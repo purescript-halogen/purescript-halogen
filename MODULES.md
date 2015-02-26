@@ -5,45 +5,35 @@
 #### `Spec`
 
 ``` purescript
-newtype Spec s i
+newtype Spec s
 ```
 
-A `Spec` defines a state machine which responds to inputs of type `i` and maintains a
+A `Spec` defines a state machine which responds to inputs of some hidden type `i` and maintains a
 state of type `s`.
-
-#### `render`
-
-``` purescript
-render :: forall s i. Spec s i -> s -> HTML i
-```
-
-
-#### `foldState`
-
-``` purescript
-foldState :: forall s i. Spec s i -> s -> i -> s
-```
-
 
 #### `mkSpec`
 
 ``` purescript
-mkSpec :: forall s i. (s -> HTML i) -> (s -> i -> s) -> Spec s i
+mkSpec :: forall s i. (s -> HTML i) -> (s -> i -> s) -> Spec s
 ```
 
 Create a `Spec` by providing a `render` function, and an operation
 which updates the state given an input.
 
+The type `i` is hidden in the return type.
+
 #### `embed`
 
 ``` purescript
-embed :: forall s1 s2 i1 i2. LensP s1 s2 -> PrismP i1 i2 -> i1 -> Spec s2 i2 -> Spec s1 i1
+embed :: forall s1 s2. LensP s1 s2 -> Spec s2 -> Spec s1
 ```
+
+`embed` allows us to enlarge the state types by using a `Lens`.
 
 #### `beside`
 
 ``` purescript
-beside :: forall s1 s2 i1 i2. Spec s1 i1 -> Spec s2 i2 -> Spec (Tuple s1 s2) (Either i1 i2)
+beside :: forall s1 s2. Spec s1 -> Spec s2 -> Spec (Tuple s1 s2)
 ```
 
 Side-by-side in a `div` element
@@ -51,7 +41,7 @@ Side-by-side in a `div` element
 #### `runSpec`
 
 ``` purescript
-runSpec :: forall s i eff. Spec s i -> s -> Eff (dom :: DOM, ref :: Ref | eff) Node
+runSpec :: forall s eff. Spec s -> s -> Eff (dom :: DOM, ref :: Ref | eff) Node
 ```
 
 `runSpec` is responsible for taking a `Spec` and hooking up its event
