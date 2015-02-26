@@ -27,16 +27,12 @@ import Data.Bifunctor
 import Control.Monad.Eff
 import Control.Monad.Eff.Ref
 
-import VirtualDOM
-import VirtualDOM.VTree
-
 import Optic.Types
 import Optic.Getter ((^.))
 import Optic.Setter (set)
 import Optic.Prism (matching)    
     
 import Halogen.HTML
-import Halogen.Props
 import Halogen.VirtualDOM    
 
 -- | A function which renders a component given an array of its rendered children and the current state

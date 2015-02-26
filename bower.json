@@ -19,7 +19,6 @@
   ],
   "dependencies": {
     "purescript-lens": "~0.6.0",
-    "purescript-virtual-dom": "~0.3.0",
     "purescript-refs": "~0.1.2",
     "purescript-exists": "~0.1.1",
     "purescript-bifunctors": "~0.2.0"

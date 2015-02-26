@@ -22,13 +22,13 @@ import Data.Foldable (foldMap)
 import Data.Bifunctor
 import Data.Maybe
 import Data.Either
+import Data.Function
+import Data.Foldable (for_)
 
 import Control.Monad.Eff
+import Control.Monad.ST
 
-import VirtualDOM
-import VirtualDOM.VTree
-
-import Halogen.Props
+import Halogen.VirtualDOM
 
 data MouseEvent
 
@@ -72,11 +72,18 @@ instance bifunctorHTML :: Bifunctor HTML where
 -- | Render a `HTML` document to a virtual DOM node
 renderHtml :: forall i c eff. (i -> Eff eff Unit) -> HTML c i -> VTree
 renderHtml _ (Text s) = vtext s
-renderHtml _ (Child _) = vnode "div" {} [vtext "Child node was not populated"]
-renderHtml k (Element name attribs children) = vnode name (propsToRecord (foldMap attributeToProps attribs)) (map (renderHtml k) children)
+renderHtml _ (Child _) = vnode "div" emptyProps [vtext "Child node was not populated"]
+renderHtml k (Element name attribs children) = vnode name props (map (renderHtml k) children)
   where
-  attributeToProps :: Attribute i -> Props
-  attributeToProps (OnClick f) = handlerProp "onclick" (k <<< f)
+  props :: Props
+  props | null attribs = emptyProps
+        | otherwise = runProps do 
+                        stp <- newProps
+                        for_ attribs (addProp stp)
+                        return stp
+    where    
+    addProp :: forall h eff. STProps h -> Attribute i -> Eff (st :: ST h | eff) Unit
+    addProp props (OnClick f) = runFn3 handlerProp "onclick" (k <<< f) props
 
 -- | Graft a child node, removing a placeholder type
 graft :: forall i1 i2 c. HTML (Maybe c) i1 -> HTML c i2 -> HTML c (Either i1 i2)
