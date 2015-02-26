@@ -2,6 +2,22 @@
 
 ## Module Halogen
 
+#### `Render`
+
+``` purescript
+type Render s i = s -> HTML i
+```
+
+A function which renders a component given an array of its rendered children and the current state
+
+#### `FoldState`
+
+``` purescript
+type FoldState s i = s -> i -> s
+```
+
+A function which can respond to inputs by updating a state
+
 #### `Spec`
 
 ``` purescript
@@ -14,7 +30,7 @@ state of type `s`.
 #### `mkSpec`
 
 ``` purescript
-mkSpec :: forall s i. (s -> HTML i) -> (s -> i -> s) -> Spec s
+mkSpec :: forall s i. Render s i -> FoldState s i -> Spec s
 ```
 
 Create a `Spec` by providing a `render` function, and an operation

@@ -2,6 +2,9 @@ module Halogen
   ( Spec()
   , mkSpec
   
+  , Render()
+  , FoldState()
+  
   , embed
   , beside
   
@@ -31,14 +34,18 @@ import Optic.Prism (matching)
 import Halogen.HTML
 import Halogen.Props
 import Halogen.VirtualDOM    
+
+-- | A function which renders a component given an array of its rendered children and the current state
+type Render s i = s -> HTML i
+
+-- | A function which can respond to inputs by updating a state
+type FoldState s i = s -> i -> s
     
+-- | A component will consist of a rendering function and a function to update its state
 newtype SpecRecord s i = SpecRecord
-  { render :: s -> HTML i
-  , foldState :: s -> i -> s
+  { render :: Render s i
+  , foldState :: FoldState s i
   }
-  
--- | A `Spec` defines a state machine which responds to inputs of type `i` and maintains a
--- | state of type `s`.
 
 render :: forall s i. SpecRecord s i -> s -> HTML i
 render (SpecRecord spec) s = spec.render s
@@ -54,7 +61,7 @@ newtype Spec s = Spec (Exists (SpecRecord s))
 -- | which updates the state given an input.
 -- |
 -- | The type `i` is hidden in the return type.
-mkSpec :: forall s i. (s -> HTML i) -> (s -> i -> s) -> Spec s
+mkSpec :: forall s i. Render s i -> FoldState s i -> Spec s
 mkSpec render_ foldState_ = Spec $ mkExists $ SpecRecord { render: render_, foldState: foldState_ }
 
 -- | `embed` allows us to enlarge the state types by using a `Lens`.
