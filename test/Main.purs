@@ -23,10 +23,10 @@ data ButtonEvent = Click
 -- | placeholder, and supports click events.
 -- | 
 -- | Its state is a `Number` which represents the number of clicks
-button :: H.Spec Number (Maybe H.Void)
-button = H.mkSpec render foldState
+button :: forall c. H.Spec Number c -> H.Spec Number c
+button = H.append (H.mkSpec render foldState)
   where
-  render :: H.Render Number (Maybe H.Void) ButtonEvent
+  render :: H.Render Number (Maybe c) ButtonEvent
   render _ = H.button [H.OnClick (const Click)] [H.child Nothing]
   
   foldState :: H.FoldState Number ButtonEvent
@@ -53,7 +53,7 @@ label = H.mkSpec render foldState
 -- |
 -- | The state type becomes a `Tuple` due to the use of the `beside` combinator. 
 ui :: H.Component (Tuple Number String)
-ui = (button `H.append` label) `H.beside` label
+ui = button label `H.beside` label
 
 main = do
   node <- H.runComponent ui (Tuple 0 "Click the button")
