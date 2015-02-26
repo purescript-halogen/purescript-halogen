@@ -1,0 +1,25 @@
+{
+  "name": "purescript-halogen",
+  "version": "0.0.0",
+  "homepage": "https://github.com/slamdata/purescript-halogen",
+  "authors": [
+    "Phil Freeman <paf31@cantab.net>"
+  ],
+  "description": "A declarative, type-safe UI library for PureScript",
+  "keywords": [
+    "purescript"
+  ],
+  "license": "Apache 2.0",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "purescript-lens": "~0.6.0",
+    "purescript-virtual-dom": "~0.3.0",
+    "purescript-refs": "~0.1.2"
+  }
+}
