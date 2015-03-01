@@ -11,7 +11,8 @@ import DOM
 
 import Halogen
 import Halogen.Signal
-import Halogen.HTML 
+
+import qualified Halogen.HTML as H
 
 foreign import appendToBody
   "function appendToBody(node) {\
@@ -22,13 +23,15 @@ foreign import appendToBody
 
 data Input = Increment | Decrement
 
-ui :: forall eff. Signal1 (trace :: Trace | eff) Input (HTML Input)
+ui :: forall eff. Signal1 (trace :: Trace | eff) Input (H.HTML Input)
 ui = view <$> stateful 0 update
   where
-  view :: Number -> HTML Input
-  view n = div' [ div' [ text (show n)]
-                  , div' [ button [ OnClick (const Increment) ] [ text "Increment" ]
-                         , button [ OnClick (const Decrement) ] [ text "Decrement" ]
+  view :: Number -> H.HTML Input
+  view n = H.div_ [ H.h1_ [ H.code_ [H.text "purescript-halogen"], H.text " demo" ]
+                  , H.p_ [ H.text "Click the buttons to modify the state of the view." ]
+                  , H.p_ [ H.text ("Current state: " <> show n) ]
+                  , H.p_ [ H.button [ H.OnClick (const Increment) ] [ H.text "Increment" ]
+                         , H.button [ H.OnClick (const Decrement) ] [ H.text "Decrement" ]
                          ]
                   ]
 

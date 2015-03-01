@@ -8,7 +8,7 @@ import Data.Maybe
 import Control.Monad.Eff
 import Control.Monad.Eff.Ref
     
-import Halogen.HTML
+import Halogen.HTML (HTML(), renderHtml)
 import Halogen.Signal 
 import Halogen.VirtualDOM   
  
