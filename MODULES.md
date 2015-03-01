@@ -1920,6 +1920,13 @@ instance semigroupoidSignal :: Semigroupoid (Signal eff)
 ```
 
 
+#### `semigroupoidSignal1`
+
+``` purescript
+instance semigroupoidSignal1 :: Semigroupoid (Signal1 eff)
+```
+
+
 #### `categorySignal`
 
 ``` purescript

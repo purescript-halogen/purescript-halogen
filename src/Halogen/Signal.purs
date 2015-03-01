@@ -84,8 +84,11 @@ instance semigroupoidSignal :: Semigroupoid (Signal eff) where
   (<<<) f g =
     Signal \i -> do s1 <- runSignal g i
                     s2 <- runSignal f (head s1)
-                    return $ (tail s2 <<< tail s1) `startingAt` head s2
-                 
+                    return (s2 <<< s1)
+         
+instance semigroupoidSignal1 :: Semigroupoid (Signal1 eff) where
+  (<<<) f g = Signal1 { result: head f, next: tail f <<< tail g }
+
 instance categorySignal :: Category (Signal eff) where
   id = input
-  
+ 
