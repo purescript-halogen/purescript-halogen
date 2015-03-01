@@ -13,6 +13,8 @@ module Halogen.Signal
   , head
   , tail
   ) where
+      
+import Data.Profunctor
     
 -- | A `Signal` represents a state machine which responds to inputs of type `i`, producing outputs of type `o`.
 newtype Signal i o = Signal (i -> Signal1 i o)
@@ -68,3 +70,19 @@ instance applicativeSignal :: Applicative (Signal i) where
 
 instance applicativeSignal1 :: Applicative (Signal1 i) where
   pure a = Signal1 { result: a, next: pure a }
+  
+instance profunctorSignal :: Profunctor Signal where
+  dimap f g (Signal k) = Signal \i -> dimap f g (k (f i))
+  
+instance profunctorSignal1 :: Profunctor Signal1 where
+  dimap f g (Signal1 o) = Signal1 { result: g o.result, next: dimap f g o.next }
+  
+instance semigroupoidSignal :: Semigroupoid Signal where
+  (<<<) f g =
+    Signal \i -> let s1 = runSignal g i
+                     s2 = runSignal f (head s1)
+                 in (tail s2 <<< tail s1) `startingAt` head s2
+                 
+instance categorySignal :: Category Signal where
+  id = input
+  

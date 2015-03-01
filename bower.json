@@ -20,6 +20,7 @@
   "dependencies": {
     "purescript-refs": "~0.1.2",
     "purescript-dom": "~0.1.1",
-    "purescript-foldable-traversable": "~0.3.0"
+    "purescript-foldable-traversable": "~0.3.0",
+    "purescript-profunctor": "~0.1.0"
   }
 }

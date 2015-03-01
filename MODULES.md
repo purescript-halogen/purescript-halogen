@@ -232,5 +232,33 @@ instance applicativeSignal1 :: Applicative (Signal1 i)
 ```
 
 
+#### `profunctorSignal`
+
+``` purescript
+instance profunctorSignal :: Profunctor Signal
+```
+
+
+#### `profunctorSignal1`
+
+``` purescript
+instance profunctorSignal1 :: Profunctor Signal1
+```
+
+
+#### `semigroupoidSignal`
+
+``` purescript
+instance semigroupoidSignal :: Semigroupoid Signal
+```
+
+
+#### `categorySignal`
+
+``` purescript
+instance categorySignal :: Category Signal
+```
+
+
 
 
