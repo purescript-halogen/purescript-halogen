@@ -25,13 +25,13 @@ import Halogen.VirtualDOM
 -- | As a simple example, we can create a signal which responds to button clicks:
 -- |
 -- | ```purescript
--- | ui :: Signal1 Unit (HTML Unit)
--- | ui = view <$> stateful 0 (\n _ -> n + 1)
+-- | ui :: forall eff. Signal1 eff Unit (HTML Unit)
+-- | ui = view <$> stateful 0 (\n _ -> pure (n + 1))
 -- |   where
 -- |   view :: Number -> HTML Unit
 -- |   view n = button [ OnClick (const unit) ] [ text (show n) ]
 -- | ```
-runUI :: forall i eff. Signal1 i (HTML i) -> Eff (ref :: Ref, dom :: DOM | eff) Node
+runUI :: forall i eff. Signal1 (ref :: Ref, dom :: DOM | eff) i (HTML i) -> Eff (ref :: Ref, dom :: DOM | eff) Node
 runUI signal = do
   ref <- newRef Nothing
   runUI' ref
@@ -48,8 +48,8 @@ runUI signal = do
     inputHandler :: i -> Eff (ref :: Ref, dom :: DOM | eff) Unit
     inputHandler i = do
       Just { signal: signal, vtree: vtree, node: node } <- readRef ref
-      let next    = runSignal signal i
-          html    = head next
+      next <- runSignal signal i
+      let html    = head next
           signal' = tail next
           vtree'  = renderHtml inputHandler html
           diffs   = diff vtree vtree' 

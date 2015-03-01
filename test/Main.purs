@@ -3,6 +3,8 @@ module Test.Main where
 import Data.Maybe
 import Data.Tuple
 
+import Debug.Trace
+
 import Control.Monad.Eff
 
 import DOM
@@ -20,7 +22,7 @@ foreign import appendToBody
 
 data Input = Increment | Decrement
 
-ui :: Signal1 Input (HTML Input)
+ui :: forall eff. Signal1 (trace :: Trace | eff) Input (HTML Input)
 ui = view <$> stateful 0 update
   where
   view :: Number -> HTML Input
@@ -30,9 +32,13 @@ ui = view <$> stateful 0 update
                          ]
                   ]
 
-  update :: Number -> Input -> Number
-  update n Increment = n + 1
-  update n Decrement = n - 1
+  update :: Number -> Input -> Eff (trace :: Trace | eff) Number
+  update n Increment = do
+    trace "Increment"
+    return (n + 1)
+  update n Decrement = do
+    trace "Decrement"
+    return (n - 1)
 
 main = do
   node <- runUI ui
