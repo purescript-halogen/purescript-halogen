@@ -19,7 +19,8 @@ var paths = {
             dest: 'MODULES.md',
             src: [
               'src/Halogen.purs',
-              'src/Halogen/HTML.purs'
+              'src/Halogen/HTML.purs',
+              'src/Halogen/Signal.purs'
             ]
         }
     },
