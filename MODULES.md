@@ -8,6 +8,25 @@
 runUI :: forall i eff. Signal1 i (HTML i) -> Eff (dom :: DOM, ref :: Ref | eff) Node
 ```
 
+`runUI` takes a UI represented as a signal function, and renders it to the DOM
+using `virtual-dom`.
+
+The signal function is responsible for rendering the HTML for the UI, and the 
+HTML can generate inputs which will be fed back into the signal function,
+resulting in DOM updates.
+
+This function returns a `Node`, and the caller is responsible for adding the node
+to the DOM.
+
+As a simple example, we can create a signal which responds to button clicks:
+
+```purescript
+ui :: Signal1 Unit (HTML Unit)
+ui = view <$> stateful 0 (\n _ -> n + 1)
+  where
+  view :: Number -> HTML Unit
+  view n = button [ OnClick (const unit) ] [ text (show n) ]
+```
 
 
 ## Module Halogen.HTML
@@ -93,6 +112,123 @@ div :: forall i. [Attribute i] -> [HTML i] -> HTML i
 
 ``` purescript
 div' :: forall i. [HTML i] -> HTML i
+```
+
+
+
+## Module Halogen.Signal
+
+#### `Signal`
+
+``` purescript
+newtype Signal i o
+```
+
+A `Signal` represents a state machine which responds to inputs of type `i`, producing outputs of type `o`.
+
+#### `runSignal`
+
+``` purescript
+runSignal :: forall i o. Signal i o -> i -> Signal1 i o
+```
+
+Run a `Signal` by providing an input
+
+#### `Signal1`
+
+``` purescript
+newtype Signal1 i o
+```
+
+`Signal1` represents non-empty signals, i.e. signals with an initial output value.
+
+#### `runSignal1`
+
+``` purescript
+runSignal1 :: forall i o. Signal1 i o -> { next :: Signal i o, result :: o }
+```
+
+Run a `Signal1` to obtain the initial value and remaining signal
+
+#### `input`
+
+``` purescript
+input :: forall i. Signal i i
+```
+
+A `Signal` which returns the latest input
+
+#### `startingAt`
+
+``` purescript
+startingAt :: forall i o. Signal i o -> o -> Signal1 i o
+```
+
+Convert a `Signal` to a `Signal1` by providing an initial value
+
+#### `head`
+
+``` purescript
+head :: forall i o. Signal1 i o -> o
+```
+
+Get the current value of a `Signal1`
+
+#### `tail`
+
+``` purescript
+tail :: forall i o. Signal1 i o -> Signal i o
+```
+
+Convert a `Signal1` to a `Signal` by ignoring its initial value
+
+#### `stateful`
+
+``` purescript
+stateful :: forall s i o. s -> (s -> i -> s) -> Signal1 i s
+```
+
+Creates a stateful `Signal`
+
+#### `functorSignal`
+
+``` purescript
+instance functorSignal :: Functor (Signal i)
+```
+
+
+#### `functorSignal1`
+
+``` purescript
+instance functorSignal1 :: Functor (Signal1 i)
+```
+
+
+#### `applySignal`
+
+``` purescript
+instance applySignal :: Apply (Signal i)
+```
+
+
+#### `applySignal1`
+
+``` purescript
+instance applySignal1 :: Apply (Signal1 i)
+```
+
+
+#### `applicativeSignal`
+
+``` purescript
+instance applicativeSignal :: Applicative (Signal i)
+```
+
+
+#### `applicativeSignal1`
+
+``` purescript
+instance applicativeSignal1 :: Applicative (Signal1 i)
 ```
 
 

@@ -18,13 +18,21 @@ foreign import appendToBody
   \  };\
   \}" :: forall eff. Node -> Eff (dom :: DOM | eff) Node
 
-data ButtonEvent = Click
+data Input = Increment | Decrement
 
-ui :: Signal1 ButtonEvent (HTML ButtonEvent)
-ui = render <$> stateful 0 (\n _ -> n + 1)
+ui :: Signal1 Input (HTML Input)
+ui = view <$> stateful 0 update
   where
-  render :: Number -> HTML ButtonEvent
-  render n = button [OnClick (const Click)] [text (show n)]
+  view :: Number -> HTML Input
+  view n = div' [ div' [ text (show n)]
+                  , div' [ button [ OnClick (const Increment) ] [ text "Increment" ]
+                         , button [ OnClick (const Decrement) ] [ text "Decrement" ]
+                         ]
+                  ]
+
+  update :: Number -> Input -> Number
+  update n Increment = n + 1
+  update n Decrement = n - 1
 
 main = do
   node <- runUI ui

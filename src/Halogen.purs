@@ -16,6 +16,25 @@ import Halogen.HTML
 import Halogen.Signal 
 import Halogen.VirtualDOM   
  
+-- | `runUI` takes a UI represented as a signal function, and renders it to the DOM
+-- | using `virtual-dom`.
+-- |
+-- | The signal function is responsible for rendering the HTML for the UI, and the 
+-- | HTML can generate inputs which will be fed back into the signal function,
+-- | resulting in DOM updates.
+-- |
+-- | This function returns a `Node`, and the caller is responsible for adding the node
+-- | to the DOM.
+-- |
+-- | As a simple example, we can create a signal which responds to button clicks:
+-- |
+-- | ```purescript
+-- | ui :: Signal1 Unit (HTML Unit)
+-- | ui = view <$> stateful 0 (\n _ -> n + 1)
+-- |   where
+-- |   view :: Number -> HTML Unit
+-- |   view n = button [ OnClick (const unit) ] [ text (show n) ]
+-- | ```
 runUI :: forall i eff. Signal1 i (HTML i) -> Eff (ref :: Ref, dom :: DOM | eff) Node
 runUI signal = do
   ref <- newRef Nothing
