@@ -14,12 +14,9 @@ module Halogen.HTML
   , renderHtml
   ) where
 
-import Data.Array
-import Data.Tuple
+import Data.Array (map, null)
 import Data.Foldable (foldMap)
-import Data.Maybe
-import Data.Either
-import Data.Function
+import Data.Function (runFn3)
 import Data.Foldable (for_)
 
 import Control.Monad.Eff

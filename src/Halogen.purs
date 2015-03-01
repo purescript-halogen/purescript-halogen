@@ -4,10 +4,6 @@ module Halogen
 import DOM
 
 import Data.Maybe
-import Data.Either
-import Data.Tuple
-import Data.Monoid
-import Data.Exists
 
 import Control.Monad.Eff
 import Control.Monad.Eff.Ref
