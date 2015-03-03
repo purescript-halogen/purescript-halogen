@@ -2,10 +2,18 @@
 
 ## Module Halogen
 
+#### `Heff`
+
+``` purescript
+type Heff eff = Eff (dom :: DOM, ref :: Ref | eff)
+```
+
+Wraps the effects required by the `runUI` and `runUIEff` functions.
+
 #### `runUI`
 
 ``` purescript
-runUI :: forall i eff. Signal1 (dom :: DOM, ref :: Ref | eff) i (HTML i) -> Eff (dom :: DOM, ref :: Ref | eff) Node
+runUI :: forall i eff. Signal1 i (HTML i) -> Heff eff Node
 ```
 
 `runUI` takes a UI represented as a signal function, and renders it to the DOM
@@ -22,11 +30,31 @@ As a simple example, we can create a signal which responds to button clicks:
 
 ```purescript
 ui :: forall eff. Signal1 eff Unit (HTML Unit)
-ui = view <$> stateful 0 (\n _ -> pure (n + 1))
+ui = view <$> stateful 0 (\n _ -> n + 1)
   where
   view :: Number -> HTML Unit
   view n = button [ OnClick (const unit) ] [ text (show n) ]
 ```
+
+
+#### `runUIEff`
+
+``` purescript
+runUIEff :: forall i r eff. Signal1 i (HTML r) -> (r -> (i -> Heff eff Unit) -> Heff eff Unit) -> Heff eff Node
+```
+
+`runUIEff` is a more general version of `runUI` which can be used to construct other
+top-level handlers for applications.
+
+`runUIEff` takes a signal function which creates HTML documents containing _requests_, 
+and a handler function which accepts requests and provides new inputs to a continuation as they
+become available.
+
+For example, the handler function might be responsible for issuing AJAX requests on behalf of the
+application.
+
+In this way, all effects are pushed to the handler function at the boundary of the application.
+
 
 
 ## Module Halogen.HTML
@@ -1788,7 +1816,7 @@ wbr_ :: forall i. [HTML i] -> HTML i
 #### `Signal`
 
 ``` purescript
-newtype Signal eff i o
+newtype Signal i o
 ```
 
 A `Signal` represents a state machine which responds to inputs of type `i`, producing outputs of type `o`.
@@ -1796,7 +1824,7 @@ A `Signal` represents a state machine which responds to inputs of type `i`, prod
 #### `runSignal`
 
 ``` purescript
-runSignal :: forall i o eff. Signal eff i o -> i -> Eff eff (Signal1 eff i o)
+runSignal :: forall i o. Signal i o -> i -> Signal1 i o
 ```
 
 Run a `Signal` by providing an input
@@ -1804,7 +1832,7 @@ Run a `Signal` by providing an input
 #### `Signal1`
 
 ``` purescript
-newtype Signal1 eff i o
+newtype Signal1 i o
 ```
 
 `Signal1` represents non-empty signals, i.e. signals with an initial output value.
@@ -1812,7 +1840,7 @@ newtype Signal1 eff i o
 #### `runSignal1`
 
 ``` purescript
-runSignal1 :: forall eff i o. Signal1 eff i o -> { next :: Signal eff i o, result :: o }
+runSignal1 :: forall i o. Signal1 i o -> { next :: Signal i o, result :: o }
 ```
 
 Run a `Signal1` to obtain the initial value and remaining signal
@@ -1820,7 +1848,7 @@ Run a `Signal1` to obtain the initial value and remaining signal
 #### `input`
 
 ``` purescript
-input :: forall eff i. Signal eff i i
+input :: forall i. Signal i i
 ```
 
 A `Signal` which returns the latest input
@@ -1828,7 +1856,7 @@ A `Signal` which returns the latest input
 #### `startingAt`
 
 ``` purescript
-startingAt :: forall eff i o. Signal eff i o -> o -> Signal1 eff i o
+startingAt :: forall i o. Signal i o -> o -> Signal1 i o
 ```
 
 Convert a `Signal` to a `Signal1` by providing an initial value
@@ -1836,7 +1864,7 @@ Convert a `Signal` to a `Signal1` by providing an initial value
 #### `head`
 
 ``` purescript
-head :: forall eff i o. Signal1 eff i o -> o
+head :: forall i o. Signal1 i o -> o
 ```
 
 Get the current value of a `Signal1`
@@ -1844,7 +1872,7 @@ Get the current value of a `Signal1`
 #### `tail`
 
 ``` purescript
-tail :: forall eff i o. Signal1 eff i o -> Signal eff i o
+tail :: forall i o. Signal1 i o -> Signal i o
 ```
 
 Convert a `Signal1` to a `Signal` by ignoring its initial value
@@ -1852,7 +1880,7 @@ Convert a `Signal1` to a `Signal` by ignoring its initial value
 #### `stateful`
 
 ``` purescript
-stateful :: forall eff s i o. s -> (s -> i -> Eff eff s) -> Signal1 eff i s
+stateful :: forall s i o. s -> (s -> i -> s) -> Signal1 i s
 ```
 
 Creates a stateful `Signal`
@@ -1860,77 +1888,77 @@ Creates a stateful `Signal`
 #### `functorSignal`
 
 ``` purescript
-instance functorSignal :: Functor (Signal eff i)
+instance functorSignal :: Functor (Signal i)
 ```
 
 
 #### `functorSignal1`
 
 ``` purescript
-instance functorSignal1 :: Functor (Signal1 eff i)
+instance functorSignal1 :: Functor (Signal1 i)
 ```
 
 
 #### `applySignal`
 
 ``` purescript
-instance applySignal :: Apply (Signal eff i)
+instance applySignal :: Apply (Signal i)
 ```
 
 
 #### `applySignal1`
 
 ``` purescript
-instance applySignal1 :: Apply (Signal1 eff i)
+instance applySignal1 :: Apply (Signal1 i)
 ```
 
 
 #### `applicativeSignal`
 
 ``` purescript
-instance applicativeSignal :: Applicative (Signal eff i)
+instance applicativeSignal :: Applicative (Signal i)
 ```
 
 
 #### `applicativeSignal1`
 
 ``` purescript
-instance applicativeSignal1 :: Applicative (Signal1 eff i)
+instance applicativeSignal1 :: Applicative (Signal1 i)
 ```
 
 
 #### `profunctorSignal`
 
 ``` purescript
-instance profunctorSignal :: Profunctor (Signal eff)
+instance profunctorSignal :: Profunctor Signal
 ```
 
 
 #### `profunctorSignal1`
 
 ``` purescript
-instance profunctorSignal1 :: Profunctor (Signal1 eff)
+instance profunctorSignal1 :: Profunctor Signal1
 ```
 
 
 #### `semigroupoidSignal`
 
 ``` purescript
-instance semigroupoidSignal :: Semigroupoid (Signal eff)
+instance semigroupoidSignal :: Semigroupoid Signal
 ```
 
 
 #### `semigroupoidSignal1`
 
 ``` purescript
-instance semigroupoidSignal1 :: Semigroupoid (Signal1 eff)
+instance semigroupoidSignal1 :: Semigroupoid Signal1
 ```
 
 
 #### `categorySignal`
 
 ``` purescript
-instance categorySignal :: Category (Signal eff)
+instance categorySignal :: Category Signal
 ```
 
 
