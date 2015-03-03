@@ -23,7 +23,7 @@ foreign import appendToBody
 
 data Input = Increment | Decrement
 
-ui :: forall eff. Signal1 (trace :: Trace | eff) Input (H.HTML Input)
+ui :: forall eff. Signal1 Input (H.HTML Input)
 ui = view <$> stateful 0 update
   where
   view :: Number -> H.HTML Input
@@ -35,13 +35,9 @@ ui = view <$> stateful 0 update
                          ]
                   ]
 
-  update :: Number -> Input -> Eff (trace :: Trace | eff) Number
-  update n Increment = do
-    trace "Increment"
-    return (n + 1)
-  update n Decrement = do
-    trace "Decrement"
-    return (n - 1)
+  update :: Number -> Input -> Number
+  update n Increment = n + 1
+  update n Decrement = n - 1
 
 main = do
   node <- runUI ui
