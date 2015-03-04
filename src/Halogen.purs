@@ -14,11 +14,11 @@ import Halogen.VirtualDOM
 -- | Wraps the effects required by the `runUI` and `runUIEff` functions.
 type Heff eff = Eff (ref :: Ref, dom :: DOM | eff)
  
--- | A signal which emits patches corresponding to successive `VTree`s.
+-- | Turn a non-empty `VTree`-generating signal into a `Patch`-generating signal.
 -- |
 -- | This function can be used to create alternative top-level handlers which use `virtual-dom`.
-changes :: VTree -> Signal VTree Patch
-changes = differencesWith diff
+changes :: forall i. Signal1 i VTree -> Signal i Patch
+changes s = tail s >>> differencesWith diff (head s)
  
 -- | `runUI` takes a UI represented as a signal function, and renders it to the DOM
 -- | using `virtual-dom`.
@@ -63,14 +63,11 @@ runUIEff signal handler = do
   where
   runUI' :: forall i. RefVal _ -> Heff eff Node
   runUI' ref = do
-    let html   = head signal
-        render = renderHtml requestHandler
-        vtree  = render html
-        next   = tail signal 
-                 >>> arr render
-                 >>> changes vtree
-        node   = createElement vtree  
-    writeRef ref $ Just { signal: next, node: node }
+    let render = renderHtml requestHandler
+        vtrees = render <$> signal
+        diffs  = changes vtrees
+        node   = createElement (head vtrees)  
+    writeRef ref $ Just { signal: diffs, node: node }
     return node    
     
     where

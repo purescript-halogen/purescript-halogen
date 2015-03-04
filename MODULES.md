@@ -13,10 +13,10 @@ Wraps the effects required by the `runUI` and `runUIEff` functions.
 #### `changes`
 
 ``` purescript
-changes :: VTree -> Signal VTree Patch
+changes :: forall i. Signal1 i VTree -> Signal i Patch
 ```
 
-A signal which emits patches corresponding to successive `VTree`s.
+Turn a non-empty `VTree`-generating signal into a `Patch`-generating signal.
 
 This function can be used to create alternative top-level handlers which use `virtual-dom`.
 
