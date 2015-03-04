@@ -1801,6 +1801,183 @@ wbr_ :: forall i. [HTML i] -> HTML i
 
 
 
+## Module Halogen.HTML.Attributes
+
+#### `Attribute`
+
+``` purescript
+data Attribute i
+```
+
+A HTML attribute which can be used in a document of type `HTML i`.
+
+#### `functorAttribute`
+
+``` purescript
+instance functorAttribute :: Functor Attribute
+```
+
+
+#### `unsafeStringAttribute`
+
+``` purescript
+unsafeStringAttribute :: forall i. String -> String -> Attribute i
+```
+
+This function can be used to define custom string attributes.
+
+#### `unsafeHandler`
+
+``` purescript
+unsafeHandler :: forall event eff i. String -> (event -> i) -> Attribute i
+```
+
+This function can be used to attach custom event handlers.
+
+#### `attributesToProps`
+
+``` purescript
+attributesToProps :: forall i eff. (i -> Eff eff Unit) -> [Attribute i] -> Props
+```
+
+Convert a collection of attributes to `Props` by providing an event handler
+
+#### `alt`
+
+``` purescript
+alt :: forall i. String -> Attribute i
+```
+
+## HTML Attributes
+
+#### `charset`
+
+``` purescript
+charset :: forall i. String -> Attribute i
+```
+
+
+#### `class_`
+
+``` purescript
+class_ :: forall i. String -> Attribute i
+```
+
+
+#### `content`
+
+``` purescript
+content :: forall i. String -> Attribute i
+```
+
+
+#### `for`
+
+``` purescript
+for :: forall i. String -> Attribute i
+```
+
+
+#### `height`
+
+``` purescript
+height :: forall i. Number -> Attribute i
+```
+
+
+#### `href`
+
+``` purescript
+href :: forall i. String -> Attribute i
+```
+
+
+#### `httpEquiv`
+
+``` purescript
+httpEquiv :: forall i. String -> Attribute i
+```
+
+
+#### `id_`
+
+``` purescript
+id_ :: forall i. String -> Attribute i
+```
+
+
+#### `name`
+
+``` purescript
+name :: forall i. String -> Attribute i
+```
+
+
+#### `rel`
+
+``` purescript
+rel :: forall i. String -> Attribute i
+```
+
+
+#### `src`
+
+``` purescript
+src :: forall i. String -> Attribute i
+```
+
+
+#### `target`
+
+``` purescript
+target :: forall i. String -> Attribute i
+```
+
+
+#### `title`
+
+``` purescript
+title :: forall i. String -> Attribute i
+```
+
+
+#### `type_`
+
+``` purescript
+type_ :: forall i. String -> Attribute i
+```
+
+
+#### `value`
+
+``` purescript
+value :: forall i. String -> Attribute i
+```
+
+
+#### `width`
+
+``` purescript
+width :: forall i. Number -> Attribute i
+```
+
+
+#### `MouseEvent`
+
+``` purescript
+data MouseEvent
+```
+
+## Event Handlers
+
+#### `onclick`
+
+``` purescript
+onclick :: forall i. (MouseEvent -> i) -> Attribute i
+```
+
+
+
 ## Module Halogen.Signal
 
 #### `Signal`
