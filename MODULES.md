@@ -1975,6 +1975,20 @@ instance profunctorSignal1 :: Profunctor Signal1
 ```
 
 
+#### `strongSignal`
+
+``` purescript
+instance strongSignal :: Strong Signal
+```
+
+
+#### `choiceSignal`
+
+``` purescript
+instance choiceSignal :: Choice Signal
+```
+
+
 #### `semigroupoidSignal`
 
 ``` purescript

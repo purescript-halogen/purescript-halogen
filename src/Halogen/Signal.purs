@@ -18,7 +18,11 @@ module Halogen.Signal
   ) where
     
 import Data.Tuple
-import Data.Profunctor    
+import Data.Either
+
+import Data.Profunctor
+import Data.Profunctor.Strong
+import Data.Profunctor.Choice
     
 -- | A `Signal` represents a state machine which responds to inputs of type `i`, producing outputs of type `o`.
 newtype Signal i o = Signal (i -> Signal1 i o)
@@ -97,6 +101,26 @@ instance profunctorSignal :: Profunctor Signal where
 instance profunctorSignal1 :: Profunctor Signal1 where
   dimap f g (Signal1 o) = Signal1 { result: g o.result, next: dimap f g o.next }
   
+instance strongSignal :: Strong Signal where
+  first s = Signal \(Tuple a c) -> 
+    case runSignal s a of
+      Signal1 o -> Signal1 { result: Tuple o.result c, next: first o.next }
+  second s = Signal \(Tuple a b) -> 
+    case runSignal s b of
+      Signal1 o -> Signal1 { result: Tuple a o.result, next: second o.next }
+  
+instance choiceSignal :: Choice Signal where
+  left s = Signal \e -> 
+    case e of
+      Left a -> case runSignal s a of
+                  Signal1 o -> Signal1 { result: Left o.result, next: left o.next }
+      Right c -> Signal1 { result: Right c, next: left s }
+  right s = Signal \e -> 
+    case e of
+      Left a -> Signal1 { result: Left a, next: right s }
+      Right b -> case runSignal s b of
+                  Signal1 o -> Signal1 { result: Right o.result, next: right o.next }
+
 instance semigroupoidSignal :: Semigroupoid Signal where
   (<<<) f g =
     Signal \i -> let s1 = runSignal g i
@@ -108,4 +132,3 @@ instance semigroupoidSignal1 :: Semigroupoid Signal1 where
 
 instance categorySignal :: Category Signal where
   id = input
- 
