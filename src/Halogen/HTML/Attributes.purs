@@ -67,8 +67,6 @@ attributesToProps k attribs
   where    
   addProp :: forall h eff. STProps h -> Attribute i -> Eff (st :: ST h | eff) Unit
   addProp props (Attribute f) = f k props
-  
--- | ## HTML Attributes
 
 alt :: forall i. String -> Attribute i
 alt = unsafeStringAttribute "alt"
@@ -120,8 +118,6 @@ value = unsafeStringAttribute "value"
    
 width :: forall i. Number -> Attribute i
 width = unsafeStringAttribute "width" <<< show
-   
--- | ## Event Handlers
 
 data MouseEvent
 

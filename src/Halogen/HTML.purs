@@ -159,8 +159,6 @@ renderHtml k (Element name attribs children) = vnode name (A.attributesToProps k
 text :: forall i. String -> HTML i
 text = Text
 
--- | ## HTML Elements
-
 a :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
 a = Element "a"
 

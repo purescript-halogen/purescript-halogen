@@ -111,7 +111,6 @@ text :: forall i. String -> HTML i
 a :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
 ```
 
-## HTML Elements
 
 #### `a_`
 
@@ -1848,7 +1847,6 @@ Convert a collection of attributes to `Props` by providing an event handler
 alt :: forall i. String -> Attribute i
 ```
 
-## HTML Attributes
 
 #### `charset`
 
@@ -1968,7 +1966,6 @@ width :: forall i. Number -> Attribute i
 data MouseEvent
 ```
 
-## Event Handlers
 
 #### `onclick`
 
