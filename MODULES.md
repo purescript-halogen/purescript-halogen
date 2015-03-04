@@ -1919,6 +1919,14 @@ differencesWith :: forall i d. (i -> i -> d) -> i -> Signal i d
 
 A `Signal` which compares consecutive inputs using a helper function
 
+#### `loop`
+
+``` purescript
+loop :: forall s i o. s -> Signal (Tuple s i) (Tuple s o) -> Signal i o
+```
+
+Create a `Signal` which hides a piece of internal state of type `s`.
+
 #### `functorSignal`
 
 ``` purescript

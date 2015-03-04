@@ -10,9 +10,8 @@ module Halogen.Signal
   , stateful
   , stateful'
   , differencesWith
-  
+  , loop
   , startingAt
-  
   , head
   , tail
   ) where
@@ -76,6 +75,12 @@ differencesWith :: forall i d. (i -> i -> d) -> i -> Signal i d
 differencesWith f initial = stateful' initial \last next -> 
   let d = f last next 
   in Tuple d next
+  
+-- | Create a `Signal` which hides a piece of internal state of type `s`.
+loop :: forall s i o. s -> Signal (Tuple s i) (Tuple s o) -> Signal i o
+loop s signal = Signal \i -> 
+  case runSignal signal (Tuple s i) of
+    Signal1 o -> Signal1 { result: snd (o.result), next: loop (fst o.result) o.next }
 
 instance functorSignal :: Functor (Signal i) where
   (<$>) f (Signal k) = Signal \i -> f <$> k i
