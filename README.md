@@ -16,11 +16,11 @@ Here is a simple example.
 ```purescript
 data Input = Click
 
-ui :: forall eff. Signal1 eff Input (HTML Input)
+ui :: forall eff. SF1 eff Input (HTML Input)
 ui = render <$> stateful 0 (\n _ -> n + 1)
   where
   render :: Number -> HTML Input
-  render n = button [OnClick (const Click)] [text (show n)]
+  render n = button [onclick (const Click)] [text (show n)]
 ```
 
 Here, the user interface is represented as a signal function of type `Signal1 eff Input (HTML Input)`. The type constructor `Signal1` represents _non-empty_ signals, i.e. signals which have an initial output value. This just means that we have an initial HTML document to render when the application loads.

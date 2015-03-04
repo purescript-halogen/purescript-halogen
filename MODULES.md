@@ -13,10 +13,10 @@ Wraps the effects required by the `runUI` and `runUIEff` functions.
 #### `changes`
 
 ``` purescript
-changes :: forall i. SF1 i VTree -> SF i Patch
+changes :: VTree -> SF VTree Patch
 ```
 
-Turn a non-empty `VTree`-generating signal into a `Patch`-generating signal.
+A signal which emits patches corresponding to successive `VTree`s.
 
 This function can be used to create alternative top-level handlers which use `virtual-dom`.
 
@@ -43,7 +43,7 @@ ui :: forall eff. SF1 eff Unit (HTML Unit)
 ui = view <$> stateful 0 (\n _ -> n + 1)
   where
   view :: Number -> HTML Unit
-  view n = button [ OnClick (const unit) ] [ text (show n) ]
+  view n = button [ onclick (const unit) ] [ text (show n) ]
 ```
 
 
