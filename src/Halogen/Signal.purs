@@ -1,9 +1,9 @@
-module Halogen.Signal 
-  ( Signal()
-  , Signal1()
+module Halogen.Signal
+  ( SF()
+  , SF1()
   
-  , runSignal
-  , runSignal1
+  , runSF
+  , runSF1
   
   , arr
   , input
@@ -23,117 +23,117 @@ import Data.Profunctor
 import Data.Profunctor.Strong
 import Data.Profunctor.Choice
     
--- | A `Signal` represents a state machine which responds to inputs of type `i`, producing outputs of type `o`.
-newtype Signal i o = Signal (i -> Signal1 i o)
+-- | A `SF` represents a state machine which responds to inputs of type `i`, producing outputs of type `o`.
+newtype SF i o = SF (i -> SF1 i o)
     
--- | Run a `Signal` by providing an input
-runSignal :: forall i o. Signal i o -> i -> Signal1 i o
-runSignal (Signal k) = k
+-- | Run a `SF` by providing an input
+runSF :: forall i o. SF i o -> i -> SF1 i o
+runSF (SF k) = k
     
--- | `Signal1` represents non-empty signals, i.e. signals with an initial output value.
-newtype Signal1 i o = Signal1 { result :: o, next :: Signal i o }
+-- | `SF1` represents non-empty signals, i.e. signals with an initial output value.
+newtype SF1 i o = SF1 { result :: o, next :: SF i o }
 
--- | Run a `Signal1` to obtain the initial value and remaining signal
-runSignal1 :: forall i o. Signal1 i o -> { result :: o, next :: Signal i o }
-runSignal1 (Signal1 o) = o
+-- | Run a `SF1` to obtain the initial value and remaining signal
+runSF1 :: forall i o. SF1 i o -> { result :: o, next :: SF i o }
+runSF1 (SF1 o) = o
   
--- | Create a `Signal` from a function  
-arr :: forall i o. (i -> o) -> Signal i o
-arr f = let s = Signal \i -> Signal1 { result: f i, next: s } in s
+-- | Create a `SF` from a function  
+arr :: forall i o. (i -> o) -> SF i o
+arr f = let s = SF \i -> SF1 { result: f i, next: s } in s
   
--- | A `Signal` which returns the latest input
-input :: forall i. Signal i i
-input = Signal \i -> Signal1 { result: i, next: input } 
+-- | A `SF` which returns the latest input
+input :: forall i. SF i i
+input = SF \i -> SF1 { result: i, next: input } 
 
--- | Convert a `Signal` to a `Signal1` by providing an initial value
-startingAt :: forall i o. Signal i o -> o -> Signal1 i o
-startingAt s o = Signal1 { result: o, next: s }
+-- | Convert a `SF` to a `SF1` by providing an initial value
+startingAt :: forall i o. SF i o -> o -> SF1 i o
+startingAt s o = SF1 { result: o, next: s }
 
--- | Get the current value of a `Signal1`
-head :: forall i o. Signal1 i o -> o
-head (Signal1 o) = o.result
+-- | Get the current value of a `SF1`
+head :: forall i o. SF1 i o -> o
+head (SF1 o) = o.result
 
--- | Convert a `Signal1` to a `Signal` by ignoring its initial value
-tail :: forall i o. Signal1 i o -> Signal i o
-tail (Signal1 o) = o.next
+-- | Convert a `SF1` to a `SF` by ignoring its initial value
+tail :: forall i o. SF1 i o -> SF i o
+tail (SF1 o) = o.next
 
--- | Creates a stateful `Signal1`
-stateful :: forall s i o. s -> (s -> i -> s) -> Signal1 i s
+-- | Creates a stateful `SF1`
+stateful :: forall s i o. s -> (s -> i -> s) -> SF1 i s
 stateful s step = stateful' s (\s i -> let s' = step s i in Tuple s' s') `startingAt` s
   
--- | Creates a stateful `Signal` based on a function which returns an output value
-stateful' :: forall s i o. s -> (s -> i -> Tuple o s) -> Signal i o
+-- | Creates a stateful `SF` based on a function which returns an output value
+stateful' :: forall s i o. s -> (s -> i -> Tuple o s) -> SF i o
 stateful' s step = go s
   where
-  go :: s -> Signal i o
-  go s = Signal \i -> 
+  go :: s -> SF i o
+  go s = SF \i -> 
     case step s i of
-      Tuple o s' -> Signal1 { result: o, next: go s' }
+      Tuple o s' -> SF1 { result: o, next: go s' }
       
--- | A `Signal` which compares consecutive inputs using a helper function
-differencesWith :: forall i d. (i -> i -> d) -> i -> Signal i d
+-- | A `SF` which compares consecutive inputs using a helper function
+differencesWith :: forall i d. (i -> i -> d) -> i -> SF i d
 differencesWith f initial = stateful' initial \last next -> 
   let d = f last next 
   in Tuple d next
   
--- | Create a `Signal` which hides a piece of internal state of type `s`.
-loop :: forall s i o. s -> Signal (Tuple s i) (Tuple s o) -> Signal i o
-loop s signal = Signal \i -> 
-  case runSignal signal (Tuple s i) of
-    Signal1 o -> Signal1 { result: snd (o.result), next: loop (fst o.result) o.next }
+-- | Create a `SF` which hides a piece of internal state of type `s`.
+loop :: forall s i o. s -> SF (Tuple s i) (Tuple s o) -> SF i o
+loop s signal = SF \i -> 
+  case runSF signal (Tuple s i) of
+    SF1 o -> SF1 { result: snd (o.result), next: loop (fst o.result) o.next }
 
-instance functorSignal :: Functor (Signal i) where
-  (<$>) f (Signal k) = Signal \i -> f <$> k i
+instance functorSF :: Functor (SF i) where
+  (<$>) f (SF k) = SF \i -> f <$> k i
 
-instance functorSignal1 :: Functor (Signal1 i) where
-  (<$>) f (Signal1 o) = Signal1 { result: f o.result, next: f <$> o.next }
+instance functorSF1 :: Functor (SF1 i) where
+  (<$>) f (SF1 o) = SF1 { result: f o.result, next: f <$> o.next }
 
-instance applySignal :: Apply (Signal i) where
-  (<*>) f x = Signal \i -> runSignal f i <*> runSignal x i
+instance applySF :: Apply (SF i) where
+  (<*>) f x = SF \i -> runSF f i <*> runSF x i
 
-instance applySignal1 :: Apply (Signal1 i) where
-  (<*>) (Signal1 f) (Signal1 x) = Signal1 { result: f.result x.result, next: f.next <*> x.next }
+instance applySF1 :: Apply (SF1 i) where
+  (<*>) (SF1 f) (SF1 x) = SF1 { result: f.result x.result, next: f.next <*> x.next }
 
-instance applicativeSignal :: Applicative (Signal i) where
-  pure a = Signal \_ -> pure a
+instance applicativeSF :: Applicative (SF i) where
+  pure a = SF \_ -> pure a
 
-instance applicativeSignal1 :: Applicative (Signal1 i) where
-  pure a = Signal1 { result: a, next: pure a }
+instance applicativeSF1 :: Applicative (SF1 i) where
+  pure a = SF1 { result: a, next: pure a }
   
-instance profunctorSignal :: Profunctor Signal where
-  dimap f g (Signal k) = Signal \i -> dimap f g (k (f i))
+instance profunctorSF :: Profunctor SF where
+  dimap f g (SF k) = SF \i -> dimap f g (k (f i))
   
-instance profunctorSignal1 :: Profunctor Signal1 where
-  dimap f g (Signal1 o) = Signal1 { result: g o.result, next: dimap f g o.next }
+instance profunctorSF1 :: Profunctor SF1 where
+  dimap f g (SF1 o) = SF1 { result: g o.result, next: dimap f g o.next }
   
-instance strongSignal :: Strong Signal where
-  first s = Signal \(Tuple a c) -> 
-    case runSignal s a of
-      Signal1 o -> Signal1 { result: Tuple o.result c, next: first o.next }
-  second s = Signal \(Tuple a b) -> 
-    case runSignal s b of
-      Signal1 o -> Signal1 { result: Tuple a o.result, next: second o.next }
+instance strongSF :: Strong SF where
+  first s = SF \(Tuple a c) -> 
+    case runSF s a of
+      SF1 o -> SF1 { result: Tuple o.result c, next: first o.next }
+  second s = SF \(Tuple a b) -> 
+    case runSF s b of
+      SF1 o -> SF1 { result: Tuple a o.result, next: second o.next }
   
-instance choiceSignal :: Choice Signal where
-  left s = Signal \e -> 
+instance choiceSF :: Choice SF where
+  left s = SF \e -> 
     case e of
-      Left a -> case runSignal s a of
-                  Signal1 o -> Signal1 { result: Left o.result, next: left o.next }
-      Right c -> Signal1 { result: Right c, next: left s }
-  right s = Signal \e -> 
+      Left a -> case runSF s a of
+                  SF1 o -> SF1 { result: Left o.result, next: left o.next }
+      Right c -> SF1 { result: Right c, next: left s }
+  right s = SF \e -> 
     case e of
-      Left a -> Signal1 { result: Left a, next: right s }
-      Right b -> case runSignal s b of
-                  Signal1 o -> Signal1 { result: Right o.result, next: right o.next }
+      Left a -> SF1 { result: Left a, next: right s }
+      Right b -> case runSF s b of
+                   SF1 o -> SF1 { result: Right o.result, next: right o.next }
 
-instance semigroupoidSignal :: Semigroupoid Signal where
+instance semigroupoidSF :: Semigroupoid SF where
   (<<<) f g =
-    Signal \i -> let s1 = runSignal g i
-                     s2 = runSignal f (head s1)
-                 in s2 <<< s1
+    SF \i -> let s1 = runSF g i
+                 s2 = runSF f (head s1)
+             in s2 <<< s1
          
-instance semigroupoidSignal1 :: Semigroupoid Signal1 where
-  (<<<) f g = Signal1 { result: head f, next: tail f <<< tail g }
+instance semigroupoidSF1 :: Semigroupoid SF1 where
+  (<<<) f g = SF1 { result: head f, next: tail f <<< tail g }
 
-instance categorySignal :: Category Signal where
+instance categorySF :: Category SF where
   id = input

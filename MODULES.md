@@ -13,7 +13,7 @@ Wraps the effects required by the `runUI` and `runUIEff` functions.
 #### `changes`
 
 ``` purescript
-changes :: forall i. Signal1 i VTree -> Signal i Patch
+changes :: forall i. SF1 i VTree -> SF i Patch
 ```
 
 Turn a non-empty `VTree`-generating signal into a `Patch`-generating signal.
@@ -23,7 +23,7 @@ This function can be used to create alternative top-level handlers which use `vi
 #### `runUI`
 
 ``` purescript
-runUI :: forall i eff. Signal1 i (HTML i) -> Heff eff Node
+runUI :: forall i eff. SF1 i (HTML i) -> Heff eff Node
 ```
 
 `runUI` takes a UI represented as a signal function, and renders it to the DOM
@@ -39,7 +39,7 @@ to the DOM.
 As a simple example, we can create a signal which responds to button clicks:
 
 ```purescript
-ui :: forall eff. Signal1 eff Unit (HTML Unit)
+ui :: forall eff. SF1 eff Unit (HTML Unit)
 ui = view <$> stateful 0 (\n _ -> n + 1)
   where
   view :: Number -> HTML Unit
@@ -50,7 +50,7 @@ ui = view <$> stateful 0 (\n _ -> n + 1)
 #### `runUIEff`
 
 ``` purescript
-runUIEff :: forall i r eff. Signal1 i (HTML r) -> (r -> (i -> Heff eff Unit) -> Heff eff Unit) -> Heff eff Node
+runUIEff :: forall i r eff. SF1 i (HTML r) -> (r -> (i -> Heff eff Unit) -> Heff eff Unit) -> Heff eff Node
 ```
 
 `runUIEff` is a more general version of `runUI` which can be used to construct other
@@ -1977,198 +1977,198 @@ onclick :: forall i. (MouseEvent -> i) -> Attribute i
 
 ## Module Halogen.Signal
 
-#### `Signal`
+#### `SF`
 
 ``` purescript
-newtype Signal i o
+newtype SF i o
 ```
 
-A `Signal` represents a state machine which responds to inputs of type `i`, producing outputs of type `o`.
+A `SF` represents a state machine which responds to inputs of type `i`, producing outputs of type `o`.
 
-#### `runSignal`
+#### `runSF`
 
 ``` purescript
-runSignal :: forall i o. Signal i o -> i -> Signal1 i o
+runSF :: forall i o. SF i o -> i -> SF1 i o
 ```
 
-Run a `Signal` by providing an input
+Run a `SF` by providing an input
 
-#### `Signal1`
+#### `SF1`
 
 ``` purescript
-newtype Signal1 i o
+newtype SF1 i o
 ```
 
-`Signal1` represents non-empty signals, i.e. signals with an initial output value.
+`SF1` represents non-empty signals, i.e. signals with an initial output value.
 
-#### `runSignal1`
+#### `runSF1`
 
 ``` purescript
-runSignal1 :: forall i o. Signal1 i o -> { next :: Signal i o, result :: o }
+runSF1 :: forall i o. SF1 i o -> { next :: SF i o, result :: o }
 ```
 
-Run a `Signal1` to obtain the initial value and remaining signal
+Run a `SF1` to obtain the initial value and remaining signal
 
 #### `arr`
 
 ``` purescript
-arr :: forall i o. (i -> o) -> Signal i o
+arr :: forall i o. (i -> o) -> SF i o
 ```
 
-Create a `Signal` from a function  
+Create a `SF` from a function  
 
 #### `input`
 
 ``` purescript
-input :: forall i. Signal i i
+input :: forall i. SF i i
 ```
 
-A `Signal` which returns the latest input
+A `SF` which returns the latest input
 
 #### `startingAt`
 
 ``` purescript
-startingAt :: forall i o. Signal i o -> o -> Signal1 i o
+startingAt :: forall i o. SF i o -> o -> SF1 i o
 ```
 
-Convert a `Signal` to a `Signal1` by providing an initial value
+Convert a `SF` to a `SF1` by providing an initial value
 
 #### `head`
 
 ``` purescript
-head :: forall i o. Signal1 i o -> o
+head :: forall i o. SF1 i o -> o
 ```
 
-Get the current value of a `Signal1`
+Get the current value of a `SF1`
 
 #### `tail`
 
 ``` purescript
-tail :: forall i o. Signal1 i o -> Signal i o
+tail :: forall i o. SF1 i o -> SF i o
 ```
 
-Convert a `Signal1` to a `Signal` by ignoring its initial value
+Convert a `SF1` to a `SF` by ignoring its initial value
 
 #### `stateful`
 
 ``` purescript
-stateful :: forall s i o. s -> (s -> i -> s) -> Signal1 i s
+stateful :: forall s i o. s -> (s -> i -> s) -> SF1 i s
 ```
 
-Creates a stateful `Signal1`
+Creates a stateful `SF1`
 
 #### `stateful'`
 
 ``` purescript
-stateful' :: forall s i o. s -> (s -> i -> Tuple o s) -> Signal i o
+stateful' :: forall s i o. s -> (s -> i -> Tuple o s) -> SF i o
 ```
 
-Creates a stateful `Signal` based on a function which returns an output value
+Creates a stateful `SF` based on a function which returns an output value
 
 #### `differencesWith`
 
 ``` purescript
-differencesWith :: forall i d. (i -> i -> d) -> i -> Signal i d
+differencesWith :: forall i d. (i -> i -> d) -> i -> SF i d
 ```
 
-A `Signal` which compares consecutive inputs using a helper function
+A `SF` which compares consecutive inputs using a helper function
 
 #### `loop`
 
 ``` purescript
-loop :: forall s i o. s -> Signal (Tuple s i) (Tuple s o) -> Signal i o
+loop :: forall s i o. s -> SF (Tuple s i) (Tuple s o) -> SF i o
 ```
 
-Create a `Signal` which hides a piece of internal state of type `s`.
+Create a `SF` which hides a piece of internal state of type `s`.
 
-#### `functorSignal`
-
-``` purescript
-instance functorSignal :: Functor (Signal i)
-```
-
-
-#### `functorSignal1`
+#### `functorSF`
 
 ``` purescript
-instance functorSignal1 :: Functor (Signal1 i)
+instance functorSF :: Functor (SF i)
 ```
 
 
-#### `applySignal`
+#### `functorSF1`
 
 ``` purescript
-instance applySignal :: Apply (Signal i)
+instance functorSF1 :: Functor (SF1 i)
 ```
 
 
-#### `applySignal1`
+#### `applySF`
 
 ``` purescript
-instance applySignal1 :: Apply (Signal1 i)
+instance applySF :: Apply (SF i)
 ```
 
 
-#### `applicativeSignal`
+#### `applySF1`
 
 ``` purescript
-instance applicativeSignal :: Applicative (Signal i)
+instance applySF1 :: Apply (SF1 i)
 ```
 
 
-#### `applicativeSignal1`
+#### `applicativeSF`
 
 ``` purescript
-instance applicativeSignal1 :: Applicative (Signal1 i)
+instance applicativeSF :: Applicative (SF i)
 ```
 
 
-#### `profunctorSignal`
+#### `applicativeSF1`
 
 ``` purescript
-instance profunctorSignal :: Profunctor Signal
+instance applicativeSF1 :: Applicative (SF1 i)
 ```
 
 
-#### `profunctorSignal1`
+#### `profunctorSF`
 
 ``` purescript
-instance profunctorSignal1 :: Profunctor Signal1
+instance profunctorSF :: Profunctor SF
 ```
 
 
-#### `strongSignal`
+#### `profunctorSF1`
 
 ``` purescript
-instance strongSignal :: Strong Signal
+instance profunctorSF1 :: Profunctor SF1
 ```
 
 
-#### `choiceSignal`
+#### `strongSF`
 
 ``` purescript
-instance choiceSignal :: Choice Signal
+instance strongSF :: Strong SF
 ```
 
 
-#### `semigroupoidSignal`
+#### `choiceSF`
 
 ``` purescript
-instance semigroupoidSignal :: Semigroupoid Signal
+instance choiceSF :: Choice SF
 ```
 
 
-#### `semigroupoidSignal1`
+#### `semigroupoidSF`
 
 ``` purescript
-instance semigroupoidSignal1 :: Semigroupoid Signal1
+instance semigroupoidSF :: Semigroupoid SF
 ```
 
 
-#### `categorySignal`
+#### `semigroupoidSF1`
 
 ``` purescript
-instance categorySignal :: Category Signal
+instance semigroupoidSF1 :: Semigroupoid SF1
+```
+
+
+#### `categorySF`
+
+``` purescript
+instance categorySF :: Category SF
 ```
 
 

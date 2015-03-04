@@ -17,7 +17,7 @@ type Heff eff = Eff (ref :: Ref, dom :: DOM | eff)
 -- | Turn a non-empty `VTree`-generating signal into a `Patch`-generating signal.
 -- |
 -- | This function can be used to create alternative top-level handlers which use `virtual-dom`.
-changes :: forall i. Signal1 i VTree -> Signal i Patch
+changes :: forall i. SF1 i VTree -> SF i Patch
 changes s = tail s >>> differencesWith diff (head s)
  
 -- | `runUI` takes a UI represented as a signal function, and renders it to the DOM
@@ -33,14 +33,14 @@ changes s = tail s >>> differencesWith diff (head s)
 -- | As a simple example, we can create a signal which responds to button clicks:
 -- |
 -- | ```purescript
--- | ui :: forall eff. Signal1 eff Unit (HTML Unit)
+-- | ui :: forall eff. SF1 eff Unit (HTML Unit)
 -- | ui = view <$> stateful 0 (\n _ -> n + 1)
 -- |   where
 -- |   view :: Number -> HTML Unit
 -- |   view n = button [ OnClick (const unit) ] [ text (show n) ]
 -- | ```
 -- |
-runUI :: forall i eff. Signal1 i (HTML i) -> Heff eff Node
+runUI :: forall i eff. SF1 i (HTML i) -> Heff eff Node
 runUI signal = runUIEff signal (\i k -> k i)
 
 -- | `runUIEff` is a more general version of `runUI` which can be used to construct other
@@ -55,7 +55,7 @@ runUI signal = runUIEff signal (\i k -> k i)
 -- |
 -- | In this way, all effects are pushed to the handler function at the boundary of the application.
 -- |
-runUIEff :: forall i r eff. Signal1 i (HTML r) -> (r -> (i -> Heff eff Unit) -> Heff eff Unit) -> Heff eff Node
+runUIEff :: forall i r eff. SF1 i (HTML r) -> (r -> (i -> Heff eff Unit) -> Heff eff Unit) -> Heff eff Node
 runUIEff signal handler = do
   ref <- newRef Nothing
   runUI' ref
@@ -77,7 +77,7 @@ runUIEff signal handler = do
     inputHandler :: i -> Heff eff Unit
     inputHandler i = do
       Just { signal: signal, node: node } <- readRef ref
-      let next = runSignal signal i
+      let next = runSF signal i
       node' <- patch (head next) node
       writeRef ref $ Just { signal: tail next, node: node' }
       

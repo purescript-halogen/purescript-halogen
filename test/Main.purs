@@ -24,7 +24,7 @@ foreign import appendToBody
 
 data Input = Increment | Decrement
 
-ui :: forall eff. Signal1 Input (H.HTML Input)
+ui :: forall eff. SF1 Input (H.HTML Input)
 ui = view <$> stateful 0 update
   where
   view :: Number -> H.HTML Input
