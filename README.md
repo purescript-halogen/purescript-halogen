@@ -17,7 +17,7 @@ Here is a simple example.
 data Input = Click
 
 ui :: forall eff. Signal1 eff Input (HTML Input)
-ui = render <$> stateful 0 (\n _ -> pure (n + 1))
+ui = render <$> stateful 0 (\n _ -> n + 1)
   where
   render :: Number -> HTML Input
   render n = button [OnClick (const Click)] [text (show n)]

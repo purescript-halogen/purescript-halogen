@@ -5,8 +5,11 @@ module Halogen.Signal
   , runSignal
   , runSignal1
   
+  , arr
   , input
   , stateful
+  , stateful'
+  , differencesWith
   
   , startingAt
   
@@ -14,6 +17,7 @@ module Halogen.Signal
   , tail
   ) where
     
+import Data.Tuple
 import Data.Profunctor    
     
 -- | A `Signal` represents a state machine which responds to inputs of type `i`, producing outputs of type `o`.
@@ -29,6 +33,10 @@ newtype Signal1 i o = Signal1 { result :: o, next :: Signal i o }
 -- | Run a `Signal1` to obtain the initial value and remaining signal
 runSignal1 :: forall i o. Signal1 i o -> { result :: o, next :: Signal i o }
 runSignal1 (Signal1 o) = o
+  
+-- | Create a `Signal` from a function  
+arr :: forall i o. (i -> o) -> Signal i o
+arr f = let s = Signal \i -> Signal1 { result: f i, next: s } in s
   
 -- | A `Signal` which returns the latest input
 input :: forall i. Signal i i
@@ -46,12 +54,24 @@ head (Signal1 o) = o.result
 tail :: forall i o. Signal1 i o -> Signal i o
 tail (Signal1 o) = o.next
 
--- | Creates a stateful `Signal`
+-- | Creates a stateful `Signal1`
 stateful :: forall s i o. s -> (s -> i -> s) -> Signal1 i s
-stateful s step = go s
+stateful s step = stateful' s (\s i -> let s' = step s i in Tuple s' s') `startingAt` s
+  
+-- | Creates a stateful `Signal` based on a function which returns an output value
+stateful' :: forall s i o. s -> (s -> i -> Tuple o s) -> Signal i o
+stateful' s step = go s
   where
-  go :: s -> Signal1 i s
-  go s = Signal1 { result: s, next: Signal (go <<< step s) }
+  go :: s -> Signal i o
+  go s = Signal \i -> 
+    case step s i of
+      Tuple o s' -> Signal1 { result: o, next: go s' }
+      
+-- | A `Signal` which compares consecutive inputs using a helper function
+differencesWith :: forall i d. (i -> i -> d) -> i -> Signal i d
+differencesWith f initial = stateful' initial \last next -> 
+  let d = f last next 
+  in Tuple d next
 
 instance functorSignal :: Functor (Signal i) where
   (<$>) f (Signal k) = Signal \i -> f <$> k i

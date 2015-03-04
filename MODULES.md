@@ -10,6 +10,16 @@ type Heff eff = Eff (dom :: DOM, ref :: Ref | eff)
 
 Wraps the effects required by the `runUI` and `runUIEff` functions.
 
+#### `changes`
+
+``` purescript
+changes :: VTree -> Signal VTree Patch
+```
+
+A signal which emits patches corresponding to successive `VTree`s.
+
+This function can be used to create alternative top-level handlers which use `virtual-dom`.
+
 #### `runUI`
 
 ``` purescript
@@ -1845,6 +1855,14 @@ runSignal1 :: forall i o. Signal1 i o -> { next :: Signal i o, result :: o }
 
 Run a `Signal1` to obtain the initial value and remaining signal
 
+#### `arr`
+
+``` purescript
+arr :: forall i o. (i -> o) -> Signal i o
+```
+
+Create a `Signal` from a function  
+
 #### `input`
 
 ``` purescript
@@ -1883,7 +1901,23 @@ Convert a `Signal1` to a `Signal` by ignoring its initial value
 stateful :: forall s i o. s -> (s -> i -> s) -> Signal1 i s
 ```
 
-Creates a stateful `Signal`
+Creates a stateful `Signal1`
+
+#### `stateful'`
+
+``` purescript
+stateful' :: forall s i o. s -> (s -> i -> Tuple o s) -> Signal i o
+```
+
+Creates a stateful `Signal` based on a function which returns an output value
+
+#### `differencesWith`
+
+``` purescript
+differencesWith :: forall i d. (i -> i -> d) -> i -> Signal i d
+```
+
+A `Signal` which compares consecutive inputs using a helper function
 
 #### `functorSignal`
 

@@ -14,6 +14,12 @@ import Halogen.VirtualDOM
 -- | Wraps the effects required by the `runUI` and `runUIEff` functions.
 type Heff eff = Eff (ref :: Ref, dom :: DOM | eff)
  
+-- | A signal which emits patches corresponding to successive `VTree`s.
+-- |
+-- | This function can be used to create alternative top-level handlers which use `virtual-dom`.
+changes :: VTree -> Signal VTree Patch
+changes = differencesWith diff
+ 
 -- | `runUI` takes a UI represented as a signal function, and renders it to the DOM
 -- | using `virtual-dom`.
 -- |
@@ -57,11 +63,14 @@ runUIEff signal handler = do
   where
   runUI' :: forall i. RefVal _ -> Heff eff Node
   runUI' ref = do
-    let html  = head signal
-        next  = tail signal
-        vtree = renderHtml requestHandler html
-        node  = createElement vtree  
-    writeRef ref $ Just { signal: next, vtree: vtree, node: node }
+    let html   = head signal
+        render = renderHtml requestHandler
+        vtree  = render html
+        next   = tail signal 
+                 >>> arr render
+                 >>> changes vtree
+        node   = createElement vtree  
+    writeRef ref $ Just { signal: next, node: node }
     return node    
     
     where
@@ -70,11 +79,8 @@ runUIEff signal handler = do
     
     inputHandler :: i -> Heff eff Unit
     inputHandler i = do
-      Just { signal: signal, vtree: vtree, node: node } <- readRef ref
+      Just { signal: signal, node: node } <- readRef ref
       let next = runSignal signal i
-      let html    = head next
-          signal' = tail next
-          vtree'  = renderHtml requestHandler html
-          diffs   = diff vtree vtree' 
-      node' <- patch diffs node
-      writeRef ref $ Just { signal: signal', vtree: vtree', node: node' }
+      node' <- patch (head next) node
+      writeRef ref $ Just { signal: tail next, node: node' }
+      
