@@ -1968,17 +1968,269 @@ width :: forall i. Number -> Attribute i
 ```
 
 
+#### `Event`
+
+``` purescript
+type Event fields = { "type" :: String, timeStamp :: Number, target :: Node, currentTarget :: Node, cancelable :: Boolean, bubbles :: Boolean | fields }
+```
+
+
+#### `onabort`
+
+``` purescript
+onabort :: forall i. (Event () -> i) -> Attribute i
+```
+
+
+#### `onbeforeunload`
+
+``` purescript
+onbeforeunload :: forall i. (Event () -> i) -> Attribute i
+```
+
+
+#### `onerror`
+
+``` purescript
+onerror :: forall i. (Event () -> i) -> Attribute i
+```
+
+
+#### `onhashchange`
+
+``` purescript
+onhashchange :: forall i. (Event () -> i) -> Attribute i
+```
+
+
+#### `onload`
+
+``` purescript
+onload :: forall i. (Event () -> i) -> Attribute i
+```
+
+
+#### `onpageshow`
+
+``` purescript
+onpageshow :: forall i. (Event () -> i) -> Attribute i
+```
+
+
+#### `onpagehide`
+
+``` purescript
+onpagehide :: forall i. (Event () -> i) -> Attribute i
+```
+
+
+#### `onresize`
+
+``` purescript
+onresize :: forall i. (Event () -> i) -> Attribute i
+```
+
+
+#### `onscroll`
+
+``` purescript
+onscroll :: forall i. (Event () -> i) -> Attribute i
+```
+
+
+#### `onunload`
+
+``` purescript
+onunload :: forall i. (Event () -> i) -> Attribute i
+```
+
+
+#### `onchange`
+
+``` purescript
+onchange :: forall i. (Event () -> i) -> Attribute i
+```
+
+
+#### `oninput`
+
+``` purescript
+oninput :: forall i. (Event () -> i) -> Attribute i
+```
+
+
+#### `oninvalid`
+
+``` purescript
+oninvalid :: forall i. (Event () -> i) -> Attribute i
+```
+
+
+#### `onreset`
+
+``` purescript
+onreset :: forall i. (Event () -> i) -> Attribute i
+```
+
+
+#### `onsearch`
+
+``` purescript
+onsearch :: forall i. (Event () -> i) -> Attribute i
+```
+
+
+#### `onselect`
+
+``` purescript
+onselect :: forall i. (Event () -> i) -> Attribute i
+```
+
+
+#### `onsubmit`
+
+``` purescript
+onsubmit :: forall i. (Event () -> i) -> Attribute i
+```
+
+
 #### `MouseEvent`
 
 ``` purescript
-data MouseEvent
+type MouseEvent = (which :: Number, metaKey :: Boolean, altKey :: Boolean, shiftKey :: Boolean, ctrlKey :: Boolean, screenY :: Number, screenX :: Number, clientY :: Number, clientX :: Number, relatedTarget :: Node, detail :: Number, button :: Number)
 ```
 
 
 #### `onclick`
 
 ``` purescript
-onclick :: forall i. (MouseEvent -> i) -> Attribute i
+onclick :: forall i. (Event MouseEvent -> i) -> Attribute i
+```
+
+
+#### `oncontextmenu`
+
+``` purescript
+oncontextmenu :: forall i. (Event MouseEvent -> i) -> Attribute i
+```
+
+
+#### `ondblclick`
+
+``` purescript
+ondblclick :: forall i. (Event MouseEvent -> i) -> Attribute i
+```
+
+
+#### `onmousedown`
+
+``` purescript
+onmousedown :: forall i. (Event MouseEvent -> i) -> Attribute i
+```
+
+
+#### `onmouseenter`
+
+``` purescript
+onmouseenter :: forall i. (Event MouseEvent -> i) -> Attribute i
+```
+
+
+#### `onmouseleave`
+
+``` purescript
+onmouseleave :: forall i. (Event MouseEvent -> i) -> Attribute i
+```
+
+
+#### `onmousemove`
+
+``` purescript
+onmousemove :: forall i. (Event MouseEvent -> i) -> Attribute i
+```
+
+
+#### `onmouseover`
+
+``` purescript
+onmouseover :: forall i. (Event MouseEvent -> i) -> Attribute i
+```
+
+
+#### `onmouseout`
+
+``` purescript
+onmouseout :: forall i. (Event MouseEvent -> i) -> Attribute i
+```
+
+
+#### `onmouseup`
+
+``` purescript
+onmouseup :: forall i. (Event MouseEvent -> i) -> Attribute i
+```
+
+
+#### `KeyboardEvent`
+
+``` purescript
+type KeyboardEvent = (which :: Number, metaKey :: Boolean, altKey :: Boolean, shiftKey :: Boolean, ctrlKey :: Boolean, keyCode :: Number, charCode :: Number)
+```
+
+
+#### `onkeydown`
+
+``` purescript
+onkeydown :: forall i. (Event KeyboardEvent -> i) -> Attribute i
+```
+
+
+#### `onkeypress`
+
+``` purescript
+onkeypress :: forall i. (Event KeyboardEvent -> i) -> Attribute i
+```
+
+
+#### `onkeyup`
+
+``` purescript
+onkeyup :: forall i. (Event KeyboardEvent -> i) -> Attribute i
+```
+
+
+#### `FocusEvent`
+
+``` purescript
+type FocusEvent = (relatedTarget :: Node)
+```
+
+
+#### `onblur`
+
+``` purescript
+onblur :: forall i. (Event FocusEvent -> i) -> Attribute i
+```
+
+
+#### `onfocus`
+
+``` purescript
+onfocus :: forall i. (Event FocusEvent -> i) -> Attribute i
+```
+
+
+#### `onfocusin`
+
+``` purescript
+onfocusin :: forall i. (Event FocusEvent -> i) -> Attribute i
+```
+
+
+#### `onfocusout`
+
+``` purescript
+onfocusout :: forall i. (Event FocusEvent -> i) -> Attribute i
 ```
 
 

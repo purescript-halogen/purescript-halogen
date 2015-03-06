@@ -1,8 +1,6 @@
 module Halogen.HTML.Attributes 
   ( Attribute()
   
-  , MouseEvent()
-  
   , attributesToProps
   
   , unsafeStringAttribute
@@ -30,10 +28,55 @@ module Halogen.HTML.Attributes
   
   -- Event Handlers
   
+  , Event()
+  
+  , onabort
+  , onbeforeunload
+  , onerror
+  , onhashchange
+  , onload
+  , onpageshow
+  , onpagehide
+  , onresize
+  , onscroll
+  , onunload
+  , onchange
+  , oninput
+  , oninvalid
+  , onreset
+  , onsearch
+  , onselect
+  , onsubmit
+  
+  , MouseEvent()
+  
   , onclick
+  , oncontextmenu
+  , ondblclick
+  , onmousedown
+  , onmouseenter
+  , onmouseleave
+  , onmousemove
+  , onmouseover
+  , onmouseout
+  , onmouseup
+
+  , KeyboardEvent()
+  
+  , onkeydown
+  , onkeypress
+  , onkeyup
+  
+  , FocusEvent()
+
+  , onblur 
+  , onfocus
+  , onfocusin
+  , onfocusout
   
   ) where
 
+import DOM
 
 import Data.Function (runFn3)
 import Data.Foldable (for_)
@@ -119,7 +162,143 @@ value = unsafeStringAttribute "value"
 width :: forall i. Number -> Attribute i
 width = unsafeStringAttribute "width" <<< show
 
-data MouseEvent
+type Event fields = 
+  { bubbles :: Boolean
+  , cancelable :: Boolean
+  , currentTarget :: Node
+  , target :: Node
+  , timeStamp :: Number
+  , "type" :: String
+  | fields
+  }
 
-onclick :: forall i. (MouseEvent -> i) -> Attribute i
+onabort	:: forall i. (Event () -> i) -> Attribute i
+onabort = unsafeHandler "onabort"
+
+onbeforeunload :: forall i. (Event () -> i) -> Attribute i
+onbeforeunload = unsafeHandler "onbeforeunload"
+
+onerror :: forall i. (Event () -> i) -> Attribute i
+onerror = unsafeHandler "onerror"
+
+onhashchange :: forall i. (Event () -> i) -> Attribute i
+onhashchange = unsafeHandler "onhashchange"
+
+onload :: forall i. (Event () -> i) -> Attribute i
+onload = unsafeHandler "onload"
+
+onpageshow :: forall i. (Event () -> i) -> Attribute i
+onpageshow = unsafeHandler "onpageshow"
+
+onpagehide :: forall i. (Event () -> i) -> Attribute i
+onpagehide = unsafeHandler "onpagehide"
+
+onresize :: forall i. (Event () -> i) -> Attribute i
+onresize = unsafeHandler "onresize"
+
+onscroll :: forall i. (Event () -> i) -> Attribute i
+onscroll = unsafeHandler "onscroll"
+
+onunload :: forall i. (Event () -> i) -> Attribute i
+onunload = unsafeHandler "onunload"
+
+onchange :: forall i. (Event () -> i) -> Attribute i
+onchange = unsafeHandler "onchange"
+
+oninput :: forall i. (Event () -> i) -> Attribute i
+oninput = unsafeHandler "oninput"
+
+oninvalid :: forall i. (Event () -> i) -> Attribute i
+oninvalid = unsafeHandler "oninvalid"
+
+onreset :: forall i. (Event () -> i) -> Attribute i
+onreset = unsafeHandler "onreset"
+
+onsearch :: forall i. (Event () -> i) -> Attribute i
+onsearch = unsafeHandler "onsearch"
+
+onselect :: forall i. (Event () -> i) -> Attribute i
+onselect = unsafeHandler "onselect"
+
+onsubmit :: forall i. (Event () -> i) -> Attribute i
+onsubmit = unsafeHandler "onsubmit"
+
+type MouseEvent = 
+  ( button :: Number
+  , detail :: Number
+  , relatedTarget :: Node
+  , clientX :: Number
+  , clientY :: Number
+  , screenX	:: Number
+  , screenY	:: Number
+  , ctrlKey	:: Boolean
+  , shiftKey :: Boolean
+  , altKey :: Boolean
+  , metaKey	:: Boolean
+  , which :: Number
+  )
+
+onclick :: forall i. (Event MouseEvent -> i) -> Attribute i
 onclick = unsafeHandler "onclick"
+
+oncontextmenu :: forall i. (Event MouseEvent -> i) -> Attribute i
+oncontextmenu = unsafeHandler "oncontextmenu"
+
+ondblclick :: forall i. (Event MouseEvent -> i) -> Attribute i
+ondblclick = unsafeHandler "ondblclick"
+
+onmousedown :: forall i. (Event MouseEvent -> i) -> Attribute i
+onmousedown = unsafeHandler "onmousedown"
+
+onmouseenter :: forall i. (Event MouseEvent -> i) -> Attribute i
+onmouseenter = unsafeHandler "onmouseenter"
+
+onmouseleave :: forall i. (Event MouseEvent -> i) -> Attribute i
+onmouseleave = unsafeHandler "onmouseleave"
+
+onmousemove :: forall i. (Event MouseEvent -> i) -> Attribute i
+onmousemove = unsafeHandler "onmousemove"
+
+onmouseover :: forall i. (Event MouseEvent -> i) -> Attribute i
+onmouseover = unsafeHandler "onmouseover"
+
+onmouseout :: forall i. (Event MouseEvent -> i) -> Attribute i
+onmouseout = unsafeHandler "onmouseout"
+
+onmouseup :: forall i. (Event MouseEvent -> i) -> Attribute i
+onmouseup = unsafeHandler "onmouseup"
+
+type KeyboardEvent = 
+  ( charCode :: Number
+  , keyCode :: Number
+  , ctrlKey	:: Boolean
+  , shiftKey :: Boolean
+  , altKey :: Boolean
+  , metaKey	:: Boolean
+  , which :: Number
+  )
+
+onkeydown :: forall i. (Event KeyboardEvent -> i) -> Attribute i
+onkeydown = unsafeHandler "onkeydown"
+
+onkeypress :: forall i. (Event KeyboardEvent -> i) -> Attribute i
+onkeypress = unsafeHandler "onkeypress"
+
+onkeyup :: forall i. (Event KeyboardEvent -> i) -> Attribute i
+onkeyup = unsafeHandler "onkeyup"
+
+type FocusEvent = 
+  ( relatedTarget :: Node
+  )
+
+onblur :: forall i. (Event FocusEvent -> i) -> Attribute i
+onblur = unsafeHandler "onblur"
+
+onfocus :: forall i. (Event FocusEvent -> i) -> Attribute i
+onfocus = unsafeHandler "onfocus"
+
+onfocusin :: forall i. (Event FocusEvent -> i) -> Attribute i
+onfocusin = unsafeHandler "onfocusin"
+
+onfocusout :: forall i. (Event FocusEvent -> i) -> Attribute i
+onfocusout = unsafeHandler "onfocusout"
