@@ -3,16 +3,21 @@ module Halogen where
 import DOM
 
 import Data.Maybe
+import Data.Either
 
 import Control.Monad.Eff
 import Control.Monad.Eff.Ref
+import Control.Monad.Eff.Exception
+import Control.Monad.Eff.Unsafe
+    
+import Control.Monad.Aff
     
 import Halogen.HTML (HTML(), renderHtml)
 import Halogen.Signal 
 import Halogen.VirtualDOM   
  
 -- | Wraps the effects required by the `runUI` and `runUIEff` functions.
-type Heff eff = Eff (ref :: Ref, dom :: DOM | eff)
+type HalogenEffects eff = (ref :: Ref, dom :: DOM | eff)
  
 -- | A signal which emits patches corresponding to successive `VTree`s.
 -- |
@@ -40,7 +45,7 @@ changes = differencesWith diff
 -- |   view n = button [ onclick (const unit) ] [ text (show n) ]
 -- | ```
 -- |
-runUI :: forall i eff. SF1 i (HTML i) -> Heff eff Node
+runUI :: forall i eff. SF1 i (HTML i) -> Eff (HalogenEffects eff) Node
 runUI signal = runUIEff signal (\i k -> k i)
 
 -- | `runUIEff` is a more general version of `runUI` which can be used to construct other
@@ -55,13 +60,13 @@ runUI signal = runUIEff signal (\i k -> k i)
 -- |
 -- | In this way, all effects are pushed to the handler function at the boundary of the application.
 -- |
-runUIEff :: forall i r eff. SF1 i (HTML r) -> (r -> (i -> Heff eff Unit) -> Heff eff Unit) -> Heff eff Node
+runUIEff :: forall i r eff. SF1 i (HTML r) -> (r -> (i -> Eff (HalogenEffects eff) Unit) -> Eff (HalogenEffects eff) Unit) -> Eff (HalogenEffects eff) Node
 runUIEff signal handler = do
   ref <- newRef Nothing
   runUI' ref
   
   where
-  runUI' :: forall i. RefVal _ -> Heff eff Node
+  runUI' :: forall i. RefVal _ -> Eff (HalogenEffects eff) Node
   runUI' ref = do
     let render = renderHtml requestHandler
         vtrees = render <$> signal
@@ -71,13 +76,18 @@ runUIEff signal handler = do
     return node    
     
     where
-    requestHandler :: r -> Heff eff Unit
+    requestHandler :: r -> Eff (HalogenEffects eff) Unit
     requestHandler r = handler r inputHandler
     
-    inputHandler :: i -> Heff eff Unit
+    inputHandler :: i -> Eff (HalogenEffects eff) Unit
     inputHandler i = do
       Just { signal: signal, node: node } <- readRef ref
       let next = runSF signal i
       node' <- patch (head next) node
       writeRef ref $ Just { signal: tail next, node: node' }
+
+-- | A convenience function which uses the `Aff` monad to represent the handler function.
+runUIAff :: forall i r eff. SF1 (Either Error i) (HTML r) -> (r -> Aff (HalogenEffects eff) i) -> EffA (HalogenEffects eff) Node
+runUIAff signal handler = unsafeInterleaveEff $ runUIEff signal \r k -> unsafeInterleaveEff $ runAff (k <<< Left) (k <<< Right) $ handler r
+
       

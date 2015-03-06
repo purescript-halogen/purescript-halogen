@@ -2,10 +2,10 @@
 
 ## Module Halogen
 
-#### `Heff`
+#### `HalogenEffects`
 
 ``` purescript
-type Heff eff = Eff (dom :: DOM, ref :: Ref | eff)
+type HalogenEffects eff = (dom :: DOM, ref :: Ref | eff)
 ```
 
 Wraps the effects required by the `runUI` and `runUIEff` functions.
@@ -23,7 +23,7 @@ This function can be used to create alternative top-level handlers which use `vi
 #### `runUI`
 
 ``` purescript
-runUI :: forall i eff. SF1 i (HTML i) -> Heff eff Node
+runUI :: forall i eff. SF1 i (HTML i) -> Eff (HalogenEffects eff) Node
 ```
 
 `runUI` takes a UI represented as a signal function, and renders it to the DOM
@@ -50,7 +50,7 @@ ui = view <$> stateful 0 (\n _ -> n + 1)
 #### `runUIEff`
 
 ``` purescript
-runUIEff :: forall i r eff. SF1 i (HTML r) -> (r -> (i -> Heff eff Unit) -> Heff eff Unit) -> Heff eff Node
+runUIEff :: forall i r eff. SF1 i (HTML r) -> (r -> (i -> Eff (HalogenEffects eff) Unit) -> Eff (HalogenEffects eff) Unit) -> Eff (HalogenEffects eff) Node
 ```
 
 `runUIEff` is a more general version of `runUI` which can be used to construct other
@@ -65,6 +65,14 @@ application.
 
 In this way, all effects are pushed to the handler function at the boundary of the application.
 
+
+#### `runUIAff`
+
+``` purescript
+runUIAff :: forall i r eff. SF1 (Either Error i) (HTML r) -> (r -> Aff (HalogenEffects eff) i) -> EffA (HalogenEffects eff) Node
+```
+
+A convenience function which uses the `Aff` monad to represent the handler function.
 
 
 ## Module Halogen.HTML
