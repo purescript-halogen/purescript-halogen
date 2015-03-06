@@ -22,6 +22,6 @@
     "purescript-dom": "~0.1.1",
     "purescript-foldable-traversable": "~0.3.0",
     "purescript-profunctor": "~0.1.0",
-    "purescript-aff": "~0.5.2"
+    "purescript-aff": "~0.5.3"
   }
 }
