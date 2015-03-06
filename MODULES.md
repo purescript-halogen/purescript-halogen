@@ -2235,6 +2235,74 @@ onfocusout :: forall i. (Event FocusEvent -> i) -> Attribute i
 
 
 
+## Module Halogen.Mixin.UndoRedo
+
+#### `UndoRedoInput`
+
+``` purescript
+data UndoRedoInput i
+  = Undo 
+  | Redo 
+  | Input i
+```
+
+Adds two new input types:
+
+- `Undo` - move to the previous state
+- `Redo` - move to the next state
+
+#### `UndoRedoState`
+
+``` purescript
+data UndoRedoState s
+```
+
+Modifies the state type to include its _past_ and _future_.
+
+#### `canUndo`
+
+``` purescript
+canUndo :: forall s. UndoRedoState s -> Boolean
+```
+
+`true` if the state supports the undo operation. 
+
+#### `canRedo`
+
+``` purescript
+canRedo :: forall s. UndoRedoState s -> Boolean
+```
+
+`true` if the state supports the redo operation.
+
+#### `getState`
+
+``` purescript
+getState :: forall s. UndoRedoState s -> s
+```
+
+Get the state at the current time
+
+#### `undoRedoState`
+
+``` purescript
+undoRedoState :: forall s. s -> UndoRedoState s
+```
+
+Create a state with no past and no future
+
+#### `withUndo`
+
+``` purescript
+withUndo :: forall s i. (s -> i -> s) -> UndoRedoState s -> UndoRedoInput i -> UndoRedoState s
+```
+
+Lift a step function to support the undo and redo operations.
+
+The view should use the `canUndo` and `canRedo` functions to determine whether or not
+to enable the corresponding controls.
+
+
 ## Module Halogen.Signal
 
 #### `SF`

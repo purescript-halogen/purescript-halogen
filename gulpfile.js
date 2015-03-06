@@ -21,6 +21,7 @@ var paths = {
               'src/Halogen.purs',
               'src/Halogen/HTML.purs',
               'src/Halogen/HTML/Attributes.purs',
+              'src/Halogen/Mixin/UndoRedo.purs',
               'src/Halogen/Signal.purs'
             ]
         }
