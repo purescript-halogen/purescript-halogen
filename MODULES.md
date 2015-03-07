@@ -1825,6 +1825,20 @@ instance functorAttribute :: Functor Attribute
 ```
 
 
+#### `semigroupAttribute`
+
+``` purescript
+instance semigroupAttribute :: Semigroup (Attribute i)
+```
+
+
+#### `monoidAttribute`
+
+``` purescript
+instance monoidAttribute :: Monoid (Attribute i)
+```
+
+
 #### `unsafeStringAttribute`
 
 ``` purescript
@@ -1837,6 +1851,14 @@ This function can be used to define custom string attributes.
 
 ``` purescript
 unsafeHandler :: forall event eff i. String -> (event -> i) -> Attribute i
+```
+
+This function can be used to attach custom event handlers.
+
+#### `unsafeHandler'`
+
+``` purescript
+unsafeHandler' :: forall event i. String -> (event -> Maybe i) -> Attribute i
 ```
 
 This function can be used to attach custom event handlers.
@@ -2233,6 +2255,19 @@ onfocusin :: forall i. (Event FocusEvent -> i) -> Attribute i
 onfocusout :: forall i. (Event FocusEvent -> i) -> Attribute i
 ```
 
+
+
+## Module Halogen.HTML.Forms
+
+#### `onValueStringChanged`
+
+``` purescript
+onValueStringChanged :: forall value i. (IsForeign value) => (value -> i) -> Attribute i
+```
+
+Attach an event handler which will produce an input when the value of an input field changes
+
+An input will not be produced if the value cannot be cast to the appropriate type.
 
 
 ## Module Halogen.Mixin.UndoRedo
