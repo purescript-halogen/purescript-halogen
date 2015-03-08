@@ -1,15 +1,5 @@
 module Halogen.HTML.Attributes 
-  ( Attribute()
-  
-  , attributesToProps
-  
-  , unsafeAttribute
-  , unsafeHandler
-  , unsafeHandler'
-  
-  -- Attributes
-  
-  , alt
+  ( alt
   , charset
   , class_
   , classes
@@ -84,49 +74,14 @@ module Halogen.HTML.Attributes
 
 import DOM
 
-import Data.Maybe
-import Data.Monoid
 import Data.String (joinWith)
-import Data.Function (runFn3)
-import Data.Foldable (for_)
 
 import Control.Monad.Eff
 import Control.Monad.ST
 
+import Halogen.HTML (Attribute())
+import Halogen.HTML.Attributes.Unsafe
 import Halogen.Internal.VirtualDOM
-
--- | A HTML attribute which can be used in a document of type `HTML i`.
-data Attribute i = Attribute (forall h eff eff1. (i -> Eff eff Unit) -> STProps h -> Eff (st :: ST h | eff1) Unit)
-
-instance functorAttribute :: Functor Attribute where
-  (<$>) f (Attribute h) = Attribute \k -> h (f >>> k)
-  
-instance semigroupAttribute :: Semigroup (Attribute i) where
-  (<>) (Attribute f) (Attribute g) = Attribute \k props -> do
-    f k props
-    g k props
-
-instance monoidAttribute :: Monoid (Attribute i) where
-  mempty = Attribute \_ _ -> return unit
-
--- | This function can be used to define custom string attributes.
-unsafeAttribute :: forall i value. String -> value -> Attribute i
-unsafeAttribute key value = Attribute \_ props -> runFn3 prop key value props
-
--- | This function can be used to attach custom event handlers.
-unsafeHandler :: forall event eff i. String -> (event -> i) -> Attribute i
-unsafeHandler key f = unsafeHandler' key (Just <<< f)
-
--- | This function can be used to attach custom event handlers.
-unsafeHandler' :: forall event i. String -> (event -> Maybe i) -> Attribute i
-unsafeHandler' key f = Attribute \k props -> runFn3 handlerProp key (\e -> maybe (return unit) k (f e)) props
-
--- | Convert a collection of attributes to `Props` by providing an event handler
-attributesToProps :: forall i eff. (i -> Eff eff Unit) -> Attribute i -> Props
-attributesToProps k (Attribute f) = runProps do 
-  props <- newProps
-  f k props
-  return props
 
 alt :: forall i. String -> Attribute i
 alt = unsafeAttribute "alt"

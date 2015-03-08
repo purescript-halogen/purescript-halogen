@@ -10,7 +10,8 @@ import Data.Either
 import Data.Foreign
 import Data.Foreign.Class
 
-import Halogen.HTML.Attributes
+import Halogen.HTML (Attribute())
+import Halogen.HTML.Attributes.Unsafe (unsafeHandler')
   
 -- | Attach an event handler which will produce an input when the value of an input field changes
 -- |
