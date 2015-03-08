@@ -46,7 +46,7 @@ changes = differencesWith diff
 -- | ```
 -- |
 runUI :: forall i eff. SF1 i (HTML i) -> Eff (HalogenEffects eff) Node
-runUI signal = runUIEff signal (\i k -> k i)
+runUI signal = runUIEff ((Left <$>) <$> signal) (\_ _ -> return unit)
 
 -- | `runUIEff` is a more general version of `runUI` which can be used to construct other
 -- | top-level handlers for applications.
@@ -60,7 +60,7 @@ runUI signal = runUIEff signal (\i k -> k i)
 -- |
 -- | In this way, all effects are pushed to the handler function at the boundary of the application.
 -- |
-runUIEff :: forall i r eff. SF1 i (HTML r) -> (r -> (i -> Eff (HalogenEffects eff) Unit) -> Eff (HalogenEffects eff) Unit) -> Eff (HalogenEffects eff) Node
+runUIEff :: forall i r eff. SF1 i (HTML (Either i r)) -> (r -> (i -> Eff (HalogenEffects eff) Unit) -> Eff (HalogenEffects eff) Unit) -> Eff (HalogenEffects eff) Node
 runUIEff signal handler = do
   ref <- newRef Nothing
   runUI' ref
@@ -76,8 +76,9 @@ runUIEff signal handler = do
     return node    
     
     where
-    requestHandler :: r -> Eff (HalogenEffects eff) Unit
-    requestHandler r = handler r inputHandler
+    requestHandler :: Either i r -> Eff (HalogenEffects eff) Unit
+    requestHandler (Left i) = inputHandler i
+    requestHandler (Right r) = handler r inputHandler
     
     inputHandler :: i -> Eff (HalogenEffects eff) Unit
     inputHandler i = do
@@ -91,7 +92,7 @@ class SupportsErrors input where
   liftError :: Error -> input
 
 -- | A convenience function which uses the `Aff` monad to represent the handler function.
-runUIAff :: forall i r eff. (SupportsErrors i) => SF1 i (HTML r) -> (r -> Aff (HalogenEffects eff) i) -> EffA (HalogenEffects eff) Node
+runUIAff :: forall i r eff. (SupportsErrors i) => SF1 i (HTML (Either i r)) -> (r -> Aff (HalogenEffects eff) i) -> EffA (HalogenEffects eff) Node
 runUIAff signal handler = unsafeInterleaveEff $ runUIEff signal \r k -> unsafeInterleaveEff $ runAff (k <<< liftError) k $ handler r
 
       

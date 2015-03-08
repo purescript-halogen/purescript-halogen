@@ -18,6 +18,9 @@ import DOM
 import Halogen
 import Halogen.Signal
 
+
+import qualified Halogen.Mixin.UndoRedo as U
+
 import qualified Halogen.HTML as H
 import qualified Halogen.HTML.Attributes as A
 
@@ -33,13 +36,23 @@ data State = State (Maybe Error) Number
 
 -- | Inputs to the state machine:
 -- | 
+-- | - `OnError e` - respond to the error `e`
 -- | - `SetCounter n` - a request to update the counter to value `n`
 data Input 
   = OnError Error    
   | SetCounter Number
+  | Undo
+  | Redo
   
 instance inputSupportsErrors :: SupportsErrors Input where
   liftError = OnError
+  
+instance inputSupportsUndoRedo :: U.SupportsUndoRedo Input where
+  fromUndoRedo U.Undo = Undo
+  fromUndoRedo U.Redo = Redo
+  toUndoRedo Undo = Just U.Undo
+  toUndoRedo Redo = Just U.Redo
+  toUndoRedo _ = Nothing
 
 -- | External requests: 
 -- | 
@@ -48,19 +61,23 @@ data Request = AddService Number Number
 
 -- | The UI is a state machine, consuming errors and inputs, and generating HTML documents which generate
 -- | external service requests of type `Request`.
-ui :: forall eff. SF1 Input (H.HTML Request)
-ui = view <$> stateful (State Nothing 0) update
+ui :: forall eff. SF1 Input (H.HTML (Either Input Request))
+ui = view <$> stateful (U.undoRedoState (State Nothing 0)) (U.withUndoRedo update)
   where
-  view :: State -> H.HTML Request
-  view (State err n) = 
-           H.div_ [ H.h1 [ A.id_ "header" ] [ H.code_ [H.text "purescript-halogen"], H.text " demo" ]
-                  , H.p_ [ H.text "Click the buttons to modify the state of the view." ]
-                  , H.p_ [ H.text (maybe "" message err) ]
-                  , H.p_ [ H.text ("Current state: " <> show n) ]
-                  , H.p_ [ H.button [ A.onclick (const (AddService n 1)) ] [ H.text "Increment" ]
-                         , H.button [ A.onclick (const (AddService n (-1))) ] [ H.text "Decrement" ]
-                         ]
-                  ]
+  view :: U.UndoRedoState State -> H.HTML (Either Input Request)
+  view st = 
+    case U.getState st of
+      State err n -> 
+        H.div_ [ H.h1 [ A.id_ "header" ] [ H.code_ [H.text "purescript-halogen"], H.text " demo" ]
+               , H.p_ [ H.text "Click the buttons to modify the state of the view." ]
+               , H.p_ [ H.text (maybe "" message err) ]
+               , H.p_ [ H.text ("Current state: " <> show n) ]
+               , H.p_ [ H.button [ A.onclick (const (Right (AddService n 1))) ] [ H.text "Increment" ]
+                      , H.button [ A.onclick (const (Right (AddService n (-1)))) ] [ H.text "Decrement" ]
+                      , H.button [ A.onclick (const (Left Undo)) ] [ H.text "Undo" ]
+                      , H.button [ A.onclick (const (Left Redo)) ] [ H.text "Redo" ]
+                      ]
+               ]
 
   update :: State -> Input -> State
   update (State _ n) (OnError err) = State (Just err) n

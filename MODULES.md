@@ -50,7 +50,7 @@ ui = view <$> stateful 0 (\n _ -> n + 1)
 #### `runUIEff`
 
 ``` purescript
-runUIEff :: forall i r eff. SF1 i (HTML r) -> (r -> (i -> Eff (HalogenEffects eff) Unit) -> Eff (HalogenEffects eff) Unit) -> Eff (HalogenEffects eff) Node
+runUIEff :: forall i r eff. SF1 i (HTML (Either i r)) -> (r -> (i -> Eff (HalogenEffects eff) Unit) -> Eff (HalogenEffects eff) Unit) -> Eff (HalogenEffects eff) Node
 ```
 
 `runUIEff` is a more general version of `runUI` which can be used to construct other
@@ -78,7 +78,7 @@ This type class identifies those input types which support errors
 #### `runUIAff`
 
 ``` purescript
-runUIAff :: forall i r eff. (SupportsErrors i) => SF1 i (HTML r) -> (r -> Aff (HalogenEffects eff) i) -> EffA (HalogenEffects eff) Node
+runUIAff :: forall i r eff. (SupportsErrors i) => SF1 i (HTML (Either i r)) -> (r -> Aff (HalogenEffects eff) i) -> EffA (HalogenEffects eff) Node
 ```
 
 A convenience function which uses the `Aff` monad to represent the handler function.
@@ -2284,16 +2284,41 @@ An input will not be produced if the value cannot be cast to the appropriate typ
 #### `UndoRedoInput`
 
 ``` purescript
-data UndoRedoInput i
+data UndoRedoInput
   = Undo 
   | Redo 
-  | Input i
 ```
 
 Adds two new input types:
 
 - `Undo` - move to the previous state
 - `Redo` - move to the next state
+
+#### `SupportsUndoRedo`
+
+``` purescript
+class SupportsUndoRedo input where
+  fromUndoRedo :: UndoRedoInput -> input
+  toUndoRedo :: input -> Maybe UndoRedoInput
+```
+
+This type class identifies those input types which support the Undo and Redo actions
+
+#### `undo`
+
+``` purescript
+undo :: forall i. (SupportsUndoRedo i) => i
+```
+
+The undo action
+
+#### `redo`
+
+``` purescript
+redo :: forall i. (SupportsUndoRedo i) => i
+```
+
+The redo action
 
 #### `UndoRedoState`
 
@@ -2335,10 +2360,10 @@ undoRedoState :: forall s. s -> UndoRedoState s
 
 Create a state with no past and no future
 
-#### `withUndo`
+#### `withUndoRedo`
 
 ``` purescript
-withUndo :: forall s i. (s -> i -> s) -> UndoRedoState s -> UndoRedoInput i -> UndoRedoState s
+withUndoRedo :: forall s i. (SupportsUndoRedo i) => (s -> i -> s) -> UndoRedoState s -> i -> UndoRedoState s
 ```
 
 Lift a step function to support the undo and redo operations.
