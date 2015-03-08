@@ -201,55 +201,55 @@ type Event fields =
   }
 
 onabort	:: forall i. (Event () -> i) -> Attribute i
-onabort = unsafeHandler "onabort"
+onabort = unsafeHandler "abort"
 
 onbeforeunload :: forall i. (Event () -> i) -> Attribute i
-onbeforeunload = unsafeHandler "onbeforeunload"
+onbeforeunload = unsafeHandler "beforeunload"
 
 onerror :: forall i. (Event () -> i) -> Attribute i
-onerror = unsafeHandler "onerror"
+onerror = unsafeHandler "error"
 
 onhashchange :: forall i. (Event () -> i) -> Attribute i
-onhashchange = unsafeHandler "onhashchange"
+onhashchange = unsafeHandler "hashchange"
 
 onload :: forall i. (Event () -> i) -> Attribute i
-onload = unsafeHandler "onload"
+onload = unsafeHandler "load"
 
 onpageshow :: forall i. (Event () -> i) -> Attribute i
-onpageshow = unsafeHandler "onpageshow"
+onpageshow = unsafeHandler "pageshow"
 
 onpagehide :: forall i. (Event () -> i) -> Attribute i
-onpagehide = unsafeHandler "onpagehide"
+onpagehide = unsafeHandler "pagehide"
 
 onresize :: forall i. (Event () -> i) -> Attribute i
-onresize = unsafeHandler "onresize"
+onresize = unsafeHandler "resize"
 
 onscroll :: forall i. (Event () -> i) -> Attribute i
-onscroll = unsafeHandler "onscroll"
+onscroll = unsafeHandler "scroll"
 
 onunload :: forall i. (Event () -> i) -> Attribute i
-onunload = unsafeHandler "onunload"
+onunload = unsafeHandler "unload"
 
 onchange :: forall i. (Event () -> i) -> Attribute i
-onchange = unsafeHandler "onchange"
+onchange = unsafeHandler "change"
 
 oninput :: forall i. (Event () -> i) -> Attribute i
-oninput = unsafeHandler "oninput"
+oninput = unsafeHandler "input"
 
 oninvalid :: forall i. (Event () -> i) -> Attribute i
-oninvalid = unsafeHandler "oninvalid"
+oninvalid = unsafeHandler "invalid"
 
 onreset :: forall i. (Event () -> i) -> Attribute i
-onreset = unsafeHandler "onreset"
+onreset = unsafeHandler "reset"
 
 onsearch :: forall i. (Event () -> i) -> Attribute i
-onsearch = unsafeHandler "onsearch"
+onsearch = unsafeHandler "search"
 
 onselect :: forall i. (Event () -> i) -> Attribute i
-onselect = unsafeHandler "onselect"
+onselect = unsafeHandler "select"
 
 onsubmit :: forall i. (Event () -> i) -> Attribute i
-onsubmit = unsafeHandler "onsubmit"
+onsubmit = unsafeHandler "submit"
 
 type MouseEvent = 
   ( button :: Number
@@ -267,34 +267,34 @@ type MouseEvent =
   )
 
 onclick :: forall i. (Event MouseEvent -> i) -> Attribute i
-onclick = unsafeHandler "onclick"
+onclick = unsafeHandler "click"
 
 oncontextmenu :: forall i. (Event MouseEvent -> i) -> Attribute i
-oncontextmenu = unsafeHandler "oncontextmenu"
+oncontextmenu = unsafeHandler "contextmenu"
 
 ondblclick :: forall i. (Event MouseEvent -> i) -> Attribute i
-ondblclick = unsafeHandler "ondblclick"
+ondblclick = unsafeHandler "dblclick"
 
 onmousedown :: forall i. (Event MouseEvent -> i) -> Attribute i
-onmousedown = unsafeHandler "onmousedown"
+onmousedown = unsafeHandler "mousedown"
 
 onmouseenter :: forall i. (Event MouseEvent -> i) -> Attribute i
-onmouseenter = unsafeHandler "onmouseenter"
+onmouseenter = unsafeHandler "mouseenter"
 
 onmouseleave :: forall i. (Event MouseEvent -> i) -> Attribute i
-onmouseleave = unsafeHandler "onmouseleave"
+onmouseleave = unsafeHandler "mouseleave"
 
 onmousemove :: forall i. (Event MouseEvent -> i) -> Attribute i
-onmousemove = unsafeHandler "onmousemove"
+onmousemove = unsafeHandler "mousemove"
 
 onmouseover :: forall i. (Event MouseEvent -> i) -> Attribute i
-onmouseover = unsafeHandler "onmouseover"
+onmouseover = unsafeHandler "mouseover"
 
 onmouseout :: forall i. (Event MouseEvent -> i) -> Attribute i
-onmouseout = unsafeHandler "onmouseout"
+onmouseout = unsafeHandler "mouseout"
 
 onmouseup :: forall i. (Event MouseEvent -> i) -> Attribute i
-onmouseup = unsafeHandler "onmouseup"
+onmouseup = unsafeHandler "mouseup"
 
 type KeyboardEvent = 
   ( charCode :: Number
@@ -307,26 +307,26 @@ type KeyboardEvent =
   )
 
 onkeydown :: forall i. (Event KeyboardEvent -> i) -> Attribute i
-onkeydown = unsafeHandler "onkeydown"
+onkeydown = unsafeHandler "keydown"
 
 onkeypress :: forall i. (Event KeyboardEvent -> i) -> Attribute i
-onkeypress = unsafeHandler "onkeypress"
+onkeypress = unsafeHandler "keypress"
 
 onkeyup :: forall i. (Event KeyboardEvent -> i) -> Attribute i
-onkeyup = unsafeHandler "onkeyup"
+onkeyup = unsafeHandler "keyup"
 
 type FocusEvent = 
   ( relatedTarget :: Node
   )
 
 onblur :: forall i. (Event FocusEvent -> i) -> Attribute i
-onblur = unsafeHandler "onblur"
+onblur = unsafeHandler "blur"
 
 onfocus :: forall i. (Event FocusEvent -> i) -> Attribute i
-onfocus = unsafeHandler "onfocus"
+onfocus = unsafeHandler "focus"
 
 onfocusin :: forall i. (Event FocusEvent -> i) -> Attribute i
-onfocusin = unsafeHandler "onfocusin"
+onfocusin = unsafeHandler "focusin"
 
 onfocusout :: forall i. (Event FocusEvent -> i) -> Attribute i
-onfocusout = unsafeHandler "onfocusout"
+onfocusout = unsafeHandler "focusout"

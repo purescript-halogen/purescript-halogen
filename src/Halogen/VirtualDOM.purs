@@ -28,9 +28,17 @@ foreign import prop
 foreign import handlerProp
   "function handlerProp(key, f, props) {\
   \  return function() {\
-  \    props[key] = function(e) {\
+  \    var Hook = function () {};\
+  \    Hook.prototype.callback = function(e) {\
   \      f(e)();\
   \    };\
+  \    Hook.prototype.hook = function(node) {\
+  \      node.addEventListener(key, this.callback);\
+  \    };\
+  \    Hook.prototype.unhook = function(node) {\
+  \      node.removeEventListener(key, this.callback);\
+  \    };\
+  \    props['data-halogen-hook-' + key] = new Hook(f);\
   \  };\
   \}" :: forall h eff eff1 event. Fn3 String (event -> Eff eff1 Unit) (STProps h) (Eff (st :: ST h | eff) Unit)
 
