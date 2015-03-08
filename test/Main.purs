@@ -24,6 +24,8 @@ import qualified Halogen.Mixin.UndoRedo as U
 import qualified Halogen.HTML as H
 import qualified Halogen.HTML.Attributes as A
 
+import qualified Halogen.Themes.Bootstrap3 as B
+
 foreign import appendToBody
   "function appendToBody(node) {\
   \  return function() {\
@@ -68,16 +70,18 @@ ui = view <$> stateful (U.undoRedoState (State Nothing 0)) (U.withUndoRedo updat
   view st = 
     case U.getState st of
       State err n -> 
-        H.div_ [ H.h1 [ A.id_ "header" ] [ H.code_ [H.text "purescript-halogen"], H.text " demo" ]
-               , H.p_ [ H.text "Click the buttons to modify the state of the view." ]
-               , H.p_ [ H.text (maybe "" message err) ]
-               , H.p_ [ H.text ("Current state: " <> show n) ]
-               , H.p_ [ H.button [ A.onclick (const (Right (AddService n 1))) ] [ H.text "Increment" ]
-                      , H.button [ A.onclick (const (Right (AddService n (-1)))) ] [ H.text "Decrement" ]
-                      , H.button [ A.enabled (U.canUndo st), A.onclick (const (Left Undo)) ] [ H.text "Undo" ]
-                      , H.button [ A.enabled (U.canRedo st), A.onclick (const (Left Redo)) ] [ H.text "Redo" ]
-                      ]
-               ]
+        H.div [ A.class_ B.container ] 
+              [ H.h1 [ A.id_ "header" ] [ H.code_ [H.text "purescript-halogen"], H.text " demo" ]
+              , H.p_ [ H.text "Click the buttons to modify the state of the view." ]
+              , H.p_ [ H.text (maybe "" message err) ]
+              , H.p_ [ H.text ("Current state: " <> show n) ]
+              , H.p [ A.class_ B.btnGroup ]
+                    [ H.button [ A.classes [ B.btn, B.btnPrimary ], A.onclick (const (Right (AddService n 1))) ] [ H.text "Increment" ]
+                    , H.button [ A.classes [ B.btn, B.btnPrimary ], A.onclick (const (Right (AddService n (-1)))) ] [ H.text "Decrement" ]
+                    , H.button [ A.class_ B.btn, A.enabled (U.canUndo st), A.onclick (const (Left Undo)) ] [ H.text "Undo" ]
+                    , H.button [ A.class_ B.btn, A.enabled (U.canRedo st), A.onclick (const (Left Redo)) ] [ H.text "Redo" ]
+                    ]
+              ]
 
   update :: State -> Input -> State
   update (State _ n) (OnError err) = State (Just err) n

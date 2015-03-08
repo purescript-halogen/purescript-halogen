@@ -12,6 +12,7 @@ module Halogen.HTML.Attributes
   , alt
   , charset
   , class_
+  , classes
   , content
   , for
   , height
@@ -83,6 +84,7 @@ import DOM
 
 import Data.Maybe
 import Data.Monoid
+import Data.String (joinWith)
 import Data.Function (runFn3)
 import Data.Foldable (for_)
 
@@ -135,7 +137,10 @@ charset :: forall i. String -> Attribute i
 charset = unsafeAttribute "charset"
 
 class_ :: forall i. String -> Attribute i
-class_ = unsafeAttribute "class"
+class_ = unsafeAttribute "className"
+
+classes :: forall i. [String] -> Attribute i
+classes ss = class_ (joinWith " " ss)
 
 content :: forall i. String -> Attribute i
 content = unsafeAttribute "content"

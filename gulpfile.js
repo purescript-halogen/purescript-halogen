@@ -23,7 +23,8 @@ var paths = {
               'src/Halogen/HTML/Attributes.purs',
               'src/Halogen/HTML/Forms.purs',
               'src/Halogen/Mixin/UndoRedo.purs',
-              'src/Halogen/Signal.purs'
+              'src/Halogen/Signal.purs',
+              'src/Halogen/Themes/Bootstrap3.purs'
             ]
         }
     },

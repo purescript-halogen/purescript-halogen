@@ -1901,6 +1901,13 @@ class_ :: forall i. String -> Attribute i
 ```
 
 
+#### `classes`
+
+``` purescript
+classes :: forall i. [String] -> Attribute i
+```
+
+
 #### `content`
 
 ``` purescript
@@ -2580,6 +2587,663 @@ instance semigroupoidSF1 :: Semigroupoid SF1
 
 ``` purescript
 instance categorySF :: Category SF
+```
+
+
+
+## Module Halogen.Themes.Bootstrap3
+
+#### `container`
+
+``` purescript
+container :: String
+```
+
+#### `containerFluid`
+
+``` purescript
+containerFluid :: String
+```
+
+
+#### `row`
+
+``` purescript
+row :: String
+```
+
+
+#### `colExtraSmall1`
+
+``` purescript
+colExtraSmall1 :: String
+```
+
+#### `colExtraSmall2`
+
+``` purescript
+colExtraSmall2 :: String
+```
+
+
+#### `colExtraSmall3`
+
+``` purescript
+colExtraSmall3 :: String
+```
+
+
+#### `colExtraSmall4`
+
+``` purescript
+colExtraSmall4 :: String
+```
+
+
+#### `colExtraSmall5`
+
+``` purescript
+colExtraSmall5 :: String
+```
+
+
+#### `colExtraSmall6`
+
+``` purescript
+colExtraSmall6 :: String
+```
+
+
+#### `colExtraSmall7`
+
+``` purescript
+colExtraSmall7 :: String
+```
+
+
+#### `colExtraSmall8`
+
+``` purescript
+colExtraSmall8 :: String
+```
+
+
+#### `colExtraSmall9`
+
+``` purescript
+colExtraSmall9 :: String
+```
+
+
+#### `colExtraSmall10`
+
+``` purescript
+colExtraSmall10 :: String
+```
+
+
+#### `colExtraSmall11`
+
+``` purescript
+colExtraSmall11 :: String
+```
+
+
+#### `colExtraSmall12`
+
+``` purescript
+colExtraSmall12 :: String
+```
+
+
+#### `colSmall1`
+
+``` purescript
+colSmall1 :: String
+```
+
+#### `colSmall2`
+
+``` purescript
+colSmall2 :: String
+```
+
+
+#### `colSmall3`
+
+``` purescript
+colSmall3 :: String
+```
+
+
+#### `colSmall4`
+
+``` purescript
+colSmall4 :: String
+```
+
+
+#### `colSmall5`
+
+``` purescript
+colSmall5 :: String
+```
+
+
+#### `colSmall6`
+
+``` purescript
+colSmall6 :: String
+```
+
+
+#### `colSmall7`
+
+``` purescript
+colSmall7 :: String
+```
+
+
+#### `colSmall8`
+
+``` purescript
+colSmall8 :: String
+```
+
+
+#### `colSmall9`
+
+``` purescript
+colSmall9 :: String
+```
+
+
+#### `colSmall10`
+
+``` purescript
+colSmall10 :: String
+```
+
+
+#### `colSmall11`
+
+``` purescript
+colSmall11 :: String
+```
+
+
+#### `colSmall12`
+
+``` purescript
+colSmall12 :: String
+```
+
+
+#### `colMedium1`
+
+``` purescript
+colMedium1 :: String
+```
+
+#### `colMedium2`
+
+``` purescript
+colMedium2 :: String
+```
+
+
+#### `colMedium3`
+
+``` purescript
+colMedium3 :: String
+```
+
+
+#### `colMedium4`
+
+``` purescript
+colMedium4 :: String
+```
+
+
+#### `colMedium5`
+
+``` purescript
+colMedium5 :: String
+```
+
+
+#### `colMedium6`
+
+``` purescript
+colMedium6 :: String
+```
+
+
+#### `colMedium7`
+
+``` purescript
+colMedium7 :: String
+```
+
+
+#### `colMedium8`
+
+``` purescript
+colMedium8 :: String
+```
+
+
+#### `colMedium9`
+
+``` purescript
+colMedium9 :: String
+```
+
+
+#### `colMedium10`
+
+``` purescript
+colMedium10 :: String
+```
+
+
+#### `colMedium11`
+
+``` purescript
+colMedium11 :: String
+```
+
+
+#### `colMedium12`
+
+``` purescript
+colMedium12 :: String
+```
+
+
+#### `colLarge1`
+
+``` purescript
+colLarge1 :: String
+```
+
+#### `colLarge2`
+
+``` purescript
+colLarge2 :: String
+```
+
+
+#### `colLarge3`
+
+``` purescript
+colLarge3 :: String
+```
+
+
+#### `colLarge4`
+
+``` purescript
+colLarge4 :: String
+```
+
+
+#### `colLarge5`
+
+``` purescript
+colLarge5 :: String
+```
+
+
+#### `colLarge6`
+
+``` purescript
+colLarge6 :: String
+```
+
+
+#### `colLarge7`
+
+``` purescript
+colLarge7 :: String
+```
+
+
+#### `colLarge8`
+
+``` purescript
+colLarge8 :: String
+```
+
+
+#### `colLarge9`
+
+``` purescript
+colLarge9 :: String
+```
+
+
+#### `colLarge10`
+
+``` purescript
+colLarge10 :: String
+```
+
+
+#### `colLarge11`
+
+``` purescript
+colLarge11 :: String
+```
+
+
+#### `colLarge12`
+
+``` purescript
+colLarge12 :: String
+```
+
+
+#### `colOffset1`
+
+``` purescript
+colOffset1 :: String
+```
+
+#### `colOffset2`
+
+``` purescript
+colOffset2 :: String
+```
+
+
+#### `colOffset3`
+
+``` purescript
+colOffset3 :: String
+```
+
+
+#### `colOffset4`
+
+``` purescript
+colOffset4 :: String
+```
+
+
+#### `colOffset5`
+
+``` purescript
+colOffset5 :: String
+```
+
+
+#### `colOffset6`
+
+``` purescript
+colOffset6 :: String
+```
+
+
+#### `colOffset7`
+
+``` purescript
+colOffset7 :: String
+```
+
+
+#### `colOffset8`
+
+``` purescript
+colOffset8 :: String
+```
+
+
+#### `colOffset9`
+
+``` purescript
+colOffset9 :: String
+```
+
+
+#### `colOffset10`
+
+``` purescript
+colOffset10 :: String
+```
+
+
+#### `colOffset11`
+
+``` purescript
+colOffset11 :: String
+```
+
+
+#### `colOffset12`
+
+``` purescript
+colOffset12 :: String
+```
+
+
+#### `table`
+
+``` purescript
+table :: String
+```
+
+#### `tableStriped`
+
+``` purescript
+tableStriped :: String
+```
+
+
+#### `tableBordered`
+
+``` purescript
+tableBordered :: String
+```
+
+
+#### `tableHover`
+
+``` purescript
+tableHover :: String
+```
+
+
+#### `tableCondensed`
+
+``` purescript
+tableCondensed :: String
+```
+
+
+#### `tableResponsive`
+
+``` purescript
+tableResponsive :: String
+```
+
+
+#### `active`
+
+``` purescript
+active :: String
+```
+
+#### `success`
+
+``` purescript
+success :: String
+```
+
+
+#### `info`
+
+``` purescript
+info :: String
+```
+
+
+#### `warning`
+
+``` purescript
+warning :: String
+```
+
+
+#### `danger`
+
+``` purescript
+danger :: String
+```
+
+
+#### `formGroup`
+
+``` purescript
+formGroup :: String
+```
+
+#### `formInline`
+
+``` purescript
+formInline :: String
+```
+
+
+#### `formHorizontal`
+
+``` purescript
+formHorizontal :: String
+```
+
+
+#### `formControl`
+
+``` purescript
+formControl :: String
+```
+
+
+#### `formControlStatic`
+
+``` purescript
+formControlStatic :: String
+```
+
+
+#### `inputGroup`
+
+``` purescript
+inputGroup :: String
+```
+
+
+#### `hasWarning`
+
+``` purescript
+hasWarning :: String
+```
+
+#### `hasError`
+
+``` purescript
+hasError :: String
+```
+
+
+#### `hasSuccess`
+
+``` purescript
+hasSuccess :: String
+```
+
+
+#### `hasFeedback`
+
+``` purescript
+hasFeedback :: String
+```
+
+
+#### `btn`
+
+``` purescript
+btn :: String
+```
+
+#### `btnPrimary`
+
+``` purescript
+btnPrimary :: String
+```
+
+
+#### `btnSuccess`
+
+``` purescript
+btnSuccess :: String
+```
+
+
+#### `btnInfo`
+
+``` purescript
+btnInfo :: String
+```
+
+
+#### `btnWarning`
+
+``` purescript
+btnWarning :: String
+```
+
+
+#### `btnDanger`
+
+``` purescript
+btnDanger :: String
+```
+
+
+#### `btnLarge`
+
+``` purescript
+btnLarge :: String
+```
+
+
+#### `btnSmall`
+
+``` purescript
+btnSmall :: String
+```
+
+
+#### `btnExtraSmall`
+
+``` purescript
+btnExtraSmall :: String
+```
+
+
+#### `btnBlock`
+
+``` purescript
+btnBlock :: String
+```
+
+
+#### `btnGroup`
+
+``` purescript
+btnGroup :: String
 ```
 
 
