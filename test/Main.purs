@@ -65,29 +65,29 @@ ui = view <$> stateful (U.undoRedoState (State [])) (U.withUndoRedo update)
   view st = 
     case U.getState st of
       State ts ->
-        H.div [ A.class_ B.container ] 
-              [ H.h1 [ A.id_ "header" ] [ H.text "todo list" ]
+        H.div (A.class_ B.container)
+              [ H.h1 (A.id_ "header") [ H.text "todo list" ]
               , toolbar st
               , tasks ts
               ]
               
   toolbar :: forall st. U.UndoRedoState st -> H.HTML Input
-  toolbar st = H.p [ A.class_ B.btnGroup ]
-                   [ H.button [ A.classes [ B.btn, B.btnPrimary ]
-                              , A.onclick (const NewTask) 
-                              ] [ H.text "New Task" ]
-                   , H.button [ A.class_ B.btn
-                              , A.enabled (U.canUndo st)
-                              , A.onclick (const Undo) 
-                              ] [ H.text "Undo" ]
-                   , H.button [ A.class_ B.btn
-                              , A.enabled (U.canRedo st)
-                              , A.onclick (const Redo) 
-                              ] [ H.text "Redo" ]
+  toolbar st = H.p (A.class_ B.btnGroup)
+                   [ H.button ( A.classes [ B.btn, B.btnPrimary ]
+                                <> A.onclick (const NewTask) )
+                              [ H.text "New Task" ]
+                   , H.button ( A.class_ B.btn
+                                <> A.enabled (U.canUndo st)
+                                <> A.onclick (const Undo) )
+                              [ H.text "Undo" ]
+                   , H.button ( A.class_ B.btn
+                                <> A.enabled (U.canRedo st)
+                                <> A.onclick (const Redo) )
+                              [ H.text "Redo" ]
                    ]
            
   tasks :: [Task] -> H.HTML Input
-  tasks ts = H.table [ A.classes [ B.table, B.tableStriped ] ] 
+  tasks ts = H.table (A.classes [ B.table, B.tableStriped ]) 
                      [ H.thead_ [ H.th_ [ H.text "Task" ]
                                 , H.th_ [ H.text "Completed" ] 
                                 , H.th_ []
@@ -98,21 +98,21 @@ ui = view <$> stateful (U.undoRedoState (State [])) (U.withUndoRedo update)
               
   task :: Task -> Number -> H.HTML Input
   task task index =
-    H.tr_ [ H.td_ [ H.input  [ A.classes [ B.formControl ]
-                             , A.placeholder "Description"
-                             , A.onValueChanged (UpdateDescription index)
-                             , A.value task.description
-                             ] [] ]
-          , H.td_ [ H.input  [ A.classes [ B.formControl, B.checkbox]
-                             , A.type_ "checkbox"
-                             , A.checked task.completed
-                             , A.title "Mark as completed"
-                             , A.onChecked (MarkCompleted index)
-                             ] [] ]
-          , H.td_ [ H.button [ A.classes [ B.btn, B.btnDefault ]
-                             , A.title "Remove task"
-                             , A.onclick \_ -> RemoveTask index
-                             ] [ H.text "✖" ] ]
+    H.tr_ [ H.td_ [ H.input ( A.classes [ B.formControl ]
+                              <> A.placeholder "Description"
+                              <> A.onValueChanged (UpdateDescription index)
+                              <> A.value task.description )
+                            [] ]
+          , H.td_ [ H.input ( A.classes [ B.formControl, B.checkbox]
+                              <> A.type_ "checkbox"
+                              <> A.checked task.completed
+                              <> A.title "Mark as completed"
+                              <> A.onChecked (MarkCompleted index) )
+                            [] ]
+          , H.td_ [ H.button ( A.classes [ B.btn, B.btnDefault ]
+                               <> A.title "Remove task"
+                               <> A.onclick \_ -> RemoveTask index )
+                             [ H.text "✖" ] ]
           ]
 
   update :: State -> Input -> State

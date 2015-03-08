@@ -122,15 +122,11 @@ unsafeHandler' :: forall event i. String -> (event -> Maybe i) -> Attribute i
 unsafeHandler' key f = Attribute \k props -> runFn3 handlerProp key (\e -> maybe (return unit) k (f e)) props
 
 -- | Convert a collection of attributes to `Props` by providing an event handler
-attributesToProps :: forall i eff. (i -> Eff eff Unit) -> [Attribute i] -> Props
-attributesToProps k attribs
-  | Data.Array.null attribs = emptyProps
-  | otherwise = runProps do stp <- newProps
-                            for_ attribs (addProp stp)
-                            return stp
-  where    
-  addProp :: forall h eff. STProps h -> Attribute i -> Eff (st :: ST h | eff) Unit
-  addProp props (Attribute f) = f k props
+attributesToProps :: forall i eff. (i -> Eff eff Unit) -> Attribute i -> Props
+attributesToProps k (Attribute f) = runProps do 
+  props <- newProps
+  f k props
+  return props
 
 alt :: forall i. String -> Attribute i
 alt = unsafeAttribute "alt"

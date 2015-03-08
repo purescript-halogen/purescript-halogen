@@ -140,7 +140,7 @@ Created a "hashed" HTML document, which only gets re-rendered when the hash chan
 #### `a`
 
 ``` purescript
-a :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+a :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -154,7 +154,7 @@ a_ :: forall i. [HTML i] -> HTML i
 #### `abbr`
 
 ``` purescript
-abbr :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+abbr :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -168,7 +168,7 @@ abbr_ :: forall i. [HTML i] -> HTML i
 #### `acronym`
 
 ``` purescript
-acronym :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+acronym :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -182,7 +182,7 @@ acronym_ :: forall i. [HTML i] -> HTML i
 #### `address`
 
 ``` purescript
-address :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+address :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -196,7 +196,7 @@ address_ :: forall i. [HTML i] -> HTML i
 #### `applet`
 
 ``` purescript
-applet :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+applet :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -210,7 +210,7 @@ applet_ :: forall i. [HTML i] -> HTML i
 #### `area`
 
 ``` purescript
-area :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+area :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -224,7 +224,7 @@ area_ :: forall i. [HTML i] -> HTML i
 #### `article`
 
 ``` purescript
-article :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+article :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -238,7 +238,7 @@ article_ :: forall i. [HTML i] -> HTML i
 #### `aside`
 
 ``` purescript
-aside :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+aside :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -252,7 +252,7 @@ aside_ :: forall i. [HTML i] -> HTML i
 #### `audio`
 
 ``` purescript
-audio :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+audio :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -266,7 +266,7 @@ audio_ :: forall i. [HTML i] -> HTML i
 #### `b`
 
 ``` purescript
-b :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+b :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -280,7 +280,7 @@ b_ :: forall i. [HTML i] -> HTML i
 #### `base`
 
 ``` purescript
-base :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+base :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -294,7 +294,7 @@ base_ :: forall i. [HTML i] -> HTML i
 #### `basefont`
 
 ``` purescript
-basefont :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+basefont :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -308,7 +308,7 @@ basefont_ :: forall i. [HTML i] -> HTML i
 #### `bdi`
 
 ``` purescript
-bdi :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+bdi :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -322,7 +322,7 @@ bdi_ :: forall i. [HTML i] -> HTML i
 #### `bdo`
 
 ``` purescript
-bdo :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+bdo :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -336,7 +336,7 @@ bdo_ :: forall i. [HTML i] -> HTML i
 #### `big`
 
 ``` purescript
-big :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+big :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -350,7 +350,7 @@ big_ :: forall i. [HTML i] -> HTML i
 #### `blockquote`
 
 ``` purescript
-blockquote :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+blockquote :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -364,7 +364,7 @@ blockquote_ :: forall i. [HTML i] -> HTML i
 #### `body`
 
 ``` purescript
-body :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+body :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -378,7 +378,7 @@ body_ :: forall i. [HTML i] -> HTML i
 #### `br`
 
 ``` purescript
-br :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+br :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -392,7 +392,7 @@ br_ :: forall i. [HTML i] -> HTML i
 #### `button`
 
 ``` purescript
-button :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+button :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -406,7 +406,7 @@ button_ :: forall i. [HTML i] -> HTML i
 #### `canvas`
 
 ``` purescript
-canvas :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+canvas :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -420,7 +420,7 @@ canvas_ :: forall i. [HTML i] -> HTML i
 #### `caption`
 
 ``` purescript
-caption :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+caption :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -434,7 +434,7 @@ caption_ :: forall i. [HTML i] -> HTML i
 #### `center`
 
 ``` purescript
-center :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+center :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -448,7 +448,7 @@ center_ :: forall i. [HTML i] -> HTML i
 #### `cite`
 
 ``` purescript
-cite :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+cite :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -462,7 +462,7 @@ cite_ :: forall i. [HTML i] -> HTML i
 #### `code`
 
 ``` purescript
-code :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+code :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -476,7 +476,7 @@ code_ :: forall i. [HTML i] -> HTML i
 #### `col`
 
 ``` purescript
-col :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+col :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -490,7 +490,7 @@ col_ :: forall i. [HTML i] -> HTML i
 #### `colgroup`
 
 ``` purescript
-colgroup :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+colgroup :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -504,7 +504,7 @@ colgroup_ :: forall i. [HTML i] -> HTML i
 #### `datalist`
 
 ``` purescript
-datalist :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+datalist :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -518,7 +518,7 @@ datalist_ :: forall i. [HTML i] -> HTML i
 #### `dd`
 
 ``` purescript
-dd :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+dd :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -532,7 +532,7 @@ dd_ :: forall i. [HTML i] -> HTML i
 #### `del`
 
 ``` purescript
-del :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+del :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -546,7 +546,7 @@ del_ :: forall i. [HTML i] -> HTML i
 #### `details`
 
 ``` purescript
-details :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+details :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -560,7 +560,7 @@ details_ :: forall i. [HTML i] -> HTML i
 #### `dfn`
 
 ``` purescript
-dfn :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+dfn :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -574,7 +574,7 @@ dfn_ :: forall i. [HTML i] -> HTML i
 #### `dialog`
 
 ``` purescript
-dialog :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+dialog :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -588,7 +588,7 @@ dialog_ :: forall i. [HTML i] -> HTML i
 #### `dir`
 
 ``` purescript
-dir :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+dir :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -602,7 +602,7 @@ dir_ :: forall i. [HTML i] -> HTML i
 #### `div`
 
 ``` purescript
-div :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+div :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -616,7 +616,7 @@ div_ :: forall i. [HTML i] -> HTML i
 #### `dl`
 
 ``` purescript
-dl :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+dl :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -630,7 +630,7 @@ dl_ :: forall i. [HTML i] -> HTML i
 #### `dt`
 
 ``` purescript
-dt :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+dt :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -644,7 +644,7 @@ dt_ :: forall i. [HTML i] -> HTML i
 #### `em`
 
 ``` purescript
-em :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+em :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -658,7 +658,7 @@ em_ :: forall i. [HTML i] -> HTML i
 #### `embed`
 
 ``` purescript
-embed :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+embed :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -672,7 +672,7 @@ embed_ :: forall i. [HTML i] -> HTML i
 #### `fieldset`
 
 ``` purescript
-fieldset :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+fieldset :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -686,7 +686,7 @@ fieldset_ :: forall i. [HTML i] -> HTML i
 #### `figcaption`
 
 ``` purescript
-figcaption :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+figcaption :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -700,7 +700,7 @@ figcaption_ :: forall i. [HTML i] -> HTML i
 #### `figure`
 
 ``` purescript
-figure :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+figure :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -714,7 +714,7 @@ figure_ :: forall i. [HTML i] -> HTML i
 #### `font`
 
 ``` purescript
-font :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+font :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -728,7 +728,7 @@ font_ :: forall i. [HTML i] -> HTML i
 #### `footer`
 
 ``` purescript
-footer :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+footer :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -742,7 +742,7 @@ footer_ :: forall i. [HTML i] -> HTML i
 #### `form`
 
 ``` purescript
-form :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+form :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -756,7 +756,7 @@ form_ :: forall i. [HTML i] -> HTML i
 #### `frame`
 
 ``` purescript
-frame :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+frame :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -770,7 +770,7 @@ frame_ :: forall i. [HTML i] -> HTML i
 #### `frameset`
 
 ``` purescript
-frameset :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+frameset :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -784,7 +784,7 @@ frameset_ :: forall i. [HTML i] -> HTML i
 #### `h1`
 
 ``` purescript
-h1 :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+h1 :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -798,7 +798,7 @@ h1_ :: forall i. [HTML i] -> HTML i
 #### `h2`
 
 ``` purescript
-h2 :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+h2 :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -812,7 +812,7 @@ h2_ :: forall i. [HTML i] -> HTML i
 #### `h3`
 
 ``` purescript
-h3 :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+h3 :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -826,7 +826,7 @@ h3_ :: forall i. [HTML i] -> HTML i
 #### `h4`
 
 ``` purescript
-h4 :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+h4 :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -840,7 +840,7 @@ h4_ :: forall i. [HTML i] -> HTML i
 #### `h5`
 
 ``` purescript
-h5 :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+h5 :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -854,7 +854,7 @@ h5_ :: forall i. [HTML i] -> HTML i
 #### `h6`
 
 ``` purescript
-h6 :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+h6 :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -868,7 +868,7 @@ h6_ :: forall i. [HTML i] -> HTML i
 #### `head`
 
 ``` purescript
-head :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+head :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -882,7 +882,7 @@ head_ :: forall i. [HTML i] -> HTML i
 #### `header`
 
 ``` purescript
-header :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+header :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -896,7 +896,7 @@ header_ :: forall i. [HTML i] -> HTML i
 #### `hr`
 
 ``` purescript
-hr :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+hr :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -910,7 +910,7 @@ hr_ :: forall i. [HTML i] -> HTML i
 #### `html`
 
 ``` purescript
-html :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+html :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -924,7 +924,7 @@ html_ :: forall i. [HTML i] -> HTML i
 #### `i`
 
 ``` purescript
-i :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+i :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -938,7 +938,7 @@ i_ :: forall i. [HTML i] -> HTML i
 #### `iframe`
 
 ``` purescript
-iframe :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+iframe :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -952,7 +952,7 @@ iframe_ :: forall i. [HTML i] -> HTML i
 #### `img`
 
 ``` purescript
-img :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+img :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -966,7 +966,7 @@ img_ :: forall i. [HTML i] -> HTML i
 #### `input`
 
 ``` purescript
-input :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+input :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -980,7 +980,7 @@ input_ :: forall i. [HTML i] -> HTML i
 #### `ins`
 
 ``` purescript
-ins :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+ins :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -994,7 +994,7 @@ ins_ :: forall i. [HTML i] -> HTML i
 #### `kbd`
 
 ``` purescript
-kbd :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+kbd :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -1008,7 +1008,7 @@ kbd_ :: forall i. [HTML i] -> HTML i
 #### `keygen`
 
 ``` purescript
-keygen :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+keygen :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -1022,7 +1022,7 @@ keygen_ :: forall i. [HTML i] -> HTML i
 #### `label`
 
 ``` purescript
-label :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+label :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -1036,7 +1036,7 @@ label_ :: forall i. [HTML i] -> HTML i
 #### `legend`
 
 ``` purescript
-legend :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+legend :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -1050,7 +1050,7 @@ legend_ :: forall i. [HTML i] -> HTML i
 #### `li`
 
 ``` purescript
-li :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+li :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -1064,7 +1064,7 @@ li_ :: forall i. [HTML i] -> HTML i
 #### `link`
 
 ``` purescript
-link :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+link :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -1078,7 +1078,7 @@ link_ :: forall i. [HTML i] -> HTML i
 #### `main`
 
 ``` purescript
-main :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+main :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -1092,7 +1092,7 @@ main_ :: forall i. [HTML i] -> HTML i
 #### `map`
 
 ``` purescript
-map :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+map :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -1106,7 +1106,7 @@ map_ :: forall i. [HTML i] -> HTML i
 #### `mark`
 
 ``` purescript
-mark :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+mark :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -1120,7 +1120,7 @@ mark_ :: forall i. [HTML i] -> HTML i
 #### `menu`
 
 ``` purescript
-menu :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+menu :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -1134,7 +1134,7 @@ menu_ :: forall i. [HTML i] -> HTML i
 #### `menuitem`
 
 ``` purescript
-menuitem :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+menuitem :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -1148,7 +1148,7 @@ menuitem_ :: forall i. [HTML i] -> HTML i
 #### `meta`
 
 ``` purescript
-meta :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+meta :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -1162,7 +1162,7 @@ meta_ :: forall i. [HTML i] -> HTML i
 #### `meter`
 
 ``` purescript
-meter :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+meter :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -1176,7 +1176,7 @@ meter_ :: forall i. [HTML i] -> HTML i
 #### `nav`
 
 ``` purescript
-nav :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+nav :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -1190,7 +1190,7 @@ nav_ :: forall i. [HTML i] -> HTML i
 #### `noframes`
 
 ``` purescript
-noframes :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+noframes :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -1204,7 +1204,7 @@ noframes_ :: forall i. [HTML i] -> HTML i
 #### `noscript`
 
 ``` purescript
-noscript :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+noscript :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -1218,7 +1218,7 @@ noscript_ :: forall i. [HTML i] -> HTML i
 #### `object`
 
 ``` purescript
-object :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+object :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -1232,7 +1232,7 @@ object_ :: forall i. [HTML i] -> HTML i
 #### `ol`
 
 ``` purescript
-ol :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+ol :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -1246,7 +1246,7 @@ ol_ :: forall i. [HTML i] -> HTML i
 #### `optgroup`
 
 ``` purescript
-optgroup :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+optgroup :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -1260,7 +1260,7 @@ optgroup_ :: forall i. [HTML i] -> HTML i
 #### `option`
 
 ``` purescript
-option :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+option :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -1274,7 +1274,7 @@ option_ :: forall i. [HTML i] -> HTML i
 #### `output`
 
 ``` purescript
-output :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+output :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -1288,7 +1288,7 @@ output_ :: forall i. [HTML i] -> HTML i
 #### `p`
 
 ``` purescript
-p :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+p :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -1302,7 +1302,7 @@ p_ :: forall i. [HTML i] -> HTML i
 #### `param`
 
 ``` purescript
-param :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+param :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -1316,7 +1316,7 @@ param_ :: forall i. [HTML i] -> HTML i
 #### `pre`
 
 ``` purescript
-pre :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+pre :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -1330,7 +1330,7 @@ pre_ :: forall i. [HTML i] -> HTML i
 #### `progress`
 
 ``` purescript
-progress :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+progress :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -1344,7 +1344,7 @@ progress_ :: forall i. [HTML i] -> HTML i
 #### `q`
 
 ``` purescript
-q :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+q :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -1358,7 +1358,7 @@ q_ :: forall i. [HTML i] -> HTML i
 #### `rp`
 
 ``` purescript
-rp :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+rp :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -1372,7 +1372,7 @@ rp_ :: forall i. [HTML i] -> HTML i
 #### `rt`
 
 ``` purescript
-rt :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+rt :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -1386,7 +1386,7 @@ rt_ :: forall i. [HTML i] -> HTML i
 #### `ruby`
 
 ``` purescript
-ruby :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+ruby :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -1400,7 +1400,7 @@ ruby_ :: forall i. [HTML i] -> HTML i
 #### `s`
 
 ``` purescript
-s :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+s :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -1414,7 +1414,7 @@ s_ :: forall i. [HTML i] -> HTML i
 #### `samp`
 
 ``` purescript
-samp :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+samp :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -1428,7 +1428,7 @@ samp_ :: forall i. [HTML i] -> HTML i
 #### `script`
 
 ``` purescript
-script :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+script :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -1442,7 +1442,7 @@ script_ :: forall i. [HTML i] -> HTML i
 #### `section`
 
 ``` purescript
-section :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+section :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -1456,7 +1456,7 @@ section_ :: forall i. [HTML i] -> HTML i
 #### `select`
 
 ``` purescript
-select :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+select :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -1470,7 +1470,7 @@ select_ :: forall i. [HTML i] -> HTML i
 #### `small`
 
 ``` purescript
-small :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+small :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -1484,7 +1484,7 @@ small_ :: forall i. [HTML i] -> HTML i
 #### `source`
 
 ``` purescript
-source :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+source :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -1498,7 +1498,7 @@ source_ :: forall i. [HTML i] -> HTML i
 #### `span`
 
 ``` purescript
-span :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+span :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -1512,7 +1512,7 @@ span_ :: forall i. [HTML i] -> HTML i
 #### `strike`
 
 ``` purescript
-strike :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+strike :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -1526,7 +1526,7 @@ strike_ :: forall i. [HTML i] -> HTML i
 #### `strong`
 
 ``` purescript
-strong :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+strong :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -1540,7 +1540,7 @@ strong_ :: forall i. [HTML i] -> HTML i
 #### `style`
 
 ``` purescript
-style :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+style :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -1554,7 +1554,7 @@ style_ :: forall i. [HTML i] -> HTML i
 #### `sub`
 
 ``` purescript
-sub :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+sub :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -1568,7 +1568,7 @@ sub_ :: forall i. [HTML i] -> HTML i
 #### `summary`
 
 ``` purescript
-summary :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+summary :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -1582,7 +1582,7 @@ summary_ :: forall i. [HTML i] -> HTML i
 #### `sup`
 
 ``` purescript
-sup :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+sup :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -1596,7 +1596,7 @@ sup_ :: forall i. [HTML i] -> HTML i
 #### `table`
 
 ``` purescript
-table :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+table :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -1610,7 +1610,7 @@ table_ :: forall i. [HTML i] -> HTML i
 #### `tbody`
 
 ``` purescript
-tbody :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+tbody :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -1624,7 +1624,7 @@ tbody_ :: forall i. [HTML i] -> HTML i
 #### `td`
 
 ``` purescript
-td :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+td :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -1638,7 +1638,7 @@ td_ :: forall i. [HTML i] -> HTML i
 #### `textarea`
 
 ``` purescript
-textarea :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+textarea :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -1652,7 +1652,7 @@ textarea_ :: forall i. [HTML i] -> HTML i
 #### `tfoot`
 
 ``` purescript
-tfoot :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+tfoot :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -1666,7 +1666,7 @@ tfoot_ :: forall i. [HTML i] -> HTML i
 #### `th`
 
 ``` purescript
-th :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+th :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -1680,7 +1680,7 @@ th_ :: forall i. [HTML i] -> HTML i
 #### `thead`
 
 ``` purescript
-thead :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+thead :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -1694,7 +1694,7 @@ thead_ :: forall i. [HTML i] -> HTML i
 #### `time`
 
 ``` purescript
-time :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+time :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -1708,7 +1708,7 @@ time_ :: forall i. [HTML i] -> HTML i
 #### `title`
 
 ``` purescript
-title :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+title :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -1722,7 +1722,7 @@ title_ :: forall i. [HTML i] -> HTML i
 #### `tr`
 
 ``` purescript
-tr :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+tr :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -1736,7 +1736,7 @@ tr_ :: forall i. [HTML i] -> HTML i
 #### `track`
 
 ``` purescript
-track :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+track :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -1750,7 +1750,7 @@ track_ :: forall i. [HTML i] -> HTML i
 #### `tt`
 
 ``` purescript
-tt :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+tt :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -1764,7 +1764,7 @@ tt_ :: forall i. [HTML i] -> HTML i
 #### `u`
 
 ``` purescript
-u :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+u :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -1778,7 +1778,7 @@ u_ :: forall i. [HTML i] -> HTML i
 #### `ul`
 
 ``` purescript
-ul :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+ul :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -1792,7 +1792,7 @@ ul_ :: forall i. [HTML i] -> HTML i
 #### `var`
 
 ``` purescript
-var :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+var :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -1806,7 +1806,7 @@ var_ :: forall i. [HTML i] -> HTML i
 #### `video`
 
 ``` purescript
-video :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+video :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -1820,7 +1820,7 @@ video_ :: forall i. [HTML i] -> HTML i
 #### `wbr`
 
 ``` purescript
-wbr :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
+wbr :: forall i. A.Attribute i -> [HTML i] -> HTML i
 ```
 
 
@@ -1890,7 +1890,7 @@ This function can be used to attach custom event handlers.
 #### `attributesToProps`
 
 ``` purescript
-attributesToProps :: forall i eff. (i -> Eff eff Unit) -> [Attribute i] -> Props
+attributesToProps :: forall i eff. (i -> Eff eff Unit) -> Attribute i -> Props
 ```
 
 Convert a collection of attributes to `Props` by providing an event handler
