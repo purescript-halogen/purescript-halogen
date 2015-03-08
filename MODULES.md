@@ -137,6 +137,17 @@ hashed :: forall i. Hash -> (Unit -> HTML i) -> HTML i
 
 Created a "hashed" HTML document, which only gets re-rendered when the hash changes
 
+#### `raw`
+
+``` purescript
+raw :: forall i. VTree -> HTML i
+```
+
+Create a HTML document from a raw `VTree`.
+
+This function is useful when embedding third-party widgets in HTML documents using the `widget` function, and
+is considered an advanced feature. Use at your own risk.
+
 #### `a`
 
 ``` purescript

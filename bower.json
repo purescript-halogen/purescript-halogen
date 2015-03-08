@@ -24,6 +24,7 @@
     "purescript-profunctor": "~0.1.0",
     "purescript-aff": "~0.5.6",
     "purescript-foreign": "~0.4.0",
-    "purescript-strings": "~0.4.3"
+    "purescript-strings": "~0.4.3",
+    "purescript-nullable": "~0.1.1"
   }
 }

@@ -3,6 +3,7 @@ module Halogen.VirtualDOM where
 import DOM
 
 import Data.Maybe
+import Data.Nullable
 import Data.Function
 
 import Control.Monad.Eff
@@ -58,6 +59,25 @@ foreign import hash
   \  };\
   \  return new HashThunk(hash);\
   \}" :: Fn2 (Fn0 VTree) String VTree
+  
+foreign import widgetImpl
+  "function widgetImpl(init, update, destroy) {\
+  \  var Widget = function () {};\
+  \  Widget.prototype.type = 'Widget';\
+  \  Widget.prototype.init = function(){\
+  \    return init();\
+  \  };\
+  \  Widget.prototype.update = function(prev, node) {\
+  \    return update(node)();\
+  \  };\
+  \  Widget.prototype.destroy = function(node) {\
+  \    destroy(node)();\
+  \  };\
+  \  return new Widget();\
+  \}" :: forall eff. Fn3 (Eff eff Node) (Node -> Eff eff (Nullable Node)) (Node -> Eff eff Unit) VTree
+
+widget :: forall eff. Eff eff Node -> (Node -> Eff eff (Maybe Node)) -> (Node -> Eff eff Unit) -> VTree
+widget init update destroy = runFn3 widgetImpl init (\n -> toNullable <$> update n) destroy
 
 foreign import newProps 
   "function newProps() {\

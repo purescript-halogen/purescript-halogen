@@ -3,6 +3,7 @@ module Halogen.HTML
   , Hash()
   
   , text
+  , raw
   , hashed
   
   -- Elements
@@ -154,17 +155,20 @@ data HTML i
   = Text String
   | Element String (A.Attribute i) [HTML i]
   | Hashed Hash (Unit -> HTML i)
+  | Raw VTree
     
 instance functorHTML :: Functor HTML where
   (<$>) _ (Text s) = Text s
   (<$>) f (Element name attribs children) = Element name (f <$> attribs) (Data.Array.map (f <$>) children)
   (<$>) f (Hashed hash g) = Hashed hash ((f <$>) <<< g)
+  (<$>) _ (Raw vtree) = Raw vtree
 
 -- | Render a `HTML` document to a virtual DOM node
 renderHtml :: forall i eff. (i -> Eff eff Unit) -> HTML i -> VTree
 renderHtml _ (Text s) = vtext s
 renderHtml k (Element name attribs children) = vnode name (A.attributesToProps k attribs) (Data.Array.map (renderHtml k) children)
 renderHtml k (Hashed h html) = runFn2 hash (mkFn0 \_ -> renderHtml k (html unit)) h
+renderHtml _ (Raw vtree) = vtree
 
 text :: forall i. String -> HTML i
 text = Text
@@ -172,6 +176,13 @@ text = Text
 -- | Created a "hashed" HTML document, which only gets re-rendered when the hash changes
 hashed :: forall i. Hash -> (Unit -> HTML i) -> HTML i
 hashed = Hashed
+
+-- | Create a HTML document from a raw `VTree`.
+-- |
+-- | This function is useful when embedding third-party widgets in HTML documents using the `widget` function, and
+-- | is considered an advanced feature. Use at your own risk.
+raw :: forall i. VTree -> HTML i
+raw = Raw
 
 a :: forall i. A.Attribute i -> [HTML i] -> HTML i
 a = Element "a"
