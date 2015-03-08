@@ -86,6 +86,13 @@ A convenience function which uses the `Aff` monad to represent the handler funct
 
 ## Module Halogen.HTML
 
+#### `Hash`
+
+``` purescript
+type Hash = String
+```
+
+
 #### `HTML`
 
 ``` purescript
@@ -121,6 +128,14 @@ Render a `HTML` document to a virtual DOM node
 text :: forall i. String -> HTML i
 ```
 
+
+#### `hashed`
+
+``` purescript
+hashed :: forall i. Hash -> (Unit -> HTML i) -> HTML i
+```
+
+Created a "hashed" HTML document, which only gets re-rendered when the hash changes
 
 #### `a`
 

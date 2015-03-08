@@ -69,7 +69,7 @@ ui = view <$> stateful (U.undoRedoState (State Nothing 0)) (U.withUndoRedo updat
   view :: U.UndoRedoState State -> H.HTML (Either Input Request)
   view st = 
     case U.getState st of
-      State err n -> 
+      State err n -> H.hashed (show (Tuple err n)) $ \_ ->
         H.div [ A.class_ B.container ] 
               [ H.h1 [ A.id_ "header" ] [ H.code_ [H.text "purescript-halogen"], H.text " demo" ]
               , H.p_ [ H.text "Click the buttons to modify the state of the view." ]
@@ -93,7 +93,7 @@ ui = view <$> stateful (U.undoRedoState (State Nothing 0)) (U.withUndoRedo updat
 handler :: forall eff. Request -> Aff (trace :: Trace | eff) Input
 handler (AddService n m) = do
   liftEff $ trace $ "Adding " <> show n <> " and " <> show m
-  when (n >= 10) $ throwError $ error "Input too large"
+  when (n + m > 10) $ throwError $ error "Input too large"
   return $ SetCounter $ n + m
 
 main = do

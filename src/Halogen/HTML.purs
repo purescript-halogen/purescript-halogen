@@ -1,7 +1,9 @@
 module Halogen.HTML
   ( HTML()
+  , Hash()
   
   , text
+  , hashed
   
   -- Elements
   
@@ -130,11 +132,15 @@ module Halogen.HTML
   , renderHtml
   ) where
 
+import Data.Function
+
 import Control.Monad.Eff
 import Control.Monad.ST
 
 import Halogen.VirtualDOM
 import qualified Halogen.HTML.Attributes as A
+
+type Hash = String
 
 -- | The `HTML` type represents HTML documents before being rendered to the virtual DOM, and ultimately,
 -- | the actual DOM.
@@ -146,18 +152,25 @@ import qualified Halogen.HTML.Attributes as A
 data HTML i
   = Text String
   | Element String [A.Attribute i] [HTML i]
+  | Hashed Hash (Unit -> HTML i)
     
 instance functorHTML :: Functor HTML where
   (<$>) _ (Text s) = Text s
   (<$>) f (Element name attribs children) = Element name (Data.Array.map (f <$>) attribs) (Data.Array.map (f <$>) children)
+  (<$>) f (Hashed hash g) = Hashed hash ((f <$>) <<< g)
 
 -- | Render a `HTML` document to a virtual DOM node
 renderHtml :: forall i eff. (i -> Eff eff Unit) -> HTML i -> VTree
 renderHtml _ (Text s) = vtext s
 renderHtml k (Element name attribs children) = vnode name (A.attributesToProps k attribs) (Data.Array.map (renderHtml k) children)
+renderHtml k (Hashed h html) = runFn2 hash (mkFn0 \_ -> renderHtml k (html unit)) h
 
 text :: forall i. String -> HTML i
 text = Text
+
+-- | Created a "hashed" HTML document, which only gets re-rendered when the hash changes
+hashed :: forall i. Hash -> (Unit -> HTML i) -> HTML i
+hashed = Hashed
 
 a :: forall i. [A.Attribute i] -> [HTML i] -> HTML i
 a = Element "a"

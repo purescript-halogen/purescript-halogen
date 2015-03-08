@@ -2,6 +2,7 @@ module Halogen.VirtualDOM where
 
 import DOM
 
+import Data.Maybe
 import Data.Function
 
 import Control.Monad.Eff
@@ -41,6 +42,22 @@ foreign import handlerProp
   \    props['data-halogen-hook-' + key] = new Hook(f);\
   \  };\
   \}" :: forall h eff eff1 event. Fn3 String (event -> Eff eff1 Unit) (STProps h) (Eff (st :: ST h | eff) Unit)
+
+foreign import hash
+  "function hash(f, hash) {\
+  \  var HashThunk = function(hash) {\
+  \    this.hash = hash;\
+  \  };\
+  \  HashThunk.prototype.type = 'Thunk';\
+  \  HashThunk.prototype.render = function(prev) {\
+  \    if (prev && prev.hash === this.hash) {\
+  \      return prev.vnode;\
+  \    } else {\
+  \      return f();\
+  \    }\
+  \  };\
+  \  return new HashThunk(hash);\
+  \}" :: Fn2 (Fn0 VTree) String VTree
 
 foreign import newProps 
   "function newProps() {\
