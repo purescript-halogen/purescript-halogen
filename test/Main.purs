@@ -51,13 +51,7 @@ instance inputSupportsUndoRedo :: U.SupportsUndoRedo Input where
   toUndoRedo Redo = Just U.Redo
   toUndoRedo _ = Nothing
 
--- | External requests: 
--- | 
--- | - `AddService n m` - send a request to an external service to add the numbers `n` and `m`
-data Request = AddService Number Number
-
--- | The UI is a state machine, consuming errors and inputs, and generating HTML documents which generate
--- | external service requests of type `Request`.
+-- | The UI is a state machine, consuming inputs, and generating HTML documents which in turn, generate new inputs
 ui :: forall eff. SF1 Input (H.HTML Input)
 ui = view <$> stateful (U.undoRedoState (State [])) (U.withUndoRedo update)
   where
