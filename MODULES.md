@@ -1848,10 +1848,10 @@ instance monoidAttribute :: Monoid (Attribute i)
 ```
 
 
-#### `unsafeStringAttribute`
+#### `unsafeAttribute`
 
 ``` purescript
-unsafeStringAttribute :: forall i. String -> String -> Attribute i
+unsafeAttribute :: forall i value. String -> value -> Attribute i
 ```
 
 This function can be used to define custom string attributes.
@@ -1996,6 +1996,20 @@ value :: forall i. String -> Attribute i
 
 ``` purescript
 width :: forall i. Number -> Attribute i
+```
+
+
+#### `disabled`
+
+``` purescript
+disabled :: forall i. Boolean -> Attribute i
+```
+
+
+#### `enabled`
+
+``` purescript
+enabled :: forall i. Boolean -> Attribute i
 ```
 
 

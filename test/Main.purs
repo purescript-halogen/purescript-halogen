@@ -74,8 +74,8 @@ ui = view <$> stateful (U.undoRedoState (State Nothing 0)) (U.withUndoRedo updat
                , H.p_ [ H.text ("Current state: " <> show n) ]
                , H.p_ [ H.button [ A.onclick (const (Right (AddService n 1))) ] [ H.text "Increment" ]
                       , H.button [ A.onclick (const (Right (AddService n (-1)))) ] [ H.text "Decrement" ]
-                      , H.button [ A.onclick (const (Left Undo)) ] [ H.text "Undo" ]
-                      , H.button [ A.onclick (const (Left Redo)) ] [ H.text "Redo" ]
+                      , H.button [ A.enabled (U.canUndo st), A.onclick (const (Left Undo)) ] [ H.text "Undo" ]
+                      , H.button [ A.enabled (U.canRedo st), A.onclick (const (Left Redo)) ] [ H.text "Redo" ]
                       ]
                ]
 

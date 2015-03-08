@@ -3,7 +3,7 @@ module Halogen.HTML.Attributes
   
   , attributesToProps
   
-  , unsafeStringAttribute
+  , unsafeAttribute
   , unsafeHandler
   , unsafeHandler'
   
@@ -26,6 +26,8 @@ module Halogen.HTML.Attributes
   , type_
   , value
   , width
+  , disabled
+  , enabled
   
   -- Event Handlers
   
@@ -104,8 +106,8 @@ instance monoidAttribute :: Monoid (Attribute i) where
   mempty = Attribute \_ _ -> return unit
 
 -- | This function can be used to define custom string attributes.
-unsafeStringAttribute :: forall i. String -> String -> Attribute i
-unsafeStringAttribute key value = Attribute \_ props -> runFn3 stringProp key value props
+unsafeAttribute :: forall i value. String -> value -> Attribute i
+unsafeAttribute key value = Attribute \_ props -> runFn3 prop key value props
 
 -- | This function can be used to attach custom event handlers.
 unsafeHandler :: forall event eff i. String -> (event -> i) -> Attribute i
@@ -127,55 +129,61 @@ attributesToProps k attribs
   addProp props (Attribute f) = f k props
 
 alt :: forall i. String -> Attribute i
-alt = unsafeStringAttribute "alt"
+alt = unsafeAttribute "alt"
      
 charset :: forall i. String -> Attribute i
-charset = unsafeStringAttribute "charset"
+charset = unsafeAttribute "charset"
 
 class_ :: forall i. String -> Attribute i
-class_ = unsafeStringAttribute "class"
+class_ = unsafeAttribute "class"
 
 content :: forall i. String -> Attribute i
-content = unsafeStringAttribute "content"
+content = unsafeAttribute "content"
 
 for :: forall i. String -> Attribute i
-for = unsafeStringAttribute "for"
+for = unsafeAttribute "for"
 
 height :: forall i. Number -> Attribute i
-height = unsafeStringAttribute "height" <<< show
+height = unsafeAttribute "height" <<< show
 
 href :: forall i. String -> Attribute i
-href = unsafeStringAttribute "href"
+href = unsafeAttribute "href"
 
 httpEquiv :: forall i. String -> Attribute i
-httpEquiv = unsafeStringAttribute "http-equiv"
+httpEquiv = unsafeAttribute "http-equiv"
 
 id_ :: forall i. String -> Attribute i
-id_ = unsafeStringAttribute "id"
+id_ = unsafeAttribute "id"
    
 name :: forall i. String -> Attribute i
-name = unsafeStringAttribute "name"
+name = unsafeAttribute "name"
        
 rel :: forall i. String -> Attribute i
-rel = unsafeStringAttribute "rel"
+rel = unsafeAttribute "rel"
     
 src :: forall i. String -> Attribute i
-src = unsafeStringAttribute "src"
+src = unsafeAttribute "src"
    
 target :: forall i. String -> Attribute i
-target = unsafeStringAttribute "target"
+target = unsafeAttribute "target"
    
 title :: forall i. String -> Attribute i
-title = unsafeStringAttribute "title"
+title = unsafeAttribute "title"
    
 type_ :: forall i. String -> Attribute i
-type_ = unsafeStringAttribute "type"
+type_ = unsafeAttribute "type"
    
 value :: forall i. String -> Attribute i
-value = unsafeStringAttribute "value"
+value = unsafeAttribute "value"
    
 width :: forall i. Number -> Attribute i
-width = unsafeStringAttribute "width" <<< show
+width = unsafeAttribute "width" <<< show
+   
+disabled :: forall i. Boolean -> Attribute i
+disabled = unsafeAttribute "disabled"
+   
+enabled :: forall i. Boolean -> Attribute i
+enabled = disabled <<< not
 
 type Event fields = 
   { bubbles :: Boolean

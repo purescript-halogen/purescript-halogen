@@ -18,12 +18,12 @@ foreign import data STProps :: * -> *
 foreign import emptyProps 
   "var emptyProps = {}" :: Props
 
-foreign import stringProp
-  "function stringProp(key, value, props) {\
+foreign import prop
+  "function prop(key, value, props) {\
   \  return function() {\
   \    props[key] = value;\
   \  };\
-  \}" :: forall h eff. Fn3 String String (STProps h) (Eff (st :: ST h | eff) Unit)
+  \}" :: forall h value eff. Fn3 String value (STProps h) (Eff (st :: ST h | eff) Unit)
 
 foreign import handlerProp
   "function handlerProp(key, f, props) {\
