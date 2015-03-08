@@ -14,7 +14,7 @@ import Control.Monad.Aff
     
 import Halogen.HTML (HTML(), renderHtml)
 import Halogen.Signal 
-import Halogen.VirtualDOM   
+import Halogen.Internal.VirtualDOM   
  
 -- | Wraps the effects required by the `runUI` and `runUIEff` functions.
 type HalogenEffects eff = (ref :: Ref, dom :: DOM | eff)

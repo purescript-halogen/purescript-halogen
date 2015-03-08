@@ -93,7 +93,7 @@ import Data.Foldable (for_)
 import Control.Monad.Eff
 import Control.Monad.ST
 
-import Halogen.VirtualDOM
+import Halogen.Internal.VirtualDOM
 
 -- | A HTML attribute which can be used in a document of type `HTML i`.
 data Attribute i = Attribute (forall h eff eff1. (i -> Eff eff Unit) -> STProps h -> Eff (st :: ST h | eff1) Unit)

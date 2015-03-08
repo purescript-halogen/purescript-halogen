@@ -139,7 +139,7 @@ import Data.Monoid (mempty)
 import Control.Monad.Eff
 import Control.Monad.ST
 
-import Halogen.VirtualDOM
+import Halogen.Internal.VirtualDOM
 import qualified Halogen.HTML.Attributes as A
 
 type Hash = String

@@ -18,13 +18,7 @@ var paths = {
         'all': {
             dest: 'MODULES.md',
             src: [
-              'src/Halogen.purs',
-              'src/Halogen/HTML.purs',
-              'src/Halogen/HTML/Attributes.purs',
-              'src/Halogen/HTML/Forms.purs',
-              'src/Halogen/Mixin/UndoRedo.purs',
-              'src/Halogen/Signal.purs',
-              'src/Halogen/Themes/Bootstrap3.purs'
+              'src/**/!(Internal)/!(Unsafe).purs'
             ]
         }
     },
