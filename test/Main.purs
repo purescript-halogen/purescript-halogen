@@ -2,7 +2,7 @@ module Test.Main where
 
 import Data.Tuple
 import Data.Maybe
-import Data.Array (zipWith, length, updateAt, deleteAt, (..), (!!))
+import Data.Array (zipWith, length, modifyAt, deleteAt, (..), (!!))
 
 import Debug.Trace
 
@@ -33,9 +33,7 @@ type Task = { description :: String, completed :: Boolean }
 -- | The state of the application
 data State = State [Task]
 
--- | Inputs to the state machine:
--- | 
--- | - `SetCounter n` - a request to update the counter to value `n`
+-- | Inputs to the state machine
 data Input 
   = NewTask
   | UpdateDescription Number String
@@ -115,12 +113,6 @@ ui = view <$> stateful (U.undoRedoState (State [])) (U.withUndoRedo update)
   update (State ts) (MarkCompleted i completed) = State $ modifyAt i (_ { completed = completed }) ts
   update (State ts) (RemoveTask i) = State $ deleteAt i 1 ts
   
-  -- TODO: move this into purescript-arrays
-  modifyAt :: forall a. Number -> (a -> a) -> [a] -> [a]
-  modifyAt i f xs = case xs !! i of
-                      Just x -> updateAt i (f x) xs
-                      Nothing -> xs
-
 main = do
   node <- runUI ui
   appendToBody node
