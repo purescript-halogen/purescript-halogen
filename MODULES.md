@@ -2035,6 +2035,20 @@ enabled :: forall i. Boolean -> Attribute i
 ```
 
 
+#### `checked`
+
+``` purescript
+checked :: forall i. Boolean -> Attribute i
+```
+
+
+#### `placeholder`
+
+``` purescript
+placeholder :: forall i. String -> Attribute i
+```
+
+
 #### `Event`
 
 ``` purescript
@@ -2304,15 +2318,23 @@ onfocusout :: forall i. (Event FocusEvent -> i) -> Attribute i
 
 ## Module Halogen.HTML.Forms
 
-#### `onValueStringChanged`
+#### `onValueChanged`
 
 ``` purescript
-onValueStringChanged :: forall value i. (IsForeign value) => (value -> i) -> Attribute i
+onValueChanged :: forall value i. (IsForeign value) => (value -> i) -> Attribute i
 ```
 
 Attach an event handler which will produce an input when the value of an input field changes
 
 An input will not be produced if the value cannot be cast to the appropriate type.
+
+#### `onChecked`
+
+``` purescript
+onChecked :: forall i. (Boolean -> i) -> Attribute i
+```
+
+Attach an event handler which will fire when a checkbox is checked or unchecked
 
 
 ## Module Halogen.Mixin.UndoRedo
@@ -3159,6 +3181,13 @@ inputGroup :: String
 ```
 
 
+#### `checkbox`
+
+``` purescript
+checkbox :: String
+```
+
+
 #### `hasWarning`
 
 ``` purescript
@@ -3191,6 +3220,13 @@ hasFeedback :: String
 ``` purescript
 btn :: String
 ```
+
+#### `btnDefault`
+
+``` purescript
+btnDefault :: String
+```
+
 
 #### `btnPrimary`
 

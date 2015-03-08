@@ -258,6 +258,9 @@ formControlStatic = "form-control-static"
 inputGroup :: String
 inputGroup = "input-group"
 
+checkbox :: String
+checkbox = "checkbox"
+
 -- Validation States
 
 hasWarning :: String
@@ -276,6 +279,9 @@ hasFeedback = "has-feedback"
 
 btn :: String
 btn = "btn"
+
+btnDefault :: String
+btnDefault = "btn-default"
 
 btnPrimary :: String
 btnPrimary = "btn-primary"

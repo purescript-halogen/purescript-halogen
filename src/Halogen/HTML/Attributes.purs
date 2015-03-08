@@ -29,6 +29,8 @@ module Halogen.HTML.Attributes
   , width
   , disabled
   , enabled
+  , checked
+  , placeholder
   
   -- Event Handlers
   
@@ -189,6 +191,12 @@ disabled = unsafeAttribute "disabled"
    
 enabled :: forall i. Boolean -> Attribute i
 enabled = disabled <<< not
+
+checked :: forall i. Boolean -> Attribute i
+checked = unsafeAttribute "checked"
+   
+placeholder :: forall i. String -> Attribute i
+placeholder = unsafeAttribute "placeholder"
 
 type Event fields = 
   { bubbles :: Boolean
