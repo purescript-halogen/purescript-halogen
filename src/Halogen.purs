@@ -86,8 +86,12 @@ runUIEff signal handler = do
       node' <- patch (head next) node
       writeRef ref $ Just { signal: tail next, node: node' }
 
+-- | This type class identifies those input types which support errors
+class SupportsErrors input where
+  liftError :: Error -> input
+
 -- | A convenience function which uses the `Aff` monad to represent the handler function.
-runUIAff :: forall i r eff. SF1 (Either Error i) (HTML r) -> (r -> Aff (HalogenEffects eff) i) -> EffA (HalogenEffects eff) Node
-runUIAff signal handler = unsafeInterleaveEff $ runUIEff signal \r k -> unsafeInterleaveEff $ runAff (k <<< Left) (k <<< Right) $ handler r
+runUIAff :: forall i r eff. (SupportsErrors i) => SF1 i (HTML r) -> (r -> Aff (HalogenEffects eff) i) -> EffA (HalogenEffects eff) Node
+runUIAff signal handler = unsafeInterleaveEff $ runUIEff signal \r k -> unsafeInterleaveEff $ runAff (k <<< liftError) k $ handler r
 
       

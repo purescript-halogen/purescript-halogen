@@ -34,7 +34,12 @@ data State = State (Maybe Error) Number
 -- | Inputs to the state machine:
 -- | 
 -- | - `SetCounter n` - a request to update the counter to value `n`
-data Input = SetCounter Number
+data Input 
+  = OnError Error    
+  | SetCounter Number
+  
+instance inputSupportsErrors :: SupportsErrors Input where
+  liftError = OnError
 
 -- | External requests: 
 -- | 
@@ -43,7 +48,7 @@ data Request = AddService Number Number
 
 -- | The UI is a state machine, consuming errors and inputs, and generating HTML documents which generate
 -- | external service requests of type `Request`.
-ui :: forall eff. SF1 (Either Error Input) (H.HTML Request)
+ui :: forall eff. SF1 Input (H.HTML Request)
 ui = view <$> stateful (State Nothing 0) update
   where
   view :: State -> H.HTML Request
@@ -57,9 +62,9 @@ ui = view <$> stateful (State Nothing 0) update
                          ]
                   ]
 
-  update :: State -> Either Error Input -> State
-  update (State _ n) (Left err) = State (Just err) n
-  update _ (Right (SetCounter n)) = State Nothing n
+  update :: State -> Input -> State
+  update (State _ n) (OnError err) = State (Just err) n
+  update _ (SetCounter n) = State Nothing n
 
 -- | This function handles external service requests.
 -- |

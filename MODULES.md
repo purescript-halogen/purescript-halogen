@@ -66,10 +66,19 @@ application.
 In this way, all effects are pushed to the handler function at the boundary of the application.
 
 
+#### `SupportsErrors`
+
+``` purescript
+class SupportsErrors input where
+  liftError :: Error -> input
+```
+
+This type class identifies those input types which support errors
+
 #### `runUIAff`
 
 ``` purescript
-runUIAff :: forall i r eff. SF1 (Either Error i) (HTML r) -> (r -> Aff (HalogenEffects eff) i) -> EffA (HalogenEffects eff) Node
+runUIAff :: forall i r eff. (SupportsErrors i) => SF1 i (HTML r) -> (r -> Aff (HalogenEffects eff) i) -> EffA (HalogenEffects eff) Node
 ```
 
 A convenience function which uses the `Aff` monad to represent the handler function.
