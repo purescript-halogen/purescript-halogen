@@ -1,5 +1,9 @@
 module Halogen.HTML.Attributes 
-  ( alt
+  ( ClassName()
+  , className
+  , runClassName
+  
+  , alt
   , charset
   , class_
   , classes
@@ -74,6 +78,7 @@ module Halogen.HTML.Attributes
 
 import DOM
 
+import Data.Array (map)
 import Data.String (joinWith)
 
 import Control.Monad.Eff
@@ -83,17 +88,28 @@ import Halogen.HTML (Attribute())
 import Halogen.HTML.Attributes.Unsafe
 import Halogen.Internal.VirtualDOM
 
+-- | A wrapper for strings which are used as CSS classes
+newtype ClassName = ClassName String
+
+-- Create a class name
+className :: String -> ClassName
+className = ClassName
+
+-- | Unpack a class name
+runClassName :: ClassName -> String
+runClassName (ClassName s) = s
+
 alt :: forall i. String -> Attribute i
 alt = unsafeAttribute "alt"
      
 charset :: forall i. String -> Attribute i
 charset = unsafeAttribute "charset"
 
-class_ :: forall i. String -> Attribute i
-class_ = unsafeAttribute "className"
+class_ :: forall i. ClassName -> Attribute i
+class_ = unsafeAttribute "className" <<< runClassName
 
-classes :: forall i. [String] -> Attribute i
-classes ss = class_ (joinWith " " ss)
+classes :: forall i. [ClassName] -> Attribute i
+classes ss = unsafeAttribute "className" (joinWith " " $ map runClassName ss)
 
 content :: forall i. String -> Attribute i
 content = unsafeAttribute "content"

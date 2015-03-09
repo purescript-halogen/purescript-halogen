@@ -1,315 +1,317 @@
 module Halogen.Themes.Bootstrap3 where
 
+import Halogen.HTML.Attributes (ClassName(), className)
+
 -- Containers and rows
 
-container :: String
-container = "container"
+container :: ClassName
+container = className "container"
 
-containerFluid :: String
-containerFluid = "container-fluid"
+containerFluid :: ClassName
+containerFluid = className "container-fluid"
 
-row :: String
-row = "row"
+row :: ClassName
+row = className "row"
 
 -- Column layout for extra small screens
 
-colExtraSmall1 :: String
-colExtraSmall1 = "col-xs-1"
+colExtraSmall1 :: ClassName
+colExtraSmall1 = className "col-xs-1"
 
-colExtraSmall2 :: String
-colExtraSmall2 = "col-xs-2"
+colExtraSmall2 :: ClassName
+colExtraSmall2 = className "col-xs-2"
 
-colExtraSmall3 :: String
-colExtraSmall3 = "col-xs-3"
+colExtraSmall3 :: ClassName
+colExtraSmall3 = className "col-xs-3"
 
-colExtraSmall4 :: String
-colExtraSmall4 = "col-xs-4"
+colExtraSmall4 :: ClassName
+colExtraSmall4 = className "col-xs-4"
 
-colExtraSmall5 :: String
-colExtraSmall5 = "col-xs-5"
+colExtraSmall5 :: ClassName
+colExtraSmall5 = className "col-xs-5"
 
-colExtraSmall6 :: String
-colExtraSmall6 = "col-xs-6"
+colExtraSmall6 :: ClassName
+colExtraSmall6 = className "col-xs-6"
 
-colExtraSmall7 :: String
-colExtraSmall7 = "col-xs-7"
+colExtraSmall7 :: ClassName
+colExtraSmall7 = className "col-xs-7"
 
-colExtraSmall8 :: String
-colExtraSmall8 = "col-xs-8"
+colExtraSmall8 :: ClassName
+colExtraSmall8 = className "col-xs-8"
 
-colExtraSmall9 :: String
-colExtraSmall9 = "col-xs-9"
+colExtraSmall9 :: ClassName
+colExtraSmall9 = className "col-xs-9"
 
-colExtraSmall10 :: String
-colExtraSmall10 = "col-xs-10"
+colExtraSmall10 :: ClassName
+colExtraSmall10 = className "col-xs-10"
 
-colExtraSmall11 :: String
-colExtraSmall11 = "col-xs-11"
+colExtraSmall11 :: ClassName
+colExtraSmall11 = className "col-xs-11"
 
-colExtraSmall12 :: String
-colExtraSmall12 = "col-xs-12"
+colExtraSmall12 :: ClassName
+colExtraSmall12 = className "col-xs-12"
 
 -- Column layout for small screens
 
-colSmall1 :: String
-colSmall1 = "col-sm-1"
+colSmall1 :: ClassName
+colSmall1 = className "col-sm-1"
 
-colSmall2 :: String
-colSmall2 = "col-sm-2"
+colSmall2 :: ClassName
+colSmall2 = className "col-sm-2"
 
-colSmall3 :: String
-colSmall3 = "col-sm-3"
+colSmall3 :: ClassName
+colSmall3 = className "col-sm-3"
 
-colSmall4 :: String
-colSmall4 = "col-sm-4"
+colSmall4 :: ClassName
+colSmall4 = className "col-sm-4"
 
-colSmall5 :: String
-colSmall5 = "col-sm-5"
+colSmall5 :: ClassName
+colSmall5 = className "col-sm-5"
 
-colSmall6 :: String
-colSmall6 = "col-sm-6"
+colSmall6 :: ClassName
+colSmall6 = className "col-sm-6"
 
-colSmall7 :: String
-colSmall7 = "col-sm-7"
+colSmall7 :: ClassName
+colSmall7 = className "col-sm-7"
 
-colSmall8 :: String
-colSmall8 = "col-sm-8"
+colSmall8 :: ClassName
+colSmall8 = className "col-sm-8"
 
-colSmall9 :: String
-colSmall9 = "col-sm-9"
+colSmall9 :: ClassName
+colSmall9 = className "col-sm-9"
 
-colSmall10 :: String
-colSmall10 = "col-sm-10"
+colSmall10 :: ClassName
+colSmall10 = className "col-sm-10"
 
-colSmall11 :: String
-colSmall11 = "col-sm-11"
+colSmall11 :: ClassName
+colSmall11 = className "col-sm-11"
 
-colSmall12 :: String
-colSmall12 = "col-sm-12"
+colSmall12 :: ClassName
+colSmall12 = className "col-sm-12"
 
 -- Column layout for medium screens
 
-colMedium1 :: String
-colMedium1 = "col-md-1"
+colMedium1 :: ClassName
+colMedium1 = className "col-md-1"
 
-colMedium2 :: String
-colMedium2 = "col-md-2"
+colMedium2 :: ClassName
+colMedium2 = className "col-md-2"
 
-colMedium3 :: String
-colMedium3 = "col-md-3"
+colMedium3 :: ClassName
+colMedium3 = className "col-md-3"
 
-colMedium4 :: String
-colMedium4 = "col-md-4"
+colMedium4 :: ClassName
+colMedium4 = className "col-md-4"
 
-colMedium5 :: String
-colMedium5 = "col-md-5"
+colMedium5 :: ClassName
+colMedium5 = className "col-md-5"
 
-colMedium6 :: String
-colMedium6 = "col-md-6"
+colMedium6 :: ClassName
+colMedium6 = className "col-md-6"
 
-colMedium7 :: String
-colMedium7 = "col-md-7"
+colMedium7 :: ClassName
+colMedium7 = className "col-md-7"
 
-colMedium8 :: String
-colMedium8 = "col-md-8"
+colMedium8 :: ClassName
+colMedium8 = className "col-md-8"
 
-colMedium9 :: String
-colMedium9 = "col-md-9"
+colMedium9 :: ClassName
+colMedium9 = className "col-md-9"
 
-colMedium10 :: String
-colMedium10 = "col-md-10"
+colMedium10 :: ClassName
+colMedium10 = className "col-md-10"
 
-colMedium11 :: String
-colMedium11 = "col-md-11"
+colMedium11 :: ClassName
+colMedium11 = className "col-md-11"
 
-colMedium12 :: String
-colMedium12 = "col-md-12"
+colMedium12 :: ClassName
+colMedium12 = className "col-md-12"
 
 -- Column layout for large screens
 
-colLarge1 :: String
-colLarge1 = "col-lg-1"
+colLarge1 :: ClassName
+colLarge1 = className "col-lg-1"
 
-colLarge2 :: String
-colLarge2 = "col-lg-2"
+colLarge2 :: ClassName
+colLarge2 = className "col-lg-2"
 
-colLarge3 :: String
-colLarge3 = "col-lg-3"
+colLarge3 :: ClassName
+colLarge3 = className "col-lg-3"
 
-colLarge4 :: String
-colLarge4 = "col-lg-4"
+colLarge4 :: ClassName
+colLarge4 = className "col-lg-4"
 
-colLarge5 :: String
-colLarge5 = "col-lg-5"
+colLarge5 :: ClassName
+colLarge5 = className "col-lg-5"
 
-colLarge6 :: String
-colLarge6 = "col-lg-6"
+colLarge6 :: ClassName
+colLarge6 = className "col-lg-6"
 
-colLarge7 :: String
-colLarge7 = "col-lg-7"
+colLarge7 :: ClassName
+colLarge7 = className "col-lg-7"
 
-colLarge8 :: String
-colLarge8 = "col-lg-8"
+colLarge8 :: ClassName
+colLarge8 = className "col-lg-8"
 
-colLarge9 :: String
-colLarge9 = "col-lg-9"
+colLarge9 :: ClassName
+colLarge9 = className "col-lg-9"
 
-colLarge10 :: String
-colLarge10 = "col-lg-10"
+colLarge10 :: ClassName
+colLarge10 = className "col-lg-10"
 
-colLarge11 :: String
-colLarge11 = "col-lg-11"
+colLarge11 :: ClassName
+colLarge11 = className "col-lg-11"
 
-colLarge12 :: String
-colLarge12 = "col-lg-12"
+colLarge12 :: ClassName
+colLarge12 = className "col-lg-12"
 
 -- Column offsets
 
-colOffset1 :: String
-colOffset1 = "col-md-offset-1"
+colOffset1 :: ClassName
+colOffset1 = className "col-md-offset-1"
 
-colOffset2 :: String
-colOffset2 = "col-md-offset-2"
+colOffset2 :: ClassName
+colOffset2 = className "col-md-offset-2"
 
-colOffset3 :: String
-colOffset3 = "col-md-offset-3"
+colOffset3 :: ClassName
+colOffset3 = className "col-md-offset-3"
 
-colOffset4 :: String
-colOffset4 = "col-md-offset-4"
+colOffset4 :: ClassName
+colOffset4 = className "col-md-offset-4"
 
-colOffset5 :: String
-colOffset5 = "col-md-offset-5"
+colOffset5 :: ClassName
+colOffset5 = className "col-md-offset-5"
 
-colOffset6 :: String
-colOffset6 = "col-md-offset-6"
+colOffset6 :: ClassName
+colOffset6 = className "col-md-offset-6"
 
-colOffset7 :: String
-colOffset7 = "col-md-offset-7"
+colOffset7 :: ClassName
+colOffset7 = className "col-md-offset-7"
 
-colOffset8 :: String
-colOffset8 = "col-md-offset-8"
+colOffset8 :: ClassName
+colOffset8 = className "col-md-offset-8"
 
-colOffset9 :: String
-colOffset9 = "col-md-offset-9"
+colOffset9 :: ClassName
+colOffset9 = className "col-md-offset-9"
 
-colOffset10 :: String
-colOffset10 = "col-md-offset-10"
+colOffset10 :: ClassName
+colOffset10 = className "col-md-offset-10"
 
-colOffset11 :: String
-colOffset11 = "col-md-offset-11"
+colOffset11 :: ClassName
+colOffset11 = className "col-md-offset-11"
 
-colOffset12 :: String
-colOffset12 = "col-md-offset-12"
+colOffset12 :: ClassName
+colOffset12 = className "col-md-offset-12"
 
 -- Tables
 
-table :: String
-table = "table"
+table :: ClassName
+table = className "table"
 
-tableStriped :: String
-tableStriped = "table-striped"
+tableStriped :: ClassName
+tableStriped = className "table-striped"
 
-tableBordered :: String
-tableBordered = "table-bordered"
+tableBordered :: ClassName
+tableBordered = className "table-bordered"
 
-tableHover :: String
-tableHover = "table-hover"
+tableHover :: ClassName
+tableHover = className "table-hover"
 
-tableCondensed :: String
-tableCondensed = "table-condensed"
+tableCondensed :: ClassName
+tableCondensed = className "table-condensed"
 
-tableResponsive :: String
-tableResponsive = "table-responsive"
+tableResponsive :: ClassName
+tableResponsive = className "table-responsive"
 
 -- Contextual classes
 
-active :: String
-active = "active"
+active :: ClassName
+active = className "active"
 
-success :: String
-success = "success"
+success :: ClassName
+success = className "success"
 
-info :: String
-info = "info"
+info :: ClassName
+info = className "info"
 
-warning :: String
-warning = "warning"
+warning :: ClassName
+warning = className "warning"
 
-danger :: String
-danger = "danger"
+danger :: ClassName
+danger = className "danger"
 
 -- Forms
 
-formGroup :: String
-formGroup = "form-group"
+formGroup :: ClassName
+formGroup = className "form-group"
 
-formInline :: String
-formInline = "form-inline"
+formInline :: ClassName
+formInline = className "form-inline"
 
-formHorizontal :: String
-formHorizontal = "form-horizontal"
+formHorizontal :: ClassName
+formHorizontal = className "form-horizontal"
 
-formControl :: String
-formControl = "form-control"
+formControl :: ClassName
+formControl = className "form-control"
 
-formControlStatic :: String
-formControlStatic = "form-control-static"
+formControlStatic :: ClassName
+formControlStatic = className "form-control-static"
 
-inputGroup :: String
-inputGroup = "input-group"
+inputGroup :: ClassName
+inputGroup = className "input-group"
 
-checkbox :: String
-checkbox = "checkbox"
+checkbox :: ClassName
+checkbox = className "checkbox"
 
 -- Validation States
 
-hasWarning :: String
-hasWarning = "has-warning"
+hasWarning :: ClassName
+hasWarning = className "has-warning"
 
-hasError :: String
-hasError = "has-error"
+hasError :: ClassName
+hasError = className "has-error"
 
-hasSuccess :: String
-hasSuccess = "has-success"
+hasSuccess :: ClassName
+hasSuccess = className "has-success"
 
-hasFeedback :: String
-hasFeedback = "has-feedback"
+hasFeedback :: ClassName
+hasFeedback = className "has-feedback"
 
 -- Buttons
 
-btn :: String
-btn = "btn"
+btn :: ClassName
+btn = className "btn"
 
-btnDefault :: String
-btnDefault = "btn-default"
+btnDefault :: ClassName
+btnDefault = className "btn-default"
 
-btnPrimary :: String
-btnPrimary = "btn-primary"
+btnPrimary :: ClassName
+btnPrimary = className "btn-primary"
 
-btnSuccess :: String
-btnSuccess = "btn-success"
+btnSuccess :: ClassName
+btnSuccess = className "btn-success"
 
-btnInfo :: String
-btnInfo = "btn-info"
+btnInfo :: ClassName
+btnInfo = className "btn-info"
 
-btnWarning :: String
-btnWarning = "btn-warning"
+btnWarning :: ClassName
+btnWarning = className "btn-warning"
 
-btnDanger :: String
-btnDanger = "btn-danger"
+btnDanger :: ClassName
+btnDanger = className "btn-danger"
 
-btnLarge :: String
-btnLarge = "btn-lg"
+btnLarge :: ClassName
+btnLarge = className "btn-lg"
 
-btnSmall :: String
-btnSmall = "btn-sm"
+btnSmall :: ClassName
+btnSmall = className "btn-sm"
 
-btnExtraSmall :: String
-btnExtraSmall = "btn-xs"
+btnExtraSmall :: ClassName
+btnExtraSmall = className "btn-xs"
 
-btnBlock :: String
-btnBlock = "btn-block"
+btnBlock :: ClassName
+btnBlock = className "btn-block"
 
-btnGroup :: String
-btnGroup = "btn-group"
+btnGroup :: ClassName
+btnGroup = className "btn-group"
 

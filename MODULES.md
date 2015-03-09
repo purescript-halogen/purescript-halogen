@@ -2004,6 +2004,28 @@ instance categorySF :: Category SF
 
 ## Module Halogen.HTML.Attributes
 
+#### `ClassName`
+
+``` purescript
+newtype ClassName
+```
+
+A wrapper for strings which are used as CSS classes
+
+#### `className`
+
+``` purescript
+className :: String -> ClassName
+```
+
+#### `runClassName`
+
+``` purescript
+runClassName :: ClassName -> String
+```
+
+Unpack a class name
+
 #### `alt`
 
 ``` purescript
@@ -2021,14 +2043,14 @@ charset :: forall i. String -> Attribute i
 #### `class_`
 
 ``` purescript
-class_ :: forall i. String -> Attribute i
+class_ :: forall i. ClassName -> Attribute i
 ```
 
 
 #### `classes`
 
 ``` purescript
-classes :: forall i. [String] -> Attribute i
+classes :: forall i. [ClassName] -> Attribute i
 ```
 
 
@@ -2544,668 +2566,668 @@ to enable the corresponding controls.
 #### `container`
 
 ``` purescript
-container :: String
+container :: ClassName
 ```
 
 #### `containerFluid`
 
 ``` purescript
-containerFluid :: String
+containerFluid :: ClassName
 ```
 
 
 #### `row`
 
 ``` purescript
-row :: String
+row :: ClassName
 ```
 
 
 #### `colExtraSmall1`
 
 ``` purescript
-colExtraSmall1 :: String
+colExtraSmall1 :: ClassName
 ```
 
 #### `colExtraSmall2`
 
 ``` purescript
-colExtraSmall2 :: String
+colExtraSmall2 :: ClassName
 ```
 
 
 #### `colExtraSmall3`
 
 ``` purescript
-colExtraSmall3 :: String
+colExtraSmall3 :: ClassName
 ```
 
 
 #### `colExtraSmall4`
 
 ``` purescript
-colExtraSmall4 :: String
+colExtraSmall4 :: ClassName
 ```
 
 
 #### `colExtraSmall5`
 
 ``` purescript
-colExtraSmall5 :: String
+colExtraSmall5 :: ClassName
 ```
 
 
 #### `colExtraSmall6`
 
 ``` purescript
-colExtraSmall6 :: String
+colExtraSmall6 :: ClassName
 ```
 
 
 #### `colExtraSmall7`
 
 ``` purescript
-colExtraSmall7 :: String
+colExtraSmall7 :: ClassName
 ```
 
 
 #### `colExtraSmall8`
 
 ``` purescript
-colExtraSmall8 :: String
+colExtraSmall8 :: ClassName
 ```
 
 
 #### `colExtraSmall9`
 
 ``` purescript
-colExtraSmall9 :: String
+colExtraSmall9 :: ClassName
 ```
 
 
 #### `colExtraSmall10`
 
 ``` purescript
-colExtraSmall10 :: String
+colExtraSmall10 :: ClassName
 ```
 
 
 #### `colExtraSmall11`
 
 ``` purescript
-colExtraSmall11 :: String
+colExtraSmall11 :: ClassName
 ```
 
 
 #### `colExtraSmall12`
 
 ``` purescript
-colExtraSmall12 :: String
+colExtraSmall12 :: ClassName
 ```
 
 
 #### `colSmall1`
 
 ``` purescript
-colSmall1 :: String
+colSmall1 :: ClassName
 ```
 
 #### `colSmall2`
 
 ``` purescript
-colSmall2 :: String
+colSmall2 :: ClassName
 ```
 
 
 #### `colSmall3`
 
 ``` purescript
-colSmall3 :: String
+colSmall3 :: ClassName
 ```
 
 
 #### `colSmall4`
 
 ``` purescript
-colSmall4 :: String
+colSmall4 :: ClassName
 ```
 
 
 #### `colSmall5`
 
 ``` purescript
-colSmall5 :: String
+colSmall5 :: ClassName
 ```
 
 
 #### `colSmall6`
 
 ``` purescript
-colSmall6 :: String
+colSmall6 :: ClassName
 ```
 
 
 #### `colSmall7`
 
 ``` purescript
-colSmall7 :: String
+colSmall7 :: ClassName
 ```
 
 
 #### `colSmall8`
 
 ``` purescript
-colSmall8 :: String
+colSmall8 :: ClassName
 ```
 
 
 #### `colSmall9`
 
 ``` purescript
-colSmall9 :: String
+colSmall9 :: ClassName
 ```
 
 
 #### `colSmall10`
 
 ``` purescript
-colSmall10 :: String
+colSmall10 :: ClassName
 ```
 
 
 #### `colSmall11`
 
 ``` purescript
-colSmall11 :: String
+colSmall11 :: ClassName
 ```
 
 
 #### `colSmall12`
 
 ``` purescript
-colSmall12 :: String
+colSmall12 :: ClassName
 ```
 
 
 #### `colMedium1`
 
 ``` purescript
-colMedium1 :: String
+colMedium1 :: ClassName
 ```
 
 #### `colMedium2`
 
 ``` purescript
-colMedium2 :: String
+colMedium2 :: ClassName
 ```
 
 
 #### `colMedium3`
 
 ``` purescript
-colMedium3 :: String
+colMedium3 :: ClassName
 ```
 
 
 #### `colMedium4`
 
 ``` purescript
-colMedium4 :: String
+colMedium4 :: ClassName
 ```
 
 
 #### `colMedium5`
 
 ``` purescript
-colMedium5 :: String
+colMedium5 :: ClassName
 ```
 
 
 #### `colMedium6`
 
 ``` purescript
-colMedium6 :: String
+colMedium6 :: ClassName
 ```
 
 
 #### `colMedium7`
 
 ``` purescript
-colMedium7 :: String
+colMedium7 :: ClassName
 ```
 
 
 #### `colMedium8`
 
 ``` purescript
-colMedium8 :: String
+colMedium8 :: ClassName
 ```
 
 
 #### `colMedium9`
 
 ``` purescript
-colMedium9 :: String
+colMedium9 :: ClassName
 ```
 
 
 #### `colMedium10`
 
 ``` purescript
-colMedium10 :: String
+colMedium10 :: ClassName
 ```
 
 
 #### `colMedium11`
 
 ``` purescript
-colMedium11 :: String
+colMedium11 :: ClassName
 ```
 
 
 #### `colMedium12`
 
 ``` purescript
-colMedium12 :: String
+colMedium12 :: ClassName
 ```
 
 
 #### `colLarge1`
 
 ``` purescript
-colLarge1 :: String
+colLarge1 :: ClassName
 ```
 
 #### `colLarge2`
 
 ``` purescript
-colLarge2 :: String
+colLarge2 :: ClassName
 ```
 
 
 #### `colLarge3`
 
 ``` purescript
-colLarge3 :: String
+colLarge3 :: ClassName
 ```
 
 
 #### `colLarge4`
 
 ``` purescript
-colLarge4 :: String
+colLarge4 :: ClassName
 ```
 
 
 #### `colLarge5`
 
 ``` purescript
-colLarge5 :: String
+colLarge5 :: ClassName
 ```
 
 
 #### `colLarge6`
 
 ``` purescript
-colLarge6 :: String
+colLarge6 :: ClassName
 ```
 
 
 #### `colLarge7`
 
 ``` purescript
-colLarge7 :: String
+colLarge7 :: ClassName
 ```
 
 
 #### `colLarge8`
 
 ``` purescript
-colLarge8 :: String
+colLarge8 :: ClassName
 ```
 
 
 #### `colLarge9`
 
 ``` purescript
-colLarge9 :: String
+colLarge9 :: ClassName
 ```
 
 
 #### `colLarge10`
 
 ``` purescript
-colLarge10 :: String
+colLarge10 :: ClassName
 ```
 
 
 #### `colLarge11`
 
 ``` purescript
-colLarge11 :: String
+colLarge11 :: ClassName
 ```
 
 
 #### `colLarge12`
 
 ``` purescript
-colLarge12 :: String
+colLarge12 :: ClassName
 ```
 
 
 #### `colOffset1`
 
 ``` purescript
-colOffset1 :: String
+colOffset1 :: ClassName
 ```
 
 #### `colOffset2`
 
 ``` purescript
-colOffset2 :: String
+colOffset2 :: ClassName
 ```
 
 
 #### `colOffset3`
 
 ``` purescript
-colOffset3 :: String
+colOffset3 :: ClassName
 ```
 
 
 #### `colOffset4`
 
 ``` purescript
-colOffset4 :: String
+colOffset4 :: ClassName
 ```
 
 
 #### `colOffset5`
 
 ``` purescript
-colOffset5 :: String
+colOffset5 :: ClassName
 ```
 
 
 #### `colOffset6`
 
 ``` purescript
-colOffset6 :: String
+colOffset6 :: ClassName
 ```
 
 
 #### `colOffset7`
 
 ``` purescript
-colOffset7 :: String
+colOffset7 :: ClassName
 ```
 
 
 #### `colOffset8`
 
 ``` purescript
-colOffset8 :: String
+colOffset8 :: ClassName
 ```
 
 
 #### `colOffset9`
 
 ``` purescript
-colOffset9 :: String
+colOffset9 :: ClassName
 ```
 
 
 #### `colOffset10`
 
 ``` purescript
-colOffset10 :: String
+colOffset10 :: ClassName
 ```
 
 
 #### `colOffset11`
 
 ``` purescript
-colOffset11 :: String
+colOffset11 :: ClassName
 ```
 
 
 #### `colOffset12`
 
 ``` purescript
-colOffset12 :: String
+colOffset12 :: ClassName
 ```
 
 
 #### `table`
 
 ``` purescript
-table :: String
+table :: ClassName
 ```
 
 #### `tableStriped`
 
 ``` purescript
-tableStriped :: String
+tableStriped :: ClassName
 ```
 
 
 #### `tableBordered`
 
 ``` purescript
-tableBordered :: String
+tableBordered :: ClassName
 ```
 
 
 #### `tableHover`
 
 ``` purescript
-tableHover :: String
+tableHover :: ClassName
 ```
 
 
 #### `tableCondensed`
 
 ``` purescript
-tableCondensed :: String
+tableCondensed :: ClassName
 ```
 
 
 #### `tableResponsive`
 
 ``` purescript
-tableResponsive :: String
+tableResponsive :: ClassName
 ```
 
 
 #### `active`
 
 ``` purescript
-active :: String
+active :: ClassName
 ```
 
 #### `success`
 
 ``` purescript
-success :: String
+success :: ClassName
 ```
 
 
 #### `info`
 
 ``` purescript
-info :: String
+info :: ClassName
 ```
 
 
 #### `warning`
 
 ``` purescript
-warning :: String
+warning :: ClassName
 ```
 
 
 #### `danger`
 
 ``` purescript
-danger :: String
+danger :: ClassName
 ```
 
 
 #### `formGroup`
 
 ``` purescript
-formGroup :: String
+formGroup :: ClassName
 ```
 
 #### `formInline`
 
 ``` purescript
-formInline :: String
+formInline :: ClassName
 ```
 
 
 #### `formHorizontal`
 
 ``` purescript
-formHorizontal :: String
+formHorizontal :: ClassName
 ```
 
 
 #### `formControl`
 
 ``` purescript
-formControl :: String
+formControl :: ClassName
 ```
 
 
 #### `formControlStatic`
 
 ``` purescript
-formControlStatic :: String
+formControlStatic :: ClassName
 ```
 
 
 #### `inputGroup`
 
 ``` purescript
-inputGroup :: String
+inputGroup :: ClassName
 ```
 
 
 #### `checkbox`
 
 ``` purescript
-checkbox :: String
+checkbox :: ClassName
 ```
 
 
 #### `hasWarning`
 
 ``` purescript
-hasWarning :: String
+hasWarning :: ClassName
 ```
 
 #### `hasError`
 
 ``` purescript
-hasError :: String
+hasError :: ClassName
 ```
 
 
 #### `hasSuccess`
 
 ``` purescript
-hasSuccess :: String
+hasSuccess :: ClassName
 ```
 
 
 #### `hasFeedback`
 
 ``` purescript
-hasFeedback :: String
+hasFeedback :: ClassName
 ```
 
 
 #### `btn`
 
 ``` purescript
-btn :: String
+btn :: ClassName
 ```
 
 #### `btnDefault`
 
 ``` purescript
-btnDefault :: String
+btnDefault :: ClassName
 ```
 
 
 #### `btnPrimary`
 
 ``` purescript
-btnPrimary :: String
+btnPrimary :: ClassName
 ```
 
 
 #### `btnSuccess`
 
 ``` purescript
-btnSuccess :: String
+btnSuccess :: ClassName
 ```
 
 
 #### `btnInfo`
 
 ``` purescript
-btnInfo :: String
+btnInfo :: ClassName
 ```
 
 
 #### `btnWarning`
 
 ``` purescript
-btnWarning :: String
+btnWarning :: ClassName
 ```
 
 
 #### `btnDanger`
 
 ``` purescript
-btnDanger :: String
+btnDanger :: ClassName
 ```
 
 
 #### `btnLarge`
 
 ``` purescript
-btnLarge :: String
+btnLarge :: ClassName
 ```
 
 
 #### `btnSmall`
 
 ``` purescript
-btnSmall :: String
+btnSmall :: ClassName
 ```
 
 
 #### `btnExtraSmall`
 
 ``` purescript
-btnExtraSmall :: String
+btnExtraSmall :: ClassName
 ```
 
 
 #### `btnBlock`
 
 ``` purescript
-btnBlock :: String
+btnBlock :: ClassName
 ```
 
 
 #### `btnGroup`
 
 ``` purescript
-btnGroup :: String
+btnGroup :: ClassName
 ```
 
 
