@@ -2180,292 +2180,246 @@ placeholder :: forall i. String -> Attribute i
 ```
 
 
-#### `Event`
 
-``` purescript
-type Event fields = { "type" :: String, timeStamp :: Number, target :: Node, currentTarget :: Node, cancelable :: Boolean, bubbles :: Boolean | fields }
-```
-
+## Module Halogen.HTML.Events
 
 #### `onabort`
 
 ``` purescript
-onabort :: forall i. (Event () -> i) -> Attribute i
+onabort :: forall i. (Event () -> EventHandler i) -> Attribute i
 ```
 
 
 #### `onbeforeunload`
 
 ``` purescript
-onbeforeunload :: forall i. (Event () -> i) -> Attribute i
+onbeforeunload :: forall i. (Event () -> EventHandler i) -> Attribute i
 ```
 
 
 #### `onerror`
 
 ``` purescript
-onerror :: forall i. (Event () -> i) -> Attribute i
+onerror :: forall i. (Event () -> EventHandler i) -> Attribute i
 ```
 
 
 #### `onhashchange`
 
 ``` purescript
-onhashchange :: forall i. (Event () -> i) -> Attribute i
+onhashchange :: forall i. (Event () -> EventHandler i) -> Attribute i
 ```
 
 
 #### `onload`
 
 ``` purescript
-onload :: forall i. (Event () -> i) -> Attribute i
+onload :: forall i. (Event () -> EventHandler i) -> Attribute i
 ```
 
 
 #### `onpageshow`
 
 ``` purescript
-onpageshow :: forall i. (Event () -> i) -> Attribute i
+onpageshow :: forall i. (Event () -> EventHandler i) -> Attribute i
 ```
 
 
 #### `onpagehide`
 
 ``` purescript
-onpagehide :: forall i. (Event () -> i) -> Attribute i
+onpagehide :: forall i. (Event () -> EventHandler i) -> Attribute i
 ```
 
 
 #### `onresize`
 
 ``` purescript
-onresize :: forall i. (Event () -> i) -> Attribute i
+onresize :: forall i. (Event () -> EventHandler i) -> Attribute i
 ```
 
 
 #### `onscroll`
 
 ``` purescript
-onscroll :: forall i. (Event () -> i) -> Attribute i
+onscroll :: forall i. (Event () -> EventHandler i) -> Attribute i
 ```
 
 
 #### `onunload`
 
 ``` purescript
-onunload :: forall i. (Event () -> i) -> Attribute i
+onunload :: forall i. (Event () -> EventHandler i) -> Attribute i
 ```
 
 
 #### `onchange`
 
 ``` purescript
-onchange :: forall i. (Event () -> i) -> Attribute i
+onchange :: forall i. (Event () -> EventHandler i) -> Attribute i
 ```
 
 
 #### `oninput`
 
 ``` purescript
-oninput :: forall i. (Event () -> i) -> Attribute i
+oninput :: forall i. (Event () -> EventHandler i) -> Attribute i
 ```
 
 
 #### `oninvalid`
 
 ``` purescript
-oninvalid :: forall i. (Event () -> i) -> Attribute i
+oninvalid :: forall i. (Event () -> EventHandler i) -> Attribute i
 ```
 
 
 #### `onreset`
 
 ``` purescript
-onreset :: forall i. (Event () -> i) -> Attribute i
+onreset :: forall i. (Event () -> EventHandler i) -> Attribute i
 ```
 
 
 #### `onsearch`
 
 ``` purescript
-onsearch :: forall i. (Event () -> i) -> Attribute i
+onsearch :: forall i. (Event () -> EventHandler i) -> Attribute i
 ```
 
 
 #### `onselect`
 
 ``` purescript
-onselect :: forall i. (Event () -> i) -> Attribute i
+onselect :: forall i. (Event () -> EventHandler i) -> Attribute i
 ```
 
 
 #### `onsubmit`
 
 ``` purescript
-onsubmit :: forall i. (Event () -> i) -> Attribute i
-```
-
-
-#### `MouseEvent`
-
-``` purescript
-type MouseEvent = (which :: Number, metaKey :: Boolean, altKey :: Boolean, shiftKey :: Boolean, ctrlKey :: Boolean, screenY :: Number, screenX :: Number, clientY :: Number, clientX :: Number, relatedTarget :: Node, detail :: Number, button :: Number)
+onsubmit :: forall i. (Event () -> EventHandler i) -> Attribute i
 ```
 
 
 #### `onclick`
 
 ``` purescript
-onclick :: forall i. (Event MouseEvent -> i) -> Attribute i
+onclick :: forall i. (Event MouseEvent -> EventHandler i) -> Attribute i
 ```
 
 
 #### `oncontextmenu`
 
 ``` purescript
-oncontextmenu :: forall i. (Event MouseEvent -> i) -> Attribute i
+oncontextmenu :: forall i. (Event MouseEvent -> EventHandler i) -> Attribute i
 ```
 
 
 #### `ondblclick`
 
 ``` purescript
-ondblclick :: forall i. (Event MouseEvent -> i) -> Attribute i
+ondblclick :: forall i. (Event MouseEvent -> EventHandler i) -> Attribute i
 ```
 
 
 #### `onmousedown`
 
 ``` purescript
-onmousedown :: forall i. (Event MouseEvent -> i) -> Attribute i
+onmousedown :: forall i. (Event MouseEvent -> EventHandler i) -> Attribute i
 ```
 
 
 #### `onmouseenter`
 
 ``` purescript
-onmouseenter :: forall i. (Event MouseEvent -> i) -> Attribute i
+onmouseenter :: forall i. (Event MouseEvent -> EventHandler i) -> Attribute i
 ```
 
 
 #### `onmouseleave`
 
 ``` purescript
-onmouseleave :: forall i. (Event MouseEvent -> i) -> Attribute i
+onmouseleave :: forall i. (Event MouseEvent -> EventHandler i) -> Attribute i
 ```
 
 
 #### `onmousemove`
 
 ``` purescript
-onmousemove :: forall i. (Event MouseEvent -> i) -> Attribute i
+onmousemove :: forall i. (Event MouseEvent -> EventHandler i) -> Attribute i
 ```
 
 
 #### `onmouseover`
 
 ``` purescript
-onmouseover :: forall i. (Event MouseEvent -> i) -> Attribute i
+onmouseover :: forall i. (Event MouseEvent -> EventHandler i) -> Attribute i
 ```
 
 
 #### `onmouseout`
 
 ``` purescript
-onmouseout :: forall i. (Event MouseEvent -> i) -> Attribute i
+onmouseout :: forall i. (Event MouseEvent -> EventHandler i) -> Attribute i
 ```
 
 
 #### `onmouseup`
 
 ``` purescript
-onmouseup :: forall i. (Event MouseEvent -> i) -> Attribute i
-```
-
-
-#### `KeyboardEvent`
-
-``` purescript
-type KeyboardEvent = (which :: Number, metaKey :: Boolean, altKey :: Boolean, shiftKey :: Boolean, ctrlKey :: Boolean, keyCode :: Number, charCode :: Number)
+onmouseup :: forall i. (Event MouseEvent -> EventHandler i) -> Attribute i
 ```
 
 
 #### `onkeydown`
 
 ``` purescript
-onkeydown :: forall i. (Event KeyboardEvent -> i) -> Attribute i
+onkeydown :: forall i. (Event KeyboardEvent -> EventHandler i) -> Attribute i
 ```
 
 
 #### `onkeypress`
 
 ``` purescript
-onkeypress :: forall i. (Event KeyboardEvent -> i) -> Attribute i
+onkeypress :: forall i. (Event KeyboardEvent -> EventHandler i) -> Attribute i
 ```
 
 
 #### `onkeyup`
 
 ``` purescript
-onkeyup :: forall i. (Event KeyboardEvent -> i) -> Attribute i
-```
-
-
-#### `FocusEvent`
-
-``` purescript
-type FocusEvent = (relatedTarget :: Node)
+onkeyup :: forall i. (Event KeyboardEvent -> EventHandler i) -> Attribute i
 ```
 
 
 #### `onblur`
 
 ``` purescript
-onblur :: forall i. (Event FocusEvent -> i) -> Attribute i
+onblur :: forall i. (Event FocusEvent -> EventHandler i) -> Attribute i
 ```
 
 
 #### `onfocus`
 
 ``` purescript
-onfocus :: forall i. (Event FocusEvent -> i) -> Attribute i
+onfocus :: forall i. (Event FocusEvent -> EventHandler i) -> Attribute i
 ```
 
 
 #### `onfocusin`
 
 ``` purescript
-onfocusin :: forall i. (Event FocusEvent -> i) -> Attribute i
+onfocusin :: forall i. (Event FocusEvent -> EventHandler i) -> Attribute i
 ```
 
 
 #### `onfocusout`
 
 ``` purescript
-onfocusout :: forall i. (Event FocusEvent -> i) -> Attribute i
+onfocusout :: forall i. (Event FocusEvent -> EventHandler i) -> Attribute i
 ```
 
-
-
-## Module Halogen.HTML.Forms
-
-#### `onValueChanged`
-
-``` purescript
-onValueChanged :: forall value i. (IsForeign value) => (value -> i) -> Attribute i
-```
-
-Attach an event handler which will produce an input when the value of an input field changes
-
-An input will not be produced if the value cannot be cast to the appropriate type.
-
-#### `onChecked`
-
-``` purescript
-onChecked :: forall i. (Boolean -> i) -> Attribute i
-```
-
-Attach an event handler which will fire when a checkbox is checked or unchecked
 
 
 ## Module Halogen.Mixin.UndoRedo
@@ -3228,6 +3182,134 @@ btnBlock :: ClassName
 
 ``` purescript
 btnGroup :: ClassName
+```
+
+
+
+## Module Halogen.HTML.Events.Forms
+
+#### `onValueChanged`
+
+``` purescript
+onValueChanged :: forall value i. (IsForeign value) => (value -> EventHandler i) -> Attribute i
+```
+
+Attach an event handler which will produce an input when the value of an input field changes
+
+An input will not be produced if the value cannot be cast to the appropriate type.
+
+#### `onChecked`
+
+``` purescript
+onChecked :: forall i. (Boolean -> EventHandler i) -> Attribute i
+```
+
+Attach an event handler which will fire when a checkbox is checked or unchecked
+
+
+## Module Halogen.HTML.Events.Handler
+
+#### `EventHandler`
+
+``` purescript
+data EventHandler a
+```
+
+This applicative functor supports the following operations on events:
+
+- `preventDefault`
+- `stopPropagation`
+- `stopImmediatePropagation`
+
+It can be used as follows:
+
+```purescript
+import Control.Functor (($>))
+
+H.a (E.onclick \_ -> E.preventDefault $> ClickHandler) (H.text "Click here")
+```
+
+#### `preventDefault`
+
+``` purescript
+preventDefault :: EventHandler Unit
+```
+
+Call the `preventDefault` method on the current event
+
+#### `stopPropagation`
+
+``` purescript
+stopPropagation :: EventHandler Unit
+```
+
+Call the `stopPropagation` method on the current event
+
+#### `stopImmediatePropagation`
+
+``` purescript
+stopImmediatePropagation :: EventHandler Unit
+```
+
+Call the `stopImmediatePropagation` method on the current event
+
+#### `functorEventHandler`
+
+``` purescript
+instance functorEventHandler :: Functor EventHandler
+```
+
+
+#### `applyEventHandler`
+
+``` purescript
+instance applyEventHandler :: Apply EventHandler
+```
+
+
+#### `applicativeEventHandler`
+
+``` purescript
+instance applicativeEventHandler :: Applicative EventHandler
+```
+
+
+#### `runEventHandler`
+
+``` purescript
+runEventHandler :: forall a fields eff. Event fields -> EventHandler a -> Eff (dom :: DOM | eff) a
+```
+
+This function can be used to update an event and return the wrapped value
+
+
+## Module Halogen.HTML.Events.Types
+
+#### `Event`
+
+``` purescript
+type Event fields = { "type" :: String, timeStamp :: Number, target :: Node, currentTarget :: Node, cancelable :: Boolean, bubbles :: Boolean | fields }
+```
+
+
+#### `MouseEvent`
+
+``` purescript
+type MouseEvent = (which :: Number, metaKey :: Boolean, altKey :: Boolean, shiftKey :: Boolean, ctrlKey :: Boolean, screenY :: Number, screenX :: Number, clientY :: Number, clientX :: Number, relatedTarget :: Node, detail :: Number, button :: Number)
+```
+
+
+#### `KeyboardEvent`
+
+``` purescript
+type KeyboardEvent = (which :: Number, metaKey :: Boolean, altKey :: Boolean, shiftKey :: Boolean, ctrlKey :: Boolean, keyCode :: Number, charCode :: Number)
+```
+
+
+#### `FocusEvent`
+
+``` purescript
+type FocusEvent = (relatedTarget :: Node)
 ```
 
 

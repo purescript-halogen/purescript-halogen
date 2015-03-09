@@ -6,6 +6,7 @@ import Data.Array (zipWith, length, modifyAt, deleteAt, (..), (!!))
 
 import Debug.Trace
 
+import Control.Functor (($>))
 import Control.Monad.Eff
 
 import DOM
@@ -17,7 +18,9 @@ import qualified Halogen.Mixin.UndoRedo as U
 
 import qualified Halogen.HTML as H
 import qualified Halogen.HTML.Attributes as A
-import qualified Halogen.HTML.Forms as A
+import qualified Halogen.HTML.Events as A
+import qualified Halogen.HTML.Events.Forms as A
+import qualified Halogen.HTML.Events.Handler as E
 
 import qualified Halogen.Themes.Bootstrap3 as B
 
@@ -66,15 +69,15 @@ ui = view <$> stateful (U.undoRedoState (State [])) (U.withUndoRedo update)
   toolbar :: forall st. U.UndoRedoState st -> H.HTML Input
   toolbar st = H.p (A.class_ B.btnGroup)
                    [ H.button ( A.classes [ B.btn, B.btnPrimary ]
-                                <> A.onclick (const NewTask) )
+                                <> A.onclick (\_ -> pure NewTask) )
                               [ H.text "New Task" ]
                    , H.button ( A.class_ B.btn
                                 <> A.enabled (U.canUndo st)
-                                <> A.onclick (const Undo) )
+                                <> A.onclick (\_ -> pure Undo) )
                               [ H.text "Undo" ]
                    , H.button ( A.class_ B.btn
                                 <> A.enabled (U.canRedo st)
-                                <> A.onclick (const Redo) )
+                                <> A.onclick (\_ -> pure Redo) )
                               [ H.text "Redo" ]
                    ]
            
@@ -92,19 +95,20 @@ ui = view <$> stateful (U.undoRedoState (State [])) (U.withUndoRedo update)
   task task index =
     H.tr_ [ H.td_ [ H.input ( A.classes [ B.formControl ]
                               <> A.placeholder "Description"
-                              <> A.onValueChanged (UpdateDescription index)
+                              <> A.onValueChanged (pure <<< UpdateDescription index)
                               <> A.value task.description )
                             [] ]
           , H.td_ [ H.input ( A.classes [ B.formControl, B.checkbox]
                               <> A.type_ "checkbox"
                               <> A.checked task.completed
                               <> A.title "Mark as completed"
-                              <> A.onChecked (MarkCompleted index) )
+                              <> A.onChecked (pure <<< MarkCompleted index) )
                             [] ]
-          , H.td_ [ H.button ( A.classes [ B.btn, B.btnDefault ]
-                               <> A.title "Remove task"
-                               <> A.onclick \_ -> RemoveTask index )
-                             [ H.text "✖" ] ]
+          , H.td_ [ H.a ( A.classes [ B.btn, B.btnDefault ]
+                          <> A.href "#"
+                          <> A.title "Remove task"
+                          <> A.onclick \_ -> E.preventDefault $> RemoveTask index )
+                        [ H.text "✖" ] ]
           ]
 
   update :: State -> Input -> State
