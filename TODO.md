@@ -1,12 +1,12 @@
 - [ ] Bootstrap Support 
-  - [ ] Input groups
+  - [x] Input groups
   - [ ] Buttons
   - [ ] Navbars
   - [ ] List groups
   - [ ] Breadcrumbs
 - [ ] Make Raw safer
 - [ ] Routing mixin + example
-- [ ] Make Attribute traversable
+- [x] Make Attribute traversable
 - [ ] More docs
 - [ ] String renderer for HTML
 - [ ] More newtypes
