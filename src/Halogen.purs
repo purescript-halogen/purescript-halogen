@@ -2,17 +2,16 @@ module Halogen where
     
 import DOM
 
+import Data.Void
 import Data.Maybe
 import Data.Either
 
 import Control.Monad.Eff
 import Control.Monad.Eff.Ref
-import Control.Monad.Eff.Exception
-import Control.Monad.Eff.Unsafe
     
 import Control.Monad.Aff
     
-import Halogen.HTML (HTML(), renderHtml)
+import Halogen.HTML (HTML(), renderHtml')
 import Halogen.Signal 
 import Halogen.Internal.VirtualDOM   
  
@@ -45,8 +44,8 @@ changes = differencesWith diff
 -- |   view n = button [ onclick (const unit) ] [ text (show n) ]
 -- | ```
 -- |
-runUI :: forall i eff. SF1 i (HTML i) -> Eff (HalogenEffects eff) Node
-runUI signal = runUIEff ((Left <$>) <$> signal) (\_ _ -> return unit)
+runUI :: forall i eff. (forall a. SF1 i (HTML a i)) -> Eff (HalogenEffects eff) Node
+runUI signal = runUIEff ((Left <$>) <$> signal) absurd (\_ _ -> return unit)
 
 -- | `runUIEff` is a more general version of `runUI` which can be used to construct other
 -- | top-level handlers for applications.
@@ -60,15 +59,15 @@ runUI signal = runUIEff ((Left <$>) <$> signal) (\_ _ -> return unit)
 -- |
 -- | In this way, all effects are pushed to the handler function at the boundary of the application.
 -- |
-runUIEff :: forall i r eff. SF1 i (HTML (Either i r)) -> (r -> (i -> Eff (HalogenEffects eff) Unit) -> Eff (HalogenEffects eff) Unit) -> Eff (HalogenEffects eff) Node
-runUIEff signal handler = do
+runUIEff :: forall i a r eff. SF1 i (HTML a (Either i r)) -> (a -> VTree) -> (r -> (i -> Eff (HalogenEffects eff) Unit) -> Eff (HalogenEffects eff) Unit) -> Eff (HalogenEffects eff) Node
+runUIEff signal renderComponent handler = do
   ref <- newRef Nothing
   runUI' ref
   
   where
-  runUI' :: forall i. RefVal _ -> Eff (HalogenEffects eff) Node
+  runUI' :: RefVal _ -> Eff (HalogenEffects eff) Node
   runUI' ref = do
-    let render = renderHtml requestHandler
+    let render = renderHtml' requestHandler renderComponent
         vtrees = render <$> signal
         diffs  = tail vtrees >>> changes (head vtrees) 
         node   = createElement (head vtrees)  
@@ -86,13 +85,4 @@ runUIEff signal handler = do
       let next = runSF signal i
       node' <- patch (head next) node
       writeRef ref $ Just { signal: tail next, node: node' }
-
--- | This type class identifies those input types which support errors
-class SupportsErrors input where
-  liftError :: Error -> input
-
--- | A convenience function which uses the `Aff` monad to represent the handler function.
-runUIAff :: forall i r eff. (SupportsErrors i) => SF1 i (HTML (Either i r)) -> (r -> Aff (HalogenEffects eff) i) -> EffA (HalogenEffects eff) Node
-runUIAff signal handler = unsafeInterleaveEff $ runUIEff signal \r k -> unsafeInterleaveEff $ runAff (k <<< liftError) k $ handler r
-
       

@@ -5,6 +5,8 @@ module Halogen.HTML.Attributes
   
   , addClass
   
+  , attribute
+  
   , alt
   , charset
   , class_
@@ -34,6 +36,7 @@ import DOM
 import Data.Tuple
 import Data.Either (either)
 import Data.Foreign
+import Data.Monoid (mempty)
 import Data.Array (map)
 import Data.String (joinWith)
 import Data.Traversable (mapAccumL)
@@ -42,7 +45,6 @@ import Control.Monad.Eff
 import Control.Monad.ST
 
 import Halogen.HTML (Attribute(..), AttributeValue(..))
-import Halogen.HTML.Attributes.Unsafe
 import Halogen.Internal.VirtualDOM
 
 -- | A wrapper for strings which are used as CSS classes
@@ -67,74 +69,77 @@ addClass cn@(ClassName c) (Attribute xs) =
     Tuple true ys -> Attribute ys
   where
   go :: Boolean -> Tuple String (AttributeValue i) -> Tuple Boolean (Tuple String (AttributeValue i))
-  go false (Tuple "className" (ValueAttribute cs)) = Tuple true (Tuple "className" (ValueAttribute (onStrings (++ (" " ++ c)) cs)))
+  go false (Tuple "className" (ValueAttribute cs)) = Tuple true (Tuple "className" (ValueAttribute (cs ++ " " ++ c)))
   go b (Tuple k v) = Tuple b (Tuple k v)
-  
-  onStrings :: (String -> String) -> Foreign -> Foreign
-  onStrings f s = either (const s) toForeign $ f <$> readString s
+    
+-- | This function can be used to define custom attributes.
+attribute :: forall i value. String -> String -> Attribute i
+attribute key value = Attribute [Tuple key (ValueAttribute value)]
 
 alt :: forall i. String -> Attribute i
-alt = unsafeAttribute "alt"
+alt = attribute "alt"
      
 charset :: forall i. String -> Attribute i
-charset = unsafeAttribute "charset"
+charset = attribute "charset"
 
 class_ :: forall i. ClassName -> Attribute i
-class_ = unsafeAttribute "className" <<< runClassName
+class_ = attribute "className" <<< runClassName
 
 classes :: forall i. [ClassName] -> Attribute i
-classes ss = unsafeAttribute "className" (joinWith " " $ map runClassName ss)
+classes ss = attribute "className" (joinWith " " $ map runClassName ss)
 
 content :: forall i. String -> Attribute i
-content = unsafeAttribute "content"
+content = attribute "content"
 
 for :: forall i. String -> Attribute i
-for = unsafeAttribute "for"
+for = attribute "for"
 
 height :: forall i. Number -> Attribute i
-height = unsafeAttribute "height" <<< show
+height = attribute "height" <<< show
 
 href :: forall i. String -> Attribute i
-href = unsafeAttribute "href"
+href = attribute "href"
 
 httpEquiv :: forall i. String -> Attribute i
-httpEquiv = unsafeAttribute "http-equiv"
+httpEquiv = attribute "http-equiv"
 
 id_ :: forall i. String -> Attribute i
-id_ = unsafeAttribute "id"
+id_ = attribute "id"
    
 name :: forall i. String -> Attribute i
-name = unsafeAttribute "name"
+name = attribute "name"
        
 rel :: forall i. String -> Attribute i
-rel = unsafeAttribute "rel"
+rel = attribute "rel"
     
 src :: forall i. String -> Attribute i
-src = unsafeAttribute "src"
+src = attribute "src"
    
 target :: forall i. String -> Attribute i
-target = unsafeAttribute "target"
+target = attribute "target"
    
 title :: forall i. String -> Attribute i
-title = unsafeAttribute "title"
+title = attribute "title"
    
 type_ :: forall i. String -> Attribute i
-type_ = unsafeAttribute "type"
+type_ = attribute "type"
    
 value :: forall i. String -> Attribute i
-value = unsafeAttribute "value"
+value = attribute "value"
    
 width :: forall i. Number -> Attribute i
-width = unsafeAttribute "width" <<< show
+width = attribute "width" <<< show
    
 disabled :: forall i. Boolean -> Attribute i
-disabled = unsafeAttribute "disabled"
+disabled false = mempty
+disabled true = attribute "disabled" "disabled"
    
 enabled :: forall i. Boolean -> Attribute i
 enabled = disabled <<< not
 
 checked :: forall i. Boolean -> Attribute i
-checked = unsafeAttribute "checked"
+checked false = mempty
+checked true = attribute "checked" "checked"
    
 placeholder :: forall i. String -> Attribute i
-placeholder = unsafeAttribute "placeholder"
+placeholder = attribute "placeholder"

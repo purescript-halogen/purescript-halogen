@@ -71,10 +71,10 @@ instance inputSupportsUndoRedo :: U.SupportsUndoRedo Input where
   toUndoRedo _ = Nothing
 
 -- | The UI is a state machine, consuming inputs, and generating HTML documents which in turn, generate new inputs
-ui :: forall eff. SF1 Input (H.HTML Input)
+ui :: forall eff a. SF1 Input (H.HTML a Input)
 ui = Hash.withHash view <$> stateful (U.undoRedoState (State [])) (U.withUndoRedo update)
   where
-  view :: U.UndoRedoState State -> H.HTML Input
+  view :: U.UndoRedoState State -> H.HTML a Input
   view st = 
     case U.getState st of
       State ts ->
@@ -84,7 +84,7 @@ ui = Hash.withHash view <$> stateful (U.undoRedoState (State [])) (U.withUndoRed
               , tasks ts
               ]
               
-  toolbar :: forall st. U.UndoRedoState st -> H.HTML Input
+  toolbar :: forall st. U.UndoRedoState st -> H.HTML a Input
   toolbar st = H.p (A.class_ B.btnGroup)
                    [ H.button ( A.classes [ B.btn, B.btnPrimary ]
                                 <> A.onclick (\_ -> pure NewTask) )
@@ -99,12 +99,12 @@ ui = Hash.withHash view <$> stateful (U.undoRedoState (State [])) (U.withUndoRed
                               [ H.text "Redo" ]
                    ]
            
-  tasks :: [Task] -> H.HTML Input
+  tasks :: [Task] -> H.HTML a Input
   tasks ts = H.table (A.classes [ B.table, B.tableStriped ]) 
                      (zipWith task ts (0 .. length ts))
                   
               
-  task :: Task -> Number -> H.HTML Input
+  task :: Task -> Number -> H.HTML a Input
   task (Task task) index =
     BI.inputGroup 
       (Just (H.input ( A.class_ B.checkbox

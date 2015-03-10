@@ -12,5 +12,5 @@ import qualified Halogen.HTML as H
 -- | cause a re-render if the hash code does not change.
 -- |
 -- | **Note**: this function may be prone to false positives due to hash collisions.
-withHash :: forall s r. (Hashable s) => (s -> H.HTML r) -> s -> H.HTML r
+withHash :: forall s a r. (Hashable s) => (s -> H.HTML a r) -> s -> H.HTML a r
 withHash f s = H.hashed (hash s) (\_ -> f s)

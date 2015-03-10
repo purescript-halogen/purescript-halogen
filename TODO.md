@@ -4,9 +4,9 @@
   - [ ] Navbars
   - [ ] List groups
   - [ ] Breadcrumbs
-- [ ] Make Raw safer
+- [x] Make Raw safer
 - [ ] Routing mixin + example
 - [x] Make Attribute traversable
 - [ ] More docs
-- [ ] String renderer for HTML
+- [x] String renderer for HTML
 - [ ] More newtypes
