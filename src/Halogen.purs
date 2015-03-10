@@ -4,6 +4,7 @@ import DOM
 
 import Data.Void
 import Data.Maybe
+import Data.Tuple
 import Data.Either
 
 import Control.Monad.Eff
@@ -43,9 +44,43 @@ changes = differencesWith diff
 -- |   view :: Number -> HTML Unit
 -- |   view n = button [ onclick (const unit) ] [ text (show n) ]
 -- | ```
--- |
 runUI :: forall i eff. (forall a. SF1 i (HTML a i)) -> Eff (HalogenEffects eff) Node
-runUI signal = runUIEff ((Left <$>) <$> signal) absurd (\_ _ -> return unit)
+runUI signal = fst <$> runUIEff ((Left <$>) <$> signal) absurd (\_ _ -> return unit)
+
+-- | This type synonym is provided to tidy up the type signature of `runUIEff`.
+-- |
+-- | The _handler function_ is responsible for receiving requests from the UI, integrating with external
+-- | components, and providing inputs back to the system based on the results.
+-- |
+-- | For example:
+-- | 
+-- | ```purescript
+-- | data Input = SetDateAndTime DateAndTime | ...
+-- | 
+-- | data Request = GetDateAndTimeRequest | ...
+-- | 
+-- | appHandler :: forall eff. Handler Request Input eff 
+-- | appHandler GetDateAndTimeRequest k =
+-- |   get "/date" \response -> k (readDateAndTime response)
+-- | ```
+type Handler r i eff = r -> (i -> Eff (HalogenEffects eff) Unit) -> Eff (HalogenEffects eff) Unit
+
+-- | This type synonym is provided to tidy up the type signature of `runUIEff`.
+-- |
+-- | The _driver function_ can be used by the caller to inject additional inputs into the system at the top-level.
+-- |
+-- | This is useful for supporting applications which respond to external events which originate
+-- | outside the UI, such as timers or hash-change events.
+-- |
+-- | For example, to drive the UI with a `Tick` input every second, we might write something like the following:
+-- | 
+-- | ```purescript
+-- | main = do
+-- |   Tuple node driver <- runUIEff ui absurd handler
+-- |   appendToBody node
+-- |   setInterval 1000 $ driver Tick
+-- | ```
+type Driver i eff = i -> Eff (HalogenEffects eff) Unit
 
 -- | `runUIEff` is a more general version of `runUI` which can be used to construct other
 -- | top-level handlers for applications.
@@ -59,28 +94,28 @@ runUI signal = runUIEff ((Left <$>) <$> signal) absurd (\_ _ -> return unit)
 -- |
 -- | In this way, all effects are pushed to the handler function at the boundary of the application.
 -- |
-runUIEff :: forall i a r eff. SF1 i (HTML a (Either i r)) -> (a -> VTree) -> (r -> (i -> Eff (HalogenEffects eff) Unit) -> Eff (HalogenEffects eff) Unit) -> Eff (HalogenEffects eff) Node
+runUIEff :: forall i a r eff. SF1 i (HTML a (Either i r)) -> (a -> VTree) -> Handler r i eff -> Eff (HalogenEffects eff) (Tuple Node (Driver i eff))
 runUIEff signal renderComponent handler = do
   ref <- newRef Nothing
   runUI' ref
   
   where
-  runUI' :: RefVal _ -> Eff (HalogenEffects eff) Node
+  runUI' :: RefVal _ -> Eff (HalogenEffects eff) (Tuple Node (Driver i eff))
   runUI' ref = do
     let render = renderHtml' requestHandler renderComponent
         vtrees = render <$> signal
         diffs  = tail vtrees >>> changes (head vtrees) 
         node   = createElement (head vtrees)  
     writeRef ref $ Just { signal: diffs, node: node }
-    return node    
+    return (Tuple node driver)  
     
     where
     requestHandler :: Either i r -> Eff (HalogenEffects eff) Unit
-    requestHandler (Left i) = inputHandler i
-    requestHandler (Right r) = handler r inputHandler
+    requestHandler (Left i) = driver i
+    requestHandler (Right r) = handler r driver
     
-    inputHandler :: i -> Eff (HalogenEffects eff) Unit
-    inputHandler i = do
+    driver :: Driver i eff
+    driver i = do
       Just { signal: signal, node: node } <- readRef ref
       let next = runSF signal i
       node' <- patch (head next) node

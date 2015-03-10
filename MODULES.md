@@ -2504,7 +2504,7 @@ This type class identifies those input types which support errors
 #### `runUIAff`
 
 ``` purescript
-runUIAff :: forall i a r eff. (SupportsErrors i) => SF1 i (HTML a (Either i r)) -> (a -> VTree) -> (r -> Aff (HalogenEffects eff) i) -> EffA (HalogenEffects eff) Node
+runUIAff :: forall i a r eff. (SupportsErrors i) => SF1 i (HTML a (Either i r)) -> (a -> VTree) -> (r -> Aff (HalogenEffects eff) i) -> EffA (HalogenEffects eff) (Tuple Node (Driver i eff))
 ```
 
 A convenience function which uses the `Aff` monad to represent the handler function.
