@@ -11,10 +11,13 @@ import Control.Monad.Eff
 
 import DOM
 
+import Data.Hashable
+
 import Halogen
 import Halogen.Signal
 
 import qualified Halogen.Mixin.UndoRedo as U
+import qualified Halogen.Mixin.Hashed as Hash
 
 import qualified Halogen.HTML as H
 import qualified Halogen.HTML.Attributes as A
@@ -31,10 +34,24 @@ foreign import appendToBody
   \  };\
   \}" :: forall eff. Node -> Eff (dom :: DOM | eff) Node
 
-type Task = { description :: String, completed :: Boolean }
+newtype Task = Task { description :: String, completed :: Boolean }
 
+instance eqTask :: Eq Task where
+  (==) (Task t1) (Task t2) = t1.description == t2.description && t1.completed == t2.completed
+  (/=) (Task t1) (Task t2) = t1.description /= t2.description || t1.completed /= t2.completed
+    
+instance hashableTask :: Hashable Task where
+  hash (Task t) = hash t.description <> hash t.completed    
+  
 -- | The state of the application
 data State = State [Task]
+
+instance eqState :: Eq State where
+  (==) (State ts1) (State ts2) = ts1 == ts2
+  (/=) (State ts1) (State ts2) = ts1 /= ts2
+    
+instance hashableState :: Hashable State where
+  hash (State ts) = hash ts
 
 -- | Inputs to the state machine
 data Input 
@@ -54,7 +71,7 @@ instance inputSupportsUndoRedo :: U.SupportsUndoRedo Input where
 
 -- | The UI is a state machine, consuming inputs, and generating HTML documents which in turn, generate new inputs
 ui :: forall eff. SF1 Input (H.HTML Input)
-ui = view <$> stateful (U.undoRedoState (State [])) (U.withUndoRedo update)
+ui = Hash.withHash view <$> stateful (U.undoRedoState (State [])) (U.withUndoRedo update)
   where
   view :: U.UndoRedoState State -> H.HTML Input
   view st = 
@@ -92,7 +109,7 @@ ui = view <$> stateful (U.undoRedoState (State [])) (U.withUndoRedo update)
                   
               
   task :: Task -> Number -> H.HTML Input
-  task task index =
+  task (Task task) index =
     H.tr_ [ H.td_ [ H.input ( A.classes [ B.formControl ]
                               <> A.placeholder "Description"
                               <> A.onValueChanged (pure <<< UpdateDescription index)
@@ -112,9 +129,9 @@ ui = view <$> stateful (U.undoRedoState (State [])) (U.withUndoRedo update)
           ]
 
   update :: State -> Input -> State
-  update (State ts) NewTask = State (ts ++ [{ description: "", completed: false }])
-  update (State ts) (UpdateDescription i description) = State $ modifyAt i (_ { description = description }) ts
-  update (State ts) (MarkCompleted i completed) = State $ modifyAt i (_ { completed = completed }) ts
+  update (State ts) NewTask = State (ts ++ [Task { description: "", completed: false }])
+  update (State ts) (UpdateDescription i description) = State $ modifyAt i (\(Task t) -> Task (t { description = description })) ts
+  update (State ts) (MarkCompleted i completed) = State $ modifyAt i (\(Task t) -> Task (t { completed = completed })) ts
   update (State ts) (RemoveTask i) = State $ deleteAt i 1 ts
   
 main = do

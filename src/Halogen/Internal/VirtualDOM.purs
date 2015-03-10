@@ -22,6 +22,7 @@ import DOM
 import Data.Maybe
 import Data.Nullable
 import Data.Function
+import Data.Hashable (Hashcode())
 
 import Control.Monad.Eff
 import Control.Monad.ST
@@ -122,7 +123,7 @@ foreign import hash
   \    }\
   \  };\
   \  return new HashThunk(hash);\
-  \}" :: Fn2 (Fn0 VTree) String VTree
+  \}" :: Fn2 (Fn0 VTree) Hashcode VTree
   
 foreign import widgetImpl
   "function widgetImpl(init, update, destroy) {\

@@ -1,3 +1,5 @@
+.psci
+.psci_modules
 node_modules
 output
 js

@@ -19,6 +19,7 @@ module Halogen.Mixin.UndoRedo
 
 import Data.Maybe
 import Data.Tuple
+import Data.Hashable
 
 data Stack a = Empty | Push a (Stack a)
 
@@ -34,6 +35,16 @@ null :: forall a. Stack a -> Boolean
 null Empty = true
 null _ = false
 
+instance eqStack :: (Eq s) => Eq (Stack s) where
+  (==) Empty Empty = true
+  (==) (Push a1 s1) (Push a2 s2) = a1 == a2 && s1 == s2
+  (==) _ _ = false
+  (/=) xs ys = not (xs == ys)
+
+instance hashableStack :: (Hashable s) => Hashable (Stack s) where
+  hash Empty = hash unit
+  hash (Push a s) = hash a <> hash s
+  
 -- | Adds two new input types:
 -- |
 -- | - `Undo` - move to the previous state
@@ -66,11 +77,18 @@ canRedo (UndoRedoState _ _ future) = not (null future)
 
 -- | Get the state at the current time
 getState :: forall s. UndoRedoState s -> s
-getState (UndoRedoState _ s _) = s
+getState (UndoRedoState _ present _) = present
 
 -- | Create a state with no past and no future
 undoRedoState :: forall s. s -> UndoRedoState s
 undoRedoState s = UndoRedoState Empty s Empty
+
+instance eqUndoRedoState :: (Eq s) => Eq (UndoRedoState s) where
+  (==) (UndoRedoState x1 y1 z1) (UndoRedoState x2 y2 z2) = x1 == x2 && y1 == y2 && z1 == z2
+  (/=) (UndoRedoState x1 y1 z1) (UndoRedoState x2 y2 z2) = x1 /= x2 || y1 /= y2 || z1 /= z2
+  
+instance hashableUndoRedoState :: (Hashable s) => Hashable (UndoRedoState s) where
+  hash (UndoRedoState past present future) = hash past <> hash present <> hash future
 
 -- | Lift a step function to support the undo and redo operations.
 -- |

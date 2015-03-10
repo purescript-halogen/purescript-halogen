@@ -1,6 +1,5 @@
 module Halogen.HTML
   ( HTML()
-  , Hash()
   , Attribute()
   
   , attribute
@@ -139,6 +138,7 @@ module Halogen.HTML
 
 import Data.Function
 import Data.Monoid
+import Data.Hashable (Hashcode(), runHashcode)
 
 import Control.Monad.Eff
 import Control.Monad.ST
@@ -170,8 +170,6 @@ attributesToProps k (Attribute f) = runProps do
   f k props
   return props
 
-type Hash = String
-
 -- | The `HTML` type represents HTML documents before being rendered to the virtual DOM, and ultimately,
 -- | the actual DOM.
 -- |
@@ -182,7 +180,7 @@ type Hash = String
 data HTML i
   = Text String
   | Element String (Attribute i) [HTML i]
-  | Hashed Hash (Unit -> HTML i)
+  | Hashed Hashcode (Unit -> HTML i)
   | Raw VTree
     
 instance functorHTML :: Functor HTML where
@@ -202,7 +200,7 @@ text :: forall i. String -> HTML i
 text = Text
 
 -- | Created a "hashed" HTML document, which only gets re-rendered when the hash changes
-hashed :: forall i. Hash -> (Unit -> HTML i) -> HTML i
+hashed :: forall i. Hashcode -> (Unit -> HTML i) -> HTML i
 hashed = Hashed
 
 -- | Create a HTML document from a raw `VTree`.

@@ -47,13 +47,6 @@ attributesToProps :: forall i eff. (i -> Eff eff Unit) -> Attribute i -> Props
 
 Convert a collection of attributes to `Props` by providing an event handler
 
-#### `Hash`
-
-``` purescript
-type Hash = String
-```
-
-
 #### `HTML`
 
 ``` purescript
@@ -93,7 +86,7 @@ text :: forall i. String -> HTML i
 #### `hashed`
 
 ``` purescript
-hashed :: forall i. Hash -> (Unit -> HTML i) -> HTML i
+hashed :: forall i. Hashcode -> (Unit -> HTML i) -> HTML i
 ```
 
 Created a "hashed" HTML document, which only gets re-rendered when the hash changes
@@ -2422,7 +2415,37 @@ onfocusout :: forall i. (Event FocusEvent -> EventHandler i) -> Attribute i
 
 
 
+## Module Halogen.Mixin.Hashed
+
+#### `withHash`
+
+``` purescript
+withHash :: forall s r. (Hashable s) => (s -> H.HTML r) -> s -> H.HTML r
+```
+
+Lift a function which produces HTML documents to one which hashes its input.
+
+The generated HTML documents will contain the hash code of the generated output, so will not
+cause a re-render if the hash code does not change.
+
+**Note**: this function may be prone to false positives due to hash collisions.
+
+
 ## Module Halogen.Mixin.UndoRedo
+
+#### `eqStack`
+
+``` purescript
+instance eqStack :: (Eq s) => Eq (Stack s)
+```
+
+
+#### `hashableStack`
+
+``` purescript
+instance hashableStack :: (Hashable s) => Hashable (Stack s)
+```
+
 
 #### `UndoRedoInput`
 
@@ -2502,6 +2525,20 @@ undoRedoState :: forall s. s -> UndoRedoState s
 ```
 
 Create a state with no past and no future
+
+#### `eqUndoRedoState`
+
+``` purescript
+instance eqUndoRedoState :: (Eq s) => Eq (UndoRedoState s)
+```
+
+
+#### `hashableUndoRedoState`
+
+``` purescript
+instance hashableUndoRedoState :: (Hashable s) => Hashable (UndoRedoState s)
+```
+
 
 #### `withUndoRedo`
 
