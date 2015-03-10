@@ -2526,6 +2526,31 @@ cause a re-render if the hash code does not change.
 **Note**: this function may be prone to false positives due to hash collisions.
 
 
+## Module Halogen.Mixin.Router
+
+#### `Hash`
+
+``` purescript
+newtype Hash
+```
+
+
+#### `runHash`
+
+``` purescript
+runHash :: Hash -> String
+```
+
+
+#### `onHashChange`
+
+``` purescript
+onHashChange :: forall i eff. (Hash -> i) -> Driver i eff -> Eff (HalogenEffects eff) Unit
+```
+
+Listen for hash change events, and provide an input to the driver function when one occurs
+
+
 ## Module Halogen.Mixin.UndoRedo
 
 #### `eqStack`

@@ -5,8 +5,8 @@
   - [ ] List groups
   - [ ] Breadcrumbs
 - [x] Make Raw safer
-- [ ] Routing mixin + example
+- [x] Routing mixin + example
 - [x] Make Attribute traversable
-- [ ] More docs
+- [x] More docs
 - [x] String renderer for HTML
 - [ ] More newtypes

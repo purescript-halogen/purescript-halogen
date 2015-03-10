@@ -1,8 +1,12 @@
 module Test.Main where
 
+import Data.Void
 import Data.Tuple
 import Data.Maybe
+import Data.Either
 import Data.Array (zipWith, length, modifyAt, deleteAt, (..), (!!))
+
+import qualified Data.String as S
 
 import Debug.Trace
 
@@ -16,8 +20,9 @@ import Data.Hashable
 import Halogen
 import Halogen.Signal
 
-import qualified Halogen.Mixin.UndoRedo as U
+import qualified Halogen.Mixin.UndoRedo as Undo
 import qualified Halogen.Mixin.Hashed as Hash
+import qualified Halogen.Mixin.Router as Router
 
 import qualified Halogen.HTML as H
 import qualified Halogen.HTML.Attributes as A
@@ -56,27 +61,27 @@ instance hashableState :: Hashable State where
 
 -- | Inputs to the state machine
 data Input 
-  = NewTask
+  = NewTask (Maybe String)
   | UpdateDescription Number String
   | MarkCompleted Number Boolean
   | RemoveTask Number
   | Undo
   | Redo
   
-instance inputSupportsUndoRedo :: U.SupportsUndoRedo Input where
-  fromUndoRedo U.Undo = Undo
-  fromUndoRedo U.Redo = Redo
-  toUndoRedo Undo = Just U.Undo
-  toUndoRedo Redo = Just U.Redo
+instance inputSupportsUndoRedo :: Undo.SupportsUndoRedo Input where
+  fromUndoRedo Undo.Undo = Undo
+  fromUndoRedo Undo.Redo = Redo
+  toUndoRedo Undo = Just Undo.Undo
+  toUndoRedo Redo = Just Undo.Redo
   toUndoRedo _ = Nothing
 
 -- | The UI is a state machine, consuming inputs, and generating HTML documents which in turn, generate new inputs
 ui :: forall eff a. SF1 Input (H.HTML a Input)
-ui = Hash.withHash view <$> stateful (U.undoRedoState (State [])) (U.withUndoRedo update)
+ui = Hash.withHash view <$> stateful (Undo.undoRedoState (State [])) (Undo.withUndoRedo update)
   where
-  view :: U.UndoRedoState State -> H.HTML a Input
+  view :: Undo.UndoRedoState State -> H.HTML a Input
   view st = 
-    case U.getState st of
+    case Undo.getState st of
       State ts ->
         H.div (A.class_ B.container)
               [ H.h1 (A.id_ "header") [ H.text "todo list" ]
@@ -84,17 +89,17 @@ ui = Hash.withHash view <$> stateful (U.undoRedoState (State [])) (U.withUndoRed
               , tasks ts
               ]
               
-  toolbar :: forall st. U.UndoRedoState st -> H.HTML a Input
+  toolbar :: forall st. Undo.UndoRedoState st -> H.HTML a Input
   toolbar st = H.p (A.class_ B.btnGroup)
                    [ H.button ( A.classes [ B.btn, B.btnPrimary ]
-                                <> A.onclick (\_ -> pure NewTask) )
+                                <> A.onclick (\_ -> pure (NewTask Nothing)) )
                               [ H.text "New Task" ]
                    , H.button ( A.class_ B.btn
-                                <> A.enabled (U.canUndo st)
+                                <> A.enabled (Undo.canUndo st)
                                 <> A.onclick (\_ -> pure Undo) )
                               [ H.text "Undo" ]
                    , H.button ( A.class_ B.btn
-                                <> A.enabled (U.canRedo st)
+                                <> A.enabled (Undo.canRedo st)
                                 <> A.onclick (\_ -> pure Redo) )
                               [ H.text "Redo" ]
                    ]
@@ -124,11 +129,12 @@ ui = Hash.withHash view <$> stateful (U.undoRedoState (State [])) (U.withUndoRed
                       [ H.text "✖" ]))
 
   update :: State -> Input -> State
-  update (State ts) NewTask = State (ts ++ [Task { description: "", completed: false }])
+  update (State ts) (NewTask s) = State (ts ++ [Task { description: fromMaybe "" s, completed: false }])
   update (State ts) (UpdateDescription i description) = State $ modifyAt i (\(Task t) -> Task (t { description = description })) ts
   update (State ts) (MarkCompleted i completed) = State $ modifyAt i (\(Task t) -> Task (t { completed = completed })) ts
   update (State ts) (RemoveTask i) = State $ deleteAt i 1 ts
   
 main = do
-  node <- runUI ui
+  Tuple node driver <- runUIEff ((Left <$>) <$> ui) absurd (\_ _ -> return unit)
   appendToBody node
+  Router.onHashChange (NewTask <<< Just <<< S.drop 1 <<< Router.runHash) driver
