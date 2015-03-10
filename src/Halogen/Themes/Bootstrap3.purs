@@ -260,6 +260,12 @@ formControlStatic = className "form-control-static"
 inputGroup :: ClassName
 inputGroup = className "input-group"
 
+inputGroupAddon :: ClassName
+inputGroupAddon = className "input-group-addon"
+
+inputGroupBtn :: ClassName
+inputGroupBtn = className "input-group-btn"
+
 checkbox :: ClassName
 checkbox = className "checkbox"
 

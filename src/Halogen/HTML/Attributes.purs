@@ -3,6 +3,8 @@ module Halogen.HTML.Attributes
   , className
   , runClassName
   
+  , addClass
+  
   , alt
   , charset
   , class_
@@ -29,13 +31,17 @@ module Halogen.HTML.Attributes
 
 import DOM
 
+import Data.Tuple
+import Data.Either (either)
+import Data.Foreign
 import Data.Array (map)
 import Data.String (joinWith)
+import Data.Traversable (mapAccumL)
 
 import Control.Monad.Eff
 import Control.Monad.ST
 
-import Halogen.HTML (Attribute())
+import Halogen.HTML (Attribute(..), AttributeValue(..))
 import Halogen.HTML.Attributes.Unsafe
 import Halogen.Internal.VirtualDOM
 
@@ -49,6 +55,23 @@ className = ClassName
 -- | Unpack a class name
 runClassName :: ClassName -> String
 runClassName (ClassName s) = s
+
+-- \ This convenience function can be used to add a class name to an existing set of attributes.
+-- |
+-- | If the `class` attribute already exists, the class name will be appended. If not, it will be added as
+-- | a new attribute.
+addClass :: forall i. ClassName -> Attribute i -> Attribute i
+addClass cn@(ClassName c) (Attribute xs) =
+  case mapAccumL go false xs of
+    Tuple false ys -> Attribute ys <> class_ cn
+    Tuple true ys -> Attribute ys
+  where
+  go :: Boolean -> Tuple String (AttributeValue i) -> Tuple Boolean (Tuple String (AttributeValue i))
+  go false (Tuple "className" (ValueAttribute cs)) = Tuple true (Tuple "className" (ValueAttribute (onStrings (++ (" " ++ c)) cs)))
+  go b (Tuple k v) = Tuple b (Tuple k v)
+  
+  onStrings :: (String -> String) -> Foreign -> Foreign
+  onStrings f s = either (const s) toForeign $ f <$> readString s
 
 alt :: forall i. String -> Attribute i
 alt = unsafeAttribute "alt"

@@ -1,8 +1,8 @@
 module Halogen.HTML
-  ( HTML()
-  , Attribute()
+  ( HTML(..)
+  , Attribute(..)
+  , AttributeValue(..)
   
-  , attribute
   , attributesToProps
   
   , text
@@ -136,39 +136,58 @@ module Halogen.HTML
   , renderHtml
   ) where
 
+import Data.Maybe
+import Data.Tuple
+import Data.Foreign
 import Data.Function
 import Data.Monoid
+import Data.Foldable (for_)
 import Data.Hashable (Hashcode(), runHashcode)
 
+import qualified Data.Array as A
+
 import Control.Monad.Eff
+import Control.Monad.Eff.Unsafe (unsafeInterleaveEff)
 import Control.Monad.ST
 
 import Halogen.Internal.VirtualDOM
+import Halogen.HTML.Events.Handler
 
 -- | A HTML attribute which can be used in a document of type `HTML i`.
-data Attribute i = Attribute (forall h eff eff1. (i -> Eff eff Unit) -> STProps h -> Eff (st :: ST h | eff1) Unit)
+data AttributeValue i
+  = ValueAttribute Foreign
+  | HandlerAttribute (Foreign -> EventHandler (Maybe i))
+
+instance functorAttributeValue :: Functor AttributeValue where
+  (<$>) _ (ValueAttribute v) = ValueAttribute v
+  (<$>) f (HandlerAttribute k) = HandlerAttribute (((f <$>) <$>) <<< k)
+
+data Attribute i = Attribute [Tuple String (AttributeValue i)]
 
 instance functorAttribute :: Functor Attribute where
-  (<$>) f (Attribute h) = Attribute \k -> h (f >>> k)
+  (<$>) f (Attribute xs) = Attribute (A.map ((f <$>) <$>) xs)
   
 instance semigroupAttribute :: Semigroup (Attribute i) where
-  (<>) (Attribute f) (Attribute g) = Attribute \k props -> do
-    f k props
-    g k props
+  (<>) (Attribute xs) (Attribute ys) = Attribute (xs <> ys)
 
 instance monoidAttribute :: Monoid (Attribute i) where
-  mempty = Attribute \_ _ -> return unit
-
--- | Create an attribute from a function which mutates an `STProps` data structure
-attribute :: forall i. (forall h eff eff1. (i -> Eff eff Unit) -> STProps h -> Eff (st :: ST h | eff1) Unit) -> Attribute i
-attribute = Attribute
+  mempty = Attribute []
 
 -- | Convert a collection of attributes to `Props` by providing an event handler
 attributesToProps :: forall i eff. (i -> Eff eff Unit) -> Attribute i -> Props
-attributesToProps k (Attribute f) = runProps do 
+attributesToProps k (Attribute xs) = runProps do 
   props <- newProps
-  f k props
+  for_ xs (addProp props)
   return props
+  where
+  addProp :: forall h eff. STProps h -> Tuple String (AttributeValue i) -> Eff (st :: ST h | eff) Unit
+  addProp props (Tuple key (ValueAttribute value)) = runFn3 prop key value props
+  addProp props (Tuple key (HandlerAttribute f)) = runFn3 handlerProp key handler props
+    where
+    handler :: Foreign -> Eff eff Unit
+    handler e = do
+      m <- unsafeInterleaveEff $ runEventHandler (unsafeFromForeign e) (f e)
+      for_ m k
 
 -- | The `HTML` type represents HTML documents before being rendered to the virtual DOM, and ultimately,
 -- | the actual DOM.

@@ -15,7 +15,6 @@ import Data.Foldable (for_)
 import Control.Apply ((*>))
 import Control.Monad.Eff
 
-import Halogen.HTML (Attribute())
 import Halogen.HTML.Events.Types
 
 data EventUpdate 

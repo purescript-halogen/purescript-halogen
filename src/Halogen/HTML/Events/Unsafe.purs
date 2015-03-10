@@ -4,10 +4,10 @@ module Halogen.HTML.Events.Unsafe
   ) where
       
 import Data.Maybe
-import Data.Function
+import Data.Tuple
+import Data.Foreign (unsafeFromForeign)
 
 import Control.Monad.Eff
-import Control.Monad.Eff.Unsafe (unsafeInterleaveEff)
       
 import Halogen.HTML
 import Halogen.HTML.Events.Types
@@ -20,4 +20,4 @@ unsafeHandler key f = unsafeHandler' key \e -> Just <$> f e
 
 -- | This function can be used to attach custom event handlers.
 unsafeHandler' :: forall fields eff i. String -> (Event fields -> EventHandler (Maybe i)) -> Attribute i
-unsafeHandler' key f = attribute \k props -> runFn3 handlerProp key (\e -> unsafeInterleaveEff (runEventHandler e (f e)) >>= maybe (return unit) k) props
+unsafeHandler' key f = Attribute [Tuple key (HandlerAttribute \e -> f (unsafeFromForeign e))]

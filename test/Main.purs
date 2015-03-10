@@ -26,6 +26,7 @@ import qualified Halogen.HTML.Events.Forms as A
 import qualified Halogen.HTML.Events.Handler as E
 
 import qualified Halogen.Themes.Bootstrap3 as B
+import qualified Halogen.Themes.Bootstrap3.InputGroup as BI
 
 foreign import appendToBody
   "function appendToBody(node) {\
@@ -100,33 +101,27 @@ ui = Hash.withHash view <$> stateful (U.undoRedoState (State [])) (U.withUndoRed
            
   tasks :: [Task] -> H.HTML Input
   tasks ts = H.table (A.classes [ B.table, B.tableStriped ]) 
-                     [ H.thead_ [ H.th_ [ H.text "Task" ]
-                                , H.th_ [ H.text "Completed" ] 
-                                , H.th_ []
-                                ] 
-                     , H.tbody_ (zipWith task ts (0 .. length ts))         
-                     ]
+                     (zipWith task ts (0 .. length ts))
                   
               
   task :: Task -> Number -> H.HTML Input
   task (Task task) index =
-    H.tr_ [ H.td_ [ H.input ( A.classes [ B.formControl ]
-                              <> A.placeholder "Description"
-                              <> A.onValueChanged (pure <<< UpdateDescription index)
-                              <> A.value task.description )
-                            [] ]
-          , H.td_ [ H.input ( A.classes [ B.formControl, B.checkbox]
-                              <> A.type_ "checkbox"
-                              <> A.checked task.completed
-                              <> A.title "Mark as completed"
-                              <> A.onChecked (pure <<< MarkCompleted index) )
-                            [] ]
-          , H.td_ [ H.a ( A.classes [ B.btn, B.btnDefault ]
-                          <> A.href "#"
-                          <> A.title "Remove task"
-                          <> A.onclick \_ -> E.preventDefault $> RemoveTask index )
-                        [ H.text "✖" ] ]
-          ]
+    BI.inputGroup 
+      (Just (H.input ( A.class_ B.checkbox
+                       <> A.type_ "checkbox"
+                       <> A.checked task.completed
+                       <> A.title "Mark as completed"
+                       <> A.onChecked (pure <<< MarkCompleted index) )
+                     []))
+      (H.input ( A.classes [ B.formControl ]
+                 <> A.placeholder "Description"
+                 <> A.onValueChanged (pure <<< UpdateDescription index)
+                 <> A.value task.description )
+               [])
+      (Just (H.button ( A.classes [ B.btn, B.btnDefault ]
+                        <> A.title "Remove task"
+                        <> A.onclick (\_ -> pure $ RemoveTask index) )
+                      [ H.text "✖" ]))
 
   update :: State -> Input -> State
   update (State ts) NewTask = State (ts ++ [Task { description: "", completed: false }])

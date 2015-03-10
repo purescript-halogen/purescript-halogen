@@ -2,13 +2,30 @@
 
 ## Module Halogen.HTML
 
+#### `AttributeValue`
+
+``` purescript
+data AttributeValue i
+  = ValueAttribute Foreign
+  | HandlerAttribute (Foreign -> EventHandler (Maybe i))
+```
+
+A HTML attribute which can be used in a document of type `HTML i`.
+
+#### `functorAttributeValue`
+
+``` purescript
+instance functorAttributeValue :: Functor AttributeValue
+```
+
+
 #### `Attribute`
 
 ``` purescript
 data Attribute i
+  = Attribute [Tuple String (AttributeValue i)]
 ```
 
-A HTML attribute which can be used in a document of type `HTML i`.
 
 #### `functorAttribute`
 
@@ -31,14 +48,6 @@ instance monoidAttribute :: Monoid (Attribute i)
 ```
 
 
-#### `attribute`
-
-``` purescript
-attribute :: forall i. (forall h eff eff1. (i -> Eff eff Unit) -> STProps h -> Eff (st :: ST h | eff1) Unit) -> Attribute i
-```
-
-Create an attribute from a function which mutates an `STProps` data structure
-
 #### `attributesToProps`
 
 ``` purescript
@@ -51,6 +60,10 @@ Convert a collection of attributes to `Props` by providing an event handler
 
 ``` purescript
 data HTML i
+  = Text String
+  | Element String (Attribute i) [HTML i]
+  | Hashed Hashcode (Unit -> HTML i)
+  | Raw VTree
 ```
 
 The `HTML` type represents HTML documents before being rendered to the virtual DOM, and ultimately,
@@ -2019,6 +2032,12 @@ runClassName :: ClassName -> String
 
 Unpack a class name
 
+#### `addClass`
+
+``` purescript
+addClass :: forall i. ClassName -> Attribute i -> Attribute i
+```
+
 #### `alt`
 
 ``` purescript
@@ -3105,6 +3124,20 @@ inputGroup :: ClassName
 ```
 
 
+#### `inputGroupAddon`
+
+``` purescript
+inputGroupAddon :: ClassName
+```
+
+
+#### `inputGroupBtn`
+
+``` purescript
+inputGroupBtn :: ClassName
+```
+
+
 #### `checkbox`
 
 ``` purescript
@@ -3352,6 +3385,16 @@ type FocusEvent = (relatedTarget :: Node)
 
 
 ## Module Halogen.Themes.Bootstrap3.InputGroup
+
+#### `inputGroup`
+
+``` purescript
+inputGroup :: forall i. Maybe (H.HTML i) -> H.HTML i -> Maybe (H.HTML i) -> H.HTML i
+```
+
+Create an input group.
+
+An input group consists of a control with optional elements placed before and after.
 
 
 
