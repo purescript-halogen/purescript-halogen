@@ -293,6 +293,9 @@ btn = className "btn"
 btnDefault :: ClassName
 btnDefault = className "btn-default"
 
+btnLink :: ClassName
+btnLink = className "btn-link"
+
 btnPrimary :: ClassName
 btnPrimary = className "btn-primary"
 
@@ -327,3 +330,52 @@ btnGroup = className "btn-group"
 
 breadcrumb :: ClassName
 breadcrumb = className "breadcrumb"
+
+
+-- Navs
+
+navbar :: ClassName
+navbar = className "navbar"
+
+navbarInverse :: ClassName
+navbarInverse = className "navbar-inverse"
+
+navbarFixedTop :: ClassName
+navbarFixedTop = className "navbar-fixed-top"
+
+navbarForm :: ClassName
+navbarForm = className "navbar-form"
+
+nav :: ClassName
+nav = className "nav"
+
+navbarNav :: ClassName
+navbarNav = className "navbar-nav"
+
+navbarRight :: ClassName
+navbarRight = className "navbar-right"
+
+navbarBrand :: ClassName
+navbarBrand = className "navbar-brand"
+
+
+-- Common
+pullRight :: ClassName
+pullRigght = className "pull-right"
+
+-- Lists
+
+listInline :: ClassName
+listInline = className "list-inline"
+
+listGroup :: ClassName
+listGroup = className "list-group"
+
+listGroupItem :: ClassName
+listGroupItem = className "list-group-item"
+
+-- Glyphicons
+
+glyphicon :: ClassName
+glyphicon = className "glyphicon"
+

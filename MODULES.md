@@ -2,6 +2,8 @@
 
 ## Module Data.Void
 
+
+
 #### `Void`
 
 ``` purescript
@@ -3395,6 +3397,13 @@ btnDefault :: ClassName
 ```
 
 
+#### `btnLink`
+
+``` purescript
+btnLink :: ClassName
+```
+
+
 #### `btnPrimary`
 
 ``` purescript
@@ -3469,6 +3478,93 @@ btnGroup :: ClassName
 
 ``` purescript
 breadcrumb :: ClassName
+```
+
+#### `navbar`
+
+``` purescript
+navbar :: ClassName
+```
+
+#### `navbarInverse`
+
+``` purescript
+navbarInverse :: ClassName
+```
+
+
+#### `navbarFixedTop`
+
+``` purescript
+navbarFixedTop :: ClassName
+```
+
+
+#### `navbarForm`
+
+``` purescript
+navbarForm :: ClassName
+```
+
+
+#### `nav`
+
+``` purescript
+nav :: ClassName
+```
+
+
+#### `navbarNav`
+
+``` purescript
+navbarNav :: ClassName
+```
+
+
+#### `navbarRight`
+
+``` purescript
+navbarRight :: ClassName
+```
+
+
+#### `navbarBrand`
+
+``` purescript
+navbarBrand :: ClassName
+```
+
+
+#### `pullRight`
+
+``` purescript
+pullRight :: ClassName
+```
+
+#### `listInline`
+
+``` purescript
+listInline :: ClassName
+```
+
+#### `listGroup`
+
+``` purescript
+listGroup :: ClassName
+```
+
+
+#### `listGroupItem`
+
+``` purescript
+listGroupItem :: ClassName
+```
+
+
+#### `glyphicon`
+
+``` purescript
+glyphicon :: ClassName
 ```
 
 
@@ -3676,6 +3772,1824 @@ breadcrumbs :: forall a i. CrumbTrail i -> H.HTML a i
 ```
 
 Create a breadcrumb navigation element from an array of `Crumb`s.
+
+
+## Module Halogen.Themes.Bootstrap3.Glyphicons
+
+
+
+#### `glyphiconAsterisk`
+
+``` purescript
+glyphiconAsterisk :: ClassName
+```
+
+
+#### `glyphiconPlus`
+
+``` purescript
+glyphiconPlus :: ClassName
+```
+
+
+#### `glyphiconEuro`
+
+``` purescript
+glyphiconEuro :: ClassName
+```
+
+
+#### `glyphiconEur`
+
+``` purescript
+glyphiconEur :: ClassName
+```
+
+
+#### `glyphiconMinus`
+
+``` purescript
+glyphiconMinus :: ClassName
+```
+
+
+#### `glyphiconCloud`
+
+``` purescript
+glyphiconCloud :: ClassName
+```
+
+
+#### `glyphiconEnvelope`
+
+``` purescript
+glyphiconEnvelope :: ClassName
+```
+
+
+#### `glyphiconPencil`
+
+``` purescript
+glyphiconPencil :: ClassName
+```
+
+
+#### `glyphiconGlass`
+
+``` purescript
+glyphiconGlass :: ClassName
+```
+
+
+#### `glyphiconMusic`
+
+``` purescript
+glyphiconMusic :: ClassName
+```
+
+
+#### `glyphiconSearch`
+
+``` purescript
+glyphiconSearch :: ClassName
+```
+
+
+#### `glyphiconHeart`
+
+``` purescript
+glyphiconHeart :: ClassName
+```
+
+
+#### `glyphiconStar`
+
+``` purescript
+glyphiconStar :: ClassName
+```
+
+
+#### `glyphiconStarEmpty`
+
+``` purescript
+glyphiconStarEmpty :: ClassName
+```
+
+
+#### `glyphiconUser`
+
+``` purescript
+glyphiconUser :: ClassName
+```
+
+
+#### `glyphiconFilm`
+
+``` purescript
+glyphiconFilm :: ClassName
+```
+
+
+#### `glyphiconThLarge`
+
+``` purescript
+glyphiconThLarge :: ClassName
+```
+
+
+#### `glyphiconTh`
+
+``` purescript
+glyphiconTh :: ClassName
+```
+
+
+#### `glyphiconThList`
+
+``` purescript
+glyphiconThList :: ClassName
+```
+
+
+#### `glyphiconOk`
+
+``` purescript
+glyphiconOk :: ClassName
+```
+
+
+#### `glyphiconRemove`
+
+``` purescript
+glyphiconRemove :: ClassName
+```
+
+
+#### `glyphiconZoomIn`
+
+``` purescript
+glyphiconZoomIn :: ClassName
+```
+
+
+#### `glyphiconZoomOut`
+
+``` purescript
+glyphiconZoomOut :: ClassName
+```
+
+
+#### `glyphiconOff`
+
+``` purescript
+glyphiconOff :: ClassName
+```
+
+
+#### `glyphiconSignal`
+
+``` purescript
+glyphiconSignal :: ClassName
+```
+
+
+#### `glyphiconCog`
+
+``` purescript
+glyphiconCog :: ClassName
+```
+
+
+#### `glyphiconTrash`
+
+``` purescript
+glyphiconTrash :: ClassName
+```
+
+
+#### `glyphiconHome`
+
+``` purescript
+glyphiconHome :: ClassName
+```
+
+
+#### `glyphiconFile`
+
+``` purescript
+glyphiconFile :: ClassName
+```
+
+
+#### `glyphiconTime`
+
+``` purescript
+glyphiconTime :: ClassName
+```
+
+
+#### `glyphiconRoad`
+
+``` purescript
+glyphiconRoad :: ClassName
+```
+
+
+#### `glyphiconDownloadAlt`
+
+``` purescript
+glyphiconDownloadAlt :: ClassName
+```
+
+
+#### `glyphiconDownload`
+
+``` purescript
+glyphiconDownload :: ClassName
+```
+
+
+#### `glyphiconUpload`
+
+``` purescript
+glyphiconUpload :: ClassName
+```
+
+
+#### `glyphiconInbox`
+
+``` purescript
+glyphiconInbox :: ClassName
+```
+
+
+#### `glyphiconPlayCircle`
+
+``` purescript
+glyphiconPlayCircle :: ClassName
+```
+
+
+#### `glyphiconRepeat`
+
+``` purescript
+glyphiconRepeat :: ClassName
+```
+
+
+#### `glyphiconRefresh`
+
+``` purescript
+glyphiconRefresh :: ClassName
+```
+
+
+#### `glyphiconListAlt`
+
+``` purescript
+glyphiconListAlt :: ClassName
+```
+
+
+#### `glyphiconLock`
+
+``` purescript
+glyphiconLock :: ClassName
+```
+
+
+#### `glyphiconFlag`
+
+``` purescript
+glyphiconFlag :: ClassName
+```
+
+
+#### `glyphiconHeadphones`
+
+``` purescript
+glyphiconHeadphones :: ClassName
+```
+
+
+#### `glyphiconVolumeOff`
+
+``` purescript
+glyphiconVolumeOff :: ClassName
+```
+
+
+#### `glyphiconVolumeDown`
+
+``` purescript
+glyphiconVolumeDown :: ClassName
+```
+
+
+#### `glyphiconVolumeUp`
+
+``` purescript
+glyphiconVolumeUp :: ClassName
+```
+
+
+#### `glyphiconQrcode`
+
+``` purescript
+glyphiconQrcode :: ClassName
+```
+
+
+#### `glyphiconBarcode`
+
+``` purescript
+glyphiconBarcode :: ClassName
+```
+
+
+#### `glyphiconTag`
+
+``` purescript
+glyphiconTag :: ClassName
+```
+
+
+#### `glyphiconTags`
+
+``` purescript
+glyphiconTags :: ClassName
+```
+
+
+#### `glyphiconBook`
+
+``` purescript
+glyphiconBook :: ClassName
+```
+
+
+#### `glyphiconBookmark`
+
+``` purescript
+glyphiconBookmark :: ClassName
+```
+
+
+#### `glyphiconPrint`
+
+``` purescript
+glyphiconPrint :: ClassName
+```
+
+
+#### `glyphiconCamera`
+
+``` purescript
+glyphiconCamera :: ClassName
+```
+
+
+#### `glyphiconFont`
+
+``` purescript
+glyphiconFont :: ClassName
+```
+
+
+#### `glyphiconBold`
+
+``` purescript
+glyphiconBold :: ClassName
+```
+
+
+#### `glyphiconItalic`
+
+``` purescript
+glyphiconItalic :: ClassName
+```
+
+
+#### `glyphiconTextHeight`
+
+``` purescript
+glyphiconTextHeight :: ClassName
+```
+
+
+#### `glyphiconTextWidth`
+
+``` purescript
+glyphiconTextWidth :: ClassName
+```
+
+
+#### `glyphiconAlignLeft`
+
+``` purescript
+glyphiconAlignLeft :: ClassName
+```
+
+
+#### `glyphiconAlignCenter`
+
+``` purescript
+glyphiconAlignCenter :: ClassName
+```
+
+
+#### `glyphiconAlignRight`
+
+``` purescript
+glyphiconAlignRight :: ClassName
+```
+
+
+#### `glyphiconAlignJustify`
+
+``` purescript
+glyphiconAlignJustify :: ClassName
+```
+
+
+#### `glyphiconList`
+
+``` purescript
+glyphiconList :: ClassName
+```
+
+
+#### `glyphiconIndentLeft`
+
+``` purescript
+glyphiconIndentLeft :: ClassName
+```
+
+
+#### `glyphiconIndentRight`
+
+``` purescript
+glyphiconIndentRight :: ClassName
+```
+
+
+#### `glyphiconFacetimeVideo`
+
+``` purescript
+glyphiconFacetimeVideo :: ClassName
+```
+
+
+#### `glyphiconPicture`
+
+``` purescript
+glyphiconPicture :: ClassName
+```
+
+
+#### `glyphiconMapMarker`
+
+``` purescript
+glyphiconMapMarker :: ClassName
+```
+
+
+#### `glyphiconAdjust`
+
+``` purescript
+glyphiconAdjust :: ClassName
+```
+
+
+#### `glyphiconTint`
+
+``` purescript
+glyphiconTint :: ClassName
+```
+
+
+#### `glyphiconEdit`
+
+``` purescript
+glyphiconEdit :: ClassName
+```
+
+
+#### `glyphiconShare`
+
+``` purescript
+glyphiconShare :: ClassName
+```
+
+
+#### `glyphiconCheck`
+
+``` purescript
+glyphiconCheck :: ClassName
+```
+
+
+#### `glyphiconMove`
+
+``` purescript
+glyphiconMove :: ClassName
+```
+
+
+#### `glyphiconStepBackward`
+
+``` purescript
+glyphiconStepBackward :: ClassName
+```
+
+
+#### `glyphiconFastBackward`
+
+``` purescript
+glyphiconFastBackward :: ClassName
+```
+
+
+#### `glyphiconBackward`
+
+``` purescript
+glyphiconBackward :: ClassName
+```
+
+
+#### `glyphiconPlay`
+
+``` purescript
+glyphiconPlay :: ClassName
+```
+
+
+#### `glyphiconPause`
+
+``` purescript
+glyphiconPause :: ClassName
+```
+
+
+#### `glyphiconStop`
+
+``` purescript
+glyphiconStop :: ClassName
+```
+
+
+#### `glyphiconForward`
+
+``` purescript
+glyphiconForward :: ClassName
+```
+
+
+#### `glyphiconFastForward`
+
+``` purescript
+glyphiconFastForward :: ClassName
+```
+
+
+#### `glyphiconStepForward`
+
+``` purescript
+glyphiconStepForward :: ClassName
+```
+
+
+#### `glyphiconEject`
+
+``` purescript
+glyphiconEject :: ClassName
+```
+
+
+#### `glyphiconChevronLeft`
+
+``` purescript
+glyphiconChevronLeft :: ClassName
+```
+
+
+#### `glyphiconChevronRight`
+
+``` purescript
+glyphiconChevronRight :: ClassName
+```
+
+
+#### `glyphiconPlusSign`
+
+``` purescript
+glyphiconPlusSign :: ClassName
+```
+
+
+#### `glyphiconMinusSign`
+
+``` purescript
+glyphiconMinusSign :: ClassName
+```
+
+
+#### `glyphiconRemoveSign`
+
+``` purescript
+glyphiconRemoveSign :: ClassName
+```
+
+
+#### `glyphiconOkSign`
+
+``` purescript
+glyphiconOkSign :: ClassName
+```
+
+
+#### `glyphiconQuestionSign`
+
+``` purescript
+glyphiconQuestionSign :: ClassName
+```
+
+
+#### `glyphiconInfoSign`
+
+``` purescript
+glyphiconInfoSign :: ClassName
+```
+
+
+#### `glyphiconScreenshot`
+
+``` purescript
+glyphiconScreenshot :: ClassName
+```
+
+
+#### `glyphiconRemoveCircle`
+
+``` purescript
+glyphiconRemoveCircle :: ClassName
+```
+
+
+#### `glyphiconOkCircle`
+
+``` purescript
+glyphiconOkCircle :: ClassName
+```
+
+
+#### `glyphiconBanCircle`
+
+``` purescript
+glyphiconBanCircle :: ClassName
+```
+
+
+#### `glyphiconArrowLeft`
+
+``` purescript
+glyphiconArrowLeft :: ClassName
+```
+
+
+#### `glyphiconArrowRight`
+
+``` purescript
+glyphiconArrowRight :: ClassName
+```
+
+
+#### `glyphiconArrowUp`
+
+``` purescript
+glyphiconArrowUp :: ClassName
+```
+
+
+#### `glyphiconArrowDown`
+
+``` purescript
+glyphiconArrowDown :: ClassName
+```
+
+
+#### `glyphiconShareAlt`
+
+``` purescript
+glyphiconShareAlt :: ClassName
+```
+
+
+#### `glyphiconResizeFull`
+
+``` purescript
+glyphiconResizeFull :: ClassName
+```
+
+
+#### `glyphiconResizeSmall`
+
+``` purescript
+glyphiconResizeSmall :: ClassName
+```
+
+
+#### `glyphiconExclamationSign`
+
+``` purescript
+glyphiconExclamationSign :: ClassName
+```
+
+
+#### `glyphiconGift`
+
+``` purescript
+glyphiconGift :: ClassName
+```
+
+
+#### `glyphiconLeaf`
+
+``` purescript
+glyphiconLeaf :: ClassName
+```
+
+
+#### `glyphiconFire`
+
+``` purescript
+glyphiconFire :: ClassName
+```
+
+
+#### `glyphiconEyeOpen`
+
+``` purescript
+glyphiconEyeOpen :: ClassName
+```
+
+
+#### `glyphiconEyeClose`
+
+``` purescript
+glyphiconEyeClose :: ClassName
+```
+
+
+#### `glyphiconWarningSign`
+
+``` purescript
+glyphiconWarningSign :: ClassName
+```
+
+
+#### `glyphiconPlane`
+
+``` purescript
+glyphiconPlane :: ClassName
+```
+
+
+#### `glyphiconCalendar`
+
+``` purescript
+glyphiconCalendar :: ClassName
+```
+
+
+#### `glyphiconRandom`
+
+``` purescript
+glyphiconRandom :: ClassName
+```
+
+
+#### `glyphiconComment`
+
+``` purescript
+glyphiconComment :: ClassName
+```
+
+
+#### `glyphiconMagnet`
+
+``` purescript
+glyphiconMagnet :: ClassName
+```
+
+
+#### `glyphiconChevronUp`
+
+``` purescript
+glyphiconChevronUp :: ClassName
+```
+
+
+#### `glyphiconChevronDown`
+
+``` purescript
+glyphiconChevronDown :: ClassName
+```
+
+
+#### `glyphiconRetweet`
+
+``` purescript
+glyphiconRetweet :: ClassName
+```
+
+
+#### `glyphiconShoppingCart`
+
+``` purescript
+glyphiconShoppingCart :: ClassName
+```
+
+
+#### `glyphiconFolderClose`
+
+``` purescript
+glyphiconFolderClose :: ClassName
+```
+
+
+#### `glyphiconFolderOpen`
+
+``` purescript
+glyphiconFolderOpen :: ClassName
+```
+
+
+#### `glyphiconResizeVertical`
+
+``` purescript
+glyphiconResizeVertical :: ClassName
+```
+
+
+#### `glyphiconResizeHorizontal`
+
+``` purescript
+glyphiconResizeHorizontal :: ClassName
+```
+
+
+#### `glyphiconHdd`
+
+``` purescript
+glyphiconHdd :: ClassName
+```
+
+
+#### `glyphiconBullhorn`
+
+``` purescript
+glyphiconBullhorn :: ClassName
+```
+
+
+#### `glyphiconBell`
+
+``` purescript
+glyphiconBell :: ClassName
+```
+
+
+#### `glyphiconCertificate`
+
+``` purescript
+glyphiconCertificate :: ClassName
+```
+
+
+#### `glyphiconThumbsUp`
+
+``` purescript
+glyphiconThumbsUp :: ClassName
+```
+
+
+#### `glyphiconThumbsDown`
+
+``` purescript
+glyphiconThumbsDown :: ClassName
+```
+
+
+#### `glyphiconHandRight`
+
+``` purescript
+glyphiconHandRight :: ClassName
+```
+
+
+#### `glyphiconHandLeft`
+
+``` purescript
+glyphiconHandLeft :: ClassName
+```
+
+
+#### `glyphiconHandUp`
+
+``` purescript
+glyphiconHandUp :: ClassName
+```
+
+
+#### `glyphiconHandDown`
+
+``` purescript
+glyphiconHandDown :: ClassName
+```
+
+
+#### `glyphiconCircleArrowRight`
+
+``` purescript
+glyphiconCircleArrowRight :: ClassName
+```
+
+
+#### `glyphiconCircleArrowLeft`
+
+``` purescript
+glyphiconCircleArrowLeft :: ClassName
+```
+
+
+#### `glyphiconCircleArrowUp`
+
+``` purescript
+glyphiconCircleArrowUp :: ClassName
+```
+
+
+#### `glyphiconCircleArrowDown`
+
+``` purescript
+glyphiconCircleArrowDown :: ClassName
+```
+
+
+#### `glyphiconGlobe`
+
+``` purescript
+glyphiconGlobe :: ClassName
+```
+
+
+#### `glyphiconWrench`
+
+``` purescript
+glyphiconWrench :: ClassName
+```
+
+
+#### `glyphiconTasks`
+
+``` purescript
+glyphiconTasks :: ClassName
+```
+
+
+#### `glyphiconFilter`
+
+``` purescript
+glyphiconFilter :: ClassName
+```
+
+
+#### `glyphiconBriefcase`
+
+``` purescript
+glyphiconBriefcase :: ClassName
+```
+
+
+#### `glyphiconFullscreen`
+
+``` purescript
+glyphiconFullscreen :: ClassName
+```
+
+
+#### `glyphiconDashboard`
+
+``` purescript
+glyphiconDashboard :: ClassName
+```
+
+
+#### `glyphiconPaperclip`
+
+``` purescript
+glyphiconPaperclip :: ClassName
+```
+
+
+#### `glyphiconHeartEmpty`
+
+``` purescript
+glyphiconHeartEmpty :: ClassName
+```
+
+
+#### `glyphiconLink`
+
+``` purescript
+glyphiconLink :: ClassName
+```
+
+
+#### `glyphiconPhone`
+
+``` purescript
+glyphiconPhone :: ClassName
+```
+
+
+#### `glyphiconPushpin`
+
+``` purescript
+glyphiconPushpin :: ClassName
+```
+
+
+#### `glyphiconUsd`
+
+``` purescript
+glyphiconUsd :: ClassName
+```
+
+
+#### `glyphiconGbp`
+
+``` purescript
+glyphiconGbp :: ClassName
+```
+
+
+#### `glyphiconSort`
+
+``` purescript
+glyphiconSort :: ClassName
+```
+
+
+#### `glyphiconSortByAlphabet`
+
+``` purescript
+glyphiconSortByAlphabet :: ClassName
+```
+
+
+#### `glyphiconSortByAlphabetAlt`
+
+``` purescript
+glyphiconSortByAlphabetAlt :: ClassName
+```
+
+
+#### `glyphiconSortByOrder`
+
+``` purescript
+glyphiconSortByOrder :: ClassName
+```
+
+
+#### `glyphiconSortByOrderAlt`
+
+``` purescript
+glyphiconSortByOrderAlt :: ClassName
+```
+
+
+#### `glyphiconSortByAttributes`
+
+``` purescript
+glyphiconSortByAttributes :: ClassName
+```
+
+
+#### `glyphiconSortByAttributesAlt`
+
+``` purescript
+glyphiconSortByAttributesAlt :: ClassName
+```
+
+
+#### `glyphiconUnchecked`
+
+``` purescript
+glyphiconUnchecked :: ClassName
+```
+
+
+#### `glyphiconExpand`
+
+``` purescript
+glyphiconExpand :: ClassName
+```
+
+
+#### `glyphiconCollapseDown`
+
+``` purescript
+glyphiconCollapseDown :: ClassName
+```
+
+
+#### `glyphiconCollapseUp`
+
+``` purescript
+glyphiconCollapseUp :: ClassName
+```
+
+
+#### `glyphiconLogIn`
+
+``` purescript
+glyphiconLogIn :: ClassName
+```
+
+
+#### `glyphiconFlash`
+
+``` purescript
+glyphiconFlash :: ClassName
+```
+
+
+#### `glyphiconLogOut`
+
+``` purescript
+glyphiconLogOut :: ClassName
+```
+
+
+#### `glyphiconNewWindow`
+
+``` purescript
+glyphiconNewWindow :: ClassName
+```
+
+
+#### `glyphiconRecord`
+
+``` purescript
+glyphiconRecord :: ClassName
+```
+
+
+#### `glyphiconSave`
+
+``` purescript
+glyphiconSave :: ClassName
+```
+
+
+#### `glyphiconOpen`
+
+``` purescript
+glyphiconOpen :: ClassName
+```
+
+
+#### `glyphiconSaved`
+
+``` purescript
+glyphiconSaved :: ClassName
+```
+
+
+#### `glyphiconImport`
+
+``` purescript
+glyphiconImport :: ClassName
+```
+
+
+#### `glyphiconExport`
+
+``` purescript
+glyphiconExport :: ClassName
+```
+
+
+#### `glyphiconSend`
+
+``` purescript
+glyphiconSend :: ClassName
+```
+
+
+#### `glyphiconFloppyDisk`
+
+``` purescript
+glyphiconFloppyDisk :: ClassName
+```
+
+
+#### `glyphiconFloppySaved`
+
+``` purescript
+glyphiconFloppySaved :: ClassName
+```
+
+
+#### `glyphiconFloppyRemove`
+
+``` purescript
+glyphiconFloppyRemove :: ClassName
+```
+
+
+#### `glyphiconFloppySave`
+
+``` purescript
+glyphiconFloppySave :: ClassName
+```
+
+
+#### `glyphiconFloppyOpen`
+
+``` purescript
+glyphiconFloppyOpen :: ClassName
+```
+
+
+#### `glyphiconCreditCard`
+
+``` purescript
+glyphiconCreditCard :: ClassName
+```
+
+
+#### `glyphiconTransfer`
+
+``` purescript
+glyphiconTransfer :: ClassName
+```
+
+
+#### `glyphiconCutlery`
+
+``` purescript
+glyphiconCutlery :: ClassName
+```
+
+
+#### `glyphiconHeader`
+
+``` purescript
+glyphiconHeader :: ClassName
+```
+
+
+#### `glyphiconCompressed`
+
+``` purescript
+glyphiconCompressed :: ClassName
+```
+
+
+#### `glyphiconEarphone`
+
+``` purescript
+glyphiconEarphone :: ClassName
+```
+
+
+#### `glyphiconPhoneAlt`
+
+``` purescript
+glyphiconPhoneAlt :: ClassName
+```
+
+
+#### `glyphiconTower`
+
+``` purescript
+glyphiconTower :: ClassName
+```
+
+
+#### `glyphiconStats`
+
+``` purescript
+glyphiconStats :: ClassName
+```
+
+
+#### `glyphiconSdVideo`
+
+``` purescript
+glyphiconSdVideo :: ClassName
+```
+
+
+#### `glyphiconHdVideo`
+
+``` purescript
+glyphiconHdVideo :: ClassName
+```
+
+
+#### `glyphiconSubtitles`
+
+``` purescript
+glyphiconSubtitles :: ClassName
+```
+
+
+#### `glyphiconSoundStereo`
+
+``` purescript
+glyphiconSoundStereo :: ClassName
+```
+
+
+#### `glyphiconSoundDolby`
+
+``` purescript
+glyphiconSoundDolby :: ClassName
+```
+
+
+#### `glyphiconSound5_1`
+
+``` purescript
+glyphiconSound5_1 :: ClassName
+```
+
+
+#### `glyphiconSound6_1`
+
+``` purescript
+glyphiconSound6_1 :: ClassName
+```
+
+
+#### `glyphiconSound7_1`
+
+``` purescript
+glyphiconSound7_1 :: ClassName
+```
+
+
+#### `glyphiconCopyrightMark`
+
+``` purescript
+glyphiconCopyrightMark :: ClassName
+```
+
+
+#### `glyphiconRegistrationMark`
+
+``` purescript
+glyphiconRegistrationMark :: ClassName
+```
+
+
+#### `glyphiconCloudDownload`
+
+``` purescript
+glyphiconCloudDownload :: ClassName
+```
+
+
+#### `glyphiconCloudUpload`
+
+``` purescript
+glyphiconCloudUpload :: ClassName
+```
+
+
+#### `glyphiconTreeConifer`
+
+``` purescript
+glyphiconTreeConifer :: ClassName
+```
+
+
+#### `glyphiconTreeDeciduous`
+
+``` purescript
+glyphiconTreeDeciduous :: ClassName
+```
+
+
+#### `glyphiconCd`
+
+``` purescript
+glyphiconCd :: ClassName
+```
+
+
+#### `glyphiconSaveFile`
+
+``` purescript
+glyphiconSaveFile :: ClassName
+```
+
+
+#### `glyphiconOpenFile`
+
+``` purescript
+glyphiconOpenFile :: ClassName
+```
+
+
+#### `glyphiconLevelUp`
+
+``` purescript
+glyphiconLevelUp :: ClassName
+```
+
+
+#### `glyphiconCopy`
+
+``` purescript
+glyphiconCopy :: ClassName
+```
+
+
+#### `glyphiconPaste`
+
+``` purescript
+glyphiconPaste :: ClassName
+```
+
+
+#### `glyphiconAlert`
+
+``` purescript
+glyphiconAlert :: ClassName
+```
+
+
+#### `glyphiconEqualizer`
+
+``` purescript
+glyphiconEqualizer :: ClassName
+```
+
+
+#### `glyphiconKing`
+
+``` purescript
+glyphiconKing :: ClassName
+```
+
+
+#### `glyphiconQueen`
+
+``` purescript
+glyphiconQueen :: ClassName
+```
+
+
+#### `glyphiconPawn`
+
+``` purescript
+glyphiconPawn :: ClassName
+```
+
+
+#### `glyphiconBishop`
+
+``` purescript
+glyphiconBishop :: ClassName
+```
+
+
+#### `glyphiconKnight`
+
+``` purescript
+glyphiconKnight :: ClassName
+```
+
+
+#### `glyphiconBabyFormula`
+
+``` purescript
+glyphiconBabyFormula :: ClassName
+```
+
+
+#### `glyphiconTent`
+
+``` purescript
+glyphiconTent :: ClassName
+```
+
+
+#### `glyphiconBlackboard`
+
+``` purescript
+glyphiconBlackboard :: ClassName
+```
+
+
+#### `glyphiconBed`
+
+``` purescript
+glyphiconBed :: ClassName
+```
+
+
+#### `glyphiconApple`
+
+``` purescript
+glyphiconApple :: ClassName
+```
+
+
+#### `glyphiconErase`
+
+``` purescript
+glyphiconErase :: ClassName
+```
+
+
+#### `glyphiconHourglass`
+
+``` purescript
+glyphiconHourglass :: ClassName
+```
+
+
+#### `glyphiconLamp`
+
+``` purescript
+glyphiconLamp :: ClassName
+```
+
+
+#### `glyphiconDuplicate`
+
+``` purescript
+glyphiconDuplicate :: ClassName
+```
+
+
+#### `glyphiconPiggyBank`
+
+``` purescript
+glyphiconPiggyBank :: ClassName
+```
+
+
+#### `glyphiconScissors`
+
+``` purescript
+glyphiconScissors :: ClassName
+```
+
+
+#### `glyphiconBitcoin`
+
+``` purescript
+glyphiconBitcoin :: ClassName
+```
+
+
+#### `glyphiconYen`
+
+``` purescript
+glyphiconYen :: ClassName
+```
+
+
+#### `glyphiconRuble`
+
+``` purescript
+glyphiconRuble :: ClassName
+```
+
+
+#### `glyphiconScale`
+
+``` purescript
+glyphiconScale :: ClassName
+```
+
+
+#### `glyphiconIceLolly`
+
+``` purescript
+glyphiconIceLolly :: ClassName
+```
+
+
+#### `glyphiconIceLollyTasted`
+
+``` purescript
+glyphiconIceLollyTasted :: ClassName
+```
+
+
+#### `glyphiconEducation`
+
+``` purescript
+glyphiconEducation :: ClassName
+```
+
+
+#### `glyphiconOptionHorizontal`
+
+``` purescript
+glyphiconOptionHorizontal :: ClassName
+```
+
+
+#### `glyphiconOptionVertical`
+
+``` purescript
+glyphiconOptionVertical :: ClassName
+```
+
+
+#### `glyphiconMenuHamburger`
+
+``` purescript
+glyphiconMenuHamburger :: ClassName
+```
+
+
+#### `glyphiconModalWindow`
+
+``` purescript
+glyphiconModalWindow :: ClassName
+```
+
+
+#### `glyphiconOil`
+
+``` purescript
+glyphiconOil :: ClassName
+```
+
+
+#### `glyphiconGrain`
+
+``` purescript
+glyphiconGrain :: ClassName
+```
+
+
+#### `glyphiconSunglasses`
+
+``` purescript
+glyphiconSunglasses :: ClassName
+```
+
+
+#### `glyphiconTextSize`
+
+``` purescript
+glyphiconTextSize :: ClassName
+```
+
+
+#### `glyphiconTextColor`
+
+``` purescript
+glyphiconTextColor :: ClassName
+```
+
+
+#### `glyphiconTextBackground`
+
+``` purescript
+glyphiconTextBackground :: ClassName
+```
+
+
+#### `glyphiconObjectAlignTop`
+
+``` purescript
+glyphiconObjectAlignTop :: ClassName
+```
+
+
+#### `glyphiconObjectAlignBottom`
+
+``` purescript
+glyphiconObjectAlignBottom :: ClassName
+```
+
+
+#### `glyphiconObjectAlignHorizontal`
+
+``` purescript
+glyphiconObjectAlignHorizontal :: ClassName
+```
+
+
+#### `glyphiconObjectAlignLeft`
+
+``` purescript
+glyphiconObjectAlignLeft :: ClassName
+```
+
+
+#### `glyphiconObjectAlignVertical`
+
+``` purescript
+glyphiconObjectAlignVertical :: ClassName
+```
+
+
+#### `glyphiconObjectAlignRight`
+
+``` purescript
+glyphiconObjectAlignRight :: ClassName
+```
+
+
+#### `glyphiconTriangleRight`
+
+``` purescript
+glyphiconTriangleRight :: ClassName
+```
+
+
+#### `glyphiconTriangleLeft`
+
+``` purescript
+glyphiconTriangleLeft :: ClassName
+```
+
+
+#### `glyphiconTriangleBottom`
+
+``` purescript
+glyphiconTriangleBottom :: ClassName
+```
+
+
+#### `glyphiconTriangleTop`
+
+``` purescript
+glyphiconTriangleTop :: ClassName
+```
+
+
+#### `glyphiconConsole`
+
+``` purescript
+glyphiconConsole :: ClassName
+```
+
+
+#### `glyphiconSuperscript`
+
+``` purescript
+glyphiconSuperscript :: ClassName
+```
+
+
+#### `glyphiconSubscript`
+
+``` purescript
+glyphiconSubscript :: ClassName
+```
+
+
+#### `glyphiconMenuLeft`
+
+``` purescript
+glyphiconMenuLeft :: ClassName
+```
+
+
+#### `glyphiconMenuRight`
+
+``` purescript
+glyphiconMenuRight :: ClassName
+```
+
+
+#### `glyphiconMenuDown`
+
+``` purescript
+glyphiconMenuDown :: ClassName
+```
+
+
+#### `glyphiconMenuUp`
+
+``` purescript
+glyphiconMenuUp :: ClassName
+```
+
 
 
 ## Module Halogen.Themes.Bootstrap3.InputGroup
