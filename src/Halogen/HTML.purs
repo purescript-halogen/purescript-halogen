@@ -157,6 +157,7 @@ import Data.Tuple
 import Data.Foreign
 import Data.Function
 import Data.Monoid
+import Data.StrMap (StrMap())
 import Data.String (joinWith)
 import Data.Foldable (for_, foldMap)
 import Data.Hashable (Hashcode(), runHashcode)
@@ -185,9 +186,11 @@ runAttributeName (AttributeName s) = s
 -- | Values are either strings or event handlers. Event handlers are required to produce outputs of type `i`.
 data AttributeValue i
   = ValueAttribute String
+  | MapAttribute (StrMap String)
   | HandlerAttribute (Foreign -> EventHandler (Maybe i))
 
 instance functorAttributeValue :: Functor AttributeValue where
+  (<$>) _ (MapAttribute m) = MapAttribute m
   (<$>) _ (ValueAttribute v) = ValueAttribute v
   (<$>) f (HandlerAttribute k) = HandlerAttribute (((f <$>) <$>) <<< k)
 
@@ -216,6 +219,7 @@ attributesToProps k (Attribute xs) = runProps do
   return props
   where
   addProp :: forall h eff. STProps h -> Tuple AttributeName (AttributeValue i) -> Eff (st :: ST h | eff) Unit
+  addProp props (Tuple key (MapAttribute map)) = runFn3 prop (runAttributeName key) map props
   addProp props (Tuple key (ValueAttribute value)) = runFn3 prop (runAttributeName key) value props
   addProp props (Tuple key (HandlerAttribute f)) = runFn3 handlerProp (runAttributeName key) handler props
     where

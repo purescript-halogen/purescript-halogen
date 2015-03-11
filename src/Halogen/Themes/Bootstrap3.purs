@@ -361,7 +361,7 @@ navbarBrand = className "navbar-brand"
 
 -- Common
 pullRight :: ClassName
-pullRigght = className "pull-right"
+pullRight = className "pull-right"
 
 -- Lists
 
