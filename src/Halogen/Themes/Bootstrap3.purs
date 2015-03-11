@@ -2084,8 +2084,8 @@ right = className "right"
 row :: ClassName
 row = className "row"
 
-show :: ClassName
-show = className "show"
+show_ :: ClassName
+show_ = className "show"
 
 small :: ClassName
 small = className "small"
