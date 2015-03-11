@@ -7644,10 +7644,10 @@ row :: ClassName
 ```
 
 
-#### `show`
+#### `show_`
 
 ``` purescript
-show :: ClassName
+show_ :: ClassName
 ```
 
 
