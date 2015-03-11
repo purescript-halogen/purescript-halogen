@@ -323,3 +323,7 @@ btnBlock = className "btn-block"
 btnGroup :: ClassName
 btnGroup = className "btn-group"
 
+-- Breadcrumbs
+
+breadcrumb :: ClassName
+breadcrumb = className "breadcrumb"

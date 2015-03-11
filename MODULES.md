@@ -3465,6 +3465,12 @@ btnGroup :: ClassName
 ```
 
 
+#### `breadcrumb`
+
+``` purescript
+breadcrumb :: ClassName
+```
+
 
 ## Module Halogen.HTML.Events.Forms
 
@@ -3609,6 +3615,67 @@ type FocusEvent = (relatedTarget :: Node)
 ```
 
 Identifies the additional fields which are available on focus events.
+
+
+## Module Halogen.Themes.Bootstrap3.Breadcrumbs
+
+
+This module provides convenience functions for creating _breadcrumb_ navigation elements.
+
+#### `URL`
+
+``` purescript
+data URL
+```
+
+A type-safe wrapper for a URL
+
+#### `url`
+
+``` purescript
+url :: String -> URL
+```
+
+Create a `URL`
+
+#### `runURL`
+
+``` purescript
+runURL :: URL -> String
+```
+
+Unwrap a URL
+
+#### `Crumb`
+
+``` purescript
+data Crumb a
+  = LinkCrumb URL
+  | DataCrumb a
+```
+
+There are two types of crumbs:
+
+- `LinkCrumb` creates crumbs which link to URLs.
+- `DataCrumb` contains data which may be used to generate inputs or requests.
+
+
+#### `CrumbTrail`
+
+``` purescript
+data CrumbTrail a
+  = CrumbTrail [Tuple String (Crumb a)] String [Tuple String (Crumb a)]
+```
+
+A `CrumbTrail` is a zipper with a current location, and crumbs behind and in front of us.
+
+#### `breadcrumbs`
+
+``` purescript
+breadcrumbs :: forall a i. CrumbTrail i -> H.HTML a i
+```
+
+Create a breadcrumb navigation element from an array of `Crumb`s.
 
 
 ## Module Halogen.Themes.Bootstrap3.InputGroup

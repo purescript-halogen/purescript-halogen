@@ -3,7 +3,7 @@
   - [ ] Buttons
   - [ ] Navbars
   - [ ] List groups
-  - [ ] Breadcrumbs
+  - [x] Breadcrumbs
 - [x] Make Raw safer
 - [x] Routing mixin + example
 - [x] Make Attribute traversable
