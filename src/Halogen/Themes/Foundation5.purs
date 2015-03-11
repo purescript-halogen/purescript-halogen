@@ -107,9 +107,6 @@ column = className "column"
 columns :: ClassName
 columns = className "columns"
 
-com :: ClassName
-com = className "com"
-
 containToGrid :: ClassName
 containToGrid = className "contain-to-grid"
 
