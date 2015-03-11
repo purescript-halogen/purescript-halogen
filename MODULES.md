@@ -4606,13 +4606,6 @@ collapsing :: ClassName
 ```
 
 
-#### `com`
-
-``` purescript
-com :: ClassName
-```
-
-
 #### `container`
 
 ``` purescript
@@ -4631,13 +4624,6 @@ containerFluid :: ClassName
 
 ``` purescript
 controlLabel :: ClassName
-```
-
-
-#### `css`
-
-``` purescript
-css :: ClassName
 ```
 
 
@@ -6909,13 +6895,6 @@ invisible :: ClassName
 ```
 
 
-#### `io`
-
-``` purescript
-io :: ClassName
-```
-
-
 #### `item`
 
 ``` purescript
@@ -7665,10 +7644,10 @@ row :: ClassName
 ```
 
 
-#### `show_`
+#### `show`
 
 ``` purescript
-show_ :: ClassName
+show :: ClassName
 ```
 
 
@@ -8356,13 +8335,6 @@ columns :: ClassName
 ```
 
 
-#### `com`
-
-``` purescript
-com :: ClassName
-```
-
-
 #### `containToGrid`
 
 ``` purescript
@@ -8381,13 +8353,6 @@ contained :: ClassName
 
 ``` purescript
 content :: ClassName
-```
-
-
-#### `css`
-
-``` purescript
-css :: ClassName
 ```
 
 
@@ -9812,13 +9777,6 @@ ltIe9 :: ClassName
 ```
 
 
-#### `map`
-
-``` purescript
-map :: ClassName
-```
-
-
 #### `mapCanvas`
 
 ``` purescript
@@ -10614,13 +10572,6 @@ parentLink :: ClassName
 
 ``` purescript
 paused :: ClassName
-```
-
-
-#### `phpied`
-
-``` purescript
-phpied :: ClassName
 ```
 
 
