@@ -9,4 +9,4 @@
 - [x] Make Attribute traversable
 - [x] More docs
 - [x] String renderer for HTML
-- [ ] More newtypes
+- [x] More newtypes

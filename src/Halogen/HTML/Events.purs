@@ -38,109 +38,110 @@ module Halogen.HTML.Events
   , onfocusout
   ) where
 
-import Halogen.HTML (Attribute())
 import Halogen.HTML.Events.Unsafe
 import Halogen.HTML.Events.Handler
 import Halogen.HTML.Events.Types
 
-onabort	:: forall i. (Event () -> EventHandler i) -> Attribute i
-onabort = unsafeHandler "abort"
+import qualified Halogen.HTML as H
 
-onbeforeunload :: forall i. (Event () -> EventHandler i) -> Attribute i
-onbeforeunload = unsafeHandler "beforeunload"
+onabort	:: forall i. (Event () -> EventHandler i) -> H.Attribute i
+onabort = unsafeHandler $ H.attributeName "abort"
 
-onerror :: forall i. (Event () -> EventHandler i) -> Attribute i
-onerror = unsafeHandler "error"
+onbeforeunload :: forall i. (Event () -> EventHandler i) -> H.Attribute i
+onbeforeunload = unsafeHandler $ H.attributeName "beforeunload"
 
-onhashchange :: forall i. (Event () -> EventHandler i) -> Attribute i
-onhashchange = unsafeHandler "hashchange"
+onerror :: forall i. (Event () -> EventHandler i) -> H.Attribute i
+onerror = unsafeHandler $ H.attributeName "error"
 
-onload :: forall i. (Event () -> EventHandler i) -> Attribute i
-onload = unsafeHandler "load"
+onhashchange :: forall i. (Event () -> EventHandler i) -> H.Attribute i
+onhashchange = unsafeHandler $ H.attributeName "hashchange"
 
-onpageshow :: forall i. (Event () -> EventHandler i) -> Attribute i
-onpageshow = unsafeHandler "pageshow"
+onload :: forall i. (Event () -> EventHandler i) -> H.Attribute i
+onload = unsafeHandler $ H.attributeName "load"
 
-onpagehide :: forall i. (Event () -> EventHandler i) -> Attribute i
-onpagehide = unsafeHandler "pagehide"
+onpageshow :: forall i. (Event () -> EventHandler i) -> H.Attribute i
+onpageshow = unsafeHandler $ H.attributeName "pageshow"
 
-onresize :: forall i. (Event () -> EventHandler i) -> Attribute i
-onresize = unsafeHandler "resize"
+onpagehide :: forall i. (Event () -> EventHandler i) -> H.Attribute i
+onpagehide = unsafeHandler $ H.attributeName "pagehide"
 
-onscroll :: forall i. (Event () -> EventHandler i) -> Attribute i
-onscroll = unsafeHandler "scroll"
+onresize :: forall i. (Event () -> EventHandler i) -> H.Attribute i
+onresize = unsafeHandler $ H.attributeName "resize"
 
-onunload :: forall i. (Event () -> EventHandler i) -> Attribute i
-onunload = unsafeHandler "unload"
+onscroll :: forall i. (Event () -> EventHandler i) -> H.Attribute i
+onscroll = unsafeHandler $ H.attributeName "scroll"
 
-onchange :: forall i. (Event () -> EventHandler i) -> Attribute i
-onchange = unsafeHandler "change"
+onunload :: forall i. (Event () -> EventHandler i) -> H.Attribute i
+onunload = unsafeHandler $ H.attributeName "unload"
 
-oninput :: forall i. (Event () -> EventHandler i) -> Attribute i
-oninput = unsafeHandler "input"
+onchange :: forall i. (Event () -> EventHandler i) -> H.Attribute i
+onchange = unsafeHandler $ H.attributeName "change"
 
-oninvalid :: forall i. (Event () -> EventHandler i) -> Attribute i
-oninvalid = unsafeHandler "invalid"
+oninput :: forall i. (Event () -> EventHandler i) -> H.Attribute i
+oninput = unsafeHandler $ H.attributeName "input"
 
-onreset :: forall i. (Event () -> EventHandler i) -> Attribute i
-onreset = unsafeHandler "reset"
+oninvalid :: forall i. (Event () -> EventHandler i) -> H.Attribute i
+oninvalid = unsafeHandler $ H.attributeName "invalid"
 
-onsearch :: forall i. (Event () -> EventHandler i) -> Attribute i
-onsearch = unsafeHandler "search"
+onreset :: forall i. (Event () -> EventHandler i) -> H.Attribute i
+onreset = unsafeHandler $ H.attributeName "reset"
 
-onselect :: forall i. (Event () -> EventHandler i) -> Attribute i
-onselect = unsafeHandler "select"
+onsearch :: forall i. (Event () -> EventHandler i) -> H.Attribute i
+onsearch = unsafeHandler $ H.attributeName "search"
 
-onsubmit :: forall i. (Event () -> EventHandler i) -> Attribute i
-onsubmit = unsafeHandler "submit"
+onselect :: forall i. (Event () -> EventHandler i) -> H.Attribute i
+onselect = unsafeHandler $ H.attributeName "select"
 
-onclick :: forall i. (Event MouseEvent -> EventHandler i) -> Attribute i
-onclick = unsafeHandler "click"
+onsubmit :: forall i. (Event () -> EventHandler i) -> H.Attribute i
+onsubmit = unsafeHandler $ H.attributeName "submit"
 
-oncontextmenu :: forall i. (Event MouseEvent -> EventHandler i) -> Attribute i
-oncontextmenu = unsafeHandler "contextmenu"
+onclick :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attribute i
+onclick = unsafeHandler $ H.attributeName "click"
 
-ondblclick :: forall i. (Event MouseEvent -> EventHandler i) -> Attribute i
-ondblclick = unsafeHandler "dblclick"
+oncontextmenu :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attribute i
+oncontextmenu = unsafeHandler $ H.attributeName "contextmenu"
 
-onmousedown :: forall i. (Event MouseEvent -> EventHandler i) -> Attribute i
-onmousedown = unsafeHandler "mousedown"
+ondblclick :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attribute i
+ondblclick = unsafeHandler $ H.attributeName "dblclick"
 
-onmouseenter :: forall i. (Event MouseEvent -> EventHandler i) -> Attribute i
-onmouseenter = unsafeHandler "mouseenter"
+onmousedown :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attribute i
+onmousedown = unsafeHandler $ H.attributeName "mousedown"
 
-onmouseleave :: forall i. (Event MouseEvent -> EventHandler i) -> Attribute i
-onmouseleave = unsafeHandler "mouseleave"
+onmouseenter :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attribute i
+onmouseenter = unsafeHandler $ H.attributeName "mouseenter"
 
-onmousemove :: forall i. (Event MouseEvent -> EventHandler i) -> Attribute i
-onmousemove = unsafeHandler "mousemove"
+onmouseleave :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attribute i
+onmouseleave = unsafeHandler $ H.attributeName "mouseleave"
 
-onmouseover :: forall i. (Event MouseEvent -> EventHandler i) -> Attribute i
-onmouseover = unsafeHandler "mouseover"
+onmousemove :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attribute i
+onmousemove = unsafeHandler $ H.attributeName "mousemove"
 
-onmouseout :: forall i. (Event MouseEvent -> EventHandler i) -> Attribute i
-onmouseout = unsafeHandler "mouseout"
+onmouseover :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attribute i
+onmouseover = unsafeHandler $ H.attributeName "mouseover"
 
-onmouseup :: forall i. (Event MouseEvent -> EventHandler i) -> Attribute i
-onmouseup = unsafeHandler "mouseup"
+onmouseout :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attribute i
+onmouseout = unsafeHandler $ H.attributeName "mouseout"
 
-onkeydown :: forall i. (Event KeyboardEvent -> EventHandler i) -> Attribute i
-onkeydown = unsafeHandler "keydown"
+onmouseup :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attribute i
+onmouseup = unsafeHandler $ H.attributeName "mouseup"
 
-onkeypress :: forall i. (Event KeyboardEvent -> EventHandler i) -> Attribute i
-onkeypress = unsafeHandler "keypress"
+onkeydown :: forall i. (Event KeyboardEvent -> EventHandler i) -> H.Attribute i
+onkeydown = unsafeHandler $ H.attributeName "keydown"
 
-onkeyup :: forall i. (Event KeyboardEvent -> EventHandler i) -> Attribute i
-onkeyup = unsafeHandler "keyup"
+onkeypress :: forall i. (Event KeyboardEvent -> EventHandler i) -> H.Attribute i
+onkeypress = unsafeHandler $ H.attributeName "keypress"
 
-onblur :: forall i. (Event FocusEvent -> EventHandler i) -> Attribute i
-onblur = unsafeHandler "blur"
+onkeyup :: forall i. (Event KeyboardEvent -> EventHandler i) -> H.Attribute i
+onkeyup = unsafeHandler $ H.attributeName "keyup"
 
-onfocus :: forall i. (Event FocusEvent -> EventHandler i) -> Attribute i
-onfocus = unsafeHandler "focus"
+onblur :: forall i. (Event FocusEvent -> EventHandler i) -> H.Attribute i
+onblur = unsafeHandler $ H.attributeName "blur"
 
-onfocusin :: forall i. (Event FocusEvent -> EventHandler i) -> Attribute i
-onfocusin = unsafeHandler "focusin"
+onfocus :: forall i. (Event FocusEvent -> EventHandler i) -> H.Attribute i
+onfocus = unsafeHandler $ H.attributeName "focus"
 
-onfocusout :: forall i. (Event FocusEvent -> EventHandler i) -> Attribute i
-onfocusout = unsafeHandler "focusout"
+onfocusin :: forall i. (Event FocusEvent -> EventHandler i) -> H.Attribute i
+onfocusin = unsafeHandler $ H.attributeName "focusin"
+
+onfocusout :: forall i. (Event FocusEvent -> EventHandler i) -> H.Attribute i
+onfocusout = unsafeHandler $ H.attributeName "focusout"

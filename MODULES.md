@@ -25,6 +25,28 @@ Since the `Void` type has no inhabitants, we can eliminate it producing any type
 This module defines the HTML types required by the Halogen library, and provides
 smart constructors for HTML5 elements.
 
+#### `AttributeName`
+
+``` purescript
+newtype AttributeName
+```
+
+A type-safe wrapper for attribute names
+
+#### `attributeName`
+
+``` purescript
+attributeName :: String -> AttributeName
+```
+
+#### `runAttributeName`
+
+``` purescript
+runAttributeName :: AttributeName -> String
+```
+
+Unpack an attribute name
+
 #### `AttributeValue`
 
 ``` purescript
@@ -47,7 +69,7 @@ instance functorAttributeValue :: Functor AttributeValue
 
 ``` purescript
 data Attribute i
-  = Attribute [Tuple String (AttributeValue i)]
+  = Attribute [Tuple AttributeName (AttributeValue i)]
 ```
 
 A value of type `Attribute i` represents a collection of HTML attributes, whose
@@ -86,12 +108,36 @@ Convert a collection of attributes to an immutable property collection by provid
 
 This function uses a temporary mutable property collection for efficiency.
 
+#### `TagName`
+
+``` purescript
+newtype TagName
+```
+
+A type-safe wrapper for a HTML tag name
+
+#### `tagName`
+
+``` purescript
+tagName :: String -> TagName
+```
+
+Create a tag name
+
+#### `runTagName`
+
+``` purescript
+runTagName :: TagName -> String
+```
+
+Unwrap a `TagName` to get the tag name as a `String`.
+
 #### `HTML`
 
 ``` purescript
 data HTML a i
   = Text String
-  | Element String (Attribute i) [HTML a i]
+  | Element TagName (Attribute i) [HTML a i]
   | Hashed Hashcode (Unit -> HTML a i)
   | Placeholder a
 ```
@@ -2115,13 +2161,13 @@ Unpack a class name
 #### `addClass`
 
 ``` purescript
-addClass :: forall i. ClassName -> Attribute i -> Attribute i
+addClass :: forall i. ClassName -> H.Attribute i -> H.Attribute i
 ```
 
 #### `attribute`
 
 ``` purescript
-attribute :: forall i value. String -> String -> Attribute i
+attribute :: forall i value. H.AttributeName -> String -> H.Attribute i
 ```
 
 This function can be used to define custom attributes.
@@ -2129,154 +2175,154 @@ This function can be used to define custom attributes.
 #### `alt`
 
 ``` purescript
-alt :: forall i. String -> Attribute i
+alt :: forall i. String -> H.Attribute i
 ```
 
 
 #### `charset`
 
 ``` purescript
-charset :: forall i. String -> Attribute i
+charset :: forall i. String -> H.Attribute i
 ```
 
 
 #### `class_`
 
 ``` purescript
-class_ :: forall i. ClassName -> Attribute i
+class_ :: forall i. ClassName -> H.Attribute i
 ```
 
 
 #### `classes`
 
 ``` purescript
-classes :: forall i. [ClassName] -> Attribute i
+classes :: forall i. [ClassName] -> H.Attribute i
 ```
 
 
 #### `content`
 
 ``` purescript
-content :: forall i. String -> Attribute i
+content :: forall i. String -> H.Attribute i
 ```
 
 
 #### `for`
 
 ``` purescript
-for :: forall i. String -> Attribute i
+for :: forall i. String -> H.Attribute i
 ```
 
 
 #### `height`
 
 ``` purescript
-height :: forall i. Number -> Attribute i
+height :: forall i. Number -> H.Attribute i
 ```
 
 
 #### `href`
 
 ``` purescript
-href :: forall i. String -> Attribute i
+href :: forall i. String -> H.Attribute i
 ```
 
 
 #### `httpEquiv`
 
 ``` purescript
-httpEquiv :: forall i. String -> Attribute i
+httpEquiv :: forall i. String -> H.Attribute i
 ```
 
 
 #### `id_`
 
 ``` purescript
-id_ :: forall i. String -> Attribute i
+id_ :: forall i. String -> H.Attribute i
 ```
 
 
 #### `name`
 
 ``` purescript
-name :: forall i. String -> Attribute i
+name :: forall i. String -> H.Attribute i
 ```
 
 
 #### `rel`
 
 ``` purescript
-rel :: forall i. String -> Attribute i
+rel :: forall i. String -> H.Attribute i
 ```
 
 
 #### `src`
 
 ``` purescript
-src :: forall i. String -> Attribute i
+src :: forall i. String -> H.Attribute i
 ```
 
 
 #### `target`
 
 ``` purescript
-target :: forall i. String -> Attribute i
+target :: forall i. String -> H.Attribute i
 ```
 
 
 #### `title`
 
 ``` purescript
-title :: forall i. String -> Attribute i
+title :: forall i. String -> H.Attribute i
 ```
 
 
 #### `type_`
 
 ``` purescript
-type_ :: forall i. String -> Attribute i
+type_ :: forall i. String -> H.Attribute i
 ```
 
 
 #### `value`
 
 ``` purescript
-value :: forall i. String -> Attribute i
+value :: forall i. String -> H.Attribute i
 ```
 
 
 #### `width`
 
 ``` purescript
-width :: forall i. Number -> Attribute i
+width :: forall i. Number -> H.Attribute i
 ```
 
 
 #### `disabled`
 
 ``` purescript
-disabled :: forall i. Boolean -> Attribute i
+disabled :: forall i. Boolean -> H.Attribute i
 ```
 
 
 #### `enabled`
 
 ``` purescript
-enabled :: forall i. Boolean -> Attribute i
+enabled :: forall i. Boolean -> H.Attribute i
 ```
 
 
 #### `checked`
 
 ``` purescript
-checked :: forall i. Boolean -> Attribute i
+checked :: forall i. Boolean -> H.Attribute i
 ```
 
 
 #### `placeholder`
 
 ``` purescript
-placeholder :: forall i. String -> Attribute i
+placeholder :: forall i. String -> H.Attribute i
 ```
 
 
@@ -2290,238 +2336,238 @@ they may be safely embedded in HTML documents.
 #### `onabort`
 
 ``` purescript
-onabort :: forall i. (Event () -> EventHandler i) -> Attribute i
+onabort :: forall i. (Event () -> EventHandler i) -> H.Attribute i
 ```
 
 
 #### `onbeforeunload`
 
 ``` purescript
-onbeforeunload :: forall i. (Event () -> EventHandler i) -> Attribute i
+onbeforeunload :: forall i. (Event () -> EventHandler i) -> H.Attribute i
 ```
 
 
 #### `onerror`
 
 ``` purescript
-onerror :: forall i. (Event () -> EventHandler i) -> Attribute i
+onerror :: forall i. (Event () -> EventHandler i) -> H.Attribute i
 ```
 
 
 #### `onhashchange`
 
 ``` purescript
-onhashchange :: forall i. (Event () -> EventHandler i) -> Attribute i
+onhashchange :: forall i. (Event () -> EventHandler i) -> H.Attribute i
 ```
 
 
 #### `onload`
 
 ``` purescript
-onload :: forall i. (Event () -> EventHandler i) -> Attribute i
+onload :: forall i. (Event () -> EventHandler i) -> H.Attribute i
 ```
 
 
 #### `onpageshow`
 
 ``` purescript
-onpageshow :: forall i. (Event () -> EventHandler i) -> Attribute i
+onpageshow :: forall i. (Event () -> EventHandler i) -> H.Attribute i
 ```
 
 
 #### `onpagehide`
 
 ``` purescript
-onpagehide :: forall i. (Event () -> EventHandler i) -> Attribute i
+onpagehide :: forall i. (Event () -> EventHandler i) -> H.Attribute i
 ```
 
 
 #### `onresize`
 
 ``` purescript
-onresize :: forall i. (Event () -> EventHandler i) -> Attribute i
+onresize :: forall i. (Event () -> EventHandler i) -> H.Attribute i
 ```
 
 
 #### `onscroll`
 
 ``` purescript
-onscroll :: forall i. (Event () -> EventHandler i) -> Attribute i
+onscroll :: forall i. (Event () -> EventHandler i) -> H.Attribute i
 ```
 
 
 #### `onunload`
 
 ``` purescript
-onunload :: forall i. (Event () -> EventHandler i) -> Attribute i
+onunload :: forall i. (Event () -> EventHandler i) -> H.Attribute i
 ```
 
 
 #### `onchange`
 
 ``` purescript
-onchange :: forall i. (Event () -> EventHandler i) -> Attribute i
+onchange :: forall i. (Event () -> EventHandler i) -> H.Attribute i
 ```
 
 
 #### `oninput`
 
 ``` purescript
-oninput :: forall i. (Event () -> EventHandler i) -> Attribute i
+oninput :: forall i. (Event () -> EventHandler i) -> H.Attribute i
 ```
 
 
 #### `oninvalid`
 
 ``` purescript
-oninvalid :: forall i. (Event () -> EventHandler i) -> Attribute i
+oninvalid :: forall i. (Event () -> EventHandler i) -> H.Attribute i
 ```
 
 
 #### `onreset`
 
 ``` purescript
-onreset :: forall i. (Event () -> EventHandler i) -> Attribute i
+onreset :: forall i. (Event () -> EventHandler i) -> H.Attribute i
 ```
 
 
 #### `onsearch`
 
 ``` purescript
-onsearch :: forall i. (Event () -> EventHandler i) -> Attribute i
+onsearch :: forall i. (Event () -> EventHandler i) -> H.Attribute i
 ```
 
 
 #### `onselect`
 
 ``` purescript
-onselect :: forall i. (Event () -> EventHandler i) -> Attribute i
+onselect :: forall i. (Event () -> EventHandler i) -> H.Attribute i
 ```
 
 
 #### `onsubmit`
 
 ``` purescript
-onsubmit :: forall i. (Event () -> EventHandler i) -> Attribute i
+onsubmit :: forall i. (Event () -> EventHandler i) -> H.Attribute i
 ```
 
 
 #### `onclick`
 
 ``` purescript
-onclick :: forall i. (Event MouseEvent -> EventHandler i) -> Attribute i
+onclick :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attribute i
 ```
 
 
 #### `oncontextmenu`
 
 ``` purescript
-oncontextmenu :: forall i. (Event MouseEvent -> EventHandler i) -> Attribute i
+oncontextmenu :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attribute i
 ```
 
 
 #### `ondblclick`
 
 ``` purescript
-ondblclick :: forall i. (Event MouseEvent -> EventHandler i) -> Attribute i
+ondblclick :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attribute i
 ```
 
 
 #### `onmousedown`
 
 ``` purescript
-onmousedown :: forall i. (Event MouseEvent -> EventHandler i) -> Attribute i
+onmousedown :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attribute i
 ```
 
 
 #### `onmouseenter`
 
 ``` purescript
-onmouseenter :: forall i. (Event MouseEvent -> EventHandler i) -> Attribute i
+onmouseenter :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attribute i
 ```
 
 
 #### `onmouseleave`
 
 ``` purescript
-onmouseleave :: forall i. (Event MouseEvent -> EventHandler i) -> Attribute i
+onmouseleave :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attribute i
 ```
 
 
 #### `onmousemove`
 
 ``` purescript
-onmousemove :: forall i. (Event MouseEvent -> EventHandler i) -> Attribute i
+onmousemove :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attribute i
 ```
 
 
 #### `onmouseover`
 
 ``` purescript
-onmouseover :: forall i. (Event MouseEvent -> EventHandler i) -> Attribute i
+onmouseover :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attribute i
 ```
 
 
 #### `onmouseout`
 
 ``` purescript
-onmouseout :: forall i. (Event MouseEvent -> EventHandler i) -> Attribute i
+onmouseout :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attribute i
 ```
 
 
 #### `onmouseup`
 
 ``` purescript
-onmouseup :: forall i. (Event MouseEvent -> EventHandler i) -> Attribute i
+onmouseup :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attribute i
 ```
 
 
 #### `onkeydown`
 
 ``` purescript
-onkeydown :: forall i. (Event KeyboardEvent -> EventHandler i) -> Attribute i
+onkeydown :: forall i. (Event KeyboardEvent -> EventHandler i) -> H.Attribute i
 ```
 
 
 #### `onkeypress`
 
 ``` purescript
-onkeypress :: forall i. (Event KeyboardEvent -> EventHandler i) -> Attribute i
+onkeypress :: forall i. (Event KeyboardEvent -> EventHandler i) -> H.Attribute i
 ```
 
 
 #### `onkeyup`
 
 ``` purescript
-onkeyup :: forall i. (Event KeyboardEvent -> EventHandler i) -> Attribute i
+onkeyup :: forall i. (Event KeyboardEvent -> EventHandler i) -> H.Attribute i
 ```
 
 
 #### `onblur`
 
 ``` purescript
-onblur :: forall i. (Event FocusEvent -> EventHandler i) -> Attribute i
+onblur :: forall i. (Event FocusEvent -> EventHandler i) -> H.Attribute i
 ```
 
 
 #### `onfocus`
 
 ``` purescript
-onfocus :: forall i. (Event FocusEvent -> EventHandler i) -> Attribute i
+onfocus :: forall i. (Event FocusEvent -> EventHandler i) -> H.Attribute i
 ```
 
 
 #### `onfocusin`
 
 ``` purescript
-onfocusin :: forall i. (Event FocusEvent -> EventHandler i) -> Attribute i
+onfocusin :: forall i. (Event FocusEvent -> EventHandler i) -> H.Attribute i
 ```
 
 
 #### `onfocusout`
 
 ``` purescript
-onfocusout :: forall i. (Event FocusEvent -> EventHandler i) -> Attribute i
+onfocusout :: forall i. (Event FocusEvent -> EventHandler i) -> H.Attribute i
 ```
 
 
@@ -3428,7 +3474,7 @@ Convenience functions for working with form elements.
 #### `onValueChanged`
 
 ``` purescript
-onValueChanged :: forall value i. (IsForeign value) => (value -> EventHandler i) -> Attribute i
+onValueChanged :: forall value i. (IsForeign value) => (value -> EventHandler i) -> H.Attribute i
 ```
 
 Attach an event handler which will produce an input when the value of an input field changes
@@ -3438,7 +3484,7 @@ An input will not be produced if the value cannot be cast to the appropriate typ
 #### `onChecked`
 
 ``` purescript
-onChecked :: forall i. (Boolean -> EventHandler i) -> Attribute i
+onChecked :: forall i. (Boolean -> EventHandler i) -> H.Attribute i
 ```
 
 Attach an event handler which will fire when a checkbox is checked or unchecked

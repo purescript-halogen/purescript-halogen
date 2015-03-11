@@ -6,6 +6,14 @@ module Halogen.HTML
   , Attribute(..)
   , AttributeValue(..)
   
+  , TagName()
+  , tagName
+  , runTagName
+  
+  , AttributeName()
+  , attributeName
+  , runAttributeName
+  
   , attributesToProps
   
   , graft
@@ -162,6 +170,17 @@ import Control.Monad.ST
 import Halogen.Internal.VirtualDOM
 import Halogen.HTML.Events.Handler
 
+-- | A type-safe wrapper for attribute names
+newtype AttributeName = AttributeName String
+
+-- Create an attribute name
+attributeName :: String -> AttributeName
+attributeName = AttributeName
+
+-- | Unpack an attribute name
+runAttributeName :: AttributeName -> String
+runAttributeName (AttributeName s) = s
+
 -- | The type `AttributeValue i` represents values which can appear inside HTML attributes.
 -- | Values are either strings or event handlers. Event handlers are required to produce outputs of type `i`.
 data AttributeValue i
@@ -176,7 +195,7 @@ instance functorAttributeValue :: Functor AttributeValue where
 -- | event handlers produce outputs of type `i`.
 -- |
 -- | The `Semigroup` instance allows attributes to be combined.
-data Attribute i = Attribute [Tuple String (AttributeValue i)]
+data Attribute i = Attribute [Tuple AttributeName (AttributeValue i)]
 
 instance functorAttribute :: Functor Attribute where
   (<$>) f (Attribute xs) = Attribute (A.map ((f <$>) <$>) xs)
@@ -196,14 +215,25 @@ attributesToProps k (Attribute xs) = runProps do
   for_ xs (addProp props)
   return props
   where
-  addProp :: forall h eff. STProps h -> Tuple String (AttributeValue i) -> Eff (st :: ST h | eff) Unit
-  addProp props (Tuple key (ValueAttribute value)) = runFn3 prop key value props
-  addProp props (Tuple key (HandlerAttribute f)) = runFn3 handlerProp key handler props
+  addProp :: forall h eff. STProps h -> Tuple AttributeName (AttributeValue i) -> Eff (st :: ST h | eff) Unit
+  addProp props (Tuple key (ValueAttribute value)) = runFn3 prop (runAttributeName key) value props
+  addProp props (Tuple key (HandlerAttribute f)) = runFn3 handlerProp (runAttributeName key) handler props
     where
     handler :: Foreign -> Eff eff Unit
     handler e = do
       m <- unsafeInterleaveEff $ runEventHandler (unsafeFromForeign e) (f e)
       for_ m k
+
+-- | A type-safe wrapper for a HTML tag name
+newtype TagName = TagName String
+
+-- | Create a tag name
+tagName :: String -> TagName
+tagName = TagName
+
+-- | Unwrap a `TagName` to get the tag name as a `String`.
+runTagName :: TagName -> String
+runTagName (TagName s) = s
 
 -- | The `HTML` type represents HTML documents before being rendered to the virtual DOM, and ultimately,
 -- | the actual DOM.
@@ -224,7 +254,7 @@ attributesToProps k (Attribute xs) = runProps do
 -- |   `graft` operation.
 data HTML a i
   = Text String
-  | Element String (Attribute i) [HTML a i]
+  | Element TagName (Attribute i) [HTML a i]
   | Hashed Hashcode (Unit -> HTML a i)
   | Placeholder a
     
@@ -249,7 +279,7 @@ graft (Text s) _ = Text s
 -- | might prefer to use `renderHtml` instead.
 renderHtml' :: forall i a eff. (i -> Eff eff Unit) -> (a -> VTree) -> HTML a i -> VTree
 renderHtml' _ _ (Text s) = vtext s
-renderHtml' k f (Element name attribs els) = vnode name (attributesToProps k attribs) (A.map (renderHtml' k f) els)
+renderHtml' k f (Element name attribs els) = vnode (runTagName name) (attributesToProps k attribs) (A.map (renderHtml' k f) els)
 renderHtml' k f (Hashed h html) = runFn2 hash (mkFn0 \_ -> renderHtml' k f (html unit)) h
 renderHtml' _ f (Placeholder a) = f a
 
@@ -265,11 +295,11 @@ renderHtmlToString = go
   where
   go :: HTML Void Void -> String
   go (Text s) = s
-  go (Element name (Attribute attr) els) = "<" <> name <> " " <> joinWith " " (A.map renderAttr attr) <> ">" <> foldMap go els <> "</" <> name <> ">"
+  go (Element name (Attribute attr) els) = "<" <> runTagName name <> " " <> joinWith " " (A.map renderAttr attr) <> ">" <> foldMap go els <> "</" <> runTagName name <> ">"
   go (Hashed _ f) = go (f unit)
   
-  renderAttr :: Tuple String (AttributeValue Void) -> String
-  renderAttr (Tuple key (ValueAttribute value)) = key <> "=\"" <> value <> "\""
+  renderAttr :: Tuple AttributeName (AttributeValue Void) -> String
+  renderAttr (Tuple key (ValueAttribute value)) = runAttributeName key <> "=\"" <> value <> "\""
   
 -- | Create a HTML document which represents a text node.
 text :: forall a i. String -> HTML a i
@@ -287,727 +317,727 @@ placeholder :: forall a i. a -> HTML a i
 placeholder = Placeholder
 
 a :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-a = Element "a"
+a = Element $ tagName "a"
 
 a_ :: forall a i. [HTML a i] -> HTML a i
 a_ = a mempty
 
 abbr :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-abbr = Element "abbr"
+abbr = Element $ tagName "abbr"
 
 abbr_ :: forall a i. [HTML a i] -> HTML a i
 abbr_ = abbr mempty
 
 acronym :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-acronym = Element "acronym"
+acronym = Element $ tagName "acronym"
 
 acronym_ :: forall a i. [HTML a i] -> HTML a i
 acronym_ = acronym mempty
 
 address :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-address = Element "address"
+address = Element $ tagName "address"
 
 address_ :: forall a i. [HTML a i] -> HTML a i
 address_ = address mempty
 
 applet :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-applet = Element "applet"
+applet = Element $ tagName "applet"
 
 applet_ :: forall a i. [HTML a i] -> HTML a i
 applet_ = applet mempty
 
 area :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-area = Element "area"
+area = Element $ tagName "area"
 
 area_ :: forall a i. [HTML a i] -> HTML a i
 area_ = area mempty
 
 article :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-article = Element "article"
+article = Element $ tagName "article"
 
 article_ :: forall a i. [HTML a i] -> HTML a i
 article_ = article mempty
 
 aside :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-aside = Element "aside"
+aside = Element $ tagName "aside"
 
 aside_ :: forall a i. [HTML a i] -> HTML a i
 aside_ = aside mempty
 
 audio :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-audio = Element "audio"
+audio = Element $ tagName "audio"
 
 audio_ :: forall a i. [HTML a i] -> HTML a i
 audio_ = audio mempty
 
 b :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-b = Element "b"
+b = Element $ tagName "b"
 
 b_ :: forall a i. [HTML a i] -> HTML a i
 b_ = b mempty
 
 base :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-base = Element "base"
+base = Element $ tagName "base"
 
 base_ :: forall a i. [HTML a i] -> HTML a i
 base_ = base mempty
 
 basefont :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-basefont = Element "basefont"
+basefont = Element $ tagName "basefont"
 
 basefont_ :: forall a i. [HTML a i] -> HTML a i
 basefont_ = basefont mempty
 
 bdi :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-bdi = Element "bdi"
+bdi = Element $ tagName "bdi"
 
 bdi_ :: forall a i. [HTML a i] -> HTML a i
 bdi_ = bdi mempty
 
 bdo :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-bdo = Element "bdo"
+bdo = Element $ tagName "bdo"
 
 bdo_ :: forall a i. [HTML a i] -> HTML a i
 bdo_ = bdo mempty
 
 big :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-big = Element "big"
+big = Element $ tagName "big"
 
 big_ :: forall a i. [HTML a i] -> HTML a i
 big_ = big mempty
 
 blockquote :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-blockquote = Element "blockquote"
+blockquote = Element $ tagName "blockquote"
 
 blockquote_ :: forall a i. [HTML a i] -> HTML a i
 blockquote_ = blockquote mempty
 
 body :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-body = Element "body"
+body = Element $ tagName "body"
 
 body_ :: forall a i. [HTML a i] -> HTML a i
 body_ = body mempty
 
 br :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-br = Element "br"
+br = Element $ tagName "br"
 
 br_ :: forall a i. [HTML a i] -> HTML a i
 br_ = br mempty
 
 button :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-button = Element "button"
+button = Element $ tagName "button"
 
 button_ :: forall a i. [HTML a i] -> HTML a i
 button_ = button mempty
 
 canvas :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-canvas = Element "canvas"
+canvas = Element $ tagName "canvas"
 
 canvas_ :: forall a i. [HTML a i] -> HTML a i
 canvas_ = canvas mempty
 
 caption :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-caption = Element "caption"
+caption = Element $ tagName "caption"
 
 caption_ :: forall a i. [HTML a i] -> HTML a i
 caption_ = caption mempty
 
 center :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-center = Element "center"
+center = Element $ tagName "center"
 
 center_ :: forall a i. [HTML a i] -> HTML a i
 center_ = center mempty
 
 cite :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-cite = Element "cite"
+cite = Element $ tagName "cite"
 
 cite_ :: forall a i. [HTML a i] -> HTML a i
 cite_ = cite mempty
 
 code :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-code = Element "code"
+code = Element $ tagName "code"
 
 code_ :: forall a i. [HTML a i] -> HTML a i
 code_ = code mempty
 
 col :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-col = Element "col"
+col = Element $ tagName "col"
 
 col_ :: forall a i. [HTML a i] -> HTML a i
 col_ = col mempty
 
 colgroup :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-colgroup = Element "colgroup"
+colgroup = Element $ tagName "colgroup"
 
 colgroup_ :: forall a i. [HTML a i] -> HTML a i
 colgroup_ = colgroup mempty
 
 datalist :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-datalist = Element "datalist"
+datalist = Element $ tagName "datalist"
 
 datalist_ :: forall a i. [HTML a i] -> HTML a i
 datalist_ = datalist mempty
 
 dd :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-dd = Element "dd"
+dd = Element $ tagName "dd"
 
 dd_ :: forall a i. [HTML a i] -> HTML a i
 dd_ = dd mempty
 
 del :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-del = Element "del"
+del = Element $ tagName "del"
 
 del_ :: forall a i. [HTML a i] -> HTML a i
 del_ = del mempty
 
 details :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-details = Element "details"
+details = Element $ tagName "details"
 
 details_ :: forall a i. [HTML a i] -> HTML a i
 details_ = details mempty
 
 dfn :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-dfn = Element "dfn"
+dfn = Element $ tagName "dfn"
 
 dfn_ :: forall a i. [HTML a i] -> HTML a i
 dfn_ = dfn mempty
 
 dialog :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-dialog = Element "dialog"
+dialog = Element $ tagName "dialog"
 
 dialog_ :: forall a i. [HTML a i] -> HTML a i
 dialog_ = dialog mempty
 
 dir :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-dir = Element "dir"
+dir = Element $ tagName "dir"
 
 dir_ :: forall a i. [HTML a i] -> HTML a i
 dir_ = dir mempty
 
 div :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-div = Element "div"
+div = Element $ tagName "div"
 
 div_ :: forall a i. [HTML a i] -> HTML a i
 div_ = div mempty
 
 dl :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-dl = Element "dl"
+dl = Element $ tagName "dl"
 
 dl_ :: forall a i. [HTML a i] -> HTML a i
 dl_ = dl mempty
 
 dt :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-dt = Element "dt"
+dt = Element $ tagName "dt"
 
 dt_ :: forall a i. [HTML a i] -> HTML a i
 dt_ = dt mempty
 
 em :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-em = Element "em"
+em = Element $ tagName "em"
 
 em_ :: forall a i. [HTML a i] -> HTML a i
 em_ = em mempty
 
 embed :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-embed = Element "embed"
+embed = Element $ tagName "embed"
 
 embed_ :: forall a i. [HTML a i] -> HTML a i
 embed_ = embed mempty
 
 fieldset :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-fieldset = Element "fieldset"
+fieldset = Element $ tagName "fieldset"
 
 fieldset_ :: forall a i. [HTML a i] -> HTML a i
 fieldset_ = fieldset mempty
 
 figcaption :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-figcaption = Element "figcaption"
+figcaption = Element $ tagName "figcaption"
 
 figcaption_ :: forall a i. [HTML a i] -> HTML a i
 figcaption_ = figcaption mempty
 
 figure :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-figure = Element "figure"
+figure = Element $ tagName "figure"
 
 figure_ :: forall a i. [HTML a i] -> HTML a i
 figure_ = figure mempty
 
 font :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-font = Element "font"
+font = Element $ tagName "font"
 
 font_ :: forall a i. [HTML a i] -> HTML a i
 font_ = font mempty
 
 footer :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-footer = Element "footer"
+footer = Element $ tagName "footer"
 
 footer_ :: forall a i. [HTML a i] -> HTML a i
 footer_ = footer mempty
 
 form :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-form = Element "form"
+form = Element $ tagName "form"
 
 form_ :: forall a i. [HTML a i] -> HTML a i
 form_ = form mempty
 
 frame :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-frame = Element "frame"
+frame = Element $ tagName "frame"
 
 frame_ :: forall a i. [HTML a i] -> HTML a i
 frame_ = frame mempty
 
 frameset :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-frameset = Element "frameset"
+frameset = Element $ tagName "frameset"
 
 frameset_ :: forall a i. [HTML a i] -> HTML a i
 frameset_ = frameset mempty
 
 h1 :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-h1 = Element "h1"
+h1 = Element $ tagName "h1"
 
 h1_ :: forall a i. [HTML a i] -> HTML a i
 h1_ = h1 mempty
 
 h2 :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-h2 = Element "h2"
+h2 = Element $ tagName "h2"
 
 h2_ :: forall a i. [HTML a i] -> HTML a i
 h2_ = h2 mempty
 
 h3 :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-h3 = Element "h3"
+h3 = Element $ tagName "h3"
 
 h3_ :: forall a i. [HTML a i] -> HTML a i
 h3_ = h3 mempty
 
 h4 :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-h4 = Element "h4"
+h4 = Element $ tagName "h4"
 
 h4_ :: forall a i. [HTML a i] -> HTML a i
 h4_ = h4 mempty
 
 h5 :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-h5 = Element "h5"
+h5 = Element $ tagName "h5"
 
 h5_ :: forall a i. [HTML a i] -> HTML a i
 h5_ = h5 mempty
 
 h6 :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-h6 = Element "h6"
+h6 = Element $ tagName "h6"
 
 h6_ :: forall a i. [HTML a i] -> HTML a i
 h6_ = h6 mempty
 
 head :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-head = Element "head"
+head = Element $ tagName "head"
 
 head_ :: forall a i. [HTML a i] -> HTML a i
 head_ = head mempty
 
 header :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-header = Element "header"
+header = Element $ tagName "header"
 
 header_ :: forall a i. [HTML a i] -> HTML a i
 header_ = header mempty
 
 hr :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-hr = Element "hr"
+hr = Element $ tagName "hr"
 
 hr_ :: forall a i. [HTML a i] -> HTML a i
 hr_ = hr mempty
 
 html :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-html = Element "html"
+html = Element $ tagName "html"
 
 html_ :: forall a i. [HTML a i] -> HTML a i
 html_ = html mempty
 
 i :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-i = Element "i"
+i = Element $ tagName "i"
 
 i_ :: forall a i. [HTML a i] -> HTML a i
 i_ = i mempty
 
 iframe :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-iframe = Element "iframe"
+iframe = Element $ tagName "iframe"
 
 iframe_ :: forall a i. [HTML a i] -> HTML a i
 iframe_ = iframe mempty
 
 img :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-img = Element "img"
+img = Element $ tagName "img"
 
 img_ :: forall a i. [HTML a i] -> HTML a i
 img_ = img mempty
 
 input :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-input = Element "input"
+input = Element $ tagName "input"
 
 input_ :: forall a i. [HTML a i] -> HTML a i
 input_ = input mempty
 
 ins :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-ins = Element "ins"
+ins = Element $ tagName "ins"
 
 ins_ :: forall a i. [HTML a i] -> HTML a i
 ins_ = ins mempty
 
 kbd :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-kbd = Element "kbd"
+kbd = Element $ tagName "kbd"
 
 kbd_ :: forall a i. [HTML a i] -> HTML a i
 kbd_ = kbd mempty
 
 keygen :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-keygen = Element "keygen"
+keygen = Element $ tagName "keygen"
 
 keygen_ :: forall a i. [HTML a i] -> HTML a i
 keygen_ = keygen mempty
 
 label :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-label = Element "label"
+label = Element $ tagName "label"
 
 label_ :: forall a i. [HTML a i] -> HTML a i
 label_ = label mempty
 
 legend :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-legend = Element "legend"
+legend = Element $ tagName "legend"
 
 legend_ :: forall a i. [HTML a i] -> HTML a i
 legend_ = legend mempty
 
 li :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-li = Element "li"
+li = Element $ tagName "li"
 
 li_ :: forall a i. [HTML a i] -> HTML a i
 li_ = li mempty
 
 link :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-link = Element "link"
+link = Element $ tagName "link"
 
 link_ :: forall a i. [HTML a i] -> HTML a i
 link_ = link mempty
 
 main :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-main = Element "main"
+main = Element $ tagName "main"
 
 main_ :: forall a i. [HTML a i] -> HTML a i
 main_ = main mempty
 
 map :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-map = Element "map"
+map = Element $ tagName "map"
 
 map_ :: forall a i. [HTML a i] -> HTML a i
 map_ = map mempty
 
 mark :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-mark = Element "mark"
+mark = Element $ tagName "mark"
 
 mark_ :: forall a i. [HTML a i] -> HTML a i
 mark_ = mark mempty
 
 menu :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-menu = Element "menu"
+menu = Element $ tagName "menu"
 
 menu_ :: forall a i. [HTML a i] -> HTML a i
 menu_ = menu mempty
 
 menuitem :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-menuitem = Element "menuitem"
+menuitem = Element $ tagName "menuitem"
 
 menuitem_ :: forall a i. [HTML a i] -> HTML a i
 menuitem_ = menuitem mempty
 
 meta :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-meta = Element "meta"
+meta = Element $ tagName "meta"
 
 meta_ :: forall a i. [HTML a i] -> HTML a i
 meta_ = meta mempty
 
 meter :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-meter = Element "meter"
+meter = Element $ tagName "meter"
 
 meter_ :: forall a i. [HTML a i] -> HTML a i
 meter_ = meter mempty
 
 nav :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-nav = Element "nav"
+nav = Element $ tagName "nav"
 
 nav_ :: forall a i. [HTML a i] -> HTML a i
 nav_ = nav mempty
 
 noframes :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-noframes = Element "noframes"
+noframes = Element $ tagName "noframes"
 
 noframes_ :: forall a i. [HTML a i] -> HTML a i
 noframes_ = noframes mempty
 
 noscript :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-noscript = Element "noscript"
+noscript = Element $ tagName "noscript"
 
 noscript_ :: forall a i. [HTML a i] -> HTML a i
 noscript_ = noscript mempty
 
 object :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-object = Element "object"
+object = Element $ tagName "object"
 
 object_ :: forall a i. [HTML a i] -> HTML a i
 object_ = object mempty
 
 ol :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-ol = Element "ol"
+ol = Element $ tagName "ol"
 
 ol_ :: forall a i. [HTML a i] -> HTML a i
 ol_ = ol mempty
 
 optgroup :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-optgroup = Element "optgroup"
+optgroup = Element $ tagName "optgroup"
 
 optgroup_ :: forall a i. [HTML a i] -> HTML a i
 optgroup_ = optgroup mempty
 
 option :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-option = Element "option"
+option = Element $ tagName "option"
 
 option_ :: forall a i. [HTML a i] -> HTML a i
 option_ = option mempty
 
 output :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-output = Element "output"
+output = Element $ tagName "output"
 
 output_ :: forall a i. [HTML a i] -> HTML a i
 output_ = output mempty
 
 p :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-p = Element "p"
+p = Element $ tagName "p"
 
 p_ :: forall a i. [HTML a i] -> HTML a i
 p_ = p mempty
 
 param :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-param = Element "param"
+param = Element $ tagName "param"
 
 param_ :: forall a i. [HTML a i] -> HTML a i
 param_ = param mempty
 
 pre :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-pre = Element "pre"
+pre = Element $ tagName "pre"
 
 pre_ :: forall a i. [HTML a i] -> HTML a i
 pre_ = pre mempty
 
 progress :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-progress = Element "progress"
+progress = Element $ tagName "progress"
 
 progress_ :: forall a i. [HTML a i] -> HTML a i
 progress_ = progress mempty
 
 q :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-q = Element "q"
+q = Element $ tagName "q"
 
 q_ :: forall a i. [HTML a i] -> HTML a i
 q_ = q mempty
 
 rp :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-rp = Element "rp"
+rp = Element $ tagName "rp"
 
 rp_ :: forall a i. [HTML a i] -> HTML a i
 rp_ = rp mempty
 
 rt :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-rt = Element "rt"
+rt = Element $ tagName "rt"
 
 rt_ :: forall a i. [HTML a i] -> HTML a i
 rt_ = rt mempty
 
 ruby :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-ruby = Element "ruby"
+ruby = Element $ tagName "ruby"
 
 ruby_ :: forall a i. [HTML a i] -> HTML a i
 ruby_ = ruby mempty
 
 s :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-s = Element "s"
+s = Element $ tagName "s"
 
 s_ :: forall a i. [HTML a i] -> HTML a i
 s_ = s mempty
 
 samp :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-samp = Element "samp"
+samp = Element $ tagName "samp"
 
 samp_ :: forall a i. [HTML a i] -> HTML a i
 samp_ = samp mempty
 
 script :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-script = Element "script"
+script = Element $ tagName "script"
 
 script_ :: forall a i. [HTML a i] -> HTML a i
 script_ = script mempty
 
 section :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-section = Element "section"
+section = Element $ tagName "section"
 
 section_ :: forall a i. [HTML a i] -> HTML a i
 section_ = section mempty
 
 select :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-select = Element "select"
+select = Element $ tagName "select"
 
 select_ :: forall a i. [HTML a i] -> HTML a i
 select_ = select mempty
 
 small :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-small = Element "small"
+small = Element $ tagName "small"
 
 small_ :: forall a i. [HTML a i] -> HTML a i
 small_ = small mempty
 
 source :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-source = Element "source"
+source = Element $ tagName "source"
 
 source_ :: forall a i. [HTML a i] -> HTML a i
 source_ = source mempty
 
 span :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-span = Element "span"
+span = Element $ tagName "span"
 
 span_ :: forall a i. [HTML a i] -> HTML a i
 span_ = span mempty
 
 strike :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-strike = Element "strike"
+strike = Element $ tagName "strike"
 
 strike_ :: forall a i. [HTML a i] -> HTML a i
 strike_ = strike mempty
 
 strong :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-strong = Element "strong"
+strong = Element $ tagName "strong"
 
 strong_ :: forall a i. [HTML a i] -> HTML a i
 strong_ = strong mempty
 
 style :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-style = Element "style"
+style = Element $ tagName "style"
 
 style_ :: forall a i. [HTML a i] -> HTML a i
 style_ = style mempty
 
 sub :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-sub = Element "sub"
+sub = Element $ tagName "sub"
 
 sub_ :: forall a i. [HTML a i] -> HTML a i
 sub_ = sub mempty
 
 summary :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-summary = Element "summary"
+summary = Element $ tagName "summary"
 
 summary_ :: forall a i. [HTML a i] -> HTML a i
 summary_ = summary mempty
 
 sup :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-sup = Element "sup"
+sup = Element $ tagName "sup"
 
 sup_ :: forall a i. [HTML a i] -> HTML a i
 sup_ = sup mempty
 
 table :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-table = Element "table"
+table = Element $ tagName "table"
 
 table_ :: forall a i. [HTML a i] -> HTML a i
 table_ = table mempty
 
 tbody :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-tbody = Element "tbody"
+tbody = Element $ tagName "tbody"
 
 tbody_ :: forall a i. [HTML a i] -> HTML a i
 tbody_ = tbody mempty
 
 td :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-td = Element "td"
+td = Element $ tagName "td"
 
 td_ :: forall a i. [HTML a i] -> HTML a i
 td_ = td mempty
 
 textarea :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-textarea = Element "textarea"
+textarea = Element $ tagName "textarea"
 
 textarea_ :: forall a i. [HTML a i] -> HTML a i
 textarea_ = textarea mempty
 
 tfoot :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-tfoot = Element "tfoot"
+tfoot = Element $ tagName "tfoot"
 
 tfoot_ :: forall a i. [HTML a i] -> HTML a i
 tfoot_ = tfoot mempty
 
 th :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-th = Element "th"
+th = Element $ tagName "th"
 
 th_ :: forall a i. [HTML a i] -> HTML a i
 th_ = th mempty
 
 thead :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-thead = Element "thead"
+thead = Element $ tagName "thead"
 
 thead_ :: forall a i. [HTML a i] -> HTML a i
 thead_ = thead mempty
 
 time :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-time = Element "time"
+time = Element $ tagName "time"
 
 time_ :: forall a i. [HTML a i] -> HTML a i
 time_ = time mempty
 
 title :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-title = Element "title"
+title = Element $ tagName "title"
 
 title_ :: forall a i. [HTML a i] -> HTML a i
 title_ = title mempty
 
 tr :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-tr = Element "tr"
+tr = Element $ tagName "tr"
 
 tr_ :: forall a i. [HTML a i] -> HTML a i
 tr_ = tr mempty
 
 track :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-track = Element "track"
+track = Element $ tagName "track"
 
 track_ :: forall a i. [HTML a i] -> HTML a i
 track_ = track mempty
 
 tt :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-tt = Element "tt"
+tt = Element $ tagName "tt"
 
 tt_ :: forall a i. [HTML a i] -> HTML a i
 tt_ = tt mempty
 
 u :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-u = Element "u"
+u = Element $ tagName "u"
 
 u_ :: forall a i. [HTML a i] -> HTML a i
 u_ = u mempty
 
 ul :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-ul = Element "ul"
+ul = Element $ tagName "ul"
 
 ul_ :: forall a i. [HTML a i] -> HTML a i
 ul_ = ul mempty
 
 var :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-var = Element "var"
+var = Element $ tagName "var"
 
 var_ :: forall a i. [HTML a i] -> HTML a i
 var_ = var mempty
 
 video :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-video = Element "video"
+video = Element $ tagName "video"
 
 video_ :: forall a i. [HTML a i] -> HTML a i
 video_ = video mempty
 
 wbr :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-wbr = Element "wbr"
+wbr = Element $ tagName "wbr"
 
 wbr_ :: forall a i. [HTML a i] -> HTML a i
 wbr_ = wbr mempty

@@ -86,7 +86,7 @@ ui = Hash.withHash view <$> stateful (Undo.undoRedoState (State [])) (Undo.withU
         H.div (A.class_ B.container)
               [ H.h1 (A.id_ "header") [ H.text "todo list" ]
               , toolbar st
-              , tasks ts
+              , H.div_ (zipWith task ts (0 .. length ts))
               ]
               
   toolbar :: forall st. Undo.UndoRedoState st -> H.HTML a Input
@@ -103,14 +103,9 @@ ui = Hash.withHash view <$> stateful (Undo.undoRedoState (State [])) (Undo.withU
                                 <> A.onclick (\_ -> pure Redo) )
                               [ H.text "Redo" ]
                    ]
-           
-  tasks :: [Task] -> H.HTML a Input
-  tasks ts = H.table (A.classes [ B.table, B.tableStriped ]) 
-                     (zipWith task ts (0 .. length ts))
-                  
-              
+                   
   task :: Task -> Number -> H.HTML a Input
-  task (Task task) index =
+  task (Task task) index = H.p_ <<< pure $
     BI.inputGroup 
       (Just (H.input ( A.class_ B.checkbox
                        <> A.type_ "checkbox"

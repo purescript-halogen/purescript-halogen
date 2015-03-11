@@ -21,5 +21,5 @@ inputGroup before ctl after =
   addon :: H.HTML a i -> [H.HTML a i]
   addon el = [ H.span (A.class_ (className el)) [el] ]
     where
-    className (H.Element name _ _) | name == "button" = B.inputGroupBtn
+    className (H.Element name _ _) | H.runTagName name == "button" = B.inputGroupBtn
     className _ = B.inputGroupAddon
