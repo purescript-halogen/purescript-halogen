@@ -1,3 +1,6 @@
+-- | This module enumerates some common HTML attributes, and provides additional
+-- | helper functions for working with CSS classes.
+
 module Halogen.HTML.Attributes 
   ( ClassName()
   , className

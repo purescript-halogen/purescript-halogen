@@ -1,7 +1,13 @@
+-- | This module defines types for common DOM events
+
 module Halogen.HTML.Events.Types where
 
 import DOM
 
+-- | This record synonym captures the properties which appear on every DOM event.
+-- |
+-- | The `fields` type parameter allows us to attach different types of additional
+-- | properties to represent more specific types of events.
 type Event fields = 
   { bubbles :: Boolean
   , cancelable :: Boolean
@@ -12,6 +18,7 @@ type Event fields =
   | fields
   }
   
+-- | Identifies the additional fields which are available on mouse events.
 type MouseEvent = 
   ( button :: Number
   , detail :: Number
@@ -26,7 +33,8 @@ type MouseEvent =
   , metaKey	:: Boolean
   , which :: Number
   )
-
+  
+-- | Identifies the additional fields which are available on keyboard events.
 type KeyboardEvent = 
   ( charCode :: Number
   , keyCode :: Number
@@ -36,7 +44,8 @@ type KeyboardEvent =
   , metaKey	:: Boolean
   , which :: Number
   )
-
+  
+-- | Identifies the additional fields which are available on focus events.
 type FocusEvent = 
   ( relatedTarget :: Node
   )

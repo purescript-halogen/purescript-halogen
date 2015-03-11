@@ -1,3 +1,7 @@
+-- | This module provides helper functions for working with components, where
+-- | we want to save time diffing the DOM by using a hash code to detect identical
+-- | component states.
+
 module Halogen.Mixin.Hashed
   ( withHash
   ) where

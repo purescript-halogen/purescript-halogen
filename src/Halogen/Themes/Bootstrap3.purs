@@ -1,3 +1,5 @@
+-- | This module provides CSS class names for common Bootstrap 3 classes.
+
 module Halogen.Themes.Bootstrap3 where
 
 import Halogen.HTML.Attributes (ClassName(), className)

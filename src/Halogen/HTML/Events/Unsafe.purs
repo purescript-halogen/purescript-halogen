@@ -1,3 +1,5 @@
+-- | Unsafe functions for working with DOM events
+
 module Halogen.HTML.Events.Unsafe
   ( unsafeHandler
   , unsafeHandler'

@@ -1,3 +1,5 @@
+-- | This module provides a generic undo/redo capability.
+
 module Halogen.Mixin.UndoRedo 
   ( UndoRedoInput(..)
   , UndoRedoState()

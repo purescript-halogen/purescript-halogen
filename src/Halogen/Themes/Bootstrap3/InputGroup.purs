@@ -1,3 +1,5 @@
+-- | This module provides convenience functions for creating _input groups_.
+
 module Halogen.Themes.Bootstrap3.InputGroup where
     
 import Data.Maybe

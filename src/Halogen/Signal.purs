@@ -1,3 +1,6 @@
+-- | This module defines signal functions (`SF`) and non-empty signal functions (`SF1`) and combinators
+-- | for working with them.
+
 module Halogen.Signal
   ( SF()
   , SF1()

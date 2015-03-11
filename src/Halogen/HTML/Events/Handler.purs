@@ -1,3 +1,6 @@
+-- | This module defines the `EventHandler` functor, which can be used
+-- | to perform standard operations on HTML events.
+
 module Halogen.HTML.Events.Handler 
   ( EventHandler()
   

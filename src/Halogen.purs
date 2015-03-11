@@ -1,3 +1,14 @@
+-- | The main module of the Halogen library. It defines functions for running applications
+-- | assembled from the parts defined in the various submodules:
+-- |
+-- | - `Halogen.Signal` for responding to inputs and maintaining state
+-- | - `Halogen.HTML.*` for templating HTML documents
+-- | - `Halogen.Themes.*` for rendering using common front-end libraries
+-- | - `Halogen.Mixin.*` for common additional application features
+-- |
+-- | The type signature and documentation for the [`runUI`](#runUI) function provides a good introduction 
+-- | to this library. For more advanced use-cases, you might like to look at the `runUIEff` function instead.
+-- |
 module Halogen where
     
 import DOM

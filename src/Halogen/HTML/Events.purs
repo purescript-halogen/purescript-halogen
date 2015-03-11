@@ -1,3 +1,6 @@
+-- | This module defines well-typed wrappers for common DOM events, so that
+-- | they may be safely embedded in HTML documents.
+
 module Halogen.HTML.Events 
   ( onabort
   , onbeforeunload

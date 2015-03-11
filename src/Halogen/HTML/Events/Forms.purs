@@ -1,3 +1,5 @@
+-- | Convenience functions for working with form elements.
+
 module Halogen.HTML.Events.Forms 
   ( onValueChanged
   , onChecked
