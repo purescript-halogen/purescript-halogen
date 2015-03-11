@@ -10,3 +10,5 @@
 - [x] More docs
 - [x] String renderer for HTML
 - [x] More newtypes
+- [ ] Use `Placeholder` instead of `Hashed`?
+- [ ] Finally tagless encoding of `HTML`.
