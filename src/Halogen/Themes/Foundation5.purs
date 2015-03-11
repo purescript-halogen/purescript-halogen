@@ -116,9 +116,6 @@ contained = className "contained"
 content :: ClassName
 content = className "content"
 
-css :: ClassName
-css = className "css"
-
 ctaButton :: ClassName
 ctaButton = className "cta-button"
 
@@ -728,9 +725,6 @@ leftSubmenu = className "left-submenu"
 ltIe9 :: ClassName
 ltIe9 = className "lt-ie9"
 
-map :: ClassName
-map = className "map"
-
 mapCanvas :: ClassName
 mapCanvas = className "map_canvas"
 
@@ -1072,9 +1066,6 @@ parentLink = className "parent-link"
 
 paused :: ClassName
 paused = className "paused"
-
-phpied :: ClassName
-phpied = className "phpied"
 
 postfix :: ClassName
 postfix = className "postfix"
