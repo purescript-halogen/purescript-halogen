@@ -782,9 +782,6 @@ collapse = className "collapse"
 collapsing :: ClassName
 collapsing = className "collapsing"
 
-com :: ClassName
-com = className "com"
-
 container :: ClassName
 container = className "container"
 
@@ -793,9 +790,6 @@ containerFluid = className "container-fluid"
 
 controlLabel :: ClassName
 controlLabel = className "control-label"
-
-css :: ClassName
-css = className "css"
 
 danger :: ClassName
 danger = className "danger"
@@ -1768,9 +1762,6 @@ inputSm = className "input-sm"
 
 invisible :: ClassName
 invisible = className "invisible"
-
-io :: ClassName
-io = className "io"
 
 item :: ClassName
 item = className "item"
