@@ -1736,8 +1736,8 @@ imgRounded = className "img-rounded"
 imgThumbnail :: ClassName
 imgThumbnail = className "img-thumbnail"
 
-in :: ClassName
-in = className "in"
+in_ :: ClassName
+in_ = className "in"
 
 info :: ClassName
 info = className "info"
@@ -2093,8 +2093,8 @@ right = className "right"
 row :: ClassName
 row = className "row"
 
-show :: ClassName
-show = className "show"
+show_ :: ClassName
+show_ = className "show"
 
 small :: ClassName
 small = className "small"
