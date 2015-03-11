@@ -32,6 +32,7 @@ module Halogen.HTML.Attributes
   , enabled
   , checked
   , placeholder
+  , style
   ) where
 
 import DOM
@@ -39,6 +40,7 @@ import DOM
 import Data.Tuple
 import Data.Either (either)
 import Data.Foreign
+import Data.StrMap (StrMap())
 import Data.Monoid (mempty)
 import Data.Array (map)
 import Data.String (joinWith)
@@ -151,3 +153,7 @@ checked true = attribute (H.attributeName "checked") "checked"
    
 placeholder :: forall i. String -> H.Attribute i
 placeholder = attribute $ H.attributeName "placeholder"
+
+
+style :: forall i. StrMap String -> H.Attribute i
+style m = H.Attribute [Tuple (H.attributeName "style") (H.MapAttribute m)]

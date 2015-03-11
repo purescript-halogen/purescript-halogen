@@ -1,16 +1,18 @@
 {
-  "name":       "purescript-halogen",
-  "license":    "Apache 2.0",
+  "name": "purescript-halogen",
+  "license": "Apache 2.0",
   "repository": "git@github.com:slamdata/purescript-halogen.git",
   "contributors": [
     "Phil Freeman <paf31@cantab.net>"
   ],
   "devDependencies": {
-    "gulp":             "~3.8.10",
-    "gulp-purescript":  "~0.1.2",
-    "gulp-browserify":  "~0.5.1",
-    "gulp-run":         "~1.6.6",
-    "run-sequence":     "~1.0.2",
-    "gulp-jsvalidate":  "~1.0.1"
+    "change-case": "^2.2.0",
+    "gulp": "~3.8.10",
+    "gulp-browserify": "~0.5.1",
+    "gulp-jsvalidate": "~1.0.1",
+    "gulp-purescript": "~0.1.2",
+    "gulp-run": "~1.6.6",
+    "lodash": "^3.5.0",
+    "run-sequence": "~1.0.2"
   }
 }

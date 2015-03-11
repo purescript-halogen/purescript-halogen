@@ -26,6 +26,11 @@
     "purescript-arrays": "~0.3.3",
     "purescript-foreign": "~0.4.0",
     "purescript-hashable": "~0.1.0",
-    "purescript-nullable": "~0.1.1"
+    "purescript-nullable": "~0.1.1",
+    "purescript-maps": "~0.3.2"
+  },
+  "devDependencies": {
+    "bootstrap": "~3.3.2",
+    "foundation": "~5.5.1"
   }
 }
