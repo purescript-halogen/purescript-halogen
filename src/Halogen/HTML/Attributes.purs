@@ -32,6 +32,7 @@ module Halogen.HTML.Attributes
   , enabled
   , checked
   , placeholder
+  , style
   ) where
 
 import DOM
