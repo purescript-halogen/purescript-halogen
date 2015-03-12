@@ -22,7 +22,7 @@
     "purescript-dom": "~0.1.1",
     "purescript-foldable-traversable": "~0.3.0",
     "purescript-profunctor": "~0.1.0",
-    "purescript-aff": "~0.5.6",
+    "purescript-aff": "~0.6.0",
     "purescript-arrays": "~0.3.3",
     "purescript-foreign": "~0.4.0",
     "purescript-hashable": "~0.1.0",
