@@ -19,23 +19,28 @@ import Halogen.HTML.Events.Unsafe (unsafeHandler')
 
 import qualified Halogen.HTML as H
   
--- Attach event handler to event ```key``` with getting ```prop``` field
--- as an argument of handler
-onSomething :: forall i value. (IsForeign value) =>
+-- | Attach event handler to event ```key``` with getting ```prop``` field
+-- | as an argument of handler
+addForeignPropHandler :: forall i value. (IsForeign value) =>
                String -> String -> (value -> EventHandler i) -> H.Attribute i
-onSomething key prop f = unsafeHandler' (H.attributeName key)
+addForeignPropHandler key prop f = unsafeHandler' (H.attributeName key)
                          \e -> traverse f (getProp prop e.target)
   where
     getProp :: String -> Node -> Maybe value
     getProp prop = either (const Nothing) Just <<< readProp prop <<< toForeign
 
+-- | Attach an event handler which will produce an input when the value of an input field changes
+-- |
+-- | An input will not be produced if the value cannot be cast to the appropriate type.
 onValueChanged :: forall value i. (IsForeign value) =>
                   (value -> EventHandler i) -> H.Attribute i
-onValueChanged = onSomething "change" "value"
+onValueChanged = addForeignPropHandler "change" "value"
 
+-- | Attach an event handler which will fire when a checkbox is checked or unchecked
 onChecked :: forall i. (Boolean -> EventHandler i) -> H.Attribute i
-onChecked = onSomething "change" "checked"
+onChecked = addForeignPropHandler "change" "checked"
 
+-- | Attach an event handler which will fire on input
 onInput :: forall value i. (IsForeign value) =>
            (value -> EventHandler i) -> H.Attribute i
-onInput = onSomething "input" "value"
+onInput = addForeignPropHandler "input" "value"
