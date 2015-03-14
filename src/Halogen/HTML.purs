@@ -20,7 +20,6 @@ module Halogen.HTML
   
   , text
   , placeholder
-  , hashed
   
   -- Elements
   
@@ -160,7 +159,6 @@ import Data.Monoid
 import Data.StrMap (StrMap())
 import Data.String (joinWith)
 import Data.Foldable (for_, foldMap)
-import Data.Hashable (Hashcode(), runHashcode)
 
 import qualified Data.Array as A
 
@@ -259,20 +257,17 @@ runTagName (TagName s) = s
 data HTML a i
   = Text String
   | Element TagName (Attribute i) [HTML a i]
-  | Hashed Hashcode (Unit -> HTML a i)
   | Placeholder a
     
 instance functorHTML :: Functor (HTML a) where
   (<$>) _ (Text s) = Text s
   (<$>) f (Element name attribs children) = Element name (f <$> attribs) (Data.Array.map (f <$>) children)
-  (<$>) f (Hashed hash g) = Hashed hash ((f <$>) <<< g)
   (<$>) _ (Placeholder a) = Placeholder a
   
 -- | Replace placeholder nodes with HTML documents.
 graft :: forall a b i. HTML a i -> (a -> HTML b i) -> HTML b i 
 graft (Placeholder a) f = f a
 graft (Element name attr els) f = Element name attr (A.map (`graft` f) els)
-graft (Hashed hc h) f = Hashed hc \u -> graft (h u) f
 graft (Text s) _ = Text s
 
 -- | A more general version of `renderHtml'`.
@@ -284,7 +279,6 @@ graft (Text s) _ = Text s
 renderHtml' :: forall i a eff. (i -> Eff eff Unit) -> (a -> VTree) -> HTML a i -> VTree
 renderHtml' _ _ (Text s) = vtext s
 renderHtml' k f (Element name attribs els) = vnode (runTagName name) (attributesToProps k attribs) (A.map (renderHtml' k f) els)
-renderHtml' k f (Hashed h html) = runFn2 hash (mkFn0 \_ -> renderHtml' k f (html unit)) h
 renderHtml' _ f (Placeholder a) = f a
 
 -- | Render a `HTML` document to a virtual DOM node
@@ -300,7 +294,6 @@ renderHtmlToString = go
   go :: HTML Void Void -> String
   go (Text s) = s
   go (Element name (Attribute attr) els) = "<" <> runTagName name <> " " <> joinWith " " (A.map renderAttr attr) <> ">" <> foldMap go els <> "</" <> runTagName name <> ">"
-  go (Hashed _ f) = go (f unit)
   
   renderAttr :: Tuple AttributeName (AttributeValue Void) -> String
   renderAttr (Tuple key (ValueAttribute value)) = runAttributeName key <> "=\"" <> value <> "\""
@@ -308,10 +301,6 @@ renderHtmlToString = go
 -- | Create a HTML document which represents a text node.
 text :: forall a i. String -> HTML a i
 text = Text
-
--- | Create a "hashed" HTML document, which only gets re-rendered when the hash changes
-hashed :: forall a i. Hashcode -> (Unit -> HTML a i) -> HTML a i
-hashed = Hashed
 
 -- | Create a HTML document which acts as a placeholder for a `VTree` to be rendered later.
 -- |

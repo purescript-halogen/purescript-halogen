@@ -16,7 +16,6 @@ module Halogen.Internal.VirtualDOM
   , patch
   , vtext
   , vnode
-  , hash
   , widget
   ) where
 
@@ -25,7 +24,6 @@ import DOM
 import Data.Maybe
 import Data.Nullable
 import Data.Function
-import Data.Hashable (Hashcode())
 
 import Control.Monad.Eff
 import Control.Monad.ST
@@ -125,23 +123,6 @@ foreign import vnode
   \    };\
   \  };\
   \}" :: String -> Props -> [VTree] -> VTree
-
--- | Create a "thunk" which only causes a re-render when the specified hashcode changes.
-foreign import hash
-  "function hash(f, hash) {\
-  \  var HashThunk = function(hash) {\
-  \    this.hash = hash;\
-  \  };\
-  \  HashThunk.prototype.type = 'Thunk';\
-  \  HashThunk.prototype.render = function(prev) {\
-  \    if (prev && prev.hash === this.hash) {\
-  \      return prev.vnode;\
-  \    } else {\
-  \      return f();\
-  \    }\
-  \  };\
-  \  return new HashThunk(hash);\
-  \}" :: Fn2 (Fn0 VTree) Hashcode VTree
   
 foreign import widgetImpl
   "function widgetImpl(init, update, destroy) {\

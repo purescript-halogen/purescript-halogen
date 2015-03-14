@@ -2,8 +2,6 @@
 
 ## Module Data.Void
 
-
-
 #### `Void`
 
 ``` purescript
@@ -141,7 +139,6 @@ Unwrap a `TagName` to get the tag name as a `String`.
 data HTML a i
   = Text String
   | Element TagName (Attribute i) [HTML a i]
-  | Hashed Hashcode (Unit -> HTML a i)
   | Placeholder a
 ```
 
@@ -216,14 +213,6 @@ text :: forall a i. String -> HTML a i
 ```
 
 Create a HTML document which represents a text node.
-
-#### `hashed`
-
-``` purescript
-hashed :: forall a i. Hashcode -> (Unit -> HTML a i) -> HTML a i
-```
-
-Create a "hashed" HTML document, which only gets re-rendered when the hash changes
 
 #### `placeholder`
 
@@ -2613,27 +2602,6 @@ runUIAff :: forall i a r eff. (SupportsErrors i) => SF1 i (HTML a (Either i r)) 
 A convenience function which uses the `Aff` monad to represent the handler function.
 
 
-## Module Halogen.Mixin.Hashed
-
-
-This module provides helper functions for working with components, where
-we want to save time diffing the DOM by using a hash code to detect identical
-component states.
-
-#### `withHash`
-
-``` purescript
-withHash :: forall s a r. (Hashable s) => (s -> H.HTML a r) -> s -> H.HTML a r
-```
-
-Lift a function which produces HTML documents to one which hashes its input.
-
-The generated HTML documents will contain the hash code of the generated output, so will not
-cause a re-render if the hash code does not change.
-
-**Note**: this function may be prone to false positives due to hash collisions.
-
-
 ## Module Halogen.Mixin.Router
 
 
@@ -2668,20 +2636,6 @@ Listen for hash change events, and provide an input to the driver function when 
 
 
 This module provides a generic undo/redo capability.
-
-#### `eqStack`
-
-``` purescript
-instance eqStack :: (Eq s) => Eq (Stack s)
-```
-
-
-#### `hashableStack`
-
-``` purescript
-instance hashableStack :: (Hashable s) => Hashable (Stack s)
-```
-
 
 #### `UndoRedoInput`
 
@@ -2761,20 +2715,6 @@ undoRedoState :: forall s. s -> UndoRedoState s
 ```
 
 Create a state with no past and no future
-
-#### `eqUndoRedoState`
-
-``` purescript
-instance eqUndoRedoState :: (Eq s) => Eq (UndoRedoState s)
-```
-
-
-#### `hashableUndoRedoState`
-
-``` purescript
-instance hashableUndoRedoState :: (Hashable s) => Hashable (UndoRedoState s)
-```
-
 
 #### `withUndoRedo`
 
@@ -8087,8 +8027,6 @@ woff2 :: ClassName
 
 
 ## Module Halogen.Themes.Foundation5
-
-
 
 #### `accordion`
 

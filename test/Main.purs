@@ -15,13 +15,10 @@ import Control.Monad.Eff
 
 import DOM
 
-import Data.Hashable
-
 import Halogen
 import Halogen.Signal
 
 import qualified Halogen.Mixin.UndoRedo as Undo
-import qualified Halogen.Mixin.Hashed as Hash
 import qualified Halogen.Mixin.Router as Router
 
 import qualified Halogen.HTML as H
@@ -41,23 +38,9 @@ foreign import appendToBody
   \}" :: forall eff. Node -> Eff (dom :: DOM | eff) Node
 
 newtype Task = Task { description :: String, completed :: Boolean }
-
-instance eqTask :: Eq Task where
-  (==) (Task t1) (Task t2) = t1.description == t2.description && t1.completed == t2.completed
-  (/=) (Task t1) (Task t2) = t1.description /= t2.description || t1.completed /= t2.completed
-    
-instance hashableTask :: Hashable Task where
-  hash (Task t) = hash t.description <> hash t.completed    
   
 -- | The state of the application
 data State = State [Task]
-
-instance eqState :: Eq State where
-  (==) (State ts1) (State ts2) = ts1 == ts2
-  (/=) (State ts1) (State ts2) = ts1 /= ts2
-    
-instance hashableState :: Hashable State where
-  hash (State ts) = hash ts
 
 -- | Inputs to the state machine
 data Input 
@@ -77,7 +60,7 @@ instance inputSupportsUndoRedo :: Undo.SupportsUndoRedo Input where
 
 -- | The UI is a state machine, consuming inputs, and generating HTML documents which in turn, generate new inputs
 ui :: forall eff a. SF1 Input (H.HTML a Input)
-ui = Hash.withHash view <$> stateful (Undo.undoRedoState (State [])) (Undo.withUndoRedo update)
+ui = view <$> stateful (Undo.undoRedoState (State [])) (Undo.withUndoRedo update)
   where
   view :: Undo.UndoRedoState State -> H.HTML a Input
   view st = 
