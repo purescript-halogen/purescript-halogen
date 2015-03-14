@@ -181,15 +181,17 @@ runAttributeName :: AttributeName -> String
 runAttributeName (AttributeName s) = s
 
 -- | The type `AttributeValue i` represents values which can appear inside HTML attributes.
--- | Values are either strings or event handlers. Event handlers are required to produce outputs of type `i`.
+-- | Values are either strings, booleans, maps or event handlers. Event handlers are required to produce outputs of type `i`.
 data AttributeValue i
-  = ValueAttribute String
+  = StringAttribute String
+  | BooleanAttribute Boolean
   | MapAttribute (StrMap String)
   | HandlerAttribute (Foreign -> EventHandler (Maybe i))
 
 instance functorAttributeValue :: Functor AttributeValue where
+  (<$>) _ (StringAttribute s) = StringAttribute s
+  (<$>) _ (BooleanAttribute b) = BooleanAttribute b
   (<$>) _ (MapAttribute m) = MapAttribute m
-  (<$>) _ (ValueAttribute v) = ValueAttribute v
   (<$>) f (HandlerAttribute k) = HandlerAttribute (((f <$>) <$>) <<< k)
 
 -- | A value of type `Attribute i` represents a collection of HTML attributes, whose
@@ -217,8 +219,9 @@ attributesToProps k (Attribute xs) = runProps do
   return props
   where
   addProp :: forall h eff. STProps h -> Tuple AttributeName (AttributeValue i) -> Eff (st :: ST h | eff) Unit
-  addProp props (Tuple key (MapAttribute map)) = runFn3 prop (runAttributeName key) map props
-  addProp props (Tuple key (ValueAttribute value)) = runFn3 prop (runAttributeName key) value props
+  addProp props (Tuple key (MapAttribute m)) = runFn3 prop (runAttributeName key) m props
+  addProp props (Tuple key (StringAttribute value)) = runFn3 prop (runAttributeName key) value props
+  addProp props (Tuple key (BooleanAttribute value)) = runFn3 prop (runAttributeName key) value props
   addProp props (Tuple key (HandlerAttribute f)) = runFn3 handlerProp (runAttributeName key) handler props
     where
     handler :: Foreign -> Eff eff Unit
@@ -296,7 +299,9 @@ renderHtmlToString = go
   go (Element name (Attribute attr) els) = "<" <> runTagName name <> " " <> joinWith " " (A.map renderAttr attr) <> ">" <> foldMap go els <> "</" <> runTagName name <> ">"
   
   renderAttr :: Tuple AttributeName (AttributeValue Void) -> String
-  renderAttr (Tuple key (ValueAttribute value)) = runAttributeName key <> "=\"" <> value <> "\""
+  renderAttr (Tuple key (StringAttribute value)) = runAttributeName key <> "=\"" <> value <> "\""
+  renderAttr (Tuple key (BooleanAttribute true)) = runAttributeName key
+  renderAttr _ = ""
   
 -- | Create a HTML document which represents a text node.
 text :: forall a i. String -> HTML a i

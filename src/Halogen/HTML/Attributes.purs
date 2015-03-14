@@ -75,8 +75,8 @@ addClass cn@(ClassName c) (H.Attribute xs) =
     Tuple true ys -> H.Attribute ys
   where
   go :: Boolean -> Tuple H.AttributeName (H.AttributeValue i) -> Tuple Boolean (Tuple H.AttributeName (H.AttributeValue i))
-  go false (Tuple name (H.ValueAttribute cs)) | H.runAttributeName name == className = 
-    Tuple true (Tuple (H.attributeName className) (H.ValueAttribute (cs ++ " " ++ c)))
+  go false (Tuple name (H.StringAttribute cs)) | H.runAttributeName name == className = 
+    Tuple true (Tuple (H.attributeName className) (H.StringAttribute (cs ++ " " ++ c)))
   go b (Tuple k v) = Tuple b (Tuple k v)
   
   className :: String
@@ -84,7 +84,7 @@ addClass cn@(ClassName c) (H.Attribute xs) =
     
 -- | This function can be used to define custom attributes.
 attribute :: forall i value. H.AttributeName -> String -> H.Attribute i
-attribute key value = H.Attribute [Tuple key (H.ValueAttribute value)]
+attribute key value = H.Attribute [Tuple key (H.StringAttribute value)]
 
 alt :: forall i. String -> H.Attribute i
 alt = attribute $ H.attributeName "alt"
@@ -141,15 +141,13 @@ width :: forall i. Number -> H.Attribute i
 width = attribute (H.attributeName "width") <<< show
    
 disabled :: forall i. Boolean -> H.Attribute i
-disabled false = mempty
-disabled true = attribute (H.attributeName "disabled") "disabled"
+disabled b = H.Attribute [Tuple (H.attributeName "disabled") (H.BooleanAttribute b)]
    
 enabled :: forall i. Boolean -> H.Attribute i
 enabled = disabled <<< not
-
+   
 checked :: forall i. Boolean -> H.Attribute i
-checked false = mempty
-checked true = attribute (H.attributeName "checked") "checked"
+checked b = H.Attribute [Tuple (H.attributeName "checked") (H.BooleanAttribute b)]
    
 placeholder :: forall i. String -> H.Attribute i
 placeholder = attribute $ H.attributeName "placeholder"

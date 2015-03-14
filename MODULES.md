@@ -51,13 +51,14 @@ Unpack an attribute name
 
 ``` purescript
 data AttributeValue i
-  = ValueAttribute String
+  = StringAttribute String
+  | BooleanAttribute Boolean
   | MapAttribute (StrMap String)
   | HandlerAttribute (Foreign -> EventHandler (Maybe i))
 ```
 
 The type `AttributeValue i` represents values which can appear inside HTML attributes.
-Values are either strings or event handlers. Event handlers are required to produce outputs of type `i`.
+Values are either strings, booleans, maps or event handlers. Event handlers are required to produce outputs of type `i`.
 
 #### `functorAttributeValue`
 
