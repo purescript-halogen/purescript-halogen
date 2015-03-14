@@ -12251,6 +12251,14 @@ onChecked :: forall i. (Boolean -> EventHandler i) -> H.Attribute i
 
 Attach an event handler which will fire when a checkbox is checked or unchecked
 
+#### `onInput`
+
+``` purescript
+onInput :: forall value i. (IsForeign value) => (value -> EventHandler i) -> H.Attribute i
+```
+
+Attach an event handler which will fire on input
+
 
 ## Module Halogen.HTML.Events.Handler
 
