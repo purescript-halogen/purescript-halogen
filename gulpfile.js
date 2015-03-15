@@ -18,6 +18,7 @@ var paths = {
         'all': {
             dest: 'MODULES.md',
             src: [
+              'src/Halogen.purs',
               'src/**/!(Internal)/!(Unsafe).purs'
             ]
         }

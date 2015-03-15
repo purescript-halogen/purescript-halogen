@@ -49,7 +49,7 @@ changes = differencesWith diff
 -- | As a simple example, we can create a signal which responds to button clicks:
 -- |
 -- | ```purescript
--- | ui :: forall eff. SF1 eff Unit (HTML Unit)
+-- | ui :: SF1 Unit (HTML Unit)
 -- | ui = view <$> stateful 0 (\n _ -> n + 1)
 -- |   where
 -- |   view :: Number -> HTML Unit
@@ -74,7 +74,7 @@ runUI signal = fst <$> runUIEff ((Left <$>) <$> signal) absurd (\_ _ -> return u
 -- | appHandler GetDateAndTimeRequest k =
 -- |   get "/date" \response -> k (readDateAndTime response)
 -- | ```
-type Handler r i eff = r -> (i -> Eff (HalogenEffects eff) Unit) -> Eff (HalogenEffects eff) Unit
+type Handler r i eff = r -> Driver i eff -> Eff (HalogenEffects eff) Unit
 
 -- | This type synonym is provided to tidy up the type signature of `runUIEff`.
 -- |
