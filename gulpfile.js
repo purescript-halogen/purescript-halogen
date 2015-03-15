@@ -23,7 +23,8 @@ var paths = {
             ]
         }
     },
-    testSrc: 'test/**/*.purs'
+    testSrc: 'test/**/*.purs',
+    bootstrapSrc: 'purescript-halogen-bootstrap/src/**/*.purs'
 };
 
 var testOpts = {
@@ -56,13 +57,13 @@ function docs (target) {
 }
 
 gulp.task('example', function() {
-    return compile(purescript.psc, [paths.src].concat(paths.bowerSrc).concat(paths.testSrc), testOpts)
+    return compile(purescript.psc, [paths.src, paths.testSrc, paths.bootstrapSrc], testOpts)
         .pipe(browserify({}))
         .pipe(gulp.dest('js'))
 });
 
 gulp.task('make', function() {
-    return compile(purescript.pscMake, [paths.src].concat(paths.bowerSrc), {})
+    return compile(purescript.pscMake, [paths.src], {})
         .pipe(gulp.dest(paths.dest))
 });
 
