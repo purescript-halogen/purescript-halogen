@@ -74,17 +74,17 @@ addClass cn@(ClassName c) (H.Attribute xs) =
     Tuple false ys -> H.Attribute ys <> class_ cn
     Tuple true ys -> H.Attribute ys
   where
-  go :: Boolean -> Tuple H.AttributeName (H.AttributeValue i) -> Tuple Boolean (Tuple H.AttributeName (H.AttributeValue i))
-  go false (Tuple name (H.StringAttribute cs)) | H.runAttributeName name == className = 
-    Tuple true (Tuple (H.attributeName className) (H.StringAttribute (cs ++ " " ++ c)))
-  go b (Tuple k v) = Tuple b (Tuple k v)
+  go :: Boolean -> H.AttributeValue i -> Tuple Boolean (H.AttributeValue i)
+  go false (H.StringAttribute name cs) | H.runAttributeName name == className = 
+    Tuple true (H.StringAttribute (H.attributeName className) (cs ++ " " ++ c))
+  go b v = Tuple b v
   
   className :: String
   className = "className"
     
 -- | This function can be used to define custom attributes.
 attribute :: forall i value. H.AttributeName -> String -> H.Attribute i
-attribute key value = H.Attribute [Tuple key (H.StringAttribute value)]
+attribute key value = H.Attribute [H.StringAttribute key value]
 
 alt :: forall i. String -> H.Attribute i
 alt = attribute $ H.attributeName "alt"
@@ -141,16 +141,16 @@ width :: forall i. Number -> H.Attribute i
 width = attribute (H.attributeName "width") <<< show
    
 disabled :: forall i. Boolean -> H.Attribute i
-disabled b = H.Attribute [Tuple (H.attributeName "disabled") (H.BooleanAttribute b)]
+disabled b = H.Attribute [H.BooleanAttribute (H.attributeName "disabled") b]
    
 enabled :: forall i. Boolean -> H.Attribute i
 enabled = disabled <<< not
    
 checked :: forall i. Boolean -> H.Attribute i
-checked b = H.Attribute [Tuple (H.attributeName "checked") (H.BooleanAttribute b)]
+checked b = H.Attribute [H.BooleanAttribute (H.attributeName "checked") b]
    
 placeholder :: forall i. String -> H.Attribute i
 placeholder = attribute $ H.attributeName "placeholder"
 
 style :: forall i. StrMap String -> H.Attribute i
-style m = H.Attribute [Tuple (H.attributeName "style") (H.MapAttribute m)]
+style m = H.Attribute [H.MapAttribute (H.attributeName "style") m]

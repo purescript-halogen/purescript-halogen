@@ -171,14 +171,39 @@ runAttributeName :: AttributeName -> String
 
 Unpack an attribute name
 
+#### `EventName`
+
+``` purescript
+newtype EventName (fields :: # *)
+```
+
+A type-safe wrapper for event names.
+
+The phantom type `fields` describes the event type which we can expect to exist on events
+corresponding to this name.
+
+#### `eventName`
+
+``` purescript
+eventName :: forall fields. String -> EventName fields
+```
+
+#### `runEventName`
+
+``` purescript
+runEventName :: forall fields. EventName fields -> String
+```
+
+Unpack an event name
+
 #### `AttributeValue`
 
 ``` purescript
 data AttributeValue i
-  = StringAttribute String
-  | BooleanAttribute Boolean
-  | MapAttribute (StrMap String)
-  | HandlerAttribute (Foreign -> EventHandler (Maybe i))
+  = StringAttribute AttributeName String
+  | BooleanAttribute AttributeName Boolean
+  | MapAttribute AttributeName (StrMap String)
+  | HandlerAttribute (forall r. (forall event. EventName event -> (Event event -> EventHandler (Maybe i)) -> r) -> r)
 ```
 
 The type `AttributeValue i` represents values which can appear inside HTML attributes.
@@ -195,7 +220,7 @@ instance functorAttributeValue :: Functor AttributeValue
 
 ``` purescript
 data Attribute i
-  = Attribute [Tuple AttributeName (AttributeValue i)]
+  = Attribute [AttributeValue i]
 ```
 
 A value of type `Attribute i` represents a collection of HTML attributes, whose
@@ -2456,6 +2481,22 @@ style :: forall i. StrMap String -> H.Attribute i
 
 This module defines well-typed wrappers for common DOM events, so that
 they may be safely embedded in HTML documents.
+
+#### `handler`
+
+``` purescript
+handler :: forall fields i. H.EventName fields -> (Event fields -> EventHandler i) -> H.Attribute i
+```
+
+This function can be used to attach custom event handlers.
+
+#### `handlerMaybe`
+
+``` purescript
+handlerMaybe :: forall fields i. H.EventName fields -> (Event fields -> EventHandler (Maybe i)) -> H.Attribute i
+```
+
+This function can be used to attach custom event handlers.
 
 #### `onabort`
 

@@ -14,6 +14,10 @@ module Halogen.HTML
   , attributeName
   , runAttributeName
   
+  , EventName()
+  , eventName
+  , runEventName
+  
   , attributesToProps
   
   , graft
@@ -167,6 +171,7 @@ import Control.Monad.Eff.Unsafe (unsafeInterleaveEff)
 import Control.Monad.ST
 
 import Halogen.Internal.VirtualDOM
+import Halogen.HTML.Events.Types
 import Halogen.HTML.Events.Handler
 
 -- | A type-safe wrapper for attribute names
@@ -180,28 +185,42 @@ attributeName = AttributeName
 runAttributeName :: AttributeName -> String
 runAttributeName (AttributeName s) = s
 
+-- | A type-safe wrapper for event names.
+-- |
+-- | The phantom type `fields` describes the event type which we can expect to exist on events
+-- | corresponding to this name.
+newtype EventName (fields :: # *) = EventName String
+
+-- Create an event name
+eventName :: forall fields. String -> EventName fields
+eventName = EventName
+
+-- | Unpack an event name
+runEventName :: forall fields. EventName fields -> String
+runEventName (EventName s) = s
+
 -- | The type `AttributeValue i` represents values which can appear inside HTML attributes.
 -- | Values are either strings, booleans, maps or event handlers. Event handlers are required to produce outputs of type `i`.
 data AttributeValue i
-  = StringAttribute String
-  | BooleanAttribute Boolean
-  | MapAttribute (StrMap String)
-  | HandlerAttribute (Foreign -> EventHandler (Maybe i))
+  = StringAttribute AttributeName String
+  | BooleanAttribute AttributeName Boolean
+  | MapAttribute AttributeName (StrMap String)
+  | HandlerAttribute (forall r. (forall event. EventName event -> (Event event -> EventHandler (Maybe i)) -> r) -> r)
 
 instance functorAttributeValue :: Functor AttributeValue where
-  (<$>) _ (StringAttribute s) = StringAttribute s
-  (<$>) _ (BooleanAttribute b) = BooleanAttribute b
-  (<$>) _ (MapAttribute m) = MapAttribute m
-  (<$>) f (HandlerAttribute k) = HandlerAttribute (((f <$>) <$>) <<< k)
+  (<$>) _ (StringAttribute k s) = StringAttribute k s
+  (<$>) _ (BooleanAttribute k b) = BooleanAttribute k b
+  (<$>) _ (MapAttribute k m) = MapAttribute k m
+  (<$>) f (HandlerAttribute g) = HandlerAttribute (\k -> g (\name h -> k name (\e -> (f <$>) <$> h e)))
 
 -- | A value of type `Attribute i` represents a collection of HTML attributes, whose
 -- | event handlers produce outputs of type `i`.
 -- |
 -- | The `Semigroup` instance allows attributes to be combined.
-data Attribute i = Attribute [Tuple AttributeName (AttributeValue i)]
+data Attribute i = Attribute [AttributeValue i]
 
 instance functorAttribute :: Functor Attribute where
-  (<$>) f (Attribute xs) = Attribute (A.map ((f <$>) <$>) xs)
+  (<$>) f (Attribute xs) = Attribute (A.map (f <$>) xs)
   
 instance semigroupAttribute :: Semigroup (Attribute i) where
   (<>) (Attribute xs) (Attribute ys) = Attribute (xs <> ys)
@@ -218,16 +237,19 @@ attributesToProps k (Attribute xs) = runProps do
   for_ xs (addProp props)
   return props
   where
-  addProp :: forall h eff. STProps h -> Tuple AttributeName (AttributeValue i) -> Eff (st :: ST h | eff) Unit
-  addProp props (Tuple key (MapAttribute m)) = runFn3 prop (runAttributeName key) m props
-  addProp props (Tuple key (StringAttribute value)) = runFn3 prop (runAttributeName key) value props
-  addProp props (Tuple key (BooleanAttribute value)) = runFn3 prop (runAttributeName key) value props
-  addProp props (Tuple key (HandlerAttribute f)) = runFn3 handlerProp (runAttributeName key) handler props
+  addProp :: forall h eff. STProps h -> AttributeValue i -> Eff (st :: ST h | eff) Unit
+  addProp props (MapAttribute key m) = runFn3 prop (runAttributeName key) m props
+  addProp props (StringAttribute key value) = runFn3 prop (runAttributeName key) value props
+  addProp props (BooleanAttribute key value) = runFn3 prop (runAttributeName key) value props
+  addProp props (HandlerAttribute e) = e addEvent
     where
-    handler :: Foreign -> Eff eff Unit
-    handler e = do
-      m <- unsafeInterleaveEff $ runEventHandler (unsafeFromForeign e) (f e)
-      for_ m k
+    addEvent :: forall eff fields. EventName fields -> (Event fields -> EventHandler (Maybe i)) -> Eff (st :: ST h | eff) Unit
+    addEvent key f = runFn3 handlerProp (runEventName key) handler props
+      where
+      handler :: Event fields -> Eff eff Unit
+      handler ev = do
+        m <- unsafeInterleaveEff $ runEventHandler ev (f ev)
+        for_ m k
 
 -- | A type-safe wrapper for a HTML tag name
 newtype TagName = TagName String
@@ -264,7 +286,7 @@ data HTML a i
     
 instance functorHTML :: Functor (HTML a) where
   (<$>) _ (Text s) = Text s
-  (<$>) f (Element name attribs children) = Element name (f <$> attribs) (Data.Array.map (f <$>) children)
+  (<$>) f (Element name attribs children) = Element name (f <$> attribs) (A.map (f <$>) children)
   (<$>) _ (Placeholder a) = Placeholder a
   
 -- | Replace placeholder nodes with HTML documents.
@@ -298,9 +320,9 @@ renderHtmlToString = go
   go (Text s) = s
   go (Element name (Attribute attr) els) = "<" <> runTagName name <> " " <> joinWith " " (A.map renderAttr attr) <> ">" <> foldMap go els <> "</" <> runTagName name <> ">"
   
-  renderAttr :: Tuple AttributeName (AttributeValue Void) -> String
-  renderAttr (Tuple key (StringAttribute value)) = runAttributeName key <> "=\"" <> value <> "\""
-  renderAttr (Tuple key (BooleanAttribute true)) = runAttributeName key
+  renderAttr :: AttributeValue Void -> String
+  renderAttr (StringAttribute key value) = runAttributeName key <> "=\"" <> value <> "\""
+  renderAttr (BooleanAttribute key true) = runAttributeName key
   renderAttr _ = ""
   
 -- | Create a HTML document which represents a text node.
