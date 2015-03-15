@@ -124,25 +124,6 @@ In this way, all effects are pushed to the handler function at the boundary of t
 
 
 
-## Module Data.Void
-
-#### `Void`
-
-``` purescript
-data Void
-```
-
-An empty data type
-
-#### `absurd`
-
-``` purescript
-absurd :: forall a. Void -> a
-```
-
-Since the `Void` type has no inhabitants, we can eliminate it producing any type whatsoever.
-
-
 ## Module Halogen.HTML
 
 
