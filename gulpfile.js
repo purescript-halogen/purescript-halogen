@@ -50,6 +50,18 @@ var paths = {
         {
             dest: 'docs/Halogen-Mixin-Aff.md',
             src: 'src/Halogen/Mixin/Aff.purs'
+        }, 
+        {
+            dest: 'docs/Halogen-Bootstrap.md',
+            src: 'purescript-halogen-bootstrap/src/Halogen/Themes/Bootstrap3.purs'
+        },  
+        {
+            dest: 'docs/Halogen-Bootstrap-Controls.md',
+            src: 'purescript-halogen-bootstrap/src/Halogen/Themes/Bootstrap3/*.purs'
+        }, 
+        {
+            dest: 'docs/Halogen-Foundation.md',
+            src: 'purescript-halogen-foundation/src/**/*.purs'
         }
     ],
     testSrc: 'test/**/*.purs',

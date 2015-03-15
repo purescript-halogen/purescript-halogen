@@ -1,0 +1,76 @@
+# Module Documentation
+
+## Module Halogen.Themes.Bootstrap3.Breadcrumbs
+
+
+This module provides convenience functions for creating _breadcrumb_ navigation elements.
+
+#### `CrumbTrail`
+
+``` purescript
+data CrumbTrail a
+  = CrumbTrail [Tuple String (Target a)] String [Tuple String (Target a)]
+```
+
+A `CrumbTrail` is a zipper with a current location, and crumbs behind and in front of us.
+
+#### `breadcrumbs`
+
+``` purescript
+breadcrumbs :: forall a i. CrumbTrail i -> H.HTML a i
+```
+
+Create a breadcrumb navigation element from an array of `Crumb`s.
+
+
+## Module Halogen.Themes.Bootstrap3.InputGroup
+
+
+This module provides convenience functions for creating _input groups_.
+
+#### `inputGroup`
+
+``` purescript
+inputGroup :: forall a i. Maybe (H.HTML a i) -> H.HTML a i -> Maybe (H.HTML a i) -> H.HTML a i
+```
+
+Create an input group.
+
+An input group consists of a control with optional elements placed before and after.
+
+
+## Module Halogen.Themes.Bootstrap3.Navbar
+
+
+This module provides convenience functions for creating Bootstrap _navbars_.
+
+#### `NavBarItem`
+
+``` purescript
+data NavBarItem a
+  = Brand (Link a)
+  | Nav (Nav a)
+  | Text String
+  | Button (Link a)
+```
+
+Enumerates the different kinds of item which can be rendered in a navbar
+
+#### `NavBar`
+
+``` purescript
+type NavBar a = { items :: [NavBarItem a] }
+```
+
+A navbar configuration
+
+#### `navbar`
+
+``` purescript
+navbar :: forall a i. NavBar i -> H.HTML a i
+```
+
+Create a navbar from a configuration object.
+
+
+
