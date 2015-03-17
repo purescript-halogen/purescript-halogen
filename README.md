@@ -4,8 +4,8 @@ A declarative, type-safe UI library for PureScript.
 
 ## Getting Started
 
-- Read the [Module documentation](docs/).
-- Try out the examples:
+- Read the [module documentation](docs/).
+- Read the examples:
   - [TODO List](examples/todo/Main.purs)
   - [Counter](examples/counter/Main.purs)
   - [AJAX](examples/ajax/Main.purs)
