@@ -5,7 +5,9 @@ A declarative, type-safe UI library for PureScript.
 ## Getting Started
 
 - Read the [Module documentation](docs/).
-- Try out the [example project](test/Main.purs).
+- Try out the examples:
+  - [TODO List](examples/todo)
+  - [Counter](examples/counter)
 
 `purescript-halogen` is a simple reactive UI library built on top of `virtual-dom`. It is based on the idea of _signal functions_.
 

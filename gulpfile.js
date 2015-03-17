@@ -64,13 +64,24 @@ var paths = {
             src: 'purescript-halogen-foundation/src/**/*.purs'
         }
     ],
-    testSrc: 'test/**/*.purs',
-    bootstrapSrc: 'purescript-halogen-bootstrap/src/**/*.purs'
-};
-
-var testOpts = {
-    main: 'Test.Main',
-    modules: ['Test.Main']
+    examples: {
+        todo: {
+            src: ['examples/todo/Main.purs', 'purescript-halogen-bootstrap/src/**/*.purs'],
+            dest: 'examples/todo',
+            options: {
+                main: 'Example.Todo',
+                modules: ['Example.Todo']
+            }
+        }, 
+        counter: {
+            src: ['examples/counter/Main.purs', 'purescript-halogen-bootstrap/src/**/*.purs'],
+            dest: 'examples/counter',
+            options: {
+                main: 'Example.Counter',
+                modules: ['Example.Counter']
+            }
+        }
+    }
 };
 
 function compile (compiler, src, opts) {
@@ -97,10 +108,20 @@ function docs (target) {
     }
 }
 
-gulp.task('example', function() {
-    return compile(purescript.psc, [paths.src, paths.testSrc, paths.bootstrapSrc], testOpts)
+gulp.task('example-todo', function() {
+    return compile(purescript.psc, [paths.src].concat(paths.examples.todo.src), paths.examples.todo.options)
         .pipe(browserify({}))
-        .pipe(gulp.dest('js'))
+        .pipe(gulp.dest(paths.examples.todo.dest));
+});
+
+gulp.task('example-counter', function() {
+    return compile(purescript.psc, [paths.src].concat(paths.examples.counter.src), paths.examples.counter.options)
+        .pipe(browserify({}))
+        .pipe(gulp.dest(paths.examples.counter.dest));
+});
+
+gulp.task('examples', function(cb) {
+    runSequence('example-todo', 'example-counter', cb);
 });
 
 gulp.task('make', function() {
@@ -127,5 +148,5 @@ gulp.task('docs', function(cb) {
 });
 
 gulp.task('default', function(cb) {
-    runSequence('make', 'docs', 'example', cb);
+    runSequence( 'examples', cb);
 });

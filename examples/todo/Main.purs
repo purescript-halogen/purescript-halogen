@@ -1,4 +1,4 @@
-module Test.Main where
+module Example.Todo where
 
 import Data.Void
 import Data.Tuple

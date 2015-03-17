@@ -2,7 +2,13 @@
 
 module Halogen.Themes.Bootstrap3.Navbar 
   ( NavBarItem(..)
+  , NavItem(..)
   , NavBar()
+  , NavLink()
+  , Nav()
+  , NavDropDown()
+  , Link()
+
   , navbar
   ) where
     
