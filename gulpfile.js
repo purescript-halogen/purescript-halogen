@@ -80,6 +80,14 @@ var paths = {
                 main: 'Example.Counter',
                 modules: ['Example.Counter']
             }
+        }, 
+        ajax: {
+            src: ['examples/ajax/Main.purs', 'purescript-halogen-bootstrap/src/**/*.purs'],
+            dest: 'examples/ajax',
+            options: {
+                main: 'Example.Ajax',
+                modules: ['Example.Ajax']
+            }
         }
     }
 };
@@ -120,8 +128,14 @@ gulp.task('example-counter', function() {
         .pipe(gulp.dest(paths.examples.counter.dest));
 });
 
+gulp.task('example-ajax', function() {
+    return compile(purescript.psc, [paths.src].concat(paths.examples.ajax.src), paths.examples.ajax.options)
+        .pipe(browserify({}))
+        .pipe(gulp.dest(paths.examples.ajax.dest));
+});
+
 gulp.task('examples', function(cb) {
-    runSequence('example-todo', 'example-counter', cb);
+    runSequence('example-todo', 'example-counter', 'example-ajax', cb);
 });
 
 gulp.task('make', function() {
