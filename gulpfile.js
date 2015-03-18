@@ -52,6 +52,10 @@ var paths = {
             src: 'src/Halogen/Mixin/Aff.purs'
         }, 
         {
+            dest: 'docs/Halogen-Mixin-ContT.md',
+            src: 'src/Halogen/Mixin/ContT.purs'
+        }, 
+        {
             dest: 'docs/Halogen-Bootstrap.md',
             src: 'purescript-halogen-bootstrap/src/Halogen/Themes/Bootstrap3.purs'
         },  
@@ -112,16 +116,14 @@ function compile (compiler, src, opts) {
 };
 
 function docs (target) {
-    return function() {
-        var docgen = purescript.pscDocs();
-        docgen.on('error', function(e) {
-            console.error(e.message);
-            docgen.end();
-        });
-        return gulp.src(target.src)
-            .pipe(docgen)
-            .pipe(gulp.dest(target.dest));
-    }
+    var docgen = purescript.pscDocs();
+    docgen.on('error', function(e) {
+        console.error(e.message);
+        docgen.end();
+    });
+    return gulp.src(target.src)
+        .pipe(docgen)
+        .pipe(gulp.dest(target.dest));
 }
 
 gulp.task('example-todo', function() {
@@ -157,24 +159,12 @@ gulp.task('make', function() {
         .pipe(gulp.dest(paths.dest))
 });
 
-function runInParallel(tasks, cb) {
-    var count = 0;
-    tasks.forEach(function(task) {
-        task(function() {
-            
-            if (count++ == tasks.length) {
-                cb();
-            }
-        });
-    });
-}
-
-gulp.task('docs', function(cb) {
-    return runInParallel(paths.docs.map(function(task) {
+gulp.task('docs', function() {
+    return paths.docs.forEach(function(task) {
         return docs(task);
-    }), cb);
+    });
 });
 
 gulp.task('default', function(cb) {
-    runSequence( 'examples', cb);
+    runSequence('make', 'docs', 'examples', cb);
 });

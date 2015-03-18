@@ -15,6 +15,7 @@
 ### Mixins
 
 - [Aff](Halogen-Mixin-Aff.md)
+- [ContT](Halogen-Mixin-ContT.md)
 - [Router](Halogen-Mixin-Router.md)
 - [Undo/Redo](Halogen-Mixin-UndoRedo.md)
 

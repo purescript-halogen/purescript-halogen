@@ -44,6 +44,47 @@ An input group consists of a control with optional elements placed before and af
 
 This module provides convenience functions for creating Bootstrap _navbars_.
 
+#### `NavLink`
+
+``` purescript
+type NavLink a = { target :: Target a, active :: Boolean, text :: String }
+```
+
+A simple navigation link
+
+#### `Link`
+
+``` purescript
+type Link a = { target :: Target a, text :: String }
+```
+
+Link text and target
+
+#### `NavDropDown`
+
+``` purescript
+type NavDropDown a = { groups :: [[Link a]], text :: String }
+```
+
+
+#### `NavItem`
+
+``` purescript
+data NavItem a
+  = NavLink (NavLink a)
+  | NavDropDown (NavDropDown a)
+```
+
+Enumerates the different kinds of navigation item
+
+#### `Nav`
+
+``` purescript
+type Nav a = { items :: [NavItem a] }
+```
+
+A navigation menu configuration
+
 #### `NavBarItem`
 
 ``` purescript
