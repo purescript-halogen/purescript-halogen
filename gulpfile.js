@@ -88,6 +88,14 @@ var paths = {
                 main: 'Example.Ajax',
                 modules: ['Example.Ajax']
             }
+        }, 
+        placeholder: {
+            src: ['examples/placeholder/Main.purs', 'purescript-halogen-bootstrap/src/**/*.purs'],
+            dest: 'examples/placeholder',
+            options: {
+                main: 'Example.Placeholder',
+                modules: ['Example.Placeholder']
+            }
         }
     }
 };
@@ -134,8 +142,14 @@ gulp.task('example-ajax', function() {
         .pipe(gulp.dest(paths.examples.ajax.dest));
 });
 
+gulp.task('example-placeholder', function() {
+    return compile(purescript.psc, [paths.src].concat(paths.examples.placeholder.src), paths.examples.placeholder.options)
+        .pipe(browserify({}))
+        .pipe(gulp.dest(paths.examples.placeholder.dest));
+});
+
 gulp.task('examples', function(cb) {
-    runSequence('example-todo', 'example-counter', 'example-ajax', cb);
+    runSequence('example-todo', 'example-counter', 'example-ajax', 'example-placeholder', cb);
 });
 
 gulp.task('make', function() {
