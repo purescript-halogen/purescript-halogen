@@ -75,7 +75,7 @@ type Handler r i eff = r -> Driver i eff -> Eff (HalogenEffects eff) Unit
 -- | 
 -- | ```purescript
 -- | main = do
--- |   Tuple node driver <- runUI ui absurd handler
+-- |   Tuple node driver <- runUI ui
 -- |   appendToBody node
 -- |   setInterval 1000 $ driver Tick
 -- | ```

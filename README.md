@@ -32,7 +32,7 @@ If the UI does not require any interaction with external components, and the onl
 In this case, the handler function will just take the DOM event, create a new input, and feed it back into the signal function. We can describe such a UI with the following type:
 
 ```purescript
-type UI input = SF1 input (HTML input)
+type PureView input = forall p. SF1 input (HTML p input)
 ```
 
 That is, we define a type of input messages, and create a signal function which consumes inputs and produces HTML documents which generate new inputs of the same type.
@@ -46,8 +46,8 @@ Here is a simple example. The `ui` function defines a signal function which resp
 ```purescript
 data Input = Click
 
-ui :: forall a. SF1 Input (HTML a Input)
-ui = render <$> stateful 0 update
+view :: PureView Input
+view = render <$> stateful 0 update
   where
   render :: Number -> HTML a Input
   render n = button [onclick \_ -> pure Click] [text (show n)]
@@ -56,7 +56,7 @@ ui = render <$> stateful 0 update
   update n Click = n + 1
   
 main = do
-  node <- runUI ui
+  node <- runUI (pureUI view)
   appendToBody node
 ```
 
@@ -130,17 +130,15 @@ These combinators allow us to enlarge the input type in interesting ways, allowi
 
 The pure model illustrated above completely ignored external components, but in real user interfaces, we need to be able to make calls to web services, local storage, etc., to determine the flow of data in our application.
 
-We can use the `runUIEff` function to create interesting handler functions which interact with the world:
+We can use the `runUI` function to create interesting handler functions which interact with the world:
 
 ```purescript
-runUIEff :: forall i a r eff. 
-  SF1 i (HTML a (Either i r)) -> -- Pure signal function
-  (a -> VTree) ->                -- Renderer for document placeholders
-  Handler r i eff ->             -- Handler function
+runUI :: forall i p r eff. 
+  UI i p r eff ->
   Eff (HalogenEffects eff) (Tuple Node (Driver i eff))
 ```
 
-The third argument to `runUIEff` is the handler function. Notice that the output type of the signal function has changed. Instead of generating inputs of type `i`, our HTML documents can now generate _requests_ of type `r`. The handler function will service requests and generate new inputs. Its type is:
+The `handler` property of the `UI` record type is the _handler function_. Notice that the output type of the view function has also changed (compare `PureView` and `View`). Instead of generating inputs of type `i`, our HTML documents can now generate _requests_ of type `r`. The handler function will service requests and generate new inputs. Its type is:
 
 ```purescript
 type Handler r i eff = r -> Driver i eff -> Eff (HalogenEffects eff) Unit
@@ -158,7 +156,7 @@ In the pure model, all inputs to the driver function come from the DOM itself, b
 
 ```purescript
 main = do
-  Tuple node driver <- runUIEff ui absurd handler
+  Tuple node driver <- runUI ui
   appendToBody node
   setInterval 1000 $ driver Tick
 ```

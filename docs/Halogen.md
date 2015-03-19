@@ -93,7 +93,7 @@ For example, to drive the UI with a `Tick` input every second, we might write so
 
 ```purescript
 main = do
-  Tuple node driver <- runUI ui absurd handler
+  Tuple node driver <- runUI ui
   appendToBody node
   setInterval 1000 $ driver Tick
 ```
@@ -142,6 +142,12 @@ A convenience function which can be used to construct a pure UI
 ``` purescript
 runUI :: forall i p r eff. UI i p r eff -> Eff (HalogenEffects eff) (Tuple Node (Driver i eff))
 ```
+
+`runUI` renders a `UI` to the DOM using `virtual-dom`.
+
+This function is the workhorse of the Halogen library. It can be called in `main`
+to set up the application and create the driver function, which can be used to 
+send inputs to the UI from external components.
 
 
 
