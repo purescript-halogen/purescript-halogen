@@ -1,5 +1,6 @@
 module Example.Placeholder where
 
+import Data.Void
 import Data.Tuple
 
 import Control.Monad.Eff
@@ -33,10 +34,13 @@ view = H.div (A.class_ B.container)
 -- | Convert placeholders into `VTrees`.
 -- |
 -- | In a real application, this function might render a third party component using `widget`.
-renderPlaceholder :: Placeholder -> VTree
-renderPlaceholder (Placeholder s) = vtext s  
+renderer :: Placeholder -> VTree
+renderer (Placeholder s) = vtext s  
+  
+ui :: forall i eff. UI i Placeholder Void eff
+ui = { view: pure view, handler: absurd, renderer: renderer }    
   
 main = do
-  Tuple node _ <- runUIEff (pure view) renderPlaceholder (\_ _ -> return unit)
+  Tuple node _ <- runUI ui
   appendToBody node
   

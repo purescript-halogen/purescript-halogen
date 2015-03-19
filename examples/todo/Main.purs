@@ -58,12 +58,12 @@ instance inputSupportsUndoRedo :: Undo.SupportsUndoRedo Input where
   toUndoRedo Redo = Just Undo.Redo
   toUndoRedo _ = Nothing
 
--- | The UI is a state machine, consuming inputs, and generating HTML documents which in turn, generate new inputs
-ui :: forall eff a. SF1 Input (H.HTML a Input)
-ui = view <$> stateful (Undo.undoRedoState (State [])) (Undo.withUndoRedo update)
+-- | The view is a state machine, consuming inputs, and generating HTML documents which in turn, generate new inputs
+view :: PureView Input
+view = render <$> stateful (Undo.undoRedoState (State [])) (Undo.withUndoRedo update)
   where
-  view :: Undo.UndoRedoState State -> H.HTML a Input
-  view st = 
+  render :: forall p. Undo.UndoRedoState State -> H.HTML p Input
+  render st = 
     case Undo.getState st of
       State ts ->
         H.div (A.class_ B.container)
@@ -72,7 +72,7 @@ ui = view <$> stateful (Undo.undoRedoState (State [])) (Undo.withUndoRedo update
               , H.div_ (zipWith task ts (0 .. length ts))
               ]
               
-  toolbar :: forall st. Undo.UndoRedoState st -> H.HTML a Input
+  toolbar :: forall p st. Undo.UndoRedoState st -> H.HTML p Input
   toolbar st = H.p (A.class_ B.btnGroup)
                    [ H.button ( A.classes [ B.btn, B.btnPrimary ]
                                 <> A.onclick (\_ -> pure (NewTask Nothing)) )
@@ -87,7 +87,7 @@ ui = view <$> stateful (Undo.undoRedoState (State [])) (Undo.withUndoRedo update
                               [ H.text "Redo" ]
                    ]
                    
-  task :: Task -> Number -> H.HTML a Input
+  task :: forall p. Task -> Number -> H.HTML p Input
   task (Task task) index = H.p_ <<< pure $
     BI.inputGroup 
       (Just (H.input ( A.class_ B.checkbox
@@ -111,8 +111,8 @@ ui = view <$> stateful (Undo.undoRedoState (State [])) (Undo.withUndoRedo update
   update (State ts) (UpdateDescription i description) = State $ modifyAt i (\(Task t) -> Task (t { description = description })) ts
   update (State ts) (MarkCompleted i completed) = State $ modifyAt i (\(Task t) -> Task (t { completed = completed })) ts
   update (State ts) (RemoveTask i) = State $ deleteAt i 1 ts
-  
+
 main = do
-  Tuple node driver <- runUIEff ((Left <$>) <$> ui) absurd (\_ _ -> return unit)
+  Tuple node driver <- runUI (pureUI view)
   appendToBody node
   Router.onHashChange (NewTask <<< Just <<< S.drop 1 <<< Router.runHash) driver

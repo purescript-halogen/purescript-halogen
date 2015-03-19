@@ -43,11 +43,11 @@ data State = State Number
 -- | Inputs to the state machine
 data Input = Tick
 
-ui :: forall eff a r. SF1 Input (H.HTML a r)
-ui = view <$> stateful (State 0) update
+view :: forall p r. SF1 Input (H.HTML p r)
+view = render <$> stateful (State 0) update
   where
-  view :: State -> H.HTML a r
-  view (State n) = 
+  render :: State -> H.HTML p r
+  render (State n) = 
     H.div (A.class_ B.container)
           [ H.h1 (A.id_ "header") [ H.text "counter" ]
           , H.p_ [ H.text (show n) ]
@@ -55,9 +55,9 @@ ui = view <$> stateful (State 0) update
           
   update :: State -> Input -> State
   update (State n) Tick = State (n + 1)
-  
+
 main = do
-  Tuple node driver <- runUIEff ui absurd (\_ _ -> return unit)
+  Tuple node driver <- runUI (pureUI view)
   appendToBody node
   setInterval 1000 $ driver Tick
   

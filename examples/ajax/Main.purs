@@ -72,11 +72,11 @@ data Input
 -- | Requests to external services
 data Request = CompileRequest String
   
-ui :: forall eff a. SF1 Input (H.HTML a (Either Input Request))
-ui = view <$> stateful (State false exampleCode Nothing) update
+view :: forall p. View Input p Request
+view = render <$> stateful (State false exampleCode Nothing) update
   where
-  view :: State -> H.HTML a (Either Input Request)
-  view (State busy code result) = 
+  render :: State -> H.HTML p (Either Input Request)
+  render (State busy code result) = 
     H.div (A.class_ B.container) $
           [ H.h1 (A.id_ "header") [ H.text "ajax example" ]
           , H.h2_ [ H.text "purescript code" ]
@@ -100,12 +100,15 @@ ui = view <$> stateful (State false exampleCode Nothing) update
   update (State busy code _) (SetResult rslt) = State false code (Just rslt)
 
 -- | Handle a request to an external service
-handleRequest :: forall eff. Handler Request Input (http :: HTTP | eff)
-handleRequest (CompileRequest code) k = do
+handler :: forall eff. Handler Request Input (http :: HTTP | eff)
+handler (CompileRequest code) k = do
   k SetBusy
   compile code \response -> do
     k (SetResult response)
+ 
+ui :: forall eff. UI Input Void Request (http :: HTTP | eff)
+ui = { view: view, handler: handler, renderer: absurd }  
   
 main = do
-  Tuple node driver <- runUIEff ui absurd handleRequest
+  Tuple node driver <- runUI ui
   appendToBody node

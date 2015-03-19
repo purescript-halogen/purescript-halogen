@@ -12,7 +12,7 @@ assembled from the parts defined in the various submodules:
 - `Halogen.Mixin.*` for common additional application features
 
 The type signature and documentation for the [`runUI`](#runUI) function provides a good introduction 
-to this library. For more advanced use-cases, you might like to look at the `runUIEff` function instead.
+to this library. For more advanced use-cases, you might like to look at the `runUI` function instead.
 
 
 #### `HalogenEffects`
@@ -21,7 +21,7 @@ to this library. For more advanced use-cases, you might like to look at the `run
 type HalogenEffects eff = (dom :: DOM, ref :: Ref | eff)
 ```
 
-Wraps the effects required by the `runUI` and `runUIEff` functions.
+Wraps the effects required by the `runUI` and `runUI` functions.
 
 #### `changes`
 
@@ -33,31 +33,25 @@ A signal which emits patches corresponding to successive `VTree`s.
 
 This function can be used to create alternative top-level handlers which use `virtual-dom`.
 
-#### `runUI`
+#### `View`
 
 ``` purescript
-runUI :: forall i eff. (forall a. SF1 i (HTML a i)) -> Eff (HalogenEffects eff) Node
+type View i p r = SF1 i (HTML p (Either i r))
 ```
 
-`runUI` takes a UI represented as a signal function, and renders it to the DOM
-using `virtual-dom`.
+A view is represented as a pure, non-empty signal function which
+consumes inputs of type `r`, and generates HTML documents.
 
-The signal function is responsible for rendering the HTML for the UI, and the 
-HTML can generate inputs which will be fed back into the signal function,
-resulting in DOM updates.
+The HTML documents can contain placeholders of type `p`, and
+generate events which are either inputs (`i`) or requests (`r`). 
 
-This function returns a `Node`, and the caller is responsible for adding the node
-to the DOM.
+#### `PureView`
 
-As a simple example, we can create a signal which responds to button clicks:
-
-```purescript
-ui :: SF1 Unit (HTML Unit)
-ui = view <$> stateful 0 (\n _ -> n + 1)
-  where
-  view :: Number -> HTML Unit
-  view n = button [ onclick (const unit) ] [ text (show n) ]
+``` purescript
+type PureView i = forall p. SF1 i (HTML p i)
 ```
+
+A pure view does not make any external requests or use placeholder elements.
 
 #### `Handler`
 
@@ -65,7 +59,7 @@ ui = view <$> stateful 0 (\n _ -> n + 1)
 type Handler r i eff = r -> Driver i eff -> Eff (HalogenEffects eff) Unit
 ```
 
-This type synonym is provided to tidy up the type signature of `runUIEff`.
+This type synonym is provided to tidy up the type signature of `runUI`.
 
 The _handler function_ is responsible for receiving requests from the UI, integrating with external
 components, and providing inputs back to the system based on the results.
@@ -88,7 +82,7 @@ appHandler GetDateAndTimeRequest k =
 type Driver i eff = i -> Eff (HalogenEffects eff) Unit
 ```
 
-This type synonym is provided to tidy up the type signature of `runUIEff`.
+This type synonym is provided to tidy up the type signature of `runUI`.
 
 The _driver function_ can be used by the caller to inject additional inputs into the system at the top-level.
 
@@ -99,29 +93,55 @@ For example, to drive the UI with a `Tick` input every second, we might write so
 
 ```purescript
 main = do
-  Tuple node driver <- runUIEff ui absurd handler
+  Tuple node driver <- runUI ui absurd handler
   appendToBody node
   setInterval 1000 $ driver Tick
 ```
 
-#### `runUIEff`
+#### `Renderer`
 
 ``` purescript
-runUIEff :: forall i a r eff. SF1 i (HTML a (Either i r)) -> (a -> VTree) -> Handler r i eff -> Eff (HalogenEffects eff) (Tuple Node (Driver i eff))
+type Renderer p = p -> VTree
 ```
 
-`runUIEff` is a more general version of `runUI` which can be used to construct other
-top-level handlers for applications.
+A type synonym for functions which render components to replace placeholders
 
-`runUIEff` takes a signal function which creates HTML documents containing _requests_, 
-and a handler function which accepts requests and provides new inputs to a continuation as they
-become available.
+#### `UI`
 
-For example, the handler function might be responsible for issuing AJAX requests on behalf of the
-application.
+``` purescript
+type UI i p r eff = { renderer :: Renderer p, handler :: Handler r i eff, view :: View i p r }
+```
 
-In this way, all effects are pushed to the handler function at the boundary of the application.
+A UI consists of:
 
+- A view
+- A handler function
+- A function which renders placeholder elements
+
+#### `PureUI`
+
+``` purescript
+type PureUI i = forall eff. UI i Void Void eff
+```
+
+A pure UI is a UI which:
+
+- Does not render placeholder elements
+- Does not make external requests
+
+#### `pureUI`
+
+``` purescript
+pureUI :: forall i. (forall p. SF1 i (HTML p i)) -> PureUI i
+```
+
+A convenience function which can be used to construct a pure UI
+
+#### `runUI`
+
+``` purescript
+runUI :: forall i p r eff. UI i p r eff -> Eff (HalogenEffects eff) (Tuple Node (Driver i eff))
+```
 
 
 
