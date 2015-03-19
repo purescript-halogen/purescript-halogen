@@ -12,6 +12,8 @@ import qualified Data.StrMap as StrMap
 
 import Control.Functor (($>))
 import Control.Monad.Eff
+import Control.Monad.Eff.Unsafe
+import Control.Monad.Aff
 
 import DOM
 
@@ -101,7 +103,7 @@ view = render <$> stateful (State false exampleCode Nothing) update
 
 -- | Handle a request to an external service
 handler :: forall eff. Handler Request Input (http :: HTTP | eff)
-handler (CompileRequest code) k = do
+handler (CompileRequest code) = makeAff \_ k -> unsafeInterleaveEff do
   k SetBusy
   compile code \response -> do
     k (SetResult response)

@@ -48,14 +48,6 @@ var paths = {
             src: 'src/Halogen/Mixin/Router.purs'
         }, 
         {
-            dest: 'docs/Halogen-Mixin-Aff.md',
-            src: 'src/Halogen/Mixin/Aff.purs'
-        }, 
-        {
-            dest: 'docs/Halogen-Mixin-ContT.md',
-            src: 'src/Halogen/Mixin/ContT.purs'
-        }, 
-        {
             dest: 'docs/Halogen-Bootstrap.md',
             src: 'purescript-halogen-bootstrap/src/Halogen/Themes/Bootstrap3.purs'
         },  

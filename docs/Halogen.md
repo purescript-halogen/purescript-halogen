@@ -18,10 +18,10 @@ to this library. For more advanced use-cases, you might like to look at the `run
 #### `HalogenEffects`
 
 ``` purescript
-type HalogenEffects eff = (dom :: DOM, ref :: Ref | eff)
+type HalogenEffects eff = (dom :: DOM, ref :: Ref, trace :: Trace | eff)
 ```
 
-Wraps the effects required by the `runUI` and `runUI` functions.
+Wraps the effects required by the `runUI` function.
 
 #### `changes`
 
@@ -56,7 +56,7 @@ A pure view does not make any external requests or use placeholder elements.
 #### `Handler`
 
 ``` purescript
-type Handler r i eff = r -> Driver i eff -> Eff (HalogenEffects eff) Unit
+type Handler r i eff = r -> Aff (HalogenEffects eff) i
 ```
 
 This type synonym is provided to tidy up the type signature of `runUI`.

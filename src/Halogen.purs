@@ -18,8 +18,12 @@ import Data.Maybe
 import Data.Tuple
 import Data.Either
 
+import Debug.Trace
+
 import Control.Monad.Eff
 import Control.Monad.Eff.Ref
+import Control.Monad.Eff.Unsafe (unsafeInterleaveEff)
+import Control.Monad.Eff.Exception
     
 import Control.Monad.Aff
     
@@ -27,8 +31,8 @@ import Halogen.HTML (HTML(), renderHtml')
 import Halogen.Signal 
 import Halogen.Internal.VirtualDOM   
  
--- | Wraps the effects required by the `runUI` and `runUI` functions.
-type HalogenEffects eff = (ref :: Ref, dom :: DOM | eff)
+-- | Wraps the effects required by the `runUI` function.
+type HalogenEffects eff = (trace :: Trace, ref :: Ref, dom :: DOM | eff)
  
 -- | A signal which emits patches corresponding to successive `VTree`s.
 -- |
@@ -62,7 +66,7 @@ type PureView i = forall p. SF1 i (HTML p i)
 -- | appHandler GetDateAndTimeRequest k =
 -- |   get "/date" \response -> k (readDateAndTime response)
 -- | ```
-type Handler r i eff = r -> Driver i eff -> Eff (HalogenEffects eff) Unit
+type Handler r i eff = r -> Aff (HalogenEffects eff) i
 
 -- | This type synonym is provided to tidy up the type signature of `runUI`.
 -- |
@@ -132,7 +136,10 @@ runUI ui = do
     where
     requestHandler :: Either i r -> Eff (HalogenEffects eff) Unit
     requestHandler (Left i) = driver i
-    requestHandler (Right r) = ui.handler r driver
+    requestHandler (Right r) = unsafeInterleaveEff $ runAff logger driver (ui.handler r)
+    
+    logger :: Error -> Eff (HalogenEffects eff) Unit
+    logger e = trace $ "Uncaught error in asynchronous code: " <> message e
     
     driver :: Driver i eff
     driver i = do
