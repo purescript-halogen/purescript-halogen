@@ -2,8 +2,7 @@
 -- | they may be safely embedded in HTML documents.
 
 module Halogen.HTML.Events 
-  ( handler
-  , handlerMaybe
+  ( createHandler
   
   , onabort
   , onbeforeunload
@@ -49,111 +48,107 @@ import Halogen.HTML.Events.Types
 import qualified Halogen.HTML as H
 
 -- | This function can be used to attach custom event handlers.
-handler :: forall fields i. H.EventName fields -> (Event fields -> EventHandler i) -> H.Attribute i
-handler key f = handlerMaybe key \e -> Just <$> f e
+createHandler :: forall fields attr i. (H.AttrRepr attr) => H.EventName fields -> (Event fields -> EventHandler i) -> attr i
+createHandler key f = H.handler key \e -> Just <$> f e
 
--- | This function can be used to attach custom event handlers.
-handlerMaybe :: forall fields i. H.EventName fields -> (Event fields -> EventHandler (Maybe i)) -> H.Attribute i
-handlerMaybe key f = H.Attribute [H.HandlerAttribute (\k -> k key (\e -> f e))]
+onabort	:: forall attr i. (H.AttrRepr attr) => (Event () -> EventHandler i) -> attr i
+onabort = createHandler (H.eventName "abort")
 
-onabort	:: forall i. (Event () -> EventHandler i) -> H.Attribute i
-onabort = handler $ H.eventName "abort"
+onbeforeunload :: forall attr i. (H.AttrRepr attr) => (Event () -> EventHandler i) -> attr i
+onbeforeunload = createHandler (H.eventName "beforeunload")
 
-onbeforeunload :: forall i. (Event () -> EventHandler i) -> H.Attribute i
-onbeforeunload = handler $ H.eventName "beforeunload"
+onerror :: forall attr i. (H.AttrRepr attr) => (Event () -> EventHandler i) -> attr i
+onerror = createHandler (H.eventName "error")
 
-onerror :: forall i. (Event () -> EventHandler i) -> H.Attribute i
-onerror = handler $ H.eventName "error"
+onhashchange :: forall attr i. (H.AttrRepr attr) => (Event () -> EventHandler i) -> attr i
+onhashchange = createHandler (H.eventName "hashchange")
 
-onhashchange :: forall i. (Event () -> EventHandler i) -> H.Attribute i
-onhashchange = handler $ H.eventName "hashchange"
+onload :: forall attr i. (H.AttrRepr attr) => (Event () -> EventHandler i) -> attr i
+onload = createHandler (H.eventName "load")
 
-onload :: forall i. (Event () -> EventHandler i) -> H.Attribute i
-onload = handler $ H.eventName "load"
+onpageshow :: forall attr i. (H.AttrRepr attr) => (Event () -> EventHandler i) -> attr i
+onpageshow = createHandler (H.eventName "pageshow")
 
-onpageshow :: forall i. (Event () -> EventHandler i) -> H.Attribute i
-onpageshow = handler $ H.eventName "pageshow"
+onpagehide :: forall attr i. (H.AttrRepr attr) => (Event () -> EventHandler i) -> attr i
+onpagehide = createHandler (H.eventName "pagehide")
 
-onpagehide :: forall i. (Event () -> EventHandler i) -> H.Attribute i
-onpagehide = handler $ H.eventName "pagehide"
+onresize :: forall attr i. (H.AttrRepr attr) => (Event () -> EventHandler i) -> attr i
+onresize = createHandler (H.eventName "resize")
 
-onresize :: forall i. (Event () -> EventHandler i) -> H.Attribute i
-onresize = handler $ H.eventName "resize"
+onscroll :: forall attr i. (H.AttrRepr attr) => (Event () -> EventHandler i) -> attr i
+onscroll = createHandler (H.eventName "scroll")
 
-onscroll :: forall i. (Event () -> EventHandler i) -> H.Attribute i
-onscroll = handler $ H.eventName "scroll"
+onunload :: forall attr i. (H.AttrRepr attr) => (Event () -> EventHandler i) -> attr i
+onunload = createHandler (H.eventName "unload")
 
-onunload :: forall i. (Event () -> EventHandler i) -> H.Attribute i
-onunload = handler $ H.eventName "unload"
+onchange :: forall attr i. (H.AttrRepr attr) => (Event () -> EventHandler i) -> attr i
+onchange = createHandler (H.eventName "change")
 
-onchange :: forall i. (Event () -> EventHandler i) -> H.Attribute i
-onchange = handler $ H.eventName "change"
+oninput :: forall attr i. (H.AttrRepr attr) => (Event () -> EventHandler i) -> attr i
+oninput = createHandler (H.eventName "input")
 
-oninput :: forall i. (Event () -> EventHandler i) -> H.Attribute i
-oninput = handler $ H.eventName "input"
+oninvalid :: forall attr i. (H.AttrRepr attr) => (Event () -> EventHandler i) -> attr i
+oninvalid = createHandler (H.eventName "invalid")
 
-oninvalid :: forall i. (Event () -> EventHandler i) -> H.Attribute i
-oninvalid = handler $ H.eventName "invalid"
+onreset :: forall attr i. (H.AttrRepr attr) => (Event () -> EventHandler i) -> attr i
+onreset = createHandler (H.eventName "reset")
 
-onreset :: forall i. (Event () -> EventHandler i) -> H.Attribute i
-onreset = handler $ H.eventName "reset"
+onsearch :: forall attr i. (H.AttrRepr attr) => (Event () -> EventHandler i) -> attr i
+onsearch = createHandler (H.eventName "search")
 
-onsearch :: forall i. (Event () -> EventHandler i) -> H.Attribute i
-onsearch = handler $ H.eventName "search"
+onselect :: forall attr i. (H.AttrRepr attr) => (Event () -> EventHandler i) -> attr i
+onselect = createHandler (H.eventName "select")
 
-onselect :: forall i. (Event () -> EventHandler i) -> H.Attribute i
-onselect = handler $ H.eventName "select"
+onsubmit :: forall attr i. (H.AttrRepr attr) => (Event () -> EventHandler i) -> attr i
+onsubmit = createHandler (H.eventName "submit")
 
-onsubmit :: forall i. (Event () -> EventHandler i) -> H.Attribute i
-onsubmit = handler $ H.eventName "submit"
+onclick :: forall attr i. (H.AttrRepr attr) => (Event MouseEvent -> EventHandler i) -> attr i
+onclick = createHandler (H.eventName "click")
 
-onclick :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attribute i
-onclick = handler $ H.eventName "click"
+oncontextmenu :: forall attr i. (H.AttrRepr attr) => (Event MouseEvent -> EventHandler i) -> attr i
+oncontextmenu = createHandler (H.eventName "contextmenu")
 
-oncontextmenu :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attribute i
-oncontextmenu = handler $ H.eventName "contextmenu"
+ondblclick :: forall attr i. (H.AttrRepr attr) => (Event MouseEvent -> EventHandler i) -> attr i
+ondblclick = createHandler (H.eventName "dblclick")
 
-ondblclick :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attribute i
-ondblclick = handler $ H.eventName "dblclick"
+onmousedown :: forall attr i. (H.AttrRepr attr) => (Event MouseEvent -> EventHandler i) -> attr i
+onmousedown = createHandler (H.eventName "mousedown")
 
-onmousedown :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attribute i
-onmousedown = handler $ H.eventName "mousedown"
+onmouseenter :: forall attr i. (H.AttrRepr attr) => (Event MouseEvent -> EventHandler i) -> attr i
+onmouseenter = createHandler (H.eventName "mouseenter")
 
-onmouseenter :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attribute i
-onmouseenter = handler $ H.eventName "mouseenter"
+onmouseleave :: forall attr i. (H.AttrRepr attr) => (Event MouseEvent -> EventHandler i) -> attr i
+onmouseleave = createHandler (H.eventName "mouseleave")
 
-onmouseleave :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attribute i
-onmouseleave = handler $ H.eventName "mouseleave"
+onmousemove :: forall attr i. (H.AttrRepr attr) => (Event MouseEvent -> EventHandler i) -> attr i
+onmousemove = createHandler (H.eventName "mousemove")
 
-onmousemove :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attribute i
-onmousemove = handler $ H.eventName "mousemove"
+onmouseover :: forall attr i. (H.AttrRepr attr) => (Event MouseEvent -> EventHandler i) -> attr i
+onmouseover = createHandler (H.eventName "mouseover")
 
-onmouseover :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attribute i
-onmouseover = handler $ H.eventName "mouseover"
+onmouseout :: forall attr i. (H.AttrRepr attr) => (Event MouseEvent -> EventHandler i) -> attr i
+onmouseout = createHandler (H.eventName "mouseout")
 
-onmouseout :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attribute i
-onmouseout = handler $ H.eventName "mouseout"
+onmouseup :: forall attr i. (H.AttrRepr attr) => (Event MouseEvent -> EventHandler i) -> attr i
+onmouseup = createHandler (H.eventName "mouseup")
 
-onmouseup :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attribute i
-onmouseup = handler $ H.eventName "mouseup"
+onkeydown :: forall attr i. (H.AttrRepr attr) => (Event KeyboardEvent -> EventHandler i) -> attr i
+onkeydown = createHandler (H.eventName "keydown")
 
-onkeydown :: forall i. (Event KeyboardEvent -> EventHandler i) -> H.Attribute i
-onkeydown = handler $ H.eventName "keydown"
+onkeypress :: forall attr i. (H.AttrRepr attr) => (Event KeyboardEvent -> EventHandler i) -> attr i
+onkeypress = createHandler (H.eventName "keypress")
 
-onkeypress :: forall i. (Event KeyboardEvent -> EventHandler i) -> H.Attribute i
-onkeypress = handler $ H.eventName "keypress"
+onkeyup :: forall attr i. (H.AttrRepr attr) => (Event KeyboardEvent -> EventHandler i) -> attr i
+onkeyup = createHandler (H.eventName "keyup")
 
-onkeyup :: forall i. (Event KeyboardEvent -> EventHandler i) -> H.Attribute i
-onkeyup = handler $ H.eventName "keyup"
+onblur :: forall attr i. (H.AttrRepr attr) => (Event FocusEvent -> EventHandler i) -> attr i
+onblur = createHandler (H.eventName "blur")
 
-onblur :: forall i. (Event FocusEvent -> EventHandler i) -> H.Attribute i
-onblur = handler $ H.eventName "blur"
+onfocus :: forall attr i. (H.AttrRepr attr) => (Event FocusEvent -> EventHandler i) -> attr i
+onfocus = createHandler (H.eventName "focus")
 
-onfocus :: forall i. (Event FocusEvent -> EventHandler i) -> H.Attribute i
-onfocus = handler $ H.eventName "focus"
+onfocusin :: forall attr i. (H.AttrRepr attr) => (Event FocusEvent -> EventHandler i) -> attr i
+onfocusin = createHandler (H.eventName "focusin")
 
-onfocusin :: forall i. (Event FocusEvent -> EventHandler i) -> H.Attribute i
-onfocusin = handler $ H.eventName "focusin"
-
-onfocusout :: forall i. (Event FocusEvent -> EventHandler i) -> H.Attribute i
-onfocusout = handler $ H.eventName "focusout"
+onfocusout :: forall attr i. (H.AttrRepr attr) => (Event FocusEvent -> EventHandler i) -> attr i
+onfocusout = createHandler (H.eventName "focusout")

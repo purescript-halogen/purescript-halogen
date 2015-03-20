@@ -2,9 +2,16 @@
 -- | smart constructors for HTML5 elements.
 
 module Halogen.HTML
-  ( HTML(..)
-  , Attribute(..)
-  , AttributeValue(..)
+  ( AttrRepr
+  , Attr()
+  , attr
+  , handler
+  
+  , HTMLRepr
+  , HTML()
+  , text
+  , placeholder
+  , element
   
   , TagName()
   , tagName
@@ -17,13 +24,6 @@ module Halogen.HTML
   , EventName()
   , eventName
   , runEventName
-  
-  , attributesToProps
-  
-  , graft
-  
-  , text
-  , placeholder
   
   -- Elements
   
@@ -148,10 +148,6 @@ module Halogen.HTML
   , var           , var_
   , video         , video_
   , wbr           , wbr_
-  
-  , renderHtml
-  , renderHtml'
-  , renderHtmlToString
   ) where
 
 import Data.Void
@@ -160,11 +156,15 @@ import Data.Tuple
 import Data.Foreign
 import Data.Function
 import Data.Monoid
+import Data.Bifunctor
 import Data.StrMap (StrMap())
 import Data.String (joinWith)
 import Data.Foldable (for_, foldMap)
 
 import qualified Data.Array as A
+
+import Control.Plus
+import Control.Alternative
 
 import Control.Monad.Eff
 import Control.Monad.Eff.Unsafe (unsafeInterleaveEff)
@@ -175,14 +175,16 @@ import Halogen.HTML.Events.Types
 import Halogen.HTML.Events.Handler
 
 -- | A type-safe wrapper for attribute names
-newtype AttributeName = AttributeName String
+-- |
+-- | The phantom type `value` describes the type of value which this attribute requires.
+newtype AttributeName value = AttributeName String
 
 -- Create an attribute name
-attributeName :: String -> AttributeName
+attributeName :: forall value. String -> AttributeName value
 attributeName = AttributeName
 
 -- | Unpack an attribute name
-runAttributeName :: AttributeName -> String
+runAttributeName :: forall value. AttributeName value -> String
 runAttributeName (AttributeName s) = s
 
 -- | A type-safe wrapper for event names.
@@ -199,58 +201,6 @@ eventName = EventName
 runEventName :: forall fields. EventName fields -> String
 runEventName (EventName s) = s
 
--- | The type `AttributeValue i` represents values which can appear inside HTML attributes.
--- | Values are either strings, booleans, maps or event handlers. Event handlers are required to produce outputs of type `i`.
-data AttributeValue i
-  = StringAttribute AttributeName String
-  | BooleanAttribute AttributeName Boolean
-  | MapAttribute AttributeName (StrMap String)
-  | HandlerAttribute (forall r. (forall event. EventName event -> (Event event -> EventHandler (Maybe i)) -> r) -> r)
-
-instance functorAttributeValue :: Functor AttributeValue where
-  (<$>) _ (StringAttribute k s) = StringAttribute k s
-  (<$>) _ (BooleanAttribute k b) = BooleanAttribute k b
-  (<$>) _ (MapAttribute k m) = MapAttribute k m
-  (<$>) f (HandlerAttribute g) = HandlerAttribute (\k -> g (\name h -> k name (\e -> (f <$>) <$> h e)))
-
--- | A value of type `Attribute i` represents a collection of HTML attributes, whose
--- | event handlers produce outputs of type `i`.
--- |
--- | The `Semigroup` instance allows attributes to be combined.
-data Attribute i = Attribute [AttributeValue i]
-
-instance functorAttribute :: Functor Attribute where
-  (<$>) f (Attribute xs) = Attribute (A.map (f <$>) xs)
-  
-instance semigroupAttribute :: Semigroup (Attribute i) where
-  (<>) (Attribute xs) (Attribute ys) = Attribute (xs <> ys)
-
-instance monoidAttribute :: Monoid (Attribute i) where
-  mempty = Attribute []
-
--- | Convert a collection of attributes to an immutable property collection by providing an event handler.
--- |
--- | This function uses a temporary mutable property collection for efficiency.
-attributesToProps :: forall i eff. (i -> Eff eff Unit) -> Attribute i -> Props
-attributesToProps k (Attribute xs) = runProps do 
-  props <- newProps
-  for_ xs (addProp props)
-  return props
-  where
-  addProp :: forall h eff. STProps h -> AttributeValue i -> Eff (st :: ST h | eff) Unit
-  addProp props (MapAttribute key m) = runFn3 prop (runAttributeName key) m props
-  addProp props (StringAttribute key value) = runFn3 prop (runAttributeName key) value props
-  addProp props (BooleanAttribute key value) = runFn3 prop (runAttributeName key) value props
-  addProp props (HandlerAttribute e) = e addEvent
-    where
-    addEvent :: forall eff fields. EventName fields -> (Event fields -> EventHandler (Maybe i)) -> Eff (st :: ST h | eff) Unit
-    addEvent key f = runFn3 handlerProp (runEventName key) handler props
-      where
-      handler :: Event fields -> Eff eff Unit
-      handler ev = do
-        m <- unsafeInterleaveEff $ runEventHandler ev (f ev)
-        for_ m k
-
 -- | A type-safe wrapper for a HTML tag name
 newtype TagName = TagName String
 
@@ -262,802 +212,748 @@ tagName = TagName
 runTagName :: TagName -> String
 runTagName (TagName s) = s
 
--- | The `HTML` type represents HTML documents before being rendered to the virtual DOM, and ultimately,
--- | the actual DOM.
--- |
--- | This representation is useful because it supports various typed transformations. It also gives a 
--- | strongly-typed representation for the events which can be generated by a document.
--- |
--- | The type parameter `a` corresponds to holes in the document which may be filled with `VTree`s during
--- | rendering. This way, the `HTML` type is kept pure while supporting custom rendering, e.g. embedding
--- | third-party components.
--- |
--- | The type parameter `i` represents the type of events which can be generated by this document.
--- |
--- | The meanings of the constructors of this type are as follows:
--- |
--- | - `Text`, `Element` - regular text and element nodes
--- | - `Placeholder` - A placeholder for a document. This can be replaced during rendering or by using the 
--- |   `graft` operation.
-data HTML a i
-  = Text String
-  | Element TagName (Attribute i) [HTML a i]
-  | Placeholder a
-    
-instance functorHTML :: Functor (HTML a) where
-  (<$>) _ (Text s) = Text s
-  (<$>) f (Element name attribs children) = Element name (f <$> attribs) (A.map (f <$>) children)
-  (<$>) _ (Placeholder a) = Placeholder a
-  
--- | Replace placeholder nodes with HTML documents.
-graft :: forall a b i. HTML a i -> (a -> HTML b i) -> HTML b i 
-graft (Placeholder a) f = f a
-graft (Element name attr els) f = Element name attr (A.map (`graft` f) els)
-graft (Text s) _ = Text s
-
--- | A more general version of `renderHtml'`.
--- |
--- | The first argument is an event handler.
--- | 
--- | The second argument is used to replace placeholder nodes. If you are not using placeholder nodes, you
--- | might prefer to use `renderHtml` instead.
-renderHtml' :: forall i a eff. (i -> Eff eff Unit) -> (a -> VTree) -> HTML a i -> VTree
-renderHtml' _ _ (Text s) = vtext s
-renderHtml' k f (Element name attribs els) = vnode (runTagName name) (attributesToProps k attribs) (A.map (renderHtml' k f) els)
-renderHtml' _ f (Placeholder a) = f a
-
--- | Render a `HTML` document to a virtual DOM node
-renderHtml :: forall i eff. (i -> Eff eff Unit) -> (forall a. HTML a i) -> VTree
-renderHtml f = renderHtml' f absurd
-  
--- | Render a HTML document as a `String`, usually for testing purposes.
--- |
--- | The rank-2 type ensures that neither events nor placeholders are allowed.
-renderHtmlToString :: (forall a i. HTML a i) -> String
-renderHtmlToString = go
-  where
-  go :: HTML Void Void -> String
-  go (Text s) = s
-  go (Element name (Attribute attr) els) = "<" <> runTagName name <> " " <> joinWith " " (A.map renderAttr attr) <> ">" <> foldMap go els <> "</" <> runTagName name <> ">"
-  
-  renderAttr :: AttributeValue Void -> String
-  renderAttr (StringAttribute key value) = runAttributeName key <> "=\"" <> value <> "\""
-  renderAttr (BooleanAttribute key true) = runAttributeName key
-  renderAttr _ = ""
-  
--- | Create a HTML document which represents a text node.
-text :: forall a i. String -> HTML a i
-text = Text
-
--- | Create a HTML document which acts as a placeholder for a `VTree` to be rendered later.
--- |
--- | This function is useful when embedding third-party widgets in HTML documents using the `widget` function, and
--- | is considered an advanced feature. Use at your own risk.
-placeholder :: forall a i. a -> HTML a i
-placeholder = Placeholder
-
-a :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-a = Element $ tagName "a"
-
-a_ :: forall a i. [HTML a i] -> HTML a i
-a_ = a mempty
-
-abbr :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-abbr = Element $ tagName "abbr"
-
-abbr_ :: forall a i. [HTML a i] -> HTML a i
-abbr_ = abbr mempty
-
-acronym :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-acronym = Element $ tagName "acronym"
-
-acronym_ :: forall a i. [HTML a i] -> HTML a i
-acronym_ = acronym mempty
-
-address :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-address = Element $ tagName "address"
-
-address_ :: forall a i. [HTML a i] -> HTML a i
-address_ = address mempty
-
-applet :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-applet = Element $ tagName "applet"
-
-applet_ :: forall a i. [HTML a i] -> HTML a i
-applet_ = applet mempty
+-- | This type class encodes _representations_ of HTML attributes
+class (Plus attr) <= AttrRepr attr where
+  attr :: forall value i. AttributeName value -> value -> attr i
+  handler :: forall event i. EventName event -> (Event event -> EventHandler (Maybe i)) -> attr i
 
-area :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-area = Element $ tagName "area"
+-- | `Attr` represents an abstract attribute
+type Attr i = forall attr. (AttrRepr attr) => attr i
 
-area_ :: forall a i. [HTML a i] -> HTML a i
-area_ = area mempty
+emptyAttrs :: forall i. Attr i
+emptyAttrs = empty
 
-article :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-article = Element $ tagName "article"
+-- | This type class encodes _representations_ of HTML nodes
+class (Bifunctor node) <= HTMLRepr node where
+  text :: forall p i. String -> node p i
+  placeholder :: forall p i. p -> node p i
+  element :: forall p i. TagName -> Attr i -> [node p i] -> node p i
 
-article_ :: forall a i. [HTML a i] -> HTML a i
-article_ = article mempty
+-- | `HTML` represents an abstract HTML node
+type HTML p i = forall node. (HTMLRepr node) => node p i
 
-aside :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-aside = Element $ tagName "aside"
+a :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+a xs = element (tagName "a") xs
 
-aside_ :: forall a i. [HTML a i] -> HTML a i
-aside_ = aside mempty
+a_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+a_ = a emptyAttrs
 
-audio :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-audio = Element $ tagName "audio"
+abbr :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+abbr xs = element (tagName "abbr") xs
 
-audio_ :: forall a i. [HTML a i] -> HTML a i
-audio_ = audio mempty
+abbr_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+abbr_ = abbr emptyAttrs
 
-b :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-b = Element $ tagName "b"
+acronym :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+acronym xs = element (tagName "acronym") xs
 
-b_ :: forall a i. [HTML a i] -> HTML a i
-b_ = b mempty
+acronym_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+acronym_ = acronym emptyAttrs
 
-base :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-base = Element $ tagName "base"
+address :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+address xs = element (tagName "address") xs
 
-base_ :: forall a i. [HTML a i] -> HTML a i
-base_ = base mempty
+address_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+address_ = address emptyAttrs
 
-basefont :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-basefont = Element $ tagName "basefont"
+applet :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+applet xs = element (tagName "applet") xs
 
-basefont_ :: forall a i. [HTML a i] -> HTML a i
-basefont_ = basefont mempty
+applet_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+applet_ = applet emptyAttrs
 
-bdi :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-bdi = Element $ tagName "bdi"
+area :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+area xs = element (tagName "area") xs
 
-bdi_ :: forall a i. [HTML a i] -> HTML a i
-bdi_ = bdi mempty
+area_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+area_ = area emptyAttrs
 
-bdo :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-bdo = Element $ tagName "bdo"
+article :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+article xs = element (tagName "article") xs
 
-bdo_ :: forall a i. [HTML a i] -> HTML a i
-bdo_ = bdo mempty
+article_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+article_ = article emptyAttrs
 
-big :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-big = Element $ tagName "big"
+aside :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+aside xs = element (tagName "aside") xs
 
-big_ :: forall a i. [HTML a i] -> HTML a i
-big_ = big mempty
+aside_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+aside_ = aside emptyAttrs
 
-blockquote :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-blockquote = Element $ tagName "blockquote"
+audio :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+audio xs = element (tagName "audio") xs
 
-blockquote_ :: forall a i. [HTML a i] -> HTML a i
-blockquote_ = blockquote mempty
+audio_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+audio_ = audio emptyAttrs
 
-body :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-body = Element $ tagName "body"
+b :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+b xs = element (tagName "b") xs
 
-body_ :: forall a i. [HTML a i] -> HTML a i
-body_ = body mempty
+b_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+b_ = b emptyAttrs
 
-br :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-br = Element $ tagName "br"
+base :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+base xs = element (tagName "base") xs
 
-br_ :: forall a i. [HTML a i] -> HTML a i
-br_ = br mempty
+base_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+base_ = base emptyAttrs
 
-button :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-button = Element $ tagName "button"
+basefont :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+basefont xs = element (tagName "basefont") xs
 
-button_ :: forall a i. [HTML a i] -> HTML a i
-button_ = button mempty
+basefont_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+basefont_ = basefont emptyAttrs
 
-canvas :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-canvas = Element $ tagName "canvas"
+bdi :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+bdi xs = element (tagName "bdi") xs
 
-canvas_ :: forall a i. [HTML a i] -> HTML a i
-canvas_ = canvas mempty
+bdi_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+bdi_ = bdi emptyAttrs
 
-caption :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-caption = Element $ tagName "caption"
+bdo :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+bdo xs = element (tagName "bdo") xs
 
-caption_ :: forall a i. [HTML a i] -> HTML a i
-caption_ = caption mempty
+bdo_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+bdo_ = bdo emptyAttrs
 
-center :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-center = Element $ tagName "center"
+big :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+big xs = element (tagName "big") xs
 
-center_ :: forall a i. [HTML a i] -> HTML a i
-center_ = center mempty
+big_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+big_ = big emptyAttrs
 
-cite :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-cite = Element $ tagName "cite"
+blockquote :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+blockquote xs = element (tagName "blockquote") xs
 
-cite_ :: forall a i. [HTML a i] -> HTML a i
-cite_ = cite mempty
+blockquote_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+blockquote_ = blockquote emptyAttrs
 
-code :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-code = Element $ tagName "code"
+body :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+body xs = element (tagName "body") xs
 
-code_ :: forall a i. [HTML a i] -> HTML a i
-code_ = code mempty
+body_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+body_ = body emptyAttrs
 
-col :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-col = Element $ tagName "col"
+br :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+br xs = element (tagName "br") xs
 
-col_ :: forall a i. [HTML a i] -> HTML a i
-col_ = col mempty
+br_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+br_ = br emptyAttrs
 
-colgroup :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-colgroup = Element $ tagName "colgroup"
+button :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+button xs = element (tagName "button") xs
 
-colgroup_ :: forall a i. [HTML a i] -> HTML a i
-colgroup_ = colgroup mempty
+button_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+button_ = button emptyAttrs
 
-datalist :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-datalist = Element $ tagName "datalist"
+canvas :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+canvas xs = element (tagName "canvas") xs
 
-datalist_ :: forall a i. [HTML a i] -> HTML a i
-datalist_ = datalist mempty
+canvas_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+canvas_ = canvas emptyAttrs
 
-dd :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-dd = Element $ tagName "dd"
+caption :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+caption xs = element (tagName "caption") xs
 
-dd_ :: forall a i. [HTML a i] -> HTML a i
-dd_ = dd mempty
+caption_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+caption_ = caption emptyAttrs
 
-del :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-del = Element $ tagName "del"
+center :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+center xs = element (tagName "center") xs
 
-del_ :: forall a i. [HTML a i] -> HTML a i
-del_ = del mempty
+center_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+center_ = center emptyAttrs
 
-details :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-details = Element $ tagName "details"
+cite :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+cite xs = element (tagName "cite") xs
 
-details_ :: forall a i. [HTML a i] -> HTML a i
-details_ = details mempty
+cite_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+cite_ = cite emptyAttrs
 
-dfn :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-dfn = Element $ tagName "dfn"
+code :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+code xs = element (tagName "code") xs
 
-dfn_ :: forall a i. [HTML a i] -> HTML a i
-dfn_ = dfn mempty
+code_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+code_ = code emptyAttrs
 
-dialog :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-dialog = Element $ tagName "dialog"
+col :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+col xs = element (tagName "col") xs
 
-dialog_ :: forall a i. [HTML a i] -> HTML a i
-dialog_ = dialog mempty
+col_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+col_ = col emptyAttrs
 
-dir :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-dir = Element $ tagName "dir"
+colgroup :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+colgroup xs = element (tagName "colgroup") xs
 
-dir_ :: forall a i. [HTML a i] -> HTML a i
-dir_ = dir mempty
+colgroup_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+colgroup_ = colgroup emptyAttrs
 
-div :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-div = Element $ tagName "div"
+datalist :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+datalist xs = element (tagName "datalist") xs
 
-div_ :: forall a i. [HTML a i] -> HTML a i
-div_ = div mempty
+datalist_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+datalist_ = datalist emptyAttrs
 
-dl :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-dl = Element $ tagName "dl"
+dd :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+dd xs = element (tagName "dd") xs
 
-dl_ :: forall a i. [HTML a i] -> HTML a i
-dl_ = dl mempty
+dd_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+dd_ = dd emptyAttrs
 
-dt :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-dt = Element $ tagName "dt"
+del :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+del xs = element (tagName "del") xs
 
-dt_ :: forall a i. [HTML a i] -> HTML a i
-dt_ = dt mempty
+del_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+del_ = del emptyAttrs
 
-em :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-em = Element $ tagName "em"
+details :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+details xs = element (tagName "details") xs
 
-em_ :: forall a i. [HTML a i] -> HTML a i
-em_ = em mempty
+details_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+details_ = details emptyAttrs
 
-embed :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-embed = Element $ tagName "embed"
+dfn :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+dfn xs = element (tagName "dfn") xs
 
-embed_ :: forall a i. [HTML a i] -> HTML a i
-embed_ = embed mempty
+dfn_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+dfn_ = dfn emptyAttrs
 
-fieldset :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-fieldset = Element $ tagName "fieldset"
+dialog :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+dialog xs = element (tagName "dialog") xs
 
-fieldset_ :: forall a i. [HTML a i] -> HTML a i
-fieldset_ = fieldset mempty
+dialog_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+dialog_ = dialog emptyAttrs
 
-figcaption :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-figcaption = Element $ tagName "figcaption"
+dir :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+dir xs = element (tagName "dir") xs
 
-figcaption_ :: forall a i. [HTML a i] -> HTML a i
-figcaption_ = figcaption mempty
+dir_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+dir_ = dir emptyAttrs
 
-figure :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-figure = Element $ tagName "figure"
+div :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+div xs = element (tagName "div") xs
 
-figure_ :: forall a i. [HTML a i] -> HTML a i
-figure_ = figure mempty
+div_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+div_ = div emptyAttrs
 
-font :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-font = Element $ tagName "font"
+dl :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+dl xs = element (tagName "dl") xs
 
-font_ :: forall a i. [HTML a i] -> HTML a i
-font_ = font mempty
+dl_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+dl_ = dl emptyAttrs
 
-footer :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-footer = Element $ tagName "footer"
+dt :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+dt xs = element (tagName "dt") xs
 
-footer_ :: forall a i. [HTML a i] -> HTML a i
-footer_ = footer mempty
+dt_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+dt_ = dt emptyAttrs
 
-form :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-form = Element $ tagName "form"
+em :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+em xs = element (tagName "em") xs
 
-form_ :: forall a i. [HTML a i] -> HTML a i
-form_ = form mempty
+em_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+em_ = em emptyAttrs
 
-frame :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-frame = Element $ tagName "frame"
+embed :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+embed xs = element (tagName "embed") xs
 
-frame_ :: forall a i. [HTML a i] -> HTML a i
-frame_ = frame mempty
+embed_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+embed_ = embed emptyAttrs
 
-frameset :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-frameset = Element $ tagName "frameset"
+fieldset :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+fieldset xs = element (tagName "fieldset") xs
 
-frameset_ :: forall a i. [HTML a i] -> HTML a i
-frameset_ = frameset mempty
+fieldset_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+fieldset_ = fieldset emptyAttrs
 
-h1 :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-h1 = Element $ tagName "h1"
+figcaption :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+figcaption xs = element (tagName "figcaption") xs
 
-h1_ :: forall a i. [HTML a i] -> HTML a i
-h1_ = h1 mempty
+figcaption_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+figcaption_ = figcaption emptyAttrs
 
-h2 :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-h2 = Element $ tagName "h2"
+figure :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+figure xs = element (tagName "figure") xs
 
-h2_ :: forall a i. [HTML a i] -> HTML a i
-h2_ = h2 mempty
+figure_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+figure_ = figure emptyAttrs
 
-h3 :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-h3 = Element $ tagName "h3"
+font :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+font xs = element (tagName "font") xs
 
-h3_ :: forall a i. [HTML a i] -> HTML a i
-h3_ = h3 mempty
+font_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+font_ = font emptyAttrs
 
-h4 :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-h4 = Element $ tagName "h4"
+footer :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+footer xs = element (tagName "footer") xs
 
-h4_ :: forall a i. [HTML a i] -> HTML a i
-h4_ = h4 mempty
+footer_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+footer_ = footer emptyAttrs
 
-h5 :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-h5 = Element $ tagName "h5"
+form :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+form xs = element (tagName "form") xs
 
-h5_ :: forall a i. [HTML a i] -> HTML a i
-h5_ = h5 mempty
+form_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+form_ = form emptyAttrs
 
-h6 :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-h6 = Element $ tagName "h6"
+frame :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+frame xs = element (tagName "frame") xs
 
-h6_ :: forall a i. [HTML a i] -> HTML a i
-h6_ = h6 mempty
+frame_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+frame_ = frame emptyAttrs
 
-head :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-head = Element $ tagName "head"
+frameset :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+frameset xs = element (tagName "frameset") xs
 
-head_ :: forall a i. [HTML a i] -> HTML a i
-head_ = head mempty
+frameset_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+frameset_ = frameset emptyAttrs
 
-header :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-header = Element $ tagName "header"
+h1 :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+h1 xs = element (tagName "h1") xs
 
-header_ :: forall a i. [HTML a i] -> HTML a i
-header_ = header mempty
+h1_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+h1_ = h1 emptyAttrs
 
-hr :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-hr = Element $ tagName "hr"
+h2 :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+h2 xs = element (tagName "h2") xs
 
-hr_ :: forall a i. [HTML a i] -> HTML a i
-hr_ = hr mempty
+h2_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+h2_ = h2 emptyAttrs
 
-html :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-html = Element $ tagName "html"
+h3 :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+h3 xs = element (tagName "h3") xs
 
-html_ :: forall a i. [HTML a i] -> HTML a i
-html_ = html mempty
+h3_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+h3_ = h3 emptyAttrs
 
-i :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-i = Element $ tagName "i"
+h4 :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+h4 xs = element (tagName "h4") xs
 
-i_ :: forall a i. [HTML a i] -> HTML a i
-i_ = i mempty
+h4_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+h4_ = h4 emptyAttrs
 
-iframe :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-iframe = Element $ tagName "iframe"
+h5 :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+h5 xs = element (tagName "h5") xs
 
-iframe_ :: forall a i. [HTML a i] -> HTML a i
-iframe_ = iframe mempty
+h5_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+h5_ = h5 emptyAttrs
 
-img :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-img = Element $ tagName "img"
+h6 :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+h6 xs = element (tagName "h6") xs
 
-img_ :: forall a i. [HTML a i] -> HTML a i
-img_ = img mempty
+h6_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+h6_ = h6 emptyAttrs
 
-input :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-input = Element $ tagName "input"
+head :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+head xs = element (tagName "head") xs
 
-input_ :: forall a i. [HTML a i] -> HTML a i
-input_ = input mempty
+head_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+head_ = head emptyAttrs
 
-ins :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-ins = Element $ tagName "ins"
+header :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+header xs = element (tagName "header") xs
 
-ins_ :: forall a i. [HTML a i] -> HTML a i
-ins_ = ins mempty
+header_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+header_ = header emptyAttrs
 
-kbd :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-kbd = Element $ tagName "kbd"
+hr :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+hr xs = element (tagName "hr") xs
 
-kbd_ :: forall a i. [HTML a i] -> HTML a i
-kbd_ = kbd mempty
+hr_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+hr_ = hr emptyAttrs
 
-keygen :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-keygen = Element $ tagName "keygen"
+html :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+html xs = element (tagName "html") xs
 
-keygen_ :: forall a i. [HTML a i] -> HTML a i
-keygen_ = keygen mempty
+html_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+html_ = html emptyAttrs
 
-label :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-label = Element $ tagName "label"
+i :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+i xs = element (tagName "i") xs
 
-label_ :: forall a i. [HTML a i] -> HTML a i
-label_ = label mempty
+i_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+i_ = i emptyAttrs
 
-legend :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-legend = Element $ tagName "legend"
+iframe :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+iframe xs = element (tagName "iframe") xs
 
-legend_ :: forall a i. [HTML a i] -> HTML a i
-legend_ = legend mempty
+iframe_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+iframe_ = iframe emptyAttrs
 
-li :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-li = Element $ tagName "li"
+img :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+img xs = element (tagName "img") xs
 
-li_ :: forall a i. [HTML a i] -> HTML a i
-li_ = li mempty
+img_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+img_ = img emptyAttrs
 
-link :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-link = Element $ tagName "link"
+input :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+input xs = element (tagName "input") xs
 
-link_ :: forall a i. [HTML a i] -> HTML a i
-link_ = link mempty
+input_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+input_ = input emptyAttrs
 
-main :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-main = Element $ tagName "main"
+ins :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+ins xs = element (tagName "ins") xs
 
-main_ :: forall a i. [HTML a i] -> HTML a i
-main_ = main mempty
+ins_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+ins_ = ins emptyAttrs
 
-map :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-map = Element $ tagName "map"
+kbd :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+kbd xs = element (tagName "kbd") xs
 
-map_ :: forall a i. [HTML a i] -> HTML a i
-map_ = map mempty
+kbd_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+kbd_ = kbd emptyAttrs
 
-mark :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-mark = Element $ tagName "mark"
+keygen :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+keygen xs = element (tagName "keygen") xs
 
-mark_ :: forall a i. [HTML a i] -> HTML a i
-mark_ = mark mempty
+keygen_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+keygen_ = keygen emptyAttrs
 
-menu :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-menu = Element $ tagName "menu"
+label :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+label xs = element (tagName "label") xs
 
-menu_ :: forall a i. [HTML a i] -> HTML a i
-menu_ = menu mempty
+label_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+label_ = label emptyAttrs
 
-menuitem :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-menuitem = Element $ tagName "menuitem"
+legend :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+legend xs = element (tagName "legend") xs
 
-menuitem_ :: forall a i. [HTML a i] -> HTML a i
-menuitem_ = menuitem mempty
+legend_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+legend_ = legend emptyAttrs
 
-meta :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-meta = Element $ tagName "meta"
+li :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+li xs = element (tagName "li") xs
 
-meta_ :: forall a i. [HTML a i] -> HTML a i
-meta_ = meta mempty
+li_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+li_ = li emptyAttrs
 
-meter :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-meter = Element $ tagName "meter"
+link :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+link xs = element (tagName "link") xs
 
-meter_ :: forall a i. [HTML a i] -> HTML a i
-meter_ = meter mempty
+link_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+link_ = link emptyAttrs
 
-nav :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-nav = Element $ tagName "nav"
+main :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+main xs = element (tagName "main") xs
 
-nav_ :: forall a i. [HTML a i] -> HTML a i
-nav_ = nav mempty
+main_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+main_ = main emptyAttrs
 
-noframes :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-noframes = Element $ tagName "noframes"
+map :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+map xs = element (tagName "map") xs
 
-noframes_ :: forall a i. [HTML a i] -> HTML a i
-noframes_ = noframes mempty
+map_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+map_ = map emptyAttrs
 
-noscript :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-noscript = Element $ tagName "noscript"
+mark :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+mark xs = element (tagName "mark") xs
 
-noscript_ :: forall a i. [HTML a i] -> HTML a i
-noscript_ = noscript mempty
+mark_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+mark_ = mark emptyAttrs
 
-object :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-object = Element $ tagName "object"
+menu :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+menu xs = element (tagName "menu") xs
 
-object_ :: forall a i. [HTML a i] -> HTML a i
-object_ = object mempty
+menu_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+menu_ = menu emptyAttrs
 
-ol :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-ol = Element $ tagName "ol"
+menuitem :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+menuitem xs = element (tagName "menuitem") xs
 
-ol_ :: forall a i. [HTML a i] -> HTML a i
-ol_ = ol mempty
+menuitem_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+menuitem_ = menuitem emptyAttrs
 
-optgroup :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-optgroup = Element $ tagName "optgroup"
+meta :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+meta xs = element (tagName "meta") xs
 
-optgroup_ :: forall a i. [HTML a i] -> HTML a i
-optgroup_ = optgroup mempty
+meta_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+meta_ = meta emptyAttrs
 
-option :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-option = Element $ tagName "option"
+meter :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+meter xs = element (tagName "meter") xs
 
-option_ :: forall a i. [HTML a i] -> HTML a i
-option_ = option mempty
+meter_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+meter_ = meter emptyAttrs
 
-output :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-output = Element $ tagName "output"
+nav :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+nav xs = element (tagName "nav") xs
 
-output_ :: forall a i. [HTML a i] -> HTML a i
-output_ = output mempty
+nav_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+nav_ = nav emptyAttrs
 
-p :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-p = Element $ tagName "p"
+noframes :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+noframes xs = element (tagName "noframes") xs
 
-p_ :: forall a i. [HTML a i] -> HTML a i
-p_ = p mempty
+noframes_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+noframes_ = noframes emptyAttrs
 
-param :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-param = Element $ tagName "param"
+noscript :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+noscript xs = element (tagName "noscript") xs
 
-param_ :: forall a i. [HTML a i] -> HTML a i
-param_ = param mempty
+noscript_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+noscript_ = noscript emptyAttrs
 
-pre :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-pre = Element $ tagName "pre"
+object :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+object xs = element (tagName "object") xs
 
-pre_ :: forall a i. [HTML a i] -> HTML a i
-pre_ = pre mempty
+object_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+object_ = object emptyAttrs
 
-progress :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-progress = Element $ tagName "progress"
+ol :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+ol xs = element (tagName "ol") xs
 
-progress_ :: forall a i. [HTML a i] -> HTML a i
-progress_ = progress mempty
+ol_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+ol_ = ol emptyAttrs
 
-q :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-q = Element $ tagName "q"
+optgroup :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+optgroup xs = element (tagName "optgroup") xs
 
-q_ :: forall a i. [HTML a i] -> HTML a i
-q_ = q mempty
+optgroup_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+optgroup_ = optgroup emptyAttrs
 
-rp :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-rp = Element $ tagName "rp"
+option :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+option xs = element (tagName "option") xs
 
-rp_ :: forall a i. [HTML a i] -> HTML a i
-rp_ = rp mempty
+option_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+option_ = option emptyAttrs
 
-rt :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-rt = Element $ tagName "rt"
+output :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+output xs = element (tagName "output") xs
 
-rt_ :: forall a i. [HTML a i] -> HTML a i
-rt_ = rt mempty
+output_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+output_ = output emptyAttrs
 
-ruby :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-ruby = Element $ tagName "ruby"
+p :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+p xs = element (tagName "p") xs
 
-ruby_ :: forall a i. [HTML a i] -> HTML a i
-ruby_ = ruby mempty
+p_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+p_ = p emptyAttrs
 
-s :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-s = Element $ tagName "s"
+param :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+param xs = element (tagName "param") xs
 
-s_ :: forall a i. [HTML a i] -> HTML a i
-s_ = s mempty
+param_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+param_ = param emptyAttrs
 
-samp :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-samp = Element $ tagName "samp"
+pre :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+pre xs = element (tagName "pre") xs
 
-samp_ :: forall a i. [HTML a i] -> HTML a i
-samp_ = samp mempty
+pre_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+pre_ = pre emptyAttrs
 
-script :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-script = Element $ tagName "script"
+progress :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+progress xs = element (tagName "progress") xs
 
-script_ :: forall a i. [HTML a i] -> HTML a i
-script_ = script mempty
+progress_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+progress_ = progress emptyAttrs
 
-section :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-section = Element $ tagName "section"
+q :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+q xs = element (tagName "q") xs
 
-section_ :: forall a i. [HTML a i] -> HTML a i
-section_ = section mempty
+q_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+q_ = q emptyAttrs
 
-select :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-select = Element $ tagName "select"
+rp :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+rp xs = element (tagName "rp") xs
 
-select_ :: forall a i. [HTML a i] -> HTML a i
-select_ = select mempty
+rp_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+rp_ = rp emptyAttrs
 
-small :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-small = Element $ tagName "small"
+rt :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+rt xs = element (tagName "rt") xs
 
-small_ :: forall a i. [HTML a i] -> HTML a i
-small_ = small mempty
+rt_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+rt_ = rt emptyAttrs
 
-source :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-source = Element $ tagName "source"
+ruby :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+ruby xs = element (tagName "ruby") xs
 
-source_ :: forall a i. [HTML a i] -> HTML a i
-source_ = source mempty
+ruby_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+ruby_ = ruby emptyAttrs
 
-span :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-span = Element $ tagName "span"
+s :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+s xs = element (tagName "s") xs
 
-span_ :: forall a i. [HTML a i] -> HTML a i
-span_ = span mempty
+s_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+s_ = s emptyAttrs
 
-strike :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-strike = Element $ tagName "strike"
+samp :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+samp xs = element (tagName "samp") xs
 
-strike_ :: forall a i. [HTML a i] -> HTML a i
-strike_ = strike mempty
+samp_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+samp_ = samp emptyAttrs
 
-strong :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-strong = Element $ tagName "strong"
+script :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+script xs = element (tagName "script") xs
 
-strong_ :: forall a i. [HTML a i] -> HTML a i
-strong_ = strong mempty
+script_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+script_ = script emptyAttrs
 
-style :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-style = Element $ tagName "style"
+section :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+section xs = element (tagName "section") xs
 
-style_ :: forall a i. [HTML a i] -> HTML a i
-style_ = style mempty
+section_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+section_ = section emptyAttrs
 
-sub :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-sub = Element $ tagName "sub"
+select :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+select xs = element (tagName "select") xs
 
-sub_ :: forall a i. [HTML a i] -> HTML a i
-sub_ = sub mempty
+select_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+select_ = select emptyAttrs
 
-summary :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-summary = Element $ tagName "summary"
+small :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+small xs = element (tagName "small") xs
 
-summary_ :: forall a i. [HTML a i] -> HTML a i
-summary_ = summary mempty
+small_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+small_ = small emptyAttrs
 
-sup :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-sup = Element $ tagName "sup"
+source :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+source xs = element (tagName "source") xs
 
-sup_ :: forall a i. [HTML a i] -> HTML a i
-sup_ = sup mempty
+source_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+source_ = source emptyAttrs
 
-table :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-table = Element $ tagName "table"
+span :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+span xs = element (tagName "span") xs
 
-table_ :: forall a i. [HTML a i] -> HTML a i
-table_ = table mempty
+span_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+span_ = span emptyAttrs
 
-tbody :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-tbody = Element $ tagName "tbody"
+strike :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+strike xs = element (tagName "strike") xs
 
-tbody_ :: forall a i. [HTML a i] -> HTML a i
-tbody_ = tbody mempty
+strike_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+strike_ = strike emptyAttrs
 
-td :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-td = Element $ tagName "td"
+strong :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+strong xs = element (tagName "strong") xs
 
-td_ :: forall a i. [HTML a i] -> HTML a i
-td_ = td mempty
+strong_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+strong_ = strong emptyAttrs
 
-textarea :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-textarea = Element $ tagName "textarea"
+style :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+style xs = element (tagName "style") xs
 
-textarea_ :: forall a i. [HTML a i] -> HTML a i
-textarea_ = textarea mempty
+style_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+style_ = style emptyAttrs
 
-tfoot :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-tfoot = Element $ tagName "tfoot"
+sub :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+sub xs = element (tagName "sub") xs
 
-tfoot_ :: forall a i. [HTML a i] -> HTML a i
-tfoot_ = tfoot mempty
+sub_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+sub_ = sub emptyAttrs
 
-th :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-th = Element $ tagName "th"
+summary :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+summary xs = element (tagName "summary") xs
 
-th_ :: forall a i. [HTML a i] -> HTML a i
-th_ = th mempty
+summary_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+summary_ = summary emptyAttrs
 
-thead :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-thead = Element $ tagName "thead"
+sup :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+sup xs = element (tagName "sup") xs
 
-thead_ :: forall a i. [HTML a i] -> HTML a i
-thead_ = thead mempty
+sup_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+sup_ = sup emptyAttrs
 
-time :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-time = Element $ tagName "time"
+table :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+table xs = element (tagName "table") xs
 
-time_ :: forall a i. [HTML a i] -> HTML a i
-time_ = time mempty
+table_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+table_ = table emptyAttrs
 
-title :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-title = Element $ tagName "title"
+tbody :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+tbody xs = element (tagName "tbody") xs
 
-title_ :: forall a i. [HTML a i] -> HTML a i
-title_ = title mempty
+tbody_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+tbody_ = tbody emptyAttrs
 
-tr :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-tr = Element $ tagName "tr"
+td :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+td xs = element (tagName "td") xs
 
-tr_ :: forall a i. [HTML a i] -> HTML a i
-tr_ = tr mempty
+td_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+td_ = td emptyAttrs
 
-track :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-track = Element $ tagName "track"
+textarea :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+textarea xs = element (tagName "textarea") xs
 
-track_ :: forall a i. [HTML a i] -> HTML a i
-track_ = track mempty
+textarea_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+textarea_ = textarea emptyAttrs
 
-tt :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-tt = Element $ tagName "tt"
+tfoot :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+tfoot xs = element (tagName "tfoot") xs
 
-tt_ :: forall a i. [HTML a i] -> HTML a i
-tt_ = tt mempty
+tfoot_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+tfoot_ = tfoot emptyAttrs
 
-u :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-u = Element $ tagName "u"
+th :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+th xs = element (tagName "th") xs
 
-u_ :: forall a i. [HTML a i] -> HTML a i
-u_ = u mempty
+th_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+th_ = th emptyAttrs
 
-ul :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-ul = Element $ tagName "ul"
+thead :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+thead xs = element (tagName "thead") xs
 
-ul_ :: forall a i. [HTML a i] -> HTML a i
-ul_ = ul mempty
+thead_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+thead_ = thead emptyAttrs
 
-var :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-var = Element $ tagName "var"
+time :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+time xs = element (tagName "time") xs
 
-var_ :: forall a i. [HTML a i] -> HTML a i
-var_ = var mempty
+time_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+time_ = time emptyAttrs
 
-video :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-video = Element $ tagName "video"
+title :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+title xs = element (tagName "title") xs
 
-video_ :: forall a i. [HTML a i] -> HTML a i
-video_ = video mempty
+title_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+title_ = title emptyAttrs
 
-wbr :: forall a i. Attribute i -> [HTML a i] -> HTML a i
-wbr = Element $ tagName "wbr"
+tr :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+tr xs = element (tagName "tr") xs
 
-wbr_ :: forall a i. [HTML a i] -> HTML a i
-wbr_ = wbr mempty
+tr_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+tr_ = tr emptyAttrs
+
+track :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+track xs = element (tagName "track") xs
+
+track_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+track_ = track emptyAttrs
+
+tt :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+tt xs = element (tagName "tt") xs
+
+tt_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+tt_ = tt emptyAttrs
+
+u :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+u xs = element (tagName "u") xs
+
+u_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+u_ = u emptyAttrs
+
+ul :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+ul xs = element (tagName "ul") xs
+
+ul_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+ul_ = ul emptyAttrs
+
+var :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+var xs = element (tagName "var") xs
+
+var_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+var_ = var emptyAttrs
+
+video :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+video xs = element (tagName "video") xs
+
+video_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+video_ = video emptyAttrs
+
+wbr :: forall p i node. (HTMLRepr node) => Attr i -> [node p i] -> node p i
+wbr xs = element (tagName "wbr") xs
+
+wbr_ :: forall p i node. (HTMLRepr node) => [node p i] -> node p i
+wbr_ = wbr emptyAttrs

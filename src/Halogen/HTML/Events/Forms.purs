@@ -14,15 +14,14 @@ import Data.Foreign
 import Data.Foreign.Class
 import Data.Traversable (traverse)
 
-import Halogen.HTML.Events (handlerMaybe)
 import Halogen.HTML.Events.Handler
 
 import qualified Halogen.HTML as H
   
 -- | Attach event handler to event ```key``` with getting ```prop``` field
 -- | as an argument of handler
-addForeignPropHandler :: forall i value. (IsForeign value) => String -> String -> (value -> EventHandler i) -> H.Attribute i
-addForeignPropHandler key prop f = handlerMaybe (H.eventName key) \e -> traverse f (getProp prop e.target)
+addForeignPropHandler :: forall attr i value. (H.AttrRepr attr, IsForeign value) => String -> String -> (value -> EventHandler i) -> attr i
+addForeignPropHandler key prop f = H.handler (H.eventName key) \e -> traverse f (getProp prop e.target)
   where
   getProp :: String -> Node -> Maybe value
   getProp prop = either (const Nothing) Just <<< readProp prop <<< toForeign
@@ -30,13 +29,13 @@ addForeignPropHandler key prop f = handlerMaybe (H.eventName key) \e -> traverse
 -- | Attach an event handler which will produce an input when the value of an input field changes
 -- |
 -- | An input will not be produced if the value cannot be cast to the appropriate type.
-onValueChanged :: forall value i. (IsForeign value) => (value -> EventHandler i) -> H.Attribute i
+onValueChanged :: forall attr value i. (H.AttrRepr attr, IsForeign value) => (value -> EventHandler i) -> attr i
 onValueChanged = addForeignPropHandler "change" "value"
 
 -- | Attach an event handler which will fire when a checkbox is checked or unchecked
-onChecked :: forall i. (Boolean -> EventHandler i) -> H.Attribute i
+onChecked :: forall attr i. (H.AttrRepr attr) => (Boolean -> EventHandler i) -> attr i
 onChecked = addForeignPropHandler "change" "checked"
 
 -- | Attach an event handler which will fire on input
-onInput :: forall value i. (IsForeign value) => (value -> EventHandler i) -> H.Attribute i
+onInput :: forall attr value i. (H.AttrRepr attr, IsForeign value) => (value -> EventHandler i) -> attr i
 onInput = addForeignPropHandler "input" "value"
