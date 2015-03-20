@@ -1,7 +1,5 @@
 module Halogen.HTML.Renderer.VirtualDOM 
   ( renderHTML
-  , HTML()
-  , Attr()
   ) where
       
 import Data.Array (map)

@@ -2,13 +2,6 @@
 
 ## Module Halogen.HTML.Renderer.VirtualDOM
 
-#### `Attr`
-
-``` purescript
-newtype Attr i
-```
-
-
 #### `functorAttr`
 
 ``` purescript
@@ -34,13 +27,6 @@ instance plusAttr :: Plus Attr
 
 ``` purescript
 instance attrRepr :: H.AttrRepr Attr
-```
-
-
-#### `HTML`
-
-``` purescript
-newtype HTML p i
 ```
 
 
