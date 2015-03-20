@@ -17,7 +17,6 @@ import Data.Void
 import Data.Maybe
 import Data.Tuple
 import Data.Either
-import Data.Bifunctor (rmap)
 
 import Debug.Trace
 
@@ -48,10 +47,10 @@ changes = differencesWith diff
 -- |
 -- | The HTML documents can contain placeholders of type `p`, and
 -- | generate events which are either inputs (`i`) or requests (`r`). 
-type View html i p r = SF1 i (html p (Either i r)) 
+type View i p r = SF1 i (H.HTML p (Either i r)) 
 
 -- | A pure view does not make any external requests or use placeholder elements.
-type PureView html i = forall p. SF1 i (html p i) 
+type PureView i = forall p. SF1 i (H.HTML p i) 
  
 -- | This type synonym is provided to tidy up the type signature of `runUI`.
 -- |
@@ -96,8 +95,8 @@ type Renderer p = p -> VTree
 -- | - A view
 -- | - A handler function
 -- | - A function which renders placeholder elements
-type UI html i p r eff = 
-  { view :: View html i p r
+type UI i p r eff = 
+  { view :: View i p r
   , handler :: Handler r i eff
   , renderer :: Renderer p
   } 
@@ -106,12 +105,12 @@ type UI html i p r eff =
 -- |
 -- | - Does not render placeholder elements
 -- | - Does not make external requests
-type PureUI html i = forall eff. UI html i Void Void eff
+type PureUI i = forall eff. UI i Void Void eff
  
 -- | A convenience function which can be used to construct a pure UI
-pureUI :: forall html i. (H.HTMLRepr html) => (forall p. SF1 i (html p i)) -> PureUI html i
+pureUI :: forall i. (forall p. SF1 i (H.HTML p i)) -> PureUI i
 pureUI view =
-  { view: rmap Left <$> view
+  { view: (Left <$>) <$> view
   , handler: absurd
   , renderer: absurd
   }
@@ -121,14 +120,14 @@ pureUI view =
 -- | This function is the workhorse of the Halogen library. It can be called in `main`
 -- | to set up the application and create the driver function, which can be used to 
 -- | send inputs to the UI from external components.
-runUI :: forall i p r eff. (forall html. (H.HTMLRepr html) => UI html i p r eff) -> Eff (HalogenEffects eff) (Tuple Node (Driver i eff))
+runUI :: forall i p r eff. UI i p r eff -> Eff (HalogenEffects eff) (Tuple Node (Driver i eff))
 runUI ui = do
   ref <- newRef Nothing
-  runUI' ui ref
+  runUI' ref
   
   where
-  runUI' :: UI R.HTML i p r eff -> RefVal _ -> Eff (HalogenEffects eff) (Tuple Node (Driver i eff))
-  runUI' ui ref = do
+  runUI' :: RefVal _ -> Eff (HalogenEffects eff) (Tuple Node (Driver i eff))
+  runUI' ref = do
     let render = R.renderHTML requestHandler ui.renderer
         vtrees = render <$> ui.view
         diffs  = tail vtrees >>> changes (head vtrees) 

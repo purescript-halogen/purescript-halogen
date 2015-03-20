@@ -19,7 +19,4 @@ inputGroup before ctl after =
         (foldMap addon before ++ [ctl] ++ foldMap addon after)
   where
   addon :: H.HTML a i -> [H.HTML a i]
-  addon el = [ H.span (A.class_ (className el)) [el] ]
-    where
-    className (H.Element name _ _) | H.runTagName name == "button" = B.inputGroupBtn
-    className _ = B.inputGroupAddon
+  addon el = [ H.span (A.class_ B.inputGroupBtn) [el] ]

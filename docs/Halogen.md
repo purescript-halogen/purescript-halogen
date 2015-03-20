@@ -36,7 +36,7 @@ This function can be used to create alternative top-level handlers which use `vi
 #### `View`
 
 ``` purescript
-type View html i p r = SF1 i (html p (Either i r))
+type View i p r = SF1 i (H.HTML p (Either i r))
 ```
 
 A view is represented as a pure, non-empty signal function which
@@ -48,7 +48,7 @@ generate events which are either inputs (`i`) or requests (`r`).
 #### `PureView`
 
 ``` purescript
-type PureView html i = forall p. SF1 i (html p i)
+type PureView i = forall p. SF1 i (H.HTML p i)
 ```
 
 A pure view does not make any external requests or use placeholder elements.
@@ -109,7 +109,7 @@ A type synonym for functions which render components to replace placeholders
 #### `UI`
 
 ``` purescript
-type UI html i p r eff = { renderer :: Renderer p, handler :: Handler r i eff, view :: View html i p r }
+type UI i p r eff = { renderer :: Renderer p, handler :: Handler r i eff, view :: View i p r }
 ```
 
 A UI consists of:
@@ -121,7 +121,7 @@ A UI consists of:
 #### `PureUI`
 
 ``` purescript
-type PureUI html i = forall eff. UI html i Void Void eff
+type PureUI i = forall eff. UI i Void Void eff
 ```
 
 A pure UI is a UI which:
@@ -132,7 +132,7 @@ A pure UI is a UI which:
 #### `pureUI`
 
 ``` purescript
-pureUI :: forall html i. (H.HTMLRepr html) => (forall p. SF1 i (html p i)) -> PureUI html i
+pureUI :: forall i. (forall p. SF1 i (H.HTML p i)) -> PureUI i
 ```
 
 A convenience function which can be used to construct a pure UI
@@ -140,7 +140,7 @@ A convenience function which can be used to construct a pure UI
 #### `runUI`
 
 ``` purescript
-runUI :: forall i p r eff. (forall html. (H.HTMLRepr html) => UI html i p r eff) -> Eff (HalogenEffects eff) (Tuple Node (Driver i eff))
+runUI :: forall i p r eff. UI i p r eff -> Eff (HalogenEffects eff) (Tuple Node (Driver i eff))
 ```
 
 `runUI` renders a `UI` to the DOM using `virtual-dom`.

@@ -61,7 +61,6 @@ foreign import handlerProp
   \    node.removeEventListener(key, this.callback);\
   \  };\
   \  props['data-halogen-hook-' + key] = new Hook(f);\
-  \  };\
   \  return props;\
   \}" :: forall eff event. Fn2 String (event -> Eff eff Unit) Props
 
