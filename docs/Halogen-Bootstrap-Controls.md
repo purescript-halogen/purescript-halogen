@@ -28,10 +28,23 @@ Create a breadcrumb navigation element from an array of `Crumb`s.
 
 This module provides convenience functions for creating _input groups_.
 
+#### `AddOn`
+
+``` purescript
+data AddOn a i
+  = RegularAddOn (H.HTML a i)
+  | ButtonAddOn (H.HTML a i)
+```
+
+Represents an input group add-on element
+
+We need to distinguish buttons from regular add-ons because of the 
+different CSS classes
+
 #### `inputGroup`
 
 ``` purescript
-inputGroup :: forall a i. Maybe (H.HTML a i) -> H.HTML a i -> Maybe (H.HTML a i) -> H.HTML a i
+inputGroup :: forall a i. Maybe (AddOn a i) -> H.HTML a i -> Maybe (AddOn a i) -> H.HTML a i
 ```
 
 Create an input group.

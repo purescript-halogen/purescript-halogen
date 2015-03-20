@@ -5,12 +5,9 @@ module Halogen.Internal.VirtualDOM
   ( VTree()
   , Patch()
   , Props()
-  , STProps()
   , emptyProps
   , prop
   , handlerProp
-  , newProps
-  , runProps
   , createElement
   , diff
   , patch
@@ -22,6 +19,7 @@ module Halogen.Internal.VirtualDOM
 import DOM
 
 import Data.Maybe
+import Data.Monoid
 import Data.Nullable
 import Data.Function
 
@@ -34,53 +32,59 @@ data VTree
 -- | Patch sets, used to update the DOM
 data Patch
 
--- | Immutable property collections
+-- | Property collections
 data Props
-
--- | Mutable property collections
-data STProps h
 
 foreign import emptyProps 
   "var emptyProps = {}" :: Props
 
 -- | Update a set of mutable properties by specifying a key/value pair
 foreign import prop
-  "function prop(key, value, props) {\
-  \  return function() {\
-  \    props[key] = value;\
-  \  };\
-  \}" :: forall h value eff. Fn3 String value (STProps h) (Eff (st :: ST h | eff) Unit)
-
+  "function prop(key, value) {\
+  \  var props = {};\
+  \  props[key] = value;\
+  \  return props;\
+  \}" :: forall value. Fn2 String value Props
 
 -- | Update a set of mutable properties by attaching a hook for an event
 foreign import handlerProp
   "function handlerProp(key, f, props) {\
-  \  return function() {\
-  \    var Hook = function () {};\
-  \    Hook.prototype.callback = function(e) {\
-  \      f(e)();\
-  \    };\
-  \    Hook.prototype.hook = function(node) {\
-  \      node.addEventListener(key, this.callback);\
-  \    };\
-  \    Hook.prototype.unhook = function(node) {\
-  \      node.removeEventListener(key, this.callback);\
-  \    };\
-  \    props['data-halogen-hook-' + key] = new Hook(f);\
+  \  var props = {};\
+  \  var Hook = function () {};\
+  \  Hook.prototype.callback = function(e) {\
+  \    f(e)();\
   \  };\
-  \}" :: forall h eff eff1 event. Fn3 String (event -> Eff eff1 Unit) (STProps h) (Eff (st :: ST h | eff) Unit)
+  \  Hook.prototype.hook = function(node) {\
+  \    node.addEventListener(key, this.callback);\
+  \  };\
+  \  Hook.prototype.unhook = function(node) {\
+  \    node.removeEventListener(key, this.callback);\
+  \  };\
+  \  props['data-halogen-hook-' + key] = new Hook(f);\
+  \  return props;\
+  \}" :: forall eff event. Fn2 String (event -> Eff eff Unit) Props
 
--- | Create a new empty mutable property collection
-foreign import newProps 
-  "function newProps() {\
-  \  return {};\
-  \}" :: forall h eff. Eff (st :: ST h | eff) (STProps h)
+foreign import concatProps
+  "function concatProps(p1, p2) {\
+  \  var props = {};\
+  \  for (var key in p1) {\
+  \    if (p1.hasOwnProperty(key)) {\
+  \      props[key] = p1[key];\
+  \    }\
+  \  }\
+  \  for (var key in p2) {\
+  \    if (p2.hasOwnProperty(key)) {\
+  \      props[key] = p2[key];\
+  \    }\
+  \  }\
+  \  return props;\
+  \}" :: Fn2 Props Props Props
+
+instance semigroupProps :: Semigroup Props where
+  (<>) = runFn2 concatProps
   
--- | Freeze a mutable property collection
-foreign import runProps
-  "function runProps(props) {\
-  \  return props();\
-  \}" :: (forall h eff. Eff (st :: ST h | eff) (STProps h)) -> Props
+instance monoidProps :: Monoid Props where
+  mempty = emptyProps
 
 -- | Create a DOM node from a virtual DOM tree
 foreign import createElement

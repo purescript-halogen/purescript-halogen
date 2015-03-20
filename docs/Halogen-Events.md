@@ -47,18 +47,10 @@ Identifies the additional fields which are available on focus events.
 This module defines well-typed wrappers for common DOM events, so that
 they may be safely embedded in HTML documents.
 
-#### `handler`
+#### `createHandler`
 
 ``` purescript
-handler :: forall fields i. H.EventName fields -> (Event fields -> EventHandler i) -> H.Attribute i
-```
-
-This function can be used to attach custom event handlers.
-
-#### `handlerMaybe`
-
-``` purescript
-handlerMaybe :: forall fields i. H.EventName fields -> (Event fields -> EventHandler (Maybe i)) -> H.Attribute i
+createHandler :: forall fields i. H.EventName fields -> (Event fields -> EventHandler i) -> H.Attr i
 ```
 
 This function can be used to attach custom event handlers.
@@ -66,238 +58,238 @@ This function can be used to attach custom event handlers.
 #### `onabort`
 
 ``` purescript
-onabort :: forall i. (Event () -> EventHandler i) -> H.Attribute i
+onabort :: forall i. (Event () -> EventHandler i) -> H.Attr i
 ```
 
 
 #### `onbeforeunload`
 
 ``` purescript
-onbeforeunload :: forall i. (Event () -> EventHandler i) -> H.Attribute i
+onbeforeunload :: forall i. (Event () -> EventHandler i) -> H.Attr i
 ```
 
 
 #### `onerror`
 
 ``` purescript
-onerror :: forall i. (Event () -> EventHandler i) -> H.Attribute i
+onerror :: forall i. (Event () -> EventHandler i) -> H.Attr i
 ```
 
 
 #### `onhashchange`
 
 ``` purescript
-onhashchange :: forall i. (Event () -> EventHandler i) -> H.Attribute i
+onhashchange :: forall i. (Event () -> EventHandler i) -> H.Attr i
 ```
 
 
 #### `onload`
 
 ``` purescript
-onload :: forall i. (Event () -> EventHandler i) -> H.Attribute i
+onload :: forall i. (Event () -> EventHandler i) -> H.Attr i
 ```
 
 
 #### `onpageshow`
 
 ``` purescript
-onpageshow :: forall i. (Event () -> EventHandler i) -> H.Attribute i
+onpageshow :: forall i. (Event () -> EventHandler i) -> H.Attr i
 ```
 
 
 #### `onpagehide`
 
 ``` purescript
-onpagehide :: forall i. (Event () -> EventHandler i) -> H.Attribute i
+onpagehide :: forall i. (Event () -> EventHandler i) -> H.Attr i
 ```
 
 
 #### `onresize`
 
 ``` purescript
-onresize :: forall i. (Event () -> EventHandler i) -> H.Attribute i
+onresize :: forall i. (Event () -> EventHandler i) -> H.Attr i
 ```
 
 
 #### `onscroll`
 
 ``` purescript
-onscroll :: forall i. (Event () -> EventHandler i) -> H.Attribute i
+onscroll :: forall i. (Event () -> EventHandler i) -> H.Attr i
 ```
 
 
 #### `onunload`
 
 ``` purescript
-onunload :: forall i. (Event () -> EventHandler i) -> H.Attribute i
+onunload :: forall i. (Event () -> EventHandler i) -> H.Attr i
 ```
 
 
 #### `onchange`
 
 ``` purescript
-onchange :: forall i. (Event () -> EventHandler i) -> H.Attribute i
+onchange :: forall i. (Event () -> EventHandler i) -> H.Attr i
 ```
 
 
 #### `oninput`
 
 ``` purescript
-oninput :: forall i. (Event () -> EventHandler i) -> H.Attribute i
+oninput :: forall i. (Event () -> EventHandler i) -> H.Attr i
 ```
 
 
 #### `oninvalid`
 
 ``` purescript
-oninvalid :: forall i. (Event () -> EventHandler i) -> H.Attribute i
+oninvalid :: forall i. (Event () -> EventHandler i) -> H.Attr i
 ```
 
 
 #### `onreset`
 
 ``` purescript
-onreset :: forall i. (Event () -> EventHandler i) -> H.Attribute i
+onreset :: forall i. (Event () -> EventHandler i) -> H.Attr i
 ```
 
 
 #### `onsearch`
 
 ``` purescript
-onsearch :: forall i. (Event () -> EventHandler i) -> H.Attribute i
+onsearch :: forall i. (Event () -> EventHandler i) -> H.Attr i
 ```
 
 
 #### `onselect`
 
 ``` purescript
-onselect :: forall i. (Event () -> EventHandler i) -> H.Attribute i
+onselect :: forall i. (Event () -> EventHandler i) -> H.Attr i
 ```
 
 
 #### `onsubmit`
 
 ``` purescript
-onsubmit :: forall i. (Event () -> EventHandler i) -> H.Attribute i
+onsubmit :: forall i. (Event () -> EventHandler i) -> H.Attr i
 ```
 
 
 #### `onclick`
 
 ``` purescript
-onclick :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attribute i
+onclick :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attr i
 ```
 
 
 #### `oncontextmenu`
 
 ``` purescript
-oncontextmenu :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attribute i
+oncontextmenu :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attr i
 ```
 
 
 #### `ondblclick`
 
 ``` purescript
-ondblclick :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attribute i
+ondblclick :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attr i
 ```
 
 
 #### `onmousedown`
 
 ``` purescript
-onmousedown :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attribute i
+onmousedown :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attr i
 ```
 
 
 #### `onmouseenter`
 
 ``` purescript
-onmouseenter :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attribute i
+onmouseenter :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attr i
 ```
 
 
 #### `onmouseleave`
 
 ``` purescript
-onmouseleave :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attribute i
+onmouseleave :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attr i
 ```
 
 
 #### `onmousemove`
 
 ``` purescript
-onmousemove :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attribute i
+onmousemove :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attr i
 ```
 
 
 #### `onmouseover`
 
 ``` purescript
-onmouseover :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attribute i
+onmouseover :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attr i
 ```
 
 
 #### `onmouseout`
 
 ``` purescript
-onmouseout :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attribute i
+onmouseout :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attr i
 ```
 
 
 #### `onmouseup`
 
 ``` purescript
-onmouseup :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attribute i
+onmouseup :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attr i
 ```
 
 
 #### `onkeydown`
 
 ``` purescript
-onkeydown :: forall i. (Event KeyboardEvent -> EventHandler i) -> H.Attribute i
+onkeydown :: forall i. (Event KeyboardEvent -> EventHandler i) -> H.Attr i
 ```
 
 
 #### `onkeypress`
 
 ``` purescript
-onkeypress :: forall i. (Event KeyboardEvent -> EventHandler i) -> H.Attribute i
+onkeypress :: forall i. (Event KeyboardEvent -> EventHandler i) -> H.Attr i
 ```
 
 
 #### `onkeyup`
 
 ``` purescript
-onkeyup :: forall i. (Event KeyboardEvent -> EventHandler i) -> H.Attribute i
+onkeyup :: forall i. (Event KeyboardEvent -> EventHandler i) -> H.Attr i
 ```
 
 
 #### `onblur`
 
 ``` purescript
-onblur :: forall i. (Event FocusEvent -> EventHandler i) -> H.Attribute i
+onblur :: forall i. (Event FocusEvent -> EventHandler i) -> H.Attr i
 ```
 
 
 #### `onfocus`
 
 ``` purescript
-onfocus :: forall i. (Event FocusEvent -> EventHandler i) -> H.Attribute i
+onfocus :: forall i. (Event FocusEvent -> EventHandler i) -> H.Attr i
 ```
 
 
 #### `onfocusin`
 
 ``` purescript
-onfocusin :: forall i. (Event FocusEvent -> EventHandler i) -> H.Attribute i
+onfocusin :: forall i. (Event FocusEvent -> EventHandler i) -> H.Attr i
 ```
 
 
 #### `onfocusout`
 
 ``` purescript
-onfocusout :: forall i. (Event FocusEvent -> EventHandler i) -> H.Attribute i
+onfocusout :: forall i. (Event FocusEvent -> EventHandler i) -> H.Attr i
 ```
 
 
