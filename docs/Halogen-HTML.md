@@ -82,7 +82,9 @@ Unwrap a `TagName` to get the tag name as a `String`.
 #### `AttrRepr`
 
 ``` purescript
-class (Plus attr) <= AttrRepr attr where
+class AttrRepr attr where
+  emptyAttr :: forall i. attr i
+  combineAttr :: forall i. attr i -> attr i -> attr i
   attr_ :: forall value i. (Show value) => AttributeName value -> value -> attr i
   handler_ :: forall event i. EventName event -> (Event event -> EventHandler (Maybe i)) -> attr i
 ```
@@ -135,7 +137,8 @@ handler :: forall event i. EventName event -> (Event event -> EventHandler (Mayb
 #### `HTMLRepr`
 
 ``` purescript
-class (Bifunctor node) <= HTMLRepr node where
+class HTMLRepr node where
+  mapHTML :: forall p i1 i2. (i1 -> i2) -> node p i1 -> node p i2
   text_ :: forall p i. String -> node p i
   placeholder_ :: forall p i. p -> node p i
   element_ :: forall p i. TagName -> Attr i -> [node p i] -> node p i

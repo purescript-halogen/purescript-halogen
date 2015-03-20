@@ -2,38 +2,10 @@
 
 ## Module Halogen.HTML.Renderer.VirtualDOM
 
-#### `functorAttr`
-
-``` purescript
-instance functorAttr :: Functor Attr
-```
-
-
-#### `altAttr`
-
-``` purescript
-instance altAttr :: Alt Attr
-```
-
-
-#### `plusAttr`
-
-``` purescript
-instance plusAttr :: Plus Attr
-```
-
-
 #### `attrRepr`
 
 ``` purescript
 instance attrRepr :: H.AttrRepr Attr
-```
-
-
-#### `bifunctorHTML`
-
-``` purescript
-instance bifunctorHTML :: Bifunctor HTML
 ```
 
 
@@ -58,38 +30,10 @@ The second argument is used to replace placeholder nodes.
 
 ## Module Halogen.HTML.Renderer.String
 
-#### `functorAttr`
-
-``` purescript
-instance functorAttr :: Functor Attr
-```
-
-
-#### `altAttr`
-
-``` purescript
-instance altAttr :: Alt Attr
-```
-
-
-#### `plusAttr`
-
-``` purescript
-instance plusAttr :: Plus Attr
-```
-
-
 #### `attrRepr`
 
 ``` purescript
 instance attrRepr :: H.AttrRepr Attr
-```
-
-
-#### `bifunctorHTML`
-
-``` purescript
-instance bifunctorHTML :: Bifunctor HTML
 ```
 
 

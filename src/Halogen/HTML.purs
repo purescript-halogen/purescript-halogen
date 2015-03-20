@@ -6,6 +6,8 @@ module Halogen.HTML
   , Attr()
   , runAttr
   
+  , emptyAttr
+  , combineAttr
   , attr_
   , handler_
   
@@ -16,6 +18,7 @@ module Halogen.HTML
   , HTML()
   , runHTML
   
+  , mapHTML
   , text_
   , placeholder_
   , element_
@@ -167,15 +170,11 @@ import Data.Tuple
 import Data.Foreign
 import Data.Function
 import Data.Monoid
-import Data.Bifunctor
 import Data.StrMap (StrMap())
 import Data.String (joinWith)
 import Data.Foldable (for_, foldMap)
 
 import qualified Data.Array as A
-
-import Control.Alt
-import Control.Plus
 
 import Control.Monad.Eff
 import Control.Monad.Eff.Unsafe (unsafeInterleaveEff)
@@ -224,7 +223,10 @@ runTagName :: TagName -> String
 runTagName (TagName s) = s
 
 -- | This type class encodes _representations_ of HTML attributes
-class (Plus attr) <= AttrRepr attr where
+class AttrRepr attr where
+  emptyAttr :: forall i. attr i    
+  combineAttr :: forall i. attr i -> attr i -> attr i    
+    
   attr_ :: forall value i. (Show value) => AttributeName value -> value -> attr i
   handler_ :: forall event i. EventName event -> (Event event -> EventHandler (Maybe i)) -> attr i
 
@@ -235,10 +237,10 @@ runAttr :: forall i attr. (AttrRepr attr) => Attr i -> attr i
 runAttr (Attr f) = f
 
 instance semigroupAttr :: Semigroup (Attr i) where
-  (<>) (Attr f) (Attr g) = Attr (f <|> g)
+  (<>) (Attr f) (Attr g) = Attr (f `combineAttr` g)
 
 instance monoidAttr :: Monoid (Attr i) where
-  mempty = Attr empty
+  mempty = Attr emptyAttr
   
 attr :: forall value i. (Show value) => AttributeName value -> value -> Attr i
 attr key value = Attr (attr_ key value)
@@ -247,7 +249,9 @@ handler :: forall event i. EventName event -> (Event event -> EventHandler (Mayb
 handler name f = Attr (handler_ name f)
 
 -- | This type class encodes _representations_ of HTML nodes
-class (Bifunctor node) <= HTMLRepr node where
+class HTMLRepr node where
+  mapHTML :: forall p i1 i2. (i1 -> i2) -> node p i1 -> node p i2
+
   text_ :: forall p i. String -> node p i
   placeholder_ :: forall p i. p -> node p i
   element_ :: forall p i. TagName -> Attr i -> [node p i] -> node p i
@@ -256,7 +260,7 @@ class (Bifunctor node) <= HTMLRepr node where
 newtype HTML p i = HTML (forall node. (HTMLRepr node) => node p i)
 
 instance functorHTML :: Functor (HTML p) where
-  (<$>) f (HTML html) = HTML (rmap f html)
+  (<$>) f (HTML html) = HTML (mapHTML f html)
 
 runHTML :: forall p i node. (HTMLRepr node) => HTML p i -> node p i
 runHTML (HTML f) = f
