@@ -29,7 +29,7 @@ var paths = {
         }, 
         {
             dest: 'docs/Halogen-HTML-Renderer.md',
-            src: 'src/Halogen/HTML/Renderer/VirtualDOM.purs'
+            src: [ 'src/Halogen/HTML/Renderer/VirtualDOM.purs', 'src/Halogen/HTML/Renderer/String.purs' ]
         }, 
         {
             dest: 'docs/Halogen-Forms.md',

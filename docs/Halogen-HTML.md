@@ -83,7 +83,7 @@ Unwrap a `TagName` to get the tag name as a `String`.
 
 ``` purescript
 class (Plus attr) <= AttrRepr attr where
-  attr_ :: forall value i. AttributeName value -> value -> attr i
+  attr_ :: forall value i. (Show value) => AttributeName value -> value -> attr i
   handler_ :: forall event i. EventName event -> (Event event -> EventHandler (Maybe i)) -> attr i
 ```
 
@@ -121,7 +121,7 @@ instance monoidAttr :: Monoid (Attr i)
 #### `attr`
 
 ``` purescript
-attr :: forall value i. AttributeName value -> value -> Attr i
+attr :: forall value i. (Show value) => AttributeName value -> value -> Attr i
 ```
 
 

@@ -225,7 +225,7 @@ runTagName (TagName s) = s
 
 -- | This type class encodes _representations_ of HTML attributes
 class (Plus attr) <= AttrRepr attr where
-  attr_ :: forall value i. AttributeName value -> value -> attr i
+  attr_ :: forall value i. (Show value) => AttributeName value -> value -> attr i
   handler_ :: forall event i. EventName event -> (Event event -> EventHandler (Maybe i)) -> attr i
 
 -- | `Attr` represents an abstract attribute
@@ -240,7 +240,7 @@ instance semigroupAttr :: Semigroup (Attr i) where
 instance monoidAttr :: Monoid (Attr i) where
   mempty = Attr empty
   
-attr :: forall value i. AttributeName value -> value -> Attr i
+attr :: forall value i. (Show value) => AttributeName value -> value -> Attr i
 attr key value = Attr (attr_ key value)
   
 handler :: forall event i. EventName event -> (Event event -> EventHandler (Maybe i)) -> Attr i
