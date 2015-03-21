@@ -90,21 +90,23 @@ view = render <$> stateful (Undo.undoRedoState (State [])) (Undo.withUndoRedo up
   task :: forall p. Task -> Number -> H.HTML p Input
   task (Task task) index = H.p_ <<< pure $
     BI.inputGroup 
-      (Just (H.input ( A.class_ B.checkbox
-                       <> A.type_ "checkbox"
-                       <> A.checked task.completed
-                       <> A.title "Mark as completed"
-                       <> A.onChecked (pure <<< MarkCompleted index) )
-                     []))
+      (Just (BI.RegularAddOn 
+        (H.input ( A.class_ B.checkbox
+                   <> A.type_ "checkbox"
+                   <> A.checked task.completed
+                   <> A.title "Mark as completed"
+                   <> A.onChecked (pure <<< MarkCompleted index) )
+                 [])))
       (H.input ( A.classes [ B.formControl ]
                  <> A.placeholder "Description"
                  <> A.onValueChanged (pure <<< UpdateDescription index)
                  <> A.value task.description )
                [])
-      (Just (H.button ( A.classes [ B.btn, B.btnDefault ]
-                        <> A.title "Remove task"
-                        <> A.onclick (\_ -> pure $ RemoveTask index) )
-                      [ H.text "✖" ]))
+      (Just (BI.ButtonAddOn 
+        (H.button ( A.classes [ B.btn, B.btnDefault ]
+                    <> A.title "Remove task"
+                    <> A.onclick (\_ -> pure $ RemoveTask index) )
+                  [ H.text "✖" ])))
 
   update :: State -> Input -> State
   update (State ts) (NewTask s) = State (ts ++ [Task { description: fromMaybe "" s, completed: false }])

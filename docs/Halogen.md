@@ -36,7 +36,7 @@ This function can be used to create alternative top-level handlers which use `vi
 #### `View`
 
 ``` purescript
-type View i p r = SF1 i (HTML p (Either i r))
+type View i p r = SF1 i (H.HTML p (Either i r))
 ```
 
 A view is represented as a pure, non-empty signal function which
@@ -48,7 +48,7 @@ generate events which are either inputs (`i`) or requests (`r`).
 #### `PureView`
 
 ``` purescript
-type PureView i = forall p. SF1 i (HTML p i)
+type PureView i = forall p. SF1 i (H.HTML p i)
 ```
 
 A pure view does not make any external requests or use placeholder elements.
@@ -132,7 +132,7 @@ A pure UI is a UI which:
 #### `pureUI`
 
 ``` purescript
-pureUI :: forall i. (forall p. SF1 i (HTML p i)) -> PureUI i
+pureUI :: forall i. (forall p. SF1 i (H.HTML p i)) -> PureUI i
 ```
 
 A convenience function which can be used to construct a pure UI
