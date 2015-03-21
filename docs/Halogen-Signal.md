@@ -180,6 +180,15 @@ instance choiceSF :: Choice SF
 ```
 
 
+#### `combineLatest`
+
+``` purescript
+combineLatest :: forall a b c d. SF1 a b -> SF1 c d -> SF1 (Either a c) (Tuple b d)
+```
+
+Combine two non-empty signals, outputting the latest value from both
+signals at each step.
+
 #### `semigroupoidSF`
 
 ``` purescript

@@ -17,6 +17,7 @@ module Halogen.Signal
   , startingAt
   , head
   , tail
+  , combineLatest
   ) where
     
 import Data.Tuple
@@ -128,6 +129,17 @@ instance choiceSF :: Choice SF where
       Left a -> SF1 { result: Left a, next: right s }
       Right b -> case runSF s b of
                    SF1 o -> SF1 { result: Right o.result, next: right o.next }
+
+-- | Combine two non-empty signals, outputting the latest value from both
+-- | signals at each step.
+combineLatest :: forall a b c d. SF1 a b -> SF1 c d -> SF1 (Either a c) (Tuple b d)
+combineLatest s1 s2 = SF1
+  { result: Tuple (head s1) (head s2)
+  , next: SF \e ->
+      case e of
+        Left a -> runSF (tail s1) a `combineLatest` s2
+        Right c -> s1 `combineLatest` runSF (tail s2) c
+  }
 
 instance semigroupoidSF :: Semigroupoid SF where
   (<<<) f g =
