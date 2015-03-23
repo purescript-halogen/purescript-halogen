@@ -116,7 +116,7 @@ Signal functions have some other interesting type class instances:
 
 #### `Strong`, `Choice`
 
-`SF` and `SF1` also have instances for the `Strong` and `Choice` type classes. These instances give us access to the following combinators:
+`SF` also has instances for the `Strong` and `Choice` type classes. These instances give us access to the following combinators:
 
 ```purescript
 (***) :: forall i1 i2 o1 o2. SF i1 o1 -> SF i2 o2 -> SF (Tuple i1 i2) (Tuple o1 o2)

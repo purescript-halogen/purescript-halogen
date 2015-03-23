@@ -110,6 +110,15 @@ loop :: forall s i o. s -> SF (Tuple s i) (Tuple s o) -> SF i o
 
 Create a `SF` which hides a piece of internal state of type `s`.
 
+#### `mergeWith`
+
+``` purescript
+mergeWith :: forall a b c d r. (c -> d -> r) -> SF1 a c -> SF1 b d -> SF1 (Either a b) r
+```
+
+Merge two non-empty signals, outputting the latest value from both
+signals at each step.
+
 #### `functorSF`
 
 ``` purescript

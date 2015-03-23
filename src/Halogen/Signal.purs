@@ -17,6 +17,7 @@ module Halogen.Signal
   , startingAt
   , head
   , tail
+  , mergeWith
   ) where
     
 import Data.Tuple
@@ -84,6 +85,17 @@ loop :: forall s i o. s -> SF (Tuple s i) (Tuple s o) -> SF i o
 loop s signal = SF \i -> 
   case runSF signal (Tuple s i) of
     SF1 o -> SF1 { result: snd (o.result), next: loop (fst o.result) o.next }
+
+-- | Merge two non-empty signals, outputting the latest value from both
+-- | signals at each step.
+mergeWith :: forall a b c d r. (c -> d -> r) -> SF1 a c -> SF1 b d -> SF1 (Either a b) r
+mergeWith f s1 s2 = SF1
+  { result: f (head s1) (head s2)
+  , next: SF \e ->
+      case e of
+        Left a -> runSF (tail s1) a `mergeWith f` s2
+        Right b -> s1 `mergeWith f` runSF (tail s2) b
+  }
 
 instance functorSF :: Functor (SF i) where
   (<$>) f (SF k) = SF \i -> f <$> k i
