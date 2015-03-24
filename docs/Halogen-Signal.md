@@ -119,6 +119,15 @@ mergeWith :: forall a b c d r. (c -> d -> r) -> SF1 a c -> SF1 b d -> SF1 (Eithe
 Merge two non-empty signals, outputting the latest value from both
 signals at each step.
 
+#### `mergeWith'`
+
+``` purescript
+mergeWith' :: forall a b c d i r. (i -> Either a b) -> (c -> d -> r) -> SF1 a c -> SF1 b d -> SF1 i r
+```
+
+A variant of `mergeWith` which takes an additional function to destructure
+its inputs.
+
 #### `functorSF`
 
 ``` purescript
