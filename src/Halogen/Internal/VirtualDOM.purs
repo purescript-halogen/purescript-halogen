@@ -6,6 +6,7 @@ module Halogen.Internal.VirtualDOM
   , Patch()
   , Props()
   , STProps()
+  , Widget()
   , emptyProps
   , prop
   , handlerProp
@@ -16,6 +17,7 @@ module Halogen.Internal.VirtualDOM
   , patch
   , vtext
   , vnode
+  , vwidget
   , widget
   ) where
 
@@ -39,6 +41,9 @@ data Props
 
 -- | Mutable property collections
 data STProps h
+
+-- | A third-party widget
+data Widget (eff :: # !) i
 
 foreign import emptyProps 
   "var emptyProps = {}" :: Props
@@ -123,6 +128,12 @@ foreign import vnode
   \    };\
   \  };\
   \}" :: String -> Props -> [VTree] -> VTree
+
+-- | Create a virtual DOM tree from a `Widget`
+foreign import vwidget 
+  "function vwidget(w) {\
+  \  return w;\
+  \}" :: forall eff i. Widget eff i -> VTree
   
 foreign import widgetImpl
   "function widgetImpl(name, id, init, update, destroy) {\
@@ -140,7 +151,7 @@ foreign import widgetImpl
   \    destroy(node)();\
   \  };\
   \  return new Widget();\
-  \}" :: forall eff. Fn5 String String (Eff eff Node) (Node -> Eff eff (Nullable Node)) (Node -> Eff eff Unit) VTree
+  \}" :: forall eff i. Fn5 String String (Eff eff Node) (Node -> Eff eff (Nullable Node)) (Node -> Eff eff Unit) (Widget eff i)
 
 -- | Create a `VTree` from a third-party component (or _widget_), by providing a name, an ID, and three functions:
 -- | 
@@ -148,5 +159,5 @@ foreign import widgetImpl
 -- | - An update function, which receives the previous DOM node and optionally creates a new one.
 -- | - A finalizer function, which deallocates any necessary resources when the component is removed from the DOM.
 -- |
-widget :: forall eff. String -> String -> Eff eff Node -> (Node -> Eff eff (Maybe Node)) -> (Node -> Eff eff Unit) -> VTree
+widget :: forall eff i. String -> String -> Eff eff Node -> (Node -> Eff eff (Maybe Node)) -> (Node -> Eff eff Unit) -> Widget eff i
 widget name id init update destroy = runFn5 widgetImpl name id init (\n -> toNullable <$> update n) destroy

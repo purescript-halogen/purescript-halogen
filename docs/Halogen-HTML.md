@@ -182,26 +182,18 @@ graft :: forall a b i. HTML a i -> (a -> HTML b i) -> HTML b i
 
 Replace placeholder nodes with HTML documents.
 
-#### `renderHtml'`
+#### `renderHtml`
 
 ``` purescript
-renderHtml' :: forall i a eff. (i -> Eff eff Unit) -> (a -> VTree) -> HTML a i -> VTree
+renderHtml :: forall i a eff. (i -> Eff eff Unit) -> (a -> Widget eff i) -> HTML a i -> VTree
 ```
 
-A more general version of `renderHtml'`.
+Render a `HTML` document to a virtual DOM node.
 
 The first argument is an event handler.
 
 The second argument is used to replace placeholder nodes. If you are not using placeholder nodes, you
 might prefer to use `renderHtml` instead.
-
-#### `renderHtml`
-
-``` purescript
-renderHtml :: forall i eff. (i -> Eff eff Unit) -> (forall a. HTML a i) -> VTree
-```
-
-Render a `HTML` document to a virtual DOM node
 
 #### `renderHtmlToString`
 

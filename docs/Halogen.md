@@ -76,6 +76,14 @@ appHandler GetDateAndTimeRequest k =
   get "/date" \response -> k (readDateAndTime response)
 ```
 
+#### `defaultHandler`
+
+``` purescript
+defaultHandler :: forall i eff. Handler Void i eff
+```
+
+A default renderer implementation which can be used when there are no placeholders
+
 #### `Driver`
 
 ``` purescript
@@ -101,15 +109,23 @@ main = do
 #### `Renderer`
 
 ``` purescript
-type Renderer p = p -> VTree
+type Renderer i p r eff = Driver i eff -> p -> Widget (HalogenEffects eff) (Either i r)
 ```
 
 A type synonym for functions which render components to replace placeholders
 
+#### `defaultRenderer`
+
+``` purescript
+defaultRenderer :: forall i p r eff. Renderer i Void r eff
+```
+
+A default renderer implementation which can be used when there are no placeholders
+
 #### `UI`
 
 ``` purescript
-type UI i p r eff = { renderer :: Renderer p, handler :: Handler r i eff, view :: View i p r }
+type UI i p r eff = { renderer :: Renderer i p r eff, handler :: Handler r i eff, view :: View i p r }
 ```
 
 A UI consists of:

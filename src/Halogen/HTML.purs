@@ -150,7 +150,6 @@ module Halogen.HTML
   , wbr           , wbr_
   
   , renderHtml
-  , renderHtml'
   , renderHtmlToString
   ) where
 
@@ -295,20 +294,16 @@ graft (Placeholder a) f = f a
 graft (Element name attr els) f = Element name attr (A.map (`graft` f) els)
 graft (Text s) _ = Text s
 
--- | A more general version of `renderHtml'`.
+-- | Render a `HTML` document to a virtual DOM node.
 -- |
 -- | The first argument is an event handler.
 -- | 
 -- | The second argument is used to replace placeholder nodes. If you are not using placeholder nodes, you
 -- | might prefer to use `renderHtml` instead.
-renderHtml' :: forall i a eff. (i -> Eff eff Unit) -> (a -> VTree) -> HTML a i -> VTree
-renderHtml' _ _ (Text s) = vtext s
-renderHtml' k f (Element name attribs els) = vnode (runTagName name) (attributesToProps k attribs) (A.map (renderHtml' k f) els)
-renderHtml' _ f (Placeholder a) = f a
-
--- | Render a `HTML` document to a virtual DOM node
-renderHtml :: forall i eff. (i -> Eff eff Unit) -> (forall a. HTML a i) -> VTree
-renderHtml f = renderHtml' f absurd
+renderHtml :: forall i a eff. (i -> Eff eff Unit) -> (a -> Widget eff i) -> HTML a i -> VTree
+renderHtml _ _ (Text s) = vtext s
+renderHtml k f (Element name attribs els) = vnode (runTagName name) (attributesToProps k attribs) (A.map (renderHtml k f) els)
+renderHtml _ f (Placeholder a) = vwidget (f a)
   
 -- | Render a HTML document as a `String`, usually for testing purposes.
 -- |

@@ -14,7 +14,7 @@ import Debug.Trace
 
 import Halogen
 import Halogen.Signal
-import Halogen.Internal.VirtualDOM (VTree(), widget)
+import Halogen.Internal.VirtualDOM (Widget(), widget)
 
 import qualified Halogen.HTML as H
 import qualified Halogen.HTML.Attributes as A
@@ -48,7 +48,7 @@ foreign import setTextContent
 -- |
 -- | This way, we keep our view pure, and can separate out impure code into the
 -- | renderer function, below.
-data Placeholder = Placeholder String
+data Placeholder = Counter Number
 
 view :: forall r. View Unit Placeholder r
 view = render <$> stateful 0 update
@@ -58,7 +58,7 @@ view = render <$> stateful 0 update
     H.div (A.class_ B.container)
           [ H.h1_ [ H.text "placeholder" ]
           , H.p_ [ H.text "This counter is rendered using a placeholder:" ]
-          , H.p_ [ H.placeholder (Placeholder ("Count: " <> show n)) ]
+          , H.p_ [ H.placeholder (Counter n) ]
           , H.button (A.classes [B.btn, B.btnPrimary] <> A.onclick \_ -> pure (Left unit)) [ H.text "Update" ]
           ] 
   
@@ -67,20 +67,20 @@ view = render <$> stateful 0 update
   
 -- | Our placeholder will be replaced with a widget, which we will create using the `widget`
 -- | function from `Halogen.Internal.VirtualDOM`.
-makeWidget :: String -> VTree  
-makeWidget s = widget "PlaceholderLabel" "label1" init update destroy
+makeCounter :: forall eff i. Number -> Widget (HalogenEffects eff) i
+makeCounter n = widget "PlaceholderLabel" "label1" init update destroy
   where 
   init :: forall eff. Eff (trace :: Trace, dom :: DOM | eff) Node
   init = do
     trace "Init function called"
     node <- createParagraph
-    runFn2 setTextContent node s
+    runFn2 setTextContent node ("Count: " <> show n)
     return node
       
   update :: forall eff. Node -> Eff (trace :: Trace, dom :: DOM | eff) (Maybe Node)
   update node = do
     trace "Update function called"
-    runFn2 setTextContent node s
+    runFn2 setTextContent node ("Count: " <> show n)
     return Nothing
   
   destroy :: forall eff. Node -> Eff (trace :: Trace, dom :: DOM | eff) Unit
@@ -89,11 +89,11 @@ makeWidget s = widget "PlaceholderLabel" "label1" init update destroy
 -- | Convert placeholders into `VTrees`.
 -- |
 -- | In a real application, this function might render a third party component using `widget`.
-renderer :: Placeholder -> VTree
-renderer (Placeholder s) = makeWidget s  
+renderer :: forall eff i r. Renderer i Placeholder r eff
+renderer _ (Counter n) = makeCounter n 
   
 ui :: forall eff. UI Unit Placeholder Void eff
-ui = { view: view, handler: absurd, renderer: renderer }    
+ui = { view: view, handler: defaultHandler, renderer: renderer }    
   
 main = do
   Tuple node _ <- runUI ui
