@@ -125,9 +125,11 @@ foreign import vnode
   \}" :: String -> Props -> [VTree] -> VTree
   
 foreign import widgetImpl
-  "function widgetImpl(init, update, destroy) {\
+  "function widgetImpl(name, id, init, update, destroy) {\
   \  var Widget = function () {};\
   \  Widget.prototype.type = 'Widget';\
+  \  Widget.prototype.name = name;\
+  \  Widget.prototype.id = id;\
   \  Widget.prototype.init = function(){\
   \    return init();\
   \  };\
@@ -138,13 +140,13 @@ foreign import widgetImpl
   \    destroy(node)();\
   \  };\
   \  return new Widget();\
-  \}" :: forall eff. Fn3 (Eff eff Node) (Node -> Eff eff (Nullable Node)) (Node -> Eff eff Unit) VTree
+  \}" :: forall eff. Fn5 String String (Eff eff Node) (Node -> Eff eff (Nullable Node)) (Node -> Eff eff Unit) VTree
 
--- | Create a `VTree` from a third-party component (or _widget_), by providing three functions:
+-- | Create a `VTree` from a third-party component (or _widget_), by providing a name, an ID, and three functions:
 -- | 
 -- | - An initialization function, which creates the DOM node
 -- | - An update function, which receives the previous DOM node and optionally creates a new one.
 -- | - A finalizer function, which deallocates any necessary resources when the component is removed from the DOM.
 -- |
-widget :: forall eff. Eff eff Node -> (Node -> Eff eff (Maybe Node)) -> (Node -> Eff eff Unit) -> VTree
-widget init update destroy = runFn3 widgetImpl init (\n -> toNullable <$> update n) destroy
+widget :: forall eff. String -> String -> Eff eff Node -> (Node -> Eff eff (Maybe Node)) -> (Node -> Eff eff Unit) -> VTree
+widget name id init update destroy = runFn5 widgetImpl name id init (\n -> toNullable <$> update n) destroy
