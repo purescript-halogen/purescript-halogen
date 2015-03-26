@@ -6,19 +6,12 @@ module Halogen.HTML
   , Attr()
   , runAttr
   
-  , attr_
-  , handler_
-  
   , attr
   , handler
   
   , HTMLRepr
   , HTML()
   , runHTML
-  
-  , text_
-  , placeholder_
-  , element_
   
   , text
   , placeholder
@@ -225,8 +218,8 @@ runTagName (TagName s) = s
 
 -- | This type class encodes _representations_ of HTML attributes
 class (Alt attr, Plus attr) <= AttrRepr attr where
-  attr_ :: forall value i. (Show value) => AttributeName value -> value -> attr i
-  handler_ :: forall fields i. EventName fields -> (Event fields -> EventHandler (Maybe i)) -> attr i
+  attr :: forall value i. (Show value) => AttributeName value -> value -> attr i
+  handler :: forall fields i. EventName fields -> (Event fields -> EventHandler (Maybe i)) -> attr i
 
 -- | `Attr` represents an abstract attribute
 newtype Attr i = Attr (forall attr. (AttrRepr attr) => attr i)
@@ -247,23 +240,17 @@ instance plusAttr :: Plus Attr where
   empty = Attr empty
 
 instance attrRepr :: AttrRepr Attr where
-  attr_ name value = Attr (attr_ name value)
-  handler_ name handler = Attr (handler_ name handler)
+  attr name value = Attr (attr name value)
+  handler name f = Attr (handler name f)
 
 instance functorAttr :: Functor Attr where
   (<$>) f (Attr x) = Attr (f <$> x)
-  
-attr :: forall value i. (Show value) => AttributeName value -> value -> Attr i
-attr key value = Attr (attr_ key value)
-  
-handler :: forall event i. EventName event -> (Event event -> EventHandler (Maybe i)) -> Attr i
-handler name f = Attr (handler_ name f)
 
 -- | This type class encodes _representations_ of HTML nodes
 class (Bifunctor node) <= HTMLRepr node where
-  text_ :: forall p i. String -> node p i
-  placeholder_ :: forall p i. p -> node p i
-  element_ :: forall p i. TagName -> Attr i -> [node p i] -> node p i
+  text :: forall p i. String -> node p i
+  placeholder :: forall p i. p -> node p i
+  element :: forall p i. TagName -> Attr i -> [node p i] -> node p i
 
 -- | `HTML` represents an abstract HTML node
 newtype HTML p i = HTML (forall node. (HTMLRepr node) => node p i)
@@ -275,21 +262,12 @@ instance bifunctorHTML :: Bifunctor HTML where
   bimap f g (HTML html) = HTML (bimap f g html)
 
 instance htmlRepr :: HTMLRepr HTML where
-  text_ s = HTML (text_ s)
-  placeholder_ p = HTML (placeholder_ p)
-  element_ name attr els = HTML (element_ name attr (runHTML <$> els))
+  text s = HTML (text s)
+  placeholder p = HTML (placeholder p)
+  element name attr els = HTML (element name attr (runHTML <$> els))
 
 runHTML :: forall p i node. (HTMLRepr node) => HTML p i -> node p i
 runHTML (HTML f) = f
-
-text :: forall p i. String -> HTML p i
-text s = HTML (text_ s)
-
-placeholder :: forall p i. p -> HTML p i
-placeholder p = HTML (placeholder_ p)
-
-element :: forall p i. TagName -> Attr i -> [HTML p i] -> HTML p i
-element name attr els = HTML (element_ name attr (A.map runHTML els))
 
 a :: forall p i. Attr i -> [HTML p i] -> HTML p i
 a xs = element (tagName "a") xs

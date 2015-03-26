@@ -35,9 +35,9 @@ instance plusAttrRepr :: Plus Attr where
   empty = Attr \_ -> emptyProps
   
 instance attrRepr :: H.AttrRepr Attr where    
-  attr_ key value = Attr \_ -> 
+  attr key value = Attr \_ -> 
     runFn2 prop (H.runAttributeName key) value
-  handler_ name f = Attr \k -> 
+  handler name f = Attr \k -> 
     runFn2 handlerProp (H.runEventName name) \ev -> do
       m <- unsafeInterleaveEff $ runEventHandler ev (f ev)
       for_ m k
@@ -51,9 +51,9 @@ instance bifunctorHTML :: Bifunctor HTML where
   bimap f g (HTML build) = HTML \k1 k2 -> build (k1 <<< g) (k2 <<< f)
 
 instance htmlRepr :: H.HTMLRepr HTML where
-  text_ s = HTML \_ _ -> vtext s
-  placeholder_ p = HTML \_ f -> vwidget (f p)
-  element_ name attrs els = HTML \k f -> vnode (H.runTagName name) (runAttr k (H.runAttr attrs)) (map (runHTML k f) els)
+  text s = HTML \_ _ -> vtext s
+  placeholder p = HTML \_ f -> vwidget (f p)
+  element name attrs els = HTML \k f -> vnode (H.runTagName name) (runAttr k (H.runAttr attrs)) (map (runHTML k f) els)
 
 -- | Render a `HTML` document to a virtual DOM node
 -- |

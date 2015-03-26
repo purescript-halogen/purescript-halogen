@@ -34,8 +34,8 @@ instance plusAttrRepr :: Plus Attr where
   empty = Attr [] 
   
 instance attrRepr :: H.AttrRepr Attr where
-  attr_ key value = Attr [ H.runAttributeName key <> "=\"" <> show value <> "\"" ]
-  handler_ name f = Attr []
+  attr key value = Attr [ H.runAttributeName key <> "=\"" <> show value <> "\"" ]
+  handler name f = Attr []
       
 newtype HTML p i = HTML String
 
@@ -46,9 +46,9 @@ instance bifunctorHTML :: Bifunctor HTML where
   bimap _ _ (HTML s) = HTML s
 
 instance htmlRepr :: H.HTMLRepr HTML where
-  text_ s = HTML s
-  placeholder_ _ = HTML "placeholders are not supported"
-  element_ name attrs els = HTML $
+  text s = HTML s
+  placeholder _ = HTML "placeholders are not supported"
+  element name attrs els = HTML $
     "<" <> H.runTagName name <> 
     " " <> joinWith " " (runAttr (H.runAttr attrs)) <> 
     ">" <> foldMap runHTML els <> 

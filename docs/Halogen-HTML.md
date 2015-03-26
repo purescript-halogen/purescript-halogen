@@ -83,8 +83,8 @@ Unwrap a `TagName` to get the tag name as a `String`.
 
 ``` purescript
 class (Alt attr, Plus attr) <= AttrRepr attr where
-  attr_ :: forall value i. (Show value) => AttributeName value -> value -> attr i
-  handler_ :: forall fields i. EventName fields -> (Event fields -> EventHandler (Maybe i)) -> attr i
+  attr :: forall value i. (Show value) => AttributeName value -> value -> attr i
+  handler :: forall fields i. EventName fields -> (Event fields -> EventHandler (Maybe i)) -> attr i
 ```
 
 This type class encodes _representations_ of HTML attributes
@@ -146,27 +146,13 @@ instance functorAttr :: Functor Attr
 ```
 
 
-#### `attr`
-
-``` purescript
-attr :: forall value i. (Show value) => AttributeName value -> value -> Attr i
-```
-
-
-#### `handler`
-
-``` purescript
-handler :: forall event i. EventName event -> (Event event -> EventHandler (Maybe i)) -> Attr i
-```
-
-
 #### `HTMLRepr`
 
 ``` purescript
 class (Bifunctor node) <= HTMLRepr node where
-  text_ :: forall p i. String -> node p i
-  placeholder_ :: forall p i. p -> node p i
-  element_ :: forall p i. TagName -> Attr i -> [node p i] -> node p i
+  text :: forall p i. String -> node p i
+  placeholder :: forall p i. p -> node p i
+  element :: forall p i. TagName -> Attr i -> [node p i] -> node p i
 ```
 
 This type class encodes _representations_ of HTML nodes
@@ -204,27 +190,6 @@ instance htmlRepr :: HTMLRepr HTML
 
 ``` purescript
 runHTML :: forall p i node. (HTMLRepr node) => HTML p i -> node p i
-```
-
-
-#### `text`
-
-``` purescript
-text :: forall p i. String -> HTML p i
-```
-
-
-#### `placeholder`
-
-``` purescript
-placeholder :: forall p i. p -> HTML p i
-```
-
-
-#### `element`
-
-``` purescript
-element :: forall p i. TagName -> Attr i -> [HTML p i] -> HTML p i
 ```
 
 

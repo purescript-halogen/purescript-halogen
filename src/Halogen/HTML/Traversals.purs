@@ -57,8 +57,8 @@ fromAttr :: forall i. Attr i -> H.Attr i
 fromAttr (Attr xs) = foldMap go xs
   where
   go :: SingleAttr i -> H.Attr i
-  go (SingleAttr f) = f \name value -> H.attr_ name value
-  go (SingleHandler f) = f \name handler -> H.handler_ name handler
+  go (SingleAttr f) = f \name value -> H.attr name value
+  go (SingleHandler f) = f \name handler -> H.handler name handler
   
 -- | Convert the final encoding to the initial encoding.
 toHTML :: forall p i. H.HTML p i -> HTML p i
@@ -66,9 +66,9 @@ toHTML = H.runHTML
 
 -- | Convert the initial encoding to the final encoding.
 fromHTML :: forall p i. HTML p i -> H.HTML p i
-fromHTML (Text s) = H.text_ s
-fromHTML (Element name attrs els) = H.element_ name (fromAttr attrs) (fromHTML <$> els)
-fromHTML (Placeholder p) = H.placeholder_ p
+fromHTML (Text s) = H.text s
+fromHTML (Element name attrs els) = H.element name (fromAttr attrs) (fromHTML <$> els)
+fromHTML (Placeholder p) = H.placeholder p
 
 -- | Replace placeholder nodes with HTML documents.
 graft :: forall a b i. HTML a i -> (a -> HTML b i) -> HTML b i 
@@ -95,8 +95,8 @@ instance plusAttr :: Plus Attr where
   empty = Attr []
   
 instance attrRepr :: H.AttrRepr Attr where 
-  attr_ name value = Attr [ SingleAttr \k -> k name value ]
-  handler_ name handler = Attr [ SingleHandler \k -> k name handler ]
+  attr name value = Attr [ SingleAttr \k -> k name value ]
+  handler name handler = Attr [ SingleHandler \k -> k name handler ]
   
 instance bifunctorHTML :: Bifunctor HTML where
   bimap _ _ (Text s) = Text s
@@ -104,6 +104,6 @@ instance bifunctorHTML :: Bifunctor HTML where
   bimap f _ (Placeholder a) = Placeholder (f a)
   
 instance htmlRepr :: H.HTMLRepr HTML where 
-  text_ = Text
-  element_ name attr els = Element name (H.runAttr attr) els
-  placeholder_ = Placeholder
+  text = Text
+  element name attr els = Element name (H.runAttr attr) els
+  placeholder = Placeholder
