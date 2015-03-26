@@ -109,7 +109,7 @@ handler (CompileRequest code) = makeAff \_ k -> unsafeInterleaveEff do
     k (SetResult response)
  
 ui :: forall eff. UI Input Void Request (http :: HTTP | eff)
-ui = { view: view, handler: handler, renderer: absurd }  
+ui = { view: view, handler: handler, renderer: defaultRenderer }  
   
 main = do
   Tuple node driver <- runUI ui

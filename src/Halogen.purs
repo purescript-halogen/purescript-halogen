@@ -69,6 +69,10 @@ type PureView i = forall p. SF1 i (H.HTML p i)
 -- |   get "/date" \response -> k (readDateAndTime response)
 -- | ```
 type Handler r i eff = r -> Aff (HalogenEffects eff) i
+ 
+-- | A default renderer implementation which can be used when there are no placeholders
+defaultHandler :: forall i eff. Handler Void i eff 
+defaultHandler = absurd
 
 -- | This type synonym is provided to tidy up the type signature of `runUI`.
 -- |
@@ -88,8 +92,12 @@ type Handler r i eff = r -> Aff (HalogenEffects eff) i
 type Driver i eff = i -> Eff (HalogenEffects eff) Unit 
  
 -- | A type synonym for functions which render components to replace placeholders
-type Renderer p = p -> VTree
+type Renderer i p eff = Driver i eff -> p -> Widget (HalogenEffects eff)
  
+-- | A default renderer implementation which can be used when there are no placeholders
+defaultRenderer :: forall i p eff. Renderer i Void eff 
+defaultRenderer _ = absurd
+     
 -- | A UI consists of:
 -- |
 -- | - A view
@@ -98,7 +106,7 @@ type Renderer p = p -> VTree
 type UI i p r eff = 
   { view :: View i p r
   , handler :: Handler r i eff
-  , renderer :: Renderer p
+  , renderer :: Renderer i p eff
   } 
   
 -- | A pure UI is a UI which:
@@ -111,8 +119,8 @@ type PureUI i = forall eff. UI i Void Void eff
 pureUI :: forall i. (forall p. SF1 i (H.HTML p i)) -> PureUI i
 pureUI view =
   { view: (Left <$>) <$> view
-  , handler: absurd
-  , renderer: absurd
+  , handler: defaultHandler
+  , renderer: defaultRenderer
   }
 
 -- | `runUI` renders a `UI` to the DOM using `virtual-dom`.
@@ -128,7 +136,7 @@ runUI ui = do
   where
   runUI' :: RefVal _ -> Eff (HalogenEffects eff) (Tuple Node (Driver i eff))
   runUI' ref = do
-    let render = R.renderHTML requestHandler ui.renderer
+    let render = R.renderHTML requestHandler (ui.renderer driver)
         vtrees = render <$> ui.view
         diffs  = tail vtrees >>> changes (head vtrees) 
         node   = createElement (head vtrees)  

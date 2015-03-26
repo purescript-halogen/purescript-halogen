@@ -47,7 +47,7 @@ instance htmlRepr :: H.HTMLRepr HTML
 #### `renderHTML`
 
 ``` purescript
-renderHTML :: forall p i eff. (i -> Eff eff Unit) -> (p -> VTree) -> H.HTML p i -> VTree
+renderHTML :: forall p i eff. (i -> Eff eff Unit) -> (p -> Widget eff) -> H.HTML p i -> VTree
 ```
 
 Render a `HTML` document to a virtual DOM node

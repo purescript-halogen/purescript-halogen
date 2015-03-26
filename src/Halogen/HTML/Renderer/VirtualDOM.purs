@@ -42,9 +42,9 @@ instance attrRepr :: H.AttrRepr Attr where
       m <- unsafeInterleaveEff $ runEventHandler ev (f ev)
       for_ m k
       
-newtype HTML p i = HTML (forall eff. (i -> Eff eff Unit) -> (p -> VTree) -> VTree)
+newtype HTML p i = HTML (forall eff. (i -> Eff eff Unit) -> (p -> Widget eff) -> VTree)
 
-runHTML :: forall p i eff. (i -> Eff eff Unit) -> (p -> VTree) -> HTML p i -> VTree
+runHTML :: forall p i eff. (i -> Eff eff Unit) -> (p -> Widget eff) -> HTML p i -> VTree
 runHTML k1 k2 (HTML f) = f k1 k2
 
 instance bifunctorHTML :: Bifunctor HTML where
@@ -52,12 +52,12 @@ instance bifunctorHTML :: Bifunctor HTML where
 
 instance htmlRepr :: H.HTMLRepr HTML where
   text_ s = HTML \_ _ -> vtext s
-  placeholder_ p = HTML \_ f -> f p
+  placeholder_ p = HTML \_ f -> vwidget (f p)
   element_ name attrs els = HTML \k f -> vnode (H.runTagName name) (runAttr k (H.runAttr attrs)) (map (runHTML k f) els)
 
 -- | Render a `HTML` document to a virtual DOM node
 -- |
 -- | The first argument is an event handler.
 -- | The second argument is used to replace placeholder nodes.
-renderHTML :: forall p i eff. (i -> Eff eff Unit) -> (p -> VTree) -> H.HTML p i -> VTree
+renderHTML :: forall p i eff. (i -> Eff eff Unit) -> (p -> Widget eff) -> H.HTML p i -> VTree
 renderHTML k1 k2 html = runHTML k1 k2 (H.runHTML html)
