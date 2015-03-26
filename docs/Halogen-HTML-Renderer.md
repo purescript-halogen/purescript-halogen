@@ -16,20 +16,6 @@ instance functorAttrRepr :: Functor Attr
 ```
 
 
-#### `altAttrRepr`
-
-``` purescript
-instance altAttrRepr :: Alt Attr
-```
-
-
-#### `plusAttrRepr`
-
-``` purescript
-instance plusAttrRepr :: Plus Attr
-```
-
-
 #### `attrRepr`
 
 ``` purescript
@@ -83,20 +69,6 @@ newtype Attr i
 
 ``` purescript
 instance functorAttrRepr :: Functor Attr
-```
-
-
-#### `altAttrRepr`
-
-``` purescript
-instance altAttrRepr :: Alt Attr
-```
-
-
-#### `plusAttrRepr`
-
-``` purescript
-instance plusAttrRepr :: Plus Attr
 ```
 
 

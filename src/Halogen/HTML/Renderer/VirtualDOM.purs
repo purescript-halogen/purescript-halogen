@@ -7,12 +7,9 @@ module Halogen.HTML.Renderer.VirtualDOM
       
 import Data.Array (map)
 import Data.Function    
-import Data.Foldable (for_)
+import Data.Foldable (for_, foldMap)
 import Data.Monoid
 import Data.Bifunctor
-
-import Control.Alt
-import Control.Plus
 
 import Control.Monad.Eff
 import Control.Monad.Eff.Unsafe (unsafeInterleaveEff)
@@ -30,12 +27,6 @@ runAttr k (Attr f) = f k
 
 instance functorAttrRepr :: Functor Attr where
   (<$>) f (Attr g) = Attr \k -> g (k <<< f)
-
-instance altAttrRepr :: Alt Attr where
-  (<|>) (Attr f) (Attr g) = Attr \k -> f k <> g k 
-
-instance plusAttrRepr :: Plus Attr where
-  empty = Attr \_ -> emptyProps
   
 instance attrRepr :: H.AttrRepr Attr where    
   attr key value = Attr \_ -> 
@@ -56,7 +47,7 @@ instance bifunctorHTML :: Bifunctor HTML where
 instance htmlRepr :: H.HTMLRepr HTML where
   text s = HTML \_ _ -> vtext s
   placeholder p = HTML \_ f -> vwidget (f p)
-  element name attrs els = HTML \k f -> vnode (H.runTagName name) (runAttr k (H.runAttr attrs)) (map (runHTML k f) els)
+  element name attrs els = HTML \k f -> vnode (H.runTagName name) (foldMap (runAttr k <<< H.runAttr) attrs) (map (runHTML k f) els)
 
 -- | Render a `HTML` document to a virtual DOM node
 -- |

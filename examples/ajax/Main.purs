@@ -79,17 +79,20 @@ view = render <$> stateful (State false exampleCode Nothing) update
   where
   render :: State -> node p (Either Input Request)
   render (State busy code result) = 
-    H.div (A.class_ B.container) $
-          [ H.h1 (A.id_ "header") [ H.text "ajax example" ]
+    H.div [ A.class_ B.container ] $
+          [ H.h1 [ A.id_ "header" ] [ H.text "ajax example" ]
           , H.h2_ [ H.text "purescript code" ]
-          , H.p_ [ H.textarea (A.class_ B.formControl 
-                               <> A.value code 
-                               <> A.onInput (pure <<< Left <<< SetCode)
-                               <> A.style (StrMap.fromList [ Tuple "font-family" "monospace"
-                                                           , Tuple "height" "200px"
-                                                           ])
-                              ) [] ]
-          , H.p_ [ H.button (A.classes [B.btn, B.btnPrimary] <> A.disabled busy <> A.onclick (\_ -> pure (Right (CompileRequest code)))) [ H.text "Compile" ] ]
+          , H.p_ [ H.textarea [ A.class_ B.formControl 
+                              , A.value code 
+                              , A.onInput (pure <<< Left <<< SetCode)
+                              , A.style (StrMap.fromList [ Tuple "font-family" "monospace"
+                                                         , Tuple "height" "200px"
+                                                         ])
+                              ] [] ]
+          , H.p_ [ H.button [ A.classes [B.btn, B.btnPrimary]
+                            , A.disabled busy
+                            , A.onclick (\_ -> pure (Right (CompileRequest code)))
+                            ] [ H.text "Compile" ] ]
           , H.p_ [ H.text (if busy then "Working..." else "") ]
           ] ++ flip foldMap result \js ->
           [ H.h2_ [ H.text "compiled javascript" ]

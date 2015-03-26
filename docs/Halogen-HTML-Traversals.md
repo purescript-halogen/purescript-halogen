@@ -6,12 +6,12 @@
 This module defines an initial encoding of the `HTML` type,
 which can be used to implement traversals.
 
-#### `SingleAttr`
+#### `Attr`
 
 ``` purescript
-data SingleAttr i
-  = SingleAttr (forall r. (forall value. (Show value) => H.AttributeName value -> value -> r) -> r)
-  | SingleHandler (forall r. (forall fields. H.EventName fields -> (Event fields -> EventHandler (Maybe i)) -> r) -> r)
+data Attr i
+  = Attr (forall r. (forall value. (Show value) => H.AttributeName value -> value -> r) -> r)
+  | Handler (forall r. (forall fields. H.EventName fields -> (Event fields -> EventHandler (Maybe i)) -> r) -> r)
 ```
 
 A single attribute is either
@@ -21,21 +21,12 @@ A single attribute is either
 
 Both are encoded as existentials-as-universals.
 
-#### `Attr`
-
-``` purescript
-newtype Attr i
-  = Attr [SingleAttr i]
-```
-
-An initial encoding of attributes.
-
 #### `HTML`
 
 ``` purescript
 data HTML a i
   = Text String
-  | Element H.TagName (Attr i) [HTML a i]
+  | Element H.TagName [Attr i] [HTML a i]
   | Placeholder a
 ```
 
@@ -90,31 +81,10 @@ modify :: forall p q i j node. (H.HTMLRepr node) => (HTML p i -> HTML q j) -> (f
 Modify a HTML structure by using the intermediate representation presented in
 this module.
 
-#### `functorSingleAttr`
-
-``` purescript
-instance functorSingleAttr :: Functor SingleAttr
-```
-
-
 #### `functorAttr`
 
 ``` purescript
 instance functorAttr :: Functor Attr
-```
-
-
-#### `altAttr`
-
-``` purescript
-instance altAttr :: Alt Attr
-```
-
-
-#### `plusAttr`
-
-``` purescript
-instance plusAttr :: Plus Attr
 ```
 
 

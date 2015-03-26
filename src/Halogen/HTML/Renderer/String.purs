@@ -12,9 +12,6 @@ import Data.Foldable (foldMap)
 import Data.Monoid
 import Data.Bifunctor
 
-import Control.Alt
-import Control.Plus
-
 import Control.Monad.Eff
 import Control.Monad.Eff.Unsafe (unsafeInterleaveEff)
 
@@ -22,23 +19,17 @@ import qualified Halogen.HTML as H
 
 import Halogen.HTML.Events.Types 
   
-newtype Attr i = Attr [String]
+newtype Attr i = Attr String
 
-runAttr :: forall i. Attr i -> [String]
+runAttr :: forall i. Attr i -> String
 runAttr (Attr s) = s
 
 instance functorAttrRepr :: Functor Attr where
-  (<$>) f (Attr ss) = Attr ss
-  
-instance altAttrRepr :: Alt Attr where
-  (<|>) (Attr ss1) (Attr ss2) = Attr (ss1 <> ss2)
-  
-instance plusAttrRepr :: Plus Attr where
-  empty = Attr [] 
+  (<$>) f (Attr s) = Attr s
   
 instance attrRepr :: H.AttrRepr Attr where
-  attr key value = Attr [ H.runAttributeName key <> "=\"" <> show value <> "\"" ]
-  handler name f = Attr []
+  attr key value = Attr (H.runAttributeName key <> "=\"" <> show value <> "\"")
+  handler name f = Attr "events are not supported"
       
 newtype HTML p i = HTML String
 
@@ -53,7 +44,7 @@ instance htmlRepr :: H.HTMLRepr HTML where
   placeholder _ = HTML "placeholders are not supported"
   element name attrs els = HTML $
     "<" <> H.runTagName name <> 
-    " " <> joinWith " " (runAttr (H.runAttr attrs)) <> 
+    " " <> joinWith " " ((runAttr <<< H.runAttr) <$> attrs) <> 
     ">" <> foldMap runHTML els <> 
     "</" <> H.runTagName name <> ">"
 

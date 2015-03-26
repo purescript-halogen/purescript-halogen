@@ -48,8 +48,8 @@ view = render <$> stateful (State 0) update
   where
   render :: State -> node p r
   render (State n) = 
-    H.div (A.class_ B.container)
-          [ H.h1 (A.id_ "header") [ H.text "counter" ]
+    H.div [ A.class_ B.container ]
+          [ H.h1 [ A.id_ "header" ] [ H.text "counter" ]
           , H.p_ [ H.text (show n) ]
           ]
           

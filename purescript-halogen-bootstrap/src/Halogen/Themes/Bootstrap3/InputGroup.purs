@@ -23,9 +23,9 @@ data AddOn node a i
 -- | An input group consists of a control with optional elements placed before and after.
 inputGroup :: forall a i node. (H.HTMLRepr node) => Maybe (AddOn node a i) -> node a i -> Maybe (AddOn node a i) -> node a i
 inputGroup before ctl after =
-  H.div (A.class_ B.inputGroup)
+  H.div [A.class_ B.inputGroup]
         (foldMap addon before ++ [ctl] ++ foldMap addon after)
   where
   addon :: AddOn node a i -> [node a i]
-  addon (RegularAddOn el) = [ H.span (A.class_ B.inputGroupAddon) [el] ]
-  addon (ButtonAddOn el) = [ H.span (A.class_ B.inputGroupBtn) [el] ]
+  addon (RegularAddOn el) = [ H.span [A.class_ B.inputGroupAddon] [el] ]
+  addon (ButtonAddOn el) = [ H.span [A.class_ B.inputGroupBtn] [el] ]

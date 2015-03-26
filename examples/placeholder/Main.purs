@@ -55,11 +55,11 @@ view = render <$> stateful 0 update
   where
   render :: Number -> node Placeholder (Either Unit r)
   render n = 
-    H.div (A.class_ B.container)
+    H.div [ A.class_ B.container ]
           [ H.h1_ [ H.text "placeholder" ]
           , H.p_ [ H.text "This counter is rendered using a placeholder:" ]
           , H.p_ [ H.placeholder (Counter n) ]
-          , H.button (A.classes [B.btn, B.btnPrimary] <> A.onclick \_ -> pure (Left unit)) [ H.text "Update" ]
+          , H.button [ A.classes [B.btn, B.btnPrimary], A.onclick \_ -> pure (Left unit) ] [ H.text "Update" ]
           ] 
   
   update :: Number -> Unit -> Number

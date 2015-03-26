@@ -25,14 +25,14 @@ data CrumbTrail a = CrumbTrail [Tuple String (Target a)] String [Tuple String (T
 -- | Create a breadcrumb navigation element from an array of `Crumb`s.
 breadcrumbs :: forall a i node. (H.HTMLRepr node) => CrumbTrail i -> node a i
 breadcrumbs (CrumbTrail behind here inFront) = 
-  H.ol (A.class_ B.breadcrumb) 
+  H.ol [ A.class_ B.breadcrumb ] 
   ( map fromCrumb behind ++ 
-    [ H.li (A.class_ B.active) [ H.text here ] ] ++
+    [ H.li [ A.class_ B.active ] [ H.text here ] ] ++
     map fromCrumb inFront )
   where
   fromCrumb :: Tuple String (Target i) -> node a i
   fromCrumb (Tuple text cr) = 
     let attr = case cr of
-                 LinkTarget url -> A.href (runURL url)
-                 DataTarget i -> E.onclick (\_ -> E.preventDefault $> i)
+                 LinkTarget url -> [A.href (runURL url)]
+                 DataTarget i -> [E.onclick (\_ -> E.preventDefault $> i)]
     in H.li_ [ H.a attr [ H.text text ] ]

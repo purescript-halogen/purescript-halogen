@@ -17,7 +17,7 @@ A `CrumbTrail` is a zipper with a current location, and crumbs behind and in fro
 #### `breadcrumbs`
 
 ``` purescript
-breadcrumbs :: forall a i. CrumbTrail i -> H.HTML a i
+breadcrumbs :: forall a i node. (H.HTMLRepr node) => CrumbTrail i -> node a i
 ```
 
 Create a breadcrumb navigation element from an array of `Crumb`s.
@@ -31,9 +31,9 @@ This module provides convenience functions for creating _input groups_.
 #### `AddOn`
 
 ``` purescript
-data AddOn a i
-  = RegularAddOn (H.HTML a i)
-  | ButtonAddOn (H.HTML a i)
+data AddOn node a i
+  = RegularAddOn (node a i)
+  | ButtonAddOn (node a i)
 ```
 
 Represents an input group add-on element
@@ -44,7 +44,7 @@ different CSS classes
 #### `inputGroup`
 
 ``` purescript
-inputGroup :: forall a i. Maybe (AddOn a i) -> H.HTML a i -> Maybe (AddOn a i) -> H.HTML a i
+inputGroup :: forall a i node. (H.HTMLRepr node) => Maybe (AddOn node a i) -> node a i -> Maybe (AddOn node a i) -> node a i
 ```
 
 Create an input group.
@@ -121,7 +121,7 @@ A navbar configuration
 #### `navbar`
 
 ``` purescript
-navbar :: forall a i. NavBar i -> H.HTML a i
+navbar :: forall a i node. (H.HTMLRepr node) => NavBar i -> node a i
 ```
 
 Create a navbar from a configuration object.
