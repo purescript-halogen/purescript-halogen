@@ -2,6 +2,13 @@
 
 ## Module Halogen.HTML.Renderer.VirtualDOM
 
+#### `Attr`
+
+``` purescript
+newtype Attr i
+```
+
+
 #### `functorAttrRepr`
 
 ``` purescript
@@ -27,6 +34,13 @@ instance plusAttrRepr :: Plus Attr
 
 ``` purescript
 instance attrRepr :: H.AttrRepr Attr
+```
+
+
+#### `HTML`
+
+``` purescript
+newtype HTML p i
 ```
 
 
@@ -47,7 +61,7 @@ instance htmlRepr :: H.HTMLRepr HTML
 #### `renderHTML`
 
 ``` purescript
-renderHTML :: forall p i eff. (i -> Eff eff Unit) -> (p -> Widget eff) -> H.HTML p i -> VTree
+renderHTML :: forall p i eff. (i -> Eff eff Unit) -> (p -> Widget eff) -> HTML p i -> VTree
 ```
 
 Render a `HTML` document to a virtual DOM node
@@ -57,6 +71,13 @@ The second argument is used to replace placeholder nodes.
 
 
 ## Module Halogen.HTML.Renderer.String
+
+#### `Attr`
+
+``` purescript
+newtype Attr i
+```
+
 
 #### `functorAttrRepr`
 
@@ -86,6 +107,13 @@ instance attrRepr :: H.AttrRepr Attr
 ```
 
 
+#### `HTML`
+
+``` purescript
+newtype HTML p i
+```
+
+
 #### `bifunctorHTML`
 
 ``` purescript
@@ -103,7 +131,7 @@ instance htmlRepr :: H.HTMLRepr HTML
 #### `renderHTMLToString`
 
 ``` purescript
-renderHTMLToString :: (forall p i. H.HTML p i) -> String
+renderHTMLToString :: (forall p i. HTML p i) -> String
 ```
 
 Render a HTML document as a `String`, usually for testing purposes.

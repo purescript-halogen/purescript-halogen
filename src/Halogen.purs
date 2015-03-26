@@ -17,6 +17,7 @@ import Data.Void
 import Data.Maybe
 import Data.Tuple
 import Data.Either
+import Data.Bifunctor (rmap)
 
 import Debug.Trace
 
@@ -47,10 +48,10 @@ changes = differencesWith diff
 -- |
 -- | The HTML documents can contain placeholders of type `p`, and
 -- | generate events which are either inputs (`i`) or requests (`r`). 
-type View i p r = SF1 i (H.HTML p (Either i r)) 
+type View i p r = SF1 i (R.HTML p (Either i r)) 
 
 -- | A pure view does not make any external requests or use placeholder elements.
-type PureView i = forall p. SF1 i (H.HTML p i) 
+type PureView i = forall p. SF1 i (R.HTML p i) 
  
 -- | This type synonym is provided to tidy up the type signature of `runUI`.
 -- |
@@ -116,9 +117,9 @@ type UI i p r eff =
 type PureUI i = forall eff. UI i Void Void eff
  
 -- | A convenience function which can be used to construct a pure UI
-pureUI :: forall i. (forall p. SF1 i (H.HTML p i)) -> PureUI i
+pureUI :: forall i. (forall p. SF1 i (R.HTML p i)) -> PureUI i
 pureUI view =
-  { view: (Left <$>) <$> view
+  { view: (rmap Left) <$> view
   , handler: defaultHandler
   , renderer: defaultRenderer
   }

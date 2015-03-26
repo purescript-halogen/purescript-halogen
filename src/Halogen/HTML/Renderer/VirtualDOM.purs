@@ -1,5 +1,8 @@
 module Halogen.HTML.Renderer.VirtualDOM 
-  ( renderHTML
+  ( HTML()
+  , Attr()
+  
+  , renderHTML
   ) where
       
 import Data.Array (map)
@@ -59,5 +62,5 @@ instance htmlRepr :: H.HTMLRepr HTML where
 -- |
 -- | The first argument is an event handler.
 -- | The second argument is used to replace placeholder nodes.
-renderHTML :: forall p i eff. (i -> Eff eff Unit) -> (p -> Widget eff) -> H.HTML p i -> VTree
-renderHTML k1 k2 html = runHTML k1 k2 (H.runHTML html)
+renderHTML :: forall p i eff. (i -> Eff eff Unit) -> (p -> Widget eff) -> HTML p i -> VTree
+renderHTML = runHTML

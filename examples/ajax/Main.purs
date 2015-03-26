@@ -74,10 +74,10 @@ data Input
 -- | Requests to external services
 data Request = CompileRequest String
   
-view :: forall p. View Input p Request
+view :: forall p node. (H.HTMLRepr node) => SF1 Input (node p (Either Input Request))
 view = render <$> stateful (State false exampleCode Nothing) update
   where
-  render :: State -> H.HTML p (Either Input Request)
+  render :: State -> node p (Either Input Request)
   render (State busy code result) = 
     H.div (A.class_ B.container) $
           [ H.h1 (A.id_ "header") [ H.text "ajax example" ]

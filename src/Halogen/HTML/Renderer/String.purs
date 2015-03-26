@@ -1,5 +1,8 @@
 module Halogen.HTML.Renderer.String 
-  ( renderHTMLToString
+  ( HTML()
+  , Attr()
+  
+  , renderHTMLToString
   ) where
     
 import Data.Array (map)
@@ -57,5 +60,5 @@ instance htmlRepr :: H.HTMLRepr HTML where
 -- | Render a HTML document as a `String`, usually for testing purposes.
 -- |
 -- | The rank-2 type ensures that neither events nor placeholders are allowed.
-renderHTMLToString :: (forall p i. H.HTML p i) -> String
-renderHTMLToString html = runHTML (H.runHTML html)
+renderHTMLToString :: (forall p i. HTML p i) -> String
+renderHTMLToString = runHTML

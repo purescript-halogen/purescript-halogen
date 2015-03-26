@@ -59,10 +59,10 @@ instance inputSupportsUndoRedo :: Undo.SupportsUndoRedo Input where
   toUndoRedo _ = Nothing
 
 -- | The view is a state machine, consuming inputs, and generating HTML documents which in turn, generate new inputs
-view :: PureView Input
+view :: forall p node. (H.HTMLRepr node) => SF1 Input (node p Input) 
 view = render <$> stateful (Undo.undoRedoState (State [])) (Undo.withUndoRedo update)
   where
-  render :: forall p. Undo.UndoRedoState State -> H.HTML p Input
+  render :: forall p. Undo.UndoRedoState State -> node p Input
   render st = 
     case Undo.getState st of
       State ts ->
@@ -72,7 +72,7 @@ view = render <$> stateful (Undo.undoRedoState (State [])) (Undo.withUndoRedo up
               , H.div_ (zipWith task ts (0 .. length ts))
               ]
               
-  toolbar :: forall p st. Undo.UndoRedoState st -> H.HTML p Input
+  toolbar :: forall p st. Undo.UndoRedoState st -> node p Input
   toolbar st = H.p (A.class_ B.btnGroup)
                    [ H.button ( A.classes [ B.btn, B.btnPrimary ]
                                 <> A.onclick (\_ -> pure (NewTask Nothing)) )
@@ -87,7 +87,7 @@ view = render <$> stateful (Undo.undoRedoState (State [])) (Undo.withUndoRedo up
                               [ H.text "Redo" ]
                    ]
                    
-  task :: forall p. Task -> Number -> H.HTML p Input
+  task :: forall p. Task -> Number -> node p Input
   task (Task task) index = H.p_ <<< pure $
     BI.inputGroup 
       (Just (BI.RegularAddOn 

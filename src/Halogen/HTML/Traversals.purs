@@ -61,11 +61,11 @@ fromAttr (Attr xs) = foldMap go xs
   go (SingleHandler f) = f \name handler -> H.handler name handler
   
 -- | Convert the final encoding to the initial encoding.
-toHTML :: forall p i. H.HTML p i -> HTML p i
-toHTML = H.runHTML
+toHTML :: forall p i. (forall node. (H.HTMLRepr node) => node p i) -> HTML p i
+toHTML html = html 
 
 -- | Convert the initial encoding to the final encoding.
-fromHTML :: forall p i. HTML p i -> H.HTML p i
+fromHTML :: forall p i node. (H.HTMLRepr node) => HTML p i -> node p i
 fromHTML (Text s) = H.text s
 fromHTML (Element name attrs els) = H.element name (fromAttr attrs) (fromHTML <$> els)
 fromHTML (Placeholder p) = H.placeholder p
@@ -78,8 +78,8 @@ graft (Text s) _ = Text s
 
 -- | Modify a HTML structure by using the intermediate representation presented in
 -- | this module.
-modify :: forall p q i j. (HTML p i -> HTML q j) -> H.HTML p i -> H.HTML q j
-modify f = fromHTML <<< f <<< toHTML
+modify :: forall p q i j node. (H.HTMLRepr node) => (HTML p i -> HTML q j) -> (forall node. (H.HTMLRepr node) => node p i) -> node q j
+modify f html = fromHTML $ f $ toHTML html
 
 instance functorSingleAttr :: Functor SingleAttr where
   (<$>) _ (SingleAttr g) = SingleAttr \k -> g k

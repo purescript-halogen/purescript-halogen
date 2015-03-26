@@ -60,7 +60,7 @@ Convert the initial encoding to the final encoding.
 #### `toHTML`
 
 ``` purescript
-toHTML :: forall p i. H.HTML p i -> HTML p i
+toHTML :: forall p i. (forall node. (H.HTMLRepr node) => node p i) -> HTML p i
 ```
 
 Convert the final encoding to the initial encoding.
@@ -68,7 +68,7 @@ Convert the final encoding to the initial encoding.
 #### `fromHTML`
 
 ``` purescript
-fromHTML :: forall p i. HTML p i -> H.HTML p i
+fromHTML :: forall p i node. (H.HTMLRepr node) => HTML p i -> node p i
 ```
 
 Convert the initial encoding to the final encoding.
@@ -84,7 +84,7 @@ Replace placeholder nodes with HTML documents.
 #### `modify`
 
 ``` purescript
-modify :: forall p q i j. (HTML p i -> HTML q j) -> H.HTML p i -> H.HTML q j
+modify :: forall p q i j node. (H.HTMLRepr node) => (HTML p i -> HTML q j) -> (forall node. (H.HTMLRepr node) => node p i) -> node q j
 ```
 
 Modify a HTML structure by using the intermediate representation presented in

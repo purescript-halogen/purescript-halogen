@@ -50,10 +50,10 @@ foreign import setTextContent
 -- | renderer function, below.
 data Placeholder = Counter Number
 
-view :: forall r. View Unit Placeholder r
+view :: forall r node. (H.HTMLRepr node) => SF1 Unit (node Placeholder (Either Unit r)) 
 view = render <$> stateful 0 update
   where
-  render :: Number -> H.HTML Placeholder (Either Unit r)
+  render :: Number -> node Placeholder (Either Unit r)
   render n = 
     H.div (A.class_ B.container)
           [ H.h1_ [ H.text "placeholder" ]
