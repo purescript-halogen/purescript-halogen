@@ -19,7 +19,7 @@ instance functorAttrRepr :: Functor Attr
 #### `attrRepr`
 
 ``` purescript
-instance attrRepr :: H.AttrRepr Attr
+instance attrRepr :: A.AttrRepr Attr
 ```
 
 
@@ -75,7 +75,7 @@ instance functorAttrRepr :: Functor Attr
 #### `attrRepr`
 
 ``` purescript
-instance attrRepr :: H.AttrRepr Attr
+instance attrRepr :: A.AttrRepr Attr
 ```
 
 

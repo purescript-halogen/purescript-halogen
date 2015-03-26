@@ -16,6 +16,7 @@ import Control.Monad.Eff
 import Control.Monad.Eff.Unsafe (unsafeInterleaveEff)
 
 import qualified Halogen.HTML as H
+import qualified Halogen.HTML.Attributes as A
 
 import Halogen.HTML.Events.Types 
   
@@ -27,8 +28,8 @@ runAttr (Attr s) = s
 instance functorAttrRepr :: Functor Attr where
   (<$>) f (Attr s) = Attr s
   
-instance attrRepr :: H.AttrRepr Attr where
-  attr key value = Attr (H.runAttributeName key <> "=\"" <> show value <> "\"")
+instance attrRepr :: A.AttrRepr Attr where
+  attr key value = Attr (A.runAttributeName key <> "=\"" <> A.toAttrString key value <> "\"")
   handler name f = Attr "events are not supported"
       
 newtype HTML p i = HTML String
@@ -44,7 +45,7 @@ instance htmlRepr :: H.HTMLRepr HTML where
   placeholder _ = HTML "placeholders are not supported"
   element name attrs els = HTML $
     "<" <> H.runTagName name <> 
-    " " <> joinWith " " ((runAttr <<< H.runAttr) <$> attrs) <> 
+    " " <> joinWith " " ((runAttr <<< A.runAttr) <$> attrs) <> 
     ">" <> foldMap runHTML els <> 
     "</" <> H.runTagName name <> ">"
 

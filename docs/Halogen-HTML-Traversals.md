@@ -10,8 +10,8 @@ which can be used to implement traversals.
 
 ``` purescript
 data Attr i
-  = Attr (forall r. (forall value. (Show value) => H.AttributeName value -> value -> r) -> r)
-  | Handler (forall r. (forall fields. H.EventName fields -> (Event fields -> EventHandler (Maybe i)) -> r) -> r)
+  = Attr (forall r. (forall value. (A.IsAttribute value) => A.AttributeName value -> value -> r) -> r)
+  | Handler (forall r. (forall fields. A.EventName fields -> (Event fields -> EventHandler (Maybe i)) -> r) -> r)
 ```
 
 A single attribute is either
@@ -35,7 +35,7 @@ An initial encoding of HTML nodes.
 #### `toAttr`
 
 ``` purescript
-toAttr :: forall i. H.Attr i -> Attr i
+toAttr :: forall i. A.Attr i -> Attr i
 ```
 
 Convert the final encoding to the initial encoding.
@@ -43,7 +43,7 @@ Convert the final encoding to the initial encoding.
 #### `fromAttr`
 
 ``` purescript
-fromAttr :: forall i. Attr i -> H.Attr i
+fromAttr :: forall i. Attr i -> A.Attr i
 ```
 
 Convert the initial encoding to the final encoding.
@@ -91,7 +91,7 @@ instance functorAttr :: Functor Attr
 #### `attrRepr`
 
 ``` purescript
-instance attrRepr :: H.AttrRepr Attr
+instance attrRepr :: A.AttrRepr Attr
 ```
 
 

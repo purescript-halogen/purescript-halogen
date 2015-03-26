@@ -45,7 +45,7 @@ import Data.Maybe
 import Halogen.HTML.Events.Handler
 import Halogen.HTML.Events.Types
 
-import qualified Halogen.HTML as H
+import qualified Halogen.HTML.Attributes as H
 
 -- | This function can be used to attach custom event handlers.
 createHandler :: forall fields i. H.EventName fields -> (Event fields -> EventHandler i) -> H.Attr i

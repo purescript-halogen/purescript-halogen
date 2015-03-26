@@ -85,9 +85,10 @@ view = render <$> stateful (State false exampleCode Nothing) update
           , H.p_ [ H.textarea [ A.class_ B.formControl 
                               , A.value code 
                               , A.onInput (pure <<< Left <<< SetCode)
-                              , A.style (StrMap.fromList [ Tuple "font-family" "monospace"
-                                                         , Tuple "height" "200px"
-                                                         ])
+                              , A.style (A.styles $ StrMap.fromList 
+                                          [ Tuple "font-family" "monospace"
+                                          , Tuple "height" "200px"
+                                          ])
                               ] [] ]
           , H.p_ [ H.button [ A.classes [B.btn, B.btnPrimary]
                             , A.disabled busy

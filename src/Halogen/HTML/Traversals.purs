@@ -24,6 +24,7 @@ import Control.Alt
 import Control.Plus
       
 import qualified Halogen.HTML as H
+import qualified Halogen.HTML.Attributes as A
 
 import Halogen.HTML.Events.Types
 import Halogen.HTML.Events.Handler
@@ -35,8 +36,8 @@ import Halogen.HTML.Events.Handler
 -- |
 -- | Both are encoded as existentials-as-universals.
 data Attr i
-  = Attr (forall r. (forall value. (Show value) => H.AttributeName value -> value -> r) -> r)
-  | Handler (forall r. (forall fields. H.EventName fields -> (Event fields -> EventHandler (Maybe i)) -> r) -> r)
+  = Attr (forall r. (forall value. (A.IsAttribute value) => A.AttributeName value -> value -> r) -> r)
+  | Handler (forall r. (forall fields. A.EventName fields -> (Event fields -> EventHandler (Maybe i)) -> r) -> r)
 
 -- | An initial encoding of HTML nodes.
 data HTML a i
@@ -45,13 +46,13 @@ data HTML a i
   | Placeholder a
 
 -- | Convert the final encoding to the initial encoding.
-toAttr :: forall i. H.Attr i -> Attr i
-toAttr = H.runAttr
+toAttr :: forall i. A.Attr i -> Attr i
+toAttr = A.runAttr
 
 -- | Convert the initial encoding to the final encoding.
-fromAttr :: forall i. Attr i -> H.Attr i
-fromAttr (Attr f) = f \name value -> H.attr name value
-fromAttr (Handler f) = f \name handler -> H.handler name handler
+fromAttr :: forall i. Attr i -> A.Attr i
+fromAttr (Attr f) = f \name value -> A.attr name value
+fromAttr (Handler f) = f \name handler -> A.handler name handler
   
 -- | Convert the final encoding to the initial encoding.
 toHTML :: forall p i. (forall node. (H.HTMLRepr node) => node p i) -> HTML p i
@@ -78,7 +79,7 @@ instance functorAttr :: Functor Attr where
   (<$>) _ (Attr g) = Attr \k -> g k
   (<$>) f (Handler g) = Handler \k -> g (\name handler -> k name (\e -> (f <$>) <$> handler e))
   
-instance attrRepr :: H.AttrRepr Attr where 
+instance attrRepr :: A.AttrRepr Attr where 
   attr name value = Attr \k -> k name value
   handler name handler = Handler \k -> k name handler
   
@@ -89,5 +90,5 @@ instance bifunctorHTML :: Bifunctor HTML where
   
 instance htmlRepr :: H.HTMLRepr HTML where 
   text = Text
-  element name attr els = Element name (H.runAttr <$> attr) els
+  element name attr els = Element name (A.runAttr <$> attr) els
   placeholder = Placeholder

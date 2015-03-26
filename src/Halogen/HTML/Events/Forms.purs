@@ -16,7 +16,7 @@ import Data.Traversable (traverse)
 
 import Halogen.HTML.Events.Handler
 
-import qualified Halogen.HTML as H
+import qualified Halogen.HTML.Attributes as H
   
 -- | Attach event handler to event ```key``` with getting ```prop``` field
 -- | as an argument of handler

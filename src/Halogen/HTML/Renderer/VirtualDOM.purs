@@ -15,6 +15,7 @@ import Control.Monad.Eff
 import Control.Monad.Eff.Unsafe (unsafeInterleaveEff)
 
 import qualified Halogen.HTML as H
+import qualified Halogen.HTML.Attributes as A
 
 import Halogen.HTML.Events.Types
 import Halogen.HTML.Events.Handler
@@ -28,11 +29,11 @@ runAttr k (Attr f) = f k
 instance functorAttrRepr :: Functor Attr where
   (<$>) f (Attr g) = Attr \k -> g (k <<< f)
   
-instance attrRepr :: H.AttrRepr Attr where    
+instance attrRepr :: A.AttrRepr Attr where    
   attr key value = Attr \_ -> 
-    runFn2 prop (H.runAttributeName key) value
+    runFn2 prop (A.runAttributeName key) value
   handler name f = Attr \k -> 
-    runFn2 handlerProp (H.runEventName name) \ev -> do
+    runFn2 handlerProp (A.runEventName name) \ev -> do
       m <- unsafeInterleaveEff $ runEventHandler ev (f ev)
       for_ m k
       
@@ -47,7 +48,7 @@ instance bifunctorHTML :: Bifunctor HTML where
 instance htmlRepr :: H.HTMLRepr HTML where
   text s = HTML \_ _ -> vtext s
   placeholder p = HTML \_ f -> vwidget (f p)
-  element name attrs els = HTML \k f -> vnode (H.runTagName name) (foldMap (runAttr k <<< H.runAttr) attrs) (map (runHTML k f) els)
+  element name attrs els = HTML \k f -> vnode (H.runTagName name) (foldMap (runAttr k <<< A.runAttr) attrs) (map (runHTML k f) els)
 
 -- | Render a `HTML` document to a virtual DOM node
 -- |
