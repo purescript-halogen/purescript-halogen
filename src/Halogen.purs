@@ -17,6 +17,7 @@ import Data.Void
 import Data.Maybe
 import Data.Tuple
 import Data.Either
+import Data.Bifunctor (rmap)
 
 import Debug.Trace
 
@@ -27,7 +28,9 @@ import Control.Monad.Eff.Exception
     
 import Control.Monad.Aff
     
-import Halogen.HTML (HTML(), renderHtml)
+import qualified Halogen.HTML as H
+import qualified Halogen.HTML.Renderer.VirtualDOM as R
+
 import Halogen.Signal 
 import Halogen.Internal.VirtualDOM   
  
@@ -45,10 +48,10 @@ changes = differencesWith diff
 -- |
 -- | The HTML documents can contain placeholders of type `p`, and
 -- | generate events which are either inputs (`i`) or requests (`r`). 
-type View i p r = SF1 i (HTML p (Either i r)) 
+type View i p r = SF1 i (R.HTML p (Either i r)) 
 
 -- | A pure view does not make any external requests or use placeholder elements.
-type PureView i = forall p. SF1 i (HTML p i) 
+type PureView i = forall p. SF1 i (R.HTML p i) 
  
 -- | This type synonym is provided to tidy up the type signature of `runUI`.
 -- |
@@ -90,10 +93,10 @@ defaultHandler = absurd
 type Driver i eff = i -> Eff (HalogenEffects eff) Unit 
  
 -- | A type synonym for functions which render components to replace placeholders
-type Renderer i p r eff = Driver i eff -> p -> Widget (HalogenEffects eff) (Either i r)
+type Renderer i p eff = Driver i eff -> p -> Widget (HalogenEffects eff)
  
 -- | A default renderer implementation which can be used when there are no placeholders
-defaultRenderer :: forall i p r eff. Renderer i Void r eff 
+defaultRenderer :: forall i p eff. Renderer i Void eff 
 defaultRenderer _ = absurd
      
 -- | A UI consists of:
@@ -104,7 +107,7 @@ defaultRenderer _ = absurd
 type UI i p r eff = 
   { view :: View i p r
   , handler :: Handler r i eff
-  , renderer :: Renderer i p r eff
+  , renderer :: Renderer i p eff
   } 
   
 -- | A pure UI is a UI which:
@@ -114,9 +117,9 @@ type UI i p r eff =
 type PureUI i = forall eff. UI i Void Void eff
  
 -- | A convenience function which can be used to construct a pure UI
-pureUI :: forall i. (forall p. SF1 i (HTML p i)) -> PureUI i
+pureUI :: forall i. (forall p. SF1 i (R.HTML p i)) -> PureUI i
 pureUI view =
-  { view: (Left <$>) <$> view
+  { view: (rmap Left) <$> view
   , handler: defaultHandler
   , renderer: defaultRenderer
   }
@@ -134,7 +137,7 @@ runUI ui = do
   where
   runUI' :: RefVal _ -> Eff (HalogenEffects eff) (Tuple Node (Driver i eff))
   runUI' ref = do
-    let render = renderHtml requestHandler (ui.renderer driver)
+    let render = R.renderHTML requestHandler (ui.renderer driver)
         vtrees = render <$> ui.view
         diffs  = tail vtrees >>> changes (head vtrees) 
         node   = createElement (head vtrees)  

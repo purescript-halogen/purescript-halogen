@@ -27,6 +27,7 @@
     "purescript-foreign": "~0.4.0",
     "purescript-nullable": "~0.1.1",
     "purescript-maps": "~0.3.2",
-    "purescript-void": "~0.1.0"
+    "purescript-bifunctors": "~0.3.1",
+    "purescript-void": "~0.2.0"
   }
 }

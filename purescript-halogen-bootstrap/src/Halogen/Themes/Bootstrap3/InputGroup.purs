@@ -10,16 +10,22 @@ import qualified Halogen.HTML.Attributes as A
     
 import qualified Halogen.Themes.Bootstrap3 as B
 
+-- | Represents an input group add-on element
+-- |
+-- | We need to distinguish buttons from regular add-ons because of the 
+-- | different CSS classes
+data AddOn node a i
+  = RegularAddOn (node a i)
+  | ButtonAddOn (node a i)
+
 -- | Create an input group.
 -- |
 -- | An input group consists of a control with optional elements placed before and after.
-inputGroup :: forall a i. Maybe (H.HTML a i) -> H.HTML a i -> Maybe (H.HTML a i) -> H.HTML a i
+inputGroup :: forall a i node. (H.HTMLRepr node) => Maybe (AddOn node a i) -> node a i -> Maybe (AddOn node a i) -> node a i
 inputGroup before ctl after =
-  H.div (A.class_ B.inputGroup)
+  H.div [A.class_ B.inputGroup]
         (foldMap addon before ++ [ctl] ++ foldMap addon after)
   where
-  addon :: H.HTML a i -> [H.HTML a i]
-  addon el = [ H.span (A.class_ (className el)) [el] ]
-    where
-    className (H.Element name _ _) | H.runTagName name == "button" = B.inputGroupBtn
-    className _ = B.inputGroupAddon
+  addon :: AddOn node a i -> [node a i]
+  addon (RegularAddOn el) = [ H.span [A.class_ B.inputGroupAddon] [el] ]
+  addon (ButtonAddOn el) = [ H.span [A.class_ B.inputGroupBtn] [el] ]

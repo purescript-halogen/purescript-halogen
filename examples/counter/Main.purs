@@ -43,13 +43,13 @@ data State = State Number
 -- | Inputs to the state machine
 data Input = Tick
 
-view :: forall p r. SF1 Input (H.HTML p r)
+view :: forall p r node. (H.HTMLRepr node) => SF1 Input (node p r)
 view = render <$> stateful (State 0) update
   where
-  render :: State -> H.HTML p r
+  render :: State -> node p r
   render (State n) = 
-    H.div (A.class_ B.container)
-          [ H.h1 (A.id_ "header") [ H.text "counter" ]
+    H.div [ A.class_ B.container ]
+          [ H.h1 [ A.id_ "header" ] [ H.text "counter" ]
           , H.p_ [ H.text (show n) ]
           ]
           

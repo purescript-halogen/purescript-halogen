@@ -9,7 +9,11 @@ var gulp        = require('gulp')
   ;
 
 var paths = {
-    src: 'src/**/*.purs',
+    src: [
+        'src/**/*.purs',
+        'purescript-halogen-foundation/src/**/*.purs',
+        'purescript-halogen-bootstrap/src/**/*.purs'
+    ],
     bowerSrc: [
       'bower_components/purescript-*/src/**/*.purs'
     ],
@@ -26,6 +30,14 @@ var paths = {
         {
             dest: 'docs/Halogen-HTML.md',
             src: [ 'src/Halogen/HTML.purs', 'src/Halogen/HTML/Attributes.purs' ]
+        }, 
+        {
+            dest: 'docs/Halogen-HTML-Traversals.md',
+            src: 'src/Halogen/HTML/Traversals.purs'
+        }, 
+        {
+            dest: 'docs/Halogen-HTML-Renderer.md',
+            src: [ 'src/Halogen/HTML/Renderer/VirtualDOM.purs', 'src/Halogen/HTML/Renderer/String.purs' ]
         }, 
         {
             dest: 'docs/Halogen-Forms.md',
@@ -62,7 +74,7 @@ var paths = {
     ],
     examples: {
         todo: {
-            src: ['examples/todo/Main.purs', 'purescript-halogen-bootstrap/src/**/*.purs'],
+            src: ['examples/todo/Main.purs'],
             dest: 'examples/todo',
             options: {
                 main: 'Example.Todo',
@@ -70,7 +82,7 @@ var paths = {
             }
         }, 
         counter: {
-            src: ['examples/counter/Main.purs', 'purescript-halogen-bootstrap/src/**/*.purs'],
+            src: ['examples/counter/Main.purs'],
             dest: 'examples/counter',
             options: {
                 main: 'Example.Counter',
@@ -78,7 +90,7 @@ var paths = {
             }
         }, 
         ajax: {
-            src: ['examples/ajax/Main.purs', 'purescript-halogen-bootstrap/src/**/*.purs'],
+            src: ['examples/ajax/Main.purs'],
             dest: 'examples/ajax',
             options: {
                 main: 'Example.Ajax',
@@ -86,7 +98,7 @@ var paths = {
             }
         }, 
         placeholder: {
-            src: ['examples/placeholder/Main.purs', 'purescript-halogen-bootstrap/src/**/*.purs'],
+            src: ['examples/placeholder/Main.purs'],
             dest: 'examples/placeholder',
             options: {
                 main: 'Example.Placeholder',
@@ -119,25 +131,25 @@ function docs (target) {
 }
 
 gulp.task('example-todo', function() {
-    return compile(purescript.psc, [paths.src].concat(paths.examples.todo.src), paths.examples.todo.options)
+    return compile(purescript.psc, paths.src.concat(paths.examples.todo.src), paths.examples.todo.options)
         .pipe(browserify({}))
         .pipe(gulp.dest(paths.examples.todo.dest));
 });
 
 gulp.task('example-counter', function() {
-    return compile(purescript.psc, [paths.src].concat(paths.examples.counter.src), paths.examples.counter.options)
+    return compile(purescript.psc, paths.src.concat(paths.examples.counter.src), paths.examples.counter.options)
         .pipe(browserify({}))
         .pipe(gulp.dest(paths.examples.counter.dest));
 });
 
 gulp.task('example-ajax', function() {
-    return compile(purescript.psc, [paths.src].concat(paths.examples.ajax.src), paths.examples.ajax.options)
+    return compile(purescript.psc, paths.src.concat(paths.examples.ajax.src), paths.examples.ajax.options)
         .pipe(browserify({}))
         .pipe(gulp.dest(paths.examples.ajax.dest));
 });
 
 gulp.task('example-placeholder', function() {
-    return compile(purescript.psc, [paths.src].concat(paths.examples.placeholder.src), paths.examples.placeholder.options)
+    return compile(purescript.psc, paths.src.concat(paths.examples.placeholder.src), paths.examples.placeholder.options)
         .pipe(browserify({}))
         .pipe(gulp.dest(paths.examples.placeholder.dest));
 });
@@ -147,7 +159,7 @@ gulp.task('examples', function(cb) {
 });
 
 gulp.task('make', function() {
-    return compile(purescript.pscMake, [paths.src], {})
+    return compile(purescript.pscMake, paths.src, {})
         .pipe(gulp.dest(paths.dest))
 });
 

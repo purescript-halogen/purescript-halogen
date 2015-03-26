@@ -47,7 +47,7 @@ There are two types of target:
 #### `target`
 
 ``` purescript
-target :: forall i. Target i -> H.Attribute i
+target :: forall i. Target i -> [A.Attr i]
 ```
 
 Attach a `Target` to an element using the `href` or `onclick` attribute as appropriate

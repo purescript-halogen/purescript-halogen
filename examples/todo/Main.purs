@@ -59,52 +59,60 @@ instance inputSupportsUndoRedo :: Undo.SupportsUndoRedo Input where
   toUndoRedo _ = Nothing
 
 -- | The view is a state machine, consuming inputs, and generating HTML documents which in turn, generate new inputs
-view :: PureView Input
+view :: forall p node. (H.HTMLRepr node) => SF1 Input (node p Input) 
 view = render <$> stateful (Undo.undoRedoState (State [])) (Undo.withUndoRedo update)
   where
-  render :: forall p. Undo.UndoRedoState State -> H.HTML p Input
+  render :: forall p. Undo.UndoRedoState State -> node p Input
   render st = 
     case Undo.getState st of
       State ts ->
-        H.div (A.class_ B.container)
-              [ H.h1 (A.id_ "header") [ H.text "todo list" ]
+        H.div [ A.class_ B.container ]
+              [ H.h1 [ A.id_ "header" ] [ H.text "todo list" ]
               , toolbar st
               , H.div_ (zipWith task ts (0 .. length ts))
               ]
               
-  toolbar :: forall p st. Undo.UndoRedoState st -> H.HTML p Input
-  toolbar st = H.p (A.class_ B.btnGroup)
-                   [ H.button ( A.classes [ B.btn, B.btnPrimary ]
-                                <> A.onclick (\_ -> pure (NewTask Nothing)) )
+  toolbar :: forall p st. Undo.UndoRedoState st -> node p Input
+  toolbar st = H.p [ A.class_ B.btnGroup ]
+                   [ H.button [ A.classes [ B.btn, B.btnPrimary ]
+                              , A.onclick (\_ -> pure (NewTask Nothing))
+                              ]
                               [ H.text "New Task" ]
-                   , H.button ( A.class_ B.btn
-                                <> A.enabled (Undo.canUndo st)
-                                <> A.onclick (\_ -> pure Undo) )
+                   , H.button [ A.class_ B.btn
+                              , A.enabled (Undo.canUndo st)
+                              , A.onclick (\_ -> pure Undo)
+                              ]
                               [ H.text "Undo" ]
-                   , H.button ( A.class_ B.btn
-                                <> A.enabled (Undo.canRedo st)
-                                <> A.onclick (\_ -> pure Redo) )
+                   , H.button [ A.class_ B.btn
+                              , A.enabled (Undo.canRedo st)
+                              , A.onclick (\_ -> pure Redo)
+                              ]
                               [ H.text "Redo" ]
                    ]
                    
-  task :: forall p. Task -> Number -> H.HTML p Input
+  task :: forall p. Task -> Number -> node p Input
   task (Task task) index = H.p_ <<< pure $
     BI.inputGroup 
-      (Just (H.input ( A.class_ B.checkbox
-                       <> A.type_ "checkbox"
-                       <> A.checked task.completed
-                       <> A.title "Mark as completed"
-                       <> A.onChecked (pure <<< MarkCompleted index) )
-                     []))
-      (H.input ( A.classes [ B.formControl ]
-                 <> A.placeholder "Description"
-                 <> A.onValueChanged (pure <<< UpdateDescription index)
-                 <> A.value task.description )
+      (Just (BI.RegularAddOn 
+        (H.input [ A.class_ B.checkbox
+                 , A.type_ "checkbox"
+                 , A.checked task.completed
+                 , A.title "Mark as completed"
+                 , A.onChecked (pure <<< MarkCompleted index)
+                 ]
+                 [])))
+      (H.input [ A.classes [ B.formControl ]
+               , A.placeholder "Description"
+               , A.onValueChanged (pure <<< UpdateDescription index)
+               , A.value task.description
+               ]
                [])
-      (Just (H.button ( A.classes [ B.btn, B.btnDefault ]
-                        <> A.title "Remove task"
-                        <> A.onclick (\_ -> pure $ RemoveTask index) )
-                      [ H.text "✖" ]))
+      (Just (BI.ButtonAddOn 
+        (H.button [ A.classes [ B.btn, B.btnDefault ]
+                  , A.title "Remove task"
+                  , A.onclick (\_ -> pure $ RemoveTask index)
+                  ]
+                  [ H.text "✖" ])))
 
   update :: State -> Input -> State
   update (State ts) (NewTask s) = State (ts ++ [Task { description: fromMaybe "" s, completed: false }])

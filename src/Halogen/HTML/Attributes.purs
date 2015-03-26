@@ -6,9 +6,27 @@ module Halogen.HTML.Attributes
   , className
   , runClassName
   
-  , addClass
+  , AttributeName()
+  , attributeName
+  , runAttributeName
   
-  , attribute
+  , EventName()
+  , eventName
+  , runEventName
+  
+  , Styles()
+  , styles
+  , runStyles
+  
+  , IsAttribute
+  , toAttrString
+  
+  , AttrRepr
+  , Attr()
+  , runAttr
+  
+  , attr
+  , handler
   
   , alt
   , charset
@@ -37,10 +55,11 @@ module Halogen.HTML.Attributes
 
 import DOM
 
+import Data.Maybe
 import Data.Tuple
 import Data.Either (either)
 import Data.Foreign
-import Data.StrMap (StrMap())
+import Data.StrMap (StrMap(), toList)
 import Data.Monoid (mempty)
 import Data.Array (map)
 import Data.String (joinWith)
@@ -50,8 +69,8 @@ import Control.Monad.Eff
 import Control.Monad.ST
 
 import Halogen.Internal.VirtualDOM
-
-import qualified Halogen.HTML as H
+import Halogen.HTML.Events.Types
+import Halogen.HTML.Events.Handler
 
 -- | A wrapper for strings which are used as CSS classes
 newtype ClassName = ClassName String
@@ -64,93 +83,148 @@ className = ClassName
 runClassName :: ClassName -> String
 runClassName (ClassName s) = s
 
--- \ This convenience function can be used to add a class name to an existing set of attributes.
+-- | A type-safe wrapper for attribute names
 -- |
--- | If the `class` attribute already exists, the class name will be appended. If not, it will be added as
--- | a new attribute.
-addClass :: forall i. ClassName -> H.Attribute i -> H.Attribute i
-addClass cn@(ClassName c) (H.Attribute xs) =
-  case mapAccumL go false xs of
-    Tuple false ys -> H.Attribute ys <> class_ cn
-    Tuple true ys -> H.Attribute ys
-  where
-  go :: Boolean -> H.AttributeValue i -> Tuple Boolean (H.AttributeValue i)
-  go false (H.StringAttribute name cs) | H.runAttributeName name == className = 
-    Tuple true (H.StringAttribute (H.attributeName className) (cs ++ " " ++ c))
-  go b v = Tuple b v
+-- | The phantom type `value` describes the type of value which this attribute requires.
+newtype AttributeName value = AttributeName String
+
+-- Create an attribute name
+attributeName :: forall value. String -> AttributeName value
+attributeName = AttributeName
+
+-- | Unpack an attribute name
+runAttributeName :: forall value. AttributeName value -> String
+runAttributeName (AttributeName s) = s
+
+-- | A type-safe wrapper for event names.
+-- |
+-- | The phantom type `fields` describes the event type which we can expect to exist on events
+-- | corresponding to this name.
+newtype EventName (fields :: # *) = EventName String
+
+-- Create an event name
+eventName :: forall fields. String -> EventName fields
+eventName = EventName
+
+-- | Unpack an event name
+runEventName :: forall fields. EventName fields -> String
+runEventName (EventName s) = s
+
+-- | A newtype for CSS styles
+newtype Styles = Styles (StrMap String)
+
+-- Create CSS styles
+styles :: StrMap String -> Styles
+styles = Styles
+
+-- | Unpack CSS styles
+runStyles :: Styles -> StrMap String
+runStyles (Styles m) = m
+
+-- | This type class captures those types which can be used as attribute values.
+-- |
+-- | `toAttrString` is an alternative to `show`, and is needed by `attr` in the string renderer.
+class IsAttribute a where
+  toAttrString :: AttributeName a -> a -> String
   
-  className :: String
-  className = "className"
-    
--- | This function can be used to define custom attributes.
-attribute :: forall i value. H.AttributeName -> String -> H.Attribute i
-attribute key value = H.Attribute [H.StringAttribute key value]
+instance stringIsAttribute :: IsAttribute String where
+  toAttrString _ s = s
+  
+instance numberIsAttribute :: IsAttribute Number where
+  toAttrString _ n = show n
+  
+instance booleanIsAttribute :: IsAttribute Boolean where
+  toAttrString name true = runAttributeName name
+  toAttrString _ false = "" 
+  
+instance stylesIsAttribute :: IsAttribute Styles where
+  toAttrString _ (Styles m) = joinWith "; " $ (\(Tuple key value) -> key <> ": " <> value) <$> toList m
 
-alt :: forall i. String -> H.Attribute i
-alt = attribute $ H.attributeName "alt"
+-- | This type class encodes _representations_ of HTML attributes
+class (Functor attr) <= AttrRepr attr where
+  attr :: forall value i. (IsAttribute value) => AttributeName value -> value -> attr i
+  handler :: forall fields i. EventName fields -> (Event fields -> EventHandler (Maybe i)) -> attr i
+
+-- | `Attr` represents an abstract attribute
+newtype Attr i = Attr (forall attr. (AttrRepr attr) => attr i)
+
+runAttr :: forall i attr. (AttrRepr attr) => Attr i -> attr i
+runAttr (Attr f) = f
+
+instance attrRepr :: AttrRepr Attr where
+  attr name value = Attr (attr name value)
+  handler name f = Attr (handler name f)
+
+instance functorAttr :: Functor Attr where
+  (<$>) f (Attr x) = Attr (f <$> x)
+
+-- Smart constructors
+
+alt :: forall i. String -> Attr i
+alt = attr $ attributeName "alt"
      
-charset :: forall i. String -> H.Attribute i
-charset = attribute $ H.attributeName "charset"
+charset :: forall i. String -> Attr i
+charset = attr $ attributeName "charset"
 
-class_ :: forall i. ClassName -> H.Attribute i
-class_ = attribute (H.attributeName "className") <<< runClassName
+class_ :: forall i. ClassName -> Attr i
+class_ = attr (attributeName "className") <<< runClassName
 
-classes :: forall i. [ClassName] -> H.Attribute i
-classes ss = attribute (H.attributeName "className") (joinWith " " $ map runClassName ss)
+classes :: forall i. [ClassName] -> Attr i
+classes ss = attr (attributeName "className") (joinWith " " $ map runClassName ss)
 
-content :: forall i. String -> H.Attribute i
-content = attribute $ H.attributeName "content"
+content :: forall i. String -> Attr i
+content = attr $ attributeName "content"
 
-for :: forall i. String -> H.Attribute i
-for = attribute $ H.attributeName "for"
+for :: forall i. String -> Attr i
+for = attr $ attributeName "for"
 
-height :: forall i. Number -> H.Attribute i
-height = attribute (H.attributeName "height") <<< show
+height :: forall i. Number -> Attr i
+height = attr (attributeName "height") <<< show
 
-href :: forall i. String -> H.Attribute i
-href = attribute $ H.attributeName "href"
+href :: forall i. String -> Attr i
+href = attr $ attributeName "href"
 
-httpEquiv :: forall i. String -> H.Attribute i
-httpEquiv = attribute $ H.attributeName "http-equiv"
+httpEquiv :: forall i. String -> Attr i
+httpEquiv = attr $ attributeName "http-equiv"
 
-id_ :: forall i. String -> H.Attribute i
-id_ = attribute $ H.attributeName "id"
+id_ :: forall i. String -> Attr i
+id_ = attr $ attributeName "id"
    
-name :: forall i. String -> H.Attribute i
-name = attribute $ H.attributeName "name"
+name :: forall i. String -> Attr i
+name = attr $ attributeName "name"
        
-rel :: forall i. String -> H.Attribute i
-rel = attribute $ H.attributeName "rel"
+rel :: forall i. String -> Attr i
+rel = attr $ attributeName "rel"
     
-src :: forall i. String -> H.Attribute i
-src = attribute $ H.attributeName "src"
+src :: forall i. String -> Attr i
+src = attr $ attributeName "src"
    
-target :: forall i. String -> H.Attribute i
-target = attribute $ H.attributeName "target"
+target :: forall i. String -> Attr i
+target = attr $ attributeName "target"
    
-title :: forall i. String -> H.Attribute i
-title = attribute $ H.attributeName "title"
+title :: forall i. String -> Attr i
+title = attr $ attributeName "title"
    
-type_ :: forall i. String -> H.Attribute i
-type_ = attribute $ H.attributeName "type"
+type_ :: forall i. String -> Attr i
+type_ = attr $ attributeName "type"
    
-value :: forall i. String -> H.Attribute i
-value = attribute $ H.attributeName "value"
+value :: forall i. String -> Attr i
+value = attr $ attributeName "value"
    
-width :: forall i. Number -> H.Attribute i
-width = attribute (H.attributeName "width") <<< show
+width :: forall i. Number -> Attr i
+width = attr (attributeName "width") <<< show
    
-disabled :: forall i. Boolean -> H.Attribute i
-disabled b = H.Attribute [H.BooleanAttribute (H.attributeName "disabled") b]
+disabled :: forall i. Boolean -> Attr i
+disabled = attr $ attributeName "disabled"
    
-enabled :: forall i. Boolean -> H.Attribute i
+enabled :: forall i. Boolean -> Attr i
 enabled = disabled <<< not
    
-checked :: forall i. Boolean -> H.Attribute i
-checked b = H.Attribute [H.BooleanAttribute (H.attributeName "checked") b]
+checked :: forall i. Boolean -> Attr i
+checked = attr $ attributeName "checked"
    
-placeholder :: forall i. String -> H.Attribute i
-placeholder = attribute $ H.attributeName "placeholder"
+placeholder :: forall i. String -> Attr i
+placeholder = attr $ attributeName "placeholder"
 
-style :: forall i. StrMap String -> H.Attribute i
-style m = H.Attribute [H.MapAttribute (H.attributeName "style") m]
+style :: forall i. Styles -> Attr i
+style = attr $ attributeName "style"

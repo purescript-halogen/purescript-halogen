@@ -50,16 +50,16 @@ foreign import setTextContent
 -- | renderer function, below.
 data Placeholder = Counter Number
 
-view :: forall r. View Unit Placeholder r
+view :: forall r node. (H.HTMLRepr node) => SF1 Unit (node Placeholder (Either Unit r)) 
 view = render <$> stateful 0 update
   where
-  render :: Number -> H.HTML Placeholder (Either Unit r)
+  render :: Number -> node Placeholder (Either Unit r)
   render n = 
-    H.div (A.class_ B.container)
+    H.div [ A.class_ B.container ]
           [ H.h1_ [ H.text "placeholder" ]
           , H.p_ [ H.text "This counter is rendered using a placeholder:" ]
           , H.p_ [ H.placeholder (Counter n) ]
-          , H.button (A.classes [B.btn, B.btnPrimary] <> A.onclick \_ -> pure (Left unit)) [ H.text "Update" ]
+          , H.button [ A.classes [B.btn, B.btnPrimary], A.onclick \_ -> pure (Left unit) ] [ H.text "Update" ]
           ] 
   
   update :: Number -> Unit -> Number
@@ -67,7 +67,7 @@ view = render <$> stateful 0 update
   
 -- | Our placeholder will be replaced with a widget, which we will create using the `widget`
 -- | function from `Halogen.Internal.VirtualDOM`.
-makeCounter :: forall eff i. Number -> Widget (HalogenEffects eff) i
+makeCounter :: forall eff. Number -> Widget (HalogenEffects eff)
 makeCounter n = widget "PlaceholderLabel" "label1" init update destroy
   where 
   init :: forall eff. Eff (trace :: Trace, dom :: DOM | eff) Node
@@ -89,7 +89,7 @@ makeCounter n = widget "PlaceholderLabel" "label1" init update destroy
 -- | Convert placeholders into `VTrees`.
 -- |
 -- | In a real application, this function might render a third party component using `widget`.
-renderer :: forall eff i r. Renderer i Placeholder r eff
+renderer :: forall eff i. Renderer i Placeholder eff
 renderer _ (Counter n) = makeCounter n 
   
 ui :: forall eff. UI Unit Placeholder Void eff

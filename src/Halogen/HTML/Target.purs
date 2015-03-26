@@ -13,6 +13,8 @@ module Halogen.HTML.Target
       
 import Control.Functor (($>))
 
+import Control.Alt
+
 import qualified Halogen.HTML as H
 import qualified Halogen.HTML.Attributes as A
 import qualified Halogen.HTML.Events as E
@@ -36,6 +38,6 @@ runURL (URL s) = s
 data Target a = LinkTarget URL | DataTarget a
 
 -- | Attach a `Target` to an element using the `href` or `onclick` attribute as appropriate
-target :: forall i. Target i -> H.Attribute i
-target (LinkTarget url) = A.href (runURL url)
-target (DataTarget i) = A.href "#" <> E.onclick (\_ -> E.preventDefault $> i)
+target :: forall i. Target i -> [A.Attr i]
+target (LinkTarget url) = [ A.href (runURL url) ]
+target (DataTarget i) = [ A.href "#", E.onclick (\_ -> E.preventDefault $> i) ]
