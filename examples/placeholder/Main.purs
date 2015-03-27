@@ -14,6 +14,7 @@ import Debug.Trace
 
 import Halogen
 import Halogen.Signal
+import Halogen.Component
 import Halogen.Internal.VirtualDOM (Widget(), widget)
 
 import qualified Halogen.HTML as H
@@ -43,23 +44,18 @@ foreign import setTextContent
   \  };\
   \}" :: forall eff. Fn2 Node String (Eff (dom :: DOM | eff) Unit)
 
--- | Instead of embedding nodes directly, we create a placeholder type,
--- | and insert placeholders into our document.
--- |
--- | This way, we keep our view pure, and can separate out impure code into the
--- | renderer function, below.
-data Placeholder = Counter Number
-
-view :: forall r node. (H.HTMLRepr node) => SF1 Unit (node Placeholder (Either Unit r)) 
-view = render <$> stateful 0 update
+ui :: forall m node eff. (Applicative m, H.HTMLRepr node) => Component (Widget (HalogenEffects eff)) m node Unit Unit
+ui = component (render <$> stateful 0 update)
   where
-  render :: Number -> node Placeholder (Either Unit r)
+  render :: Number -> node _ (m Unit)
   render n = 
     H.div [ A.class_ B.container ]
           [ H.h1_ [ H.text "placeholder" ]
           , H.p_ [ H.text "This counter is rendered using a placeholder:" ]
-          , H.p_ [ H.placeholder (Counter n) ]
-          , H.button [ A.classes [B.btn, B.btnPrimary], A.onclick \_ -> pure (Left unit) ] [ H.text "Update" ]
+          , H.p_ [ H.placeholder (makeCounter n) ]
+          , H.button [ A.classes [B.btn, B.btnPrimary]
+                     , A.onclick \_ -> pure (pure unit) 
+                     ] [ H.text "Update" ]
           ] 
   
   update :: Number -> Unit -> Number
@@ -85,15 +81,6 @@ makeCounter n = widget "PlaceholderLabel" "label1" init update destroy
   
   destroy :: forall eff. Node -> Eff (trace :: Trace, dom :: DOM | eff) Unit
   destroy _ = trace "Destroy function called"
-  
--- | Convert placeholders into `VTrees`.
--- |
--- | In a real application, this function might render a third party component using `widget`.
-renderer :: forall eff i. Renderer i Placeholder eff
-renderer _ (Counter n) = makeCounter n 
-  
-ui :: forall eff. UI Unit Placeholder Void eff
-ui = { view: view, handler: defaultHandler, renderer: renderer }    
   
 main = do
   Tuple node _ <- runUI ui

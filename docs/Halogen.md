@@ -8,11 +8,13 @@ assembled from the parts defined in the various submodules:
 
 - `Halogen.Signal` for responding to inputs and maintaining state
 - `Halogen.HTML.*` for templating HTML documents
+- `Halogen.Component` for building application components
 - `Halogen.Themes.*` for rendering using common front-end libraries
 - `Halogen.Mixin.*` for common additional application features
 
-The type signature and documentation for the [`runUI`](#runUI) function provides a good introduction 
-to this library. For more advanced use-cases, you might like to look at the `runUI` function instead.
+The functionality of this library is completely described by the type signature of the `runUI`
+function, which renders a `Component` to the DOM. The other modules exist to make the construction
+of `Component`s as simple as possible.
 
 
 #### `HalogenEffects`
@@ -32,57 +34,6 @@ changes :: VTree -> SF VTree Patch
 A signal which emits patches corresponding to successive `VTree`s.
 
 This function can be used to create alternative top-level handlers which use `virtual-dom`.
-
-#### `View`
-
-``` purescript
-type View i p r = SF1 i (R.HTML p (Either i r))
-```
-
-A view is represented as a pure, non-empty signal function which
-consumes inputs of type `r`, and generates HTML documents.
-
-The HTML documents can contain placeholders of type `p`, and
-generate events which are either inputs (`i`) or requests (`r`). 
-
-#### `PureView`
-
-``` purescript
-type PureView i = forall p. SF1 i (R.HTML p i)
-```
-
-A pure view does not make any external requests or use placeholder elements.
-
-#### `Handler`
-
-``` purescript
-type Handler r i eff = r -> Aff (HalogenEffects eff) i
-```
-
-This type synonym is provided to tidy up the type signature of `runUI`.
-
-The _handler function_ is responsible for receiving requests from the UI, integrating with external
-components, and providing inputs back to the system based on the results.
-
-For example:
-
-```purescript
-data Input = SetDateAndTime DateAndTime | ...
-
-data Request = GetDateAndTimeRequest | ...
-
-appHandler :: forall eff. Handler Request Input eff 
-appHandler GetDateAndTimeRequest k =
-  get "/date" \response -> k (readDateAndTime response)
-```
-
-#### `defaultHandler`
-
-``` purescript
-defaultHandler :: forall i eff. Handler Void i eff
-```
-
-A default renderer implementation which can be used when there are no placeholders
 
 #### `Driver`
 
@@ -106,60 +57,13 @@ main = do
   setInterval 1000 $ driver Tick
 ```
 
-#### `Renderer`
-
-``` purescript
-type Renderer i p eff = Driver i eff -> p -> Widget (HalogenEffects eff)
-```
-
-A type synonym for functions which render components to replace placeholders
-
-#### `defaultRenderer`
-
-``` purescript
-defaultRenderer :: forall i p eff. Renderer i Void eff
-```
-
-A default renderer implementation which can be used when there are no placeholders
-
-#### `UI`
-
-``` purescript
-type UI i p r eff = { renderer :: Renderer i p eff, handler :: Handler r i eff, view :: View i p r }
-```
-
-A UI consists of:
-
-- A view
-- A handler function
-- A function which renders placeholder elements
-
-#### `PureUI`
-
-``` purescript
-type PureUI i = forall eff. UI i Void Void eff
-```
-
-A pure UI is a UI which:
-
-- Does not render placeholder elements
-- Does not make external requests
-
-#### `pureUI`
-
-``` purescript
-pureUI :: forall i. (forall p. SF1 i (R.HTML p i)) -> PureUI i
-```
-
-A convenience function which can be used to construct a pure UI
-
 #### `runUI`
 
 ``` purescript
-runUI :: forall i p r eff. UI i p r eff -> Eff (HalogenEffects eff) (Tuple Node (Driver i eff))
+runUI :: forall p req eff. Component (Widget (HalogenEffects eff)) (Aff (HalogenEffects eff)) R.HTML req req -> Eff (HalogenEffects eff) (Tuple Node (Driver req eff))
 ```
 
-`runUI` renders a `UI` to the DOM using `virtual-dom`.
+`runUI` renders a `Component` to the DOM using `virtual-dom`.
 
 This function is the workhorse of the Halogen library. It can be called in `main`
 to set up the application and create the driver function, which can be used to 

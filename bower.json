@@ -21,13 +21,14 @@
     "purescript-refs": "~0.1.2",
     "purescript-dom": "~0.1.1",
     "purescript-foldable-traversable": "~0.3.0",
-    "purescript-profunctor": "~0.1.0",
+    "purescript-profunctor": "~0.2.1",
     "purescript-aff": "~0.6.0",
     "purescript-arrays": "~0.3.3",
     "purescript-foreign": "~0.4.0",
     "purescript-nullable": "~0.1.1",
     "purescript-maps": "~0.3.2",
     "purescript-bifunctors": "~0.3.1",
-    "purescript-void": "~0.2.0"
+    "purescript-void": "~0.2.0",
+    "purescript-exists": "~0.1.1"
   }
 }

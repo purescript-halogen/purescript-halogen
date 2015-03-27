@@ -10,6 +10,7 @@ import DOM
 
 import Halogen
 import Halogen.Signal
+import Halogen.Component
 
 import qualified Halogen.HTML as H
 import qualified Halogen.HTML.Attributes as A
@@ -43,10 +44,10 @@ data State = State Number
 -- | Inputs to the state machine
 data Input = Tick
 
-view :: forall p r node. (H.HTMLRepr node) => SF1 Input (node p r)
-view = render <$> stateful (State 0) update
+ui :: forall p m node eff. (Applicative m, H.HTMLRepr node) => Component p m node Input Input
+ui = component (render <$> stateful (State 0) update)
   where
-  render :: State -> node p r
+  render :: State -> node p (m Input)
   render (State n) = 
     H.div [ A.class_ B.container ]
           [ H.h1 [ A.id_ "header" ] [ H.text "counter" ]
@@ -57,7 +58,7 @@ view = render <$> stateful (State 0) update
   update (State n) Tick = State (n + 1)
 
 main = do
-  Tuple node driver <- runUI (pureUI view)
+  Tuple node driver <- runUI ui
   appendToBody node
   setInterval 1000 $ driver Tick
   

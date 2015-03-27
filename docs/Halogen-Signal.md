@@ -38,14 +38,6 @@ runSF1 :: forall i o. SF1 i o -> { next :: SF i o, result :: o }
 
 Run a `SF1` to obtain the initial value and remaining signal
 
-#### `arr`
-
-``` purescript
-arr :: forall i o. (i -> o) -> SF i o
-```
-
-Create a `SF` from a function  
-
 #### `input`
 
 ``` purescript
