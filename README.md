@@ -15,24 +15,24 @@ A declarative, type-safe UI library for PureScript.
 
 A signal function is a state machine which consumes values of one input type, and yields values of an output type. In the case of our user interfaces, our signal functions will consume input events and yield HTML documents. The standard collection of instances (`Functor`, `Applicative`, etc.) allow us to compose these signal functions to create useful reactive documents.
 
-The main idea in `purescript-halogen` is to separate the UI into the following components:
+The main idea in `purescript-halogen` is to separate the UI into _components_. A component consists of
 
-- A _pure_ signal function, which is responsible for responding to inputs, and generating HTML documents.
-- A _handler function_, which is responsible for responding to DOM events, and initiating (possibly asynchronous) computations, which can result in new inputs.
-- A _driver function_ which runs the signal function, using the handler function to turn DOM events into new inputs.
+- A _signal function_, which responds to inputs, and generates HTML documents.
+- In turn, HTML documents can create _actions_. 
+- Actions can create new inputs, which are fed back into the signal function.
 
-Halogen provides some general-purpose driver functions, and tools for building signal functions and handler functions.
+Halogen provides tools for composing components, signal functions and HTML documents.
 
-In this way, we separate our effectful code from the view, which is a pure function of the UI state. All of the effects are pushed to the boundary of our application, in the _driver function_.
+The type signatures for each part of the Halogen library are very general, using type arguments to delineate optional features. 
 
 ### A Pure Model
 
 If the UI does not require any interaction with external components, and the only effects involved are DOM effects, we can simplify the model above.
 
-In this case, the handler function will just take the DOM event, create a new input, and feed it back into the signal function. We can describe such a UI with the following type:
+In this case, the HTML documents will just generate inputs directly, to be fed back into the signla function. We can describe such a UI with the following type:
 
 ```purescript
-type PureView input = forall p. SF1 input (HTML p input)
+forall node p m. (H.HTMLRepr node) => Component p m node input input
 ```
 
 That is, we define a type of input messages, and create a signal function which consumes inputs and produces HTML documents which generate new inputs of the same type.
@@ -41,43 +41,45 @@ It is useful to see how this model can be used to create simple UIs before writi
 
 ### A Simple State Machine
 
-Here is a simple example. The `ui` function defines a signal function which responds to click events by incrementing a counter.
+Here is a simple example. The `ui` function defines a component which responds to click events by incrementing a counter.
 
 ```purescript
 data Input = Click
 
-view :: PureView Input
-view = render <$> stateful 0 update
+ui :: forall p node m. (H.HTMLRepr node) => Component p m node Input Input
+ui = component (render <$> stateful 0 update)
   where
-  render :: Number -> HTML a Input
-  render n = button [onclick \_ -> pure Click] [text (show n)]
+  render :: Number -> node p (m Input)
+  render n = button [onclick \_ -> pure (pure Click)] [text (show n)]
   
   update :: Number -> Input -> Number
   update n Click = n + 1
   
 main = do
-  node <- runUI (pureUI view)
+  node <- runUI ui
   appendToBody node
 ```
 
-Here, the user interface is represented as a signal function of type `SF1 Input (HTML Input)`. The type constructor `SF1` represents _non-empty_ signals, i.e. signals which have an initial output value. This just means that we have an initial HTML document to render when the application loads.
+Here, the user interface is represented as a signal function of type `SF1 Input (node p (m Input))`. The type constructor `SF1` represents _non-empty_ signals, i.e. signals which have an initial output value. This just means that we have an initial HTML document to render when the application loads.
 
 The `Applicative` instance is used to apply the `render` function (essentially the _view_) to a signal created using the `stateful` function (which acts as our _model_).
 
-Note that the type `HTML Input` references the input event type. This means that our HTML documents can contain embedded functions which will generate events in response to user input. In this case, the `const Click` function is attached to the `onclick` handler of our button, so that our signal function will be run when the user clicks the button, causing the document to be updated.
+The `component` function is applied to the signal function to create a _component_, which can then be passed to `runUI` to be rendered to the DOM.
+
+Note that the type `node p (m Input)` references the input event type. This means that our HTML documents can contain embedded functions which will generate events in response to user input. In this case, the `pure (pure Click)` function is attached to the `onclick` handler of our button, so that our signal function will be run when the user clicks the button, causing the document to be updated.
 
 ### Handling Events
 
 In the example above, the `button`'s `onclick` handler was bound to the `Click` message as follows:
 
 ```purescript
-onclick \_ -> pure Click
+onclick \_ -> pure (pure Click)
 ```
 
 Here, `pure` indicates that we are using an `Applicative` functor. The functor in question is the `EventHandler` functor, which can be used to perform common tasks related to events:
 
 ```purescript
-onclick \_ -> preventDefault $> Click
+onclick \_ -> preventDefault $> pure Click
 ```
 
 Here, we use the `preventDefault` default function to call the `preventDefault` method on the event in the event handler. Other methods are supported, like `stopPropagation` and `stopImmediatePropagation`.
