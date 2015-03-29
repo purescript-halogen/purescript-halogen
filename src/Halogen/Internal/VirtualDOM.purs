@@ -146,16 +146,25 @@ foreign import widgetImpl
   \  Widget.prototype.name = name;\
   \  Widget.prototype.id = id;\
   \  Widget.prototype.init = function(){\
-  \    return init();\
+  \    var state = init();\
+  \    this.state = state.state;\
+  \    return state.node;\
   \  };\
   \  Widget.prototype.update = function(prev, node) {\
-  \    return update(node)();\
+  \    var updated = update(prev.state)(node)();\
+  \    this.state = prev.state;\
+  \    return updated;\
   \  };\
   \  Widget.prototype.destroy = function(node) {\
-  \    destroy(node)();\
+  \    destroy(this.state)(node)();\
   \  };\
   \  return new Widget();\
-  \}" :: forall eff i. Fn5 String String (Eff eff Node) (Node -> Eff eff (Nullable Node)) (Node -> Eff eff Unit) (Widget eff)
+  \}" :: forall eff i s. Fn5 String 
+                             String 
+                             (Eff eff { state :: s, node :: Node }) 
+                             (s -> Node -> Eff eff (Nullable Node)) 
+                             (s -> Node -> Eff eff Unit) 
+                             (Widget eff)
 
 -- | Create a `VTree` from a third-party component (or _widget_), by providing a name, an ID, and three functions:
 -- | 
@@ -163,5 +172,11 @@ foreign import widgetImpl
 -- | - An update function, which receives the previous DOM node and optionally creates a new one.
 -- | - A finalizer function, which deallocates any necessary resources when the component is removed from the DOM.
 -- |
-widget :: forall eff i. String -> String -> Eff eff Node -> (Node -> Eff eff (Maybe Node)) -> (Node -> Eff eff Unit) -> Widget eff
-widget name id init update destroy = runFn5 widgetImpl name id init (\n -> toNullable <$> update n) destroy
+-- | The three functions share a common piece of data of a hidden type `s`.
+widget :: forall eff i s. String -> 
+                          String -> 
+                          Eff eff { state :: s, node :: Node } ->
+                          (s -> Node -> Eff eff (Maybe Node)) -> 
+                          (s -> Node -> Eff eff Unit) -> 
+                          Widget eff
+widget name id init update destroy = runFn5 widgetImpl name id init (\s n -> toNullable <$> update s n) destroy

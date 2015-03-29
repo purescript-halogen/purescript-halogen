@@ -101,12 +101,12 @@ var paths = {
                 modules: ['Example.Ajax']
             }
         }, 
-        placeholder: {
-            src: ['examples/placeholder/Main.purs'],
-            dest: 'examples/placeholder',
+        ace: {
+            src: ['examples/ace/Main.purs'],
+            dest: 'examples/ace',
             options: {
-                main: 'Example.Placeholder',
-                modules: ['Example.Placeholder']
+                main: 'Example.Ace',
+                modules: ['Example.Ace']
             }
         }
     }
@@ -152,14 +152,14 @@ gulp.task('example-ajax', function() {
         .pipe(gulp.dest(paths.examples.ajax.dest));
 });
 
-gulp.task('example-placeholder', function() {
-    return compile(purescript.psc, paths.src.concat(paths.examples.placeholder.src), paths.examples.placeholder.options)
+gulp.task('example-ace', function() {
+    return compile(purescript.psc, paths.src.concat(paths.examples.ace.src), paths.examples.ace.options)
         .pipe(browserify({}))
-        .pipe(gulp.dest(paths.examples.placeholder.dest));
+        .pipe(gulp.dest(paths.examples.ace.dest));
 });
 
 gulp.task('examples', function(cb) {
-    runSequence('example-todo', 'example-counter', 'example-ajax', 'example-placeholder', cb);
+    runSequence('example-todo', 'example-counter', 'example-ajax', 'example-ace', cb);
 });
 
 gulp.task('make', function() {
