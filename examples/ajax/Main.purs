@@ -19,6 +19,7 @@ import DOM
 
 import Halogen
 import Halogen.Signal
+import Halogen.Component
 
 import qualified Halogen.HTML as H
 import qualified Halogen.HTML.Attributes as A
@@ -70,21 +71,18 @@ data Input
   = SetBusy
   | SetCode String
   | SetResult String
-  
--- | Requests to external services
-data Request = CompileRequest String
-  
-view :: forall p node. (H.HTMLRepr node) => SF1 Input (node p (Either Input Request))
-view = render <$> stateful (State false exampleCode Nothing) update
+
+ui :: forall p node eff. (H.HTMLRepr node) => Component p (Aff (HalogenEffects (http :: HTTP | eff))) node Input Input
+ui = component (render <$> stateful (State false exampleCode Nothing) update)
   where
-  render :: State -> node p (Either Input Request)
+  render :: State -> node p (Aff (HalogenEffects (http :: HTTP | eff)) Input)
   render (State busy code result) = 
     H.div [ A.class_ B.container ] $
           [ H.h1 [ A.id_ "header" ] [ H.text "ajax example" ]
           , H.h2_ [ H.text "purescript code" ]
           , H.p_ [ H.textarea [ A.class_ B.formControl 
                               , A.value code 
-                              , A.onInput (pure <<< Left <<< SetCode)
+                              , A.onInput (pure <<< pure <<< SetCode)
                               , A.style (A.styles $ StrMap.fromList 
                                           [ Tuple "font-family" "monospace"
                                           , Tuple "height" "200px"
@@ -92,7 +90,7 @@ view = render <$> stateful (State false exampleCode Nothing) update
                               ] [] ]
           , H.p_ [ H.button [ A.classes [B.btn, B.btnPrimary]
                             , A.disabled busy
-                            , A.onclick (\_ -> pure (Right (CompileRequest code)))
+                            , A.onclick (\_ -> pure (handler code))
                             ] [ H.text "Compile" ] ]
           , H.p_ [ H.text (if busy then "Working..." else "") ]
           ] ++ flip foldMap result \js ->
@@ -106,14 +104,11 @@ view = render <$> stateful (State false exampleCode Nothing) update
   update (State busy code _) (SetResult rslt) = State false code (Just rslt)
 
 -- | Handle a request to an external service
-handler :: forall eff. Handler Request Input (http :: HTTP | eff)
-handler (CompileRequest code) = makeAff \_ k -> unsafeInterleaveEff do
+handler :: forall eff. String -> Aff (HalogenEffects (http :: HTTP | eff)) Input
+handler code = makeAff \_ k -> unsafeInterleaveEff do
   k SetBusy
   compile code \response -> do
     k (SetResult response)
- 
-ui :: forall eff. UI Input Void Request (http :: HTTP | eff)
-ui = { view: view, handler: handler, renderer: defaultRenderer }  
   
 main = do
   Tuple node driver <- runUI ui

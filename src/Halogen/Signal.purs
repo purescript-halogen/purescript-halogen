@@ -8,7 +8,6 @@ module Halogen.Signal
   , runSF
   , runSF1
   
-  , arr
   , input
   , stateful
   , stateful'
@@ -41,10 +40,6 @@ newtype SF1 i o = SF1 { result :: o, next :: SF i o }
 -- | Run a `SF1` to obtain the initial value and remaining signal
 runSF1 :: forall i o. SF1 i o -> { result :: o, next :: SF i o }
 runSF1 (SF1 o) = o
-  
--- | Create a `SF` from a function  
-arr :: forall i o. (i -> o) -> SF i o
-arr f = let s = SF \i -> SF1 { result: f i, next: s } in s
   
 -- | A `SF` which returns the latest input
 input :: forall i. SF i i

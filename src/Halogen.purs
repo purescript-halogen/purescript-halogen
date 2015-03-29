@@ -3,13 +3,22 @@
 -- |
 -- | - `Halogen.Signal` for responding to inputs and maintaining state
 -- | - `Halogen.HTML.*` for templating HTML documents
+-- | - `Halogen.Component` for building application components
 -- | - `Halogen.Themes.*` for rendering using common front-end libraries
 -- | - `Halogen.Mixin.*` for common additional application features
 -- |
--- | The type signature and documentation for the [`runUI`](#runUI) function provides a good introduction 
--- | to this library. For more advanced use-cases, you might like to look at the `runUI` function instead.
+-- | The functionality of this library is completely described by the type signature of the `runUI`
+-- | function, which renders a `Component` to the DOM. The other modules exist to make the construction
+-- | of `Component`s as simple as possible.
 -- |
-module Halogen where
+module Halogen 
+  ( HalogenEffects()
+  , Driver()
+  
+  , changes
+  
+  , runUI
+  ) where
     
 import DOM
 
@@ -33,6 +42,7 @@ import qualified Halogen.HTML.Renderer.VirtualDOM as R
 
 import Halogen.Signal 
 import Halogen.Internal.VirtualDOM   
+import Halogen.Component   
  
 -- | Wraps the effects required by the `runUI` function.
 type HalogenEffects eff = (trace :: Trace, ref :: Ref, dom :: DOM | eff)
@@ -42,38 +52,6 @@ type HalogenEffects eff = (trace :: Trace, ref :: Ref, dom :: DOM | eff)
 -- | This function can be used to create alternative top-level handlers which use `virtual-dom`.
 changes :: VTree -> SF VTree Patch
 changes = differencesWith diff
- 
--- | A view is represented as a pure, non-empty signal function which
--- | consumes inputs of type `r`, and generates HTML documents.
--- |
--- | The HTML documents can contain placeholders of type `p`, and
--- | generate events which are either inputs (`i`) or requests (`r`). 
-type View i p r = SF1 i (R.HTML p (Either i r)) 
-
--- | A pure view does not make any external requests or use placeholder elements.
-type PureView i = forall p. SF1 i (R.HTML p i) 
- 
--- | This type synonym is provided to tidy up the type signature of `runUI`.
--- |
--- | The _handler function_ is responsible for receiving requests from the UI, integrating with external
--- | components, and providing inputs back to the system based on the results.
--- |
--- | For example:
--- | 
--- | ```purescript
--- | data Input = SetDateAndTime DateAndTime | ...
--- | 
--- | data Request = GetDateAndTimeRequest | ...
--- | 
--- | appHandler :: forall eff. Handler Request Input eff 
--- | appHandler GetDateAndTimeRequest k =
--- |   get "/date" \response -> k (readDateAndTime response)
--- | ```
-type Handler r i eff = r -> Aff (HalogenEffects eff) i
- 
--- | A default renderer implementation which can be used when there are no placeholders
-defaultHandler :: forall i eff. Handler Void i eff 
-defaultHandler = absurd
 
 -- | This type synonym is provided to tidy up the type signature of `runUI`.
 -- |
@@ -90,72 +68,46 @@ defaultHandler = absurd
 -- |   appendToBody node
 -- |   setInterval 1000 $ driver Tick
 -- | ```
-type Driver i eff = i -> Eff (HalogenEffects eff) Unit 
- 
--- | A type synonym for functions which render components to replace placeholders
-type Renderer i p eff = Driver i eff -> p -> Widget (HalogenEffects eff)
- 
--- | A default renderer implementation which can be used when there are no placeholders
-defaultRenderer :: forall i p eff. Renderer i Void eff 
-defaultRenderer _ = absurd
-     
--- | A UI consists of:
--- |
--- | - A view
--- | - A handler function
--- | - A function which renders placeholder elements
-type UI i p r eff = 
-  { view :: View i p r
-  , handler :: Handler r i eff
-  , renderer :: Renderer i p eff
-  } 
-  
--- | A pure UI is a UI which:
--- |
--- | - Does not render placeholder elements
--- | - Does not make external requests
-type PureUI i = forall eff. UI i Void Void eff
- 
--- | A convenience function which can be used to construct a pure UI
-pureUI :: forall i. (forall p. SF1 i (R.HTML p i)) -> PureUI i
-pureUI view =
-  { view: (rmap Left) <$> view
-  , handler: defaultHandler
-  , renderer: defaultRenderer
-  }
+type Driver i eff = i -> Eff (HalogenEffects eff) Unit
 
--- | `runUI` renders a `UI` to the DOM using `virtual-dom`.
+-- | `runUI` renders a `Component` to the DOM using `virtual-dom`.
 -- |
 -- | This function is the workhorse of the Halogen library. It can be called in `main`
 -- | to set up the application and create the driver function, which can be used to 
 -- | send inputs to the UI from external components.
-runUI :: forall i p r eff. UI i p r eff -> Eff (HalogenEffects eff) (Tuple Node (Driver i eff))
-runUI ui = do
+runUI :: forall p req eff. 
+           Component (Widget (HalogenEffects eff)) (Aff (HalogenEffects eff)) R.HTML req req -> 
+           Eff (HalogenEffects eff) (Tuple Node (Driver req eff))
+runUI = runComponent \sf -> do
   ref <- newRef Nothing
-  runUI' ref
+  runUI' ref sf
+
+-- | Internal function used in the implementation of `runUI`.
+runUI' :: forall i p req eff. 
+            RefVal (Maybe { signal :: SF (Either i req) Patch, node :: Node }) -> 
+            SF1 (Either i req) (R.HTML (Widget (HalogenEffects eff)) (Aff (HalogenEffects eff) (Either i req))) -> 
+            Eff (HalogenEffects eff) (Tuple Node (Driver req eff))
+runUI' ref sf = do
+  let render = R.renderHTML requestHandler id
+      vtrees = render <$> sf
+      diffs  = tail vtrees >>> changes (head vtrees) 
+      node   = createElement (head vtrees)  
+  writeRef ref $ Just { signal: diffs, node: node }
+  return (Tuple node externalDriver)  
   
   where
-  runUI' :: RefVal _ -> Eff (HalogenEffects eff) (Tuple Node (Driver i eff))
-  runUI' ref = do
-    let render = R.renderHTML requestHandler (ui.renderer driver)
-        vtrees = render <$> ui.view
-        diffs  = tail vtrees >>> changes (head vtrees) 
-        node   = createElement (head vtrees)  
-    writeRef ref $ Just { signal: diffs, node: node }
-    return (Tuple node driver)  
+  requestHandler :: Aff (HalogenEffects eff) (Either i req) -> Eff (HalogenEffects eff) Unit
+  requestHandler aff = unsafeInterleaveEff $ runAff logger driver aff
+  
+  logger :: Error -> Eff (HalogenEffects eff) Unit
+  logger e = trace $ "Uncaught error in asynchronous code: " <> message e
+  
+  driver :: Driver (Either i req) eff
+  driver e = do
+    Just { signal: signal, node: node } <- readRef ref
+    let next = runSF signal e
+    node' <- patch (head next) node
+    writeRef ref $ Just { signal: tail next, node: node' }
     
-    where
-    requestHandler :: Either i r -> Eff (HalogenEffects eff) Unit
-    requestHandler (Left i) = driver i
-    requestHandler (Right r) = unsafeInterleaveEff $ runAff logger driver (ui.handler r)
-    
-    logger :: Error -> Eff (HalogenEffects eff) Unit
-    logger e = trace $ "Uncaught error in asynchronous code: " <> message e
-    
-    driver :: Driver i eff
-    driver i = do
-      Just { signal: signal, node: node } <- readRef ref
-      let next = runSF signal i
-      node' <- patch (head next) node
-      writeRef ref $ Just { signal: tail next, node: node' }
-      
+  externalDriver :: Driver req eff
+  externalDriver req = driver (Right req)

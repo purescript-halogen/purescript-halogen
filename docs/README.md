@@ -5,6 +5,7 @@
 - [Main Module](Halogen.md)
 - [Signal Functions](Halogen-Signal.md)
 - [HTML Templating](Halogen-HTML.md)
+- [Components](Halogen-Component.md)
 - [HTML Traversals](Halogen-HTML-Traversals.md)
 - [HTML Rendering](Halogen-HTML-Renderer.md)
 - [DOM Events](Halogen-Events.md)
