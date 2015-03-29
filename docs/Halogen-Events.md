@@ -55,6 +55,23 @@ createHandler :: forall fields i. H.EventName fields -> (Event fields -> EventHa
 
 This function can be used to attach custom event handlers.
 
+#### `input`
+
+``` purescript
+input :: forall i m a. (Applicative m) => (a -> i) -> a -> EventHandler (m i)
+```
+
+A helper function which can be used to create simple event handlers.
+
+Often we don't need to use `EventHandler` or the monad underlying our component, and just need
+to generate an input to the signal function. 
+
+This function provides an alternative to making two nested calls to `pure`:
+
+```purescript
+onclick (input \_ -> Input)
+```
+
 #### `onabort`
 
 ``` purescript

@@ -82,7 +82,7 @@ ui = component (render <$> stateful (State false exampleCode Nothing) update)
           , H.h2_ [ H.text "purescript code" ]
           , H.p_ [ H.textarea [ A.class_ B.formControl 
                               , A.value code 
-                              , A.onInput (pure <<< pure <<< SetCode)
+                              , A.onInput (A.input SetCode)
                               , A.style (A.styles $ StrMap.fromList 
                                           [ Tuple "font-family" "monospace"
                                           , Tuple "height" "200px"

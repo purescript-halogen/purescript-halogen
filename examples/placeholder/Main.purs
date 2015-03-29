@@ -54,7 +54,7 @@ ui = component (render <$> stateful 0 update)
           , H.p_ [ H.text "This counter is rendered using a placeholder:" ]
           , H.p_ [ H.placeholder (makeCounter n) ]
           , H.button [ A.classes [B.btn, B.btnPrimary]
-                     , A.onclick \_ -> pure (pure unit) 
+                     , A.onclick (A.input \_ -> unit) 
                      ] [ H.text "Update" ]
           ] 
   

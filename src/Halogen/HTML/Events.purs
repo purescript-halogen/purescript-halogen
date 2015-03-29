@@ -3,6 +3,7 @@
 
 module Halogen.HTML.Events 
   ( createHandler
+  , input
   
   , onabort
   , onbeforeunload
@@ -50,6 +51,19 @@ import qualified Halogen.HTML.Attributes as H
 -- | This function can be used to attach custom event handlers.
 createHandler :: forall fields i. H.EventName fields -> (Event fields -> EventHandler i) -> H.Attr i
 createHandler key f = H.handler key \e -> Just <$> f e
+
+-- | A helper function which can be used to create simple event handlers.
+-- |
+-- | Often we don't need to use `EventHandler` or the monad underlying our component, and just need
+-- | to generate an input to the signal function. 
+-- |
+-- | This function provides an alternative to making two nested calls to `pure`:
+-- |
+-- | ```purescript
+-- | onclick (input \_ -> Input)
+-- | ```
+input :: forall i m a. (Applicative m) => (a -> i) -> a -> EventHandler (m i)
+input f e = pure (pure (f e))
 
 onabort	:: forall i. (Event () -> EventHandler i) -> H.Attr i
 onabort = createHandler (H.eventName "abort")

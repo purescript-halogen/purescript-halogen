@@ -76,17 +76,17 @@ ui = component (render <$> stateful (Undo.undoRedoState (State [])) (Undo.withUn
   toolbar :: forall p st. Undo.UndoRedoState st -> node p (m Input)
   toolbar st = H.p [ A.class_ B.btnGroup ]
                    [ H.button [ A.classes [ B.btn, B.btnPrimary ]
-                              , A.onclick \_ -> pure (pure (NewTask Nothing))
+                              , A.onclick (A.input \_ -> NewTask Nothing)
                               ]
                               [ H.text "New Task" ]
                    , H.button [ A.class_ B.btn
                               , A.enabled (Undo.canUndo st)
-                              , A.onclick \_ -> pure (pure Undo)
+                              , A.onclick (A.input \_ -> Undo)
                               ]
                               [ H.text "Undo" ]
                    , H.button [ A.class_ B.btn
                               , A.enabled (Undo.canRedo st)
-                              , A.onclick \_ -> pure (pure Redo)
+                              , A.onclick (A.input \_ -> Redo)
                               ]
                               [ H.text "Redo" ]
                    ]
@@ -99,19 +99,19 @@ ui = component (render <$> stateful (Undo.undoRedoState (State [])) (Undo.withUn
                  , A.type_ "checkbox"
                  , A.checked task.completed
                  , A.title "Mark as completed"
-                 , A.onChecked (pure <<< pure <<< MarkCompleted index)
+                 , A.onChecked (A.input (MarkCompleted index))
                  ]
                  [])))
       (H.input [ A.classes [ B.formControl ]
                , A.placeholder "Description"
-               , A.onValueChanged (pure <<< pure <<< UpdateDescription index)
+               , A.onValueChanged (A.input (UpdateDescription index))
                , A.value task.description
                ]
                [])
       (Just (BI.ButtonAddOn 
         (H.button [ A.classes [ B.btn, B.btnDefault ]
                   , A.title "Remove task"
-                  , A.onclick (\_ -> pure $ pure $ RemoveTask index)
+                  , A.onclick (A.input \_ -> RemoveTask index)
                   ]
                   [ H.text "✖" ])))
 
