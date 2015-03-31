@@ -49,6 +49,7 @@ module Halogen.HTML.Attributes
   , disabled
   , enabled
   , checked
+  , selected
   , placeholder
   , style
   ) where
@@ -222,6 +223,9 @@ enabled = disabled <<< not
    
 checked :: forall i. Boolean -> Attr i
 checked = attr $ attributeName "checked"
+   
+selected :: forall i. Boolean -> Attr i
+selected = attr $ attributeName "selected"
    
 placeholder :: forall i. String -> Attr i
 placeholder = attr $ attributeName "placeholder"

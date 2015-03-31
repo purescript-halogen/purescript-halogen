@@ -2059,6 +2059,13 @@ checked :: forall i. Boolean -> Attr i
 ```
 
 
+#### `selected`
+
+``` purescript
+selected :: forall i. Boolean -> Attr i
+```
+
+
 #### `placeholder`
 
 ``` purescript
