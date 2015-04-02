@@ -1,6 +1,5 @@
 {
   "name": "purescript-halogen",
-  "version": "0.0.0",
   "homepage": "https://github.com/slamdata/purescript-halogen",
   "authors": [
     "Phil Freeman <paf31@cantab.net>"
@@ -33,5 +32,11 @@
   },
   "devDependencies": {
     "purescript-ace": "~0.1.0"
+  },
+  "resolutions": {
+    "purescript-foldable-traversable": "~0.3.0",
+    "purescript-foreign": "~0.4.0",
+    "purescript-tuples": "~0.3.0",
+    "purescript-monoid": "~0.2.0"
   }
 }
