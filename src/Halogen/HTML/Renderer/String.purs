@@ -5,7 +5,8 @@ module Halogen.HTML.Renderer.String
   , renderHTMLToString
   ) where
     
-import Data.Array (map)
+import Data.Maybe
+import Data.Array (mapMaybe)
 import Data.Function    
 import Data.String (joinWith)
 import Data.Foldable (foldMap)
@@ -20,17 +21,17 @@ import qualified Halogen.HTML.Attributes as A
 
 import Halogen.HTML.Events.Types 
   
-newtype Attr i = Attr String
+newtype Attr i = Attr (Maybe String)
 
-runAttr :: forall i. Attr i -> String
+runAttr :: forall i. Attr i -> Maybe String
 runAttr (Attr s) = s
 
 instance functorAttrRepr :: Functor Attr where
   (<$>) f (Attr s) = Attr s
   
 instance attrRepr :: A.AttrRepr Attr where
-  attr key value = Attr (A.runAttributeName key <> "=\"" <> A.toAttrString key value <> "\"")
-  handler name f = Attr "events are not supported"
+  attr key value = Attr (Just (A.runAttributeName key <> "=\"" <> A.toAttrString key value <> "\""))
+  handler name f = Attr Nothing
       
 newtype HTML p i = HTML String
 
@@ -45,12 +46,12 @@ instance htmlRepr :: H.HTMLRepr HTML where
   placeholder _ = HTML "placeholders are not supported"
   element name attrs els = HTML $
     "<" <> H.runTagName name <> 
-    " " <> joinWith " " ((runAttr <<< A.runAttr) <$> attrs) <> 
+    " " <> joinWith " " (mapMaybe (runAttr <<< A.runAttr) attrs) <> 
     ">" <> foldMap runHTML els <> 
     "</" <> H.runTagName name <> ">"
 
 -- | Render a HTML document as a `String`, usually for testing purposes.
 -- |
--- | The rank-2 type ensures that neither events nor placeholders are allowed.
-renderHTMLToString :: (forall p i. HTML p i) -> String
+-- | The rank-2 type ensures that placeholders are allowed.
+renderHTMLToString :: forall i. (forall p. HTML p i) -> String
 renderHTMLToString = runHTML

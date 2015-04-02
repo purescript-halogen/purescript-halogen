@@ -103,12 +103,12 @@ instance htmlRepr :: H.HTMLRepr HTML
 #### `renderHTMLToString`
 
 ``` purescript
-renderHTMLToString :: (forall p i. HTML p i) -> String
+renderHTMLToString :: forall i. (forall p. HTML p i) -> String
 ```
 
 Render a HTML document as a `String`, usually for testing purposes.
 
-The rank-2 type ensures that neither events nor placeholders are allowed.
+The rank-2 type ensures that placeholders are allowed.
 
 
 
