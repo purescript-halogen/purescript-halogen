@@ -1,0 +1,9 @@
+language: node_js
+node_js:
+  - 0.10
+install:
+  - npm install purescript bower -g
+  - npm install
+  - bower install
+script:
+  - node node_modules/gulp/bin/gulp.js 
