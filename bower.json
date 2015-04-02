@@ -30,5 +30,8 @@
     "purescript-bifunctors": "~0.3.1",
     "purescript-void": "~0.2.0",
     "purescript-exists": "~0.1.1"
+  },
+  "devDependencies": {
+    "purescript-ace": "~0.1.0"
   }
 }

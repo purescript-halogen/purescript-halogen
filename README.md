@@ -1,5 +1,7 @@
 # purescript-halogen
 
+[![Build Status](https://travis-ci.org/slamdata/purescript-halogen.svg?branch=master)](https://travis-ci.org/slamdata/purescript-halogen)
+
 A declarative, type-safe UI library for PureScript.
 
 ## Getting Started
