@@ -41,9 +41,9 @@ import qualified Halogen.HTML as H
 import qualified Halogen.HTML.Renderer.VirtualDOM as R
 
 import Halogen.Signal 
-import Halogen.Internal.VirtualDOM   
-import Halogen.Component   
- 
+import Halogen.Component
+import Halogen.Internal.VirtualDOM (VTree(), Patch(), Widget(), diff, patch, createElement)
+
 -- | Wraps the effects required by the `runUI` function.
 type HalogenEffects eff = (trace :: Trace, ref :: Ref, dom :: DOM | eff)
  
@@ -76,7 +76,7 @@ type Driver i eff = i -> Eff (HalogenEffects eff) Unit
 -- | to set up the application and create the driver function, which can be used to 
 -- | send inputs to the UI from external components.
 runUI :: forall p req eff. 
-           Component (Widget (HalogenEffects eff)) (Aff (HalogenEffects eff)) R.HTML req req -> 
+           Component (Widget (HalogenEffects eff) req) (Aff (HalogenEffects eff)) req req -> 
            Eff (HalogenEffects eff) (Tuple Node (Driver req eff))
 runUI = runComponent \sf -> do
   ref <- newRef Nothing
@@ -85,10 +85,10 @@ runUI = runComponent \sf -> do
 -- | Internal function used in the implementation of `runUI`.
 runUI' :: forall i p req eff. 
             RefVal (Maybe { signal :: SF (Either i req) Patch, node :: Node }) -> 
-            SF1 (Either i req) (R.HTML (Widget (HalogenEffects eff)) (Aff (HalogenEffects eff) (Either i req))) -> 
+            SF1 (Either i req) (H.HTML (Widget (HalogenEffects eff) req) (Aff (HalogenEffects eff) (Either i req))) -> 
             Eff (HalogenEffects eff) (Tuple Node (Driver req eff))
 runUI' ref sf = do
-  let render = R.renderHTML requestHandler id
+  let render = R.renderHTML requestHandler widgetHandler
       vtrees = render <$> sf
       diffs  = tail vtrees >>> changes (head vtrees) 
       node   = createElement (head vtrees)  
@@ -98,6 +98,9 @@ runUI' ref sf = do
   where
   requestHandler :: Aff (HalogenEffects eff) (Either i req) -> Eff (HalogenEffects eff) Unit
   requestHandler aff = unsafeInterleaveEff $ runAff logger driver aff
+  
+  widgetHandler :: Widget (HalogenEffects eff) req -> Widget (HalogenEffects eff) (Aff (HalogenEffects eff) (Either i req))
+  widgetHandler = ((pure <<< Right) <$>)
   
   logger :: Error -> Eff (HalogenEffects eff) Unit
   logger e = trace $ "Uncaught error in asynchronous code: " <> message e

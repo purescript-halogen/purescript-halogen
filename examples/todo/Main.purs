@@ -60,10 +60,10 @@ instance inputSupportsUndoRedo :: Undo.SupportsUndoRedo Input where
   toUndoRedo _ = Nothing
 
 -- | The view is a state machine, consuming inputs, and generating HTML documents which in turn, generate new inputs
-ui :: forall p m node. (Applicative m, H.HTMLRepr node) => Component p m node Input Input
+ui :: forall p m. (Applicative m) => Component p m Input Input
 ui = component (render <$> stateful (Undo.undoRedoState (State [])) (Undo.withUndoRedo update))
   where
-  render :: forall p. Undo.UndoRedoState State -> node p (m Input)
+  render :: forall p. Undo.UndoRedoState State -> H.HTML p (m Input)
   render st = 
     case Undo.getState st of
       State ts ->
@@ -73,7 +73,7 @@ ui = component (render <$> stateful (Undo.undoRedoState (State [])) (Undo.withUn
               , H.div_ (zipWith task ts (0 .. length ts))
               ]
               
-  toolbar :: forall p st. Undo.UndoRedoState st -> node p (m Input)
+  toolbar :: forall p st. Undo.UndoRedoState st -> H.HTML p (m Input)
   toolbar st = H.p [ A.class_ B.btnGroup ]
                    [ H.button [ A.classes [ B.btn, B.btnPrimary ]
                               , A.onclick (A.input \_ -> NewTask Nothing)
@@ -91,7 +91,7 @@ ui = component (render <$> stateful (Undo.undoRedoState (State [])) (Undo.withUn
                               [ H.text "Redo" ]
                    ]
                    
-  task :: forall p. Task -> Number -> node p (m Input)
+  task :: forall p. Task -> Number -> H.HTML p (m Input)
   task (Task task) index = H.p_ <<< pure $
     BI.inputGroup 
       (Just (BI.RegularAddOn 

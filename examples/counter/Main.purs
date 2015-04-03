@@ -44,10 +44,10 @@ data State = State Number
 -- | Inputs to the state machine
 data Input = Tick
 
-ui :: forall p m node eff. (Applicative m, H.HTMLRepr node) => Component p m node Input Input
+ui :: forall p m eff. (Applicative m) => Component p m Input Input
 ui = component (render <$> stateful (State 0) update)
   where
-  render :: State -> node p (m Input)
+  render :: State -> H.HTML p (m Input)
   render (State n) = 
     H.div [ A.class_ B.container ]
           [ H.h1 [ A.id_ "header" ] [ H.text "counter" ]

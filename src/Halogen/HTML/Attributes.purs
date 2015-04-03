@@ -21,9 +21,14 @@ module Halogen.HTML.Attributes
   , IsAttribute
   , toAttrString
   
-  , AttrRepr
-  , Attr()
-  , runAttr
+  , ExistsR()
+  , mkExistsR
+  , runExistsR
+  
+  , AttrF(..)
+  , HandlerF(..)
+  
+  , Attr(..)
   
   , attr
   , handler
@@ -65,6 +70,7 @@ import Data.Monoid (mempty)
 import Data.Array (map)
 import Data.String (joinWith)
 import Data.Traversable (mapAccumL)
+import Data.Exists
 
 import Control.Monad.Eff
 import Control.Monad.ST
@@ -72,6 +78,48 @@ import Control.Monad.ST
 import Halogen.Internal.VirtualDOM
 import Halogen.HTML.Events.Types
 import Halogen.HTML.Events.Handler
+
+-- | We need a variant of `Exists` which works for type constructors which accept a _row_ of types.
+data ExistsR (f :: # * -> *)
+
+foreign import unsafeCoerce
+  "function unsafeCoerce(x) {\
+  \  return x;\
+  \}" :: forall a b. a -> b
+ 
+runExistsR :: forall f r. (forall a. f a -> r) -> ExistsR f -> r
+runExistsR = unsafeCoerce
+ 
+mkExistsR :: forall f a. f a -> ExistsR f
+mkExistsR = unsafeCoerce
+
+-- | The data which represents a typed attribute, hidden inside an existential package in
+-- | the `Attr` type.
+data AttrF value = AttrF (AttributeName value -> value -> String) (AttributeName value) value
+
+-- | The data which represents a typed event handler, hidden inside an existential package in
+-- | the `Attr` type.
+data HandlerF i fields = HandlerF (EventName fields) (Event fields -> EventHandler (Maybe i))
+
+-- | A single attribute is either
+-- |
+-- | - An attribute
+-- | - An event handler
+data Attr i
+  = Attr (Exists AttrF)
+  | Handler (ExistsR (HandlerF i))
+
+instance functorAttr :: Functor Attr where
+  (<$>) _ (Attr e) = Attr e
+  (<$>) f (Handler e) = runExistsR (\(HandlerF name k) -> Handler (mkExistsR (HandlerF name (\e -> (f <$>) <$> k e)))) e
+
+-- | Create an attribute
+attr :: forall value i. (IsAttribute value) => AttributeName value -> value -> Attr i
+attr name v = Attr (mkExists (AttrF toAttrString name v))
+
+-- | Create an event handler
+handler :: forall fields i. EventName fields -> (Event fields -> EventHandler (Maybe i)) -> Attr i
+handler name k = Handler (mkExistsR (HandlerF name k))
 
 -- | A wrapper for strings which are used as CSS classes
 newtype ClassName = ClassName String
@@ -140,24 +188,6 @@ instance booleanIsAttribute :: IsAttribute Boolean where
   
 instance stylesIsAttribute :: IsAttribute Styles where
   toAttrString _ (Styles m) = joinWith "; " $ (\(Tuple key value) -> key <> ": " <> value) <$> toList m
-
--- | This type class encodes _representations_ of HTML attributes
-class (Functor attr) <= AttrRepr attr where
-  attr :: forall value i. (IsAttribute value) => AttributeName value -> value -> attr i
-  handler :: forall fields i. EventName fields -> (Event fields -> EventHandler (Maybe i)) -> attr i
-
--- | `Attr` represents an abstract attribute
-newtype Attr i = Attr (forall attr. (AttrRepr attr) => attr i)
-
-runAttr :: forall i attr. (AttrRepr attr) => Attr i -> attr i
-runAttr (Attr f) = f
-
-instance attrRepr :: AttrRepr Attr where
-  attr name value = Attr (attr name value)
-  handler name f = Attr (handler name f)
-
-instance functorAttr :: Functor Attr where
-  (<$>) f (Attr x) = Attr (f <$> x)
 
 -- Smart constructors
 

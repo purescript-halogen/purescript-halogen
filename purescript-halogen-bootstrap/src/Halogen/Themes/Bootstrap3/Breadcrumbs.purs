@@ -23,14 +23,14 @@ import qualified Halogen.Themes.Bootstrap3 as B
 data CrumbTrail a = CrumbTrail [Tuple String (Target a)] String [Tuple String (Target a)]
 
 -- | Create a breadcrumb navigation element from an array of `Crumb`s.
-breadcrumbs :: forall a i node. (H.HTMLRepr node) => CrumbTrail i -> node a i
+breadcrumbs :: forall p i. CrumbTrail i -> H.HTML p i
 breadcrumbs (CrumbTrail behind here inFront) = 
   H.ol [ A.class_ B.breadcrumb ] 
   ( map fromCrumb behind ++ 
     [ H.li [ A.class_ B.active ] [ H.text here ] ] ++
     map fromCrumb inFront )
   where
-  fromCrumb :: Tuple String (Target i) -> node a i
+  fromCrumb :: Tuple String (Target i) -> H.HTML p i
   fromCrumb (Tuple text cr) = 
     let attr = case cr of
                  LinkTarget url -> [A.href (runURL url)]

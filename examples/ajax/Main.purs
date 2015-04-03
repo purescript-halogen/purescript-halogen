@@ -38,6 +38,8 @@ exampleCode = S.joinWith "\n"
   , "fact :: Number -> Number"
   , "fact 0 = 1"
   , "fact n = n * fact (n - 1)"
+  , ""
+  , "main = Debug.Trace.print (fact 20)"
   ]
 
 foreign import appendToBody
@@ -54,7 +56,8 @@ foreign import compile
   \      var xhr = new XMLHttpRequest();\
   \      xhr.onreadystatechange = function(){\
   \        if (xhr.readyState === 4) {\
-  \          k(xhr.responseText)();\
+  \          var res = JSON.parse(xhr.responseText);\
+  \          k(res.js || res.error)();\
   \        }\
   \      };\
   \      xhr.open('POST', 'http://try.purescript.org/compile/text', true);\
@@ -72,10 +75,10 @@ data Input
   | SetCode String
   | SetResult String
 
-ui :: forall p node eff. (H.HTMLRepr node) => Component p (Aff (HalogenEffects (http :: HTTP | eff))) node Input Input
+ui :: forall p eff. Component p (Aff (HalogenEffects (http :: HTTP | eff))) Input Input
 ui = component (render <$> stateful (State false exampleCode Nothing) update)
   where
-  render :: State -> node p (Aff (HalogenEffects (http :: HTTP | eff)) Input)
+  render :: State -> H.HTML p (Aff (HalogenEffects (http :: HTTP | eff)) Input)
   render (State busy code result) = 
     H.div [ A.class_ B.container ] $
           [ H.h1 [ A.id_ "header" ] [ H.text "ajax example" ]

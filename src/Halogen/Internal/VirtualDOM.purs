@@ -38,7 +38,7 @@ data Patch
 data Props
 
 -- | A third-party widget
-data Widget (eff :: # !)
+data Widget (eff :: # !) i
 
 foreign import emptyProps 
   "var emptyProps = {}" :: Props
@@ -135,48 +135,55 @@ foreign import vnode
 
 -- | Create a virtual DOM tree from a `Widget`
 foreign import vwidget 
-  "function vwidget(w) {\
-  \  return w;\
-  \}" :: forall eff. Widget eff -> VTree
+  "function vwidget(driver) {\
+  \  return function(w) {\
+  \    return w.create(driver);\
+  \  };\
+  \}" :: forall eff i. (i -> Eff eff Unit) -> Widget eff i -> VTree
   
-foreign import widgetImpl
-  "function widgetImpl(name, id, init, update, destroy) {\
-  \  var Widget = function () {};\
-  \  Widget.prototype.type = 'Widget';\
-  \  Widget.prototype.name = name;\
-  \  Widget.prototype.id = id;\
-  \  Widget.prototype.init = function(){\
-  \    var state = init();\
-  \    this.state = state.state;\
-  \    return state.node;\
+foreign import mapWidget 
+  "function mapWidget(f) {\
+  \  return function(w) {\
+  \    return {\
+  \      create: function(driver) {\
+  \        return w.create(function(i) {\
+  \          return driver(f(i));\
+  \        });\
+  \      }\
+  \    };\
   \  };\
-  \  Widget.prototype.update = function(prev, node) {\
-  \    var updated = update(prev.state)(node)();\
-  \    this.state = prev.state;\
-  \    return updated;\
+  \}" :: forall eff i j. (i -> j) -> Widget eff i -> Widget eff j
+  
+instance functorWidget :: Functor (Widget eff) where
+  (<$>) = mapWidget
+  
+foreign import widget
+  "function widget(name, id, init, update, destroy) {\
+  \  return {\
+  \    create: function(driver) {\
+  \      var Widget = function () {};\
+  \      Widget.prototype.type = 'Widget';\
+  \      Widget.prototype.name = name;\
+  \      Widget.prototype.id = id;\
+  \      Widget.prototype.init = function(){\
+  \        var state = init(driver)();\
+  \        this.state = state.state;\
+  \        return state.node;\
+  \      };\
+  \      Widget.prototype.update = function(prev, node) {\
+  \        var updated = update(prev.state)(node)();\
+  \        this.state = prev.state;\
+  \        return updated;\
+  \      };\
+  \      Widget.prototype.destroy = function(node) {\
+  \        destroy(this.state)(node)();\
+  \      };\
+  \      return new Widget();\
+  \    }\
   \  };\
-  \  Widget.prototype.destroy = function(node) {\
-  \    destroy(this.state)(node)();\
-  \  };\
-  \  return new Widget();\
   \}" :: forall eff i s. Fn5 String 
                              String 
-                             (Eff eff { state :: s, node :: Node }) 
+                             ((i -> Eff eff Unit) -> Eff eff { state :: s, node :: Node }) 
                              (s -> Node -> Eff eff (Nullable Node)) 
                              (s -> Node -> Eff eff Unit) 
-                             (Widget eff)
-
--- | Create a `VTree` from a third-party component (or _widget_), by providing a name, an ID, and three functions:
--- | 
--- | - An initialization function, which creates the DOM node
--- | - An update function, which receives the previous DOM node and optionally creates a new one.
--- | - A finalizer function, which deallocates any necessary resources when the component is removed from the DOM.
--- |
--- | The three functions share a common piece of data of a hidden type `s`.
-widget :: forall eff i s. String -> 
-                          String -> 
-                          Eff eff { state :: s, node :: Node } ->
-                          (s -> Node -> Eff eff (Maybe Node)) -> 
-                          (s -> Node -> Eff eff Unit) -> 
-                          Widget eff
-widget name id init update destroy = runFn5 widgetImpl name id init (\s n -> toNullable <$> update s n) destroy
+                             (Widget eff i)
