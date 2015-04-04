@@ -36,6 +36,10 @@ var paths = {
             src: 'src/Halogen/Component.purs'
         }, 
         {
+            dest: 'docs/Halogen-Widgets.md',
+            src: 'src/Halogen/HTML/Widget.purs'
+        }, 
+        {
             dest: 'docs/Halogen-HTML-Traversals.md',
             src: 'src/Halogen/HTML/Traversals.purs'
         }, 
