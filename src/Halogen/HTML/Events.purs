@@ -11,33 +11,33 @@ module Halogen.HTML.Events
   , onload
   , onpageshow
   , onpagehide
-  , onresize
-  , onscroll
-  , onunload
-  , onchange
-  , oninput
+  , onresize 
+  , onscroll 
+  , onunload 
+  , onchange 
+  , oninput  
   , oninvalid
-  , onreset
-  , onsearch
-  , onselect
-  , onsubmit
-  , onclick
-  , oncontextmenu
-  , ondblclick
-  , onmousedown
+  , onreset  
+  , onsearch 
+  , onselect 
+  , onsubmit 
+  , onclick  
+  , oncontextmenu 
+  , ondblclick  
+  , onmousedown 
   , onmouseenter
   , onmouseleave
-  , onmousemove
-  , onmouseover
-  , onmouseout
-  , onmouseup
-  , onkeydown
-  , onkeypress
-  , onkeyup
-  , onblur 
-  , onfocus
-  , onfocusin
-  , onfocusout
+  , onmousemove 
+  , onmouseover 
+  , onmouseout  
+  , onmouseup   
+  , onkeydown   
+  , onkeypress  
+  , onkeyup     
+  , onblur      
+  , onfocus     
+  , onfocusin   
+  , onfocusout  
   ) where
 
 import Data.Maybe
@@ -59,6 +59,10 @@ import qualified Halogen.HTML.Attributes as H
 -- | ```
 input :: forall i m a. (Applicative m) => (a -> i) -> a -> EventHandler (m i)
 input f e = pure (pure (f e))
+
+-- | Create an event handler which uses `EventHandlerT`.
+withEventHandlerT :: forall i m e. (e -> EventHandlerT m i) -> e -> EventHandler (m i)
+withEventHandlerT f = unwrapEventHandler <<< f
 
 onabort	:: forall i. (Event () -> EventHandler i) -> H.Attr i
 onabort = H.handler (H.eventName "abort")

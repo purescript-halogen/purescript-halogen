@@ -309,13 +309,13 @@ onfocusout :: forall i. (Event FocusEvent -> EventHandler i) -> H.Attr i
 This module defines the `EventHandler` functor, which can be used
 to perform standard operations on HTML events.
 
-#### `EventHandler`
+#### `EventHandlerT`
 
 ``` purescript
-newtype EventHandler a
+data EventHandlerT m a
 ```
 
-This monad supports the following operations on events:
+This `Applicative` transformer supports the following operations on events:
 
 - `preventDefault`
 - `stopPropagation`
@@ -330,10 +330,21 @@ import Control.Functor (($>))
 H.a (E.onclick \_ -> E.preventDefault $> ClickHandler) (H.text "Click here")
 ```
 
+#### `EventHandler`
+
+``` purescript
+type EventHandler = EventHandlerT Identity
+```
+
+`EventHandler` is a synonym for `EventHandlerT` applied to the `Identity` monad.
+
+That is, `EventHandler` only adds the `preventDefault`, `stopPropagation`,
+`stopImmediatePropagation` and `cancel` actions to the underlying monad.
+
 #### `preventDefault`
 
 ``` purescript
-preventDefault :: EventHandler Unit
+preventDefault :: forall m. (Applicative m) => EventHandlerT m Unit
 ```
 
 Call the `preventDefault` method on the current event
@@ -341,7 +352,7 @@ Call the `preventDefault` method on the current event
 #### `stopPropagation`
 
 ``` purescript
-stopPropagation :: EventHandler Unit
+stopPropagation :: forall m. (Applicative m) => EventHandlerT m Unit
 ```
 
 Call the `stopPropagation` method on the current event
@@ -349,7 +360,7 @@ Call the `stopPropagation` method on the current event
 #### `stopImmediatePropagation`
 
 ``` purescript
-stopImmediatePropagation :: EventHandler Unit
+stopImmediatePropagation :: forall m. (Applicative m) => EventHandlerT m Unit
 ```
 
 Call the `stopImmediatePropagation` method on the current event
@@ -357,43 +368,45 @@ Call the `stopImmediatePropagation` method on the current event
 #### `cancel`
 
 ``` purescript
-cancel :: forall a. EventHandler a
+cancel :: forall m a. EventHandlerT m a
 ```
 
 Cancel the event, so that no input data will be passed to the signal function
 
+#### `liftEventHandler`
+
+``` purescript
+liftEventHandler :: forall m a. m a -> EventHandlerT m a
+```
+
+Lift an action into the `EventHandlerT` transformer
+
+#### `unwrapEventHandler`
+
+``` purescript
+unwrapEventHandler :: forall m a. EventHandlerT m a -> EventHandler (m a)
+```
+
+Interpret `EventHandlerT` in terms of `EventHandler`.
+
 #### `functorEventHandler`
 
 ``` purescript
-instance functorEventHandler :: Functor EventHandler
+instance functorEventHandler :: (Functor m) => Functor (EventHandlerT m)
 ```
 
 
 #### `applyEventHandler`
 
 ``` purescript
-instance applyEventHandler :: Apply EventHandler
+instance applyEventHandler :: (Apply m) => Apply (EventHandlerT m)
 ```
 
 
 #### `applicativeEventHandler`
 
 ``` purescript
-instance applicativeEventHandler :: Applicative EventHandler
-```
-
-
-#### `bindEventHandler`
-
-``` purescript
-instance bindEventHandler :: Bind EventHandler
-```
-
-
-#### `monadEventHandler`
-
-``` purescript
-instance monadEventHandler :: Monad EventHandler
+instance applicativeEventHandler :: (Applicative m) => Applicative (EventHandlerT m)
 ```
 
 
