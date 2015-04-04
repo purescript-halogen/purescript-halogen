@@ -13,7 +13,7 @@ A declarative, type-safe UI library for PureScript.
   - [AJAX](examples/ajax/Main.purs)
   - [Ace Editor](examples/ace/Main.purs)
 
-`purescript-halogen` is a simple reactive UI library built on top of `virtual-dom`. It aims to answer the following questions?
+`purescript-halogen` is a simple reactive UI library built on top of `virtual-dom`. It aims to answer the following questions:
 
 - How can we describe web pages as pure functions of application state? 
 - How can we handle DOM events which modify the application state?
