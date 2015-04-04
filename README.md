@@ -13,162 +13,189 @@ A declarative, type-safe UI library for PureScript.
   - [AJAX](examples/ajax/Main.purs)
   - [Ace Editor](examples/ace/Main.purs)
 
-`purescript-halogen` is a simple reactive UI library built on top of `virtual-dom`. It is based on the idea of _signal functions_.
+`purescript-halogen` is a simple reactive UI library built on top of `virtual-dom`. It aims to answer the following questions?
 
-A signal function is a state machine which consumes values of one input type, and yields values of an output type. In the case of our user interfaces, our signal functions will consume input events and yield HTML documents. The standard collection of instances (`Functor`, `Applicative`, etc.) allow us to compose these signal functions to create useful reactive documents.
+- How can we describe web pages as pure functions of application state? 
+- How can we handle DOM events which modify the application state?
+- How can we incorporate asynchronous requests (such as AJAX) into our solution?
+- How can we handle third party components in a pure functional UI?
+- How can we create reusable components which encompass all of the above?
 
-The main idea in `purescript-halogen` is to separate the UI into _components_. A component consists of
+Halogen answers these questions by building layers of abstraction using simple concepts like _signal functions_.
 
-- A _signal function_, which responds to inputs, and generates HTML documents.
-- In turn, HTML documents can create _actions_. 
-- Actions can create new inputs, which are fed back into the signal function.
+## Signals and Signal Functions
 
-Halogen provides tools for composing components, signal functions and HTML documents.
+> How can we describe web pages as pure functions of application state?
 
-The type signatures for each part of the Halogen library are very general, using type arguments to delineate optional features. 
-
-### A Pure Model
-
-If the UI does not require any interaction with external components, and the only effects involved are DOM effects, we can simplify the model above.
-
-In this case, the HTML documents will just generate inputs directly, to be fed back into the signla function. We can describe such a UI with the following type:
+There is a standard, elegant answer to this question: we can model documents as _signals_, or time-varying values. When the signal changes, we push changes to the DOM.
 
 ```purescript
-forall node p m. (H.HTMLRepr node) => Component p m node input input
+type UI0 = Signal HTML
 ```
 
-That is, we define a type of input messages, and create a signal function which consumes inputs and produces HTML documents which generate new inputs of the same type.
+A reasonable `Signal` type constructor should implement type classes like `Functor` and `Applicative`, allowing us to compose signals and documents to create our application.
 
-It is useful to see how this model can be used to create simple UIs before writing more interesting handler functions.
+However, when we come to answer the second question, things are not quite so clear:
 
-### A Simple State Machine
+> How can we handle DOM events which modify the application state?
+
+Our `Signal` generates documents over time in response to inputs from external sources, but those documents will contain elements which are capable of generating new inputs, which we would like in turn to influence our `Signal`. The model now contains a feedback loop.
+
+Halogen's answer to this question is to move from signals to _signal functions_.
+
+First, we modify our `HTML` type to contain the type of events we are interested in modeling:
+
+```purescript
+type UI1 input = Signal (HTML input)
+```
+
+Now our documents can supposedly generate events, but we still can't represent the feedback loop in which events modify the state of our signal. We can pass our generated inputs as an argument to our UI function, modeling them as an external signal:
+
+```purescript
+type UI2 input = Signal input -> Signal (HTML input)
+```
+
+Here, we assume the existence of some worker function which is capable of taking our specification of type `UI2 input`, and "tying the knot", passing our generated inputs back into the input signal.
+
+Instead of defining a type `Signal` of signals, Halogen defines a type of _signal functions_, `SF`, which we can think of intuitively as a function like `UI2`. So our "signal function model" looks like:
+
+```purescript
+type UI3 input = SF input (HTML input)
+```
+
+We can think of a value of type `SF i o` as a state machine which receives an input of type `i` and yields values of type `o` at each step.
+
+Signal functions have a pure model, so that we can separate our UI's description from the way in which it actually interacts with the world.
+
+`SF` implements the usual set of type classes (`Functor`, `Apply`, `Applicative`), but also implements some new ones: `Category`, `Profunctor`, `Strong` and `Choice`, allowing us to compose signal functions in more interesting ways.
+
+_Note_: in reality, Halogen distinguishes between signal functions (`SF`) and non-empty signal functions (`SF1`), but in practice this distinction is rarely important.
+
+The `Halogen.Signal` module also provides some useful combinators, such as the `stateful` function, which can be used to build simple signal functions.
+
+The TODO example provides a good overview of the signal function approach.
+
+## Handling Asynchronous Requests
+
+- How can we incorporate asynchronous requests (such as AJAX) into our solution?
+
+With our signal function model, it is now simple to support things like AJAX which generate events asynchronously. We can wedge a monad `m` into our signal function as follows:
+
+```purescript
+type UI4 m input = SF input (HTML (m input)) 
+```
+
+This allows us to create documents which generate inputs in some effectful way. In practice, Halogen requires `m` to be the `Aff` monad, defined in the `purescript-aff` library. `Aff` allows us to define asynchronous actions, and provides a simple AJAX API in the `affjax` library.
+
+Separating the monad `m` into a type argument is useful, because we can choose a different monad with which to define our application (such as a `Free` monad), choosing to interpret that monad in different ways for different purposes (production, testing, etc.)
+
+See the AJAX example for a demonstration of the `Aff` monad.
+
+## Third-Party Components
+
+Halogen provides a simple way to incorporate third-party components into UIs. In the interest of keeping our signal function pure, we don't simply extend the `HTML` type with arbitrary DOM content, but instead provide the ability to add _placeholder_ nodes to a `HTML` document. We tag placeholders with a type argument `p`:
+
+```purescript
+type UI5 m p input = SF input (HTML p (m input)) 
+```
+
+In practice, Halogen chooses `p` to be the type `Widget eff input`, which describes a `virtual-dom` widget, but as with the type argument `m`, leaving things polymorphic has the advantage that we can choose to interpret our model in a different way for testing.
+
+The `p` type parameter also gives us a way to "graft" HTML documents at a point which is marked by a placeholder. We can think of the type `HTML p a` as describing HTML documents with "holes" marked with values of type `p`.
+
+See the Ace editor example for a demonstration of placeholders.
+
+## Components
+
+> How can we create reusable components which encompass all of the above?
+
+The `Halogen` module defines the `runUI` function, which interprets our pure model of the UI, using `virtual-dom` to render it to the DOM and attach any necessary event handlers.
+
+The `Component` type describes all of the data which is needed by `runUI`:
+
+```purescript
+data Component p m req res
+```
+
+There are several type parameters here:
+
+- `p` and `m` have the same interpretation as for `HTML`. They represent placeholders and the effects with which we generate inputs respectively.
+- `req` is the type of input messages, or _requests_.
+- `res` is the type of output messages, or _responses_.
+
+`Component` represents a reusable component, which can maintain its own internal state, use its own internal messages, perform asynchronous actions. Components present an API to the application by means of the `req` and `res` types.
+
+It is easy to create a `Component` from a signal function, using the `component` function:
+
+```purescript
+component :: forall p m req res. (Functor m) => SF1 req (HTML p (m res)) -> Component p m req res
+```
+
+But components are more than just signal functions. They can send and receive internal messages, as demonstrated by the `component'` function:
+
+```purescript
+component' :: forall p m req res i. SF1 (Either i req) (HTML p (m (Either i res))) -> Component p m req res
+``` 
+
+Third party components can also be turned into `Component`s, using the `widget` function.
+
+`Component` provides an instance for the `Profunctor` class, and some other useful combinators so that components can be composed to create useful applications.
+
+The Ace editor example demonstrates how components can be composed.
+
+## Example
 
 Here is a simple example. The `ui` function defines a component which responds to click events by incrementing a counter.
 
 ```purescript
 data Input = Click
 
-ui :: forall p node m. (H.HTMLRepr node) => Component p m node Input Input
+ui :: forall p m. Component p m Input Input
 ui = component (render <$> stateful 0 update)
   where
-  render :: Number -> node p (m Input)
-  render n = button [onclick \_ -> pure (pure Click)] [text (show n)]
+  render :: Number -> HTML p (m Input)
+  render n = button [onclick \_ -> input Click] [ text (show n) ]
   
   update :: Number -> Input -> Number
   update n Click = n + 1
   
 main = do
-  node <- runUI ui
-  appendToBody node
+  Tuple node _ <- runUI ui
+  -- Render the node to the DOM
 ```
 
-Here, the user interface is represented as a signal function of type `SF1 Input (node p (m Input))`. The type constructor `SF1` represents _non-empty_ signals, i.e. signals which have an initial output value. This just means that we have an initial HTML document to render when the application loads.
+Here, the user interface is represented as a signal function which is wrapped in a `Component`. Notice that the type signatures are actually quite simple. Because we are not using placeholders or effects, we can keep the type arguments `p` and `m` polymorphic.
 
-The `Applicative` instance is used to apply the `render` function (essentially the _view_) to a signal created using the `stateful` function (which acts as our _model_).
-
-The `component` function is applied to the signal function to create a _component_, which can then be passed to `runUI` to be rendered to the DOM.
-
-Note that the type `node p (m Input)` references the input event type. This means that our HTML documents can contain embedded functions which will generate events in response to user input. In this case, the `pure (pure Click)` function is attached to the `onclick` handler of our button, so that our signal function will be run when the user clicks the button, causing the document to be updated.
-
-### Handling Events
+## Handling Events
 
 In the example above, the `button`'s `onclick` handler was bound to the `Click` message as follows:
 
 ```purescript
-onclick \_ -> pure (pure Click)
+onclick \_ -> input Click
 ```
 
-Here, `pure` indicates that we are using an `Applicative` functor. The functor in question is the `EventHandler` functor, which can be used to perform common tasks related to events:
+The `input` function is used to generate an input to the state machine.
+
+In general, the `EventHandler` applicative functor is used to create event handlers. It supports operations on events such as `preventDefault`:
 
 ```purescript
 onclick \_ -> preventDefault $> pure Click
 ```
 
-Here, we use the `preventDefault` default function to call the `preventDefault` method on the event in the event handler. Other methods are supported, like `stopPropagation` and `stopImmediatePropagation`.
+Other methods are supported, like `stopPropagation` and `stopImmediatePropagation`.
 
 Generally, functions like `onclick` take arguments of type `Event fields -> EventHandler input`, where `Event fields` represents the DOM event type. That is, our HTML documents contain pure functions which generate inputs from DOM events.
 
-### Mixins
+## Mixins
 
 Halogen provides "mixins" which can be used to add common functionality to our applications. Since signal functions allow us to give an entirely pure model of our view and state, a mixin is often as simple as a (higher-order) function, which modifies the types and functions described above, to add new functionality.
 
 For example, the `UndoRedo` mixin allows us to add undo/redo functionality in a general way, by adding two new input messages (undo and redo) and modifying the state type passed to the `stateful` function to use a stack of previous states. 
 
-### Composing UIs
+## Custom Handler Functions
 
-#### `Functor`, `Applicative`
+The `runUI` action also returns a _driver function_ of type `Driver req eff`, which simply passes its input to the current signal function, updating the internal state of the system, and eventually, the DOM.
 
-UIs can be composed in Halogen using the familiar `Functor` and `Applicative` type classes. For example, we used the `Functor` instance above to apply the `view` function to our state machine. 
+Usually, inputs to the driver function come from the DOM itself, but it is possible to "drive" the system externally by providing additional inputs. For example, we might use a timer to provide a tick input every second.
 
-
-The `Applicative` instance can also be used to compose user interfaces from smaller components which use the same input type:
-
-```purescript
-ui :: forall a. SF1 Input (HTML a Input)
-ui = div_ <$> traverse [component1, component2, component3]
-```
-
-Signal functions have some other interesting type class instances:
-
-#### `Category`
-
-`SF` is a `Category`, and `SF1` is a `Semigroupoid`. This means that we can compose signal functions whose input and output types match, just like regular functions. In fact, you can think of `SF` as a function which maintains an internal state.
-
-#### `Profunctor`
-
-`SF` and `SF1` are both instances of the `Profunctor` class, which means that you can grow the output type or shrink the input type using `dimap`. This can be useful when trying to make two signal functions compatible so that they can be composed.
-
-#### `Strong`, `Choice`
-
-`SF` also has instances for the `Strong` and `Choice` type classes. These instances give us access to the following combinators:
-
-```purescript
-(***) :: forall i1 i2 o1 o2. SF i1 o1 -> SF i2 o2 -> SF (Tuple i1 i2) (Tuple o1 o2)
-(+++) :: forall i1 i2 o1 o2. SF i1 o1 -> SF i2 o2 -> SF (Either i1 i2) (Either o1 o2)
-(|||) :: forall i1 i2 o. SF i1 o -> SF i2 o -> SF (Either i1 i2) o
-```
-
-These combinators allow us to enlarge the input type in interesting ways, allowing us to construct graphs of signal functions, composing larger systems from smaller components.
-
-### Custom Handler Functions
-
-The pure model illustrated above completely ignored external components, but in real user interfaces, we need to be able to make calls to web services, local storage, etc., to determine the flow of data in our application.
-
-We can use the `runUI` function to create interesting handler functions which interact with the world:
-
-```purescript
-runUI :: forall i p r eff. 
-  UI i p r eff ->
-  Eff (HalogenEffects eff) (Tuple Node (Driver i eff))
-```
-
-The `handler` property of the `UI` record type is the _handler function_. Notice that the output type of the view function has also changed (compare `PureView` and `View`). Instead of generating inputs of type `i`, our HTML documents can now generate _requests_ of type `r`. The handler function will service requests and generate new inputs. Its type is:
-
-```purescript
-type Handler r i eff = r -> Driver i eff -> Eff (HalogenEffects eff) Unit
-```
-
-That is, a handler function takes a request and a driver function, and runs some asynchronous computation which will provide inputs to the driver function as they become available.
-
-For example, the handler function might respond to requests by using the `purescript-affjax` library to make asynchronous AJAX calls, embedding the response content in an input message.
-
-### Using Driver Functions 
-
-The driver function generated by `runUIEff` simply passes its input to the current signal function, updating the internal state of the system, and eventually, the DOM.
-
-In the pure model, all inputs to the driver function come from the DOM itself, but it is possible to "drive" the system externally by providing additional inputs. For example, we might use a timer to provide a tick input every second:
-
-```purescript
-main = do
-  Tuple node driver <- runUI ui
-  appendToBody node
-  setInterval 1000 $ driver Tick
-```
-
-### Placeholders
-
-The first type argument of the `HTML` type constructor is used to create _placeholders_. Placeholders are used to embed third-party components in the user interface.
-
-Since the signal function is pure, we have to handle placeholders outside the signal function at the top-level. The second argument to `runUIEff` is a function of type `a -> VTree`. This is the function used to render placeholders in the document.
-
-Placeholders are only needed when using third-party components. Usually, the type variable `a` will be instantiated to the `Void` type, and the `absurd` function can be used as the rendering function.
+The Counter example gives a demonstration of using a driver function in this way.

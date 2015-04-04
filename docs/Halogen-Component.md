@@ -33,7 +33,7 @@ the corresponding type parameter unconstrained in the declaration of your compon
 #### `component`
 
 ``` purescript
-component :: forall p m req res i. (Functor m) => SF1 req (HTML p (m res)) -> Component p m req res
+component :: forall p m req res. (Functor m) => SF1 req (HTML p (m res)) -> Component p m req res
 ```
 
 Create a component by providing a signal function.

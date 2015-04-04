@@ -61,7 +61,7 @@ newtype Component p m req res = Component (Exists (ComponentF p m req res))
 -- | nodes in turn will create (monadic) external requests.
 -- |
 -- | See the `Halogen.Signal` documentation.
-component :: forall p m req res i. (Functor m) => SF1 req (HTML p (m res)) -> Component p m req res
+component :: forall p m req res. (Functor m) => SF1 req (HTML p (m res)) -> Component p m req res
 component sf = component' (dimap f (rmap (g <$>)) sf)
   where
   f :: Either Void req -> req
