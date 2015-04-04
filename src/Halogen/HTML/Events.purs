@@ -3,6 +3,7 @@
 
 module Halogen.HTML.Events 
   ( input
+  , withEventHandlerT
   
   , onabort
   , onbeforeunload

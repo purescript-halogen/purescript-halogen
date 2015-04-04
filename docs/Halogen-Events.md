@@ -64,6 +64,14 @@ This function provides an alternative to making two nested calls to `pure`:
 onclick (input \_ -> Input)
 ```
 
+#### `withEventHandlerT`
+
+``` purescript
+withEventHandlerT :: forall i m e. (e -> EventHandlerT m i) -> e -> EventHandler (m i)
+```
+
+Create an event handler which uses `EventHandlerT`.
+
 #### `onabort`
 
 ``` purescript
