@@ -21,10 +21,12 @@ import qualified Halogen.HTML.Attributes as H
 -- | Attach event handler to event ```key``` with getting ```prop``` field
 -- | as an argument of handler
 addForeignPropHandler :: forall i value. (IsForeign value) => String -> String -> (value -> EventHandler i) -> H.Attr i
-addForeignPropHandler key prop f = H.handler (H.eventName key) \e -> traverse f (getProp prop e.target)
+addForeignPropHandler key prop f = H.handler (H.eventName key) handler
   where
-  getProp :: String -> Node -> Maybe value
-  getProp prop = either (const Nothing) Just <<< readProp prop <<< toForeign
+  handler :: forall e. e -> EventHandler i
+  handler e = case readProp prop (toForeign e) of
+                Left _ -> cancel
+                Right i -> f i
 
 -- | Attach an event handler which will produce an input when the value of an input field changes
 -- |

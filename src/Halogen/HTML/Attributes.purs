@@ -99,7 +99,7 @@ data AttrF value = AttrF (AttributeName value -> value -> String) (AttributeName
 
 -- | The data which represents a typed event handler, hidden inside an existential package in
 -- | the `Attr` type.
-data HandlerF i fields = HandlerF (EventName fields) (Event fields -> EventHandler (Maybe i))
+data HandlerF i fields = HandlerF (EventName fields) (Event fields -> EventHandler i)
 
 -- | A single attribute is either
 -- |
@@ -111,14 +111,14 @@ data Attr i
 
 instance functorAttr :: Functor Attr where
   (<$>) _ (Attr e) = Attr e
-  (<$>) f (Handler e) = runExistsR (\(HandlerF name k) -> Handler (mkExistsR (HandlerF name (\e -> (f <$>) <$> k e)))) e
+  (<$>) f (Handler e) = runExistsR (\(HandlerF name k) -> Handler (mkExistsR (HandlerF name (\e -> f <$> k e)))) e
 
 -- | Create an attribute
 attr :: forall value i. (IsAttribute value) => AttributeName value -> value -> Attr i
 attr name v = Attr (mkExists (AttrF toAttrString name v))
 
 -- | Create an event handler
-handler :: forall fields i. EventName fields -> (Event fields -> EventHandler (Maybe i)) -> Attr i
+handler :: forall fields i. EventName fields -> (Event fields -> EventHandler i) -> Attr i
 handler name k = Handler (mkExistsR (HandlerF name k))
 
 -- | A wrapper for strings which are used as CSS classes

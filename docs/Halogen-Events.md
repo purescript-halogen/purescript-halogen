@@ -47,14 +47,6 @@ Identifies the additional fields which are available on focus events.
 This module defines well-typed wrappers for common DOM events, so that
 they may be safely embedded in HTML documents.
 
-#### `createHandler`
-
-``` purescript
-createHandler :: forall fields i. H.EventName fields -> (Event fields -> EventHandler i) -> H.Attr i
-```
-
-This function can be used to attach custom event handlers.
-
 #### `input`
 
 ``` purescript
@@ -320,14 +312,15 @@ to perform standard operations on HTML events.
 #### `EventHandler`
 
 ``` purescript
-data EventHandler a
+newtype EventHandler a
 ```
 
-This applicative functor supports the following operations on events:
+This monad supports the following operations on events:
 
 - `preventDefault`
 - `stopPropagation`
 - `stopImmediatePropagation`
+- `cancel`
 
 It can be used as follows:
 
@@ -361,6 +354,14 @@ stopImmediatePropagation :: EventHandler Unit
 
 Call the `stopImmediatePropagation` method on the current event
 
+#### `cancel`
+
+``` purescript
+cancel :: forall a. EventHandler a
+```
+
+Cancel the event, so that no input data will be passed to the signal function
+
 #### `functorEventHandler`
 
 ``` purescript
@@ -382,10 +383,24 @@ instance applicativeEventHandler :: Applicative EventHandler
 ```
 
 
+#### `bindEventHandler`
+
+``` purescript
+instance bindEventHandler :: Bind EventHandler
+```
+
+
+#### `monadEventHandler`
+
+``` purescript
+instance monadEventHandler :: Monad EventHandler
+```
+
+
 #### `runEventHandler`
 
 ``` purescript
-runEventHandler :: forall a fields eff. Event fields -> EventHandler a -> Eff (dom :: DOM | eff) a
+runEventHandler :: forall a fields eff. Event fields -> EventHandler a -> Eff (dom :: DOM | eff) (Maybe a)
 ```
 
 This function can be used to update an event and return the wrapped value

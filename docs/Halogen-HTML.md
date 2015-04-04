@@ -1813,7 +1813,7 @@ the `Attr` type.
 
 ``` purescript
 data HandlerF i fields
-  = HandlerF (EventName fields) (Event fields -> EventHandler (Maybe i))
+  = HandlerF (EventName fields) (Event fields -> EventHandler i)
 ```
 
 The data which represents a typed event handler, hidden inside an existential package in
@@ -1850,7 +1850,7 @@ Create an attribute
 #### `handler`
 
 ``` purescript
-handler :: forall fields i. EventName fields -> (Event fields -> EventHandler (Maybe i)) -> Attr i
+handler :: forall fields i. EventName fields -> (Event fields -> EventHandler i) -> Attr i
 ```
 
 Create an event handler
