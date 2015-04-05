@@ -53,9 +53,6 @@ data EventUpdate
 data EventHandlerT m a = EventHandlerT [EventUpdate] (Maybe (m a))
 
 -- | `EventHandler` is a synonym for `EventHandlerT` applied to the `Identity` monad.
--- | 
--- | That is, `EventHandler` only adds the `preventDefault`, `stopPropagation`,
--- | `stopImmediatePropagation` and `cancel` actions to the underlying monad.
 type EventHandler = EventHandlerT Identity
      
 log :: forall m. (Applicative m) => EventUpdate -> EventHandlerT m Unit

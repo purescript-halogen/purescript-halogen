@@ -38,6 +38,6 @@ runURL (URL s) = s
 data Target a = LinkTarget URL | DataTarget a
 
 -- | Attach a `Target` to an element using the `href` or `onclick` attribute as appropriate
-target :: forall i. Target i -> [A.Attr i]
+target :: forall m i. (Applicative m) => Target i -> [A.Attr (m i)]
 target (LinkTarget url) = [ A.href (runURL url) ]
 target (DataTarget i) = [ A.href "#", E.onclick (\_ -> E.preventDefault $> i) ]

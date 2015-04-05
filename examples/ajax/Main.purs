@@ -85,7 +85,7 @@ ui = component (render <$> stateful (State false exampleCode Nothing) update)
           , H.h2_ [ H.text "purescript code" ]
           , H.p_ [ H.textarea [ A.class_ B.formControl 
                               , A.value code 
-                              , A.onInput (A.input SetCode)
+                              , A.onInput $ A.input SetCode
                               , A.style (A.styles $ StrMap.fromList 
                                           [ Tuple "font-family" "monospace"
                                           , Tuple "height" "200px"
@@ -93,7 +93,7 @@ ui = component (render <$> stateful (State false exampleCode Nothing) update)
                               ] [] ]
           , H.p_ [ H.button [ A.classes [B.btn, B.btnPrimary]
                             , A.disabled busy
-                            , A.onclick (\_ -> pure (handler code))
+                            , A.onclick \_ -> E.liftEventHandler (handler code)
                             ] [ H.text "Compile" ] ]
           , H.p_ [ H.text (if busy then "Working..." else "") ]
           ] ++ flip foldMap result \js ->
