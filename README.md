@@ -77,7 +77,7 @@ The TODO example provides a good overview of the signal function approach.
 
 ## Handling Asynchronous Requests
 
-- How can we incorporate asynchronous requests (such as AJAX) into our solution?
+> How can we incorporate asynchronous requests (such as AJAX) into our solution?
 
 With our signal function model, it is now simple to support things like AJAX which generate events asynchronously. We can wedge a monad `m` into our signal function as follows:
 
