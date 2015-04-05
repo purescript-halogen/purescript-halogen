@@ -154,7 +154,7 @@ ui :: forall p m. Component p m Input Input
 ui = component (render <$> stateful 0 update)
   where
   render :: Number -> HTML p (m Input)
-  render n = button [onclick \_ -> input Click] [ text (show n) ]
+  render n = button [onclick $ input \_ -> Click] [ text (show n) ]
   
   update :: Number -> Input -> Number
   update n Click = n + 1
@@ -171,10 +171,10 @@ Here, the user interface is represented as a signal function which is wrapped in
 In the example above, the `button`'s `onclick` handler was bound to the `Click` message as follows:
 
 ```purescript
-onclick \_ -> input Click
+onclick $ input \_ -> Click
 ```
 
-The `input` function is used to generate an input to the state machine.
+The `input` function is used to generate an input to the state machine without effects. It is implemented as a wrapper around `pure`.
 
 In general, the `EventHandler` applicative functor is used to create event handlers. It supports operations on events such as `preventDefault`:
 
