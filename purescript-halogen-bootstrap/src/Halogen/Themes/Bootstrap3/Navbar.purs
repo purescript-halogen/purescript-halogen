@@ -66,27 +66,27 @@ type NavBar a =
   }
 
 -- | Create a navbar from a configuration object.
-navbar :: forall p i. NavBar i -> H.HTML p i
+navbar :: forall m p i. (Applicative m) => NavBar i -> H.HTML p (m i)
 navbar conf = 
   H.nav [ A.classes [B.navbar, B.navbarDefault] ]
         [ H.div [ A.class_ B.containerFluid ] (map renderItem conf.items) ]
         
   where
-  renderItem :: NavBarItem i -> H.HTML p i
+  renderItem :: NavBarItem i -> H.HTML p (m i)
   renderItem (Brand o) = H.a (A.class_ B.navbarBrand : target o.target) [H.text o.text]
   renderItem (Nav o) = H.ul [ A.classes [B.nav, B.navbarNav] ] (map renderNavItem o.items)
   renderItem (Text s) = H.p [ A.class_ B.navbarText ] [H.text s]
   renderItem (Button o) = H.a (A.classes [B.btn, B.btnDefault, B.navbarBtn] : target o.target) [H.text o.text]
   
-  renderNavItem :: NavItem i -> H.HTML p i
+  renderNavItem :: NavItem i -> H.HTML p (m i)
   renderNavItem (NavLink o) = H.li (if o.active then [A.class_ B.active] else []) [ H.a (target o.target) [ H.text o.text ] ]
   renderNavItem (NavDropDown o) = H.li [ A.class_ B.dropdown ] 
                                        [ H.a [ A.href "#", A.class_ B.dropdownToggle ] [H.text o.text] 
                                        , H.ul [ A.class_ B.dropdownMenu ] (intercalate [divider] (map (map renderLink) o.groups))
                                        ]
     where
-    divider :: H.HTML p i
+    divider :: H.HTML p (m i)
     divider = H.li [ A.class_ B.divider ] []
         
-    renderLink :: Link i -> H.HTML p i
+    renderLink :: Link i -> H.HTML p (m i)
     renderLink o = H.li_ [ H.a (target o.target) [ H.text o.text ] ]

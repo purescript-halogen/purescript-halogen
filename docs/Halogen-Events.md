@@ -50,7 +50,7 @@ they may be safely embedded in HTML documents.
 #### `input`
 
 ``` purescript
-input :: forall i m a. (Applicative m) => (a -> i) -> a -> EventHandler (m i)
+input :: forall i m a. (Applicative m) => (a -> i) -> a -> EventHandlerT m i
 ```
 
 A helper function which can be used to create simple event handlers.
@@ -64,241 +64,257 @@ This function provides an alternative to making two nested calls to `pure`:
 onclick (input \_ -> Input)
 ```
 
+#### `withEventHandlerT`
+
+``` purescript
+withEventHandlerT :: forall i m e. (e -> EventHandlerT m i) -> e -> EventHandler (m i)
+```
+
+Create an event handler which uses `EventHandlerT`.
+
+#### `handlerT`
+
+``` purescript
+handlerT :: forall fields m i. H.EventName fields -> (Event fields -> EventHandlerT m i) -> H.Attr (m i)
+```
+
+Attach an event handler which uses `EventHandlerT`.
+
 #### `onabort`
 
 ``` purescript
-onabort :: forall i. (Event () -> EventHandler i) -> H.Attr i
+onabort :: forall m i. (Event () -> EventHandlerT m i) -> H.Attr (m i)
 ```
 
 
 #### `onbeforeunload`
 
 ``` purescript
-onbeforeunload :: forall i. (Event () -> EventHandler i) -> H.Attr i
+onbeforeunload :: forall m i. (Event () -> EventHandlerT m i) -> H.Attr (m i)
 ```
 
 
 #### `onerror`
 
 ``` purescript
-onerror :: forall i. (Event () -> EventHandler i) -> H.Attr i
+onerror :: forall m i. (Event () -> EventHandlerT m i) -> H.Attr (m i)
 ```
 
 
 #### `onhashchange`
 
 ``` purescript
-onhashchange :: forall i. (Event () -> EventHandler i) -> H.Attr i
+onhashchange :: forall m i. (Event () -> EventHandlerT m i) -> H.Attr (m i)
 ```
 
 
 #### `onload`
 
 ``` purescript
-onload :: forall i. (Event () -> EventHandler i) -> H.Attr i
+onload :: forall m i. (Event () -> EventHandlerT m i) -> H.Attr (m i)
 ```
 
 
 #### `onpageshow`
 
 ``` purescript
-onpageshow :: forall i. (Event () -> EventHandler i) -> H.Attr i
+onpageshow :: forall m i. (Event () -> EventHandlerT m i) -> H.Attr (m i)
 ```
 
 
 #### `onpagehide`
 
 ``` purescript
-onpagehide :: forall i. (Event () -> EventHandler i) -> H.Attr i
+onpagehide :: forall m i. (Event () -> EventHandlerT m i) -> H.Attr (m i)
 ```
 
 
 #### `onresize`
 
 ``` purescript
-onresize :: forall i. (Event () -> EventHandler i) -> H.Attr i
+onresize :: forall m i. (Event () -> EventHandlerT m i) -> H.Attr (m i)
 ```
 
 
 #### `onscroll`
 
 ``` purescript
-onscroll :: forall i. (Event () -> EventHandler i) -> H.Attr i
+onscroll :: forall m i. (Event () -> EventHandlerT m i) -> H.Attr (m i)
 ```
 
 
 #### `onunload`
 
 ``` purescript
-onunload :: forall i. (Event () -> EventHandler i) -> H.Attr i
+onunload :: forall m i. (Event () -> EventHandlerT m i) -> H.Attr (m i)
 ```
 
 
 #### `onchange`
 
 ``` purescript
-onchange :: forall i. (Event () -> EventHandler i) -> H.Attr i
+onchange :: forall m i. (Event () -> EventHandlerT m i) -> H.Attr (m i)
 ```
 
 
 #### `oninput`
 
 ``` purescript
-oninput :: forall i. (Event () -> EventHandler i) -> H.Attr i
+oninput :: forall m i. (Event () -> EventHandlerT m i) -> H.Attr (m i)
 ```
 
 
 #### `oninvalid`
 
 ``` purescript
-oninvalid :: forall i. (Event () -> EventHandler i) -> H.Attr i
+oninvalid :: forall m i. (Event () -> EventHandlerT m i) -> H.Attr (m i)
 ```
 
 
 #### `onreset`
 
 ``` purescript
-onreset :: forall i. (Event () -> EventHandler i) -> H.Attr i
+onreset :: forall m i. (Event () -> EventHandlerT m i) -> H.Attr (m i)
 ```
 
 
 #### `onsearch`
 
 ``` purescript
-onsearch :: forall i. (Event () -> EventHandler i) -> H.Attr i
+onsearch :: forall m i. (Event () -> EventHandlerT m i) -> H.Attr (m i)
 ```
 
 
 #### `onselect`
 
 ``` purescript
-onselect :: forall i. (Event () -> EventHandler i) -> H.Attr i
+onselect :: forall m i. (Event () -> EventHandlerT m i) -> H.Attr (m i)
 ```
 
 
 #### `onsubmit`
 
 ``` purescript
-onsubmit :: forall i. (Event () -> EventHandler i) -> H.Attr i
+onsubmit :: forall m i. (Event () -> EventHandlerT m i) -> H.Attr (m i)
 ```
 
 
 #### `onclick`
 
 ``` purescript
-onclick :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attr i
+onclick :: forall m i. (Event MouseEvent -> EventHandlerT m i) -> H.Attr (m i)
 ```
 
 
 #### `oncontextmenu`
 
 ``` purescript
-oncontextmenu :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attr i
+oncontextmenu :: forall m i. (Event MouseEvent -> EventHandlerT m i) -> H.Attr (m i)
 ```
 
 
 #### `ondblclick`
 
 ``` purescript
-ondblclick :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attr i
+ondblclick :: forall m i. (Event MouseEvent -> EventHandlerT m i) -> H.Attr (m i)
 ```
 
 
 #### `onmousedown`
 
 ``` purescript
-onmousedown :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attr i
+onmousedown :: forall m i. (Event MouseEvent -> EventHandlerT m i) -> H.Attr (m i)
 ```
 
 
 #### `onmouseenter`
 
 ``` purescript
-onmouseenter :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attr i
+onmouseenter :: forall m i. (Event MouseEvent -> EventHandlerT m i) -> H.Attr (m i)
 ```
 
 
 #### `onmouseleave`
 
 ``` purescript
-onmouseleave :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attr i
+onmouseleave :: forall m i. (Event MouseEvent -> EventHandlerT m i) -> H.Attr (m i)
 ```
 
 
 #### `onmousemove`
 
 ``` purescript
-onmousemove :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attr i
+onmousemove :: forall m i. (Event MouseEvent -> EventHandlerT m i) -> H.Attr (m i)
 ```
 
 
 #### `onmouseover`
 
 ``` purescript
-onmouseover :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attr i
+onmouseover :: forall m i. (Event MouseEvent -> EventHandlerT m i) -> H.Attr (m i)
 ```
 
 
 #### `onmouseout`
 
 ``` purescript
-onmouseout :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attr i
+onmouseout :: forall m i. (Event MouseEvent -> EventHandlerT m i) -> H.Attr (m i)
 ```
 
 
 #### `onmouseup`
 
 ``` purescript
-onmouseup :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attr i
+onmouseup :: forall m i. (Event MouseEvent -> EventHandlerT m i) -> H.Attr (m i)
 ```
 
 
 #### `onkeydown`
 
 ``` purescript
-onkeydown :: forall i. (Event KeyboardEvent -> EventHandler i) -> H.Attr i
+onkeydown :: forall m i. (Event KeyboardEvent -> EventHandlerT m i) -> H.Attr (m i)
 ```
 
 
 #### `onkeypress`
 
 ``` purescript
-onkeypress :: forall i. (Event KeyboardEvent -> EventHandler i) -> H.Attr i
+onkeypress :: forall m i. (Event KeyboardEvent -> EventHandlerT m i) -> H.Attr (m i)
 ```
 
 
 #### `onkeyup`
 
 ``` purescript
-onkeyup :: forall i. (Event KeyboardEvent -> EventHandler i) -> H.Attr i
+onkeyup :: forall m i. (Event KeyboardEvent -> EventHandlerT m i) -> H.Attr (m i)
 ```
 
 
 #### `onblur`
 
 ``` purescript
-onblur :: forall i. (Event FocusEvent -> EventHandler i) -> H.Attr i
+onblur :: forall m i. (Event FocusEvent -> EventHandlerT m i) -> H.Attr (m i)
 ```
 
 
 #### `onfocus`
 
 ``` purescript
-onfocus :: forall i. (Event FocusEvent -> EventHandler i) -> H.Attr i
+onfocus :: forall m i. (Event FocusEvent -> EventHandlerT m i) -> H.Attr (m i)
 ```
 
 
 #### `onfocusin`
 
 ``` purescript
-onfocusin :: forall i. (Event FocusEvent -> EventHandler i) -> H.Attr i
+onfocusin :: forall m i. (Event FocusEvent -> EventHandlerT m i) -> H.Attr (m i)
 ```
 
 
 #### `onfocusout`
 
 ``` purescript
-onfocusout :: forall i. (Event FocusEvent -> EventHandler i) -> H.Attr i
+onfocusout :: forall m i. (Event FocusEvent -> EventHandlerT m i) -> H.Attr (m i)
 ```
 
 
@@ -309,13 +325,13 @@ onfocusout :: forall i. (Event FocusEvent -> EventHandler i) -> H.Attr i
 This module defines the `EventHandler` functor, which can be used
 to perform standard operations on HTML events.
 
-#### `EventHandler`
+#### `EventHandlerT`
 
 ``` purescript
-newtype EventHandler a
+data EventHandlerT m a
 ```
 
-This monad supports the following operations on events:
+This `Applicative` transformer supports the following operations on events:
 
 - `preventDefault`
 - `stopPropagation`
@@ -330,10 +346,18 @@ import Control.Functor (($>))
 H.a (E.onclick \_ -> E.preventDefault $> ClickHandler) (H.text "Click here")
 ```
 
+#### `EventHandler`
+
+``` purescript
+type EventHandler = EventHandlerT Identity
+```
+
+`EventHandler` is a synonym for `EventHandlerT` applied to the `Identity` monad.
+
 #### `preventDefault`
 
 ``` purescript
-preventDefault :: EventHandler Unit
+preventDefault :: forall m. (Applicative m) => EventHandlerT m Unit
 ```
 
 Call the `preventDefault` method on the current event
@@ -341,7 +365,7 @@ Call the `preventDefault` method on the current event
 #### `stopPropagation`
 
 ``` purescript
-stopPropagation :: EventHandler Unit
+stopPropagation :: forall m. (Applicative m) => EventHandlerT m Unit
 ```
 
 Call the `stopPropagation` method on the current event
@@ -349,7 +373,7 @@ Call the `stopPropagation` method on the current event
 #### `stopImmediatePropagation`
 
 ``` purescript
-stopImmediatePropagation :: EventHandler Unit
+stopImmediatePropagation :: forall m. (Applicative m) => EventHandlerT m Unit
 ```
 
 Call the `stopImmediatePropagation` method on the current event
@@ -357,43 +381,45 @@ Call the `stopImmediatePropagation` method on the current event
 #### `cancel`
 
 ``` purescript
-cancel :: forall a. EventHandler a
+cancel :: forall m a. EventHandlerT m a
 ```
 
 Cancel the event, so that no input data will be passed to the signal function
 
+#### `liftEventHandler`
+
+``` purescript
+liftEventHandler :: forall m a. m a -> EventHandlerT m a
+```
+
+Lift an action into the `EventHandlerT` transformer
+
+#### `unwrapEventHandler`
+
+``` purescript
+unwrapEventHandler :: forall m a. EventHandlerT m a -> EventHandler (m a)
+```
+
+Interpret `EventHandlerT` in terms of `EventHandler`.
+
 #### `functorEventHandler`
 
 ``` purescript
-instance functorEventHandler :: Functor EventHandler
+instance functorEventHandler :: (Functor m) => Functor (EventHandlerT m)
 ```
 
 
 #### `applyEventHandler`
 
 ``` purescript
-instance applyEventHandler :: Apply EventHandler
+instance applyEventHandler :: (Apply m) => Apply (EventHandlerT m)
 ```
 
 
 #### `applicativeEventHandler`
 
 ``` purescript
-instance applicativeEventHandler :: Applicative EventHandler
-```
-
-
-#### `bindEventHandler`
-
-``` purescript
-instance bindEventHandler :: Bind EventHandler
-```
-
-
-#### `monadEventHandler`
-
-``` purescript
-instance monadEventHandler :: Monad EventHandler
+instance applicativeEventHandler :: (Applicative m) => Applicative (EventHandlerT m)
 ```
 
 

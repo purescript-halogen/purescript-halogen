@@ -3,13 +3,17 @@
 
 module Halogen.HTML.Events.Handler 
   ( EventHandler()
+  , EventHandlerT()
   
   , preventDefault 
   , stopPropagation
   , stopImmediatePropagation
   , cancel
   
+  , liftEventHandler
+  
   , runEventHandler
+  , unwrapEventHandler
   ) where
 
 import DOM
@@ -18,16 +22,12 @@ import Data.Maybe
 import Data.Tuple
 import Data.Array ()
 import Data.Foldable (for_)
+import Data.Traversable (sequence)
+import Data.Identity
 
-import Control.Apply ((*>))
+import Control.Apply (lift2, (*>))
 import Control.Plus (empty)
 import Control.Monad.Eff
-
-import Control.Monad.Maybe.Trans
-
-import Control.Monad.Writer
-import Control.Monad.Writer.Trans
-import Control.Monad.Writer.Class
 
 import Halogen.HTML.Events.Types
 
@@ -36,7 +36,7 @@ data EventUpdate
   | StopPropagation
   | StopImmediatePropagation
 
--- | This monad supports the following operations on events:
+-- | This `Applicative` transformer supports the following operations on events:
 -- |
 -- | - `preventDefault`
 -- | - `stopPropagation`
@@ -50,40 +50,46 @@ data EventUpdate
 -- |
 -- | H.a (E.onclick \_ -> E.preventDefault $> ClickHandler) (H.text "Click here")
 -- | ```
-newtype EventHandler a = EventHandler (MaybeT (Writer [EventUpdate]) a)
+data EventHandlerT m a = EventHandlerT [EventUpdate] (Maybe (m a))
+
+-- | `EventHandler` is a synonym for `EventHandlerT` applied to the `Identity` monad.
+type EventHandler = EventHandlerT Identity
      
-unEventHandler :: forall a. EventHandler a -> MaybeT (Writer [EventUpdate]) a
-unEventHandler (EventHandler mw) = mw
-     
+log :: forall m. (Applicative m) => EventUpdate -> EventHandlerT m Unit
+log e = EventHandlerT [e] (Just (pure unit))
+
 -- | Call the `preventDefault` method on the current event
-preventDefault :: EventHandler Unit
-preventDefault = EventHandler (tell [PreventDefault])
+preventDefault :: forall m. (Applicative m) => EventHandlerT m Unit
+preventDefault = log PreventDefault
      
 -- | Call the `stopPropagation` method on the current event
-stopPropagation :: EventHandler Unit
-stopPropagation = EventHandler (tell [StopPropagation])
+stopPropagation :: forall m. (Applicative m) => EventHandlerT m Unit
+stopPropagation = log StopPropagation
      
 -- | Call the `stopImmediatePropagation` method on the current event
-stopImmediatePropagation :: EventHandler Unit
-stopImmediatePropagation = EventHandler (tell [StopImmediatePropagation])
+stopImmediatePropagation :: forall m. (Applicative m) => EventHandlerT m Unit
+stopImmediatePropagation = log StopImmediatePropagation
      
 -- | Cancel the event, so that no input data will be passed to the signal function
-cancel :: forall a. EventHandler a
-cancel = EventHandler empty
+cancel :: forall m a. EventHandlerT m a
+cancel = EventHandlerT [] Nothing
+
+-- | Lift an action into the `EventHandlerT` transformer
+liftEventHandler :: forall m a. m a -> EventHandlerT m a
+liftEventHandler = EventHandlerT [] <<< Just
+     
+-- | Interpret `EventHandlerT` in terms of `EventHandler`.
+unwrapEventHandler :: forall m a. EventHandlerT m a -> EventHandler (m a)
+unwrapEventHandler (EventHandlerT es ma) = EventHandlerT es (Identity <$> ma)
       
-instance functorEventHandler :: Functor EventHandler where
-  (<$>) f (EventHandler mw) = EventHandler (f <$> mw)
-
-instance applyEventHandler :: Apply EventHandler where
-  (<*>) (EventHandler mw1) (EventHandler mw2) = EventHandler (mw1 <*> mw2)
-
-instance applicativeEventHandler :: Applicative EventHandler where
-  pure = EventHandler <<< pure
-
-instance bindEventHandler :: Bind EventHandler where
-  (>>=) (EventHandler mw) f = EventHandler (mw >>= unEventHandler <<< f)
+instance functorEventHandler :: (Functor m) => Functor (EventHandlerT m) where
+  (<$>) f (EventHandlerT es m) = EventHandlerT es ((f <$>) <$> m)
   
-instance monadEventHandler :: Monad EventHandler
+instance applyEventHandler :: (Apply m) => Apply (EventHandlerT m) where
+  (<*>) (EventHandlerT es1 m1) (EventHandlerT es2 m2) = EventHandlerT (es1 <> es2) (lift2 (<*>) m1 m2)
+
+instance applicativeEventHandler :: (Applicative m) => Applicative (EventHandlerT m) where
+  pure a = EventHandlerT [] (Just (pure a))
   
 foreign import preventDefaultImpl
   "function preventDefaultImpl(e) {\
@@ -108,9 +114,9 @@ foreign import stopImmediatePropagationImpl
       
 -- | This function can be used to update an event and return the wrapped value
 runEventHandler :: forall a fields eff. Event fields -> EventHandler a -> Eff (dom :: DOM | eff) (Maybe a)
-runEventHandler e (EventHandler mw) = 
-  case runWriter (runMaybeT mw) of
-    Tuple ma eus -> for_ eus applyUpdate *> return ma
+runEventHandler e (EventHandlerT es ma) = do
+  for_ es applyUpdate
+  return (runIdentity (sequence ma))
   where
   applyUpdate :: EventUpdate -> Eff (dom :: DOM | eff) Unit
   applyUpdate PreventDefault            = preventDefaultImpl e
