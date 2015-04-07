@@ -397,4 +397,149 @@ runEventHandler :: forall a fields eff. Event fields -> EventHandler a -> Eff (d
 This function can be used to update an event and return the wrapped value
 
 
+## Module Halogen.HTML.Events.Monad
+
+
+This module defines the `Event` monad.
+
+#### `Event`
+
+``` purescript
+newtype Event eff a
+  = Event (ListT (Aff eff) a)
+```
+
+The `Event` monad, which supports the asynchronous generation of events.
+
+This monad is used in the definition of `runUI`.
+
+#### `unEvent`
+
+``` purescript
+unEvent :: forall eff a. Event eff a -> ListT (Aff eff) a
+```
+
+Unwrap the `Event` constructor.
+
+#### `runEvent`
+
+``` purescript
+runEvent :: forall eff a. (Error -> Eff eff Unit) -> (a -> Eff eff Unit) -> Event eff a -> Eff eff Unit
+```
+
+Run a computation in the `Event` monad by providing a callback function.
+
+The callback function will be invoked zero or more times.
+
+#### `yield`
+
+``` purescript
+yield :: forall eff a. a -> Event eff a
+```
+
+Yield an event. In practice, the event will be passed to the driver function.
+
+#### `async`
+
+``` purescript
+async :: forall eff a. Aff eff a -> Event eff a
+```
+
+Lift an asynchronous computation into the `Event` monad.
+
+#### `andThen`
+
+``` purescript
+andThen :: forall eff a. Event eff a -> (a -> Event eff a) -> Event eff a
+```
+
+A combinator which branches based on the supplied function after the first result,
+and returns to the original stream of events after the secondary stream has been
+exhausted.
+
+#### `semigroupEvent`
+
+``` purescript
+instance semigroupEvent :: Semigroup (Event eff a)
+```
+
+
+#### `monoidEvent`
+
+``` purescript
+instance monoidEvent :: Monoid (Event eff a)
+```
+
+
+#### `functorEvent`
+
+``` purescript
+instance functorEvent :: Functor (Event eff)
+```
+
+
+#### `applyEvent`
+
+``` purescript
+instance applyEvent :: Apply (Event eff)
+```
+
+
+#### `applicativeEvent`
+
+``` purescript
+instance applicativeEvent :: Applicative (Event eff)
+```
+
+
+#### `bindEvent`
+
+``` purescript
+instance bindEvent :: Bind (Event eff)
+```
+
+
+#### `monadEvent`
+
+``` purescript
+instance monadEvent :: Monad (Event eff)
+```
+
+
+#### `monadAffEvent`
+
+``` purescript
+instance monadAffEvent :: MonadAff eff (Event eff)
+```
+
+
+#### `altEvent`
+
+``` purescript
+instance altEvent :: Alt (Event eff)
+```
+
+
+#### `plusEvent`
+
+``` purescript
+instance plusEvent :: Plus (Event eff)
+```
+
+
+#### `alternativeEvent`
+
+``` purescript
+instance alternativeEvent :: Alternative (Event eff)
+```
+
+
+#### `monadPlusEvent`
+
+``` purescript
+instance monadPlusEvent :: MonadPlus (Event eff)
+```
+
+
+
 
