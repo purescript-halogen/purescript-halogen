@@ -85,11 +85,11 @@ With our signal function model, it is now simple to support things like AJAX whi
 type UI4 m input = SF input (HTML (m input)) 
 ```
 
-This allows us to create documents which generate inputs in some effectful way. In practice, Halogen requires `m` to be the `Aff` monad, defined in the `purescript-aff` library. `Aff` allows us to define asynchronous actions, and provides a simple AJAX API in the `affjax` library.
+This allows us to create documents which generate inputs in some effectful way. In practice, Halogen requires `m` to be the `Event` monad, defined in the `Halogen.HTML.Events.Monad` module. `Event` uses the `Aff` monad to support define asynchronous actions. `Aff` is defined in the `purescript-aff` library, and provides a simple AJAX API in the `affjax` library.
 
 Separating the monad `m` into a type argument is useful, because we can choose a different monad with which to define our application (such as a `Free` monad), choosing to interpret that monad in different ways for different purposes (production, testing, etc.)
 
-See the AJAX example for a demonstration of the `Aff` monad.
+See the AJAX example for a demonstration of the `Event` monad.
 
 ## Third-Party Components
 

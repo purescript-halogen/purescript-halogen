@@ -57,7 +57,7 @@ var paths = {
         }, 
         {
             dest: 'docs/Halogen-Events.md',
-            src: [ 'src/Halogen/HTML/Events/Types.purs', 'src/Halogen/HTML/Events.purs', 'src/Halogen/HTML/Events/Handler.purs' ]
+            src: [ 'src/Halogen/HTML/Events/Types.purs', 'src/Halogen/HTML/Events.purs', 'src/Halogen/HTML/Events/Handler.purs', 'src/Halogen/HTML/Events/Monad.purs' ]
         }, 
         {
             dest: 'docs/Halogen-Mixin-UndoRedo.md',

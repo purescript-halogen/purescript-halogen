@@ -22,8 +22,8 @@ renderAttr :: forall i eff. (i -> Eff eff Unit) -> A.Attr i -> Props
 renderAttr _  (A.Attr e) = runExists (\(A.AttrF _ key value) -> runFn2 prop (A.runAttributeName key) value) e
 renderAttr dr (A.Handler e) = A.runExistsR (\(A.HandlerF name k) ->
   runFn2 handlerProp (A.runEventName name) \ev -> do
-    m <- unsafeInterleaveEff $ runEventHandler ev (k ev)
-    for_ m dr) e
+    a <- unsafeInterleaveEff $ runEventHandler ev (k ev)
+    dr a) e
 
 -- | Render a `HTML` document to a virtual DOM node
 -- |

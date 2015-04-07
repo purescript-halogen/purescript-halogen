@@ -12,7 +12,6 @@ import qualified Data.StrMap as StrMap
 
 import Control.Functor (($>))
 import Control.Monad.Eff
-import Control.Monad.Eff.Unsafe
 import Control.Monad.Aff
 
 import DOM
@@ -26,6 +25,7 @@ import qualified Halogen.HTML.Attributes as A
 import qualified Halogen.HTML.Events as A
 import qualified Halogen.HTML.Events.Forms as A
 import qualified Halogen.HTML.Events.Handler as E
+import qualified Halogen.HTML.Events.Monad as E
 
 import qualified Halogen.Themes.Bootstrap3 as B
 
@@ -75,17 +75,17 @@ data Input
   | SetCode String
   | SetResult String
 
-ui :: forall p eff. Component p (Aff (HalogenEffects (http :: HTTP | eff))) Input Input
+ui :: forall p eff. Component p (E.Event (HalogenEffects (http :: HTTP | eff))) Input Input
 ui = component (render <$> stateful (State false exampleCode Nothing) update)
   where
-  render :: State -> H.HTML p (Aff (HalogenEffects (http :: HTTP | eff)) Input)
+  render :: State -> H.HTML p (E.Event (HalogenEffects (http :: HTTP | eff)) Input)
   render (State busy code result) = 
     H.div [ A.class_ B.container ] $
           [ H.h1 [ A.id_ "header" ] [ H.text "ajax example" ]
           , H.h2_ [ H.text "purescript code" ]
           , H.p_ [ H.textarea [ A.class_ B.formControl 
                               , A.value code 
-                              , A.onInput $ A.input SetCode
+                              , A.onInput (A.input SetCode)
                               , A.style (A.styles $ StrMap.fromList 
                                           [ Tuple "font-family" "monospace"
                                           , Tuple "height" "200px"
@@ -93,7 +93,7 @@ ui = component (render <$> stateful (State false exampleCode Nothing) update)
                               ] [] ]
           , H.p_ [ H.button [ A.classes [B.btn, B.btnPrimary]
                             , A.disabled busy
-                            , A.onclick \_ -> E.liftEventHandler (handler code)
+                            , A.onclick (\_ -> pure (handler code))
                             ] [ H.text "Compile" ] ]
           , H.p_ [ H.text (if busy then "Working..." else "") ]
           ] ++ flip foldMap result \js ->
@@ -107,12 +107,13 @@ ui = component (render <$> stateful (State false exampleCode Nothing) update)
   update (State busy code _) (SetResult rslt) = State false code (Just rslt)
 
 -- | Handle a request to an external service
-handler :: forall eff. String -> Aff (HalogenEffects (http :: HTTP | eff)) Input
-handler code = makeAff \_ k -> unsafeInterleaveEff do
-  k SetBusy
-  compile code \response -> do
-    k (SetResult response)
-  
+handler :: forall eff. String -> E.Event (HalogenEffects (http :: HTTP | eff)) Input
+handler code = E.yield SetBusy `E.andThen` \_ -> E.async compileAff
+  where
+  compileAff :: Aff (HalogenEffects (http :: HTTP | eff)) Input
+  compileAff = makeAff \_ k ->
+    compile code \response -> k (SetResult response)
+      
 main = do
   Tuple node driver <- runUI ui
   appendToBody node

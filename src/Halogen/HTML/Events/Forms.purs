@@ -14,31 +14,33 @@ import Data.Foreign
 import Data.Foreign.Class
 import Data.Traversable (traverse)
 
+import Control.Plus
+import Control.Alternative
+
 import Halogen.HTML.Events.Handler
 
-import qualified Halogen.HTML.Events as E
 import qualified Halogen.HTML.Attributes as H
   
 -- | Attach event handler to event ```key``` with getting ```prop``` field
 -- | as an argument of handler
-addForeignPropHandler :: forall value m i. (IsForeign value) => String -> String -> (value -> EventHandlerT m i) -> H.Attr (m i)
-addForeignPropHandler key prop f = E.handlerT (H.eventName key) (\e -> handler (toForeign e.target))
+addForeignPropHandler :: forall f i value. (Alternative f, IsForeign value) => String -> String -> (value -> EventHandler (f i)) -> H.Attr (f i)
+addForeignPropHandler key prop f = H.handler (H.eventName key) (\e -> handler (toForeign e.target))
   where
-  handler :: Foreign -> EventHandlerT m i
+  handler :: Foreign -> EventHandler (f i)
   handler e = case readProp prop e of
-                Left _ -> cancel
+                Left _ -> pure empty
                 Right i -> f i
 
 -- | Attach an event handler which will produce an input when the value of an input field changes
 -- |
 -- | An input will not be produced if the value cannot be cast to the appropriate type.
-onValueChanged :: forall value m i. (IsForeign value) => (value -> EventHandlerT m i) -> H.Attr (m i)
+onValueChanged :: forall value f i. (Alternative f, IsForeign value) => (value -> EventHandler (f i)) -> H.Attr (f i)
 onValueChanged = addForeignPropHandler "change" "value"
 
 -- | Attach an event handler which will fire when a checkbox is checked or unchecked
-onChecked :: forall m i. (Boolean -> EventHandlerT m i) -> H.Attr (m i)
+onChecked :: forall f i. (Alternative f) => (Boolean -> EventHandler (f i)) -> H.Attr (f i)
 onChecked = addForeignPropHandler "change" "checked"
 
 -- | Attach an event handler which will fire on input
-onInput :: forall value m i. (IsForeign value) => (value -> EventHandlerT m i) -> H.Attr (m i)
+onInput :: forall f value i. (Alternative f, IsForeign value) => (value -> EventHandler (f i)) -> H.Attr (f i)
 onInput = addForeignPropHandler "input" "value"
