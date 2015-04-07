@@ -16,29 +16,28 @@ import Data.Traversable (traverse)
 
 import Halogen.HTML.Events.Handler
 
-import qualified Halogen.HTML.Events as E
 import qualified Halogen.HTML.Attributes as H
   
 -- | Attach event handler to event ```key``` with getting ```prop``` field
 -- | as an argument of handler
-addForeignPropHandler :: forall value m i. (IsForeign value) => String -> String -> (value -> EventHandlerT m i) -> H.Attr (m i)
-addForeignPropHandler key prop f = E.handlerT (H.eventName key) (\e -> handler (toForeign e.target))
+addForeignPropHandler :: forall i value. (IsForeign value) => String -> String -> (value -> EventHandler i) -> H.Attr i
+addForeignPropHandler key prop f = H.handler (H.eventName key) handler
   where
-  handler :: Foreign -> EventHandlerT m i
-  handler e = case readProp prop e of
+  handler :: forall e. e -> EventHandler i
+  handler e = case readProp prop (toForeign e) of
                 Left _ -> cancel
                 Right i -> f i
 
 -- | Attach an event handler which will produce an input when the value of an input field changes
 -- |
 -- | An input will not be produced if the value cannot be cast to the appropriate type.
-onValueChanged :: forall value m i. (IsForeign value) => (value -> EventHandlerT m i) -> H.Attr (m i)
+onValueChanged :: forall value i. (IsForeign value) => (value -> EventHandler i) -> H.Attr i
 onValueChanged = addForeignPropHandler "change" "value"
 
 -- | Attach an event handler which will fire when a checkbox is checked or unchecked
-onChecked :: forall m i. (Boolean -> EventHandlerT m i) -> H.Attr (m i)
+onChecked :: forall i. (Boolean -> EventHandler i) -> H.Attr i
 onChecked = addForeignPropHandler "change" "checked"
 
 -- | Attach an event handler which will fire on input
-onInput :: forall value m i. (IsForeign value) => (value -> EventHandlerT m i) -> H.Attr (m i)
+onInput :: forall value i. (IsForeign value) => (value -> EventHandler i) -> H.Attr i
 onInput = addForeignPropHandler "input" "value"

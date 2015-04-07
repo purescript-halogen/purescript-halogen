@@ -17,7 +17,7 @@ A `CrumbTrail` is a zipper with a current location, and crumbs behind and in fro
 #### `breadcrumbs`
 
 ``` purescript
-breadcrumbs :: forall m p i. (Applicative m) => CrumbTrail i -> H.HTML p (m i)
+breadcrumbs :: forall p i. CrumbTrail i -> H.HTML p i
 ```
 
 Create a breadcrumb navigation element from an array of `Crumb`s.
@@ -121,7 +121,7 @@ A navbar configuration
 #### `navbar`
 
 ``` purescript
-navbar :: forall m p i. (Applicative m) => NavBar i -> H.HTML p (m i)
+navbar :: forall p i. NavBar i -> H.HTML p i
 ```
 
 Create a navbar from a configuration object.
