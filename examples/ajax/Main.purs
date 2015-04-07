@@ -26,6 +26,7 @@ import qualified Halogen.HTML.Attributes as A
 import qualified Halogen.HTML.Events as A
 import qualified Halogen.HTML.Events.Forms as A
 import qualified Halogen.HTML.Events.Handler as E
+import qualified Halogen.HTML.Events.Monad as E
 
 import qualified Halogen.Themes.Bootstrap3 as B
 
@@ -75,10 +76,10 @@ data Input
   | SetCode String
   | SetResult String
 
-ui :: forall p eff. Component p (Aff (HalogenEffects (http :: HTTP | eff))) Input Input
+ui :: forall p eff. Component p (E.Event (HalogenEffects (http :: HTTP | eff))) Input Input
 ui = component (render <$> stateful (State false exampleCode Nothing) update)
   where
-  render :: State -> H.HTML p (Aff (HalogenEffects (http :: HTTP | eff)) Input)
+  render :: State -> H.HTML p (E.Event (HalogenEffects (http :: HTTP | eff)) Input)
   render (State busy code result) = 
     H.div [ A.class_ B.container ] $
           [ H.h1 [ A.id_ "header" ] [ H.text "ajax example" ]
@@ -107,8 +108,8 @@ ui = component (render <$> stateful (State false exampleCode Nothing) update)
   update (State busy code _) (SetResult rslt) = State false code (Just rslt)
 
 -- | Handle a request to an external service
-handler :: forall eff. String -> Aff (HalogenEffects (http :: HTTP | eff)) Input
-handler code = makeAff \_ k -> unsafeInterleaveEff do
+handler :: forall eff. String -> E.Event (HalogenEffects (http :: HTTP | eff)) Input
+handler code = E.async $ makeAff \_ k -> unsafeInterleaveEff do
   k SetBusy
   compile code \response -> do
     k (SetResult response)
