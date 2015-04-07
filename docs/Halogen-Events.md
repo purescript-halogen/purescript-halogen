@@ -320,7 +320,6 @@ This monad supports the following operations on events:
 - `preventDefault`
 - `stopPropagation`
 - `stopImmediatePropagation`
-- `cancel`
 
 It can be used as follows:
 
@@ -353,14 +352,6 @@ stopImmediatePropagation :: EventHandler Unit
 ```
 
 Call the `stopImmediatePropagation` method on the current event
-
-#### `cancel`
-
-``` purescript
-cancel :: forall a. EventHandler a
-```
-
-Cancel the event, so that no input data will be passed to the signal function
 
 #### `functorEventHandler`
 
@@ -400,7 +391,7 @@ instance monadEventHandler :: Monad EventHandler
 #### `runEventHandler`
 
 ``` purescript
-runEventHandler :: forall a fields eff. Event fields -> EventHandler a -> Eff (dom :: DOM | eff) (Maybe a)
+runEventHandler :: forall a fields eff. Event fields -> EventHandler a -> Eff (dom :: DOM | eff) a
 ```
 
 This function can be used to update an event and return the wrapped value

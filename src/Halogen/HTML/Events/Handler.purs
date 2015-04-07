@@ -7,7 +7,6 @@ module Halogen.HTML.Events.Handler
   , preventDefault 
   , stopPropagation
   , stopImmediatePropagation
-  , cancel
   
   , runEventHandler
   ) where
@@ -22,8 +21,6 @@ import Data.Foldable (for_)
 import Control.Apply ((*>))
 import Control.Plus (empty)
 import Control.Monad.Eff
-
-import Control.Monad.Maybe.Trans
 
 import Control.Monad.Writer
 import Control.Monad.Writer.Trans
@@ -41,7 +38,6 @@ data EventUpdate
 -- | - `preventDefault`
 -- | - `stopPropagation`
 -- | - `stopImmediatePropagation`
--- | - `cancel`
 -- |
 -- | It can be used as follows:
 -- |
@@ -50,9 +46,9 @@ data EventUpdate
 -- |
 -- | H.a (E.onclick \_ -> E.preventDefault $> ClickHandler) (H.text "Click here")
 -- | ```
-newtype EventHandler a = EventHandler (MaybeT (Writer [EventUpdate]) a)
+newtype EventHandler a = EventHandler (Writer [EventUpdate] a)
      
-unEventHandler :: forall a. EventHandler a -> MaybeT (Writer [EventUpdate]) a
+unEventHandler :: forall a. EventHandler a -> Writer [EventUpdate] a
 unEventHandler (EventHandler mw) = mw
      
 -- | Call the `preventDefault` method on the current event
@@ -66,10 +62,6 @@ stopPropagation = EventHandler (tell [StopPropagation])
 -- | Call the `stopImmediatePropagation` method on the current event
 stopImmediatePropagation :: EventHandler Unit
 stopImmediatePropagation = EventHandler (tell [StopImmediatePropagation])
-     
--- | Cancel the event, so that no input data will be passed to the signal function
-cancel :: forall a. EventHandler a
-cancel = EventHandler empty
       
 instance functorEventHandler :: Functor EventHandler where
   (<$>) f (EventHandler mw) = EventHandler (f <$> mw)
@@ -107,10 +99,10 @@ foreign import stopImmediatePropagationImpl
   \}" :: forall eff fields. Event fields -> Eff (dom :: DOM | eff) Unit
       
 -- | This function can be used to update an event and return the wrapped value
-runEventHandler :: forall a fields eff. Event fields -> EventHandler a -> Eff (dom :: DOM | eff) (Maybe a)
+runEventHandler :: forall a fields eff. Event fields -> EventHandler a -> Eff (dom :: DOM | eff) a
 runEventHandler e (EventHandler mw) = 
-  case runWriter (runMaybeT mw) of
-    Tuple ma eus -> for_ eus applyUpdate *> return ma
+  case runWriter mw of
+    Tuple a eus -> for_ eus applyUpdate *> return a
   where
   applyUpdate :: EventUpdate -> Eff (dom :: DOM | eff) Unit
   applyUpdate PreventDefault            = preventDefaultImpl e

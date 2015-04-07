@@ -11,6 +11,7 @@ import qualified Data.String as S
 import Debug.Trace
 
 import Control.Functor (($>))
+import Control.Alternative
 import Control.Monad.Eff
 
 import DOM
@@ -60,7 +61,7 @@ instance inputSupportsUndoRedo :: Undo.SupportsUndoRedo Input where
   toUndoRedo _ = Nothing
 
 -- | The view is a state machine, consuming inputs, and generating HTML documents which in turn, generate new inputs
-ui :: forall p m. (Applicative m) => Component p m Input Input
+ui :: forall p m. (Alternative m) => Component p m Input Input
 ui = component (render <$> stateful (Undo.undoRedoState (State [])) (Undo.withUndoRedo update))
   where
   render :: forall p. Undo.UndoRedoState State -> H.HTML p (m Input)
