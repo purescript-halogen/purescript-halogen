@@ -12,7 +12,6 @@ import qualified Data.StrMap as StrMap
 
 import Control.Functor (($>))
 import Control.Monad.Eff
-import Control.Monad.Eff.Unsafe
 import Control.Monad.Aff
 
 import DOM
@@ -109,11 +108,12 @@ ui = component (render <$> stateful (State false exampleCode Nothing) update)
 
 -- | Handle a request to an external service
 handler :: forall eff. String -> E.Event (HalogenEffects (http :: HTTP | eff)) Input
-handler code = E.async $ makeAff \_ k -> unsafeInterleaveEff do
-  k SetBusy
-  compile code \response -> do
-    k (SetResult response)
-  
+handler code = E.yield SetBusy `E.andThen` \_ -> E.async compileAff
+  where
+  compileAff :: Aff (HalogenEffects (http :: HTTP | eff)) Input
+  compileAff = makeAff \_ k ->
+    compile code \response -> k (SetResult response)
+      
 main = do
   Tuple node driver <- runUI ui
   appendToBody node

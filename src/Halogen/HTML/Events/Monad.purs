@@ -8,6 +8,7 @@ module Halogen.HTML.Events.Monad
   
   , yield
   , async
+  , andThen
   ) where
       
 import Data.Tuple
@@ -58,6 +59,19 @@ yield = async <<< pure
 -- | Lift an asynchronous computation into the `Event` monad.
 async :: forall eff a. Aff eff a -> Event eff a
 async = liftAff
+
+-- | A combinator which branches based on the supplied function after the first result,
+-- | and returns to the original stream of events after the secondary stream has been
+-- | exhausted.
+andThen :: forall eff a. Event eff a -> (a -> Event eff a) -> Event eff a
+andThen (Event l) f = Event (go l)
+  where
+  go :: ListT (Aff eff) a -> ListT (Aff eff) a
+  go l = wrapEffect do
+    m <- uncons l
+    return case m of
+      Nothing -> nil
+      Just (Tuple a l1) -> singleton a <> unEvent (f a) <> go l1
   
 instance semigroupEvent :: Semigroup (Event eff a) where
   (<>) (Event l1) (Event l2) = Event (l1 <> l2) 
