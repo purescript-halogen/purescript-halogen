@@ -163,5 +163,8 @@ combine f = runComponent \sf1 -> runComponent \sf2 -> component' (mergeWith' f1 
   f3 (Left (Right res1)) = Right (Left res1)
   f3 (Right (Right res2)) = Right (Right res2)
 
+instance functorComponent :: (Functor m) => Functor (Component p m req) where
+  (<$>) = Data.Profunctor.rmap
+  
 instance profunctorComponent :: (Functor m) => Profunctor (Component p m) where
   dimap f g = runComponent \sf -> component' (dimap (f <$>) (rmap ((g <$>) <$>)) sf)
