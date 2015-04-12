@@ -137,7 +137,7 @@ runClassName (ClassName s) = s
 -- | The phantom type `value` describes the type of value which this attribute requires.
 newtype AttributeName value = AttributeName String
 
--- Create an attribute name
+-- | Create an attribute name
 attributeName :: forall value. String -> AttributeName value
 attributeName = AttributeName
 

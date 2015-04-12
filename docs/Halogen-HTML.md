@@ -1893,6 +1893,8 @@ The phantom type `value` describes the type of value which this attribute requir
 attributeName :: forall value. String -> AttributeName value
 ```
 
+Create an attribute name
+
 #### `runAttributeName`
 
 ``` purescript

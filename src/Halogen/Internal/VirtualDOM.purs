@@ -43,7 +43,13 @@ data Widget (eff :: # !) i
 foreign import emptyProps 
   "var emptyProps = {}" :: Props
 
--- | Update a set of mutable properties by specifying a key/value pair
+-- | Create a property from a key/value pair.
+-- | 
+-- | Properties named `data-*` will be added as attributes, and any other properties will
+-- | be set directly.
+-- |
+-- | Users should use caution when creating custom attributes, and understand how they will
+-- | be added to the DOM here.
 foreign import prop
   "function prop(key, value) {\
   \  var props = {};\
@@ -65,7 +71,7 @@ foreign import handlerProp
   \  Hook.prototype.unhook = function(node) {\
   \    node.removeEventListener(key, this.callback);\
   \  };\
-  \  props['data-halogen-hook-' + key] = new Hook(f);\
+  \  props['halogen-hook-' + key] = new Hook(f);\
   \  return props;\
   \}" :: forall eff event. Fn2 String (event -> Eff eff Unit) Props
 
@@ -73,14 +79,10 @@ foreign import concatProps
   "function concatProps(p1, p2) {\
   \  var props = {};\
   \  for (var key in p1) {\
-  \    if (p1.hasOwnProperty(key)) {\
-  \      props[key] = p1[key];\
-  \    }\
+  \    props[key] = p1[key];\
   \  }\
   \  for (var key in p2) {\
-  \    if (p2.hasOwnProperty(key)) {\
-  \      props[key] = p2[key];\
-  \    }\
+  \    props[key] = p2[key];\
   \  }\
   \  return props;\
   \}" :: Fn2 Props Props Props
@@ -125,9 +127,19 @@ foreign import vtext
 -- | Create a virtual DOM tree which represents an element with properties
 foreign import vnode 
   "function vnode(name) {\
-  \  return function(props) {\
+  \  return function(attr) {\
   \    return function(children) {\
   \      var VirtualNode = require('virtual-dom/vnode/vnode');\
+  \      var props = {\
+  \        attributes: {}\
+  \      };\
+  \      for (var key in attr) {\
+  \        if (key.indexOf('data-') === 0) {\
+  \          props.attributes[key] = attr[key];\
+  \        } else {\
+  \          props[key] = attr[key];\
+  \        }\
+  \      }\
   \      return new VirtualNode(name, props, children);\
   \    };\
   \  };\
