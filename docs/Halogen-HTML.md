@@ -1825,6 +1825,7 @@ the `Attr` type.
 data Attr i
   = Attr (Exists AttrF)
   | Handler (ExistsR (HandlerF i))
+  | Initializer (Boolean -> i)
 ```
 
 A single attribute is either
@@ -1854,6 +1855,17 @@ handler :: forall fields i. EventName fields -> (Event fields -> EventHandler i)
 ```
 
 Create an event handler
+
+#### `initializer`
+
+``` purescript
+initializer :: forall i. (Boolean -> i) -> Attr i
+```
+
+Create an initializer function.
+
+The initializer will receive a Boolean value which indicates whether the component is being
+initialized for the first time, or just rerendered.
 
 #### `ClassName`
 

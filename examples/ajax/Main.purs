@@ -11,10 +11,14 @@ import qualified Data.String as S
 import qualified Data.StrMap as StrMap
 
 import Control.Functor (($>))
+import Control.Plus (empty)
+
 import Control.Monad.Eff
+import Control.Monad.Eff.Class
 import Control.Monad.Aff
 
 import DOM
+import Debug.Trace
 
 import Halogen
 import Halogen.Signal
@@ -80,7 +84,7 @@ ui = component (render <$> stateful (State false exampleCode Nothing) update)
   where
   render :: State -> H.HTML p (E.Event (HalogenEffects (http :: HTTP | eff)) Input)
   render (State busy code result) = 
-    H.div [ A.class_ B.container ] $
+    H.div [ A.class_ B.container, A.initializer initialized ] $
           [ H.h1 [ A.id_ "header" ] [ H.text "ajax example" ]
           , H.h2_ [ H.text "purescript code" ]
           , H.p_ [ H.textarea [ A.class_ B.formControl 
@@ -105,6 +109,12 @@ ui = component (render <$> stateful (State false exampleCode Nothing) update)
   update (State _ code rslt) SetBusy = State true code rslt
   update (State busy _ _) (SetCode code) = State busy code Nothing
   update (State busy code _) (SetResult rslt) = State false code (Just rslt)
+
+-- | Called when the component is initialized
+initialized :: forall eff. Boolean -> E.Event (HalogenEffects (http :: HTTP | eff)) Input
+initialized b = do
+  liftEff $ trace $ "UI initialized: " <> show b
+  empty
 
 -- | Handle a request to an external service
 handler :: forall eff. String -> E.Event (HalogenEffects (http :: HTTP | eff)) Input

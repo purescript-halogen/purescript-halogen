@@ -25,6 +25,7 @@ import Control.Monad.Trans
 import Control.Monad.ListT
 
 import Control.Monad.Eff
+import Control.Monad.Eff.Class
 import Control.Monad.Eff.Exception (Error())
 
 import Control.Monad.Aff
@@ -92,6 +93,9 @@ instance bindEvent :: Bind (Event eff) where
   (>>=) (Event l) f = Event (l >>= f >>> unEvent)
 
 instance monadEvent :: Monad (Event eff)
+
+instance monadEffEvent :: MonadEff eff (Event eff) where
+  liftEff = Event <<< lift <<< liftEff
 
 instance monadAffEvent :: MonadAff eff (Event eff) where
   liftAff = Event <<< lift

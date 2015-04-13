@@ -24,6 +24,7 @@ renderAttr dr (A.Handler e) = A.runExistsR (\(A.HandlerF name k) ->
   runFn2 handlerProp (A.runEventName name) \ev -> do
     a <- unsafeInterleaveEff $ runEventHandler ev (k ev)
     dr a) e
+renderAttr dr (A.Initializer f) = initProp (dr <<< f)
 
 -- | Render a `HTML` document to a virtual DOM node
 -- |
