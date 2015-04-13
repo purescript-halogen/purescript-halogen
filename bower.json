@@ -32,12 +32,6 @@
     "purescript-lists": "~0.6.0"
   },
   "devDependencies": {
-    "purescript-ace": "~0.1.0"
-  },
-  "resolutions": {
-    "purescript-foldable-traversable": "~0.3.0",
-    "purescript-foreign": "~0.4.0",
-    "purescript-tuples": "~0.3.0",
-    "purescript-monoid": "~0.2.0"
+    "purescript-ace": "~0.2.0"
   }
 }
