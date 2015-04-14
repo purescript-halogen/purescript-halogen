@@ -506,6 +506,13 @@ instance monadEvent :: Monad (Event eff)
 ```
 
 
+#### `monadEffEvent`
+
+``` purescript
+instance monadEffEvent :: MonadEff eff (Event eff)
+```
+
+
 #### `monadAffEvent`
 
 ``` purescript

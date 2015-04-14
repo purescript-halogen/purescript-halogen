@@ -9,6 +9,8 @@ module Halogen.Internal.VirtualDOM
   , emptyProps
   , prop
   , handlerProp
+  , initProp
+  , finalizerProp
   , createElement
   , diff
   , patch
@@ -57,9 +59,9 @@ foreign import prop
   \  return props;\
   \}" :: forall value. Fn2 String value Props
 
--- | Update a set of mutable properties by attaching a hook for an event
+-- | Create a property from an event handler
 foreign import handlerProp
-  "function handlerProp(key, f, props) {\
+  "function handlerProp(key, f) {\
   \  var props = {};\
   \  var Hook = function () {};\
   \  Hook.prototype.callback = function(e) {\
@@ -74,6 +76,33 @@ foreign import handlerProp
   \  props['halogen-hook-' + key] = new Hook(f);\
   \  return props;\
   \}" :: forall eff event. Fn2 String (event -> Eff eff Unit) Props
+
+-- | Create a property from an initializer
+foreign import initProp
+  "function initProp(f) {\
+  \  var props = {};\
+  \  var Hook = function () {};\
+  \  Hook.prototype.hook = function(node, prop, prev) {\
+  \    if (typeof prev === 'undefined') {\
+  \      f();\
+  \    };\
+  \  };\
+  \  props['halogen-init'] = new Hook(f);\
+  \  return props;\
+  \}" :: forall eff. Eff eff Unit -> Props
+  
+-- | Create a property from an finalizer
+foreign import finalizerProp
+  "function finalizerProp(f) {\
+  \  var props = {};\
+  \  var Hook = function () {};\
+  \  Hook.prototype.hook = function() { };\
+  \  Hook.prototype.unhook = function() {\
+  \    f();\
+  \  };\
+  \  props['halogen-finalizer'] = new Hook(f);\
+  \  return props;\
+  \}" :: forall eff. Eff eff Unit -> Props
 
 foreign import concatProps
   "function concatProps(p1, p2) {\

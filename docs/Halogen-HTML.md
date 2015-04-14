@@ -1825,6 +1825,8 @@ the `Attr` type.
 data Attr i
   = Attr (Exists AttrF)
   | Handler (ExistsR (HandlerF i))
+  | Initializer i
+  | Finalizer i
 ```
 
 A single attribute is either
@@ -1854,6 +1856,22 @@ handler :: forall fields i. EventName fields -> (Event fields -> EventHandler i)
 ```
 
 Create an event handler
+
+#### `initializer`
+
+``` purescript
+initializer :: forall i. i -> Attr i
+```
+
+Attach an initializer.
+
+#### `finalizer`
+
+``` purescript
+finalizer :: forall i. i -> Attr i
+```
+
+Attach a finalizer.
 
 #### `ClassName`
 

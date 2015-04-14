@@ -32,6 +32,8 @@ module Halogen.HTML.Attributes
   
   , attr
   , handler
+  , initializer
+  , finalizer
   
   , alt
   , charset
@@ -108,10 +110,14 @@ data HandlerF i fields = HandlerF (EventName fields) (Event fields -> EventHandl
 data Attr i
   = Attr (Exists AttrF)
   | Handler (ExistsR (HandlerF i))
+  | Initializer i
+  | Finalizer i
 
 instance functorAttr :: Functor Attr where
   (<$>) _ (Attr e) = Attr e
   (<$>) f (Handler e) = runExistsR (\(HandlerF name k) -> Handler (mkExistsR (HandlerF name (\e -> f <$> k e)))) e
+  (<$>) f (Initializer i) = Initializer (f i)
+  (<$>) f (Finalizer i) = Finalizer (f i)
 
 -- | Create an attribute
 attr :: forall value i. (IsAttribute value) => AttributeName value -> value -> Attr i
@@ -120,6 +126,14 @@ attr name v = Attr (mkExists (AttrF toAttrString name v))
 -- | Create an event handler
 handler :: forall fields i. EventName fields -> (Event fields -> EventHandler i) -> Attr i
 handler name k = Handler (mkExistsR (HandlerF name k))
+
+-- | Attach an initializer.
+initializer :: forall i. i -> Attr i
+initializer = Initializer
+
+-- | Attach a finalizer.
+finalizer :: forall i. i -> Attr i
+finalizer = Finalizer
 
 -- | A wrapper for strings which are used as CSS classes
 newtype ClassName = ClassName String
