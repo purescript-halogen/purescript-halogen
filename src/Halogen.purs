@@ -21,6 +21,7 @@ module Halogen
   ) where
     
 import DOM
+import Data.DOM.Simple.Types
 
 import Data.Void
 import Data.Maybe
@@ -74,18 +75,18 @@ type Driver i eff = i -> Eff (HalogenEffects eff) Unit
 -- | This function is the workhorse of the Halogen library. It can be called in `main`
 -- | to set up the application and create the driver function, which can be used to 
 -- | send inputs to the UI from external components.
-runUI :: forall req eff. 
-           Component (Widget (HalogenEffects eff) req) (Event (HalogenEffects eff)) req req -> 
-           Eff (HalogenEffects eff) (Tuple Node (Driver req eff))
+runUI :: forall req eff.
+           Component (Widget (HalogenEffects eff) req) (Event (HalogenEffects eff)) req req ->
+           Eff (HalogenEffects eff) (Tuple HTMLElement (Driver req eff))
 runUI = runComponent \sf -> do
   ref <- newRef Nothing
   runUI' ref sf
 
 -- | Internal function used in the implementation of `runUI`.
-runUI' :: forall i req eff. 
-            RefVal (Maybe { signal :: SF (Either i req) Patch, node :: Node }) -> 
-            SF1 (Either i req) (H.HTML (Widget (HalogenEffects eff) req) (Event (HalogenEffects eff) (Either i req))) -> 
-            Eff (HalogenEffects eff) (Tuple Node (Driver req eff))
+runUI' :: forall i req eff.
+            RefVal (Maybe { signal :: SF (Either i req) Patch, node :: HTMLElement }) ->
+            SF1 (Either i req) (H.HTML (Widget (HalogenEffects eff) req) (Event (HalogenEffects eff) (Either i req))) ->
+            Eff (HalogenEffects eff) (Tuple HTMLElement (Driver req eff))
 runUI' ref sf = do
   let render = R.renderHTML requestHandler widgetHandler
       vtrees = render <$> sf

@@ -13,12 +13,18 @@ import qualified Data.StrMap as StrMap
 import Control.Functor (($>))
 import Control.Plus (empty)
 
+import Control.Bind
 import Control.Monad.Eff
 import Control.Monad.Eff.Class
 import Control.Monad.Aff
 
 import DOM
 import Debug.Trace
+
+import Data.DOM.Simple.Document
+import Data.DOM.Simple.Element
+import Data.DOM.Simple.Types
+import Data.DOM.Simple.Window
 
 import Halogen
 import Halogen.Signal
@@ -46,13 +52,9 @@ exampleCode = S.joinWith "\n"
   , "main = Debug.Trace.print (fact 20)"
   ]
 
-foreign import appendToBody
-  "function appendToBody(node) {\
-  \  return function() {\
-  \    document.body.appendChild(node);\
-  \  };\
-  \}" :: forall eff. Node -> Eff (dom :: DOM | eff) Node
-  
+appendToBody :: forall eff. HTMLElement -> Eff (dom :: DOM | eff) Unit
+appendToBody e = document globalWindow >>= (body >=> flip appendChild e)
+
 foreign import compile
   "function compile(code) {\
   \  return function(k) {\

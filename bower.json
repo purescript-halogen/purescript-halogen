@@ -18,7 +18,7 @@
   ],
   "dependencies": {
     "purescript-refs": "~0.1.2",
-    "purescript-dom": "~0.1.1",
+    "purescript-simple-dom": "~0.0.2",
     "purescript-foldable-traversable": "~0.3.0",
     "purescript-profunctor": "~0.2.1",
     "purescript-aff": "~0.9.0",
@@ -32,6 +32,6 @@
     "purescript-lists": "~0.6.0"
   },
   "devDependencies": {
-    "purescript-ace": "~0.2.0"
+    "purescript-ace": "a4ee2f1a00943b5e3d8098642ae7c3a1517b6bd4"
   }
 }

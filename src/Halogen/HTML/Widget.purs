@@ -2,7 +2,7 @@
 
 module Halogen.HTML.Widget where
 
-import DOM
+import Data.DOM.Simple.Types
 
 import Data.Maybe
 import Data.Function
@@ -22,8 +22,8 @@ import qualified Halogen.Internal.VirtualDOM as V
 -- | The three functions share a common piece of data of a hidden type `s`.
 widget :: forall eff i s. { name    :: String
                           , id      :: String
-                          , init    :: (i -> Eff eff Unit) -> Eff eff { state :: s, node :: Node }
-                          , update  :: s -> Node -> Eff eff (Maybe Node)
-                          , destroy :: s -> Node -> Eff eff Unit
+                          , init    :: (i -> Eff eff Unit) -> Eff eff { state :: s, node :: HTMLElement }
+                          , update  :: s -> HTMLElement -> Eff eff (Maybe HTMLElement)
+                          , destroy :: s -> HTMLElement -> Eff eff Unit
                           } -> V.Widget eff i
 widget spec = runFn5 V.widget spec.name spec.id spec.init (\s n -> toNullable <$> spec.update s n) spec.destroy

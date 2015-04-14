@@ -2,7 +2,7 @@
 
 module Halogen.HTML.Events.Types where
 
-import DOM
+import Data.DOM.Simple.Types
 
 -- | This record synonym captures the properties which appear on every DOM event.
 -- |
@@ -11,8 +11,8 @@ import DOM
 type Event fields = 
   { bubbles :: Boolean
   , cancelable :: Boolean
-  , currentTarget :: Node
-  , target :: Node
+  , currentTarget :: HTMLElement
+  , target :: HTMLElement
   , timeStamp :: Number
   , "type" :: String
   | fields
@@ -22,7 +22,7 @@ type Event fields =
 type MouseEvent = 
   ( button :: Number
   , detail :: Number
-  , relatedTarget :: Node
+  , relatedTarget :: HTMLElement
   , clientX :: Number
   , clientY :: Number
   , screenX	:: Number
@@ -47,5 +47,5 @@ type KeyboardEvent =
   
 -- | Identifies the additional fields which are available on focus events.
 type FocusEvent = 
-  ( relatedTarget :: Node
+  ( relatedTarget :: HTMLElement
   )

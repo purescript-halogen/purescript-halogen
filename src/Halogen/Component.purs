@@ -15,7 +15,7 @@ module Halogen.Component
   , hoistComponent
   ) where
 
-import DOM
+import Data.DOM.Simple.Types
 
 import Data.Maybe      
 import Data.Void (Void(), absurd)
@@ -82,7 +82,7 @@ component' sf = Component (mkExists (ComponentF sf))
 -- |   types of widget.
 -- | - `id` - a unique ID which belongs to this instance of the widget type, required by 
 -- |   `virtual-dom` to distinguish widgets from each other.
--- | - `init` - an action which initializes the component and returns the `Node` it corresponds
+-- | - `init` - an action which initializes the component and returns the `HTMLElement` it corresponds
 -- |   to in the DOM. This action receives the driver function for the component so that it can
 -- |   generate events. It can also create a piece of state of type `s` which is shared with the
 -- |   other lifecycle functions.
@@ -93,9 +93,9 @@ widget :: forall eff req res s m.
   (Functor m) => 
   { name    :: String
   , id      :: String
-  , init    :: (res -> Eff eff Unit) -> Eff eff { state :: s, node :: Node }
-  , update  :: req -> s -> Node -> Eff eff (Maybe Node)
-  , destroy :: s -> Node -> Eff eff Unit
+  , init    :: (res -> Eff eff Unit) -> Eff eff { state :: s, node :: HTMLElement }
+  , update  :: req -> s -> HTMLElement -> Eff eff (Maybe HTMLElement)
+  , destroy :: s -> HTMLElement -> Eff eff Unit
   } -> 
   Component (Widget eff res) m req res
 widget spec = component (placeholder <$> ((updateWith <$> input) `startingAt` w0))
