@@ -10,6 +10,7 @@ module Halogen.Internal.VirtualDOM
   , prop
   , handlerProp
   , initProp
+  , finalizerProp
   , createElement
   , diff
   , patch
@@ -76,17 +77,32 @@ foreign import handlerProp
   \  return props;\
   \}" :: forall eff event. Fn2 String (event -> Eff eff Unit) Props
 
--- | Create a property from aninitializer
+-- | Create a property from an initializer
 foreign import initProp
   "function initProp(f) {\
   \  var props = {};\
   \  var Hook = function () {};\
   \  Hook.prototype.hook = function(node, prop, prev) {\
-  \    f(typeof prev === 'undefined')();\
+  \    if (typeof prev === 'undefined') {\
+  \      f();\
+  \    };\
   \  };\
   \  props['halogen-init'] = new Hook(f);\
   \  return props;\
-  \}" :: forall eff. (Boolean -> Eff eff Unit) -> Props
+  \}" :: forall eff. Eff eff Unit -> Props
+  
+-- | Create a property from an finalizer
+foreign import finalizerProp
+  "function finalizerProp(f) {\
+  \  var props = {};\
+  \  var Hook = function () {};\
+  \  Hook.prototype.hook = function() { };\
+  \  Hook.prototype.unhook = function() {\
+  \    f();\
+  \  };\
+  \  props['halogen-finalizer'] = new Hook(f);\
+  \  return props;\
+  \}" :: forall eff. Eff eff Unit -> Props
 
 foreign import concatProps
   "function concatProps(p1, p2) {\

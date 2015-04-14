@@ -84,7 +84,7 @@ ui = component (render <$> stateful (State false exampleCode Nothing) update)
   where
   render :: State -> H.HTML p (E.Event (HalogenEffects (http :: HTTP | eff)) Input)
   render (State busy code result) = 
-    H.div [ A.class_ B.container, A.initializer initialized ] $
+    H.div [ A.class_ B.container ] $
           [ H.h1 [ A.id_ "header" ] [ H.text "ajax example" ]
           , H.h2_ [ H.text "purescript code" ]
           , H.p_ [ H.textarea [ A.class_ B.formControl 
@@ -101,9 +101,10 @@ ui = component (render <$> stateful (State false exampleCode Nothing) update)
                             ] [ H.text "Compile" ] ]
           , H.p_ [ H.text (if busy then "Working..." else "") ]
           ] ++ flip foldMap result \js ->
-          [ H.h2_ [ H.text "compiled javascript" ]
-          , H.pre_ [ H.code_ [ H.text js ] ]
-          ]
+          [ H.div [ A.initializer initialized, A.finalizer finalized ] 
+                  [ H.h2_ [ H.text "compiled javascript" ]
+                  , H.pre_ [ H.code_ [ H.text js ] ]
+                  ] ]
 
   update :: State -> Input -> State
   update (State _ code rslt) SetBusy = State true code rslt
@@ -111,9 +112,15 @@ ui = component (render <$> stateful (State false exampleCode Nothing) update)
   update (State busy code _) (SetResult rslt) = State false code (Just rslt)
 
 -- | Called when the component is initialized
-initialized :: forall eff. Boolean -> E.Event (HalogenEffects (http :: HTTP | eff)) Input
-initialized b = do
-  liftEff $ trace $ "UI initialized: " <> show b
+initialized :: forall eff. E.Event (HalogenEffects (http :: HTTP | eff)) Input
+initialized = do
+  liftEff $ trace "UI initialized"
+  empty
+  
+-- | Called when the component is finalized
+finalized :: forall eff. E.Event (HalogenEffects (http :: HTTP | eff)) Input
+finalized = do
+  liftEff $ trace "UI finalized"
   empty
 
 -- | Handle a request to an external service

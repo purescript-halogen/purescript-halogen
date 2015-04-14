@@ -1825,7 +1825,8 @@ the `Attr` type.
 data Attr i
   = Attr (Exists AttrF)
   | Handler (ExistsR (HandlerF i))
-  | Initializer (Boolean -> i)
+  | Initializer i
+  | Finalizer i
 ```
 
 A single attribute is either
@@ -1859,13 +1860,18 @@ Create an event handler
 #### `initializer`
 
 ``` purescript
-initializer :: forall i. (Boolean -> i) -> Attr i
+initializer :: forall i. i -> Attr i
 ```
 
-Create an initializer function.
+Attach an initializer.
 
-The initializer will receive a Boolean value which indicates whether the component is being
-initialized for the first time, or just rerendered.
+#### `finalizer`
+
+``` purescript
+finalizer :: forall i. i -> Attr i
+```
+
+Attach a finalizer.
 
 #### `ClassName`
 
