@@ -32,6 +32,6 @@
     "purescript-lists": "~0.6.0"
   },
   "devDependencies": {
-    "purescript-ace": "a4ee2f1a00943b5e3d8098642ae7c3a1517b6bd4"
+    "purescript-ace": "~0.3.0"
   }
 }
