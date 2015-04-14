@@ -1,9 +1,10 @@
 -- | This module defines well-typed wrappers for common DOM events, so that
 -- | they may be safely embedded in HTML documents.
 
-module Halogen.HTML.Events 
+module Halogen.HTML.Events
   ( input
-  
+  , input_
+
   , onabort
   , onbeforeunload
   , onerror
@@ -34,7 +35,7 @@ module Halogen.HTML.Events
   , onkeydown
   , onkeypress
   , onkeyup
-  , onblur 
+  , onblur
   , onfocus
   , onfocusin
   , onfocusout
@@ -50,7 +51,7 @@ import qualified Halogen.HTML.Attributes as H
 -- | A helper function which can be used to create simple event handlers.
 -- |
 -- | Often we don't need to use `EventHandler` or the monad underlying our component, and just need
--- | to generate an input to the signal function. 
+-- | to generate an input to the signal function.
 -- |
 -- | This function provides an alternative to making two nested calls to `pure`:
 -- |
@@ -59,6 +60,15 @@ import qualified Halogen.HTML.Attributes as H
 -- | ```
 input :: forall i m a. (Applicative m) => (a -> i) -> a -> EventHandler (m i)
 input f e = pure (pure (f e))
+
+-- | A helper function for simple event handlers that provide an input to the signal function,
+-- | where there is no need to make use of the event value to generate the input.
+-- |
+-- | ```purescript
+-- | onclick (input_ Input)
+-- | ```
+input_ :: forall i m a. (Applicative m) => i -> a -> EventHandler (m i)
+input_ x _ = pure (pure x)
 
 onabort	:: forall i. (Event () -> EventHandler i) -> H.Attr i
 onabort = H.handler (H.eventName "abort")

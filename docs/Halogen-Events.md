@@ -56,12 +56,25 @@ input :: forall i m a. (Applicative m) => (a -> i) -> a -> EventHandler (m i)
 A helper function which can be used to create simple event handlers.
 
 Often we don't need to use `EventHandler` or the monad underlying our component, and just need
-to generate an input to the signal function. 
+to generate an input to the signal function.
 
 This function provides an alternative to making two nested calls to `pure`:
 
 ```purescript
 onclick (input \_ -> Input)
+```
+
+#### `input_`
+
+``` purescript
+input_ :: forall i m a. (Applicative m) => i -> a -> EventHandler (m i)
+```
+
+A helper function for simple event handlers that provide an input to the signal function,
+where there is no need to make use of the event value to generate the input.
+
+```purescript
+onclick (input_ Input)
 ```
 
 #### `onabort`

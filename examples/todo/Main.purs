@@ -40,19 +40,19 @@ foreign import appendToBody
   \}" :: forall eff. Node -> Eff (dom :: DOM | eff) Node
 
 newtype Task = Task { description :: String, completed :: Boolean }
-  
+
 -- | The state of the application
 data State = State [Task]
 
 -- | Inputs to the state machine
-data Input 
+data Input
   = NewTask (Maybe String)
   | UpdateDescription Number String
   | MarkCompleted Number Boolean
   | RemoveTask Number
   | Undo
   | Redo
-  
+
 instance inputSupportsUndoRedo :: Undo.SupportsUndoRedo Input where
   fromUndoRedo Undo.Undo = Undo
   fromUndoRedo Undo.Redo = Redo
@@ -65,7 +65,7 @@ ui :: forall p m. (Alternative m) => Component p m Input Input
 ui = component (render <$> stateful (Undo.undoRedoState (State [])) (Undo.withUndoRedo update))
   where
   render :: forall p. Undo.UndoRedoState State -> H.HTML p (m Input)
-  render st = 
+  render st =
     case Undo.getState st of
       State ts ->
         H.div [ A.class_ B.container ]
@@ -73,29 +73,29 @@ ui = component (render <$> stateful (Undo.undoRedoState (State [])) (Undo.withUn
               , toolbar st
               , H.div_ (zipWith task ts (0 .. length ts))
               ]
-              
+
   toolbar :: forall p st. Undo.UndoRedoState st -> H.HTML p (m Input)
   toolbar st = H.p [ A.class_ B.btnGroup ]
                    [ H.button [ A.classes [ B.btn, B.btnPrimary ]
-                              , A.onclick (A.input \_ -> NewTask Nothing)
+                              , A.onclick (A.input_ $ NewTask Nothing)
                               ]
                               [ H.text "New Task" ]
                    , H.button [ A.class_ B.btn
                               , A.enabled (Undo.canUndo st)
-                              , A.onclick (A.input \_ -> Undo)
+                              , A.onclick (A.input_ Undo)
                               ]
                               [ H.text "Undo" ]
                    , H.button [ A.class_ B.btn
                               , A.enabled (Undo.canRedo st)
-                              , A.onclick (A.input \_ -> Redo)
+                              , A.onclick (A.input_ Redo)
                               ]
                               [ H.text "Redo" ]
                    ]
-                   
+
   task :: forall p. Task -> Number -> H.HTML p (m Input)
   task (Task task) index = H.p_ <<< pure $
-    BI.inputGroup 
-      (Just (BI.RegularAddOn 
+    BI.inputGroup
+      (Just (BI.RegularAddOn
         (H.input [ A.class_ B.checkbox
                  , A.type_ "checkbox"
                  , A.checked task.completed
@@ -109,10 +109,10 @@ ui = component (render <$> stateful (Undo.undoRedoState (State [])) (Undo.withUn
                , A.value task.description
                ]
                [])
-      (Just (BI.ButtonAddOn 
+      (Just (BI.ButtonAddOn
         (H.button [ A.classes [ B.btn, B.btnDefault ]
                   , A.title "Remove task"
-                  , A.onclick (A.input \_ -> RemoveTask index)
+                  , A.onclick (A.input_ $ RemoveTask index)
                   ]
                   [ H.text "✖" ])))
 
