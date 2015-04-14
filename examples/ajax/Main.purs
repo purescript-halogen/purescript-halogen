@@ -52,7 +52,7 @@ foreign import appendToBody
   \    document.body.appendChild(node);\
   \  };\
   \}" :: forall eff. Node -> Eff (dom :: DOM | eff) Node
-  
+
 foreign import compile
   "function compile(code) {\
   \  return function(k) {\
@@ -69,12 +69,12 @@ foreign import compile
   \    };\
   \  };\
   \}" :: forall eff. String -> (String -> Eff (http :: HTTP | eff) Unit) -> Eff (http :: HTTP | eff) Unit
-  
+
 -- | The state of the application
 data State = State Boolean String (Maybe String)
 
 -- | Inputs to the state machine
-data Input 
+data Input
   = SetBusy
   | SetCode String
   | SetResult String
@@ -83,21 +83,21 @@ ui :: forall p eff. Component p (E.Event (HalogenEffects (http :: HTTP | eff))) 
 ui = component (render <$> stateful (State false exampleCode Nothing) update)
   where
   render :: State -> H.HTML p (E.Event (HalogenEffects (http :: HTTP | eff)) Input)
-  render (State busy code result) = 
+  render (State busy code result) =
     H.div [ A.class_ B.container ] $
           [ H.h1 [ A.id_ "header" ] [ H.text "ajax example" ]
           , H.h2_ [ H.text "purescript code" ]
-          , H.p_ [ H.textarea [ A.class_ B.formControl 
-                              , A.value code 
+          , H.p_ [ H.textarea [ A.class_ B.formControl
+                              , A.value code
                               , A.onInput (A.input SetCode)
-                              , A.style (A.styles $ StrMap.fromList 
+                              , A.style (A.styles $ StrMap.fromList
                                           [ Tuple "font-family" "monospace"
                                           , Tuple "height" "200px"
                                           ])
                               ] [] ]
           , H.p_ [ H.button [ A.classes [B.btn, B.btnPrimary]
                             , A.disabled busy
-                            , A.onclick (\_ -> pure (handler code))
+                            , A.onClick (\_ -> pure (handler code))
                             ] [ H.text "Compile" ] ]
           , H.p_ [ H.text (if busy then "Working..." else "") ]
           ] ++ flip foldMap result \js ->
@@ -130,7 +130,7 @@ handler code = E.yield SetBusy `E.andThen` \_ -> E.async compileAff
   compileAff :: Aff (HalogenEffects (http :: HTTP | eff)) Input
   compileAff = makeAff \_ k ->
     compile code \response -> k (SetResult response)
-      
+
 main = do
   Tuple node driver <- runUI ui
   appendToBody node
