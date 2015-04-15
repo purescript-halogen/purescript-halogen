@@ -12,9 +12,15 @@ import Debug.Trace
 
 import Control.Functor (($>))
 import Control.Alternative
+import Control.Bind
 import Control.Monad.Eff
 
 import DOM
+
+import Data.DOM.Simple.Document
+import Data.DOM.Simple.Element
+import Data.DOM.Simple.Types
+import Data.DOM.Simple.Window
 
 import Halogen
 import Halogen.Signal
@@ -32,12 +38,8 @@ import qualified Halogen.HTML.Events.Handler as E
 import qualified Halogen.Themes.Bootstrap3 as B
 import qualified Halogen.Themes.Bootstrap3.InputGroup as BI
 
-foreign import appendToBody
-  "function appendToBody(node) {\
-  \  return function() {\
-  \    document.body.appendChild(node);\
-  \  };\
-  \}" :: forall eff. Node -> Eff (dom :: DOM | eff) Node
+appendToBody :: forall eff. HTMLElement -> Eff (dom :: DOM | eff) Unit
+appendToBody e = document globalWindow >>= (body >=> flip appendChild e)
 
 newtype Task = Task { description :: String, completed :: Boolean }
 

@@ -60,7 +60,7 @@ main = do
 #### `runUI`
 
 ``` purescript
-runUI :: forall req eff. Component (Widget (HalogenEffects eff) req) (Event (HalogenEffects eff)) req req -> Eff (HalogenEffects eff) (Tuple Node (Driver req eff))
+runUI :: forall req eff. Component (Widget (HalogenEffects eff) req) (Event (HalogenEffects eff)) req req -> Eff (HalogenEffects eff) (Tuple HTMLElement (Driver req eff))
 ```
 
 `runUI` renders a `Component` to the DOM using `virtual-dom`.

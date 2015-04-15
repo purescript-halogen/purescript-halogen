@@ -21,6 +21,7 @@ module Halogen.Internal.VirtualDOM
   ) where
 
 import DOM
+import Data.DOM.Simple.Types
 
 import Data.Maybe
 import Data.Monoid
@@ -126,7 +127,7 @@ instance monoidProps :: Monoid Props where
 foreign import createElement
   "function createElement(vtree) {\
   \  return require('virtual-dom/create-element')(vtree);\
-  \}" :: VTree -> Node
+  \}" :: VTree -> HTMLElement
 
 -- | Calculate the differences between two virtual DOM trees
 foreign import diff
@@ -144,7 +145,7 @@ foreign import patch
   \      return require('virtual-dom/patch')(node, p);\
   \    };\
   \  };\
-  \}" :: forall eff. Patch -> Node -> Eff (dom :: DOM | eff) Node
+  \}" :: forall eff. Patch -> HTMLElement -> Eff (dom :: DOM | eff) HTMLElement
 
 -- | Create a virtual DOM tree which represents a single text node
 foreign import vtext 
@@ -222,9 +223,9 @@ foreign import widget
   \      return new Widget();\
   \    }\
   \  };\
-  \}" :: forall eff i s. Fn5 String 
-                             String 
-                             ((i -> Eff eff Unit) -> Eff eff { state :: s, node :: Node }) 
-                             (s -> Node -> Eff eff (Nullable Node)) 
-                             (s -> Node -> Eff eff Unit) 
+  \}" :: forall eff i s. Fn5 String
+                             String
+                             ((i -> Eff eff Unit) -> Eff eff { state :: s, node :: HTMLElement })
+                             (s -> HTMLElement -> Eff eff (Nullable HTMLElement))
+                             (s -> HTMLElement -> Eff eff Unit)
                              (Widget eff i)

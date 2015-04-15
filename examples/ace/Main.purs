@@ -8,9 +8,15 @@ import Data.Function
 import Data.Profunctor (lmap)
 
 import Control.Functor (($>))
+import Control.Bind
 import Control.Monad.Eff
 
 import DOM
+
+import Data.DOM.Simple.Document
+import Data.DOM.Simple.Element
+import Data.DOM.Simple.Types
+import Data.DOM.Simple.Window
 
 import Debug.Trace
 
@@ -30,17 +36,13 @@ import Ace.Types (EAce(), Editor())
 
 import qualified Ace.Editor as Editor
 
-foreign import appendToBody
-  "function appendToBody(node) {\
-  \  return function() {\
-  \    document.body.appendChild(node);\
-  \  };\
-  \}" :: forall eff. Node -> Eff (dom :: DOM | eff) Unit
+appendToBody :: forall eff. HTMLElement -> Eff (dom :: DOM | eff) Unit
+appendToBody e = document globalWindow >>= (body >=> flip appendChild e)
 
 foreign import createEditorNode
   "function createEditorNode() {\
   \  return document.createElement('div');\
-  \}" :: forall eff. Eff (dom :: DOM | eff) Node
+  \}" :: forall eff. Eff (dom :: DOM | eff) HTMLElement
 
 -- | The type of inputs to the Ace widget.
 data AceInput = ClearText
@@ -94,7 +96,7 @@ controls = component (render <$> stateful (State Nothing) update)
 aceEditor :: forall m eff. (Functor m) => Component (Widget (HalogenEffects (ace :: EAce | eff)) AceEvent) m AceInput AceEvent
 aceEditor = widget { name: "AceEditor", id: "editor1", init: init, update: update, destroy: destroy }
   where
-  init :: forall eff. (AceEvent -> Eff (ace :: EAce, dom :: DOM | eff) Unit) -> Eff (ace :: EAce, dom :: DOM | eff) { state :: Editor, node :: Node }
+  init :: forall eff. (AceEvent -> Eff (ace :: EAce, dom :: DOM | eff) Unit) -> Eff (ace :: EAce, dom :: DOM | eff) { state :: Editor, node :: HTMLElement }
   init driver = do
     node <- createEditorNode
     editor <- Ace.editNode node ace
@@ -102,10 +104,10 @@ aceEditor = widget { name: "AceEditor", id: "editor1", init: init, update: updat
     Editor.onCopy editor (driver <<< TextCopied)
     return { state: editor, node: node }
 
-  update :: forall eff. AceInput -> Editor -> Node -> Eff (ace :: EAce, dom :: DOM | eff) (Maybe Node)
+  update :: forall eff. AceInput -> Editor -> HTMLElement -> Eff (ace :: EAce, dom :: DOM | eff) (Maybe HTMLElement)
   update ClearText editor _ = Editor.setValue "" Nothing editor $> Nothing
 
-  destroy :: forall eff. Editor -> Node -> Eff (ace :: EAce, dom :: DOM | eff) Unit
+  destroy :: forall eff. Editor -> HTMLElement -> Eff (ace :: EAce, dom :: DOM | eff) Unit
   destroy editor _ = Editor.destroy editor
 
 main = do

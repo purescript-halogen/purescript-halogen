@@ -8,7 +8,7 @@ This module defines types for common DOM events
 #### `Event`
 
 ``` purescript
-type Event fields = { "type" :: String, timeStamp :: Number, target :: Node, currentTarget :: Node, cancelable :: Boolean, bubbles :: Boolean | fields }
+type Event fields = { "type" :: String, timeStamp :: Number, target :: HTMLElement, currentTarget :: HTMLElement, cancelable :: Boolean, bubbles :: Boolean | fields }
 ```
 
 This record synonym captures the properties which appear on every DOM event.
@@ -19,7 +19,7 @@ properties to represent more specific types of events.
 #### `MouseEvent`
 
 ``` purescript
-type MouseEvent = (which :: Number, metaKey :: Boolean, altKey :: Boolean, shiftKey :: Boolean, ctrlKey :: Boolean, screenY :: Number, screenX :: Number, clientY :: Number, clientX :: Number, relatedTarget :: Node, detail :: Number, button :: Number)
+type MouseEvent = (which :: Number, metaKey :: Boolean, altKey :: Boolean, shiftKey :: Boolean, ctrlKey :: Boolean, screenY :: Number, screenX :: Number, clientY :: Number, clientX :: Number, relatedTarget :: HTMLElement, detail :: Number, button :: Number)
 ```
 
 Identifies the additional fields which are available on mouse events.
@@ -35,7 +35,7 @@ Identifies the additional fields which are available on keyboard events.
 #### `FocusEvent`
 
 ``` purescript
-type FocusEvent = (relatedTarget :: Node)
+type FocusEvent = (relatedTarget :: HTMLElement)
 ```
 
 Identifies the additional fields which are available on focus events.
