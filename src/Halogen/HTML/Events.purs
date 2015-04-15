@@ -4,41 +4,39 @@
 module Halogen.HTML.Events
   ( input
   , input_
-
-  , onabort
-  , onbeforeunload
-  , onerror
-  , onhashchange
-  , onload
-  , onpageshow
-  , onpagehide
-  , onresize
-  , onscroll
-  , onunload
-  , onchange
-  , oninput
-  , oninvalid
-  , onreset
-  , onsearch
-  , onselect
-  , onsubmit
-  , onclick
-  , oncontextmenu
-  , ondblclick
-  , onmousedown
-  , onmouseenter
-  , onmouseleave
-  , onmousemove
-  , onmouseover
-  , onmouseout
-  , onmouseup
-  , onkeydown
-  , onkeypress
-  , onkeyup
-  , onblur
-  , onfocus
-  , onfocusin
-  , onfocusout
+  , onAbort
+  , onBeforeUnload
+  , onError
+  , onHashChange
+  , onLoad
+  , onPageShow
+  , onPageHide
+  , onResize
+  , onScroll
+  , onUnload
+  , onChange
+  , onInvalid
+  , onReset
+  , onSearch
+  , onSelect
+  , onSubmit
+  , onClick
+  , onContextMenu
+  , onDoubleClick
+  , onMouseDown
+  , onMouseEnter
+  , onMouseLeave
+  , onMouseMove
+  , onMouseOver
+  , onMouseOut
+  , onMouseUp
+  , onKeyDown
+  , onKeyPress
+  , onKeyUp
+  , onBlur
+  , onFocus
+  , onFocusIn
+  , onFocusOut
   ) where
 
 import Data.Maybe
@@ -56,7 +54,7 @@ import qualified Halogen.HTML.Attributes as H
 -- | This function provides an alternative to making two nested calls to `pure`:
 -- |
 -- | ```purescript
--- | onclick (input \_ -> Input)
+-- | onClick (input \_ -> Input)
 -- | ```
 input :: forall i m a. (Applicative m) => (a -> i) -> a -> EventHandler (m i)
 input f e = pure (pure (f e))
@@ -70,104 +68,101 @@ input f e = pure (pure (f e))
 input_ :: forall i m a. (Applicative m) => i -> a -> EventHandler (m i)
 input_ x _ = pure (pure x)
 
-onabort	:: forall i. (Event () -> EventHandler i) -> H.Attr i
-onabort = H.handler (H.eventName "abort")
+onAbort	:: forall i. (Event () -> EventHandler i) -> H.Attr i
+onAbort = H.handler (H.eventName "abort")
 
-onbeforeunload :: forall i. (Event () -> EventHandler i) -> H.Attr i
-onbeforeunload = H.handler (H.eventName "beforeunload")
+onBeforeUnload :: forall i. (Event () -> EventHandler i) -> H.Attr i
+onBeforeUnload = H.handler (H.eventName "beforeunload")
 
-onerror :: forall i. (Event () -> EventHandler i) -> H.Attr i
-onerror = H.handler (H.eventName "error")
+onError :: forall i. (Event () -> EventHandler i) -> H.Attr i
+onError = H.handler (H.eventName "error")
 
-onhashchange :: forall i. (Event () -> EventHandler i) -> H.Attr i
-onhashchange = H.handler (H.eventName "hashchange")
+onHashChange :: forall i. (Event () -> EventHandler i) -> H.Attr i
+onHashChange = H.handler (H.eventName "hashchange")
 
-onload :: forall i. (Event () -> EventHandler i) -> H.Attr i
-onload = H.handler (H.eventName "load")
+onLoad :: forall i. (Event () -> EventHandler i) -> H.Attr i
+onLoad = H.handler (H.eventName "load")
 
-onpageshow :: forall i. (Event () -> EventHandler i) -> H.Attr i
-onpageshow = H.handler (H.eventName "pageshow")
+onPageShow :: forall i. (Event () -> EventHandler i) -> H.Attr i
+onPageShow = H.handler (H.eventName "pageshow")
 
-onpagehide :: forall i. (Event () -> EventHandler i) -> H.Attr i
-onpagehide = H.handler (H.eventName "pagehide")
+onPageHide :: forall i. (Event () -> EventHandler i) -> H.Attr i
+onPageHide = H.handler (H.eventName "pagehide")
 
-onresize :: forall i. (Event () -> EventHandler i) -> H.Attr i
-onresize = H.handler (H.eventName "resize")
+onResize :: forall i. (Event () -> EventHandler i) -> H.Attr i
+onResize = H.handler (H.eventName "resize")
 
-onscroll :: forall i. (Event () -> EventHandler i) -> H.Attr i
-onscroll = H.handler (H.eventName "scroll")
+onScroll :: forall i. (Event () -> EventHandler i) -> H.Attr i
+onScroll = H.handler (H.eventName "scroll")
 
-onunload :: forall i. (Event () -> EventHandler i) -> H.Attr i
-onunload = H.handler (H.eventName "unload")
+onUnload :: forall i. (Event () -> EventHandler i) -> H.Attr i
+onUnload = H.handler (H.eventName "unload")
 
-onchange :: forall i. (Event () -> EventHandler i) -> H.Attr i
-onchange = H.handler (H.eventName "change")
+onChange :: forall i. (Event () -> EventHandler i) -> H.Attr i
+onChange = H.handler (H.eventName "change")
 
-oninput :: forall i. (Event () -> EventHandler i) -> H.Attr i
-oninput = H.handler (H.eventName "input")
+onInvalid :: forall i. (Event () -> EventHandler i) -> H.Attr i
+onInvalid = H.handler (H.eventName "invalid")
 
-oninvalid :: forall i. (Event () -> EventHandler i) -> H.Attr i
-oninvalid = H.handler (H.eventName "invalid")
+onReset :: forall i. (Event () -> EventHandler i) -> H.Attr i
+onReset = H.handler (H.eventName "reset")
 
-onreset :: forall i. (Event () -> EventHandler i) -> H.Attr i
-onreset = H.handler (H.eventName "reset")
+onSearch :: forall i. (Event () -> EventHandler i) -> H.Attr i
+onSearch = H.handler (H.eventName "search")
 
-onsearch :: forall i. (Event () -> EventHandler i) -> H.Attr i
-onsearch = H.handler (H.eventName "search")
+onSelect :: forall i. (Event () -> EventHandler i) -> H.Attr i
+onSelect = H.handler (H.eventName "select")
 
-onselect :: forall i. (Event () -> EventHandler i) -> H.Attr i
-onselect = H.handler (H.eventName "select")
+onSubmit :: forall i. (Event () -> EventHandler i) -> H.Attr i
+onSubmit = H.handler (H.eventName "submit")
 
-onsubmit :: forall i. (Event () -> EventHandler i) -> H.Attr i
-onsubmit = H.handler (H.eventName "submit")
+onClick :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attr i
+onClick = H.handler (H.eventName "click")
 
-onclick :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attr i
-onclick = H.handler (H.eventName "click")
+onContextMenu :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attr i
+onContextMenu = H.handler (H.eventName "contextmenu")
 
-oncontextmenu :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attr i
-oncontextmenu = H.handler (H.eventName "contextmenu")
+onDoubleClick :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attr i
+onDoubleClick = H.handler (H.eventName "dblclick")
 
-ondblclick :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attr i
-ondblclick = H.handler (H.eventName "dblclick")
+onMouseDown :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attr i
+onMouseDown = H.handler (H.eventName "mousedown")
 
-onmousedown :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attr i
-onmousedown = H.handler (H.eventName "mousedown")
+onMouseEnter :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attr i
+onMouseEnter = H.handler (H.eventName "mouseenter")
 
-onmouseenter :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attr i
-onmouseenter = H.handler (H.eventName "mouseenter")
+onMouseLeave :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attr i
+onMouseLeave = H.handler (H.eventName "mouseleave")
 
-onmouseleave :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attr i
-onmouseleave = H.handler (H.eventName "mouseleave")
+onMouseMove :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attr i
+onMouseMove = H.handler (H.eventName "mousemove")
 
-onmousemove :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attr i
-onmousemove = H.handler (H.eventName "mousemove")
+onMouseOver :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attr i
+onMouseOver = H.handler (H.eventName "mouseover")
 
-onmouseover :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attr i
-onmouseover = H.handler (H.eventName "mouseover")
+onMouseOut :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attr i
+onMouseOut = H.handler (H.eventName "mouseout")
 
-onmouseout :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attr i
-onmouseout = H.handler (H.eventName "mouseout")
+onMouseUp :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attr i
+onMouseUp = H.handler (H.eventName "mouseup")
 
-onmouseup :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attr i
-onmouseup = H.handler (H.eventName "mouseup")
+onKeyDown :: forall i. (Event KeyboardEvent -> EventHandler i) -> H.Attr i
+onKeyDown = H.handler (H.eventName "keydown")
 
-onkeydown :: forall i. (Event KeyboardEvent -> EventHandler i) -> H.Attr i
-onkeydown = H.handler (H.eventName "keydown")
+onKeyPress :: forall i. (Event KeyboardEvent -> EventHandler i) -> H.Attr i
+onKeyPress = H.handler (H.eventName "keypress")
 
-onkeypress :: forall i. (Event KeyboardEvent -> EventHandler i) -> H.Attr i
-onkeypress = H.handler (H.eventName "keypress")
+onKeyUp :: forall i. (Event KeyboardEvent -> EventHandler i) -> H.Attr i
+onKeyUp = H.handler (H.eventName "keyup")
 
-onkeyup :: forall i. (Event KeyboardEvent -> EventHandler i) -> H.Attr i
-onkeyup = H.handler (H.eventName "keyup")
+onBlur :: forall i. (Event FocusEvent -> EventHandler i) -> H.Attr i
+onBlur = H.handler (H.eventName "blur")
 
-onblur :: forall i. (Event FocusEvent -> EventHandler i) -> H.Attr i
-onblur = H.handler (H.eventName "blur")
+onFocus :: forall i. (Event FocusEvent -> EventHandler i) -> H.Attr i
+onFocus = H.handler (H.eventName "focus")
 
-onfocus :: forall i. (Event FocusEvent -> EventHandler i) -> H.Attr i
-onfocus = H.handler (H.eventName "focus")
+onFocusIn :: forall i. (Event FocusEvent -> EventHandler i) -> H.Attr i
+onFocusIn = H.handler (H.eventName "focusin")
 
-onfocusin :: forall i. (Event FocusEvent -> EventHandler i) -> H.Attr i
-onfocusin = H.handler (H.eventName "focusin")
-
-onfocusout :: forall i. (Event FocusEvent -> EventHandler i) -> H.Attr i
-onfocusout = H.handler (H.eventName "focusout")
+onFocusOut :: forall i. (Event FocusEvent -> EventHandler i) -> H.Attr i
+onFocusOut = H.handler (H.eventName "focusout")

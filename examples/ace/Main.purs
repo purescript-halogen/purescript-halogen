@@ -81,7 +81,7 @@ controls = component (render <$> stateful (State Nothing) update)
   render :: State -> H.HTML _ (m AceInput)
   render (State copied) =
     H.div_ [ H.p_ [ H.button [ A.classes [B.btn, B.btnPrimary]
-                             , A.onclick (A.input_ ClearText)
+                             , A.onClick (A.input_ ClearText)
                              ] [ H.text "Clear" ]
                   ]
            , H.p_ [ H.text (maybe "" ("Text copied: " <>) copied) ]
