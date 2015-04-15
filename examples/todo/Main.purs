@@ -77,17 +77,17 @@ ui = component (render <$> stateful (Undo.undoRedoState (State [])) (Undo.withUn
   toolbar :: forall p st. Undo.UndoRedoState st -> H.HTML p (m Input)
   toolbar st = H.p [ A.class_ B.btnGroup ]
                    [ H.button [ A.classes [ B.btn, B.btnPrimary ]
-                              , A.onclick (A.input_ $ NewTask Nothing)
+                              , A.onClick (A.input_ $ NewTask Nothing)
                               ]
                               [ H.text "New Task" ]
                    , H.button [ A.class_ B.btn
                               , A.enabled (Undo.canUndo st)
-                              , A.onclick (A.input_ Undo)
+                              , A.onClick (A.input_ Undo)
                               ]
                               [ H.text "Undo" ]
                    , H.button [ A.class_ B.btn
                               , A.enabled (Undo.canRedo st)
-                              , A.onclick (A.input_ Redo)
+                              , A.onClick (A.input_ Redo)
                               ]
                               [ H.text "Redo" ]
                    ]
@@ -112,7 +112,7 @@ ui = component (render <$> stateful (Undo.undoRedoState (State [])) (Undo.withUn
       (Just (BI.ButtonAddOn
         (H.button [ A.classes [ B.btn, B.btnDefault ]
                   , A.title "Remove task"
-                  , A.onclick (A.input_ $ RemoveTask index)
+                  , A.onClick (A.input_ $ RemoveTask index)
                   ]
                   [ H.text "✖" ])))
 
