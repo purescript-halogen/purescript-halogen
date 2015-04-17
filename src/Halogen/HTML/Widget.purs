@@ -4,6 +4,7 @@ module Halogen.HTML.Widget where
 
 import DOM
 
+import Data.Int
 import Data.Maybe
 import Data.Function
 import Data.Nullable
@@ -20,10 +21,11 @@ import qualified Halogen.Internal.VirtualDOM as V
 -- | - A finalizer function, which deallocates any necessary resources when the component is removed from the DOM.
 -- |
 -- | The three functions share a common piece of data of a hidden type `s`.
-widget :: forall eff i s. { name    :: String
-                          , id      :: String
-                          , init    :: (i -> Eff eff Unit) -> Eff eff { state :: s, node :: Node }
-                          , update  :: s -> Node -> Eff eff (Maybe Node)
-                          , destroy :: s -> Node -> Eff eff Unit
-                          } -> V.Widget eff i
-widget spec = runFn5 V.widget spec.name spec.id spec.init (\s n -> toNullable <$> spec.update s n) spec.destroy
+widget :: forall eff ref i s. { ref     :: Int
+                              , name    :: String
+                              , id      :: String
+                              , init    :: (i -> Eff eff Unit) -> Eff eff { state :: s, node :: Node }
+                              , update  :: s -> Node -> Eff eff (Maybe Node)
+                              , destroy :: s -> Node -> Eff eff Unit
+                              } -> V.Widget eff i
+widget spec = runFn6 V.widget spec.ref spec.name spec.id spec.init (\s n -> toNullable <$> spec.update s n) spec.destroy

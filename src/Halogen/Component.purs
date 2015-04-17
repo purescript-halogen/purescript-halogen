@@ -17,6 +17,7 @@ module Halogen.Component
 
 import DOM
 
+import Data.Int
 import Data.Maybe      
 import Data.Void (Void(), absurd)
 import Data.Either
@@ -27,7 +28,7 @@ import Data.Profunctor (Profunctor, dimap)
 import Control.Monad.Eff
 
 import Halogen.HTML (HTML(), placeholder)
-import Halogen.Signal (SF1(), mergeWith', startingAt, input)
+import Halogen.Signal
 import Halogen.Internal.VirtualDOM (Widget())
 
 import qualified Halogen.HTML.Widget as W
@@ -98,25 +99,26 @@ widget :: forall eff req res s m.
   , destroy :: s -> Node -> Eff eff Unit
   } -> 
   Component (Widget eff res) m req res
-widget spec = component (placeholder <$> ((updateWith <$> input) `startingAt` w0))
+widget spec = component (placeholder <$> ((updateWith <$> input <*> version) `startingAt` w0))
   where
   w0 :: Widget eff res
-  w0 = W.widget
-    { name: spec.name
-    , id: spec.id
-    , init: spec.init
-    , update: \_ _ -> return Nothing
-    , destroy: spec.destroy 
-    }
+  w0 = buildWidget zero (\_ _ -> return Nothing)
       
-  updateWith :: req -> Widget eff res
-  updateWith i = W.widget 
-    { name: spec.name
+  updateWith :: req -> Int -> Widget eff res
+  updateWith i n = buildWidget n (spec.update i)
+  
+  buildWidget :: Int -> (s -> Node -> Eff eff (Maybe Node)) -> Widget eff res
+  buildWidget ref update = W.widget
+    { ref: ref
+    , name: spec.name
     , id: spec.id
     , init: spec.init
-    , update: spec.update i
+    , update: update
     , destroy: spec.destroy 
-    }
+    } 
+    
+  version :: forall i. SF i Int
+  version = tail $ stateful zero (\i _ -> i + one)
   
 -- | Map a function over the placeholders in a component          
 mapP :: forall p q m req res. (p -> q) -> Component p m req res -> Component q m req res
