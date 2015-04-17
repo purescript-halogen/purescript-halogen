@@ -22,6 +22,7 @@ module Halogen.Internal.VirtualDOM
 
 import DOM
 
+import Data.Int
 import Data.Maybe
 import Data.Monoid
 import Data.Nullable
@@ -199,22 +200,26 @@ instance functorWidget :: Functor (Widget eff) where
   (<$>) = mapWidget
   
 foreign import widget
-  "function widget(name, id, init, update, destroy) {\
+  "function widget(ref, name, id, init, update, destroy) {\
   \  return {\
   \    create: function(driver) {\
   \      var Widget = function () {};\
   \      Widget.prototype.type = 'Widget';\
   \      Widget.prototype.name = name;\
   \      Widget.prototype.id = id;\
+  \      Widget.prototype.ref = ref;\
   \      Widget.prototype.init = function(){\
   \        var state = init(driver)();\
   \        this.state = state.state;\
   \        return state.node;\
   \      };\
   \      Widget.prototype.update = function(prev, node) {\
-  \        var updated = update(prev.state)(node)();\
   \        this.state = prev.state;\
-  \        return updated;\
+  \        if (this.ref !== prev.ref) {\
+  \          return update(prev.state)(node)();\
+  \        } else {\
+  \          return null;\
+  \        }\
   \      };\
   \      Widget.prototype.destroy = function(node) {\
   \        destroy(this.state)(node)();\
@@ -222,9 +227,10 @@ foreign import widget
   \      return new Widget();\
   \    }\
   \  };\
-  \}" :: forall eff i s. Fn5 String 
-                             String 
-                             ((i -> Eff eff Unit) -> Eff eff { state :: s, node :: Node }) 
-                             (s -> Node -> Eff eff (Nullable Node)) 
-                             (s -> Node -> Eff eff Unit) 
-                             (Widget eff i)
+  \}" :: forall eff ref i s. Fn6 Int
+                                 String 
+                                 String 
+                                 ((i -> Eff eff Unit) -> Eff eff { state :: s, node :: Node }) 
+                                 (s -> Node -> Eff eff (Nullable Node)) 
+                                 (s -> Node -> Eff eff Unit) 
+                                 (Widget eff i)
