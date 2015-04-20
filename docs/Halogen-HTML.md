@@ -76,6 +76,14 @@ placeholder :: forall p i. p -> HTML p i
 ```
 
 
+#### `graft`
+
+``` purescript
+graft :: forall a b i. HTML a i -> (a -> HTML b i) -> HTML b i
+```
+
+Replace placeholder nodes with HTML documents.
+
 #### `a`
 
 ``` purescript

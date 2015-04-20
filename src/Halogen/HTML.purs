@@ -8,6 +8,8 @@ module Halogen.HTML
   , placeholder
   , element
   
+  , graft
+  
   , TagName()
   , tagName
   , runTagName
