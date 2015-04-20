@@ -154,6 +154,7 @@ foreign import vtext
   \  return new VText(s);\
   \}" :: String -> VTree
 
+
 -- | Create a virtual DOM tree which represents an element with properties
 foreign import vnode 
   "function vnode(name) {\
@@ -164,7 +165,7 @@ foreign import vnode
   \        attributes: {}\
   \      };\
   \      for (var key in attr) {\
-  \        if (key.indexOf('data-') === 0) {\
+  \        if ((key.indexOf('data-') === 0) || (key === 'readonly')) {\
   \          props.attributes[key] = attr[key];\
   \        } else {\
   \          props[key] = attr[key];\
