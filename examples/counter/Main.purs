@@ -58,7 +58,7 @@ ui = component (render <$> stateful (State 0) update)
   update (State n) Tick = State (n + 1)
 
 main = do
-  Tuple node driver <- runUI ui
-  appendToBody node
-  setInterval 1000 $ driver Tick
+  result <- runUI ui
+  appendToBody result.node
+  setInterval 1000 $ result.driver Tick
   

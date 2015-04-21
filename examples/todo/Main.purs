@@ -123,6 +123,6 @@ ui = component (render <$> stateful (Undo.undoRedoState (State [])) (Undo.withUn
   update (State ts) (RemoveTask i) = State $ deleteAt i 1 ts
 
 main = do
-  Tuple node driver <- runUI ui
-  appendToBody node
-  Router.onHashChange (NewTask <<< Just <<< S.drop 1 <<< Router.runHash) driver
+  result <- runUI ui
+  appendToBody result.node
+  Router.onHashChange (NewTask <<< Just <<< S.drop 1 <<< Router.runHash) result.driver

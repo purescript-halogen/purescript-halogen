@@ -109,5 +109,5 @@ aceEditor = widget { name: "AceEditor", id: "editor1", init: init, update: updat
   destroy editor _ = Editor.destroy editor
 
 main = do
-  Tuple node _ <- runUI ui
-  appendToBody node
+  result <- runUI ui
+  appendToBody result.node

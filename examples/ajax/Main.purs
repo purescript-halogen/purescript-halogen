@@ -132,5 +132,5 @@ handler code = E.yield SetBusy `E.andThen` \_ -> E.async compileAff
     compile code \response -> k (SetResult response)
 
 main = do
-  Tuple node driver <- runUI ui
-  appendToBody node
+  result <- runUI ui
+  appendToBody result.node

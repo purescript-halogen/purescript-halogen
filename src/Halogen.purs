@@ -76,7 +76,7 @@ type Driver i eff = i -> Eff (HalogenEffects eff) Unit
 -- | send inputs to the UI from external components.
 runUI :: forall req eff. 
            Component (Widget (HalogenEffects eff) req) (Event (HalogenEffects eff)) req req -> 
-           Eff (HalogenEffects eff) (Tuple Node (Driver req eff))
+           Eff (HalogenEffects eff) { node :: Node, driver :: Driver req eff }
 runUI = runComponent \sf -> do
   ref <- newRef Nothing
   runUI' ref sf
@@ -85,14 +85,14 @@ runUI = runComponent \sf -> do
 runUI' :: forall i req eff. 
             RefVal (Maybe { signal :: SF (Either i req) Patch, node :: Node }) -> 
             SF1 (Either i req) (H.HTML (Widget (HalogenEffects eff) req) (Event (HalogenEffects eff) (Either i req))) -> 
-            Eff (HalogenEffects eff) (Tuple Node (Driver req eff))
+            Eff (HalogenEffects eff) { node :: Node, driver :: Driver req eff }
 runUI' ref sf = do
   let render = R.renderHTML requestHandler widgetHandler
       vtrees = render <$> sf
       diffs  = tail vtrees >>> changes (head vtrees) 
       node   = createElement (head vtrees)  
   writeRef ref $ Just { signal: diffs, node: node }
-  return (Tuple node externalDriver)  
+  return { node: node, driver: externalDriver }
   
   where
   requestHandler :: Event (HalogenEffects eff) (Either i req) -> Eff (HalogenEffects eff) Unit
