@@ -2014,6 +2014,20 @@ classes :: forall i. [ClassName] -> Attr i
 ```
 
 
+#### `colspan`
+
+``` purescript
+colspan :: forall i. Number -> Attr i
+```
+
+
+#### `rowspan`
+
+``` purescript
+rowspan :: forall i. Number -> Attr i
+```
+
+
 #### `content`
 
 ``` purescript
