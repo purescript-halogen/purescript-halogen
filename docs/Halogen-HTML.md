@@ -2034,17 +2034,17 @@ classes :: forall i. [ClassName] -> Attr i
 ```
 
 
-#### `colspan`
+#### `colSpan`
 
 ``` purescript
-colspan :: forall i. Number -> Attr i
+colSpan :: forall i. Number -> Attr i
 ```
 
 
-#### `rowspan`
+#### `rowSpan`
 
 ``` purescript
-rowspan :: forall i. Number -> Attr i
+rowSpan :: forall i. Number -> Attr i
 ```
 
 

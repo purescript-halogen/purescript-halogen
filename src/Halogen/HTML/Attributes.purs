@@ -39,8 +39,8 @@ module Halogen.HTML.Attributes
   , charset
   , class_
   , classes
-  , colspan
-  , rowspan
+  , colSpan
+  , rowSpan
   , content
   , for
   , height
@@ -219,11 +219,11 @@ class_ = attr (attributeName "className") <<< runClassName
 classes :: forall i. [ClassName] -> Attr i
 classes ss = attr (attributeName "className") (joinWith " " $ map runClassName ss)
 
-colspan :: forall i. Number -> Attr i
-colspan = attr (attributeName "colspan") <<< show
+colSpan :: forall i. Number -> Attr i
+colSpan = attr (attributeName "colSpan") <<< show
 
-rowspan :: forall i. Number -> Attr i
-rowspan = attr (attributeName "rowspan") <<< show
+rowSpan :: forall i. Number -> Attr i
+rowSpan = attr (attributeName "rowSpan") <<< show
 
 content :: forall i. String -> Attr i
 content = attr $ attributeName "content"
