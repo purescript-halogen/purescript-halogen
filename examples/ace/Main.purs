@@ -44,6 +44,11 @@ foreign import createEditorNode
   \  return document.createElement('div');\
   \}" :: forall eff. Eff (dom :: DOM | eff) HTMLElement
 
+foreign import coerceNode
+  "function coerceNode(el) {\
+  \  return el;\
+  \}" :: HTMLElement -> Node
+
 -- | The type of inputs to the Ace widget.
 data AceInput = ClearText
 
@@ -83,7 +88,7 @@ controls = component (render <$> stateful (State Nothing) update)
   render :: State -> H.HTML _ (m AceInput)
   render (State copied) =
     H.div_ [ H.p_ [ H.button [ A.classes [B.btn, B.btnPrimary]
-                             , A.onclick (A.input_ ClearText)
+                             , A.onClick (A.input_ ClearText)
                              ] [ H.text "Clear" ]
                   ]
            , H.p_ [ H.text (maybe "" ("Text copied: " <>) copied) ]
@@ -99,7 +104,7 @@ aceEditor = widget { name: "AceEditor", id: "editor1", init: init, update: updat
   init :: forall eff. (AceEvent -> Eff (ace :: EAce, dom :: DOM | eff) Unit) -> Eff (ace :: EAce, dom :: DOM | eff) { state :: Editor, node :: HTMLElement }
   init driver = do
     node <- createEditorNode
-    editor <- Ace.editNode node ace
+    editor <- Ace.editNode (coerceNode node) ace
     Editor.setTheme "ace/theme/monokai" editor
     Editor.onCopy editor (driver <<< TextCopied)
     return { state: editor, node: node }
