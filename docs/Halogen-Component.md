@@ -101,10 +101,29 @@ Unpack a component.
 
 The rank-2 type ensures that the hidden message type must be used abstractly.
 
+#### `install`
+
+``` purescript
+install :: forall p m req1 req2 res1 res2. (Functor m) => Component p m req1 res1 -> Component (Maybe p) m req2 res2 -> Component p m (Either req1 req2) (Either res1 res2)
+```
+
+Install a component inside another, by replacing a placeholder.
+
+The placeholders labelled with `Nothing` in the second component will be replaced with the
+first component. Placeholders labelled with `Just` will remain as placeholders.
+
+#### `hide`
+
+``` purescript
+hide :: forall p m i req res. (Functor m) => Component p m (Either i req) (Either i res) -> Component p m req res
+```
+
+Hide some of the internal messages in a `Component`.
+
 #### `combine`
 
 ``` purescript
-combine :: forall p m req1 req2 res1 res2. (Functor m) => (forall a. HTML p a -> HTML p a -> HTML p a) -> Component p m req1 res1 -> Component p m req2 res2 -> Component p m (Either req1 req2) (Either res1 res2)
+combine :: forall p q r m req1 req2 res1 res2. (Functor m) => (forall a. HTML p a -> HTML q a -> HTML r a) -> Component p m req1 res1 -> Component q m req2 res2 -> Component r m (Either req1 req2) (Either res1 res2)
 ```
 
 Combine two components into a single component.
