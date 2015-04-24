@@ -13,6 +13,13 @@ A declarative, type-safe UI library for PureScript.
   - [AJAX](examples/ajax/Main.purs)
   - [Ace Editor](examples/ace/Main.purs)
 
+`purescript-halogen` uses the `virtual-dom` library as a CommonJS dependency. To set up `virtual-dom` in your project, it is recommended that you:
+
+- Install `virtual-dom` as an NPM dependency in your `project.json` file.
+- Use `psc` or `psc-make` with `browserify` to build and link the `virtual-dom` source code into a JS bundle for use in the web browser. See the `gulpfile.js` file in this repository for examples.
+
+## Introduction
+
 `purescript-halogen` is a simple reactive UI library built on top of `virtual-dom`. It aims to answer the following questions:
 
 - How can we describe web pages as pure functions of application state? 
