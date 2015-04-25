@@ -107,10 +107,13 @@ runUI' ref sf = do
   
   driver :: Driver (Either i req) eff
   driver e = do
-    Just { signal: signal, node: node } <- readRef ref
-    let next = runSF signal e
-    node' <- patch (head next) node
-    writeRef ref $ Just { signal: tail next, node: node' }
+    ms <- readRef ref
+    case ms of
+      Just { signal: signal, node: node } -> do
+        let next = runSF signal e
+        node' <- patch (head next) node
+        writeRef ref $ Just { signal: tail next, node: node' }
+      Nothing -> trace "Error: An attempt to re-render was made during the initial render."
     
   externalDriver :: Driver req eff
   externalDriver req = driver (Right req)
