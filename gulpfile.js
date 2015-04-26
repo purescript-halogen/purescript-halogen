@@ -11,8 +11,6 @@ var gulp        = require('gulp')
 var paths = {
     src: [
         'src/**/*.purs',
-        'purescript-halogen-foundation/src/**/*.purs',
-        'purescript-halogen-bootstrap/src/**/*.purs'
     ],
     bowerSrc: [
       'bower_components/purescript-*/src/**/*.purs'
@@ -66,19 +64,7 @@ var paths = {
         {
             dest: 'docs/Halogen-Mixin-Router.md',
             src: 'src/Halogen/Mixin/Router.purs'
-        }, 
-        {
-            dest: 'docs/Halogen-Bootstrap.md',
-            src: 'purescript-halogen-bootstrap/src/Halogen/Themes/Bootstrap3.purs'
-        },  
-        {
-            dest: 'docs/Halogen-Bootstrap-Controls.md',
-            src: 'purescript-halogen-bootstrap/src/Halogen/Themes/Bootstrap3/*.purs'
-        }, 
-        {
-            dest: 'docs/Halogen-Foundation.md',
-            src: 'purescript-halogen-foundation/src/**/*.purs'
-        }
+        } 
     ],
     examples: {
         todo: {
