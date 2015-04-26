@@ -20,8 +20,3 @@
 - [Router](Halogen-Mixin-Router.md)
 - [Undo/Redo](Halogen-Mixin-UndoRedo.md)
 
-### Themes
-
-- [Bootstrap 3](Halogen-Bootstrap.md)
-  - [Bootstrap 3 Components](Halogen-Bootstrap-Controls.md)
-- [Foundation 5](Halogen-Foundation.md)
