@@ -8,10 +8,10 @@ A declarative, type-safe UI library for PureScript.
 
 - Read the [module documentation](docs/).
 - Read the examples:
-  - [TODO List](examples/todo/Main.purs)
-  - [Counter](examples/counter/Main.purs)
-  - [AJAX](examples/ajax/Main.purs)
-  - [Ace Editor](examples/ace/Main.purs)
+  - [TODO List](examples/todo/)
+  - [Counter](examples/counter/)
+  - [AJAX](examples/ajax/)
+  - [Ace Editor](examples/ace/)
 
 `purescript-halogen` uses the `virtual-dom` library as a CommonJS dependency. To set up `virtual-dom` in your project, it is recommended that you:
 
