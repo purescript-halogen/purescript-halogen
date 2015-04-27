@@ -47,7 +47,7 @@ runEvent :: forall eff a. (Error -> Eff eff Unit) -> (a -> Eff eff Unit) -> Even
 runEvent f s = go <<< unEvent
   where
   go :: ListT (Aff eff) a -> Eff eff Unit
-  go l = runAff f handler (uncons l)
+  go l = runAff f handler (later (uncons l))
   
   handler :: Maybe (Tuple a (ListT (Aff eff) a)) -> Eff eff Unit
   handler Nothing = return unit
