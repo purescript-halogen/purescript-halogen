@@ -5,6 +5,7 @@ import Data.Tuple
 import Data.Maybe
 import Data.Either
 import Data.Foldable (foldMap)
+import Data.Foreign.Class
 
 import qualified Data.String as S
 
@@ -13,6 +14,7 @@ import qualified Data.StrMap as StrMap
 import Control.Functor (($>))
 import Control.Plus (empty)
 
+import Control.Alt
 import Control.Bind
 import Control.Monad.Eff
 import Control.Monad.Eff.Class
@@ -39,7 +41,7 @@ import qualified Halogen.HTML.Events.Monad as E
 
 import qualified Halogen.Themes.Bootstrap3 as B
 
-foreign import data HTTP :: !
+import Network.HTTP.Affjax
 
 exampleCode :: String
 exampleCode = S.joinWith "\n"
@@ -55,23 +57,6 @@ exampleCode = S.joinWith "\n"
 appendToBody :: forall eff. HTMLElement -> Eff (dom :: DOM | eff) Unit
 appendToBody e = document globalWindow >>= (body >=> flip appendChild e)
 
-foreign import compile
-  "function compile(code) {\
-  \  return function(k) {\
-  \    return function() {\
-  \      var xhr = new XMLHttpRequest();\
-  \      xhr.onreadystatechange = function(){\
-  \        if (xhr.readyState === 4) {\
-  \          var res = JSON.parse(xhr.responseText);\
-  \          k(res.js || res.error)();\
-  \        }\
-  \      };\
-  \      xhr.open('POST', 'http://try.purescript.org/compile/text', true);\
-  \      xhr.send(code);\
-  \    };\
-  \  };\
-  \}" :: forall eff. String -> (String -> Eff (http :: HTTP | eff) Unit) -> Eff (http :: HTTP | eff) Unit
-
 -- | The state of the application
 data State = State Boolean String (Maybe String)
 
@@ -81,10 +66,10 @@ data Input
   | SetCode String
   | SetResult String
 
-ui :: forall p eff. Component p (E.Event (HalogenEffects (http :: HTTP | eff))) Input Input
+ui :: forall p eff. Component p (E.Event (HalogenEffects (ajax :: AJAX | eff))) Input Input
 ui = component (render <$> stateful (State false exampleCode Nothing) update)
   where
-  render :: State -> H.HTML p (E.Event (HalogenEffects (http :: HTTP | eff)) Input)
+  render :: State -> H.HTML p (E.Event (HalogenEffects (ajax :: AJAX | eff)) Input)
   render (State busy code result) =
     H.div [ A.class_ B.container ] $
           [ H.h1 [ A.id_ "header" ] [ H.text "ajax example" ]
@@ -114,24 +99,28 @@ ui = component (render <$> stateful (State false exampleCode Nothing) update)
   update (State busy code _) (SetResult rslt) = State false code (Just rslt)
 
 -- | Called when the component is initialized
-initialized :: forall eff. E.Event (HalogenEffects (http :: HTTP | eff)) Input
+initialized :: forall eff. E.Event (HalogenEffects (ajax :: AJAX | eff)) Input
 initialized = do
   liftEff $ trace "UI initialized"
   empty
   
 -- | Called when the component is finalized
-finalized :: forall eff. E.Event (HalogenEffects (http :: HTTP | eff)) Input
+finalized :: forall eff. E.Event (HalogenEffects (ajax :: AJAX | eff)) Input
 finalized = do
   liftEff $ trace "UI finalized"
   empty
 
 -- | Handle a request to an external service
-handler :: forall eff. String -> E.Event (HalogenEffects (http :: HTTP | eff)) Input
+handler :: forall eff. String -> E.Event (HalogenEffects (ajax :: AJAX | eff)) Input
 handler code = E.yield SetBusy `E.andThen` \_ -> E.async compileAff
   where
-  compileAff :: Aff (HalogenEffects (http :: HTTP | eff)) Input
-  compileAff = makeAff \_ k ->
-    compile code \response -> k (SetResult response)
+  compileAff :: Aff (HalogenEffects (ajax :: AJAX | eff)) Input
+  compileAff = do
+    result <- post "http://try.purescript.org/compile/text" code
+    let response = result.response
+    return case readProp "js" response <|> readProp "error" response of
+      Right js -> SetResult js
+      Left _ -> SetResult "Invalid response"
 
 main = do
   Tuple node driver <- runUI ui
