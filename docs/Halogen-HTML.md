@@ -1833,8 +1833,8 @@ the `Attr` type.
 data Attr i
   = Attr (Exists AttrF)
   | Handler (ExistsR (HandlerF i))
-  | Initializer i
-  | Finalizer i
+  | Initializer (HTMLElement -> i)
+  | Finalizer (HTMLElement -> i)
 ```
 
 A single attribute is either
@@ -1868,7 +1868,7 @@ Create an event handler
 #### `initializer`
 
 ``` purescript
-initializer :: forall i. i -> Attr i
+initializer :: forall i. (HTMLElement -> i) -> Attr i
 ```
 
 Attach an initializer.
@@ -1876,7 +1876,7 @@ Attach an initializer.
 #### `finalizer`
 
 ``` purescript
-finalizer :: forall i. i -> Attr i
+finalizer :: forall i. (HTMLElement -> i) -> Attr i
 ```
 
 Attach a finalizer.

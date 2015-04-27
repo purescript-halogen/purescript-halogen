@@ -86,12 +86,12 @@ foreign import initProp
   \  var Hook = function () {};\
   \  Hook.prototype.hook = function(node, prop, prev) {\
   \    if (typeof prev === 'undefined') {\
-  \      f();\
+  \      f(node);\
   \    };\
   \  };\
   \  props['halogen-init'] = new Hook(f);\
   \  return props;\
-  \}" :: forall eff. Eff eff Unit -> Props
+  \}" :: forall eff. (HTMLElement -> Eff eff Unit) -> Props
   
 -- | Create a property from an finalizer
 foreign import finalizerProp
@@ -99,12 +99,12 @@ foreign import finalizerProp
   \  var props = {};\
   \  var Hook = function () {};\
   \  Hook.prototype.hook = function() { };\
-  \  Hook.prototype.unhook = function() {\
-  \    f();\
+  \  Hook.prototype.unhook = function(node) {\
+  \    f(node);\
   \  };\
   \  props['halogen-finalizer'] = new Hook(f);\
   \  return props;\
-  \}" :: forall eff. Eff eff Unit -> Props
+  \}" :: forall eff. (HTMLElement -> Eff eff Unit) -> Props
 
 foreign import concatProps
   "function concatProps(p1, p2) {\
