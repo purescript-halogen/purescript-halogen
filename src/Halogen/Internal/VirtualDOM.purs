@@ -202,37 +202,34 @@ instance functorWidget :: Functor (Widget eff) where
   (<$>) = mapWidget
   
 foreign import widget
-  "function widget(ref, name, id, init, update, destroy) {\
+  "function widget(value, name, id, init, update, destroy) {\
   \  return {\
   \    create: function(driver) {\
   \      var Widget = function () {};\
   \      Widget.prototype.type = 'Widget';\
   \      Widget.prototype.name = name;\
   \      Widget.prototype.id = id;\
-  \      Widget.prototype.ref = ref;\
+  \      Widget.prototype.value = value;\
   \      Widget.prototype.init = function(){\
-  \        var state = init(driver)();\
-  \        this.state = state.state;\
-  \        return state.node;\
+  \        var result = init(driver)();\
+  \        this.context = result.context;\
+  \        return result.node;\
   \      };\
   \      Widget.prototype.update = function(prev, node) {\
-  \        this.state = prev.state;\
-  \        if (this.ref !== prev.ref) {\
-  \          return update(prev.state)(node)();\
-  \        } else {\
-  \          return null;\
-  \        }\
+  \        this.context = prev.context;\
+  \        return update(this.value, prev.value, prev.context, node)();\
   \      };\
   \      Widget.prototype.destroy = function(node) {\
-  \        destroy(this.state)(node)();\
+  \        destroy(this.context, node)();\
   \      };\
   \      return new Widget();\
   \    }\
   \  };\
-  \}" :: forall eff ref i s. Fn6 Int
-                                 String 
-                                 String 
-                                 ((i -> Eff eff Unit) -> Eff eff { state :: s, node :: HTMLElement }) 
-                                 (s -> HTMLElement -> Eff eff (Nullable HTMLElement)) 
-                                 (s -> HTMLElement -> Eff eff Unit) 
-                                 (Widget eff i)
+  \}" :: forall eff res ctx val. 
+           Fn6 val
+               String 
+               String 
+               ((res -> Eff eff Unit) -> Eff eff { context :: ctx, node :: HTMLElement }) 
+               (Fn4 val val ctx HTMLElement (Eff eff (Nullable HTMLElement))) 
+               (Fn2 ctx HTMLElement (Eff eff Unit)) 
+               (Widget eff res)

@@ -92,26 +92,31 @@ component' sf = Component (mkExists (ComponentF sf))
 -- | - `update` - Update the widget based on an input message.
 -- | - `destroy` - Release any resources associated with the widget as it is about to be removed
 -- |   from the DOM.
-widget :: forall eff req res s m. 
+widget :: forall eff req res ctx m. 
   (Functor m) => 
   { name    :: String
   , id      :: String
-  , init    :: (res -> Eff eff Unit) -> Eff eff { state :: s, node :: HTMLElement }
-  , update  :: req -> s -> HTMLElement -> Eff eff (Maybe HTMLElement)
-  , destroy :: s -> HTMLElement -> Eff eff Unit
+  , init    :: (res -> Eff eff Unit) -> Eff eff { context :: ctx, node :: HTMLElement }
+  , update  :: req -> ctx -> HTMLElement -> Eff eff (Maybe HTMLElement)
+  , destroy :: ctx -> HTMLElement -> Eff eff Unit
   } -> 
   Component (Widget eff res) m req res
 widget spec = component (placeholder <$> ((updateWith <$> input <*> version) `startingAt` w0))
   where
   w0 :: Widget eff res
-  w0 = buildWidget zero (\_ _ -> return Nothing)
+  w0 = buildWidget zero (\_ _ _ _ -> return Nothing)
       
   updateWith :: req -> Int -> Widget eff res
-  updateWith i n = buildWidget n (spec.update i)
+  updateWith i n = buildWidget n updateIfVersionChanged
+    where
+    updateIfVersionChanged :: Int -> Int -> ctx -> HTMLElement -> Eff eff (Maybe HTMLElement)
+    updateIfVersionChanged new old 
+      | new > old = spec.update i
+      | otherwise = \_ _ -> return Nothing
   
-  buildWidget :: Int -> (s -> HTMLElement -> Eff eff (Maybe HTMLElement)) -> Widget eff res
-  buildWidget ref update = W.widget
-    { ref: ref
+  buildWidget :: Int -> (Int -> Int -> ctx -> HTMLElement -> Eff eff (Maybe HTMLElement)) -> Widget eff res
+  buildWidget ver update = W.widget
+    { value: ver
     , name: spec.name
     , id: spec.id
     , init: spec.init

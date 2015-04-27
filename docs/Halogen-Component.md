@@ -54,7 +54,7 @@ A variant of `component` which creates a component with some internal, hidden in
 #### `widget`
 
 ``` purescript
-widget :: forall eff req res s m. (Functor m) => { destroy :: s -> HTMLElement -> Eff eff Unit, update :: req -> s -> HTMLElement -> Eff eff (Maybe HTMLElement), init :: (res -> Eff eff Unit) -> Eff eff { node :: HTMLElement, state :: s }, id :: String, name :: String } -> Component (Widget eff res) m req res
+widget :: forall eff req res ctx m. (Functor m) => { destroy :: ctx -> HTMLElement -> Eff eff Unit, update :: req -> ctx -> HTMLElement -> Eff eff (Maybe HTMLElement), init :: (res -> Eff eff Unit) -> Eff eff { node :: HTMLElement, context :: ctx }, id :: String, name :: String } -> Component (Widget eff res) m req res
 ```
 
 Construct a `Component` from a third-party widget.
