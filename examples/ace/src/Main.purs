@@ -1,4 +1,4 @@
-module Example.Ace where
+module Main where
 
 import Data.Void
 import Data.Maybe
@@ -43,11 +43,6 @@ foreign import createEditorNode
   "function createEditorNode() {\
   \  return document.createElement('div');\
   \}" :: forall eff. Eff (dom :: DOM | eff) HTMLElement
-
-foreign import coerceNode
-  "function coerceNode(el) {\
-  \  return el;\
-  \}" :: HTMLElement -> Node
 
 -- | The type of inputs to the Ace widget.
 data AceInput = ClearText
@@ -104,7 +99,7 @@ aceEditor = widget { name: "AceEditor", id: "editor1", init: init, update: updat
   init :: forall eff. (AceEvent -> Eff (ace :: EAce, dom :: DOM | eff) Unit) -> Eff (ace :: EAce, dom :: DOM | eff) { state :: Editor, node :: HTMLElement }
   init driver = do
     node <- createEditorNode
-    editor <- Ace.editNode (coerceNode node) ace
+    editor <- Ace.editNode node ace
     Editor.setTheme "ace/theme/monokai" editor
     Editor.onCopy editor (driver <<< TextCopied)
     return { state: editor, node: node }

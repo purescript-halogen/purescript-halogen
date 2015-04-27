@@ -65,41 +65,7 @@ var paths = {
             dest: 'docs/Halogen-Mixin-Router.md',
             src: 'src/Halogen/Mixin/Router.purs'
         } 
-    ],
-    examples: {
-        todo: {
-            src: ['examples/todo/Main.purs'],
-            dest: 'examples/todo',
-            options: {
-                main: 'Example.Todo',
-                modules: ['Example.Todo']
-            }
-        }, 
-        counter: {
-            src: ['examples/counter/Main.purs'],
-            dest: 'examples/counter',
-            options: {
-                main: 'Example.Counter',
-                modules: ['Example.Counter']
-            }
-        }, 
-        ajax: {
-            src: ['examples/ajax/Main.purs'],
-            dest: 'examples/ajax',
-            options: {
-                main: 'Example.Ajax',
-                modules: ['Example.Ajax']
-            }
-        }, 
-        ace: {
-            src: ['examples/ace/Main.purs'],
-            dest: 'examples/ace',
-            options: {
-                main: 'Example.Ace',
-                modules: ['Example.Ace']
-            }
-        }
-    }
+    ]
 };
 
 function compile (compiler, src, opts) {
@@ -124,34 +90,6 @@ function docs (target) {
         .pipe(gulp.dest(target.dest));
 }
 
-gulp.task('example-todo', function() {
-    return compile(purescript.psc, paths.src.concat(paths.examples.todo.src), paths.examples.todo.options)
-        .pipe(browserify({}))
-        .pipe(gulp.dest(paths.examples.todo.dest));
-});
-
-gulp.task('example-counter', function() {
-    return compile(purescript.psc, paths.src.concat(paths.examples.counter.src), paths.examples.counter.options)
-        .pipe(browserify({}))
-        .pipe(gulp.dest(paths.examples.counter.dest));
-});
-
-gulp.task('example-ajax', function() {
-    return compile(purescript.psc, paths.src.concat(paths.examples.ajax.src), paths.examples.ajax.options)
-        .pipe(browserify({}))
-        .pipe(gulp.dest(paths.examples.ajax.dest));
-});
-
-gulp.task('example-ace', function() {
-    return compile(purescript.psc, paths.src.concat(paths.examples.ace.src), paths.examples.ace.options)
-        .pipe(browserify({}))
-        .pipe(gulp.dest(paths.examples.ace.dest));
-});
-
-gulp.task('examples', function(cb) {
-    runSequence('example-todo', 'example-counter', 'example-ajax', 'example-ace', cb);
-});
-
 gulp.task('make', function() {
     return compile(purescript.pscMake, paths.src, {})
         .pipe(gulp.dest(paths.dest))
@@ -164,5 +102,5 @@ gulp.task('docs', function() {
 });
 
 gulp.task('default', function(cb) {
-    runSequence('make', 'docs', 'examples', cb);
+    runSequence('make', 'docs', cb);
 });

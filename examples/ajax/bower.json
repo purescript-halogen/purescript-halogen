@@ -1,0 +1,21 @@
+{
+  "name": "ajax",
+  "version": "1.0.0",
+  "moduleType": [
+    "node"
+  ],
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "output"
+  ],
+  "dependencies": {
+    "purescript-halogen": "master",
+    "purescript-halogen-bootstrap": "master",
+    "purescript-affjax": "~0.2.1"
+  },
+  "resolutions": {
+    "purescript-integers": "~0.1.0"
+  }
+}

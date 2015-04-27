@@ -1,0 +1,18 @@
+{
+  "name": "ace",
+  "version": "1.0.0",
+  "moduleType": [
+    "node"
+  ],
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "output"
+  ],
+  "dependencies": {
+    "purescript-ace": "~0.3.0",
+    "purescript-halogen": "master",
+    "purescript-halogen-bootstrap": "master"
+  }
+}

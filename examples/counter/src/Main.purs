@@ -1,4 +1,4 @@
-module Example.Counter where
+module Main where
 
 import Data.Void
 import Data.Tuple
