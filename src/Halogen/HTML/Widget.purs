@@ -21,11 +21,17 @@ import qualified Halogen.Internal.VirtualDOM as V
 -- | - A finalizer function, which deallocates any necessary resources when the component is removed from the DOM.
 -- |
 -- | The three functions share a common piece of data of a hidden type `s`.
-widget :: forall eff ref i s. { ref     :: Int
-                              , name    :: String
-                              , id      :: String
-                              , init    :: (i -> Eff eff Unit) -> Eff eff { state :: s, node :: HTMLElement }
-                              , update  :: s -> HTMLElement -> Eff eff (Maybe HTMLElement)
-                              , destroy :: s -> HTMLElement -> Eff eff Unit
-                              } -> V.Widget eff i
-widget spec = runFn6 V.widget spec.ref spec.name spec.id spec.init (\s n -> toNullable <$> spec.update s n) spec.destroy
+widget :: forall eff ctx val res. { value   :: val
+                                  , name    :: String
+                                  , id      :: String
+                                  , init    :: (res -> Eff eff Unit) -> Eff eff { context :: ctx, node :: HTMLElement }
+                                  , update  :: val -> val -> ctx -> HTMLElement -> Eff eff (Maybe HTMLElement)
+                                  , destroy :: ctx -> HTMLElement -> Eff eff Unit
+                                  } -> V.Widget eff res
+widget spec = runFn6 V.widget 
+                     spec.value 
+                     spec.name 
+                     spec.id 
+                     spec.init 
+                     (mkFn4 \v0 v1 ctx node -> toNullable <$> spec.update v0 v1 ctx node) 
+                     (mkFn2 spec.destroy)
