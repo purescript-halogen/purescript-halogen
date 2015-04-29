@@ -56,6 +56,9 @@ module Halogen.HTML.Attributes
   , value
   , width
   , disabled
+  , required
+  , readonly
+  , spellcheck
   , enabled
   , checked
   , selected
@@ -269,6 +272,15 @@ width = attr (attributeName "width") <<< show
    
 disabled :: forall i. Boolean -> Attr i
 disabled = attr $ attributeName "disabled"
+
+required :: forall i. Boolean -> Attr i
+required = attr $ attributeName "required"
+
+readonly :: forall i. Boolean -> Attr i
+readonly = attr $ attributeName "readonly"
+
+spellcheck :: forall i. Boolean -> Attr i
+spellcheck = attr $ attributeName "spellcheck"
    
 enabled :: forall i. Boolean -> Attr i
 enabled = disabled <<< not
