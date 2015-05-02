@@ -24,7 +24,6 @@ import Data.DOM.Simple.Window
 
 import Halogen
 import Halogen.Signal
-import Halogen.Component
 
 import qualified Halogen.Mixin.UndoRedo as Undo
 import qualified Halogen.Mixin.Router as Router
@@ -63,8 +62,8 @@ instance inputSupportsUndoRedo :: Undo.SupportsUndoRedo Input where
   toUndoRedo _ = Nothing
 
 -- | The view is a state machine, consuming inputs, and generating HTML documents which in turn, generate new inputs
-ui :: forall p m. (Alternative m) => Component p m Input Input
-ui = component (render <$> stateful (Undo.undoRedoState (State [])) (Undo.withUndoRedo update))
+ui :: forall p m. (Alternative m) => SF1 Input (H.HTML p (m Input))
+ui = render <$> stateful (Undo.undoRedoState (State [])) (Undo.withUndoRedo update)
   where
   render :: forall p. Undo.UndoRedoState State -> H.HTML p (m Input)
   render st =

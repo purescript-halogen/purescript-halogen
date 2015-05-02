@@ -39,7 +39,7 @@ import Control.Monad.Eff.Exception
 import qualified Halogen.HTML as H
 import qualified Halogen.HTML.Renderer.VirtualDOM as R
 
-import Halogen.Signal 
+import Halogen.Signal
 import Halogen.Component
 import Halogen.HTML.Events.Monad 
 import Halogen.Internal.VirtualDOM (VTree(), Patch(), Widget(), diff, patch, createElement)
@@ -78,14 +78,14 @@ type Driver i eff = i -> Eff (HalogenEffects eff) Unit
 runUI :: forall req eff.
            Component (Widget (HalogenEffects eff) req) (Event (HalogenEffects eff)) req req ->
            Eff (HalogenEffects eff) (Tuple HTMLElement (Driver req eff))
-runUI = runComponent \sf -> do
+runUI sf = do
   ref <- newRef Nothing
   runUI' ref sf
 
 -- | Internal function used in the implementation of `runUI`.
-runUI' :: forall i req eff.
-            RefVal (Maybe { signal :: SF (Either i req) Patch, node :: HTMLElement }) ->
-            SF1 (Either i req) (H.HTML (Widget (HalogenEffects eff) req) (Event (HalogenEffects eff) (Either i req))) ->
+runUI' :: forall req eff.
+            RefVal (Maybe { signal :: SF req Patch, node :: HTMLElement }) ->
+            Component (Widget (HalogenEffects eff) req) (Event (HalogenEffects eff)) req req ->
             Eff (HalogenEffects eff) (Tuple HTMLElement (Driver req eff))
 runUI' ref sf = do
   let render = R.renderHTML requestHandler widgetHandler
@@ -93,19 +93,19 @@ runUI' ref sf = do
       diffs  = tail vtrees >>> changes (head vtrees) 
       node   = createElement (head vtrees)  
   writeRef ref $ Just { signal: diffs, node: node }
-  return (Tuple node externalDriver)  
+  return (Tuple node driver)  
   
   where
-  requestHandler :: Event (HalogenEffects eff) (Either i req) -> Eff (HalogenEffects eff) Unit
+  requestHandler :: Event (HalogenEffects eff) req -> Eff (HalogenEffects eff) Unit
   requestHandler aff = unsafeInterleaveEff $ runEvent logger driver aff
   
-  widgetHandler :: Widget (HalogenEffects eff) req -> Widget (HalogenEffects eff) (Event (HalogenEffects eff) (Either i req))
-  widgetHandler = ((pure <<< Right) <$>)
+  widgetHandler :: Widget (HalogenEffects eff) req -> Widget (HalogenEffects eff) (Event (HalogenEffects eff) req)
+  widgetHandler = (pure <$>)
   
   logger :: Error -> Eff (HalogenEffects eff) Unit
   logger e = trace $ "Uncaught error in asynchronous code: " <> message e
   
-  driver :: Driver (Either i req) eff
+  driver :: Driver req eff
   driver e = do
     ms <- readRef ref
     case ms of
@@ -114,6 +114,3 @@ runUI' ref sf = do
         node' <- patch (head next) node
         writeRef ref $ Just { signal: tail next, node: node' }
       Nothing -> trace "Error: An attempt to re-render was made during the initial render."
-    
-  externalDriver :: Driver req eff
-  externalDriver req = driver (Right req)

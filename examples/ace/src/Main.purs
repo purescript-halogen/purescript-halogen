@@ -78,7 +78,7 @@ ui = mapP (Right <$>) $ lmap swap $ combine render controls aceEditor
 -- |
 -- | Note that the input and output/event types are reversed here.
 controls :: forall p m eff. (Applicative m) => Component p m AceEvent AceInput
-controls = component (render <$> stateful (State Nothing) update)
+controls = render <$> stateful (State Nothing) update
   where
   render :: State -> H.HTML _ (m AceInput)
   render (State copied) =
@@ -96,13 +96,13 @@ controls = component (render <$> stateful (State Nothing) update)
 aceEditor :: forall m eff. (Functor m) => Component (Widget (HalogenEffects (ace :: EAce | eff)) AceEvent) m AceInput AceEvent
 aceEditor = widget { name: "AceEditor", id: "editor1", init: init, update: update, destroy: destroy }
   where
-  init :: forall eff. (AceEvent -> Eff (ace :: EAce, dom :: DOM | eff) Unit) -> Eff (ace :: EAce, dom :: DOM | eff) { state :: Editor, node :: HTMLElement }
+  init :: forall eff. (AceEvent -> Eff (ace :: EAce, dom :: DOM | eff) Unit) -> Eff (ace :: EAce, dom :: DOM | eff) { context :: Editor, node :: HTMLElement }
   init driver = do
     node <- createEditorNode
     editor <- Ace.editNode node ace
     Editor.setTheme "ace/theme/monokai" editor
     Editor.onCopy editor (driver <<< TextCopied)
-    return { state: editor, node: node }
+    return { context: editor, node: node }
 
   update :: forall eff. AceInput -> Editor -> HTMLElement -> Eff (ace :: EAce, dom :: DOM | eff) (Maybe HTMLElement)
   update ClearText editor _ = Editor.setValue "" Nothing editor $> Nothing

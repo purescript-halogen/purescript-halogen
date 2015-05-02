@@ -30,7 +30,6 @@ import Data.DOM.Simple.Window
 
 import Halogen
 import Halogen.Signal
-import Halogen.Component
 
 import qualified Halogen.HTML as H
 import qualified Halogen.HTML.Attributes as A
@@ -66,8 +65,8 @@ data Input
   | SetCode String
   | SetResult String
 
-ui :: forall p eff. Component p (E.Event (HalogenEffects (ajax :: AJAX | eff))) Input Input
-ui = component (render <$> stateful (State false exampleCode Nothing) update)
+ui :: forall p eff. SF1 Input (H.HTML p (E.Event (HalogenEffects (ajax :: AJAX | eff)) Input))
+ui = render <$> stateful (State false exampleCode Nothing) update
   where
   render :: State -> H.HTML p (E.Event (HalogenEffects (ajax :: AJAX | eff)) Input)
   render (State busy code result) =
