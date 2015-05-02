@@ -31,28 +31,6 @@ unrestricted, allowing components to be composed in various ways.
 If you do not use a particular feature (e.g. placeholders, requests), you might like to leave 
 the corresponding type parameter unconstrained in the declaration of your component. 
 
-#### `widget`
-
-``` purescript
-widget :: forall eff req res ctx m. (Functor m) => { destroy :: ctx -> HTMLElement -> Eff eff Unit, update :: req -> ctx -> HTMLElement -> Eff eff (Maybe HTMLElement), init :: (res -> Eff eff Unit) -> Eff eff { node :: HTMLElement, context :: ctx }, id :: String, name :: String } -> Component (Widget eff res) m req res
-```
-
-Construct a `Component` from a third-party widget.
-
-The function argument is a record with the following properties:
-
-- `name` - the type of the widget, required by `virtual-dom` to distinguish different
-  types of widget.
-- `id` - a unique ID which belongs to this instance of the widget type, required by 
-  `virtual-dom` to distinguish widgets from each other.
-- `init` - an action which initializes the component and returns the `HTMLElement` it corresponds
-  to in the DOM. This action receives the driver function for the component so that it can
-  generate events. It can also create a piece of state of type `s` which is shared with the
-  other lifecycle functions.
-- `update` - Update the widget based on an input message.
-- `destroy` - Release any resources associated with the widget as it is about to be removed
-  from the DOM.
-
 #### `mapP`
 
 ``` purescript

@@ -5,7 +5,6 @@ module Halogen.Internal.VirtualDOM
   ( VTree()
   , Patch()
   , Props()
-  , Widget()
   , emptyProps
   , prop
   , handlerProp
@@ -16,8 +15,6 @@ module Halogen.Internal.VirtualDOM
   , patch
   , vtext
   , vnode
-  , vwidget
-  , widget
   ) where
 
 import DOM
@@ -40,9 +37,6 @@ data Patch
 
 -- | Property collections
 data Props
-
--- | A third-party widget
-data Widget (eff :: # !) i
 
 foreign import emptyProps 
   "var emptyProps = {}" :: Props
@@ -176,60 +170,3 @@ foreign import vnode
   \    };\
   \  };\
   \}" :: String -> Props -> [VTree] -> VTree
-
--- | Create a virtual DOM tree from a `Widget`
-foreign import vwidget 
-  "function vwidget(driver) {\
-  \  return function(w) {\
-  \    return w.create(driver);\
-  \  };\
-  \}" :: forall eff i. (i -> Eff eff Unit) -> Widget eff i -> VTree
-  
-foreign import mapWidget 
-  "function mapWidget(f) {\
-  \  return function(w) {\
-  \    return {\
-  \      create: function(driver) {\
-  \        return w.create(function(i) {\
-  \          return driver(f(i));\
-  \        });\
-  \      }\
-  \    };\
-  \  };\
-  \}" :: forall eff i j. (i -> j) -> Widget eff i -> Widget eff j
-  
-instance functorWidget :: Functor (Widget eff) where
-  (<$>) = mapWidget
-  
-foreign import widget
-  "function widget(value, name, id, init, update, destroy) {\
-  \  return {\
-  \    create: function(driver) {\
-  \      var Widget = function () {};\
-  \      Widget.prototype.type = 'Widget';\
-  \      Widget.prototype.name = name;\
-  \      Widget.prototype.id = id;\
-  \      Widget.prototype.value = value;\
-  \      Widget.prototype.init = function(){\
-  \        var result = init(driver)();\
-  \        this.context = result.context;\
-  \        return result.node;\
-  \      };\
-  \      Widget.prototype.update = function(prev, node) {\
-  \        this.context = prev.context;\
-  \        return update(this.value, prev.value, prev.context, node)();\
-  \      };\
-  \      Widget.prototype.destroy = function(node) {\
-  \        destroy(this.context, node)();\
-  \      };\
-  \      return new Widget();\
-  \    }\
-  \  };\
-  \}" :: forall eff res ctx val. 
-           Fn6 val
-               String 
-               String 
-               ((res -> Eff eff Unit) -> Eff eff { context :: ctx, node :: HTMLElement }) 
-               (Fn4 val val ctx HTMLElement (Eff eff (Nullable HTMLElement))) 
-               (Fn2 ctx HTMLElement (Eff eff Unit)) 
-               (Widget eff res)

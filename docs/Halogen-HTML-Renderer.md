@@ -5,7 +5,7 @@
 #### `renderHTML`
 
 ``` purescript
-renderHTML :: forall p i eff. (i -> Eff eff Unit) -> (p -> Widget eff i) -> H.HTML p i -> VTree
+renderHTML :: forall i eff. (i -> Eff eff Unit) -> H.HTML Void i -> VTree
 ```
 
 Render a `HTML` document to a virtual DOM node

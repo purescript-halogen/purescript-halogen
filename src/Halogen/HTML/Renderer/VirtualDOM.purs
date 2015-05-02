@@ -2,6 +2,7 @@ module Halogen.HTML.Renderer.VirtualDOM
   ( renderHTML
   ) where
       
+import Data.Void
 import Data.Array (map)
 import Data.Function    
 import Data.Foldable (for_, foldMap)
@@ -31,9 +32,8 @@ renderAttr dr (A.Finalizer i) = finalizerProp (dr i)
 -- |
 -- | The first argument is an event handler.
 -- | The second argument is used to replace placeholder nodes.
-renderHTML :: forall p i eff. (i -> Eff eff Unit) -> (p -> Widget eff i) -> H.HTML p i -> VTree
-renderHTML f g = go
+renderHTML :: forall i eff. (i -> Eff eff Unit) -> H.HTML Void i -> VTree
+renderHTML f = go
   where
   go (H.Text s) = vtext s
-  go (H.Placeholder p) = vwidget f (g p)
   go (H.Element name attrs els) = vnode (H.runTagName name) (foldMap (renderAttr f) attrs) (map go els)

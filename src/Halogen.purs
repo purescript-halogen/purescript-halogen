@@ -42,7 +42,7 @@ import qualified Halogen.HTML.Renderer.VirtualDOM as R
 import Halogen.Signal
 import Halogen.Component
 import Halogen.HTML.Events.Monad 
-import Halogen.Internal.VirtualDOM (VTree(), Patch(), Widget(), diff, patch, createElement)
+import Halogen.Internal.VirtualDOM (VTree(), Patch(), diff, patch, createElement)
 
 -- | Wraps the effects required by the `runUI` function.
 type HalogenEffects eff = (trace :: Trace, ref :: Ref, dom :: DOM | eff)
@@ -76,7 +76,7 @@ type Driver i eff = i -> Eff (HalogenEffects eff) Unit
 -- | to set up the application and create the driver function, which can be used to 
 -- | send inputs to the UI from external components.
 runUI :: forall req eff.
-           Component (Widget (HalogenEffects eff) req) (Event (HalogenEffects eff)) req req ->
+           Component Void (Event (HalogenEffects eff)) req req ->
            Eff (HalogenEffects eff) (Tuple HTMLElement (Driver req eff))
 runUI sf = do
   ref <- newRef Nothing
@@ -85,10 +85,10 @@ runUI sf = do
 -- | Internal function used in the implementation of `runUI`.
 runUI' :: forall req eff.
             RefVal (Maybe { signal :: SF req Patch, node :: HTMLElement }) ->
-            Component (Widget (HalogenEffects eff) req) (Event (HalogenEffects eff)) req req ->
+            Component Void (Event (HalogenEffects eff)) req req ->
             Eff (HalogenEffects eff) (Tuple HTMLElement (Driver req eff))
 runUI' ref sf = do
-  let render = R.renderHTML requestHandler widgetHandler
+  let render = R.renderHTML requestHandler
       vtrees = render <$> sf
       diffs  = tail vtrees >>> changes (head vtrees) 
       node   = createElement (head vtrees)  
@@ -98,9 +98,6 @@ runUI' ref sf = do
   where
   requestHandler :: Event (HalogenEffects eff) req -> Eff (HalogenEffects eff) Unit
   requestHandler aff = unsafeInterleaveEff $ runEvent logger driver aff
-  
-  widgetHandler :: Widget (HalogenEffects eff) req -> Widget (HalogenEffects eff) (Event (HalogenEffects eff) req)
-  widgetHandler = (pure <$>)
   
   logger :: Error -> Eff (HalogenEffects eff) Unit
   logger e = trace $ "Uncaught error in asynchronous code: " <> message e
