@@ -5,13 +5,12 @@
 #### `renderHTML`
 
 ``` purescript
-renderHTML :: forall i eff. (i -> Eff eff Unit) -> H.HTML Void i -> VTree
+renderHTML :: forall i eff. (i -> Eff eff Unit) -> H.HTML i -> VTree
 ```
 
 Render a `HTML` document to a virtual DOM node
 
 The first argument is an event handler.
-The second argument is used to replace placeholder nodes.
 
 
 ## Module Halogen.HTML.Renderer.String
@@ -19,7 +18,7 @@ The second argument is used to replace placeholder nodes.
 #### `renderHTMLToString`
 
 ``` purescript
-renderHTMLToString :: forall i. H.HTML Void i -> String
+renderHTMLToString :: forall i. H.HTML i -> String
 ```
 
 Render a HTML document as a `String`, usually for testing purposes.

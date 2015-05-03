@@ -116,35 +116,19 @@ Note: this is considered an advanced use case - incorrect use of this feature co
 
 The `Halogen` module defines the `runUI` function, which interprets our pure model of the UI, using `virtual-dom` to render it to the DOM and attach any necessary event handlers.
 
-The `Component` type describes all of the data which is needed by `runUI`:
+The `Component` type synonym describes all of the data which is needed by `runUI`:
 
 ```purescript
-data Component p m req res
+type Component m req res = SF1 req (HTML (m res))
 ```
 
-There are several type parameters here:
+There are three type parameters here:
 
-- `p` and `m` have the same interpretation as for `HTML`. They represent placeholders and the effects with which we generate inputs respectively.
+- `m` has the same interpretation as for `HTML`. It represents the effects with which we generate inputs respectively.
 - `req` is the type of input messages, or _requests_.
 - `res` is the type of output messages, or _responses_.
 
-`Component` represents a reusable component, which can maintain its own internal state, use its own internal messages, perform asynchronous actions. Components present an API to the application by means of the `req` and `res` types.
-
-It is easy to create a `Component` from a signal function, using the `component` function:
-
-```purescript
-component :: forall p m req res. (Functor m) => SF1 req (HTML p (m res)) -> Component p m req res
-```
-
-But components are more than just signal functions. They can send and receive internal messages, as demonstrated by the `component'` function:
-
-```purescript
-component' :: forall p m req res i. SF1 (Either i req) (HTML p (m (Either i res))) -> Component p m req res
-``` 
-
-Third party components can also be turned into `Component`s, using the `widget` function.
-
-`Component` provides an instance for the `Profunctor` class, and some other useful combinators so that components can be composed to create useful applications.
+`Component` represents a reusable component, which can maintain its own internal state and perform asynchronous actions. Components present an API to the application by means of the `req` and `res` types.
 
 The Ace editor example demonstrates how components can be composed.
 
@@ -155,10 +139,10 @@ Here is a simple example. The `ui` function defines a component which responds t
 ```purescript
 data Input = Click
 
-ui :: forall p m. Component p m Input Input
+ui :: forall m. Component m Input Input
 ui = component (render <$> stateful 0 update)
   where
-  render :: Number -> HTML p (m Input)
+  render :: Number -> HTML (m Input)
   render n = button [onclick $ input \_ -> Click] [ text (show n) ]
   
   update :: Number -> Input -> Number
@@ -169,7 +153,7 @@ main = do
   -- Render the node to the DOM
 ```
 
-Here, the user interface is represented as a signal function which is wrapped in a `Component`. Notice that the type signatures are actually quite simple. Because we are not using placeholders or effects, we can keep the type arguments `p` and `m` polymorphic.
+Here, the user interface is represented as a signal function. Notice that the type signatures are actually quite simple. Because we are not using effects, we can keep the type argument `m` polymorphic.
 
 ## Handling Events
 

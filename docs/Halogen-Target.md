@@ -15,6 +15,27 @@ data URL
 
 A type-safe wrapper for a URL
 
+#### `eqURL`
+
+``` purescript
+instance eqURL :: Eq URL
+```
+
+
+#### `semigroupURL`
+
+``` purescript
+instance semigroupURL :: Semigroup URL
+```
+
+
+#### `showURL`
+
+``` purescript
+instance showURL :: Show URL
+```
+
+
 #### `url`
 
 ``` purescript
