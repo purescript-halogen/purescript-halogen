@@ -23,6 +23,16 @@ import qualified Halogen.HTML.Events.Handler as E
 -- | A type-safe wrapper for a URL
 data URL = URL String
 
+instance eqURL :: Eq URL where
+  (==) (URL a) (URL b) = a == b
+  (/=) a       b       = not (a == b)
+
+instance semigroupURL :: Semigroup URL where
+  (<>) (URL a) (URL b) = URL (a <> b)
+
+instance showURL :: Show URL where
+  show (URL a) = "url " ++ show a
+
 -- | Create a `URL`
 url :: String -> URL
 url = URL
