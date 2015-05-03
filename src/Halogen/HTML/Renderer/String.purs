@@ -9,7 +9,6 @@ import Data.String (joinWith)
 import Data.Foldable (foldMap)
 import Data.Monoid
 import Data.Exists
-import Data.Void
 
 import Control.Monad.Eff
 import Control.Monad.Eff.Unsafe (unsafeInterleaveEff)
@@ -24,7 +23,7 @@ renderAttr (A.Attr e) = runExists (\(A.AttrF f key value) -> Just $ A.runAttribu
 renderAttr _ = Nothing
 
 -- | Render a HTML document as a `String`, usually for testing purposes.
-renderHTMLToString :: forall i. H.HTML Void i -> String
+renderHTMLToString :: forall i. H.HTML i -> String
 renderHTMLToString (H.Text s) = s
 renderHTMLToString (H.Element name attrs els) =
   "<" <> H.runTagName name <> 

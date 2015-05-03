@@ -60,7 +60,7 @@ main = do
 #### `runUI`
 
 ``` purescript
-runUI :: forall req eff. Component Void (Event (HalogenEffects eff)) req req -> Eff (HalogenEffects eff) (Tuple HTMLElement (Driver req eff))
+runUI :: forall req eff. Component (Event (HalogenEffects eff)) req req -> Eff (HalogenEffects eff) (Tuple HTMLElement (Driver req eff))
 ```
 
 `runUI` renders a `Component` to the DOM using `virtual-dom`.
@@ -72,7 +72,7 @@ send inputs to the UI from external components.
 #### `runUIWith`
 
 ``` purescript
-runUIWith :: forall req eff. Component Void (Event (HalogenEffects eff)) req req -> (HTMLElement -> Driver req eff -> Eff (HalogenEffects eff) Unit) -> Eff (HalogenEffects eff) (Tuple HTMLElement (Driver req eff))
+runUIWith :: forall req eff. Component (Event (HalogenEffects eff)) req req -> (HTMLElement -> Driver req eff -> Eff (HalogenEffects eff) Unit) -> Eff (HalogenEffects eff) (Tuple HTMLElement (Driver req eff))
 ```
 
 A variant of `runUI` which supports a _post-render hook_. This allows applications

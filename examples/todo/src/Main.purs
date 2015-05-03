@@ -24,6 +24,7 @@ import Data.DOM.Simple.Window
 
 import Halogen
 import Halogen.Signal
+import Halogen.Component
 
 import qualified Halogen.Mixin.UndoRedo as Undo
 import qualified Halogen.Mixin.Router as Router
@@ -62,10 +63,10 @@ instance inputSupportsUndoRedo :: Undo.SupportsUndoRedo Input where
   toUndoRedo _ = Nothing
 
 -- | The view is a state machine, consuming inputs, and generating HTML documents which in turn, generate new inputs
-ui :: forall p m. (Alternative m) => SF1 Input (H.HTML p (m Input))
+ui :: forall m. (Alternative m) => Component m Input Input
 ui = render <$> stateful (Undo.undoRedoState (State [])) (Undo.withUndoRedo update)
   where
-  render :: forall p. Undo.UndoRedoState State -> H.HTML p (m Input)
+  render :: Undo.UndoRedoState State -> H.HTML (m Input)
   render st =
     case Undo.getState st of
       State ts ->
@@ -75,7 +76,7 @@ ui = render <$> stateful (Undo.undoRedoState (State [])) (Undo.withUndoRedo upda
               , H.div_ (zipWith task ts (0 .. length ts))
               ]
 
-  toolbar :: forall p st. Undo.UndoRedoState st -> H.HTML p (m Input)
+  toolbar :: forall st. Undo.UndoRedoState st -> H.HTML (m Input)
   toolbar st = H.p [ A.class_ B.btnGroup ]
                    [ H.button [ A.classes [ B.btn, B.btnPrimary ]
                               , A.onClick (A.input_ $ NewTask Nothing)
@@ -93,7 +94,7 @@ ui = render <$> stateful (Undo.undoRedoState (State [])) (Undo.withUndoRedo upda
                               [ H.text "Redo" ]
                    ]
 
-  task :: forall p. Task -> Number -> H.HTML p (m Input)
+  task :: Task -> Number -> H.HTML (m Input)
   task (Task task) index = H.p_ <<< pure $
     BI.inputGroup
       (Just (BI.RegularAddOn

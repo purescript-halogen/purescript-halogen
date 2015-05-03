@@ -24,11 +24,9 @@ module Halogen
 import DOM
 import Data.DOM.Simple.Types
 
-import Data.Void
 import Data.Maybe
 import Data.Tuple
 import Data.Either
-import Data.Bifunctor (rmap)
 
 import Debug.Trace
 
@@ -77,7 +75,7 @@ type Driver i eff = i -> Eff (HalogenEffects eff) Unit
 -- | to set up the application and create the driver function, which can be used to 
 -- | send inputs to the UI from external components.
 runUI :: forall req eff.
-           Component Void (Event (HalogenEffects eff)) req req ->
+           Component (Event (HalogenEffects eff)) req req ->
            Eff (HalogenEffects eff) (Tuple HTMLElement (Driver req eff))
 runUI sf = sf `runUIWith` \_ _ -> return unit
 
@@ -88,7 +86,7 @@ runUI sf = sf `runUIWith` \_ _ -> return unit
 -- | This is considered an advanced feature, and should only be used with an understanding of
 -- | the rendering pipeline.
 runUIWith :: forall req eff.
-               Component Void (Event (HalogenEffects eff)) req req ->
+               Component (Event (HalogenEffects eff)) req req ->
                (HTMLElement -> Driver req eff -> Eff (HalogenEffects eff) Unit) -> 
                Eff (HalogenEffects eff) (Tuple HTMLElement (Driver req eff))
 runUIWith sf postRender = do
