@@ -5,11 +5,13 @@ import Data.Maybe
 import Data.Tuple
 import Data.Either
 import Data.Function
-import Data.Profunctor (lmap)
+import Data.Foldable (for_)
 
 import Control.Functor (($>))
 import Control.Bind
+import Control.Monad (when)
 import Control.Monad.Eff
+import Control.Monad.Eff.Ref
 
 import DOM
 
@@ -23,7 +25,6 @@ import Debug.Trace
 import Halogen
 import Halogen.Signal
 import Halogen.Component
-import Halogen.Internal.VirtualDOM (Widget())
 
 import qualified Halogen.HTML as H
 import qualified Halogen.HTML.Attributes as A
@@ -35,81 +36,86 @@ import Ace
 import Ace.Types (EAce(), Editor())
 
 import qualified Ace.Editor as Editor
-
-appendToBody :: forall eff. HTMLElement -> Eff (dom :: DOM | eff) Unit
-appendToBody e = document globalWindow >>= (body >=> flip appendChild e)
+import qualified Ace.EditSession as Session
 
 foreign import createEditorNode
   "function createEditorNode() {\
   \  return document.createElement('div');\
   \}" :: forall eff. Eff (dom :: DOM | eff) HTMLElement
 
--- | The type of inputs to the Ace widget.
-data AceInput = ClearText
+-- | The application state, which stores the current text, and the string most recently 
+-- | copied to the clipboard.
+data State = State String (Maybe String)
 
--- | The type of outputs/events from the Ace widget.
-data AceEvent = TextCopied String
+-- | The type of inputs to the component.
+data Input = TextCopied String | TextChanged String
 
--- | The application state, which stores the string most recently copied to the clipboard.
-data State = State (Maybe String)
-
--- | The complete UI is the union of the events from the widget, and from the controller.
--- | The controller generates the inputs needed by the widget as events, and vice versa.
-type Input = Either AceInput AceEvent
+-- | Custom attributes
+dataAceText :: forall i. String -> A.Attr i
+dataAceText = A.attr $ A.attributeName "data-ace-text"
 
 -- | Using `combine` and `mapP` and some `Profunctor` trickery, we can make the types
 -- | match what is required by `runUI`.
 -- |
 -- | `combine` takes a function which renders two `HTML` elements side-by-side, and
 -- | combines the `Component`s, taking the sum of the input types.
-ui :: forall m eff. (Applicative m) => Component (Widget (HalogenEffects (ace :: EAce | eff)) Input) m Input Input
-ui = mapP (Right <$>) $ lmap swap $ combine render controls aceEditor
+ui :: forall p m eff. (Applicative m) => Component p m Input Input
+ui = render <$> stateful (State "" Nothing) update
   where
-  render :: forall a. H.HTML _ a -> H.HTML _ a -> H.HTML _ a
-  render c1 c2 = H.div [ A.class_ B.container ] [ H.h1_ [ H.text "ace editor" ], c1, c2 ]
-
-  swap :: forall a b. Either a b -> Either b a
-  swap = either Right Left
-
--- | The UI for the controls.
--- |
--- | The controls consist of a 'Clear' button, and a label which displays the most recently
--- | copied string.
--- |
--- | Note that the input and output/event types are reversed here.
-controls :: forall p m eff. (Applicative m) => Component p m AceEvent AceInput
-controls = render <$> stateful (State Nothing) update
-  where
-  render :: State -> H.HTML _ (m AceInput)
-  render (State copied) =
-    H.div_ [ H.p_ [ H.button [ A.classes [B.btn, B.btnPrimary]
-                             , A.onClick (A.input_ ClearText)
-                             ] [ H.text "Clear" ]
-                  ]
-           , H.p_ [ H.text (maybe "" ("Text copied: " <>) copied) ]
-           ]
-
-  update :: State -> AceEvent -> State
-  update (State _) (TextCopied copied) = State (Just copied)
-
--- | The Ace editor is represented as a `Component`, created using `Component.widget`.
-aceEditor :: forall m eff. (Functor m) => Component (Widget (HalogenEffects (ace :: EAce | eff)) AceEvent) m AceInput AceEvent
-aceEditor = widget { name: "AceEditor", id: "editor1", init: init, update: update, destroy: destroy }
-  where
-  init :: forall eff. (AceEvent -> Eff (ace :: EAce, dom :: DOM | eff) Unit) -> Eff (ace :: EAce, dom :: DOM | eff) { context :: Editor, node :: HTMLElement }
-  init driver = do
-    node <- createEditorNode
-    editor <- Ace.editNode node ace
-    Editor.setTheme "ace/theme/monokai" editor
-    Editor.onCopy editor (driver <<< TextCopied)
-    return { context: editor, node: node }
-
-  update :: forall eff. AceInput -> Editor -> HTMLElement -> Eff (ace :: EAce, dom :: DOM | eff) (Maybe HTMLElement)
-  update ClearText editor _ = Editor.setValue "" Nothing editor $> Nothing
-
-  destroy :: forall eff. Editor -> HTMLElement -> Eff (ace :: EAce, dom :: DOM | eff) Unit
-  destroy editor _ = Editor.destroy editor
+  render :: State -> H.HTML _ (m Input)
+  render (State text copied) =
+    H.div [ A.class_ B.container ]
+          [ H.h1_ [ H.text "ace editor" ]
+          , H.div_ [ H.p_ [ H.button [ A.classes [ B.btn, B.btnPrimary ]
+                                     , A.onClick (A.input_ (TextChanged ""))
+                                     ] [ H.text "Clear" ]
+                          ]
+                   , H.p_ [ H.text (maybe "" ("Text copied: " <>) copied) ]
+                   ]
+          , H.div [ dataAceText text ] []
+          ]
+          
+  update :: State -> Input -> State
+  update (State text _) (TextCopied copied) = State text (Just copied)
+  update (State _ copied) (TextChanged text) = State text copied
 
 main = do
-  Tuple node _ <- runUI ui
-  appendToBody node
+  -- A RefVal is used to manage widget state.
+  -- In practice, this data store might need to be more complex, mapping component IDs to individual states.
+  editorRef <- newRef Nothing    
+    
+  Tuple node driver <- runUIWith ui (updateAce editorRef)
+  
+  doc <- document globalWindow
+  b <- body doc
+  b `appendChild` node
+  
+  -- Set up the Ace editor
+  els <- querySelector "[data-ace-text]" b
+  for_ els \el -> do
+    -- Setup the Ace editor
+    editor <- Ace.editNode el ace
+    session <- Editor.getSession editor
+    writeRef editorRef (Just editor)
+    Editor.setTheme "ace/theme/monokai" editor
+    -- Set up event handlers
+    Editor.onCopy editor (driver <<< TextCopied)
+    Session.onChange session do
+      text <- Editor.getValue editor
+      driver $ TextChanged text
+      
+  where 
+  updateAce :: RefVal _ -> HTMLElement -> _ -> Eff _ Unit
+  updateAce editorRef el _ = do
+    doc <- document globalWindow
+    b <- body doc
+    els <- querySelector "[data-ace-text]" b
+
+    Just editor <- readRef editorRef
+    
+    for_ els \el -> do
+      -- Set the editor's content to the current value
+      text <- getAttribute "data-ace-text" el
+      current <- Editor.getValue editor
+      when (text /= current) $ void $
+        Editor.setValue text Nothing editor

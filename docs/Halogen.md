@@ -69,5 +69,18 @@ This function is the workhorse of the Halogen library. It can be called in `main
 to set up the application and create the driver function, which can be used to 
 send inputs to the UI from external components.
 
+#### `runUIWith`
+
+``` purescript
+runUIWith :: forall req eff. Component Void (Event (HalogenEffects eff)) req req -> (HTMLElement -> Driver req eff -> Eff (HalogenEffects eff) Unit) -> Eff (HalogenEffects eff) (Tuple HTMLElement (Driver req eff))
+```
+
+A variant of `runUI` which supports a _post-render hook_. This allows applications
+to support third-party components or other custom behaviors by modifying the DOM after
+each update.
+
+This is considered an advanced feature, and should only be used with an understanding of
+the rendering pipeline.
+
 
 

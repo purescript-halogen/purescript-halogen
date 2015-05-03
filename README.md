@@ -100,17 +100,15 @@ See the AJAX example for a demonstration of the `Event` monad.
 
 ## Third-Party Components
 
-Halogen provides a simple way to incorporate third-party components into UIs. In the interest of keeping our signal function pure, we don't simply extend the `HTML` type with arbitrary DOM content, but instead provide the ability to add _placeholder_ nodes to a `HTML` document. We tag placeholders with a type argument `p`:
+Halogen's components are pure functions of application state, which means that it can be difficult to interoperate with third-party Javascript components, which are often written in a very imperative style.
 
-```purescript
-type UI5 m p input = SF input (HTML p (m input)) 
-```
+Halogen provides a low-level mechanism for dealing with third-party components and other customizations, in the form of _post-render hooks_.
 
-In practice, Halogen chooses `p` to be the type `Widget eff input`, which describes a `virtual-dom` widget, but as with the type argument `m`, leaving things polymorphic has the advantage that we can choose to interpret our model in a different way for testing.
+The `runUIWith` function accepts an extra parameter, a function which will be called whenever the DOM is updated. By using this function in conjunction with custom data attributes, it is possible to synchronize the internal state of a third-party component with your component's internal state.
 
-The `p` type parameter also gives us a way to "graft" HTML documents at a point which is marked by a placeholder. We can think of the type `HTML p a` as describing HTML documents with "holes" marked with values of type `p`.
+See the `examples/ace` directory for a worked example.
 
-See the Ace editor example for a demonstration of placeholders.
+Note: this is considered an advanced use case - incorrect use of this feature could lead to unexpected behavior, so it is recommended that you understand the rendering pipeline before using post-render hooks.
 
 ## Components
 
