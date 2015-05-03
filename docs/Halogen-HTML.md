@@ -2161,6 +2161,27 @@ disabled :: forall i. Boolean -> Attr i
 ```
 
 
+#### `required`
+
+``` purescript
+required :: forall i. Boolean -> Attr i
+```
+
+
+#### `readonly`
+
+``` purescript
+readonly :: forall i. Boolean -> Attr i
+```
+
+
+#### `spellcheck`
+
+``` purescript
+spellcheck :: forall i. Boolean -> Attr i
+```
+
+
 #### `enabled`
 
 ``` purescript

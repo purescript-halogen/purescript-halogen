@@ -16,7 +16,6 @@ import Data.DOM.Simple.Window
 
 import Halogen
 import Halogen.Signal
-import Halogen.Component
 
 import qualified Halogen.HTML as H
 import qualified Halogen.HTML.Attributes as A
@@ -35,8 +34,8 @@ data State = State Number
 -- | Inputs to the state machine
 data Input = Tick
 
-ui :: forall p m eff. (Applicative m) => Component p m Input Input
-ui = component (render <$> stateful (State 0) update)
+ui :: forall p m eff. (Applicative m) => SF1 Input (H.HTML p (m Input))
+ui = render <$> stateful (State 0) update
   where
   render :: State -> H.HTML p (m Input)
   render (State n) = 
