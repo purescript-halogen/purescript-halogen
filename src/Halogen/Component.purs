@@ -7,8 +7,6 @@ module Halogen.Component
   , install
   , combine
   
-  , widget
-  
   , mapP
   , hoistComponent
   ) where
@@ -23,10 +21,7 @@ import Data.Bifunctor (lmap, rmap)
 import Control.Monad.Eff
 
 import Halogen.HTML (HTML(), placeholder, graft)
-import Halogen.Signal (SF(), SF1(), mergeWith, stateful, startingAt, input, tail)
-import Halogen.Internal.VirtualDOM (Widget())
-
-import qualified Halogen.HTML.Widget as W
+import Halogen.Signal (SF1(), mergeWith)
       
 -- | A component.
 -- | 
@@ -47,56 +42,6 @@ import qualified Halogen.HTML.Widget as W
 -- | If you do not use a particular feature (e.g. placeholders, requests), you might like to leave 
 -- | the corresponding type parameter unconstrained in the declaration of your component. 
 type Component p m req res = SF1 req (HTML p (m res))
-
--- | Construct a `Component` from a third-party widget.
--- |
--- | The function argument is a record with the following properties:
--- |
--- | - `name` - the type of the widget, required by `virtual-dom` to distinguish different
--- |   types of widget.
--- | - `id` - a unique ID which belongs to this instance of the widget type, required by 
--- |   `virtual-dom` to distinguish widgets from each other.
--- | - `init` - an action which initializes the component and returns the `HTMLElement` it corresponds
--- |   to in the DOM. This action receives the driver function for the component so that it can
--- |   generate events. It can also create a piece of state of type `s` which is shared with the
--- |   other lifecycle functions.
--- | - `update` - Update the widget based on an input message.
--- | - `destroy` - Release any resources associated with the widget as it is about to be removed
--- |   from the DOM.
-widget :: forall eff req res ctx m. 
-  (Functor m) => 
-  { name    :: String
-  , id      :: String
-  , init    :: (res -> Eff eff Unit) -> Eff eff { context :: ctx, node :: HTMLElement }
-  , update  :: req -> ctx -> HTMLElement -> Eff eff (Maybe HTMLElement)
-  , destroy :: ctx -> HTMLElement -> Eff eff Unit
-  } -> 
-  Component (Widget eff res) m req res
-widget spec = placeholder <$> ((updateWith <$> input <*> version) `startingAt` w0)
-  where
-  w0 :: Widget eff res
-  w0 = buildWidget zero (\_ _ _ _ -> return Nothing)
-      
-  updateWith :: req -> Int -> Widget eff res
-  updateWith i n = buildWidget n updateIfVersionChanged
-    where
-    updateIfVersionChanged :: Int -> Int -> ctx -> HTMLElement -> Eff eff (Maybe HTMLElement)
-    updateIfVersionChanged new old 
-      | new > old = spec.update i
-      | otherwise = \_ _ -> return Nothing
-  
-  buildWidget :: Int -> (Int -> Int -> ctx -> HTMLElement -> Eff eff (Maybe HTMLElement)) -> Widget eff res
-  buildWidget ver update = W.widget
-    { value: ver
-    , name: spec.name
-    , id: spec.id
-    , init: spec.init
-    , update: update
-    , destroy: spec.destroy 
-    } 
-    
-  version :: forall i. SF i Int
-  version = tail $ stateful zero (\i _ -> i + one)
   
 -- | Map a function over the placeholders in a component          
 mapP :: forall p q m req res. (p -> q) -> Component p m req res -> Component q m req res

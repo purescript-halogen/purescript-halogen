@@ -18,6 +18,7 @@ module Halogen
   , changes
   
   , runUI
+  , runUIWith
   ) where
     
 import DOM
@@ -42,7 +43,7 @@ import qualified Halogen.HTML.Renderer.VirtualDOM as R
 import Halogen.Signal
 import Halogen.Component
 import Halogen.HTML.Events.Monad 
-import Halogen.Internal.VirtualDOM (VTree(), Patch(), Widget(), diff, patch, createElement)
+import Halogen.Internal.VirtualDOM (VTree(), Patch(), diff, patch, createElement)
 
 -- | Wraps the effects required by the `runUI` function.
 type HalogenEffects eff = (trace :: Trace, ref :: Ref, dom :: DOM | eff)
@@ -76,41 +77,48 @@ type Driver i eff = i -> Eff (HalogenEffects eff) Unit
 -- | to set up the application and create the driver function, which can be used to 
 -- | send inputs to the UI from external components.
 runUI :: forall req eff.
-           Component (Widget (HalogenEffects eff) req) (Event (HalogenEffects eff)) req req ->
+           Component Void (Event (HalogenEffects eff)) req req ->
            Eff (HalogenEffects eff) (Tuple HTMLElement (Driver req eff))
-runUI sf = do
-  ref <- newRef Nothing
-  runUI' ref sf
+runUI sf = sf `runUIWith` \_ _ -> return unit
 
--- | Internal function used in the implementation of `runUI`.
-runUI' :: forall req eff.
-            RefVal (Maybe { signal :: SF req Patch, node :: HTMLElement }) ->
-            Component (Widget (HalogenEffects eff) req) (Event (HalogenEffects eff)) req req ->
-            Eff (HalogenEffects eff) (Tuple HTMLElement (Driver req eff))
-runUI' ref sf = do
-  let render = R.renderHTML requestHandler widgetHandler
-      vtrees = render <$> sf
-      diffs  = tail vtrees >>> changes (head vtrees) 
-      node   = createElement (head vtrees)  
-  writeRef ref $ Just { signal: diffs, node: node }
-  return (Tuple node driver)  
-  
+-- | A variant of `runUI` which supports a _post-render hook_. This allows applications
+-- | to support third-party components or other custom behaviors by modifying the DOM after
+-- | each update.
+-- |
+-- | This is considered an advanced feature, and should only be used with an understanding of
+-- | the rendering pipeline.
+runUIWith :: forall req eff.
+               Component Void (Event (HalogenEffects eff)) req req ->
+               (HTMLElement -> Driver req eff -> Eff (HalogenEffects eff) Unit) -> 
+               Eff (HalogenEffects eff) (Tuple HTMLElement (Driver req eff))
+runUIWith sf postRender = do
+  ref <- newRef Nothing
+  go ref
   where
-  requestHandler :: Event (HalogenEffects eff) req -> Eff (HalogenEffects eff) Unit
-  requestHandler aff = unsafeInterleaveEff $ runEvent logger driver aff
+  go :: RefVal (Maybe { signal :: SF req Patch, node :: HTMLElement }) ->
+        Eff (HalogenEffects eff) (Tuple HTMLElement (Driver req eff))
+  go ref = do
+    let render = R.renderHTML requestHandler
+        vtrees = render <$> sf
+        diffs  = tail vtrees >>> changes (head vtrees) 
+        node   = createElement (head vtrees)  
+    writeRef ref $ Just { signal: diffs, node: node }
+    return (Tuple node driver)  
+    where
+    requestHandler :: Event (HalogenEffects eff) req -> Eff (HalogenEffects eff) Unit
+    requestHandler aff = unsafeInterleaveEff $ runEvent logger driver aff
+    
+    logger :: Error -> Eff (HalogenEffects eff) Unit
+    logger e = trace $ "Uncaught error in asynchronous code: " <> message e
+    
+    driver :: Driver req eff
+    driver e = do
+      ms <- readRef ref
+      case ms of
+        Just { signal: signal, node: node } -> do
+          let next = runSF signal e
+          node' <- patch (head next) node
+          writeRef ref $ Just { signal: tail next, node: node' }
+          postRender node' driver
+        Nothing -> trace "Error: An attempt to re-render was made during the initial render."
   
-  widgetHandler :: Widget (HalogenEffects eff) req -> Widget (HalogenEffects eff) (Event (HalogenEffects eff) req)
-  widgetHandler = (pure <$>)
-  
-  logger :: Error -> Eff (HalogenEffects eff) Unit
-  logger e = trace $ "Uncaught error in asynchronous code: " <> message e
-  
-  driver :: Driver req eff
-  driver e = do
-    ms <- readRef ref
-    case ms of
-      Just { signal: signal, node: node } -> do
-        let next = runSF signal e
-        node' <- patch (head next) node
-        writeRef ref $ Just { signal: tail next, node: node' }
-      Nothing -> trace "Error: An attempt to re-render was made during the initial render."
