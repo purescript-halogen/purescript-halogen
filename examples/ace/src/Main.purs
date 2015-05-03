@@ -59,10 +59,10 @@ dataAceText = A.attr $ A.attributeName "data-ace-text"
 -- |
 -- | `combine` takes a function which renders two `HTML` elements side-by-side, and
 -- | combines the `Component`s, taking the sum of the input types.
-ui :: forall p m eff. (Applicative m) => Component p m Input Input
+ui :: forall m eff. (Applicative m) => Component m Input Input
 ui = render <$> stateful (State "" Nothing) update
   where
-  render :: State -> H.HTML _ (m Input)
+  render :: State -> H.HTML (m Input)
   render (State text copied) =
     H.div [ A.class_ B.container ]
           [ H.h1_ [ H.text "ace editor" ]
