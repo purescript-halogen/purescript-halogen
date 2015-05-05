@@ -35,6 +35,8 @@ module Halogen.HTML.Attributes
   , initializer
   , finalizer
   
+  , key
+  
   , alt
   , charset
   , class_
@@ -209,6 +211,11 @@ instance stylesIsAttribute :: IsAttribute Styles where
   toAttrString _ (Styles m) = joinWith "; " $ (\(Tuple key value) -> key <> ": " <> value) <$> toList m
 
 -- Smart constructors
+
+-- | The `key` property associates a unique key with a node, which can be used to 
+-- | implement a more efficient diff/patch.
+key :: forall i. String -> Attr i
+key = attr $ attributeName "key"
 
 alt :: forall i. String -> Attr i
 alt = attr $ attributeName "alt"

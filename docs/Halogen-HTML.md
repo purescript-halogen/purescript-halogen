@@ -1992,11 +1992,18 @@ instance stylesIsAttribute :: IsAttribute Styles
 ```
 
 
+#### `key`
+
+``` purescript
+key :: forall i. String -> Attr i
+```
+
 #### `alt`
 
 ``` purescript
 alt :: forall i. String -> Attr i
 ```
+
 
 #### `charset`
 
