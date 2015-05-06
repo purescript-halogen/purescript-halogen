@@ -185,6 +185,7 @@ foreign import vnode
   """
   var vnode = (function () {
     var VirtualNode = require('virtual-dom/vnode/vnode');
+    var SoftSetHook = require('virtual-dom/virtual-hyperscript/hooks/soft-set-hook');
     return function (name) {
       return function (attr) {
         return function (children) {
@@ -197,6 +198,9 @@ foreign import vnode
             } else {
               props[key] = attr[key];
             }
+          }
+          if (name === 'input' && props.value !== undefined) {
+            props.value = new SoftSetHook(props.value);
           }
           return new VirtualNode(name, props, children);
         };
