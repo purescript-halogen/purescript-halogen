@@ -105,8 +105,8 @@ main = do
       driver $ TextChanged text
       
   where 
-  updateAce :: RefVal _ -> HTMLElement -> _ -> Eff _ Unit
-  updateAce editorRef el _ = do
+  updateAce :: RefVal _ -> Input -> HTMLElement -> _ -> Eff _ Unit
+  updateAce editorRef (TextChanged _) el _ = do
     doc <- document globalWindow
     b <- body doc
     els <- querySelector "[data-ace-text]" b
@@ -119,3 +119,4 @@ main = do
       current <- Editor.getValue editor
       when (text /= current) $ void $
         Editor.setValue text Nothing editor
+  updateAce _ _ _ _ = return unit

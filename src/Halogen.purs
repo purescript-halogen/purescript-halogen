@@ -77,7 +77,7 @@ type Driver i eff = i -> Eff (HalogenEffects eff) Unit
 runUI :: forall req eff.
            Component (Event (HalogenEffects eff)) req req ->
            Eff (HalogenEffects eff) (Tuple HTMLElement (Driver req eff))
-runUI sf = sf `runUIWith` \_ _ -> return unit
+runUI sf = sf `runUIWith` \_ _ _ -> return unit
 
 -- | A variant of `runUI` which supports a _post-render hook_. This allows applications
 -- | to support third-party components or other custom behaviors by modifying the DOM after
@@ -87,7 +87,7 @@ runUI sf = sf `runUIWith` \_ _ -> return unit
 -- | the rendering pipeline.
 runUIWith :: forall req eff.
                Component (Event (HalogenEffects eff)) req req ->
-               (HTMLElement -> Driver req eff -> Eff (HalogenEffects eff) Unit) -> 
+               (req -> HTMLElement -> Driver req eff -> Eff (HalogenEffects eff) Unit) -> 
                Eff (HalogenEffects eff) (Tuple HTMLElement (Driver req eff))
 runUIWith sf postRender = do
   ref <- newRef Nothing
@@ -110,13 +110,13 @@ runUIWith sf postRender = do
     logger e = trace $ "Uncaught error in asynchronous code: " <> message e
     
     driver :: Driver req eff
-    driver e = do
+    driver req = do
       ms <- readRef ref
       case ms of
         Just { signal: signal, node: node } -> do
-          let next = runSF signal e
+          let next = runSF signal req
           node' <- patch (head next) node
           writeRef ref $ Just { signal: tail next, node: node' }
-          postRender node' driver
+          postRender req node' driver
         Nothing -> trace "Error: An attempt to re-render was made during the initial render."
   
