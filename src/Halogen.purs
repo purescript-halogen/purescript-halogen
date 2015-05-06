@@ -14,11 +14,14 @@
 module Halogen 
   ( HalogenEffects()
   , Driver()
+  , Process()
   
   , changes
   
   , runUI
   , runUIWith
+  
+  , mainLoop
   ) where
     
 import DOM
@@ -27,6 +30,8 @@ import Data.DOM.Simple.Types
 import Data.Maybe
 import Data.Tuple
 import Data.Either
+
+import Data.Profunctor.Strong ((&&&))
 
 import Debug.Trace
 
@@ -89,19 +94,16 @@ runUIWith :: forall req eff.
                Component (Event (HalogenEffects eff)) req req ->
                (req -> HTMLElement -> Driver req eff -> Eff (HalogenEffects eff) Unit) -> 
                Eff (HalogenEffects eff) (Tuple HTMLElement (Driver req eff))
-runUIWith sf postRender = do
-  ref <- newRef Nothing
-  go ref
+runUIWith sf postRender = mainLoop buildProcess
   where
-  go :: RefVal (Maybe { signal :: SF req Patch, node :: HTMLElement }) ->
-        Eff (HalogenEffects eff) (Tuple HTMLElement (Driver req eff))
-  go ref = do
-    let render = R.renderHTML requestHandler
-        vtrees = render <$> sf
-        diffs  = tail vtrees >>> changes (head vtrees) 
-        node   = createElement (head vtrees)  
-    writeRef ref $ Just { signal: diffs, node: node }
-    return (Tuple node driver)  
+  buildProcess :: Driver req eff -> Eff (HalogenEffects eff) (Tuple HTMLElement (Process req eff))
+  buildProcess driver =
+    let render  = R.renderHTML requestHandler
+        vtrees  = render <$> sf
+        diffs   = tail vtrees >>> changes (head vtrees) 
+        process = diffs &&& input
+        node    = createElement (head vtrees)
+    in pure $ Tuple node (applyPatch node <$> process)    
     where
     requestHandler :: Event (HalogenEffects eff) req -> Eff (HalogenEffects eff) Unit
     requestHandler aff = unsafeInterleaveEff $ runEvent logger driver aff
@@ -109,14 +111,42 @@ runUIWith sf postRender = do
     logger :: Error -> Eff (HalogenEffects eff) Unit
     logger e = trace $ "Uncaught error in asynchronous code: " <> message e
     
+    applyPatch :: HTMLElement -> Tuple Patch req -> Eff (HalogenEffects eff) HTMLElement
+    applyPatch node (Tuple p req) = do
+      node' <- patch p node
+      postRender req node driver
+      return node'
+
+-- | A `Process` receives inputs and outputs effectful computations which update the DOM.
+type Process req eff = SF req (Eff (HalogenEffects eff) HTMLElement)
+
+-- | This function provides the low-level implementation of Halogen's DOM update loop.
+-- |
+-- | The first argument is a function which receives the `Driver` function as an argument and
+-- | constructs a `Process` which will update the DOM given an input.
+-- |
+-- | This function could be reused to create other types of applications based on signal functions
+-- | (2D and 3D canvas, text-based, etc.)
+mainLoop :: forall req eff. (Driver req eff -> Eff (HalogenEffects eff) (Tuple HTMLElement (Process req eff))) -> 
+                            Eff (HalogenEffects eff) (Tuple HTMLElement (Driver req eff))
+mainLoop buildProcess = do
+  ref <- newRef Nothing
+  go ref
+  where
+  go :: RefVal (Maybe { process :: Process req eff, node :: HTMLElement }) ->
+        Eff (HalogenEffects eff) (Tuple HTMLElement (Driver req eff))
+  go ref = do
+    Tuple node process <- buildProcess driver
+    writeRef ref $ Just { process: process, node: node }
+    return (Tuple node driver)  
+    where
+
     driver :: Driver req eff
     driver req = do
       ms <- readRef ref
       case ms of
-        Just { signal: signal, node: node } -> do
-          let next = runSF signal req
-          node' <- patch (head next) node
-          writeRef ref $ Just { signal: tail next, node: node' }
-          postRender req node' driver
+        Just { process: process, node: node } -> do
+          let work = runSF process req
+          node' <- head work
+          writeRef ref $ Just { process: tail work, node: node' }
         Nothing -> trace "Error: An attempt to re-render was made during the initial render."
-  
