@@ -31,7 +31,7 @@ import Data.Maybe
 import Data.Tuple
 import Data.Either
 
-import Data.Profunctor.Strong ((&&&))
+import Data.Profunctor.Strong ((&&&), (***))
 
 import Debug.Trace
 
@@ -101,9 +101,9 @@ runUIWith sf postRender = mainLoop buildProcess
     let render  = R.renderHTML requestHandler
         vtrees  = render <$> sf
         diffs   = tail vtrees >>> changes (head vtrees) 
-        process = diffs &&& input
+        process = (diffs &&& input) *** input
         node    = createElement (head vtrees)
-    in pure $ Tuple node (applyPatch node <$> process)    
+    in pure $ Tuple node (applyPatch <$> process)    
     where
     requestHandler :: Event (HalogenEffects eff) req -> Eff (HalogenEffects eff) Unit
     requestHandler aff = unsafeInterleaveEff $ runEvent logger driver aff
@@ -111,14 +111,14 @@ runUIWith sf postRender = mainLoop buildProcess
     logger :: Error -> Eff (HalogenEffects eff) Unit
     logger e = trace $ "Uncaught error in asynchronous code: " <> message e
     
-    applyPatch :: HTMLElement -> Tuple Patch req -> Eff (HalogenEffects eff) HTMLElement
-    applyPatch node (Tuple p req) = do
+    applyPatch :: Tuple (Tuple Patch req) HTMLElement -> Eff (HalogenEffects eff) HTMLElement
+    applyPatch (Tuple (Tuple p req) node) = do
       node' <- patch p node
       postRender req node driver
       return node'
 
 -- | A `Process` receives inputs and outputs effectful computations which update the DOM.
-type Process req eff = SF req (Eff (HalogenEffects eff) HTMLElement)
+type Process req eff = SF (Tuple req HTMLElement) (Eff (HalogenEffects eff) HTMLElement)
 
 -- | This function provides the low-level implementation of Halogen's DOM update loop.
 -- |
@@ -146,7 +146,7 @@ mainLoop buildProcess = do
       ms <- readRef ref
       case ms of
         Just { process: process, node: node } -> do
-          let work = runSF process req
+          let work = runSF process (Tuple req node)
           node' <- head work
           writeRef ref $ Just { process: tail work, node: node' }
         Nothing -> trace "Error: An attempt to re-render was made during the initial render."

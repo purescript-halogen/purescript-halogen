@@ -85,7 +85,7 @@ the rendering pipeline.
 #### `Process`
 
 ``` purescript
-type Process req eff = SF req (Eff (HalogenEffects eff) HTMLElement)
+type Process req eff = SF (Tuple req HTMLElement) (Eff (HalogenEffects eff) HTMLElement)
 ```
 
 A `Process` receives inputs and outputs effectful computations which update the DOM.
