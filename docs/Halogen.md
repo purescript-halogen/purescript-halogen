@@ -82,5 +82,35 @@ each update.
 This is considered an advanced feature, and should only be used with an understanding of
 the rendering pipeline.
 
+#### `Process`
+
+``` purescript
+type Process req eff = SF (Tuple req HTMLElement) (Eff (HalogenEffects eff) HTMLElement)
+```
+
+A `Process` receives inputs and outputs effectful computations which update the DOM.
+
+#### `componentProcess`
+
+``` purescript
+componentProcess :: forall req eff. Component (Event (HalogenEffects eff)) req req -> (req -> HTMLElement -> Driver req eff -> Eff (HalogenEffects eff) Unit) -> Driver req eff -> Eff (HalogenEffects eff) (Tuple HTMLElement (Process req eff))
+```
+
+Build a `Process` from a `Component`.
+
+#### `mainLoop`
+
+``` purescript
+mainLoop :: forall req eff. (Driver req eff -> Eff (HalogenEffects eff) (Tuple HTMLElement (Process req eff))) -> Eff (HalogenEffects eff) (Tuple HTMLElement (Driver req eff))
+```
+
+This function provides the low-level implementation of Halogen's DOM update loop.
+
+The first argument is a function which receives the `Driver` function as an argument and
+constructs a `Process` which will update the DOM given an input.
+
+This function could be reused to create other types of applications based on signal functions
+(2D and 3D canvas, text-based, etc.)
+
 
 
