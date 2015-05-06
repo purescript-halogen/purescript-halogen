@@ -90,6 +90,14 @@ type Process req eff = SF (Tuple req HTMLElement) (Eff (HalogenEffects eff) HTML
 
 A `Process` receives inputs and outputs effectful computations which update the DOM.
 
+#### `componentProcess`
+
+``` purescript
+componentProcess :: forall req eff. Component (Event (HalogenEffects eff)) req req -> (req -> HTMLElement -> Driver req eff -> Eff (HalogenEffects eff) Unit) -> Driver req eff -> Eff (HalogenEffects eff) (Tuple HTMLElement (Process req eff))
+```
+
+Build a `Process` from a `Component`.
+
 #### `mainLoop`
 
 ``` purescript
