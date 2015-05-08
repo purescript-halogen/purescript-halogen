@@ -122,7 +122,7 @@ componentProcess sf postRender driver =
   applyPatch :: Tuple (Tuple Patch req) HTMLElement -> Eff (HalogenEffects eff) HTMLElement
   applyPatch (Tuple (Tuple p req) node) = do
     node' <- patch p node
-    postRender req node driver
+    postRender req node' driver
     return node'
 
 -- | This function provides the low-level implementation of Halogen's DOM update loop.
