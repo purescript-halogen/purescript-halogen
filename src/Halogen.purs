@@ -38,7 +38,6 @@ import Debug.Trace
 
 import Control.Monad.Eff
 import Control.Monad.Eff.Ref
-import Control.Monad.Eff.Unsafe (unsafeInterleaveEff)
 import Control.Monad.Eff.Exception
     
 import qualified Halogen.HTML as H
@@ -95,7 +94,7 @@ runUIWith :: forall req eff.
                Component (Event (HalogenEffects eff)) req req ->
                (req -> HTMLElement -> Driver req eff -> Eff (HalogenEffects eff) Unit) -> 
                Eff (HalogenEffects eff) (Tuple HTMLElement (Driver req eff))
-runUIWith sf postRender = mainLoop (componentProcess sf postRender)
+runUIWith sf postRender = mainLoop (pure <<< componentProcess sf postRender)
 
 -- | A `Process` receives inputs and outputs effectful computations which update the DOM.
 type Process req eff = SF (Tuple req HTMLElement) (Eff (HalogenEffects eff) HTMLElement)
@@ -105,21 +104,21 @@ componentProcess :: forall req eff.
                       Component (Event (HalogenEffects eff)) req req ->
                       (req -> HTMLElement -> Driver req eff -> Eff (HalogenEffects eff) Unit) -> 
                       Driver req eff -> 
-                      Eff (HalogenEffects eff) (Tuple HTMLElement (Process req eff))
+                      Tuple HTMLElement (Process req eff)
 componentProcess sf postRender driver =
   let render  = R.renderHTML requestHandler
       vtrees  = render <$> sf
-      diffs   = tail vtrees >>> changes (head vtrees) 
+      diffs   = tail vtrees >>> changes (head vtrees)
       process = (diffs &&& input) *** input
       node    = createElement (head vtrees)
-  in pure $ Tuple node (applyPatch <$> process)    
+  in Tuple node (applyPatch <$> process)
   where
   requestHandler :: Event (HalogenEffects eff) req -> Eff (HalogenEffects eff) Unit
-  requestHandler aff = unsafeInterleaveEff $ runEvent logger driver aff
-  
+  requestHandler aff = runEvent logger driver aff
+
   logger :: Error -> Eff (HalogenEffects eff) Unit
   logger e = trace $ "Uncaught error in asynchronous code: " <> message e
-  
+
   applyPatch :: Tuple (Tuple Patch req) HTMLElement -> Eff (HalogenEffects eff) HTMLElement
   applyPatch (Tuple (Tuple p req) node) = do
     node' <- patch p node
