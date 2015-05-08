@@ -27,6 +27,7 @@ module Halogen
     
 import DOM
 import Data.DOM.Simple.Types
+import Data.DOM.Simple.Window
 
 import Data.Maybe
 import Data.Tuple
@@ -122,7 +123,7 @@ componentProcess sf postRender driver =
   applyPatch :: Tuple (Tuple Patch req) HTMLElement -> Eff (HalogenEffects eff) HTMLElement
   applyPatch (Tuple (Tuple p req) node) = do
     node' <- patch p node
-    postRender req node' driver
+    setTimeout globalWindow 0 $ postRender req node' driver
     return node'
 
 -- | This function provides the low-level implementation of Halogen's DOM update loop.
