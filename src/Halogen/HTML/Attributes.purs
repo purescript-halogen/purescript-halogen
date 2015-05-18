@@ -14,10 +14,6 @@ module Halogen.HTML.Attributes
   , eventName
   , runEventName
   
-  , Styles()
-  , styles
-  , runStyles
-  
   , IsAttribute
   , toAttrString
   
@@ -65,7 +61,6 @@ module Halogen.HTML.Attributes
   , checked
   , selected
   , placeholder
-  , style
   ) where
 
 import DOM
@@ -74,7 +69,6 @@ import Data.Maybe
 import Data.Tuple
 import Data.Either (either)
 import Data.Foreign
-import Data.StrMap (StrMap(), toList)
 import Data.Monoid (mempty)
 import Data.Array (map)
 import Data.String (joinWith)
@@ -180,17 +174,6 @@ eventName = EventName
 runEventName :: forall fields. EventName fields -> String
 runEventName (EventName s) = s
 
--- | A newtype for CSS styles
-newtype Styles = Styles (StrMap String)
-
--- Create CSS styles
-styles :: StrMap String -> Styles
-styles = Styles
-
--- | Unpack CSS styles
-runStyles :: Styles -> StrMap String
-runStyles (Styles m) = m
-
 -- | This type class captures those types which can be used as attribute values.
 -- |
 -- | `toAttrString` is an alternative to `show`, and is needed by `attr` in the string renderer.
@@ -205,10 +188,7 @@ instance numberIsAttribute :: IsAttribute Number where
   
 instance booleanIsAttribute :: IsAttribute Boolean where
   toAttrString name true = runAttributeName name
-  toAttrString _ false = "" 
-  
-instance stylesIsAttribute :: IsAttribute Styles where
-  toAttrString _ (Styles m) = joinWith "; " $ (\(Tuple key value) -> key <> ": " <> value) <$> toList m
+  toAttrString _ false = ""
 
 -- Smart constructors
 
@@ -300,6 +280,3 @@ selected = attr $ attributeName "selected"
    
 placeholder :: forall i. String -> Attr i
 placeholder = attr $ attributeName "placeholder"
-
-style :: forall i. Styles -> Attr i
-style = attr $ attributeName "style"

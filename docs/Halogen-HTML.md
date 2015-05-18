@@ -1931,28 +1931,6 @@ runEventName :: forall fields. EventName fields -> String
 
 Unpack an event name
 
-#### `Styles`
-
-``` purescript
-newtype Styles
-```
-
-A newtype for CSS styles
-
-#### `styles`
-
-``` purescript
-styles :: StrMap String -> Styles
-```
-
-#### `runStyles`
-
-``` purescript
-runStyles :: Styles -> StrMap String
-```
-
-Unpack CSS styles
-
 #### `IsAttribute`
 
 ``` purescript
@@ -1982,13 +1960,6 @@ instance numberIsAttribute :: IsAttribute Number
 
 ``` purescript
 instance booleanIsAttribute :: IsAttribute Boolean
-```
-
-
-#### `stylesIsAttribute`
-
-``` purescript
-instance stylesIsAttribute :: IsAttribute Styles
 ```
 
 
@@ -2191,13 +2162,6 @@ selected :: forall i. Boolean -> Attr i
 
 ``` purescript
 placeholder :: forall i. String -> Attr i
-```
-
-
-#### `style`
-
-``` purescript
-style :: forall i. Styles -> Attr i
 ```
 
 

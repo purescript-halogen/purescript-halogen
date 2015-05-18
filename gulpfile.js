@@ -30,6 +30,10 @@ var paths = {
             src: [ 'src/Halogen/HTML.purs', 'src/Halogen/HTML/Attributes.purs' ]
         }, 
         {
+            dest: 'docs/Halogen-HTML-CSS.md',
+            src: 'src/Halogen/HTML/CSS.purs'
+        }, 
+        {
             dest: 'docs/Halogen-Component.md',
             src: 'src/Halogen/Component.purs'
         }, 
