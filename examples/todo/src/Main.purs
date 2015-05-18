@@ -34,9 +34,13 @@ import qualified Halogen.HTML.Attributes as A
 import qualified Halogen.HTML.Events as A
 import qualified Halogen.HTML.Events.Forms as A
 import qualified Halogen.HTML.Events.Handler as E
+import qualified Halogen.HTML.CSS as CSS
 
 import qualified Halogen.Themes.Bootstrap3 as B
 import qualified Halogen.Themes.Bootstrap3.InputGroup as BI
+
+import Css.Size (em)
+import Css.Font (fontSize)
 
 appendToBody :: forall eff. HTMLElement -> Eff (dom :: DOM | eff) Unit
 appendToBody e = document globalWindow >>= (body >=> flip appendChild e)
@@ -71,7 +75,7 @@ ui = render <$> stateful (Undo.undoRedoState (State [])) (Undo.withUndoRedo upda
     case Undo.getState st of
       State ts ->
         H.div [ A.class_ B.container ]
-              [ H.h1 [ A.id_ "header" ] [ H.text "todo list" ]
+              [ H.h1 [ CSS.style (fontSize (em 3.0)) ] [ H.text "todo list" ]
               , toolbar st
               , H.div_ (zipWith task ts (0 .. length ts))
               ]

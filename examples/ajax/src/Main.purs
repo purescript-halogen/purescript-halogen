@@ -39,7 +39,14 @@ import qualified Halogen.HTML.Events.Forms as A
 import qualified Halogen.HTML.Events.Handler as E
 import qualified Halogen.HTML.Events.Monad as E
 
+import qualified Halogen.HTML.CSS as CSS
+
 import qualified Halogen.Themes.Bootstrap3 as B
+
+import Css.Font
+import Css.Size (px)
+import Css.String
+import Css.Geometry (height)
 
 import Network.HTTP.Affjax
 
@@ -66,6 +73,9 @@ data Input
   | SetCode String
   | SetResult String
 
+monospace :: GenericFontFamily
+monospace = GenericFontFamily $ fromString "monospace"
+
 ui :: forall eff. Component (E.Event (HalogenEffects (ajax :: AJAX | eff))) Input Input
 ui = render <$> stateful (State false exampleCode Nothing) update
   where
@@ -77,10 +87,9 @@ ui = render <$> stateful (State false exampleCode Nothing) update
           , H.p_ [ H.textarea [ A.class_ B.formControl
                               , A.value code
                               , A.onInput (A.input SetCode)
-                              , A.style (A.styles $ StrMap.fromList
-                                          [ Tuple "font-family" "monospace"
-                                          , Tuple "height" "200px"
-                                          ])
+                              , CSS.style do
+                                  fontFamily [] (pure monospace)
+                                  height (px 200)
                               ] [] ]
           , H.p_ [ H.button [ A.classes [B.btn, B.btnPrimary]
                             , A.disabled busy
