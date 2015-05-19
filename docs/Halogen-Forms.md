@@ -26,7 +26,7 @@ Attach an event handler which will fire when a checkbox is checked or unchecked
 #### `onInput`
 
 ``` purescript
-onInput :: forall f value i. (Alternative f, IsForeign value) => (value -> EventHandler (f i)) -> H.Attr (f i)
+onInput :: forall f i. (Alternative f) => (String -> EventHandler (f i)) -> H.Attr (f i)
 ```
 
 Attach an event handler which will fire on input
