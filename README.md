@@ -20,6 +20,8 @@ A declarative, type-safe UI library for PureScript.
 
 ## Introduction
 
+[Watch Phil Freeman's presentation on Halogen from PureScript Conf 2015](https://www.youtube.com/watch?v=AbDX-wRigAo).
+
 `purescript-halogen` is a simple reactive UI library built on top of `virtual-dom`. It aims to answer the following questions:
 
 - How can we describe web pages as pure functions of application state? 
