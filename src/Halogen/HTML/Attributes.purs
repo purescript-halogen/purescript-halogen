@@ -40,6 +40,7 @@ module Halogen.HTML.Attributes
   , colSpan
   , rowSpan
   , content
+  , data_
   , for
   , height
   , href
@@ -217,6 +218,9 @@ rowSpan = attr (attributeName "rowSpan") <<< show
 
 content :: forall i. String -> Attr i
 content = attr $ attributeName "content"
+
+data_ :: forall i. String -> Attr i
+data_ = attr $ attributeName "data"
 
 for :: forall i. String -> Attr i
 for = attr $ attributeName "for"
