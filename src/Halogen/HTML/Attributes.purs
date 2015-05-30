@@ -219,7 +219,7 @@ content :: forall i. String -> Attr i
 content = attr $ attributeName "content"
 
 for :: forall i. String -> Attr i
-for = attr $ attributeName "for"
+for = attr $ attributeName "htmlFor"
 
 height :: forall i. Number -> Attr i
 height = attr (attributeName "height") <<< show
