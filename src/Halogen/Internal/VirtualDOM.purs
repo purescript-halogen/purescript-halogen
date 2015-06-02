@@ -233,7 +233,7 @@ foreign import vnode
           if (name === 'input' && props.value !== undefined) {
             props.value = new SoftSetHook(props.value);
           }
-          return new VirtualNode(name, props, children, attr.key);
+          return new VirtualNode(name, props, children, attr.key, attr.namespace);
         };
       };
     };
