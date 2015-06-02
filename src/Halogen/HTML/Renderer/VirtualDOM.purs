@@ -5,6 +5,7 @@ module Halogen.HTML.Renderer.VirtualDOM
 import Data.Array (map)
 import Data.Function    
 import Data.Foldable (for_, foldMap)
+import Data.Maybe
 import Data.Monoid
 import Data.Exists
 
@@ -18,8 +19,10 @@ import Halogen.HTML.Events.Types
 import Halogen.HTML.Events.Handler
 import Halogen.Internal.VirtualDOM
       
-renderAttr :: forall i eff. (i -> Eff eff Unit) -> A.Attr i -> Props
-renderAttr _  (A.Attr e) = runExists (\(A.AttrF _ key value) -> runFn2 prop (A.runAttributeName key) value) e
+renderAttr :: forall i eff. (i -> Eff eff Unit) -> A.Attr i -> VProps
+renderAttr _  (A.Attr Nothing e) = runExists (\(A.AttrF _ key value) -> runFn2 attrVProp (A.runAttributeName key) value) e
+renderAttr _  (A.Attr (Just ns) e) = runExists (\(A.AttrF _ key value) -> runFn3 nsAttrVProp (A.attrNSRaw ns) (A.runAttributeName key) value) e
+renderAttr _  (A.Prop e) = runExists (\(A.AttrF _ key value) -> runFn2 vprop (A.runAttributeName key) value) e
 renderAttr dr (A.Handler e) = A.runExistsR (\(A.HandlerF name k) ->
   runFn2 handlerVProp (A.runEventName name) \ev -> do
     a <- unsafeInterleaveEff $ runEventHandler ev (k ev)

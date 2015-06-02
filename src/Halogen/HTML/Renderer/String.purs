@@ -19,8 +19,12 @@ import qualified Halogen.HTML.Attributes as A
 import Halogen.HTML.Events.Types 
 
 renderAttr :: forall i. A.Attr i -> Maybe String
-renderAttr (A.Attr e) = runExists (\(A.AttrF f key value) -> Just $ A.runAttributeName key <> "=\"" <> f key value <> "\"") e
+renderAttr (A.Attr _ e) = renderExistsAttrF e
+renderAttr (A.Prop e) = renderExistsAttrF e
 renderAttr _ = Nothing
+
+renderExistsAttrF :: Exists A.AttrF -> Maybe String
+renderExistsAttrF e = runExists (\(A.AttrF f key value) -> Just $ A.runAttributeName key <> "=\"" <> f key value <> "\"") e
 
 -- | Render a HTML document as a `String`, usually for testing purposes.
 renderHTMLToString :: forall i. H.HTML i -> String

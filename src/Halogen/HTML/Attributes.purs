@@ -24,9 +24,13 @@ module Halogen.HTML.Attributes
   , AttrF(..)
   , HandlerF(..)
   
+  , AttrNS(..)
+  , attrNSRaw
   , Attr(..)
   
   , attr
+  , attrNS
+  , prop
   , handler
   , initializer
   , finalizer
@@ -104,25 +108,45 @@ data AttrF value = AttrF (AttributeName value -> value -> String) (AttributeName
 -- | the `Attr` type.
 data HandlerF i fields = HandlerF (EventName fields) (Event fields -> EventHandler i)
 
+data AttrNS
+  = SvgNS
+  | XmlNS
+  | XlinkNS
+
+attrNSRaw :: AttrNS -> String
+attrNSRaw SvgNS = ""
+attrNSRaw XmlNS = "http://www.w3.org/XML/1998/namespace"
+attrNSRaw XlinkNS = "http://www.w3.org/1999/xlink"
+
 -- | A single attribute is either
 -- |
 -- | - An attribute
 -- | - An event handler
 data Attr i
-  = Attr (Exists AttrF)
+  = Attr (Maybe AttrNS) (Exists AttrF)
+  | Prop (Exists AttrF)
   | Handler (ExistsR (HandlerF i))
   | Initializer i
   | Finalizer i
 
 instance functorAttr :: Functor Attr where
-  (<$>) _ (Attr e) = Attr e
+  (<$>) _ (Attr ns e) = Attr ns e
+  (<$>) _ (Prop e) = Prop e
   (<$>) f (Handler e) = runExistsR (\(HandlerF name k) -> Handler (mkExistsR (HandlerF name (\e -> f <$> k e)))) e
   (<$>) f (Initializer i) = Initializer (f i)
   (<$>) f (Finalizer i) = Finalizer (f i)
 
 -- | Create an attribute
 attr :: forall value i. (IsAttribute value) => AttributeName value -> value -> Attr i
-attr name v = Attr (mkExists (AttrF toAttrString name v))
+attr name v = Attr Nothing (mkExists (AttrF toAttrString name v))
+
+-- | Create a namespaced attribute
+attrNS :: forall value i. (IsAttribute value) => AttrNS -> AttributeName value -> value -> Attr i
+attrNS ns name v = Attr (Just ns) (mkExists (AttrF toAttrString name v))
+
+-- | Create a property
+prop :: forall value i. (IsAttribute value) => AttributeName value -> value -> Attr i
+prop name v = Prop (mkExists (AttrF toAttrString name v))
 
 -- | Create an event handler
 handler :: forall fields i. EventName fields -> (Event fields -> EventHandler i) -> Attr i

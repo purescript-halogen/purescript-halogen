@@ -1804,11 +1804,22 @@ data HandlerF i fields
 The data which represents a typed event handler, hidden inside an existential package in
 the `Attr` type.
 
+#### `AttrNS`
+
+``` purescript
+data AttrNS
+  = SvgNS 
+  | XmlNS 
+  | XlinkNS 
+```
+
+
 #### `Attr`
 
 ``` purescript
 data Attr i
-  = Attr (Exists AttrF)
+  = Attr (Maybe AttrNS) (Exists AttrF)
+  | Prop (Exists AttrF)
   | Handler (ExistsR (HandlerF i))
   | Initializer i
   | Finalizer i

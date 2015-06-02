@@ -57,7 +57,28 @@ foreign import vprop
     props[key] = value;
     return props;
   }
-  """ :: forall value. Fn2 String value Props
+  """ :: forall value. Fn2 String value VProps
+
+foreign import attrVProp
+  """
+  function attrVProp(key, value) {
+    var attrs = {};
+    attrs[key] = value;
+    return {attributes: attrs};
+  }
+  """ :: forall value. Fn2 String value VProps
+
+foreign import nsAttrVProp
+  """
+  var nsAttrVProp = (function() {
+    var attributeHook = require('virtual-dom/virtual-hyperscript/hooks/attribute-hook');
+    return function nsAttrVProp(ns, key, value) {
+      var props = {};
+      props[key] = attributeHook(ns || null, value);
+      return props;
+    };
+  })();
+  """ :: forall value. Fn3 String String value VProps
 
 -- | Create a property from an event handler
 foreign import handlerVProp
@@ -113,13 +134,21 @@ foreign import finalizerVProp
 foreign import concatVProps
   """
   function concatVProps(p1, p2) {
+    var attrs = {};
     var props = {};
+    for (var key in p1.attributes || null) {
+      attrs[key] = p1.attributes[key];
+    }
+    for (var key in p2.attributes || null) {
+      attrs[key] = p2.attributes[key];
+    }
     for (var key in p1) {
       props[key] = p1[key];
     }
     for (var key in p2) {
       props[key] = p2[key];
     }
+    props.attributes = attrs;
     return props;
   }
   """ :: Fn2 VProps VProps VProps
@@ -192,7 +221,7 @@ foreign import vnode
       return function (attr) {
         return function (children) {
           var props = {
-            attributes: {}
+            attributes: attr.attributes || {}
           };
           for (var key in attr) {
             if ((key.indexOf('data-') === 0) || (key === 'readonly')) {
