@@ -4,12 +4,14 @@
 module Halogen.Internal.VirtualDOM
   ( VTree()
   , Patch()
-  , Props()
-  , emptyProps
-  , prop
-  , handlerProp
-  , initProp
-  , finalizerProp
+  , VProps()
+  , emptyVProps
+  , vprop
+  , attrVProp
+  , nsAttrVProp
+  , handlerVProp
+  , initVProp
+  , finalizerVProp
   , createElement
   , diff
   , patch
@@ -36,10 +38,10 @@ data VTree
 data Patch
 
 -- | Property collections
-data Props
+data VProps
 
-foreign import emptyProps
-  "var emptyProps = {}" :: Props
+foreign import emptyVProps
+  "var emptyVProps = {}" :: VProps
 
 -- | Create a property from a key/value pair.
 -- |
@@ -48,9 +50,9 @@ foreign import emptyProps
 -- |
 -- | Users should use caution when creating custom attributes, and understand how they will
 -- | be added to the DOM here.
-foreign import prop
+foreign import vprop
   """
-  function prop(key, value) {
+  function vprop(key, value) {
     var props = {};
     props[key] = value;
     return props;
@@ -58,9 +60,9 @@ foreign import prop
   """ :: forall value. Fn2 String value Props
 
 -- | Create a property from an event handler
-foreign import handlerProp
+foreign import handlerVProp
   """
-  function handlerProp(key, f) {
+  function handlerVProp(key, f) {
     var props = {};
     var Hook = function () {};
     Hook.prototype.callback = function (e) {
@@ -75,12 +77,12 @@ foreign import handlerProp
     props['halogen-hook-' + key] = new Hook(f);
     return props;
   }
-  """ :: forall eff event. Fn2 String (event -> Eff eff Unit) Props
+  """ :: forall eff event. Fn2 String (event -> Eff eff Unit) VProps
 
 -- | Create a property from an initializer
-foreign import initProp
+foreign import initVProp
   """
-  function initProp(f) {
+  function initVProp(f) {
     var props = {};
     var Hook = function () {};
     Hook.prototype.hook = function (node, prop, prev) {
@@ -91,12 +93,12 @@ foreign import initProp
     props['halogen-init'] = new Hook(f);
     return props;
   }
-  """ :: forall eff. Eff eff Unit -> Props
+  """ :: forall eff. Eff eff Unit -> VProps
 
 -- | Create a property from an finalizer
-foreign import finalizerProp
+foreign import finalizerVProp
   """
-  function finalizerProp(f) {
+  function finalizerVProp(f) {
     var props = {};
     var Hook = function () {};
     Hook.prototype.hook = function () { };
@@ -106,11 +108,11 @@ foreign import finalizerProp
     props['halogen-finalizer'] = new Hook(f);
     return props;
   }
-  """ :: forall eff. Eff eff Unit -> Props
+  """ :: forall eff. Eff eff Unit -> VProps
 
-foreign import concatProps
+foreign import concatVProps
   """
-  function concatProps(p1, p2) {
+  function concatVProps(p1, p2) {
     var props = {};
     for (var key in p1) {
       props[key] = p1[key];
@@ -120,13 +122,13 @@ foreign import concatProps
     }
     return props;
   }
-  """ :: Fn2 Props Props Props
+  """ :: Fn2 VProps VProps VProps
 
-instance semigroupProps :: Semigroup Props where
-  (<>) = runFn2 concatProps
+instance semigroupVProps :: Semigroup VProps where
+  (<>) = runFn2 concatVProps
 
-instance monoidProps :: Monoid Props where
-  mempty = emptyProps
+instance monoidVProps :: Monoid VProps where
+  mempty = emptyVProps
 
 -- | Create a DOM node from a virtual DOM tree
 foreign import createElement
@@ -207,4 +209,4 @@ foreign import vnode
       };
     };
   }());
-  """ :: String -> Props -> [VTree] -> VTree
+  """ :: String -> VProps -> [VTree] -> VTree
