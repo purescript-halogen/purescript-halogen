@@ -6,7 +6,7 @@ the types provided by this library - signal functions and HTML documents.
 #### `Component`
 
 ``` purescript
-type Component m req res = SF1 req (HTML (m res))
+type Component p m req res = SF1 req (HTML p (m res))
 ```
 
 A component.
@@ -30,7 +30,7 @@ the corresponding type parameter unconstrained in the declaration of your compon
 #### `hoistComponent`
 
 ``` purescript
-hoistComponent :: forall m n req res. (forall a. m a -> n a) -> Component m req res -> Component n req res
+hoistComponent :: forall p m n req res. (forall a. m a -> n a) -> Component p m req res -> Component p n req res
 ```
 
 Map a natural transformation over the monad type argument of a `Component`.
@@ -40,7 +40,7 @@ This function may be useful during testing, to mock requests with a different mo
 #### `combine`
 
 ``` purescript
-combine :: forall m req1 req2 res1 res2. (Functor m) => (forall a. HTML a -> HTML a -> HTML a) -> Component m req1 res1 -> Component m req2 res2 -> Component m (Either req1 req2) (Either res1 res2)
+combine :: forall p m req1 req2 res1 res2. (Functor m) => (forall a. HTML p a -> HTML p a -> HTML p a) -> Component p m req1 res1 -> Component p m req2 res2 -> Component p m (Either req1 req2) (Either res1 res2)
 ```
 
 Combine two components into a single component.

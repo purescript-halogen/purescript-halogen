@@ -3,7 +3,7 @@
 #### `renderHTML`
 
 ``` purescript
-renderHTML :: forall i eff. (i -> Eff eff Unit) -> HTML i -> VTree
+renderHTML :: forall p i eff. (i -> Eff eff Unit) -> HTML p i -> VTree
 ```
 
 Render a `HTML` document to a virtual DOM node
@@ -16,7 +16,7 @@ The first argument is an event handler.
 #### `renderHTMLToString`
 
 ``` purescript
-renderHTMLToString :: forall i. HTML i -> String
+renderHTMLToString :: forall p i. HTML p i -> String
 ```
 
 Render a HTML document as a `String`, usually for testing purposes.

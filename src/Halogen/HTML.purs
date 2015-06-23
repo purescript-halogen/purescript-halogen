@@ -147,6 +147,7 @@ import Data.Monoid
 import Data.StrMap (StrMap())
 import Data.String (joinWith)
 import Data.Foldable (for_, foldMap)
+import Data.Bifunctor
 
 import Control.Monad.Eff
 import Control.Monad.Eff.Unsafe (unsafeInterleaveEff)
@@ -168,744 +169,749 @@ runTagName :: TagName -> String
 runTagName (TagName s) = s
 
 -- | An initial encoding of HTML nodes.
-data HTML i
+data HTML p i
   = Text String
-  | Element TagName (Array (A.Attr i)) (Array (HTML i))
+  | Element TagName (Array (A.Attr i)) (Array (HTML p i))
+  | Placeholder p
 
-instance functorHTML :: Functor HTML where
-  map f = go
+instance bifunctorHTML :: Bifunctor HTML where
+  bimap f g = go
     where
     go (Text s) = Text s
-    go (Element name attrs els) = Element name ((f <$>) <$> attrs) (go <$> els)
+    go (Element name attrs els) = Element name ((g <$>) <$> attrs) (go <$> els)
+    go (Placeholder p) = Placeholder (f p)
 
-text :: forall i. String -> HTML i
+instance functorHTML :: Functor (HTML p) where
+  map = rmap
+
+text :: forall p i. String -> HTML p i
 text = Text
 
-element :: forall i. TagName -> Array (A.Attr i) -> Array (HTML i) -> HTML i
+element :: forall p i. TagName -> Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 element = Element
 
-a :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+a :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 a xs = element (tagName "a") xs
 
-a_ :: forall i. Array (HTML i) -> HTML i
+a_ :: forall p i. Array (HTML p i) -> HTML p i
 a_ = a mempty
 
-abbr :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+abbr :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 abbr xs = element (tagName "abbr") xs
 
-abbr_ :: forall i. Array (HTML i) -> HTML i
+abbr_ :: forall p i. Array (HTML p i) -> HTML p i
 abbr_ = abbr mempty
 
-acronym :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+acronym :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 acronym xs = element (tagName "acronym") xs
 
-acronym_ :: forall i. Array (HTML i) -> HTML i
+acronym_ :: forall p i. Array (HTML p i) -> HTML p i
 acronym_ = acronym mempty
 
-address :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+address :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 address xs = element (tagName "address") xs
 
-address_ :: forall i. Array (HTML i) -> HTML i
+address_ :: forall p i. Array (HTML p i) -> HTML p i
 address_ = address mempty
 
-applet :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+applet :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 applet xs = element (tagName "applet") xs
 
-applet_ :: forall i. Array (HTML i) -> HTML i
+applet_ :: forall p i. Array (HTML p i) -> HTML p i
 applet_ = applet mempty
 
-area :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+area :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 area xs = element (tagName "area") xs
 
-area_ :: forall i. Array (HTML i) -> HTML i
+area_ :: forall p i. Array (HTML p i) -> HTML p i
 area_ = area mempty
 
-article :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+article :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 article xs = element (tagName "article") xs
 
-article_ :: forall i. Array (HTML i) -> HTML i
+article_ :: forall p i. Array (HTML p i) -> HTML p i
 article_ = article mempty
 
-aside :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+aside :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 aside xs = element (tagName "aside") xs
 
-aside_ :: forall i. Array (HTML i) -> HTML i
+aside_ :: forall p i. Array (HTML p i) -> HTML p i
 aside_ = aside mempty
 
-audio :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+audio :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 audio xs = element (tagName "audio") xs
 
-audio_ :: forall i. Array (HTML i) -> HTML i
+audio_ :: forall p i. Array (HTML p i) -> HTML p i
 audio_ = audio mempty
 
-b :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+b :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 b xs = element (tagName "b") xs
 
-b_ :: forall i. Array (HTML i) -> HTML i
+b_ :: forall p i. Array (HTML p i) -> HTML p i
 b_ = b mempty
 
-base :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+base :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 base xs = element (tagName "base") xs
 
-base_ :: forall i. Array (HTML i) -> HTML i
+base_ :: forall p i. Array (HTML p i) -> HTML p i
 base_ = base mempty
 
-basefont :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+basefont :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 basefont xs = element (tagName "basefont") xs
 
-basefont_ :: forall i. Array (HTML i) -> HTML i
+basefont_ :: forall p i. Array (HTML p i) -> HTML p i
 basefont_ = basefont mempty
 
-bdi :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+bdi :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 bdi xs = element (tagName "bdi") xs
 
-bdi_ :: forall i. Array (HTML i) -> HTML i
+bdi_ :: forall p i. Array (HTML p i) -> HTML p i
 bdi_ = bdi mempty
 
-bdo :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+bdo :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 bdo xs = element (tagName "bdo") xs
 
-bdo_ :: forall i. Array (HTML i) -> HTML i
+bdo_ :: forall p i. Array (HTML p i) -> HTML p i
 bdo_ = bdo mempty
 
-big :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+big :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 big xs = element (tagName "big") xs
 
-big_ :: forall i. Array (HTML i) -> HTML i
+big_ :: forall p i. Array (HTML p i) -> HTML p i
 big_ = big mempty
 
-blockquote :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+blockquote :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 blockquote xs = element (tagName "blockquote") xs
 
-blockquote_ :: forall i. Array (HTML i) -> HTML i
+blockquote_ :: forall p i. Array (HTML p i) -> HTML p i
 blockquote_ = blockquote mempty
 
-body :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+body :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 body xs = element (tagName "body") xs
 
-body_ :: forall i. Array (HTML i) -> HTML i
+body_ :: forall p i. Array (HTML p i) -> HTML p i
 body_ = body mempty
 
-br :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+br :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 br xs = element (tagName "br") xs
 
-br_ :: forall i. Array (HTML i) -> HTML i
+br_ :: forall p i. Array (HTML p i) -> HTML p i
 br_ = br mempty
 
-button :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+button :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 button xs = element (tagName "button") xs
 
-button_ :: forall i. Array (HTML i) -> HTML i
+button_ :: forall p i. Array (HTML p i) -> HTML p i
 button_ = button mempty
 
-canvas :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+canvas :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 canvas xs = element (tagName "canvas") xs
 
-canvas_ :: forall i. Array (HTML i) -> HTML i
+canvas_ :: forall p i. Array (HTML p i) -> HTML p i
 canvas_ = canvas mempty
 
-caption :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+caption :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 caption xs = element (tagName "caption") xs
 
-caption_ :: forall i. Array (HTML i) -> HTML i
+caption_ :: forall p i. Array (HTML p i) -> HTML p i
 caption_ = caption mempty
 
-center :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+center :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 center xs = element (tagName "center") xs
 
-center_ :: forall i. Array (HTML i) -> HTML i
+center_ :: forall p i. Array (HTML p i) -> HTML p i
 center_ = center mempty
 
-cite :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+cite :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 cite xs = element (tagName "cite") xs
 
-cite_ :: forall i. Array (HTML i) -> HTML i
+cite_ :: forall p i. Array (HTML p i) -> HTML p i
 cite_ = cite mempty
 
-code :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+code :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 code xs = element (tagName "code") xs
 
-code_ :: forall i. Array (HTML i) -> HTML i
+code_ :: forall p i. Array (HTML p i) -> HTML p i
 code_ = code mempty
 
-col :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+col :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 col xs = element (tagName "col") xs
 
-col_ :: forall i. Array (HTML i) -> HTML i
+col_ :: forall p i. Array (HTML p i) -> HTML p i
 col_ = col mempty
 
-colgroup :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+colgroup :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 colgroup xs = element (tagName "colgroup") xs
 
-colgroup_ :: forall i. Array (HTML i) -> HTML i
+colgroup_ :: forall p i. Array (HTML p i) -> HTML p i
 colgroup_ = colgroup mempty
 
-datalist :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+datalist :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 datalist xs = element (tagName "datalist") xs
 
-datalist_ :: forall i. Array (HTML i) -> HTML i
+datalist_ :: forall p i. Array (HTML p i) -> HTML p i
 datalist_ = datalist mempty
 
-dd :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+dd :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 dd xs = element (tagName "dd") xs
 
-dd_ :: forall i. Array (HTML i) -> HTML i
+dd_ :: forall p i. Array (HTML p i) -> HTML p i
 dd_ = dd mempty
 
-del :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+del :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 del xs = element (tagName "del") xs
 
-del_ :: forall i. Array (HTML i) -> HTML i
+del_ :: forall p i. Array (HTML p i) -> HTML p i
 del_ = del mempty
 
-details :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+details :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 details xs = element (tagName "details") xs
 
-details_ :: forall i. Array (HTML i) -> HTML i
+details_ :: forall p i. Array (HTML p i) -> HTML p i
 details_ = details mempty
 
-dfn :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+dfn :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 dfn xs = element (tagName "dfn") xs
 
-dfn_ :: forall i. Array (HTML i) -> HTML i
+dfn_ :: forall p i. Array (HTML p i) -> HTML p i
 dfn_ = dfn mempty
 
-dialog :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+dialog :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 dialog xs = element (tagName "dialog") xs
 
-dialog_ :: forall i. Array (HTML i) -> HTML i
+dialog_ :: forall p i. Array (HTML p i) -> HTML p i
 dialog_ = dialog mempty
 
-dir :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+dir :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 dir xs = element (tagName "dir") xs
 
-dir_ :: forall i. Array (HTML i) -> HTML i
+dir_ :: forall p i. Array (HTML p i) -> HTML p i
 dir_ = dir mempty
 
-div :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+div :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 div xs = element (tagName "div") xs
 
-div_ :: forall i. Array (HTML i) -> HTML i
+div_ :: forall p i. Array (HTML p i) -> HTML p i
 div_ = div mempty
 
-dl :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+dl :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 dl xs = element (tagName "dl") xs
 
-dl_ :: forall i. Array (HTML i) -> HTML i
+dl_ :: forall p i. Array (HTML p i) -> HTML p i
 dl_ = dl mempty
 
-dt :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+dt :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 dt xs = element (tagName "dt") xs
 
-dt_ :: forall i. Array (HTML i) -> HTML i
+dt_ :: forall p i. Array (HTML p i) -> HTML p i
 dt_ = dt mempty
 
-em :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+em :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 em = element (tagName "em")
 
-em_ :: forall i. Array (HTML i) -> HTML i
+em_ :: forall p i. Array (HTML p i) -> HTML p i
 em_ = em mempty
 
-embed :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+embed :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 embed xs = element (tagName "embed") xs
 
-embed_ :: forall i. Array (HTML i) -> HTML i
+embed_ :: forall p i. Array (HTML p i) -> HTML p i
 embed_ = embed mempty
 
-fieldset :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+fieldset :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 fieldset xs = element (tagName "fieldset") xs
 
-fieldset_ :: forall i. Array (HTML i) -> HTML i
+fieldset_ :: forall p i. Array (HTML p i) -> HTML p i
 fieldset_ = fieldset mempty
 
-figcaption :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+figcaption :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 figcaption xs = element (tagName "figcaption") xs
 
-figcaption_ :: forall i. Array (HTML i) -> HTML i
+figcaption_ :: forall p i. Array (HTML p i) -> HTML p i
 figcaption_ = figcaption mempty
 
-figure :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+figure :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 figure xs = element (tagName "figure") xs
 
-figure_ :: forall i. Array (HTML i) -> HTML i
+figure_ :: forall p i. Array (HTML p i) -> HTML p i
 figure_ = figure mempty
 
-font :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+font :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 font xs = element (tagName "font") xs
 
-font_ :: forall i. Array (HTML i) -> HTML i
+font_ :: forall p i. Array (HTML p i) -> HTML p i
 font_ = font mempty
 
-footer :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+footer :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 footer xs = element (tagName "footer") xs
 
-footer_ :: forall i. Array (HTML i) -> HTML i
+footer_ :: forall p i. Array (HTML p i) -> HTML p i
 footer_ = footer mempty
 
-form :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+form :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 form xs = element (tagName "form") xs
 
-form_ :: forall i. Array (HTML i) -> HTML i
+form_ :: forall p i. Array (HTML p i) -> HTML p i
 form_ = form mempty
 
-frame :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+frame :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 frame xs = element (tagName "frame") xs
 
-frame_ :: forall i. Array (HTML i) -> HTML i
+frame_ :: forall p i. Array (HTML p i) -> HTML p i
 frame_ = frame mempty
 
-frameset :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+frameset :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 frameset xs = element (tagName "frameset") xs
 
-frameset_ :: forall i. Array (HTML i) -> HTML i
+frameset_ :: forall p i. Array (HTML p i) -> HTML p i
 frameset_ = frameset mempty
 
-h1 :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+h1 :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 h1 xs = element (tagName "h1") xs
 
-h1_ :: forall i. Array (HTML i) -> HTML i
+h1_ :: forall p i. Array (HTML p i) -> HTML p i
 h1_ = h1 mempty
 
-h2 :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+h2 :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 h2 xs = element (tagName "h2") xs
 
-h2_ :: forall i. Array (HTML i) -> HTML i
+h2_ :: forall p i. Array (HTML p i) -> HTML p i
 h2_ = h2 mempty
 
-h3 :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+h3 :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 h3 xs = element (tagName "h3") xs
 
-h3_ :: forall i. Array (HTML i) -> HTML i
+h3_ :: forall p i. Array (HTML p i) -> HTML p i
 h3_ = h3 mempty
 
-h4 :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+h4 :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 h4 xs = element (tagName "h4") xs
 
-h4_ :: forall i. Array (HTML i) -> HTML i
+h4_ :: forall p i. Array (HTML p i) -> HTML p i
 h4_ = h4 mempty
 
-h5 :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+h5 :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 h5 xs = element (tagName "h5") xs
 
-h5_ :: forall i. Array (HTML i) -> HTML i
+h5_ :: forall p i. Array (HTML p i) -> HTML p i
 h5_ = h5 mempty
 
-h6 :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+h6 :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 h6 xs = element (tagName "h6") xs
 
-h6_ :: forall i. Array (HTML i) -> HTML i
+h6_ :: forall p i. Array (HTML p i) -> HTML p i
 h6_ = h6 mempty
 
-head :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+head :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 head xs = element (tagName "head") xs
 
-head_ :: forall i. Array (HTML i) -> HTML i
+head_ :: forall p i. Array (HTML p i) -> HTML p i
 head_ = head mempty
 
-header :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+header :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 header xs = element (tagName "header") xs
 
-header_ :: forall i. Array (HTML i) -> HTML i
+header_ :: forall p i. Array (HTML p i) -> HTML p i
 header_ = header mempty
 
-hr :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+hr :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 hr xs = element (tagName "hr") xs
 
-hr_ :: forall i. Array (HTML i) -> HTML i
+hr_ :: forall p i. Array (HTML p i) -> HTML p i
 hr_ = hr mempty
 
-html :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+html :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 html xs = element (tagName "html") xs
 
-html_ :: forall i. Array (HTML i) -> HTML i
+html_ :: forall p i. Array (HTML p i) -> HTML p i
 html_ = html mempty
 
-i :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+i :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 i xs = element (tagName "i") xs
 
-i_ :: forall i. Array (HTML i) -> HTML i
+i_ :: forall p i. Array (HTML p i) -> HTML p i
 i_ = i mempty
 
-iframe :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+iframe :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 iframe xs = element (tagName "iframe") xs
 
-iframe_ :: forall i. Array (HTML i) -> HTML i
+iframe_ :: forall p i. Array (HTML p i) -> HTML p i
 iframe_ = iframe mempty
 
-img :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+img :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 img xs = element (tagName "img") xs
 
-img_ :: forall i. Array (HTML i) -> HTML i
+img_ :: forall p i. Array (HTML p i) -> HTML p i
 img_ = img mempty
 
-input :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+input :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 input xs = element (tagName "input") xs
 
-input_ :: forall i. Array (HTML i) -> HTML i
+input_ :: forall p i. Array (HTML p i) -> HTML p i
 input_ = input mempty
 
-ins :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+ins :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 ins xs = element (tagName "ins") xs
 
-ins_ :: forall i. Array (HTML i) -> HTML i
+ins_ :: forall p i. Array (HTML p i) -> HTML p i
 ins_ = ins mempty
 
-kbd :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+kbd :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 kbd xs = element (tagName "kbd") xs
 
-kbd_ :: forall i. Array (HTML i) -> HTML i
+kbd_ :: forall p i. Array (HTML p i) -> HTML p i
 kbd_ = kbd mempty
 
-keygen :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+keygen :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 keygen xs = element (tagName "keygen") xs
 
-keygen_ :: forall i. Array (HTML i) -> HTML i
+keygen_ :: forall p i. Array (HTML p i) -> HTML p i
 keygen_ = keygen mempty
 
-label :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+label :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 label xs = element (tagName "label") xs
 
-label_ :: forall i. Array (HTML i) -> HTML i
+label_ :: forall p i. Array (HTML p i) -> HTML p i
 label_ = label mempty
 
-legend :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+legend :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 legend xs = element (tagName "legend") xs
 
-legend_ :: forall i. Array (HTML i) -> HTML i
+legend_ :: forall p i. Array (HTML p i) -> HTML p i
 legend_ = legend mempty
 
-li :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+li :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 li xs = element (tagName "li") xs
 
-li_ :: forall i. Array (HTML i) -> HTML i
+li_ :: forall p i. Array (HTML p i) -> HTML p i
 li_ = li mempty
 
-link :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+link :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 link xs = element (tagName "link") xs
 
-link_ :: forall i. Array (HTML i) -> HTML i
+link_ :: forall p i. Array (HTML p i) -> HTML p i
 link_ = link mempty
 
-main :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+main :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 main xs = element (tagName "main") xs
 
-main_ :: forall i. Array (HTML i) -> HTML i
+main_ :: forall p i. Array (HTML p i) -> HTML p i
 main_ = main mempty
 
-map :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+map :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 map xs = element (tagName "map") xs
 
-map_ :: forall i. Array (HTML i) -> HTML i
+map_ :: forall p i. Array (HTML p i) -> HTML p i
 map_ = map mempty
 
-mark :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+mark :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 mark xs = element (tagName "mark") xs
 
-mark_ :: forall i. Array (HTML i) -> HTML i
+mark_ :: forall p i. Array (HTML p i) -> HTML p i
 mark_ = mark mempty
 
-menu :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+menu :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 menu xs = element (tagName "menu") xs
 
-menu_ :: forall i. Array (HTML i) -> HTML i
+menu_ :: forall p i. Array (HTML p i) -> HTML p i
 menu_ = menu mempty
 
-menuitem :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+menuitem :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 menuitem xs = element (tagName "menuitem") xs
 
-menuitem_ :: forall i. Array (HTML i) -> HTML i
+menuitem_ :: forall p i. Array (HTML p i) -> HTML p i
 menuitem_ = menuitem mempty
 
-meta :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+meta :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 meta xs = element (tagName "meta") xs
 
-meta_ :: forall i. Array (HTML i) -> HTML i
+meta_ :: forall p i. Array (HTML p i) -> HTML p i
 meta_ = meta mempty
 
-meter :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+meter :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 meter xs = element (tagName "meter") xs
 
-meter_ :: forall i. Array (HTML i) -> HTML i
+meter_ :: forall p i. Array (HTML p i) -> HTML p i
 meter_ = meter mempty
 
-nav :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+nav :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 nav xs = element (tagName "nav") xs
 
-nav_ :: forall i. Array (HTML i) -> HTML i
+nav_ :: forall p i. Array (HTML p i) -> HTML p i
 nav_ = nav mempty
 
-noframes :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+noframes :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 noframes xs = element (tagName "noframes") xs
 
-noframes_ :: forall i. Array (HTML i) -> HTML i
+noframes_ :: forall p i. Array (HTML p i) -> HTML p i
 noframes_ = noframes mempty
 
-noscript :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+noscript :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 noscript xs = element (tagName "noscript") xs
 
-noscript_ :: forall i. Array (HTML i) -> HTML i
+noscript_ :: forall p i. Array (HTML p i) -> HTML p i
 noscript_ = noscript mempty
 
-object :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+object :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 object xs = element (tagName "object") xs
 
-object_ :: forall i. Array (HTML i) -> HTML i
+object_ :: forall p i. Array (HTML p i) -> HTML p i
 object_ = object mempty
 
-ol :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+ol :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 ol xs = element (tagName "ol") xs
 
-ol_ :: forall i. Array (HTML i) -> HTML i
+ol_ :: forall p i. Array (HTML p i) -> HTML p i
 ol_ = ol mempty
 
-optgroup :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+optgroup :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 optgroup xs = element (tagName "optgroup") xs
 
-optgroup_ :: forall i. Array (HTML i) -> HTML i
+optgroup_ :: forall p i. Array (HTML p i) -> HTML p i
 optgroup_ = optgroup mempty
 
-option :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+option :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 option xs = element (tagName "option") xs
 
-option_ :: forall i. Array (HTML i) -> HTML i
+option_ :: forall p i. Array (HTML p i) -> HTML p i
 option_ = option mempty
 
-output :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+output :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 output xs = element (tagName "output") xs
 
-output_ :: forall i. Array (HTML i) -> HTML i
+output_ :: forall p i. Array (HTML p i) -> HTML p i
 output_ = output mempty
 
-p :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+p :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 p xs = element (tagName "p") xs
 
-p_ :: forall i. Array (HTML i) -> HTML i
+p_ :: forall p i. Array (HTML p i) -> HTML p i
 p_ = p mempty
 
-param :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+param :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 param xs = element (tagName "param") xs
 
-param_ :: forall i. Array (HTML i) -> HTML i
+param_ :: forall p i. Array (HTML p i) -> HTML p i
 param_ = param mempty
 
-pre :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+pre :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 pre xs = element (tagName "pre") xs
 
-pre_ :: forall i. Array (HTML i) -> HTML i
+pre_ :: forall p i. Array (HTML p i) -> HTML p i
 pre_ = pre mempty
 
-progress :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+progress :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 progress xs = element (tagName "progress") xs
 
-progress_ :: forall i. Array (HTML i) -> HTML i
+progress_ :: forall p i. Array (HTML p i) -> HTML p i
 progress_ = progress mempty
 
-q :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+q :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 q xs = element (tagName "q") xs
 
-q_ :: forall i. Array (HTML i) -> HTML i
+q_ :: forall p i. Array (HTML p i) -> HTML p i
 q_ = q mempty
 
-rp :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+rp :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 rp xs = element (tagName "rp") xs
 
-rp_ :: forall i. Array (HTML i) -> HTML i
+rp_ :: forall p i. Array (HTML p i) -> HTML p i
 rp_ = rp mempty
 
-rt :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+rt :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 rt xs = element (tagName "rt") xs
 
-rt_ :: forall i. Array (HTML i) -> HTML i
+rt_ :: forall p i. Array (HTML p i) -> HTML p i
 rt_ = rt mempty
 
-ruby :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+ruby :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 ruby xs = element (tagName "ruby") xs
 
-ruby_ :: forall i. Array (HTML i) -> HTML i
+ruby_ :: forall p i. Array (HTML p i) -> HTML p i
 ruby_ = ruby mempty
 
-s :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+s :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 s xs = element (tagName "s") xs
 
-s_ :: forall i. Array (HTML i) -> HTML i
+s_ :: forall p i. Array (HTML p i) -> HTML p i
 s_ = s mempty
 
-samp :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+samp :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 samp xs = element (tagName "samp") xs
 
-samp_ :: forall i. Array (HTML i) -> HTML i
+samp_ :: forall p i. Array (HTML p i) -> HTML p i
 samp_ = samp mempty
 
-script :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+script :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 script xs = element (tagName "script") xs
 
-script_ :: forall i. Array (HTML i) -> HTML i
+script_ :: forall p i. Array (HTML p i) -> HTML p i
 script_ = script mempty
 
-section :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+section :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 section xs = element (tagName "section") xs
 
-section_ :: forall i. Array (HTML i) -> HTML i
+section_ :: forall p i. Array (HTML p i) -> HTML p i
 section_ = section mempty
 
-select :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+select :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 select xs = element (tagName "select") xs
 
-select_ :: forall i. Array (HTML i) -> HTML i
+select_ :: forall p i. Array (HTML p i) -> HTML p i
 select_ = select mempty
 
-small :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+small :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 small xs = element (tagName "small") xs
 
-small_ :: forall i. Array (HTML i) -> HTML i
+small_ :: forall p i. Array (HTML p i) -> HTML p i
 small_ = small mempty
 
-source :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+source :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 source xs = element (tagName "source") xs
 
-source_ :: forall i. Array (HTML i) -> HTML i
+source_ :: forall p i. Array (HTML p i) -> HTML p i
 source_ = source mempty
 
-span :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+span :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 span xs = element (tagName "span") xs
 
-span_ :: forall i. Array (HTML i) -> HTML i
+span_ :: forall p i. Array (HTML p i) -> HTML p i
 span_ = span mempty
 
-strike :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+strike :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 strike xs = element (tagName "strike") xs
 
-strike_ :: forall i. Array (HTML i) -> HTML i
+strike_ :: forall p i. Array (HTML p i) -> HTML p i
 strike_ = strike mempty
 
-strong :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+strong :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 strong xs = element (tagName "strong") xs
 
-strong_ :: forall i. Array (HTML i) -> HTML i
+strong_ :: forall p i. Array (HTML p i) -> HTML p i
 strong_ = strong mempty
 
-style :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+style :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 style xs = element (tagName "style") xs
 
-style_ :: forall i. Array (HTML i) -> HTML i
+style_ :: forall p i. Array (HTML p i) -> HTML p i
 style_ = style mempty
 
-sub :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+sub :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 sub xs = element (tagName "sub") xs
 
-sub_ :: forall i. Array (HTML i) -> HTML i
+sub_ :: forall p i. Array (HTML p i) -> HTML p i
 sub_ = sub mempty
 
-summary :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+summary :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 summary xs = element (tagName "summary") xs
 
-summary_ :: forall i. Array (HTML i) -> HTML i
+summary_ :: forall p i. Array (HTML p i) -> HTML p i
 summary_ = summary mempty
 
-sup :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+sup :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 sup xs = element (tagName "sup") xs
 
-sup_ :: forall i. Array (HTML i) -> HTML i
+sup_ :: forall p i. Array (HTML p i) -> HTML p i
 sup_ = sup mempty
 
-table :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+table :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 table xs = element (tagName "table") xs
 
-table_ :: forall i. Array (HTML i) -> HTML i
+table_ :: forall p i. Array (HTML p i) -> HTML p i
 table_ = table mempty
 
-tbody :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+tbody :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 tbody xs = element (tagName "tbody") xs
 
-tbody_ :: forall i. Array (HTML i) -> HTML i
+tbody_ :: forall p i. Array (HTML p i) -> HTML p i
 tbody_ = tbody mempty
 
-td :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+td :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 td xs = element (tagName "td") xs
 
-td_ :: forall i. Array (HTML i) -> HTML i
+td_ :: forall p i. Array (HTML p i) -> HTML p i
 td_ = td mempty
 
-textarea :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+textarea :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 textarea xs = element (tagName "textarea") xs
 
-textarea_ :: forall i. Array (HTML i) -> HTML i
+textarea_ :: forall p i. Array (HTML p i) -> HTML p i
 textarea_ = textarea mempty
 
-tfoot :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+tfoot :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 tfoot xs = element (tagName "tfoot") xs
 
-tfoot_ :: forall i. Array (HTML i) -> HTML i
+tfoot_ :: forall p i. Array (HTML p i) -> HTML p i
 tfoot_ = tfoot mempty
 
-th :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+th :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 th xs = element (tagName "th") xs
 
-th_ :: forall i. Array (HTML i) -> HTML i
+th_ :: forall p i. Array (HTML p i) -> HTML p i
 th_ = th mempty
 
-thead :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+thead :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 thead xs = element (tagName "thead") xs
 
-thead_ :: forall i. Array (HTML i) -> HTML i
+thead_ :: forall p i. Array (HTML p i) -> HTML p i
 thead_ = thead mempty
 
-time :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+time :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 time xs = element (tagName "time") xs
 
-time_ :: forall i. Array (HTML i) -> HTML i
+time_ :: forall p i. Array (HTML p i) -> HTML p i
 time_ = time mempty
 
-title :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+title :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 title xs = element (tagName "title") xs
 
-title_ :: forall i. Array (HTML i) -> HTML i
+title_ :: forall p i. Array (HTML p i) -> HTML p i
 title_ = title mempty
 
-tr :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+tr :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 tr xs = element (tagName "tr") xs
 
-tr_ :: forall i. Array (HTML i) -> HTML i
+tr_ :: forall p i. Array (HTML p i) -> HTML p i
 tr_ = tr mempty
 
-track :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+track :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 track xs = element (tagName "track") xs
 
-track_ :: forall i. Array (HTML i) -> HTML i
+track_ :: forall p i. Array (HTML p i) -> HTML p i
 track_ = track mempty
 
-tt :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+tt :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 tt xs = element (tagName "tt") xs
 
-tt_ :: forall i. Array (HTML i) -> HTML i
+tt_ :: forall p i. Array (HTML p i) -> HTML p i
 tt_ = tt mempty
 
-u :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+u :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 u xs = element (tagName "u") xs
 
-u_ :: forall i. Array (HTML i) -> HTML i
+u_ :: forall p i. Array (HTML p i) -> HTML p i
 u_ = u mempty
 
-ul :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+ul :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 ul xs = element (tagName "ul") xs
 
-ul_ :: forall i. Array (HTML i) -> HTML i
+ul_ :: forall p i. Array (HTML p i) -> HTML p i
 ul_ = ul mempty
 
-var :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+var :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 var xs = element (tagName "var") xs
 
-var_ :: forall i. Array (HTML i) -> HTML i
+var_ :: forall p i. Array (HTML p i) -> HTML p i
 var_ = var mempty
 
-video :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+video :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 video xs = element (tagName "video") xs
 
-video_ :: forall i. Array (HTML i) -> HTML i
+video_ :: forall p i. Array (HTML p i) -> HTML p i
 video_ = video mempty
 
-wbr :: forall i. Array (A.Attr i) -> Array (HTML i) -> HTML i
+wbr :: forall p i. Array (A.Attr i) -> Array (HTML p i) -> HTML p i
 wbr xs = element (tagName "wbr") xs
 
-wbr_ :: forall i. Array (HTML i) -> HTML i
+wbr_ :: forall p i. Array (HTML p i) -> HTML p i
 wbr_ = wbr mempty

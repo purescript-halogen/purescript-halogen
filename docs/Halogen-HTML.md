@@ -30,1480 +30,1482 @@ Unwrap a `TagName` to get the tag name as a `String`.
 #### `HTML`
 
 ``` purescript
-data HTML i
+data HTML p i
   = Text String
-  | Element TagName (Array (Attr i)) (Array (HTML i))
+  | Element TagName (Array (Attr i)) (Array (HTML p i))
+  | Placeholder p
 ```
 
 An initial encoding of HTML nodes.
 
 ##### Instances
 ``` purescript
-instance functorHTML :: Functor HTML
+instance bifunctorHTML :: Bifunctor HTML
+instance functorHTML :: Functor (HTML p)
 ```
 
 #### `text`
 
 ``` purescript
-text :: forall i. String -> HTML i
+text :: forall p i. String -> HTML p i
 ```
 
 #### `element`
 
 ``` purescript
-element :: forall i. TagName -> Array (Attr i) -> Array (HTML i) -> HTML i
+element :: forall p i. TagName -> Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `a`
 
 ``` purescript
-a :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+a :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `a_`
 
 ``` purescript
-a_ :: forall i. Array (HTML i) -> HTML i
+a_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `abbr`
 
 ``` purescript
-abbr :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+abbr :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `abbr_`
 
 ``` purescript
-abbr_ :: forall i. Array (HTML i) -> HTML i
+abbr_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `acronym`
 
 ``` purescript
-acronym :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+acronym :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `acronym_`
 
 ``` purescript
-acronym_ :: forall i. Array (HTML i) -> HTML i
+acronym_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `address`
 
 ``` purescript
-address :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+address :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `address_`
 
 ``` purescript
-address_ :: forall i. Array (HTML i) -> HTML i
+address_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `applet`
 
 ``` purescript
-applet :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+applet :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `applet_`
 
 ``` purescript
-applet_ :: forall i. Array (HTML i) -> HTML i
+applet_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `area`
 
 ``` purescript
-area :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+area :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `area_`
 
 ``` purescript
-area_ :: forall i. Array (HTML i) -> HTML i
+area_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `article`
 
 ``` purescript
-article :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+article :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `article_`
 
 ``` purescript
-article_ :: forall i. Array (HTML i) -> HTML i
+article_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `aside`
 
 ``` purescript
-aside :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+aside :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `aside_`
 
 ``` purescript
-aside_ :: forall i. Array (HTML i) -> HTML i
+aside_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `audio`
 
 ``` purescript
-audio :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+audio :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `audio_`
 
 ``` purescript
-audio_ :: forall i. Array (HTML i) -> HTML i
+audio_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `b`
 
 ``` purescript
-b :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+b :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `b_`
 
 ``` purescript
-b_ :: forall i. Array (HTML i) -> HTML i
+b_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `base`
 
 ``` purescript
-base :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+base :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `base_`
 
 ``` purescript
-base_ :: forall i. Array (HTML i) -> HTML i
+base_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `basefont`
 
 ``` purescript
-basefont :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+basefont :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `basefont_`
 
 ``` purescript
-basefont_ :: forall i. Array (HTML i) -> HTML i
+basefont_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `bdi`
 
 ``` purescript
-bdi :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+bdi :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `bdi_`
 
 ``` purescript
-bdi_ :: forall i. Array (HTML i) -> HTML i
+bdi_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `bdo`
 
 ``` purescript
-bdo :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+bdo :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `bdo_`
 
 ``` purescript
-bdo_ :: forall i. Array (HTML i) -> HTML i
+bdo_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `big`
 
 ``` purescript
-big :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+big :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `big_`
 
 ``` purescript
-big_ :: forall i. Array (HTML i) -> HTML i
+big_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `blockquote`
 
 ``` purescript
-blockquote :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+blockquote :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `blockquote_`
 
 ``` purescript
-blockquote_ :: forall i. Array (HTML i) -> HTML i
+blockquote_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `body`
 
 ``` purescript
-body :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+body :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `body_`
 
 ``` purescript
-body_ :: forall i. Array (HTML i) -> HTML i
+body_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `br`
 
 ``` purescript
-br :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+br :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `br_`
 
 ``` purescript
-br_ :: forall i. Array (HTML i) -> HTML i
+br_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `button`
 
 ``` purescript
-button :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+button :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `button_`
 
 ``` purescript
-button_ :: forall i. Array (HTML i) -> HTML i
+button_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `canvas`
 
 ``` purescript
-canvas :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+canvas :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `canvas_`
 
 ``` purescript
-canvas_ :: forall i. Array (HTML i) -> HTML i
+canvas_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `caption`
 
 ``` purescript
-caption :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+caption :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `caption_`
 
 ``` purescript
-caption_ :: forall i. Array (HTML i) -> HTML i
+caption_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `center`
 
 ``` purescript
-center :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+center :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `center_`
 
 ``` purescript
-center_ :: forall i. Array (HTML i) -> HTML i
+center_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `cite`
 
 ``` purescript
-cite :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+cite :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `cite_`
 
 ``` purescript
-cite_ :: forall i. Array (HTML i) -> HTML i
+cite_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `code`
 
 ``` purescript
-code :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+code :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `code_`
 
 ``` purescript
-code_ :: forall i. Array (HTML i) -> HTML i
+code_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `col`
 
 ``` purescript
-col :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+col :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `col_`
 
 ``` purescript
-col_ :: forall i. Array (HTML i) -> HTML i
+col_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `colgroup`
 
 ``` purescript
-colgroup :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+colgroup :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `colgroup_`
 
 ``` purescript
-colgroup_ :: forall i. Array (HTML i) -> HTML i
+colgroup_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `datalist`
 
 ``` purescript
-datalist :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+datalist :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `datalist_`
 
 ``` purescript
-datalist_ :: forall i. Array (HTML i) -> HTML i
+datalist_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `dd`
 
 ``` purescript
-dd :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+dd :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `dd_`
 
 ``` purescript
-dd_ :: forall i. Array (HTML i) -> HTML i
+dd_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `del`
 
 ``` purescript
-del :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+del :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `del_`
 
 ``` purescript
-del_ :: forall i. Array (HTML i) -> HTML i
+del_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `details`
 
 ``` purescript
-details :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+details :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `details_`
 
 ``` purescript
-details_ :: forall i. Array (HTML i) -> HTML i
+details_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `dfn`
 
 ``` purescript
-dfn :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+dfn :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `dfn_`
 
 ``` purescript
-dfn_ :: forall i. Array (HTML i) -> HTML i
+dfn_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `dialog`
 
 ``` purescript
-dialog :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+dialog :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `dialog_`
 
 ``` purescript
-dialog_ :: forall i. Array (HTML i) -> HTML i
+dialog_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `dir`
 
 ``` purescript
-dir :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+dir :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `dir_`
 
 ``` purescript
-dir_ :: forall i. Array (HTML i) -> HTML i
+dir_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `div`
 
 ``` purescript
-div :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+div :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `div_`
 
 ``` purescript
-div_ :: forall i. Array (HTML i) -> HTML i
+div_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `dl`
 
 ``` purescript
-dl :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+dl :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `dl_`
 
 ``` purescript
-dl_ :: forall i. Array (HTML i) -> HTML i
+dl_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `dt`
 
 ``` purescript
-dt :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+dt :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `dt_`
 
 ``` purescript
-dt_ :: forall i. Array (HTML i) -> HTML i
+dt_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `em`
 
 ``` purescript
-em :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+em :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `em_`
 
 ``` purescript
-em_ :: forall i. Array (HTML i) -> HTML i
+em_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `embed`
 
 ``` purescript
-embed :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+embed :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `embed_`
 
 ``` purescript
-embed_ :: forall i. Array (HTML i) -> HTML i
+embed_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `fieldset`
 
 ``` purescript
-fieldset :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+fieldset :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `fieldset_`
 
 ``` purescript
-fieldset_ :: forall i. Array (HTML i) -> HTML i
+fieldset_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `figcaption`
 
 ``` purescript
-figcaption :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+figcaption :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `figcaption_`
 
 ``` purescript
-figcaption_ :: forall i. Array (HTML i) -> HTML i
+figcaption_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `figure`
 
 ``` purescript
-figure :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+figure :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `figure_`
 
 ``` purescript
-figure_ :: forall i. Array (HTML i) -> HTML i
+figure_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `font`
 
 ``` purescript
-font :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+font :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `font_`
 
 ``` purescript
-font_ :: forall i. Array (HTML i) -> HTML i
+font_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `footer`
 
 ``` purescript
-footer :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+footer :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `footer_`
 
 ``` purescript
-footer_ :: forall i. Array (HTML i) -> HTML i
+footer_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `form`
 
 ``` purescript
-form :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+form :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `form_`
 
 ``` purescript
-form_ :: forall i. Array (HTML i) -> HTML i
+form_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `frame`
 
 ``` purescript
-frame :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+frame :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `frame_`
 
 ``` purescript
-frame_ :: forall i. Array (HTML i) -> HTML i
+frame_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `frameset`
 
 ``` purescript
-frameset :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+frameset :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `frameset_`
 
 ``` purescript
-frameset_ :: forall i. Array (HTML i) -> HTML i
+frameset_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `h1`
 
 ``` purescript
-h1 :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+h1 :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `h1_`
 
 ``` purescript
-h1_ :: forall i. Array (HTML i) -> HTML i
+h1_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `h2`
 
 ``` purescript
-h2 :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+h2 :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `h2_`
 
 ``` purescript
-h2_ :: forall i. Array (HTML i) -> HTML i
+h2_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `h3`
 
 ``` purescript
-h3 :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+h3 :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `h3_`
 
 ``` purescript
-h3_ :: forall i. Array (HTML i) -> HTML i
+h3_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `h4`
 
 ``` purescript
-h4 :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+h4 :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `h4_`
 
 ``` purescript
-h4_ :: forall i. Array (HTML i) -> HTML i
+h4_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `h5`
 
 ``` purescript
-h5 :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+h5 :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `h5_`
 
 ``` purescript
-h5_ :: forall i. Array (HTML i) -> HTML i
+h5_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `h6`
 
 ``` purescript
-h6 :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+h6 :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `h6_`
 
 ``` purescript
-h6_ :: forall i. Array (HTML i) -> HTML i
+h6_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `head`
 
 ``` purescript
-head :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+head :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `head_`
 
 ``` purescript
-head_ :: forall i. Array (HTML i) -> HTML i
+head_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `header`
 
 ``` purescript
-header :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+header :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `header_`
 
 ``` purescript
-header_ :: forall i. Array (HTML i) -> HTML i
+header_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `hr`
 
 ``` purescript
-hr :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+hr :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `hr_`
 
 ``` purescript
-hr_ :: forall i. Array (HTML i) -> HTML i
+hr_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `html`
 
 ``` purescript
-html :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+html :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `html_`
 
 ``` purescript
-html_ :: forall i. Array (HTML i) -> HTML i
+html_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `i`
 
 ``` purescript
-i :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+i :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `i_`
 
 ``` purescript
-i_ :: forall i. Array (HTML i) -> HTML i
+i_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `iframe`
 
 ``` purescript
-iframe :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+iframe :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `iframe_`
 
 ``` purescript
-iframe_ :: forall i. Array (HTML i) -> HTML i
+iframe_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `img`
 
 ``` purescript
-img :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+img :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `img_`
 
 ``` purescript
-img_ :: forall i. Array (HTML i) -> HTML i
+img_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `input`
 
 ``` purescript
-input :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+input :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `input_`
 
 ``` purescript
-input_ :: forall i. Array (HTML i) -> HTML i
+input_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `ins`
 
 ``` purescript
-ins :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+ins :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `ins_`
 
 ``` purescript
-ins_ :: forall i. Array (HTML i) -> HTML i
+ins_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `kbd`
 
 ``` purescript
-kbd :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+kbd :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `kbd_`
 
 ``` purescript
-kbd_ :: forall i. Array (HTML i) -> HTML i
+kbd_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `keygen`
 
 ``` purescript
-keygen :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+keygen :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `keygen_`
 
 ``` purescript
-keygen_ :: forall i. Array (HTML i) -> HTML i
+keygen_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `label`
 
 ``` purescript
-label :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+label :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `label_`
 
 ``` purescript
-label_ :: forall i. Array (HTML i) -> HTML i
+label_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `legend`
 
 ``` purescript
-legend :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+legend :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `legend_`
 
 ``` purescript
-legend_ :: forall i. Array (HTML i) -> HTML i
+legend_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `li`
 
 ``` purescript
-li :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+li :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `li_`
 
 ``` purescript
-li_ :: forall i. Array (HTML i) -> HTML i
+li_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `link`
 
 ``` purescript
-link :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+link :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `link_`
 
 ``` purescript
-link_ :: forall i. Array (HTML i) -> HTML i
+link_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `main`
 
 ``` purescript
-main :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+main :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `main_`
 
 ``` purescript
-main_ :: forall i. Array (HTML i) -> HTML i
+main_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `map`
 
 ``` purescript
-map :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+map :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `map_`
 
 ``` purescript
-map_ :: forall i. Array (HTML i) -> HTML i
+map_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `mark`
 
 ``` purescript
-mark :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+mark :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `mark_`
 
 ``` purescript
-mark_ :: forall i. Array (HTML i) -> HTML i
+mark_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `menu`
 
 ``` purescript
-menu :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+menu :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `menu_`
 
 ``` purescript
-menu_ :: forall i. Array (HTML i) -> HTML i
+menu_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `menuitem`
 
 ``` purescript
-menuitem :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+menuitem :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `menuitem_`
 
 ``` purescript
-menuitem_ :: forall i. Array (HTML i) -> HTML i
+menuitem_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `meta`
 
 ``` purescript
-meta :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+meta :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `meta_`
 
 ``` purescript
-meta_ :: forall i. Array (HTML i) -> HTML i
+meta_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `meter`
 
 ``` purescript
-meter :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+meter :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `meter_`
 
 ``` purescript
-meter_ :: forall i. Array (HTML i) -> HTML i
+meter_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `nav`
 
 ``` purescript
-nav :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+nav :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `nav_`
 
 ``` purescript
-nav_ :: forall i. Array (HTML i) -> HTML i
+nav_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `noframes`
 
 ``` purescript
-noframes :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+noframes :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `noframes_`
 
 ``` purescript
-noframes_ :: forall i. Array (HTML i) -> HTML i
+noframes_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `noscript`
 
 ``` purescript
-noscript :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+noscript :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `noscript_`
 
 ``` purescript
-noscript_ :: forall i. Array (HTML i) -> HTML i
+noscript_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `object`
 
 ``` purescript
-object :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+object :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `object_`
 
 ``` purescript
-object_ :: forall i. Array (HTML i) -> HTML i
+object_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `ol`
 
 ``` purescript
-ol :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+ol :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `ol_`
 
 ``` purescript
-ol_ :: forall i. Array (HTML i) -> HTML i
+ol_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `optgroup`
 
 ``` purescript
-optgroup :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+optgroup :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `optgroup_`
 
 ``` purescript
-optgroup_ :: forall i. Array (HTML i) -> HTML i
+optgroup_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `option`
 
 ``` purescript
-option :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+option :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `option_`
 
 ``` purescript
-option_ :: forall i. Array (HTML i) -> HTML i
+option_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `output`
 
 ``` purescript
-output :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+output :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `output_`
 
 ``` purescript
-output_ :: forall i. Array (HTML i) -> HTML i
+output_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `p`
 
 ``` purescript
-p :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+p :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `p_`
 
 ``` purescript
-p_ :: forall i. Array (HTML i) -> HTML i
+p_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `param`
 
 ``` purescript
-param :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+param :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `param_`
 
 ``` purescript
-param_ :: forall i. Array (HTML i) -> HTML i
+param_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `pre`
 
 ``` purescript
-pre :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+pre :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `pre_`
 
 ``` purescript
-pre_ :: forall i. Array (HTML i) -> HTML i
+pre_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `progress`
 
 ``` purescript
-progress :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+progress :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `progress_`
 
 ``` purescript
-progress_ :: forall i. Array (HTML i) -> HTML i
+progress_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `q`
 
 ``` purescript
-q :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+q :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `q_`
 
 ``` purescript
-q_ :: forall i. Array (HTML i) -> HTML i
+q_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `rp`
 
 ``` purescript
-rp :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+rp :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `rp_`
 
 ``` purescript
-rp_ :: forall i. Array (HTML i) -> HTML i
+rp_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `rt`
 
 ``` purescript
-rt :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+rt :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `rt_`
 
 ``` purescript
-rt_ :: forall i. Array (HTML i) -> HTML i
+rt_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `ruby`
 
 ``` purescript
-ruby :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+ruby :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `ruby_`
 
 ``` purescript
-ruby_ :: forall i. Array (HTML i) -> HTML i
+ruby_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `s`
 
 ``` purescript
-s :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+s :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `s_`
 
 ``` purescript
-s_ :: forall i. Array (HTML i) -> HTML i
+s_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `samp`
 
 ``` purescript
-samp :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+samp :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `samp_`
 
 ``` purescript
-samp_ :: forall i. Array (HTML i) -> HTML i
+samp_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `script`
 
 ``` purescript
-script :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+script :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `script_`
 
 ``` purescript
-script_ :: forall i. Array (HTML i) -> HTML i
+script_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `section`
 
 ``` purescript
-section :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+section :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `section_`
 
 ``` purescript
-section_ :: forall i. Array (HTML i) -> HTML i
+section_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `select`
 
 ``` purescript
-select :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+select :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `select_`
 
 ``` purescript
-select_ :: forall i. Array (HTML i) -> HTML i
+select_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `small`
 
 ``` purescript
-small :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+small :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `small_`
 
 ``` purescript
-small_ :: forall i. Array (HTML i) -> HTML i
+small_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `source`
 
 ``` purescript
-source :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+source :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `source_`
 
 ``` purescript
-source_ :: forall i. Array (HTML i) -> HTML i
+source_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `span`
 
 ``` purescript
-span :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+span :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `span_`
 
 ``` purescript
-span_ :: forall i. Array (HTML i) -> HTML i
+span_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `strike`
 
 ``` purescript
-strike :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+strike :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `strike_`
 
 ``` purescript
-strike_ :: forall i. Array (HTML i) -> HTML i
+strike_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `strong`
 
 ``` purescript
-strong :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+strong :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `strong_`
 
 ``` purescript
-strong_ :: forall i. Array (HTML i) -> HTML i
+strong_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `style`
 
 ``` purescript
-style :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+style :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `style_`
 
 ``` purescript
-style_ :: forall i. Array (HTML i) -> HTML i
+style_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `sub`
 
 ``` purescript
-sub :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+sub :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `sub_`
 
 ``` purescript
-sub_ :: forall i. Array (HTML i) -> HTML i
+sub_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `summary`
 
 ``` purescript
-summary :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+summary :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `summary_`
 
 ``` purescript
-summary_ :: forall i. Array (HTML i) -> HTML i
+summary_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `sup`
 
 ``` purescript
-sup :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+sup :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `sup_`
 
 ``` purescript
-sup_ :: forall i. Array (HTML i) -> HTML i
+sup_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `table`
 
 ``` purescript
-table :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+table :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `table_`
 
 ``` purescript
-table_ :: forall i. Array (HTML i) -> HTML i
+table_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `tbody`
 
 ``` purescript
-tbody :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+tbody :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `tbody_`
 
 ``` purescript
-tbody_ :: forall i. Array (HTML i) -> HTML i
+tbody_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `td`
 
 ``` purescript
-td :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+td :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `td_`
 
 ``` purescript
-td_ :: forall i. Array (HTML i) -> HTML i
+td_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `textarea`
 
 ``` purescript
-textarea :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+textarea :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `textarea_`
 
 ``` purescript
-textarea_ :: forall i. Array (HTML i) -> HTML i
+textarea_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `tfoot`
 
 ``` purescript
-tfoot :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+tfoot :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `tfoot_`
 
 ``` purescript
-tfoot_ :: forall i. Array (HTML i) -> HTML i
+tfoot_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `th`
 
 ``` purescript
-th :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+th :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `th_`
 
 ``` purescript
-th_ :: forall i. Array (HTML i) -> HTML i
+th_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `thead`
 
 ``` purescript
-thead :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+thead :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `thead_`
 
 ``` purescript
-thead_ :: forall i. Array (HTML i) -> HTML i
+thead_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `time`
 
 ``` purescript
-time :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+time :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `time_`
 
 ``` purescript
-time_ :: forall i. Array (HTML i) -> HTML i
+time_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `title`
 
 ``` purescript
-title :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+title :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `title_`
 
 ``` purescript
-title_ :: forall i. Array (HTML i) -> HTML i
+title_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `tr`
 
 ``` purescript
-tr :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+tr :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `tr_`
 
 ``` purescript
-tr_ :: forall i. Array (HTML i) -> HTML i
+tr_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `track`
 
 ``` purescript
-track :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+track :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `track_`
 
 ``` purescript
-track_ :: forall i. Array (HTML i) -> HTML i
+track_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `tt`
 
 ``` purescript
-tt :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+tt :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `tt_`
 
 ``` purescript
-tt_ :: forall i. Array (HTML i) -> HTML i
+tt_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `u`
 
 ``` purescript
-u :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+u :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `u_`
 
 ``` purescript
-u_ :: forall i. Array (HTML i) -> HTML i
+u_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `ul`
 
 ``` purescript
-ul :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+ul :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `ul_`
 
 ``` purescript
-ul_ :: forall i. Array (HTML i) -> HTML i
+ul_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `var`
 
 ``` purescript
-var :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+var :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `var_`
 
 ``` purescript
-var_ :: forall i. Array (HTML i) -> HTML i
+var_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `video`
 
 ``` purescript
-video :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+video :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `video_`
 
 ``` purescript
-video_ :: forall i. Array (HTML i) -> HTML i
+video_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 #### `wbr`
 
 ``` purescript
-wbr :: forall i. Array (Attr i) -> Array (HTML i) -> HTML i
+wbr :: forall p i. Array (Attr i) -> Array (HTML p i) -> HTML p i
 ```
 
 #### `wbr_`
 
 ``` purescript
-wbr_ :: forall i. Array (HTML i) -> HTML i
+wbr_ :: forall p i. Array (HTML p i) -> HTML p i
 ```
 
 

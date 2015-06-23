@@ -81,8 +81,8 @@ type Driver i eff = i -> Eff (HalogenEffects eff) Unit
 -- | This function is the workhorse of the Halogen library. It can be called in `main`
 -- | to set up the application and create the driver function, which can be used to
 -- | send inputs to the UI from external components.
-runUI :: forall req eff.
-           Component (Event (HalogenEffects eff)) req req ->
+runUI :: forall p req eff.
+           Component p (Event (HalogenEffects eff)) req req ->
            Eff (HalogenEffects eff) (Tuple HTMLElement (Driver req eff))
 runUI sf = sf `runUIWith` \_ _ _ -> return unit
 
@@ -92,8 +92,8 @@ runUI sf = sf `runUIWith` \_ _ _ -> return unit
 -- |
 -- | This is considered an advanced feature, and should only be used with an understanding of
 -- | the rendering pipeline.
-runUIWith :: forall req eff.
-               Component (Event (HalogenEffects eff)) req req ->
+runUIWith :: forall p req eff.
+               Component p (Event (HalogenEffects eff)) req req ->
                (req -> HTMLElement -> Driver req eff -> Eff (HalogenEffects eff) Unit) ->
                Eff (HalogenEffects eff) (Tuple HTMLElement (Driver req eff))
 runUIWith sf postRender = mainLoop (pure <<< componentProcess sf postRender)
@@ -102,8 +102,8 @@ runUIWith sf postRender = mainLoop (pure <<< componentProcess sf postRender)
 type Process req eff = SF (Tuple req HTMLElement) (Eff (HalogenEffects eff) HTMLElement)
 
 -- | Build a `Process` from a `Component`.
-componentProcess :: forall req eff.
-                      Component (Event (HalogenEffects eff)) req req ->
+componentProcess :: forall p req eff.
+                      Component p (Event (HalogenEffects eff)) req req ->
                       (req -> HTMLElement -> Driver req eff -> Eff (HalogenEffects eff) Unit) ->
                       Driver req eff ->
                       Tuple HTMLElement (Process req eff)

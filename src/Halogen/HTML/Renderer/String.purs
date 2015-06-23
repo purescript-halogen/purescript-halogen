@@ -25,7 +25,7 @@ renderAttr (A.Attr e) = runExists (\(A.AttrF f key value) -> Just $ A.runAttribu
 renderAttr _ = Nothing
 
 -- | Render a HTML document as a `String`, usually for testing purposes.
-renderHTMLToString :: forall i. H.HTML i -> String
+renderHTMLToString :: forall p i. H.HTML p i -> String
 renderHTMLToString (H.Text s) = s
 renderHTMLToString (H.Element name attrs els) =
   "<" <> H.runTagName name <>

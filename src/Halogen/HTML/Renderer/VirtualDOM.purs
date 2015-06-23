@@ -31,7 +31,7 @@ renderAttr dr (A.Finalizer i) = finalizerProp (dr i)
 -- | Render a `HTML` document to a virtual DOM node
 -- |
 -- | The first argument is an event handler.
-renderHTML :: forall i eff. (i -> Eff eff Unit) -> H.HTML i -> VTree
+renderHTML :: forall p i eff. (i -> Eff eff Unit) -> H.HTML p i -> VTree
 renderHTML f = go
   where
   go (H.Text s) = vtext s
