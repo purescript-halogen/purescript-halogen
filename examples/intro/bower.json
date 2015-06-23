@@ -1,16 +1,7 @@
 {
-  "name": "halogen-intro",
-  "version": "1.0.0",
-  "moduleType": [
-    "node"
-  ],
-  "ignore": [
-    "**/.*",
-    "node_modules",
-    "bower_components",
-    "output"
-  ],
+  "name": "intro",
+  "private": true,
   "dependencies": {
-    "purescript-halogen": "master"
+    "purescript-halogen": "*"
   }
 }

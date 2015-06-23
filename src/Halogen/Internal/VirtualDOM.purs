@@ -5,8 +5,8 @@ module Halogen.Internal.VirtualDOM
   ( VTree()
   , Patch()
   , Props()
-  , emptyProps
   , prop
+  , attr
   , handlerProp
   , initProp
   , finalizerProp
@@ -15,21 +15,19 @@ module Halogen.Internal.VirtualDOM
   , patch
   , vtext
   , vnode
+  , widget
   ) where
 
 import Prelude
 
-import DOM
-import Data.DOM.Simple.Types
+import Control.Monad.Eff (Eff())
 
-import Data.Int
-import Data.Maybe
-import Data.Monoid
-import Data.Nullable
-import Data.Function
+import Data.DOM.Simple.Types (HTMLElement())
+import Data.Monoid (Monoid)
+import Data.Nullable (Nullable())
+import Data.Function (Fn2(), runFn2)
 
-import Control.Monad.Eff
-import Control.Monad.ST
+import DOM (DOM())
 
 -- | Virtual DOM nodes
 data VTree
@@ -40,27 +38,23 @@ data Patch
 -- | Property collections
 data Props
 
-foreign import emptyProps :: Props
-
 -- | Create a property from a key/value pair.
--- |
--- | Properties named `data-*` will be added as attributes, and any other properties will
--- | be set directly.
--- |
--- | Users should use caution when creating custom attributes, and understand how they will
--- | be added to the DOM here.
 foreign import prop :: forall value. Fn2 String value Props
 
--- | Create a property from an event handler
+foreign import attr :: forall value. Fn2 String String Props
+
+-- | Create a property from an event handler.
 foreign import handlerProp :: forall eff event. Fn2 String (event -> Eff eff Unit) Props
 
--- | Create a property from an initializer
-foreign import initProp :: forall eff. Eff eff Unit -> Props
+-- | Create a property from an initializer.
+foreign import initProp :: forall eff. (HTMLElement -> Eff eff Unit) -> Props
 
--- | Create a property from an finalizer
-foreign import finalizerProp :: forall eff. Eff eff Unit -> Props
+-- | Create a property from an finalizer.
+foreign import finalizerProp :: forall eff. (HTMLElement -> Eff eff Unit) -> Props
 
 foreign import concatProps :: Fn2 Props Props Props
+
+foreign import emptyProps :: Props
 
 instance semigroupProps :: Semigroup Props where
   append = runFn2 concatProps
@@ -80,6 +74,11 @@ foreign import patch :: forall eff. Patch -> HTMLElement -> Eff (dom :: DOM | ef
 -- | Create a virtual DOM tree which represents a single text node
 foreign import vtext :: String -> VTree
 
-
 -- | Create a virtual DOM tree which represents an element with properties
-foreign import vnode :: String -> Props -> Array VTree -> VTree
+-- | (namespace, tag name, key, properties, children).
+foreign import vnode :: Nullable String -> String -> Nullable String -> Props -> Array VTree -> VTree
+
+foreign import widget :: forall eff. Eff (dom :: DOM | eff) HTMLElement
+                                  -> (HTMLElement -> Eff (dom :: DOM | eff) (Nullable HTMLElement))
+                                  -> (HTMLElement -> Eff (dom :: DOM | eff) Unit)
+                                  -> VTree

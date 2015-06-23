@@ -1,18 +1,11 @@
 {
   "name": "ace",
-  "version": "1.0.0",
-  "moduleType": [
-    "node"
-  ],
-  "ignore": [
-    "**/.*",
-    "node_modules",
-    "bower_components",
-    "output"
-  ],
+  "private": true,
   "dependencies": {
-    "purescript-ace": "~0.3.0",
-    "purescript-halogen": "master",
-    "purescript-halogen-bootstrap": "master"
+    "purescript-ace": "^0.5.0",
+    "purescript-halogen": "*"
+  },
+  "resolutions": {
+    "purescript-simple-dom": "^0.1.0"
   }
 }
