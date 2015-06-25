@@ -48,7 +48,7 @@ module HalogenC where
 
   type ComponentState s f g p = Tuple s (Component s f g p)
 
-  newtype InstalledState s s' f' g p p' = InstalledState
+  type InstalledState s s' f' g p p' =
     { parent   :: s
     , children :: M.Map p (ComponentState s' f' g p')
     , factory  :: p -> ComponentState s' f' g p'
@@ -62,13 +62,13 @@ module HalogenC where
   -- queries a particular child from the parent:
   query :: forall s s' f' p p' g. (Monad g, Ord p) => p -> (forall i. Free f' i -> QueryT s' f' p p' g s (Maybe i))
   query p q = do
-    InstalledState st <- get :: QueryT s' f' p p' g s (InstalledState s s' f' g p p')
+    st <- get :: QueryT s' f' p p' g s (InstalledState s s' f' g p p')
     case M.lookup p st.children of
       Nothing -> pure Nothing
       Just (Tuple s comp@(Component c)) ->
         QueryT $ do
           Tuple i s' <- lift $ runStateT (c.query q) s
-          put $ InstalledState st { children = M.insert p (Tuple s' comp) st.children }
+          put st { children = M.insert p (Tuple s' comp) st.children }
           pure (Just i)
 
   -- lifts an effect into the QueryT monad:
@@ -89,8 +89,12 @@ module HalogenC where
 
   instance monadQueryT :: (Monad g) => Monad (QueryT s' f' p p' g s)
 
-  instance monadStateQueryT :: (Monad g) => MonadState (InstalledState s s' f' g p p') (QueryT s' f' p p' g s) where
-    state f = QueryT (state f)
+  instance monadStateQueryT :: (Monad g) => MonadState s (QueryT s' f' p p' g s) where
+    state f = do
+      st <- get
+      let s' = f st.parent
+      put st { parent = snd s' }
+      pure $ fst s'
 
   instance functorChildF :: (Functor f) => Functor (ChildF p f) where
     (<$>) f (ChildF p fi) = ChildF p (f <$> fi)
