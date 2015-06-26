@@ -5,7 +5,7 @@ module HalogenC where
   import Control.Monad.Rec.Class (MonadRec)
   import Control.Monad.State.Class (MonadState, get, put)
   import Control.Monad.State.Trans (StateT(), runStateT)
-  import Control.Monad.Trans (lift)
+  import Control.Monad.Trans (MonadTrans, lift)
   import Control.Plus (Plus, empty)
   import Data.Bifunctor (bimap, lmap)
   import Data.Coyoneda (Natural(), lowerCoyoneda)
@@ -33,38 +33,38 @@ module HalogenC where
   foreign import todo :: forall a. a
 
   installR :: forall s f g pl pr s' f' p'. (Ord pr, Plus g) =>
-    Component s f (QueryT s' f' pr p' g s) (Either pl pr) ->   -- parent
-    (pr -> Tuple s' (Component s' f' g p'))               ->   -- factory
-    Component (InstalledState s s' f' g pl p') (Coproduct f (ChildF pr f')) g (Either pl p')
-  installR a f = todo
+    (pr -> Tuple s' (Component s' f' g p'))               ->
+    Component s f (QueryT s s' f' pr p' g) (Either pl pr) ->
+    Component (InstalledState s s' f' pl p' g) (Coproduct f (ChildF pr f')) g (Either pl p')
+  installR f a = todo
 
   installL :: forall s f g pl pr s' f' p'. (Ord pl, Plus g) =>
-    Component s f (QueryT s' f' pl p' g s) (Either pl pr) ->   -- parent
-    (pl -> Tuple s' (Component s' f' g p'))               ->   -- factory
-    Component (InstalledState s s' f' g pr p') (Coproduct f (ChildF pl f')) g (Either pr p')
-  installL a f = todo
+    (pl -> Tuple s' (Component s' f' g p'))               ->
+    Component s f (QueryT s s' f' pl p' g) (Either pl pr) ->
+    Component (InstalledState s s' f' pr p' g) (Coproduct f (ChildF pl f')) g (Either pr p')
+  installL f a = todo
 
   installAll :: forall s f g p s' f' p'. (Ord p, Functor f, Functor f', MonadRec g, Plus g) =>
-    (p -> Tuple s' (Component s' f' g p'))  -> -- factory
-    Component s f (QueryT s' f' p p' g s) p -> -- parent
-    Component (InstalledState s s' f' g p p') (Coproduct f (ChildF p f')) g p'
+    (p -> Tuple s' (Component s' f' g p'))  ->
+    Component s f (QueryT s s' f' p p' g) p ->
+    Component (InstalledState s s' f' p p' g) (Coproduct f (ChildF p f')) g p'
   installAll f (Component c) = Component { render: render, query: query }
     where
 
-    render :: (InstalledState s s' f' g p p') -> HTML p' ((Coproduct f (ChildF p f')) Unit)
+    render :: (InstalledState s s' f' p p' g) -> HTML p' ((Coproduct f (ChildF p f')) Unit)
     render st = install (renderChild st) left $ c.render st.parent
 
-    renderChild :: (InstalledState s s' f' g p p') -> p -> HTML p' ((Coproduct f (ChildF p f')) Unit)
+    renderChild :: (InstalledState s s' f' p p' g) -> p -> HTML p' ((Coproduct f (ChildF p f')) Unit)
     renderChild st p = case f p of
       Tuple si (Component c) ->
         (right <<< ChildF p) <$> c.render (maybe si fst $ M.lookup p st.children)
 
-    query :: forall i. Free (Coproduct f (ChildF p f')) i -> StateT (InstalledState s s' f' g p p') g i
+    query :: forall i. Free (Coproduct f (ChildF p f')) i -> StateT (InstalledState s s' f' p p' g) g i
     query fi = runFreeM (coproduct (pure empty) queryChild) fi
 
-    queryChild :: forall i. ChildF p f' i -> StateT (InstalledState s s' f' g p p') g i
+    queryChild :: forall i. ChildF p f' i -> StateT (InstalledState s s' f' p p' g) g i
     queryChild (ChildF p q) = do
-      st <- get :: _ (InstalledState s s' f' g p p')
+      st <- get :: _ (InstalledState s s' f' p p' g)
       case M.lookup p st.children of
         Nothing -> empty
         Just (Tuple s comp@(Component c)) -> do
@@ -79,53 +79,50 @@ module HalogenC where
 
   type ComponentState s f g p = Tuple s (Component s f g p)
 
-  type InstalledState s s' f' g p p' =
+  type InstalledState s s' f' p p' g =
     { parent   :: s
     , children :: M.Map p (ComponentState s' f' g p')
     , factory  :: p -> ComponentState s' f' g p'
     }
 
-  newtype QueryT s' f' p p' g s a = QueryT (StateT (InstalledState s s' f' g p p') g a)
+  newtype QueryT s s' f' p p' g a = QueryT (StateT (InstalledState s s' f' p p' g) g a)
 
-  runQueryT :: forall s' f' p p' g s a. QueryT s' f' p p' g s a -> StateT (InstalledState s s' f' g p p') g a
+  runQueryT :: forall s s' f' p p' g a. QueryT s s' f' p p' g a -> StateT (InstalledState s s' f' p p' g) g a
   runQueryT (QueryT a) = a
 
-  -- queries a particular child from the parent:
-  query :: forall s s' f' p p' g. (Monad g, Ord p) => p -> (forall i. Free f' i -> QueryT s' f' p p' g s (Maybe i))
-  query p q = do
-    st <- get :: _ (InstalledState s s' f' g p p')
+  query :: forall s s' f' p p' g. (Monad g, Ord p) => p -> (forall i. Free f' i -> QueryT s s' f' p p' g (Maybe i))
+  query p q = QueryT $ do
+    st <- get :: _ (InstalledState s s' f' p p' g)
     case M.lookup p st.children of
       Nothing -> pure Nothing
-      Just (Tuple s comp@(Component c)) ->
-        QueryT $ do
-          Tuple i s' <- lift $ runStateT (c.query q) s
-          put st { children = M.insert p (Tuple s' comp) st.children }
-          pure (Just i)
+      Just (Tuple s comp@(Component c)) -> do
+        Tuple i s' <- lift $ runStateT (c.query q) s
+        put st { children = M.insert p (Tuple s' comp) st.children }
+        pure (Just i)
 
-  -- lifts an effect into the QueryT monad:
-  effect :: forall s' f' p p' g s a. (Monad g) => g a -> QueryT s' f' p p' g s a
-  effect ga = QueryT (lift ga)
-
-  instance functorQueryT :: (Monad g) => Functor (QueryT s' f' p p' g s) where
+  instance functorQueryT :: (Monad g) => Functor (QueryT s s' f' p p' g) where
     (<$>) f (QueryT a) = QueryT (f <$> a)
 
-  instance applyQueryT :: (Monad g) => Apply (QueryT s' f' p p' g s) where
+  instance applyQueryT :: (Monad g) => Apply (QueryT s s' f' p p' g) where
     (<*>) (QueryT f) (QueryT a) = QueryT (f <*> a)
 
-  instance applicativeQueryT :: (Monad g) => Applicative (QueryT s' f' p p' g s) where
+  instance applicativeQueryT :: (Monad g) => Applicative (QueryT s s' f' p p' g) where
     pure a = QueryT (pure a)
 
-  instance bindQueryT :: (Monad g) => Bind (QueryT s' f' p p' g s) where
+  instance bindQueryT :: (Monad g) => Bind (QueryT s s' f' p p' g) where
     (>>=) (QueryT a) f = QueryT $ a >>= runQueryT <<< f
 
-  instance monadQueryT :: (Monad g) => Monad (QueryT s' f' p p' g s)
+  instance monadQueryT :: (Monad g) => Monad (QueryT s s' f' p p' g)
 
-  instance monadStateQueryT :: (Monad g) => MonadState s (QueryT s' f' p p' g s) where
-    state f = do
+  instance monadStateQueryT :: (Monad g) => MonadState s (QueryT s s' f' p p' g) where
+    state f = QueryT $ do
       st <- get
       let s' = f st.parent
       put st { parent = snd s' }
       pure $ fst s'
+
+  instance monadTransQueryT :: MonadTrans (QueryT s s' f' p p') where
+    lift m = QueryT $ lift m
 
 module ClickComponent where
 
