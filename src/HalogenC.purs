@@ -1,10 +1,10 @@
 module HalogenC where
 
-  import Control.Functor (($>))
   import Control.Monad.Free (Free(), runFreeM, mapF, liftFC)
   import Control.Monad.Rec.Class (MonadRec)
-  import Control.Monad.State.Class (MonadState, get, put)
+  import Control.Monad.State.Class (MonadState, get, gets, put)
   import Control.Monad.State.Trans (StateT(), runStateT)
+  import Control.Monad.State (State(), runState)
   import Control.Monad.Trans (MonadTrans, lift)
   import Control.Plus (Plus, empty)
   import Data.Bifunctor (bimap, lmap)
@@ -17,52 +17,70 @@ module HalogenC where
   import qualified Data.Map as M
 
   newtype Component s f g p = Component
-    { render :: s -> HTML p (f Unit)
+    { render :: State s (HTML p (f Unit))
     , query  :: forall i. Free f i -> StateT s g i
     }
 
-  runComponent :: forall s f g p. Component s f g p -> _
-  runComponent (Component c) = c
-
   instance functorComponent :: Functor (Component s f g) where
     (<$>) f (Component c) =
-      Component { render: \s -> f `lmap` c.render s
+      Component { render: lmap f <$> c.render
                 , query: c.query
                 }
 
+  renderPure :: forall s p i. (s -> (HTML p i)) -> State s (HTML p i)
+  renderPure = gets
+
   foreign import todo :: forall a. a
 
-  installR :: forall s f g pl pr s' f' p'. (Ord pr, Plus g) =>
-    (pr -> Tuple s' (Component s' f' g p'))               ->
-    Component s f (QueryT s s' f' pr p' g) (Either pl pr) ->
-    Component (InstalledState s s' f' pl p' g) (Coproduct f (ChildF pr f')) g (Either pl p')
+  installR :: forall s f g pl pr s' f' p'. (Ord pr, Plus g)
+           => (pr -> Tuple s' (Component s' f' g p'))
+           -> Component s f (QueryT s s' f' pr p' g) (Either pl pr)
+           -> Component (InstalledState s s' f' pl p' g) (Coproduct f (ChildF pr f')) g (Either pl p')
   installR f a = todo
 
-  installL :: forall s f g pl pr s' f' p'. (Ord pl, Plus g) =>
-    (pl -> Tuple s' (Component s' f' g p'))               ->
-    Component s f (QueryT s s' f' pl p' g) (Either pl pr) ->
-    Component (InstalledState s s' f' pr p' g) (Coproduct f (ChildF pl f')) g (Either pr p')
+  installL :: forall s f g pl pr s' f' p'. (Ord pl, Plus g)
+           => (pl -> Tuple s' (Component s' f' g p'))
+           -> Component s f (QueryT s s' f' pl p' g) (Either pl pr)
+           -> Component (InstalledState s s' f' pr p' g) (Coproduct f (ChildF pl f')) g (Either pr p')
   installL f a = todo
 
-  installAll :: forall s f g p s' f' p'. (Ord p, Functor f, Functor f', MonadRec g, Plus g) =>
-    (p -> Tuple s' (Component s' f' g p'))  ->
-    Component s f (QueryT s s' f' p p' g) p ->
-    Component (InstalledState s s' f' p p' g) (Coproduct f (ChildF p f')) g p'
+  installAll :: forall s f g p s' f' p'. (Ord p, Functor f, Functor f', MonadRec g, Plus g)
+             => (p -> Tuple s' (Component s' f' g p'))
+             -> Component s f (QueryT s s' f' p p' g) p
+             -> Component (InstalledState s s' f' p p' g) (Coproduct f (ChildF p f')) g p'
   installAll f (Component c) = Component { render: render, query: query }
     where
 
-    render :: (InstalledState s s' f' p p' g) -> HTML p' ((Coproduct f (ChildF p f')) Unit)
-    render st = install (renderChild st) left $ c.render st.parent
+    render :: State (InstalledState s s' f' p p' g) (HTML p' ((Coproduct f (ChildF p f')) Unit))
+    render = do
+      st <- get
+      case runState c.render st.parent of
+        Tuple html s -> do
+          put st { parent = s }
+          install (renderChild st) left html
 
-    renderChild :: (InstalledState s s' f' p p' g) -> p -> HTML p' ((Coproduct f (ChildF p f')) Unit)
-    renderChild st p = case f p of
-      Tuple si (Component c) ->
-        (right <<< ChildF p) <$> c.render (maybe si fst $ M.lookup p st.children)
+    renderChild :: (InstalledState s s' f' p p' g)
+                -> p
+                -> State (InstalledState s s' f' p p' g) (HTML p' ((Coproduct f (ChildF p f')) Unit))
+    renderChild st p = renderChild' st p $ case M.lookup p st.children of
+      Just sc -> sc
+      Nothing -> f p
 
-    query :: forall i. Free (Coproduct f (ChildF p f')) i -> StateT (InstalledState s s' f' p p' g) g i
+    renderChild' :: (InstalledState s s' f' p p' g)
+                 -> p
+                 -> ComponentState s' f' g p'
+                 -> State (InstalledState s s' f' p p' g) (HTML p' ((Coproduct f (ChildF p f')) Unit))
+    renderChild' st p (Tuple s comp@(Component c)) = case runState c.render s of
+      Tuple html s' -> do
+        put st { children = M.insert p (Tuple s' comp) st.children }
+        pure $ (right <<< ChildF p) <$> html
+
+    query :: forall i. Free (Coproduct f (ChildF p f')) i
+                    -> StateT (InstalledState s s' f' p p' g) g i
     query fi = runFreeM (coproduct (pure empty) queryChild) fi
 
-    queryChild :: forall i. ChildF p f' i -> StateT (InstalledState s s' f' p p' g) g i
+    queryChild :: forall i. ChildF p f' i
+                         -> StateT (InstalledState s s' f' p p' g) g i
     queryChild (ChildF p q) = do
       st <- get :: _ (InstalledState s s' f' p p' g)
       case M.lookup p st.children of
@@ -149,7 +167,7 @@ module ClickComponent where
   clickDecrement = liftF (inj (liftCoyoneda $ ClickDecrement unit) :: g Unit)
 
   counterComponent :: forall g. (MonadRec g) => Component Number InputC g Void
-  counterComponent = Component { render : render, query : query }
+  counterComponent = Component { render : renderPure render, query : query }
     where
 
     eval :: forall g. (Monad g) => Natural Input (StateT Number g)
@@ -204,7 +222,7 @@ module EditorComponent where
   getCursor = liftF (inj (liftCoyoneda $ GetCursor id) :: g Number)
 
   editorComponent :: forall eff. Component Unit InputC (Eff (dom :: DOM | eff)) Void
-  editorComponent = Component { render : render, query : query }
+  editorComponent = Component { render : renderPure render, query : query }
     where
 
     eval :: forall eff a. Natural Input (StateT Unit (Eff (dom :: DOM | eff)))

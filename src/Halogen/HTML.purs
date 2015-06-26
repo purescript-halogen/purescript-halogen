@@ -148,6 +148,7 @@ import Data.Monoid
 import Data.StrMap (StrMap())
 import Data.String (joinWith)
 import Data.Foldable (for_, foldMap)
+import Data.Traversable (traverse)
 import Data.Bifunctor
 
 import Control.Monad.Eff
@@ -175,9 +176,9 @@ data HTML p i
   | Element TagName (Array (A.Attr i)) (Array (HTML p i))
   | Placeholder p
 
-install :: forall p p' i i'. (p -> HTML p' i') -> (i -> i') -> HTML p i -> HTML p' i'
-install _ _ (Text s) = Text s
-install _ g (Element name attrs els) = Element name ((g <$>) <$> attrs) (install f g <$> els)
+install :: forall p p' i i' m. (Applicative m) => (p -> m (HTML p' i')) -> (i -> i') -> HTML p i -> m (HTML p' i')
+install _ _ (Text s) = pure $ Text s
+install f g (Element name attrs els) = Element name ((g <$>) <$> attrs) <$> traverse (install f g) els
 install f _ (Placeholder p) = f p
 
 instance bifunctorHTML :: Bifunctor HTML where
