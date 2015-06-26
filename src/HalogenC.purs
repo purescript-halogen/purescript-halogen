@@ -27,28 +27,31 @@ module HalogenC where
                 , query: c.query
                 }
 
+  component :: forall s f g p. (s -> HTML p (f Unit)) -> (forall i. Free f i -> StateT s g i) -> Component s f g p
+  component r q = Component { render: renderPure r, query: q }
+
   renderPure :: forall s p i. (s -> (HTML p i)) -> State s (HTML p i)
   renderPure = gets
 
   foreign import todo :: forall a. a
 
   installR :: forall s f g pl pr s' f' p'. (Ord pr, Plus g)
-           => (pr -> Tuple s' (Component s' f' g p'))
-           -> Component s f (QueryT s s' f' pr p' g) (Either pl pr)
+           => Component s f (QueryT s s' f' pr p' g) (Either pl pr)
+           -> (pr -> Tuple s' (Component s' f' g p'))
            -> Component (InstalledState s s' f' pl p' g) (Coproduct f (ChildF pr f')) g (Either pl p')
-  installR f a = todo
+  installR (Component c) f = todo
 
   installL :: forall s f g pl pr s' f' p'. (Ord pl, Plus g)
-           => (pl -> Tuple s' (Component s' f' g p'))
-           -> Component s f (QueryT s s' f' pl p' g) (Either pl pr)
+           => Component s f (QueryT s s' f' pl p' g) (Either pl pr)
+           -> (pl -> Tuple s' (Component s' f' g p'))
            -> Component (InstalledState s s' f' pr p' g) (Coproduct f (ChildF pl f')) g (Either pr p')
-  installL f a = todo
+  installL (Component c) f = todo
 
   installAll :: forall s f g p s' f' p'. (Ord p, Functor f, Functor f', MonadRec g, Plus g)
-             => (p -> Tuple s' (Component s' f' g p'))
-             -> Component s f (QueryT s s' f' p p' g) p
+             => Component s f (QueryT s s' f' p p' g) p
+             -> (p -> Tuple s' (Component s' f' g p'))
              -> Component (InstalledState s s' f' p p' g) (Coproduct f (ChildF p f')) g p'
-  installAll f (Component c) = Component { render: render, query: query }
+  installAll (Component c) f = Component { render: render, query: query }
     where
 
     render :: State (InstalledState s s' f' p p' g) (HTML p' ((Coproduct f (ChildF p f')) Unit))
@@ -73,7 +76,7 @@ module HalogenC where
     renderChild' st p (Tuple s comp@(Component c)) = case runState c.render s of
       Tuple html s' -> do
         put st { children = M.insert p (Tuple s' comp) st.children }
-        pure $ (right <<< ChildF p) <$> html
+        pure $ right <<< ChildF p <$> html
 
     query :: forall i. Free (Coproduct f (ChildF p f')) i
                     -> StateT (InstalledState s s' f' p p' g) g i
@@ -100,7 +103,6 @@ module HalogenC where
   type InstalledState s s' f' p p' g =
     { parent   :: s
     , children :: M.Map p (ComponentState s' f' g p')
-    , factory  :: p -> ComponentState s' f' g p'
     }
 
   newtype QueryT s s' f' p p' g a = QueryT (StateT (InstalledState s s' f' p p' g) g a)
@@ -109,7 +111,7 @@ module HalogenC where
   runQueryT (QueryT a) = a
 
   query :: forall s s' f' p p' g. (Monad g, Ord p) => p -> (forall i. Free f' i -> QueryT s s' f' p p' g (Maybe i))
-  query p q = QueryT $ do
+  query p q = QueryT do
     st <- get :: _ (InstalledState s s' f' p p' g)
     case M.lookup p st.children of
       Nothing -> pure Nothing
@@ -125,122 +127,19 @@ module HalogenC where
     (<*>) (QueryT f) (QueryT a) = QueryT (f <*> a)
 
   instance applicativeQueryT :: (Monad g) => Applicative (QueryT s s' f' p p' g) where
-    pure a = QueryT (pure a)
+    pure = QueryT <<< pure
 
   instance bindQueryT :: (Monad g) => Bind (QueryT s s' f' p p' g) where
-    (>>=) (QueryT a) f = QueryT $ a >>= runQueryT <<< f
+    (>>=) (QueryT a) f = QueryT (a >>= runQueryT <<< f)
 
   instance monadQueryT :: (Monad g) => Monad (QueryT s s' f' p p' g)
 
   instance monadStateQueryT :: (Monad g) => MonadState s (QueryT s s' f' p p' g) where
-    state f = QueryT $ do
+    state f = QueryT do
       st <- get
       let s' = f st.parent
       put st { parent = snd s' }
       pure $ fst s'
 
   instance monadTransQueryT :: MonadTrans (QueryT s s' f' p p') where
-    lift m = QueryT $ lift m
-
-module ClickComponent where
-
-  import Control.Monad.Free
-  import Control.Monad.Rec.Class
-  import Control.Monad.State.Class (modify)
-  import Control.Monad.State.Trans
-
-  import Data.Coyoneda
-  import Data.Identity
-  import Data.Inject
-  import Data.Void
-
-  import HalogenC
-  import qualified Halogen.HTML as H
-
-  data Input a = ClickIncrement a | ClickDecrement a
-  type InputC = Coyoneda Input
-
-  clickIncrement :: forall g. (Functor g, Inject (Coyoneda Input) g) => Free g Unit
-  clickIncrement = liftF (inj (liftCoyoneda $ ClickIncrement unit) :: g Unit)
-
-  clickDecrement :: forall g. (Functor g, Inject (Coyoneda Input) g) => Free g Unit
-  clickDecrement = liftF (inj (liftCoyoneda $ ClickDecrement unit) :: g Unit)
-
-  counterComponent :: forall g. (MonadRec g) => Component Number InputC g Void
-  counterComponent = Component { render : renderPure render, query : query }
-    where
-
-    eval :: forall g. (Monad g) => Natural Input (StateT Number g)
-    eval (ClickIncrement next) = do
-      modify (+1)
-      return next
-    eval (ClickDecrement next) = do
-      modify (flip (-) 1)
-      return next
-
-    render :: Number -> H.HTML Void (InputC Unit)
-    render n = H.text (show n)
-
-    query :: forall g i. (MonadRec g) => Free InputC i -> StateT Number g i
-    query = runFreeCM eval
-
-  test :: Free InputC Unit
-  test = do
-    clickIncrement
-    clickIncrement
-    clickDecrement
-
-module EditorComponent where
-
-  import Control.Monad.State.Trans
-  import Control.Monad.State.Class (modify)
-  import Control.Monad.Free
-  import Control.Monad.Rec.Class
-  import Control.Monad.Eff
-  import Control.Monad.Trans (lift)
-  import Control.Apply ((*>))
-
-  import Data.Coyoneda
-  import Data.Inject
-  import Data.Void
-  import Data.Identity
-
-  import DOM (DOM())
-  import HalogenC
-  import qualified Halogen.HTML as H
-
-  data Input a = GetContent (String -> a) | SetContent a String | GetCursor (Number -> a)
-  type InputC = Coyoneda Input
-
-  getContent :: forall g. (Functor g, Inject (Coyoneda Input) g) => Free g String
-  getContent = liftF (inj (liftCoyoneda $ GetContent id) :: g String)
-
-  setContent :: forall g. (Functor g, Inject (Coyoneda Input) g) => String -> Free g Unit
-  setContent s = liftF (inj (liftCoyoneda $ SetContent unit s) :: g Unit)
-
-  getCursor :: forall g. (Functor g, Inject (Coyoneda Input) g) => Free g Number
-  getCursor = liftF (inj (liftCoyoneda $ GetCursor id) :: g Number)
-
-  editorComponent :: forall eff. Component Unit InputC (Eff (dom :: DOM | eff)) Void
-  editorComponent = Component { render : renderPure render, query : query }
-    where
-
-    eval :: forall eff a. Natural Input (StateT Unit (Eff (dom :: DOM | eff)))
-    eval (GetContent f  ) = lift $       f <$> effectfulGetContent
-    eval (SetContent n s) = lift $ const n <$> effectfulSetContent s
-    eval (GetCursor  f  ) = lift $       f <$> effectfulGetCursor
-
-    render s = H.text "todo"
-
-    query :: forall eff i. Free InputC i -> StateT Unit (Eff (dom :: DOM | eff)) i
-    query = runFreeCM eval
-
-  test :: Free InputC Unit
-  test = do
-    cursor  <- getCursor
-    content <- getContent
-    setContent $ content ++ (show cursor)
-
-  foreign import effectfulGetContent :: forall eff. Eff (dom :: DOM | eff) String
-  foreign import effectfulSetContent :: forall eff. String -> Eff (dom :: DOM | eff) Unit
-  foreign import effectfulGetCursor  :: forall eff. Eff (dom :: DOM | eff) Number
+    lift = QueryT <<< lift
