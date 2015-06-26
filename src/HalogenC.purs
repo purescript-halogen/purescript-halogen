@@ -1,13 +1,14 @@
 module HalogenC where
 
   import Control.Functor (($>))
-  import Control.Monad.Free
+  import Control.Monad.Free (Free(), runFreeM, mapF, liftFC)
   import Control.Monad.Rec.Class (MonadRec)
-  import Control.Monad.State.Class
-  import Control.Monad.State.Trans
-  import Control.Monad.Trans
+  import Control.Monad.State.Class (MonadState, get, put)
+  import Control.Monad.State.Trans (StateT(), runStateT)
+  import Control.Monad.Trans (lift)
   import Control.Plus (Plus, empty)
   import Data.Bifunctor (bimap, lmap)
+  import Data.Coyoneda (Natural(), lowerCoyoneda)
   import Data.Either (Either(..))
   import Data.Functor.Coproduct (Coproduct(), coproduct, left, right)
   import Data.Maybe (Maybe(..), maybe)
@@ -67,12 +68,14 @@ module HalogenC where
       case M.lookup p st.children of
         Nothing -> empty
         Just (Tuple s comp@(Component c)) -> do
-          Tuple i s' <- lift $ runStateT (c.query $ pure q) s
+          Tuple i s' <- lift $ runStateT (c.query $ lowerCoyoneda `mapF` liftFC q) s
           put st { children = M.insert p (Tuple s' comp) st.children }
-          let what = i :: f' _
-          todo
+          pure i
 
   data ChildF p f i = ChildF p (f i)
+
+  instance functorChildF :: (Functor f) => Functor (ChildF p f) where
+    (<$>) f (ChildF p fi) = ChildF p (f <$> fi)
 
   type ComponentState s f g p = Tuple s (Component s f g p)
 
@@ -123,9 +126,6 @@ module HalogenC where
       let s' = f st.parent
       put st { parent = snd s' }
       pure $ fst s'
-
-  instance functorChildF :: (Functor f) => Functor (ChildF p f) where
-    (<$>) f (ChildF p fi) = ChildF p (f <$> fi)
 
 module ClickComponent where
 
