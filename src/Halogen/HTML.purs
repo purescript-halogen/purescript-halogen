@@ -3,6 +3,7 @@
 
 module Halogen.HTML
   ( HTML(..)
+  , install
 
   , text
   , element
@@ -173,6 +174,11 @@ data HTML p i
   = Text String
   | Element TagName (Array (A.Attr i)) (Array (HTML p i))
   | Placeholder p
+
+install :: forall p p' i i'. (p -> HTML p' i') -> (i -> i') -> HTML p i -> HTML p' i'
+install _ _ (Text s) = Text s
+install _ g (Element name attrs els) = Element name ((g <$>) <$> attrs) (install f g <$> els)
+install f _ (Placeholder p) = f p
 
 instance bifunctorHTML :: Bifunctor HTML where
   bimap f g = go

@@ -1,15 +1,17 @@
 module HalogenC where
 
-  import Control.Plus (Plus)
-  import Data.Bifunctor (lmap)
-  import Data.Tuple (Tuple(..), fst, snd)
-  import Data.Maybe (Maybe(..), maybe)
-  import Data.Either (Either(..))
-  import Data.Functor.Coproduct (Coproduct())
+  import Control.Functor (($>))
   import Control.Monad.Free
+  import Control.Monad.Rec.Class (MonadRec)
   import Control.Monad.State.Class
   import Control.Monad.State.Trans
   import Control.Monad.Trans
+  import Control.Plus (Plus, empty)
+  import Data.Bifunctor (bimap, lmap)
+  import Data.Either (Either(..))
+  import Data.Functor.Coproduct (Coproduct(), coproduct, left, right)
+  import Data.Maybe (Maybe(..), maybe)
+  import Data.Tuple (Tuple(..), fst, snd)
   import Halogen.HTML
   import qualified Data.Map as M
 
@@ -17,6 +19,9 @@ module HalogenC where
     { render :: s -> HTML p (f Unit)
     , query  :: forall i. Free f i -> StateT s g i
     }
+
+  runComponent :: forall s f g p. Component s f g p -> _
+  runComponent (Component c) = c
 
   instance functorComponent :: Functor (Component s f g) where
     (<$>) f (Component c) =
@@ -38,11 +43,34 @@ module HalogenC where
     Component (InstalledState s s' f' g pr p') (Coproduct f (ChildF pl f')) g (Either pr p')
   installL a f = todo
 
-  installAll :: forall s f g p s' f' p'. (Ord p, Plus g) =>
-    Component s f (QueryT s' f' p p' g s) p               ->   -- parent
-    (p -> Tuple s' (Component s' f' g p'))                ->   -- factory
+  installAll :: forall s f g p s' f' p'. (Ord p, Functor f, Functor f', MonadRec g, Plus g) =>
+    (p -> Tuple s' (Component s' f' g p'))  -> -- factory
+    Component s f (QueryT s' f' p p' g s) p -> -- parent
     Component (InstalledState s s' f' g p p') (Coproduct f (ChildF p f')) g p'
-  installAll a f = todo
+  installAll f (Component c) = Component { render: render, query: query }
+    where
+
+    render :: (InstalledState s s' f' g p p') -> HTML p' ((Coproduct f (ChildF p f')) Unit)
+    render st = install (renderChild st) left $ c.render st.parent
+
+    renderChild :: (InstalledState s s' f' g p p') -> p -> HTML p' ((Coproduct f (ChildF p f')) Unit)
+    renderChild st p = case f p of
+      Tuple si (Component c) ->
+        (right <<< ChildF p) <$> c.render (maybe si fst $ M.lookup p st.children)
+
+    query :: forall i. Free (Coproduct f (ChildF p f')) i -> StateT (InstalledState s s' f' g p p') g i
+    query fi = runFreeM (coproduct (pure empty) queryChild) fi
+
+    queryChild :: forall i. ChildF p f' i -> StateT (InstalledState s s' f' g p p') g i
+    queryChild (ChildF p q) = do
+      st <- get :: _ (InstalledState s s' f' g p p')
+      case M.lookup p st.children of
+        Nothing -> empty
+        Just (Tuple s comp@(Component c)) -> do
+          Tuple i s' <- lift $ runStateT (c.query $ pure q) s
+          put st { children = M.insert p (Tuple s' comp) st.children }
+          let what = i :: f' _
+          todo
 
   data ChildF p f i = ChildF p (f i)
 
@@ -62,7 +90,7 @@ module HalogenC where
   -- queries a particular child from the parent:
   query :: forall s s' f' p p' g. (Monad g, Ord p) => p -> (forall i. Free f' i -> QueryT s' f' p p' g s (Maybe i))
   query p q = do
-    st <- get :: QueryT s' f' p p' g s (InstalledState s s' f' g p p')
+    st <- get :: _ (InstalledState s s' f' g p p')
     case M.lookup p st.children of
       Nothing -> pure Nothing
       Just (Tuple s comp@(Component c)) ->
