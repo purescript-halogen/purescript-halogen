@@ -13,7 +13,7 @@
   "dependencies": {
     "purescript-halogen": "master",
     "purescript-halogen-bootstrap": "master",
-    "purescript-affjax": "~0.2.1"
+    "purescript-affjax": "~0.3.2"
   },
   "resolutions": {
     "purescript-integers": "~0.1.0"
