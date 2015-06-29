@@ -18,7 +18,6 @@ module EditorComponent where
   import qualified Halogen.HTML as H
 
   data Input a = GetContent (String -> a) | SetContent a String | GetCursor (Number -> a)
-  type InputC = Coyoneda Input
 
   getContent :: forall g. (Functor g, Inject (Coyoneda Input) g) => Free g String
   getContent = liftF (inj (liftCoyoneda $ GetContent id) :: g String)
@@ -29,7 +28,7 @@ module EditorComponent where
   getCursor :: forall g. (Functor g, Inject (Coyoneda Input) g) => Free g Number
   getCursor = liftF (inj (liftCoyoneda $ GetCursor id) :: g Number)
 
-  editorComponent :: forall eff. Component Unit (Free InputC) (Eff (dom :: DOM | eff)) Void
+  editorComponent :: forall eff. ComponentFC Unit Input (Eff (dom :: DOM | eff)) Void
   editorComponent = component render query
     where
 
@@ -38,13 +37,13 @@ module EditorComponent where
     eval (SetContent n s) = lift $ const n <$> effectfulSetContent s
     eval (GetCursor  f  ) = lift $       f <$> effectfulGetCursor
 
-    render :: Unit -> H.HTML Void (Free InputC Unit)
+    render :: Unit -> H.HTML Void (FreeC Input Unit)
     render s = H.text "todo"
 
-    query :: forall eff i. Free InputC i -> StateT Unit (Eff (dom :: DOM | eff)) i
+    query :: forall eff i. FreeC Input i -> StateT Unit (Eff (dom :: DOM | eff)) i
     query = runFreeCM eval
 
-  test :: Free InputC Unit
+  test :: FreeC Input Unit
   test = do
     cursor  <- getCursor
     content <- getContent

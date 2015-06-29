@@ -1,6 +1,7 @@
 module HalogenC where
 
   import Control.Monad.Rec.Class (MonadRec)
+  import Control.Monad.Free (Free(), FreeC())
   import Control.Monad.State (State(), runState)
   import Control.Monad.State.Class (MonadState, get, gets, put)
   import Control.Monad.State.Trans (StateT(), runStateT)
@@ -18,6 +19,9 @@ module HalogenC where
     { render :: State s (HTML p (f Unit))
     , query  :: forall i. f i -> StateT s g i
     }
+
+  type ComponentF s f g = Component s (Free f) g
+  type ComponentFC s f g = Component s (FreeC f) g
 
   instance functorComponent :: Functor (Component s f g) where
     (<$>) f (Component c) =

@@ -14,7 +14,6 @@ module ClickComponent where
   import qualified Halogen.HTML as H
 
   data Input a = ClickIncrement a | ClickDecrement a
-  type InputC = Coyoneda Input
 
   clickIncrement :: forall g. (Functor g, Inject (Coyoneda Input) g) => Free g Unit
   clickIncrement = liftF (inj (liftCoyoneda $ ClickIncrement unit) :: g Unit)
@@ -22,7 +21,7 @@ module ClickComponent where
   clickDecrement :: forall g. (Functor g, Inject (Coyoneda Input) g) => Free g Unit
   clickDecrement = liftF (inj (liftCoyoneda $ ClickDecrement unit) :: g Unit)
 
-  counterComponent :: forall g. (MonadRec g) => Component Number (Free InputC) g Void
+  counterComponent :: forall g. (MonadRec g) => ComponentFC Number Input g Void
   counterComponent = component render query
     where
 
@@ -34,13 +33,13 @@ module ClickComponent where
       modify (flip (-) 1)
       return next
 
-    render :: Number -> H.HTML Void (Free InputC Unit)
+    render :: Number -> H.HTML Void (FreeC Input Unit)
     render n = H.text (show n)
 
-    query :: forall g i. (MonadRec g) => Free InputC i -> StateT Number g i
+    query :: forall g i. (MonadRec g) => FreeC Input i -> StateT Number g i
     query = runFreeCM eval
 
-  test :: Free InputC Unit
+  test :: FreeC Input Unit
   test = do
     clickIncrement
     clickIncrement
