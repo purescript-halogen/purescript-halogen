@@ -22,7 +22,7 @@ module ClickComponent where
   clickDecrement :: forall g. (Functor g, Inject (Coyoneda Input) g) => Free g Unit
   clickDecrement = liftF (inj (liftCoyoneda $ ClickDecrement unit) :: g Unit)
 
-  counterComponent :: forall g. (MonadRec g) => Component Number InputC g Void
+  counterComponent :: forall g. (MonadRec g) => Component Number (Free InputC) g Void
   counterComponent = component render query
     where
 
@@ -34,7 +34,7 @@ module ClickComponent where
       modify (flip (-) 1)
       return next
 
-    render :: Number -> H.HTML Void (InputC Unit)
+    render :: Number -> H.HTML Void (Free InputC Unit)
     render n = H.text (show n)
 
     query :: forall g i. (MonadRec g) => Free InputC i -> StateT Number g i

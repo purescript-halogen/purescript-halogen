@@ -1,24 +1,22 @@
 module HalogenC where
 
-  import Control.Monad.Free (Free(), runFreeM, mapF, liftFC)
   import Control.Monad.Rec.Class (MonadRec)
+  import Control.Monad.State (State(), runState)
   import Control.Monad.State.Class (MonadState, get, gets, put)
   import Control.Monad.State.Trans (StateT(), runStateT)
-  import Control.Monad.State (State(), runState)
   import Control.Monad.Trans (MonadTrans, lift)
   import Control.Plus (Plus, empty)
-  import Data.Bifunctor (bimap, lmap)
-  import Data.Coyoneda (Natural(), lowerCoyoneda)
+  import Data.Bifunctor (lmap)
   import Data.Either (Either(..))
   import Data.Functor.Coproduct (Coproduct(), coproduct, left, right)
-  import Data.Maybe (Maybe(..), maybe)
+  import Data.Maybe (Maybe(..))
   import Data.Tuple (Tuple(..), fst, snd)
-  import Halogen.HTML
+  import Halogen.HTML (HTML(), install)
   import qualified Data.Map as M
 
   newtype Component s f g p = Component
     { render :: State s (HTML p (f Unit))
-    , query  :: forall i. Free f i -> StateT s g i
+    , query  :: forall i. f i -> StateT s g i
     }
 
   instance functorComponent :: Functor (Component s f g) where
@@ -27,7 +25,7 @@ module HalogenC where
                 , query: c.query
                 }
 
-  component :: forall s f g p. (s -> HTML p (f Unit)) -> (forall i. Free f i -> StateT s g i) -> Component s f g p
+  component :: forall s f g p. (s -> HTML p (f Unit)) -> (forall i. f i -> StateT s g i) -> Component s f g p
   component r q = Component { render: renderPure r, query: q }
 
   renderPure :: forall s p i. (s -> (HTML p i)) -> State s (HTML p i)
@@ -78,9 +76,9 @@ module HalogenC where
         put st { children = M.insert p (Tuple s' comp) st.children }
         pure $ right <<< ChildF p <$> html
 
-    query :: forall i. Free (Coproduct f (ChildF p f')) i
+    query :: forall i. (Coproduct f (ChildF p f')) i
                     -> StateT (InstalledState s s' f' p p' g) g i
-    query fi = runFreeM (coproduct (pure empty) queryChild) fi
+    query fi = coproduct (pure empty) queryChild fi
 
     queryChild :: forall i. ChildF p f' i
                          -> StateT (InstalledState s s' f' p p' g) g i
@@ -89,7 +87,7 @@ module HalogenC where
       case M.lookup p st.children of
         Nothing -> empty
         Just (Tuple s comp@(Component c)) -> do
-          Tuple i s' <- lift $ runStateT (c.query $ lowerCoyoneda `mapF` liftFC q) s
+          Tuple i s' <- lift $ runStateT (c.query q) s
           put st { children = M.insert p (Tuple s' comp) st.children }
           pure i
 
@@ -110,7 +108,7 @@ module HalogenC where
   runQueryT :: forall s s' f' p p' g a. QueryT s s' f' p p' g a -> StateT (InstalledState s s' f' p p' g) g a
   runQueryT (QueryT a) = a
 
-  query :: forall s s' f' p p' g. (Monad g, Ord p) => p -> (forall i. Free f' i -> QueryT s s' f' p p' g (Maybe i))
+  query :: forall s s' f' p p' g. (Monad g, Ord p) => p -> (forall i. f' i -> QueryT s s' f' p p' g (Maybe i))
   query p q = QueryT do
     st <- get :: _ (InstalledState s s' f' p p' g)
     case M.lookup p st.children of

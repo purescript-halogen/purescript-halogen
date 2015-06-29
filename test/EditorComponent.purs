@@ -29,7 +29,7 @@ module EditorComponent where
   getCursor :: forall g. (Functor g, Inject (Coyoneda Input) g) => Free g Number
   getCursor = liftF (inj (liftCoyoneda $ GetCursor id) :: g Number)
 
-  editorComponent :: forall eff. Component Unit InputC (Eff (dom :: DOM | eff)) Void
+  editorComponent :: forall eff. Component Unit (Free InputC) (Eff (dom :: DOM | eff)) Void
   editorComponent = component render query
     where
 
@@ -38,6 +38,7 @@ module EditorComponent where
     eval (SetContent n s) = lift $ const n <$> effectfulSetContent s
     eval (GetCursor  f  ) = lift $       f <$> effectfulGetCursor
 
+    render :: Unit -> H.HTML Void (Free InputC Unit)
     render s = H.text "todo"
 
     query :: forall eff i. Free InputC i -> StateT Unit (Eff (dom :: DOM | eff)) i
