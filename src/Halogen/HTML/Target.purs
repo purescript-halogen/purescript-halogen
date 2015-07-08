@@ -11,9 +11,11 @@ module Halogen.HTML.Target
   , target
   ) where
 
-import Control.Functor (($>))
+import Prelude
 
 import Control.Alt
+
+import Data.Functor (($>))
 
 import qualified Halogen.HTML as H
 import qualified Halogen.HTML.Attributes as A
@@ -24,11 +26,10 @@ import qualified Halogen.HTML.Events.Handler as E
 data URL = URL String
 
 instance eqURL :: Eq URL where
-  (==) (URL a) (URL b) = a == b
-  (/=) a       b       = not (a == b)
+  eq (URL a) (URL b) = a == b
 
 instance semigroupURL :: Semigroup URL where
-  (<>) (URL a) (URL b) = URL (a <> b)
+  append (URL a) (URL b) = URL (a <> b)
 
 instance showURL :: Show URL where
   show (URL a) = "url " ++ show a
@@ -48,6 +49,6 @@ runURL (URL s) = s
 data Target a = LinkTarget URL | DataTarget a
 
 -- | Attach a `Target` to an element using the `href` or `onclick` attribute as appropriate
-target :: forall i. Target i -> [A.Attr i]
+target :: forall i. Target i -> Array (A.Attr i)
 target (LinkTarget url) = [ A.href (runURL url) ]
 target (DataTarget i) = [ A.href "#", E.onClick (\_ -> E.preventDefault $> i) ]

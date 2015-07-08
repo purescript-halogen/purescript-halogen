@@ -1,7 +1,4 @@
-# Module Documentation
-
 ## Module Halogen.Mixin.UndoRedo
-
 
 This module provides a generic undo/redo capability.
 
@@ -9,8 +6,8 @@ This module provides a generic undo/redo capability.
 
 ``` purescript
 data UndoRedoInput
-  = Undo 
-  | Redo 
+  = Undo
+  | Redo
 ```
 
 Adds two new input types:
@@ -58,7 +55,7 @@ Modifies the state type to include its _past_ and _future_.
 canUndo :: forall s. UndoRedoState s -> Boolean
 ```
 
-`true` if the state supports the undo operation. 
+`true` if the state supports the undo operation.
 
 #### `canRedo`
 
@@ -94,6 +91,5 @@ Lift a step function to support the undo and redo operations.
 
 The view should use the `canUndo` and `canRedo` functions to determine whether or not
 to enable the corresponding controls.
-
 
 

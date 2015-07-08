@@ -1,14 +1,11 @@
-# Module Documentation
-
 ## Module Halogen.HTML.Events.Types
-
 
 This module defines types for common DOM events
 
 #### `Event`
 
 ``` purescript
-type Event fields = { "type" :: String, timeStamp :: Number, target :: HTMLElement, currentTarget :: HTMLElement, cancelable :: Boolean, bubbles :: Boolean | fields }
+type Event fields = { bubbles :: Boolean, cancelable :: Boolean, currentTarget :: HTMLElement, target :: HTMLElement, timeStamp :: Number, type :: String | fields }
 ```
 
 This record synonym captures the properties which appear on every DOM event.
@@ -19,7 +16,7 @@ properties to represent more specific types of events.
 #### `MouseEvent`
 
 ``` purescript
-type MouseEvent = (which :: Number, metaKey :: Boolean, altKey :: Boolean, shiftKey :: Boolean, ctrlKey :: Boolean, screenY :: Number, screenX :: Number, clientY :: Number, clientX :: Number, relatedTarget :: HTMLElement, detail :: Number, button :: Number)
+type MouseEvent = (button :: Number, detail :: Number, relatedTarget :: HTMLElement, clientX :: Number, clientY :: Number, screenX :: Number, screenY :: Number, ctrlKey :: Boolean, shiftKey :: Boolean, altKey :: Boolean, metaKey :: Boolean, which :: Number)
 ```
 
 Identifies the additional fields which are available on mouse events.
@@ -27,7 +24,7 @@ Identifies the additional fields which are available on mouse events.
 #### `KeyboardEvent`
 
 ``` purescript
-type KeyboardEvent = (which :: Number, metaKey :: Boolean, altKey :: Boolean, shiftKey :: Boolean, ctrlKey :: Boolean, keyCode :: Number, charCode :: Number)
+type KeyboardEvent = (charCode :: Number, keyCode :: Number, ctrlKey :: Boolean, shiftKey :: Boolean, altKey :: Boolean, metaKey :: Boolean, which :: Number)
 ```
 
 Identifies the additional fields which are available on keyboard events.
@@ -42,7 +39,6 @@ Identifies the additional fields which are available on focus events.
 
 
 ## Module Halogen.HTML.Events
-
 
 This module defines well-typed wrappers for common DOM events, so that
 they may be safely embedded in HTML documents.
@@ -80,237 +76,203 @@ onclick (input_ Input)
 #### `onAbort`
 
 ``` purescript
-onAbort :: forall i. (Event () -> EventHandler i) -> H.Attr i
+onAbort :: forall i. (Event () -> EventHandler i) -> Attr i
 ```
-
 
 #### `onBeforeUnload`
 
 ``` purescript
-onBeforeUnload :: forall i. (Event () -> EventHandler i) -> H.Attr i
+onBeforeUnload :: forall i. (Event () -> EventHandler i) -> Attr i
 ```
-
 
 #### `onError`
 
 ``` purescript
-onError :: forall i. (Event () -> EventHandler i) -> H.Attr i
+onError :: forall i. (Event () -> EventHandler i) -> Attr i
 ```
-
 
 #### `onHashChange`
 
 ``` purescript
-onHashChange :: forall i. (Event () -> EventHandler i) -> H.Attr i
+onHashChange :: forall i. (Event () -> EventHandler i) -> Attr i
 ```
-
 
 #### `onLoad`
 
 ``` purescript
-onLoad :: forall i. (Event () -> EventHandler i) -> H.Attr i
+onLoad :: forall i. (Event () -> EventHandler i) -> Attr i
 ```
-
 
 #### `onPageShow`
 
 ``` purescript
-onPageShow :: forall i. (Event () -> EventHandler i) -> H.Attr i
+onPageShow :: forall i. (Event () -> EventHandler i) -> Attr i
 ```
-
 
 #### `onPageHide`
 
 ``` purescript
-onPageHide :: forall i. (Event () -> EventHandler i) -> H.Attr i
+onPageHide :: forall i. (Event () -> EventHandler i) -> Attr i
 ```
-
 
 #### `onResize`
 
 ``` purescript
-onResize :: forall i. (Event () -> EventHandler i) -> H.Attr i
+onResize :: forall i. (Event () -> EventHandler i) -> Attr i
 ```
-
 
 #### `onScroll`
 
 ``` purescript
-onScroll :: forall i. (Event () -> EventHandler i) -> H.Attr i
+onScroll :: forall i. (Event () -> EventHandler i) -> Attr i
 ```
-
 
 #### `onUnload`
 
 ``` purescript
-onUnload :: forall i. (Event () -> EventHandler i) -> H.Attr i
+onUnload :: forall i. (Event () -> EventHandler i) -> Attr i
 ```
-
 
 #### `onChange`
 
 ``` purescript
-onChange :: forall i. (Event () -> EventHandler i) -> H.Attr i
+onChange :: forall i. (Event () -> EventHandler i) -> Attr i
 ```
-
 
 #### `onInvalid`
 
 ``` purescript
-onInvalid :: forall i. (Event () -> EventHandler i) -> H.Attr i
+onInvalid :: forall i. (Event () -> EventHandler i) -> Attr i
 ```
-
 
 #### `onReset`
 
 ``` purescript
-onReset :: forall i. (Event () -> EventHandler i) -> H.Attr i
+onReset :: forall i. (Event () -> EventHandler i) -> Attr i
 ```
-
 
 #### `onSearch`
 
 ``` purescript
-onSearch :: forall i. (Event () -> EventHandler i) -> H.Attr i
+onSearch :: forall i. (Event () -> EventHandler i) -> Attr i
 ```
-
 
 #### `onSelect`
 
 ``` purescript
-onSelect :: forall i. (Event () -> EventHandler i) -> H.Attr i
+onSelect :: forall i. (Event () -> EventHandler i) -> Attr i
 ```
-
 
 #### `onSubmit`
 
 ``` purescript
-onSubmit :: forall i. (Event () -> EventHandler i) -> H.Attr i
+onSubmit :: forall i. (Event () -> EventHandler i) -> Attr i
 ```
-
 
 #### `onClick`
 
 ``` purescript
-onClick :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attr i
+onClick :: forall i. (Event MouseEvent -> EventHandler i) -> Attr i
 ```
-
 
 #### `onContextMenu`
 
 ``` purescript
-onContextMenu :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attr i
+onContextMenu :: forall i. (Event MouseEvent -> EventHandler i) -> Attr i
 ```
-
 
 #### `onDoubleClick`
 
 ``` purescript
-onDoubleClick :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attr i
+onDoubleClick :: forall i. (Event MouseEvent -> EventHandler i) -> Attr i
 ```
-
 
 #### `onMouseDown`
 
 ``` purescript
-onMouseDown :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attr i
+onMouseDown :: forall i. (Event MouseEvent -> EventHandler i) -> Attr i
 ```
-
 
 #### `onMouseEnter`
 
 ``` purescript
-onMouseEnter :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attr i
+onMouseEnter :: forall i. (Event MouseEvent -> EventHandler i) -> Attr i
 ```
-
 
 #### `onMouseLeave`
 
 ``` purescript
-onMouseLeave :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attr i
+onMouseLeave :: forall i. (Event MouseEvent -> EventHandler i) -> Attr i
 ```
-
 
 #### `onMouseMove`
 
 ``` purescript
-onMouseMove :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attr i
+onMouseMove :: forall i. (Event MouseEvent -> EventHandler i) -> Attr i
 ```
-
 
 #### `onMouseOver`
 
 ``` purescript
-onMouseOver :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attr i
+onMouseOver :: forall i. (Event MouseEvent -> EventHandler i) -> Attr i
 ```
-
 
 #### `onMouseOut`
 
 ``` purescript
-onMouseOut :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attr i
+onMouseOut :: forall i. (Event MouseEvent -> EventHandler i) -> Attr i
 ```
-
 
 #### `onMouseUp`
 
 ``` purescript
-onMouseUp :: forall i. (Event MouseEvent -> EventHandler i) -> H.Attr i
+onMouseUp :: forall i. (Event MouseEvent -> EventHandler i) -> Attr i
 ```
-
 
 #### `onKeyDown`
 
 ``` purescript
-onKeyDown :: forall i. (Event KeyboardEvent -> EventHandler i) -> H.Attr i
+onKeyDown :: forall i. (Event KeyboardEvent -> EventHandler i) -> Attr i
 ```
-
 
 #### `onKeyPress`
 
 ``` purescript
-onKeyPress :: forall i. (Event KeyboardEvent -> EventHandler i) -> H.Attr i
+onKeyPress :: forall i. (Event KeyboardEvent -> EventHandler i) -> Attr i
 ```
-
 
 #### `onKeyUp`
 
 ``` purescript
-onKeyUp :: forall i. (Event KeyboardEvent -> EventHandler i) -> H.Attr i
+onKeyUp :: forall i. (Event KeyboardEvent -> EventHandler i) -> Attr i
 ```
-
 
 #### `onBlur`
 
 ``` purescript
-onBlur :: forall i. (Event FocusEvent -> EventHandler i) -> H.Attr i
+onBlur :: forall i. (Event FocusEvent -> EventHandler i) -> Attr i
 ```
-
 
 #### `onFocus`
 
 ``` purescript
-onFocus :: forall i. (Event FocusEvent -> EventHandler i) -> H.Attr i
+onFocus :: forall i. (Event FocusEvent -> EventHandler i) -> Attr i
 ```
-
 
 #### `onFocusIn`
 
 ``` purescript
-onFocusIn :: forall i. (Event FocusEvent -> EventHandler i) -> H.Attr i
+onFocusIn :: forall i. (Event FocusEvent -> EventHandler i) -> Attr i
 ```
-
 
 #### `onFocusOut`
 
 ``` purescript
-onFocusOut :: forall i. (Event FocusEvent -> EventHandler i) -> H.Attr i
+onFocusOut :: forall i. (Event FocusEvent -> EventHandler i) -> Attr i
 ```
 
 
-
 ## Module Halogen.HTML.Events.Handler
-
 
 This module defines the `EventHandler` functor, which can be used
 to perform standard operations on HTML events.
@@ -333,6 +295,15 @@ It can be used as follows:
 import Control.Functor (($>))
 
 H.a (E.onclick \_ -> E.preventDefault $> ClickHandler) (H.text "Click here")
+```
+
+##### Instances
+``` purescript
+instance functorEventHandler :: Functor EventHandler
+instance applyEventHandler :: Apply EventHandler
+instance applicativeEventHandler :: Applicative EventHandler
+instance bindEventHandler :: Bind EventHandler
+instance monadEventHandler :: Monad EventHandler
 ```
 
 #### `preventDefault`
@@ -359,41 +330,6 @@ stopImmediatePropagation :: EventHandler Unit
 
 Call the `stopImmediatePropagation` method on the current event
 
-#### `functorEventHandler`
-
-``` purescript
-instance functorEventHandler :: Functor EventHandler
-```
-
-
-#### `applyEventHandler`
-
-``` purescript
-instance applyEventHandler :: Apply EventHandler
-```
-
-
-#### `applicativeEventHandler`
-
-``` purescript
-instance applicativeEventHandler :: Applicative EventHandler
-```
-
-
-#### `bindEventHandler`
-
-``` purescript
-instance bindEventHandler :: Bind EventHandler
-```
-
-
-#### `monadEventHandler`
-
-``` purescript
-instance monadEventHandler :: Monad EventHandler
-```
-
-
 #### `runEventHandler`
 
 ``` purescript
@@ -404,7 +340,6 @@ This function can be used to update an event and return the wrapped value
 
 
 ## Module Halogen.HTML.Events.Monad
-
 
 This module defines the `Event` monad.
 
@@ -418,6 +353,23 @@ newtype Event eff a
 The `Event` monad, which supports the asynchronous generation of events.
 
 This monad is used in the definition of `runUI`.
+
+##### Instances
+``` purescript
+instance semigroupEvent :: Semigroup (Event eff a)
+instance monoidEvent :: Monoid (Event eff a)
+instance functorEvent :: Functor (Event eff)
+instance applyEvent :: Apply (Event eff)
+instance applicativeEvent :: Applicative (Event eff)
+instance bindEvent :: Bind (Event eff)
+instance monadEvent :: Monad (Event eff)
+instance monadEffEvent :: MonadEff eff (Event eff)
+instance monadAffEvent :: MonadAff eff (Event eff)
+instance altEvent :: Alt (Event eff)
+instance plusEvent :: Plus (Event eff)
+instance alternativeEvent :: Alternative (Event eff)
+instance monadPlusEvent :: MonadPlus (Event eff)
+```
 
 #### `unEvent`
 
@@ -462,97 +414,5 @@ andThen :: forall eff a. Event eff a -> (a -> Event eff a) -> Event eff a
 A combinator which branches based on the supplied function after the first result,
 and returns to the original stream of events after the secondary stream has been
 exhausted.
-
-#### `semigroupEvent`
-
-``` purescript
-instance semigroupEvent :: Semigroup (Event eff a)
-```
-
-
-#### `monoidEvent`
-
-``` purescript
-instance monoidEvent :: Monoid (Event eff a)
-```
-
-
-#### `functorEvent`
-
-``` purescript
-instance functorEvent :: Functor (Event eff)
-```
-
-
-#### `applyEvent`
-
-``` purescript
-instance applyEvent :: Apply (Event eff)
-```
-
-
-#### `applicativeEvent`
-
-``` purescript
-instance applicativeEvent :: Applicative (Event eff)
-```
-
-
-#### `bindEvent`
-
-``` purescript
-instance bindEvent :: Bind (Event eff)
-```
-
-
-#### `monadEvent`
-
-``` purescript
-instance monadEvent :: Monad (Event eff)
-```
-
-
-#### `monadEffEvent`
-
-``` purescript
-instance monadEffEvent :: MonadEff eff (Event eff)
-```
-
-
-#### `monadAffEvent`
-
-``` purescript
-instance monadAffEvent :: MonadAff eff (Event eff)
-```
-
-
-#### `altEvent`
-
-``` purescript
-instance altEvent :: Alt (Event eff)
-```
-
-
-#### `plusEvent`
-
-``` purescript
-instance plusEvent :: Plus (Event eff)
-```
-
-
-#### `alternativeEvent`
-
-``` purescript
-instance alternativeEvent :: Alternative (Event eff)
-```
-
-
-#### `monadPlusEvent`
-
-``` purescript
-instance monadPlusEvent :: MonadPlus (Event eff)
-```
-
-
 
 

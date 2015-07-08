@@ -1,10 +1,12 @@
-module Halogen.HTML.Renderer.String 
+module Halogen.HTML.Renderer.String
   ( renderHTMLToString
   ) where
-    
+
+import Prelude
+
 import Data.Maybe
 import Data.Array (mapMaybe)
-import Data.Function    
+import Data.Function
 import Data.String (joinWith)
 import Data.Foldable (foldMap)
 import Data.Monoid
@@ -16,7 +18,7 @@ import Control.Monad.Eff.Unsafe (unsafeInterleaveEff)
 import qualified Halogen.HTML as H
 import qualified Halogen.HTML.Attributes as A
 
-import Halogen.HTML.Events.Types 
+import Halogen.HTML.Events.Types
 
 renderAttr :: forall i. A.Attr i -> Maybe String
 renderAttr (A.Attr e) = runExists (\(A.AttrF f key value) -> Just $ A.runAttributeName key <> "=\"" <> f key value <> "\"") e
@@ -26,7 +28,7 @@ renderAttr _ = Nothing
 renderHTMLToString :: forall i. H.HTML i -> String
 renderHTMLToString (H.Text s) = s
 renderHTMLToString (H.Element name attrs els) =
-  "<" <> H.runTagName name <> 
-  " " <> joinWith " " (mapMaybe renderAttr attrs) <> 
-  ">" <> foldMap renderHTMLToString els <> 
+  "<" <> H.runTagName name <>
+  " " <> joinWith " " (mapMaybe renderAttr attrs) <>
+  ">" <> foldMap renderHTMLToString els <>
   "</" <> H.runTagName name <> ">"

@@ -1,9 +1,9 @@
 -- | This module provides a generic undo/redo capability.
 
-module Halogen.Mixin.UndoRedo 
+module Halogen.Mixin.UndoRedo
   ( UndoRedoInput(..)
   , UndoRedoState()
-  
+
   , SupportsUndoRedo
   , fromUndoRedo
   , toUndoRedo
@@ -15,9 +15,11 @@ module Halogen.Mixin.UndoRedo
   , canRedo
   , getState
   , undoRedoState
-  
+
   , withUndoRedo
   ) where
+
+import Prelude
 
 import Data.Maybe
 import Data.Tuple
@@ -28,14 +30,14 @@ pop :: forall a. Stack a -> Maybe (Tuple a (Stack a))
 pop (Push a s) = Just (Tuple a s)
 pop Empty = Nothing
 
-depth :: forall a. Stack a -> Number
+depth :: forall a. Stack a -> Int
 depth Empty = 0
 depth (Push _ s) = 1 + depth s
 
 null :: forall a. Stack a -> Boolean
 null Empty = true
 null _ = false
-  
+
 -- | Adds two new input types:
 -- |
 -- | - `Undo` - move to the previous state
@@ -58,13 +60,13 @@ redo = fromUndoRedo Redo
 -- | Modifies the state type to include its _past_ and _future_.
 data UndoRedoState s = UndoRedoState (Stack s) s (Stack s)
 
--- | `true` if the state supports the undo operation. 
+-- | `true` if the state supports the undo operation.
 canUndo :: forall s. UndoRedoState s -> Boolean
 canUndo (UndoRedoState past _ _) = not (null past)
 
 -- | `true` if the state supports the redo operation.
 canRedo :: forall s. UndoRedoState s -> Boolean
-canRedo (UndoRedoState _ _ future) = not (null future) 
+canRedo (UndoRedoState _ _ future) = not (null future)
 
 -- | Get the state at the current time
 getState :: forall s. UndoRedoState s -> s
@@ -87,5 +89,5 @@ withUndoRedo f st i = withUndo' st (toUndoRedo i)
   withUndo' st@(UndoRedoState past s future) (Just Redo) = fromMaybe st $ do
     Tuple next rest <- pop future
     return $ UndoRedoState (Push s past) next rest
-  withUndo' (UndoRedoState past s _) Nothing = 
+  withUndo' (UndoRedoState past s _) Nothing =
     UndoRedoState (Push s past) (f s i) Empty

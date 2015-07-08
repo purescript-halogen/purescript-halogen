@@ -1,7 +1,4 @@
-# Module Documentation
-
 ## Module Halogen
-
 
 The main module of the Halogen library. It defines functions for running applications
 assembled from the parts defined in the various submodules:
@@ -20,7 +17,7 @@ of `Component`s as simple as possible.
 #### `HalogenEffects`
 
 ``` purescript
-type HalogenEffects eff = (dom :: DOM, ref :: Ref, trace :: Trace | eff)
+type HalogenEffects eff = (console :: CONSOLE, ref :: REF, dom :: DOM | eff)
 ```
 
 Wraps the effects required by the `runUI` function.
@@ -66,7 +63,7 @@ runUI :: forall req eff. Component (Event (HalogenEffects eff)) req req -> Eff (
 `runUI` renders a `Component` to the DOM using `virtual-dom`.
 
 This function is the workhorse of the Halogen library. It can be called in `main`
-to set up the application and create the driver function, which can be used to 
+to set up the application and create the driver function, which can be used to
 send inputs to the UI from external components.
 
 #### `runUIWith`
@@ -111,6 +108,5 @@ constructs a `Process` which will update the DOM given an input.
 
 This function could be reused to create other types of applications based on signal functions
 (2D and 3D canvas, text-based, etc.)
-
 
 

@@ -1,110 +1,69 @@
-'use strict'
+/* jshint node: true */
+"use strict";
 
-var gulp        = require('gulp')
-  , purescript  = require('gulp-purescript')
-  , browserify  = require('gulp-browserify')
-  , run         = require('gulp-run')
-  , runSequence = require('run-sequence')
-  , jsValidate  = require('gulp-jsvalidate')
-  ;
+var gulp = require("gulp");
+var jshint = require("gulp-jshint");
+var jscs = require("gulp-jscs");
+var purescript = require("gulp-purescript");
+var rimraf = require("rimraf");
 
-var paths = {
-    src: [
-        'src/**/*.purs',
-    ],
-    bowerSrc: [
-      'bower_components/purescript-*/src/**/*.purs'
-    ],
-    dest: '',
-    docs: [ 
-        {
-            dest: 'docs/Halogen.md',
-            src: 'src/Halogen.purs'
-        }, 
-        {
-            dest: 'docs/Halogen-Signal.md',
-            src: 'src/Halogen/Signal.purs'
-        }, 
-        {
-            dest: 'docs/Halogen-HTML.md',
-            src: [ 'src/Halogen/HTML.purs', 'src/Halogen/HTML/Attributes.purs' ]
-        }, 
-        {
-            dest: 'docs/Halogen-HTML-CSS.md',
-            src: 'src/Halogen/HTML/CSS.purs'
-        }, 
-        {
-            dest: 'docs/Halogen-Component.md',
-            src: 'src/Halogen/Component.purs'
-        }, 
-        {
-            dest: 'docs/Halogen-Widgets.md',
-            src: 'src/Halogen/HTML/Widget.purs'
-        }, 
-        {
-            dest: 'docs/Halogen-HTML-Traversals.md',
-            src: 'src/Halogen/HTML/Traversals.purs'
-        }, 
-        {
-            dest: 'docs/Halogen-HTML-Renderer.md',
-            src: [ 'src/Halogen/HTML/Renderer/VirtualDOM.purs', 'src/Halogen/HTML/Renderer/String.purs' ]
-        }, 
-        {
-            dest: 'docs/Halogen-Forms.md',
-            src: 'src/Halogen/HTML/Events/Forms.purs'
-        }, 
-        {
-            dest: 'docs/Halogen-Target.md',
-            src: 'src/Halogen/HTML/Target.purs'
-        }, 
-        {
-            dest: 'docs/Halogen-Events.md',
-            src: [ 'src/Halogen/HTML/Events/Types.purs', 'src/Halogen/HTML/Events.purs', 'src/Halogen/HTML/Events/Handler.purs', 'src/Halogen/HTML/Events/Monad.purs' ]
-        }, 
-        {
-            dest: 'docs/Halogen-Mixin-UndoRedo.md',
-            src: 'src/Halogen/Mixin/UndoRedo.purs'
-        }, 
-        {
-            dest: 'docs/Halogen-Mixin-Router.md',
-            src: 'src/Halogen/Mixin/Router.purs'
-        } 
-    ]
-};
+var sources = [
+  "src/**/*.purs",
+  "bower_components/purescript-*/src/**/*.purs"
+];
 
-function compile (compiler, src, opts) {
-    var psc = compiler(opts);
-    psc.on('error', function(e) {
-        console.error(e.message);
-        psc.end();
-    });
-    return gulp.src(src.concat(paths.bowerSrc))
-        .pipe(psc)
-        .pipe(jsValidate());
-};
+var foreigns = [
+  "src/**/*.js",
+  "bower_components/purescript-*/src/**/*.js"
+];
 
-function docs (target) {
-    var docgen = purescript.pscDocs();
-    docgen.on('error', function(e) {
-        console.error(e.message);
-        docgen.end();
-    });
-    return gulp.src(target.src)
-        .pipe(docgen)
-        .pipe(gulp.dest(target.dest));
-}
-
-gulp.task('make', function() {
-    return compile(purescript.pscMake, paths.src, {})
-        .pipe(gulp.dest(paths.dest))
+gulp.task("clean-docs", function (cb) {
+  rimraf("docs", cb);
 });
 
-gulp.task('docs', function() {
-    return paths.docs.forEach(function(task) {
-        return docs(task);
-    });
+gulp.task("clean-output", function (cb) {
+  rimraf("output", cb);
 });
 
-gulp.task('default', function(cb) {
-    runSequence('make', 'docs', cb);
+gulp.task("clean", ["clean-docs", "clean-output"]);
+
+gulp.task("lint", function() {
+  return gulp.src("src/**/*.js")
+    .pipe(jshint())
+    .pipe(jshint.reporter())
+    .pipe(jscs());
 });
+
+gulp.task("make", ["lint"], function() {
+  return purescript.psc({ src: sources, ffi: foreigns });
+});
+
+gulp.task("docs", ["clean-docs"], function() {
+  return purescript.pscDocs({
+    src: sources,
+    docgen: {
+      "Halogen": "docs/Halogen.md",
+      "Halogen.Component": "docs/Halogen-Component.md",
+      "Halogen.HTML.Events.Types": "docs/Halogen-Events.md",
+      "Halogen.HTML.Events": "docs/Halogen-Events.md",
+      "Halogen.HTML.Events.Handler": "docs/Halogen-Events.md",
+      "Halogen.HTML.Events.Monad": "docs/Halogen-Events.md",
+      "Halogen.HTML.Events.Forms": "docs/Halogen-Forms.md",
+      "Halogen.HTML.CSS": "docs/Halogen-HTML-CSS.md",
+      "Halogen.HTML.Renderer.VirtualDOM": "docs/Halogen-HTML-Renderer.md",
+      "Halogen.HTML.Renderer.String": "docs/Halogen-HTML-Renderer.md",
+      "Halogen.HTML": "docs/Halogen-HTML.md",
+      "Halogen.Mixin.Router": "docs/Halogen-Mixin-Router.md",
+      "Halogen.Mixin.UndoRedo": "docs/Halogen-Mixin-UndoRedo.md",
+      "Halogen.Signal": "docs/Halogen-Signal.md",
+      "Halogen.HTML.Target": "docs/Halogen-Target.md"
+    }
+  });
+});
+
+gulp.task("dotpsci", function () {
+  return purescript.psci({ src: sources, ffi: foreigns })
+    .pipe(gulp.dest("."));
+});
+
+gulp.task("default", ["make", "docs", "dotpsci"]);

@@ -3,22 +3,25 @@
 module Halogen.HTML.CSS
   ( Styles(..)
   , runStyles
-  
+
   , style
   , stylesheet
   ) where
 
-import Data.Tuple (Tuple(..))
-import Data.Either (Either(), either)
-import Data.Maybe (Maybe(..), fromMaybe)
+import Prelude
+
 import Data.Array (mapMaybe)
+import Data.Either (Either(), either)
+import Data.List (fromList, toList)
+import Data.Maybe (Maybe(..), fromMaybe)
 import Data.String (joinWith)
+import Data.Tuple (Tuple(..))
 
 import qualified Data.StrMap as SM
 
 import Css.Property (Key(), Value())
-import Css.Stylesheet (Css(), Rule(..), runS)
 import Css.Render (render, renderedSheet, collect)
+import Css.Stylesheet (Css(), Rule(..), runS)
 
 import qualified Halogen.HTML as H
 import qualified Halogen.HTML.Attributes as A
@@ -31,7 +34,7 @@ runStyles :: Styles -> SM.StrMap String
 runStyles (Styles m) = m
 
 instance stylesIsAttribute :: A.IsAttribute Styles where
-  toAttrString _ (Styles m) = joinWith "; " $ (\(Tuple key value) -> key <> ": " <> value) <$> SM.toList m
+  toAttrString _ (Styles m) = joinWith "; " $ (\(Tuple key value) -> key <> ": " <> value) <$> fromList (SM.toList m)
 
 -- | Render a set of rules as an inline style.
 -- |
@@ -45,17 +48,17 @@ instance stylesIsAttribute :: A.IsAttribute Styles where
 style :: forall i. Css -> A.Attr i
 style = A.attr (A.attributeName "style") <<< Styles <<< rules <<< runS
   where
-  rules :: [Rule] -> SM.StrMap String
-  rules rs = SM.fromList properties
+  rules :: Array Rule -> SM.StrMap String
+  rules rs = SM.fromList (toList properties)
     where
-    properties :: [Tuple String String]
+    properties :: Array (Tuple String String)
     properties = mapMaybe property rs >>= collect >>> rights
-    
+
   property :: Rule -> Maybe (Tuple (Key Unit) Value)
   property (Property k v) = Just (Tuple k v)
   property _              = Nothing
-  
-  rights :: forall a b. [Either a b] -> [b]
+
+  rights :: forall a b. Array (Either a b) -> Array b
   rights = mapMaybe (either (const Nothing) Just)
 
 -- | Render a set of rules as a `style` element.
