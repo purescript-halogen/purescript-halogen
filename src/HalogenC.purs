@@ -1,5 +1,6 @@
 module HalogenC where
 
+  import Prelude
   import Control.Monad.Rec.Class (MonadRec)
   import Control.Monad.Free (Free(), FreeC())
   import Control.Monad.State (State(), runState)
@@ -24,7 +25,7 @@ module HalogenC where
   type ComponentFC s f g = Component s (FreeC f) g
 
   instance functorComponent :: Functor (Component s f g) where
-    (<$>) f (Component c) =
+    map f (Component c) =
       Component { render: lmap f <$> c.render
                 , query: c.query
                 }
@@ -98,7 +99,7 @@ module HalogenC where
   data ChildF p f i = ChildF p (f i)
 
   instance functorChildF :: (Functor f) => Functor (ChildF p f) where
-    (<$>) f (ChildF p fi) = ChildF p (f <$> fi)
+    map f (ChildF p fi) = ChildF p (f <$> fi)
 
   type ComponentState s f g p = Tuple s (Component s f g p)
 
@@ -123,16 +124,16 @@ module HalogenC where
         pure (Just i)
 
   instance functorQueryT :: (Monad g) => Functor (QueryT s s' f' p p' g) where
-    (<$>) f (QueryT a) = QueryT (f <$> a)
+    map f (QueryT a) = QueryT (f <$> a)
 
   instance applyQueryT :: (Monad g) => Apply (QueryT s s' f' p p' g) where
-    (<*>) (QueryT f) (QueryT a) = QueryT (f <*> a)
+    apply (QueryT f) (QueryT a) = QueryT (f <*> a)
 
   instance applicativeQueryT :: (Monad g) => Applicative (QueryT s s' f' p p' g) where
     pure = QueryT <<< pure
 
   instance bindQueryT :: (Monad g) => Bind (QueryT s s' f' p p' g) where
-    (>>=) (QueryT a) f = QueryT (a >>= runQueryT <<< f)
+    bind (QueryT a) f = QueryT (a >>= runQueryT <<< f)
 
   instance monadQueryT :: (Monad g) => Monad (QueryT s s' f' p p' g)
 

@@ -44,6 +44,12 @@ instance bifunctorHTML :: Bifunctor HTML
 instance functorHTML :: Functor (HTML p)
 ```
 
+#### `install`
+
+``` purescript
+install :: forall p p' i i' m. (Applicative m) => (p -> m (HTML p' i')) -> (i -> i') -> HTML p i -> m (HTML p' i')
+```
+
 #### `text`
 
 ``` purescript
