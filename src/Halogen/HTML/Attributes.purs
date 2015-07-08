@@ -1,38 +1,38 @@
 -- | This module enumerates some common HTML attributes, and provides additional
 -- | helper functions for working with CSS classes.
 
-module Halogen.HTML.Attributes 
+module Halogen.HTML.Attributes
   ( ClassName()
   , className
   , runClassName
-  
+
   , AttributeName()
   , attributeName
   , runAttributeName
-  
+
   , EventName()
   , eventName
   , runEventName
-  
+
   , IsAttribute
   , toAttrString
-  
+
   , ExistsR()
   , mkExistsR
   , runExistsR
-  
+
   , AttrF(..)
   , HandlerF(..)
-  
+
   , Attr(..)
-  
+
   , attr
   , handler
   , initializer
   , finalizer
-  
+
   , key
-  
+
   , alt
   , charset
   , class_
@@ -63,6 +63,8 @@ module Halogen.HTML.Attributes
   , placeholder
   ) where
 
+import Prelude
+
 import DOM
 
 import Data.Maybe
@@ -70,7 +72,6 @@ import Data.Tuple
 import Data.Either (either)
 import Data.Foreign
 import Data.Monoid (mempty)
-import Data.Array (map)
 import Data.String (joinWith)
 import Data.Traversable (mapAccumL)
 import Data.Exists
@@ -82,17 +83,14 @@ import Halogen.Internal.VirtualDOM
 import Halogen.HTML.Events.Types
 import Halogen.HTML.Events.Handler
 
+import Unsafe.Coerce (unsafeCoerce)
+
 -- | We need a variant of `Exists` which works for type constructors which accept a _row_ of types.
 data ExistsR (f :: # * -> *)
 
-foreign import unsafeCoerce
-  "function unsafeCoerce(x) {\
-  \  return x;\
-  \}" :: forall a b. a -> b
- 
 runExistsR :: forall f r. (forall a. f a -> r) -> ExistsR f -> r
 runExistsR = unsafeCoerce
- 
+
 mkExistsR :: forall f a. f a -> ExistsR f
 mkExistsR = unsafeCoerce
 
@@ -115,10 +113,10 @@ data Attr i
   | Finalizer i
 
 instance functorAttr :: Functor Attr where
-  (<$>) _ (Attr e) = Attr e
-  (<$>) f (Handler e) = runExistsR (\(HandlerF name k) -> Handler (mkExistsR (HandlerF name (\e -> f <$> k e)))) e
-  (<$>) f (Initializer i) = Initializer (f i)
-  (<$>) f (Finalizer i) = Finalizer (f i)
+  map _ (Attr e) = Attr e
+  map f (Handler e) = runExistsR (\(HandlerF name k) -> Handler (mkExistsR (HandlerF name (\e -> f <$> k e)))) e
+  map f (Initializer i) = Initializer (f i)
+  map f (Finalizer i) = Finalizer (f i)
 
 -- | Create an attribute
 attr :: forall value i. (IsAttribute value) => AttributeName value -> value -> Attr i
@@ -179,34 +177,34 @@ runEventName (EventName s) = s
 -- | `toAttrString` is an alternative to `show`, and is needed by `attr` in the string renderer.
 class IsAttribute a where
   toAttrString :: AttributeName a -> a -> String
-  
+
 instance stringIsAttribute :: IsAttribute String where
   toAttrString _ s = s
-  
+
 instance numberIsAttribute :: IsAttribute Number where
   toAttrString _ n = show n
-  
+
 instance booleanIsAttribute :: IsAttribute Boolean where
   toAttrString name true = runAttributeName name
   toAttrString _ false = ""
 
 -- Smart constructors
 
--- | The `key` property associates a unique key with a node, which can be used to 
+-- | The `key` property associates a unique key with a node, which can be used to
 -- | implement a more efficient diff/patch.
 key :: forall i. String -> Attr i
 key = attr $ attributeName "key"
 
 alt :: forall i. String -> Attr i
 alt = attr $ attributeName "alt"
-     
+
 charset :: forall i. String -> Attr i
 charset = attr $ attributeName "charset"
 
 class_ :: forall i. ClassName -> Attr i
 class_ = attr (attributeName "className") <<< runClassName
 
-classes :: forall i. [ClassName] -> Attr i
+classes :: forall i. Array ClassName -> Attr i
 classes ss = attr (attributeName "className") (joinWith " " $ map runClassName ss)
 
 colSpan :: forall i. Number -> Attr i
@@ -232,31 +230,31 @@ httpEquiv = attr $ attributeName "http-equiv"
 
 id_ :: forall i. String -> Attr i
 id_ = attr $ attributeName "id"
-   
+
 name :: forall i. String -> Attr i
 name = attr $ attributeName "name"
-       
+
 rel :: forall i. String -> Attr i
 rel = attr $ attributeName "rel"
-    
+
 src :: forall i. String -> Attr i
 src = attr $ attributeName "src"
-   
+
 target :: forall i. String -> Attr i
 target = attr $ attributeName "target"
-   
+
 title :: forall i. String -> Attr i
 title = attr $ attributeName "title"
-   
+
 type_ :: forall i. String -> Attr i
 type_ = attr $ attributeName "type"
-   
+
 value :: forall i. String -> Attr i
 value = attr $ attributeName "value"
-   
+
 width :: forall i. Number -> Attr i
 width = attr (attributeName "width") <<< show
-   
+
 disabled :: forall i. Boolean -> Attr i
 disabled = attr $ attributeName "disabled"
 
@@ -268,15 +266,15 @@ readonly = attr $ attributeName "readonly"
 
 spellcheck :: forall i. Boolean -> Attr i
 spellcheck = attr $ attributeName "spellcheck"
-   
+
 enabled :: forall i. Boolean -> Attr i
 enabled = disabled <<< not
-   
+
 checked :: forall i. Boolean -> Attr i
 checked = attr $ attributeName "checked"
-   
+
 selected :: forall i. Boolean -> Attr i
 selected = attr $ attributeName "selected"
-   
+
 placeholder :: forall i. String -> Attr i
 placeholder = attr $ attributeName "placeholder"

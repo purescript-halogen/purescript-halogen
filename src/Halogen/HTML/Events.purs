@@ -39,6 +39,8 @@ module Halogen.HTML.Events
   , onFocusOut
   ) where
 
+import Prelude
+
 import Data.Maybe
 
 import Halogen.HTML.Events.Handler

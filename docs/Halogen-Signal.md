@@ -1,7 +1,4 @@
-# Module Documentation
-
 ## Module Halogen.Signal
-
 
 This module defines signal functions (`SF`) and non-empty signal functions (`SF1`) and combinators
 for working with them.
@@ -13,6 +10,18 @@ newtype SF i o
 ```
 
 A `SF` represents a state machine which responds to inputs of type `i`, producing outputs of type `o`.
+
+##### Instances
+``` purescript
+instance functorSF :: Functor (SF i)
+instance applySF :: Apply (SF i)
+instance applicativeSF :: Applicative (SF i)
+instance profunctorSF :: Profunctor SF
+instance strongSF :: Strong SF
+instance choiceSF :: Choice SF
+instance semigroupoidSF :: Semigroupoid SF
+instance categorySF :: Category SF
+```
 
 #### `runSF`
 
@@ -30,10 +39,19 @@ newtype SF1 i o
 
 `SF1` represents non-empty signals, i.e. signals with an initial output value.
 
+##### Instances
+``` purescript
+instance functorSF1 :: Functor (SF1 i)
+instance applySF1 :: Apply (SF1 i)
+instance applicativeSF1 :: Applicative (SF1 i)
+instance profunctorSF1 :: Profunctor SF1
+instance semigroupoidSF1 :: Semigroupoid SF1
+```
+
 #### `runSF1`
 
 ``` purescript
-runSF1 :: forall i o. SF1 i o -> { next :: SF i o, result :: o }
+runSF1 :: forall i o. SF1 i o -> { result :: o, next :: SF i o }
 ```
 
 Run a `SF1` to obtain the initial value and remaining signal
@@ -119,97 +137,5 @@ mergeWith' :: forall a b c d i r. (i -> Either a b) -> (c -> d -> r) -> SF1 a c 
 
 A variant of `mergeWith` which takes an additional function to destructure
 its inputs.
-
-#### `functorSF`
-
-``` purescript
-instance functorSF :: Functor (SF i)
-```
-
-
-#### `functorSF1`
-
-``` purescript
-instance functorSF1 :: Functor (SF1 i)
-```
-
-
-#### `applySF`
-
-``` purescript
-instance applySF :: Apply (SF i)
-```
-
-
-#### `applySF1`
-
-``` purescript
-instance applySF1 :: Apply (SF1 i)
-```
-
-
-#### `applicativeSF`
-
-``` purescript
-instance applicativeSF :: Applicative (SF i)
-```
-
-
-#### `applicativeSF1`
-
-``` purescript
-instance applicativeSF1 :: Applicative (SF1 i)
-```
-
-
-#### `profunctorSF`
-
-``` purescript
-instance profunctorSF :: Profunctor SF
-```
-
-
-#### `profunctorSF1`
-
-``` purescript
-instance profunctorSF1 :: Profunctor SF1
-```
-
-
-#### `strongSF`
-
-``` purescript
-instance strongSF :: Strong SF
-```
-
-
-#### `choiceSF`
-
-``` purescript
-instance choiceSF :: Choice SF
-```
-
-
-#### `semigroupoidSF`
-
-``` purescript
-instance semigroupoidSF :: Semigroupoid SF
-```
-
-
-#### `semigroupoidSF1`
-
-``` purescript
-instance semigroupoidSF1 :: Semigroupoid SF1
-```
-
-
-#### `categorySF`
-
-``` purescript
-instance categorySF :: Category SF
-```
-
-
 
 

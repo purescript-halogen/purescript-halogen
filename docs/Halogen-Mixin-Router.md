@@ -1,7 +1,4 @@
-# Module Documentation
-
 ## Module Halogen.Mixin.Router
-
 
 This module provides helper functions for working with URL hashes.
 
@@ -28,6 +25,5 @@ onHashChange :: forall i eff. (Hash -> i) -> Driver i eff -> Eff (HalogenEffects
 ```
 
 Listen for hash change events, and provide an input to the driver function when one occurs.
-
 
 

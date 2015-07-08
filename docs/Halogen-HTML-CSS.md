@@ -1,7 +1,4 @@
-# Module Documentation
-
 ## Module Halogen.HTML.CSS
-
 
 This module defines an adapter between the `purescript-halogen` and `purescript-css` libraries.
 
@@ -9,30 +6,28 @@ This module defines an adapter between the `purescript-halogen` and `purescript-
 
 ``` purescript
 newtype Styles
-  = Styles (SM.StrMap String)
+  = Styles (StrMap String)
 ```
 
 A newtype for CSS styles
 
+##### Instances
+``` purescript
+instance stylesIsAttribute :: IsAttribute Styles
+```
+
 #### `runStyles`
 
 ``` purescript
-runStyles :: Styles -> SM.StrMap String
+runStyles :: Styles -> StrMap String
 ```
 
 Unpack CSS styles
 
-#### `stylesIsAttribute`
-
-``` purescript
-instance stylesIsAttribute :: A.IsAttribute Styles
-```
-
-
 #### `style`
 
 ``` purescript
-style :: forall i. Css -> A.Attr i
+style :: forall i. Css -> Attr i
 ```
 
 Render a set of rules as an inline style.
@@ -48,10 +43,9 @@ H.div [ Css.style do color red
 #### `stylesheet`
 
 ``` purescript
-stylesheet :: forall i. Css -> H.HTML i
+stylesheet :: forall i. Css -> HTML i
 ```
 
 Render a set of rules as a `style` element.
-
 
 

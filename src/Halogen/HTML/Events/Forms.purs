@@ -6,6 +6,8 @@ module Halogen.HTML.Events.Forms
   , onInput
   ) where
 
+import Prelude
+
 import DOM
 
 import Data.Maybe

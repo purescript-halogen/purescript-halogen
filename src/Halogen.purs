@@ -11,20 +11,22 @@
 -- | function, which renders a `Component` to the DOM. The other modules exist to make the construction
 -- | of `Component`s as simple as possible.
 -- |
-module Halogen 
+module Halogen
   ( HalogenEffects()
   , Driver()
   , Process()
-  
+
   , changes
-  
+
   , runUI
   , runUIWith
-  
+
   , componentProcess
   , mainLoop
   ) where
-    
+
+import Prelude
+
 import DOM
 import Data.DOM.Simple.Types
 import Data.DOM.Simple.Window
@@ -35,23 +37,22 @@ import Data.Either
 
 import Data.Profunctor.Strong ((&&&), (***))
 
-import Debug.Trace
-
 import Control.Monad.Eff
-import Control.Monad.Eff.Ref
+import Control.Monad.Eff.Console (CONSOLE(), log)
 import Control.Monad.Eff.Exception
-    
+import Control.Monad.Eff.Ref
+
 import qualified Halogen.HTML as H
 import qualified Halogen.HTML.Renderer.VirtualDOM as R
 
 import Halogen.Signal
 import Halogen.Component
-import Halogen.HTML.Events.Monad 
+import Halogen.HTML.Events.Monad
 import Halogen.Internal.VirtualDOM (VTree(), Patch(), diff, patch, createElement)
 
 -- | Wraps the effects required by the `runUI` function.
-type HalogenEffects eff = (trace :: Trace, ref :: Ref, dom :: DOM | eff)
- 
+type HalogenEffects eff = (console :: CONSOLE, ref :: REF, dom :: DOM | eff)
+
 -- | A signal which emits patches corresponding to successive `VTree`s.
 -- |
 -- | This function can be used to create alternative top-level handlers which use `virtual-dom`.
@@ -66,7 +67,7 @@ changes = differencesWith diff
 -- | outside the UI, such as timers or hash-change events.
 -- |
 -- | For example, to drive the UI with a `Tick` input every second, we might write something like the following:
--- | 
+-- |
 -- | ```purescript
 -- | main = do
 -- |   Tuple node driver <- runUI ui
@@ -78,7 +79,7 @@ type Driver i eff = i -> Eff (HalogenEffects eff) Unit
 -- | `runUI` renders a `Component` to the DOM using `virtual-dom`.
 -- |
 -- | This function is the workhorse of the Halogen library. It can be called in `main`
--- | to set up the application and create the driver function, which can be used to 
+-- | to set up the application and create the driver function, which can be used to
 -- | send inputs to the UI from external components.
 runUI :: forall req eff.
            Component (Event (HalogenEffects eff)) req req ->
@@ -93,7 +94,7 @@ runUI sf = sf `runUIWith` \_ _ _ -> return unit
 -- | the rendering pipeline.
 runUIWith :: forall req eff.
                Component (Event (HalogenEffects eff)) req req ->
-               (req -> HTMLElement -> Driver req eff -> Eff (HalogenEffects eff) Unit) -> 
+               (req -> HTMLElement -> Driver req eff -> Eff (HalogenEffects eff) Unit) ->
                Eff (HalogenEffects eff) (Tuple HTMLElement (Driver req eff))
 runUIWith sf postRender = mainLoop (pure <<< componentProcess sf postRender)
 
@@ -101,10 +102,10 @@ runUIWith sf postRender = mainLoop (pure <<< componentProcess sf postRender)
 type Process req eff = SF (Tuple req HTMLElement) (Eff (HalogenEffects eff) HTMLElement)
 
 -- | Build a `Process` from a `Component`.
-componentProcess :: forall req eff. 
+componentProcess :: forall req eff.
                       Component (Event (HalogenEffects eff)) req req ->
-                      (req -> HTMLElement -> Driver req eff -> Eff (HalogenEffects eff) Unit) -> 
-                      Driver req eff -> 
+                      (req -> HTMLElement -> Driver req eff -> Eff (HalogenEffects eff) Unit) ->
+                      Driver req eff ->
                       Tuple HTMLElement (Process req eff)
 componentProcess sf postRender driver =
   let render  = R.renderHTML requestHandler
@@ -118,7 +119,7 @@ componentProcess sf postRender driver =
   requestHandler aff = runEvent logger driver aff
 
   logger :: Error -> Eff (HalogenEffects eff) Unit
-  logger e = trace $ "Uncaught error in asynchronous code: " <> message e
+  logger e = log $ "Uncaught error in asynchronous code: " <> message e
 
   applyPatch :: Tuple (Tuple Patch req) HTMLElement -> Eff (HalogenEffects eff) HTMLElement
   applyPatch (Tuple (Tuple p req) node) = do
@@ -133,26 +134,26 @@ componentProcess sf postRender driver =
 -- |
 -- | This function could be reused to create other types of applications based on signal functions
 -- | (2D and 3D canvas, text-based, etc.)
-mainLoop :: forall req eff. (Driver req eff -> Eff (HalogenEffects eff) (Tuple HTMLElement (Process req eff))) -> 
+mainLoop :: forall req eff. (Driver req eff -> Eff (HalogenEffects eff) (Tuple HTMLElement (Process req eff))) ->
                             Eff (HalogenEffects eff) (Tuple HTMLElement (Driver req eff))
 mainLoop buildProcess = do
   ref <- newRef Nothing
   go ref
   where
-  go :: RefVal (Maybe { process :: Process req eff, node :: HTMLElement }) ->
+  go :: Ref (Maybe { process :: Process req eff, node :: HTMLElement }) ->
         Eff (HalogenEffects eff) (Tuple HTMLElement (Driver req eff))
   go ref = do
     Tuple node process <- buildProcess driver
     writeRef ref $ Just { process: process, node: node }
-    return (Tuple node driver)  
+    return (Tuple node driver)
     where
 
     driver :: Driver req eff
-    driver req = void $ setTimeout globalWindow 0 do
+    driver req = void $ setTimeout globalWindow 0.0 do
       ms <- readRef ref
       case ms of
         Just { process: process, node: node } -> do
           let work = runSF process (Tuple req node)
           node' <- head work
           writeRef ref $ Just { process: tail work, node: node' }
-        Nothing -> trace "Error: An attempt to re-render was made during the initial render."
+        Nothing -> log "Error: An attempt to re-render was made during the initial render."

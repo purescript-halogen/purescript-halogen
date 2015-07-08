@@ -1,7 +1,4 @@
-# Module Documentation
-
 ## Module Halogen.HTML.Target
-
 
 This module defines a type of _link targets_, which can be used as the target of a hyperlink or button.
 
@@ -15,26 +12,12 @@ data URL
 
 A type-safe wrapper for a URL
 
-#### `eqURL`
-
+##### Instances
 ``` purescript
 instance eqURL :: Eq URL
-```
-
-
-#### `semigroupURL`
-
-``` purescript
 instance semigroupURL :: Semigroup URL
-```
-
-
-#### `showURL`
-
-``` purescript
 instance showURL :: Show URL
 ```
-
 
 #### `url`
 
@@ -68,10 +51,9 @@ There are two types of target:
 #### `target`
 
 ``` purescript
-target :: forall i. Target i -> [A.Attr i]
+target :: forall i. Target i -> Array (Attr i)
 ```
 
 Attach a `Target` to an element using the `href` or `onclick` attribute as appropriate
-
 
 
