@@ -1,130 +1,234 @@
--- | This module defines well-typed wrappers for common DOM events, so that
--- | they may be safely embedded in HTML documents.
+## Module Halogen.HTML.Events
 
-module Halogen.HTML.Events where
+This module defines well-typed wrappers for common DOM events, so that
+they may be safely embedded in HTML documents.
 
-import Prelude
+#### `inputF`
 
-import Control.Monad.Free (Free(), liftF)
-
-import Data.Coyoneda (Coyoneda(), liftCoyoneda)
-import Data.Inject (Inject, inj)
-
-import Halogen (actionF, actionFC)
-import Halogen.HTML.Events.Handler (EventHandler())
-import Halogen.HTML.Events.Types (Event(), MouseEvent(), FocusEvent(), KeyboardEvent())
-import Halogen.HTML.Properties (Prop(), handler, eventName)
-
+``` purescript
 inputF :: forall f g a. (Functor f, Functor g, Inject f g) => (forall i. a -> i -> f i) -> a -> EventHandler (Free g Unit)
-inputF f x = pure $ actionF (f x)
+```
 
+#### `inputF_`
+
+``` purescript
 inputF_ :: forall f g a. (Functor f, Functor g, Inject f g) => (forall i. i -> f i) -> a -> EventHandler (Free g Unit)
-inputF_ f _ = pure $ actionF f
+```
 
+#### `inputFC`
+
+``` purescript
 inputFC :: forall f g a. (Functor g, Inject (Coyoneda f) g) => (forall i. a -> i -> f i) -> a -> EventHandler (Free g Unit)
-inputFC f x = pure $ actionFC (f x)
+```
 
+#### `inputFC_`
+
+``` purescript
 inputFC_ :: forall f g a. (Functor g, Inject (Coyoneda f) g) => (forall i. i -> f i) -> a -> EventHandler (Free g Unit)
-inputFC_ f _ = pure $ actionFC f
+```
 
-onAbort	:: forall i. (Event () -> EventHandler i) -> Prop i
-onAbort = handler (eventName "abort")
+#### `onAbort`
 
+``` purescript
+onAbort :: forall i. (Event () -> EventHandler i) -> Prop i
+```
+
+#### `onBeforeUnload`
+
+``` purescript
 onBeforeUnload :: forall i. (Event () -> EventHandler i) -> Prop i
-onBeforeUnload = handler (eventName "beforeunload")
+```
 
+#### `onError`
+
+``` purescript
 onError :: forall i. (Event () -> EventHandler i) -> Prop i
-onError = handler (eventName "error")
+```
 
+#### `onHashChange`
+
+``` purescript
 onHashChange :: forall i. (Event () -> EventHandler i) -> Prop i
-onHashChange = handler (eventName "hashchange")
+```
 
+#### `onLoad`
+
+``` purescript
 onLoad :: forall i. (Event () -> EventHandler i) -> Prop i
-onLoad = handler (eventName "load")
+```
 
+#### `onPageShow`
+
+``` purescript
 onPageShow :: forall i. (Event () -> EventHandler i) -> Prop i
-onPageShow = handler (eventName "pageshow")
+```
 
+#### `onPageHide`
+
+``` purescript
 onPageHide :: forall i. (Event () -> EventHandler i) -> Prop i
-onPageHide = handler (eventName "pagehide")
+```
 
+#### `onResize`
+
+``` purescript
 onResize :: forall i. (Event () -> EventHandler i) -> Prop i
-onResize = handler (eventName "resize")
+```
 
+#### `onScroll`
+
+``` purescript
 onScroll :: forall i. (Event () -> EventHandler i) -> Prop i
-onScroll = handler (eventName "scroll")
+```
 
+#### `onUnload`
+
+``` purescript
 onUnload :: forall i. (Event () -> EventHandler i) -> Prop i
-onUnload = handler (eventName "unload")
+```
 
+#### `onChange`
+
+``` purescript
 onChange :: forall i. (Event () -> EventHandler i) -> Prop i
-onChange = handler (eventName "change")
+```
 
+#### `onInput`
+
+``` purescript
 onInput :: forall i. (Event () -> EventHandler i) -> Prop i
-onInput = handler (eventName "input")
+```
 
+#### `onInvalid`
+
+``` purescript
 onInvalid :: forall i. (Event () -> EventHandler i) -> Prop i
-onInvalid = handler (eventName "invalid")
+```
 
+#### `onReset`
+
+``` purescript
 onReset :: forall i. (Event () -> EventHandler i) -> Prop i
-onReset = handler (eventName "reset")
+```
 
+#### `onSearch`
+
+``` purescript
 onSearch :: forall i. (Event () -> EventHandler i) -> Prop i
-onSearch = handler (eventName "search")
+```
 
+#### `onSelect`
+
+``` purescript
 onSelect :: forall i. (Event () -> EventHandler i) -> Prop i
-onSelect = handler (eventName "select")
+```
 
+#### `onSubmit`
+
+``` purescript
 onSubmit :: forall i. (Event () -> EventHandler i) -> Prop i
-onSubmit = handler (eventName "submit")
+```
 
+#### `onClick`
+
+``` purescript
 onClick :: forall i. (Event MouseEvent -> EventHandler i) -> Prop i
-onClick = handler (eventName "click")
+```
 
+#### `onContextMenu`
+
+``` purescript
 onContextMenu :: forall i. (Event MouseEvent -> EventHandler i) -> Prop i
-onContextMenu = handler (eventName "contextmenu")
+```
 
+#### `onDoubleClick`
+
+``` purescript
 onDoubleClick :: forall i. (Event MouseEvent -> EventHandler i) -> Prop i
-onDoubleClick = handler (eventName "dblclick")
+```
 
+#### `onMouseDown`
+
+``` purescript
 onMouseDown :: forall i. (Event MouseEvent -> EventHandler i) -> Prop i
-onMouseDown = handler (eventName "mousedown")
+```
 
+#### `onMouseEnter`
+
+``` purescript
 onMouseEnter :: forall i. (Event MouseEvent -> EventHandler i) -> Prop i
-onMouseEnter = handler (eventName "mouseenter")
+```
 
+#### `onMouseLeave`
+
+``` purescript
 onMouseLeave :: forall i. (Event MouseEvent -> EventHandler i) -> Prop i
-onMouseLeave = handler (eventName "mouseleave")
+```
 
+#### `onMouseMove`
+
+``` purescript
 onMouseMove :: forall i. (Event MouseEvent -> EventHandler i) -> Prop i
-onMouseMove = handler (eventName "mousemove")
+```
 
+#### `onMouseOver`
+
+``` purescript
 onMouseOver :: forall i. (Event MouseEvent -> EventHandler i) -> Prop i
-onMouseOver = handler (eventName "mouseover")
+```
 
+#### `onMouseOut`
+
+``` purescript
 onMouseOut :: forall i. (Event MouseEvent -> EventHandler i) -> Prop i
-onMouseOut = handler (eventName "mouseout")
+```
 
+#### `onMouseUp`
+
+``` purescript
 onMouseUp :: forall i. (Event MouseEvent -> EventHandler i) -> Prop i
-onMouseUp = handler (eventName "mouseup")
+```
 
+#### `onKeyDown`
+
+``` purescript
 onKeyDown :: forall i. (Event KeyboardEvent -> EventHandler i) -> Prop i
-onKeyDown = handler (eventName "keydown")
+```
 
+#### `onKeyPress`
+
+``` purescript
 onKeyPress :: forall i. (Event KeyboardEvent -> EventHandler i) -> Prop i
-onKeyPress = handler (eventName "keypress")
+```
 
+#### `onKeyUp`
+
+``` purescript
 onKeyUp :: forall i. (Event KeyboardEvent -> EventHandler i) -> Prop i
-onKeyUp = handler (eventName "keyup")
+```
 
+#### `onBlur`
+
+``` purescript
 onBlur :: forall i. (Event FocusEvent -> EventHandler i) -> Prop i
-onBlur = handler (eventName "blur")
+```
 
+#### `onFocus`
+
+``` purescript
 onFocus :: forall i. (Event FocusEvent -> EventHandler i) -> Prop i
-onFocus = handler (eventName "focus")
+```
 
+#### `onFocusIn`
+
+``` purescript
 onFocusIn :: forall i. (Event FocusEvent -> EventHandler i) -> Prop i
-onFocusIn = handler (eventName "focusin")
+```
 
+#### `onFocusOut`
+
+``` purescript
 onFocusOut :: forall i. (Event FocusEvent -> EventHandler i) -> Prop i
-onFocusOut = handler (eventName "focusout")
+```
+
+

@@ -13,7 +13,7 @@ A newtype for CSS styles
 
 ##### Instances
 ``` purescript
-instance stylesIsAttribute :: IsAttribute Styles
+instance stylesIsProp :: IsProp Styles
 ```
 
 #### `runStyles`
@@ -27,7 +27,7 @@ Unpack CSS styles
 #### `style`
 
 ``` purescript
-style :: forall i. Css -> Attr i
+style :: forall i. Css -> Prop i
 ```
 
 Render a set of rules as an inline style.

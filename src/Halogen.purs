@@ -1,159 +1,79 @@
--- | The main module of the Halogen library. It defines functions for running applications
--- | assembled from the parts defined in the various submodules:
--- |
--- | - `Halogen.Signal` for responding to inputs and maintaining state
--- | - `Halogen.HTML.*` for templating HTML documents
--- | - `Halogen.Component` for building application components
--- | - `Halogen.Themes.*` for rendering using common front-end libraries
--- | - `Halogen.Mixin.*` for common additional application features
--- |
--- | The functionality of this library is completely described by the type signature of the `runUI`
--- | function, which renders a `Component` to the DOM. The other modules exist to make the construction
--- | of `Component`s as simple as possible.
--- |
 module Halogen
-  ( HalogenEffects()
-  , Driver()
-  , Process()
-
-  , changes
-
+  ( Driver()
   , runUI
-  , runUIWith
-
-  , componentProcess
-  , mainLoop
+  , actionF
+  , actionFC
+  , requestF
+  , requestFC
+  , module Halogen.Component
+  , module Halogen.Effects
   ) where
 
 import Prelude
 
-import DOM
-import Data.DOM.Simple.Types
-import Data.DOM.Simple.Window
+import Control.Monad.Eff (Eff())
+import Control.Monad.Eff.Exception (throwException, error)
+import Control.Monad.Eff.Ref (Ref(), newRef, writeRef, readRef)
+import Control.Monad.Free
+import Control.Monad.State (runState)
+import Control.Monad.State.Trans (runStateT)
 
-import Data.Maybe
-import Data.Tuple
-import Data.Either
+import Data.Coyoneda (Coyoneda(), liftCoyoneda)
+import Data.DOM.Simple.Types (HTMLElement())
+import Data.Inject (Inject, inj)
+import Data.Maybe (Maybe(..))
+import Data.Tuple (Tuple(..))
+import Data.Void (Void())
 
-import Data.Profunctor.Strong ((&&&), (***))
+import Halogen.Component (Component(..))
+import Halogen.Effects (HalogenEffects())
+import Halogen.HTML.Renderer.VirtualDOM (renderHTML)
+import Halogen.Internal.VirtualDOM (VTree(), createElement, diff, patch)
 
-import Control.Monad.Eff
-import Control.Monad.Eff.Console (CONSOLE(), log)
-import Control.Monad.Eff.Exception
-import Control.Monad.Eff.Ref
+type DriverState s =
+  Maybe { node :: HTMLElement
+        , vtree :: VTree
+        , state :: s
+        }
 
-import qualified Halogen.HTML as H
-import qualified Halogen.HTML.Renderer.VirtualDOM as R
+type Driver f eff = forall i. f i -> Eff (HalogenEffects eff) i
 
-import Halogen.Signal
-import Halogen.Component
-import Halogen.HTML.Events.Monad
-import Halogen.Internal.VirtualDOM (VTree(), Patch(), diff, patch, createElement)
+runUI :: forall eff s f. Component s f (Eff (HalogenEffects eff)) Void
+      -> s
+      -> Eff (HalogenEffects eff) { node :: HTMLElement, driver :: Driver f eff }
+runUI (Component c) s =
+  case runState c.render s of
+    Tuple html s' -> do
+      ref <- newRef Nothing
+      let vtree = renderHTML (driver ref) html
+          node = createElement vtree
+      writeRef ref $ Just { node: node, vtree: vtree, state: s' }
+      pure { node: node, driver: driver ref }
 
--- | Wraps the effects required by the `runUI` function.
-type HalogenEffects eff = (console :: CONSOLE, ref :: REF, dom :: DOM | eff)
-
--- | A signal which emits patches corresponding to successive `VTree`s.
--- |
--- | This function can be used to create alternative top-level handlers which use `virtual-dom`.
-changes :: VTree -> SF VTree Patch
-changes = differencesWith diff
-
--- | This type synonym is provided to tidy up the type signature of `runUI`.
--- |
--- | The _driver function_ can be used by the caller to inject additional inputs into the system at the top-level.
--- |
--- | This is useful for supporting applications which respond to external events which originate
--- | outside the UI, such as timers or hash-change events.
--- |
--- | For example, to drive the UI with a `Tick` input every second, we might write something like the following:
--- |
--- | ```purescript
--- | main = do
--- |   Tuple node driver <- runUI ui
--- |   appendToBody node
--- |   setInterval 1000 $ driver Tick
--- | ```
-type Driver i eff = i -> Eff (HalogenEffects eff) Unit
-
--- | `runUI` renders a `Component` to the DOM using `virtual-dom`.
--- |
--- | This function is the workhorse of the Halogen library. It can be called in `main`
--- | to set up the application and create the driver function, which can be used to
--- | send inputs to the UI from external components.
-runUI :: forall p req eff.
-           Component p (Event (HalogenEffects eff)) req req ->
-           Eff (HalogenEffects eff) (Tuple HTMLElement (Driver req eff))
-runUI sf = sf `runUIWith` \_ _ _ -> return unit
-
--- | A variant of `runUI` which supports a _post-render hook_. This allows applications
--- | to support third-party components or other custom behaviors by modifying the DOM after
--- | each update.
--- |
--- | This is considered an advanced feature, and should only be used with an understanding of
--- | the rendering pipeline.
-runUIWith :: forall p req eff.
-               Component p (Event (HalogenEffects eff)) req req ->
-               (req -> HTMLElement -> Driver req eff -> Eff (HalogenEffects eff) Unit) ->
-               Eff (HalogenEffects eff) (Tuple HTMLElement (Driver req eff))
-runUIWith sf postRender = mainLoop (pure <<< componentProcess sf postRender)
-
--- | A `Process` receives inputs and outputs effectful computations which update the DOM.
-type Process req eff = SF (Tuple req HTMLElement) (Eff (HalogenEffects eff) HTMLElement)
-
--- | Build a `Process` from a `Component`.
-componentProcess :: forall p req eff.
-                      Component p (Event (HalogenEffects eff)) req req ->
-                      (req -> HTMLElement -> Driver req eff -> Eff (HalogenEffects eff) Unit) ->
-                      Driver req eff ->
-                      Tuple HTMLElement (Process req eff)
-componentProcess sf postRender driver =
-  let render  = R.renderHTML requestHandler
-      vtrees  = render <$> sf
-      diffs   = tail vtrees >>> changes (head vtrees)
-      process = (diffs &&& input) *** input
-      node    = createElement (head vtrees)
-  in Tuple node (applyPatch <$> process)
   where
-  requestHandler :: Event (HalogenEffects eff) req -> Eff (HalogenEffects eff) Unit
-  requestHandler aff = runEvent logger driver aff
 
-  logger :: Error -> Eff (HalogenEffects eff) Unit
-  logger e = log $ "Uncaught error in asynchronous code: " <> message e
+  driver :: Ref (DriverState s) -> Driver f eff
+  driver ref q = do
+    refVal <- readRef ref
+    case refVal of
+      Nothing -> throwException $ error "Error: An attempt to re-render was made during the initial render."
+      Just { node: node, vtree: prev, state: s } -> do
+        Tuple i s' <- runStateT (c.query q) s
+        case runState c.render s' of
+          Tuple html s'' -> do
+            let next = renderHTML (driver ref) html
+            node' <- patch (diff prev next) node
+            writeRef ref $ Just { node: node', vtree: next, state: s'' }
+            pure i
 
-  applyPatch :: Tuple (Tuple Patch req) HTMLElement -> Eff (HalogenEffects eff) HTMLElement
-  applyPatch (Tuple (Tuple p req) node) = do
-    node' <- patch p node
-    postRender req node' driver
-    return node'
+actionF :: forall f g. (Functor f, Functor g, Inject f g) => (forall i. i -> f i) -> Free g Unit
+actionF f = liftF (inj (f unit) :: g Unit)
 
--- | This function provides the low-level implementation of Halogen's DOM update loop.
--- |
--- | The first argument is a function which receives the `Driver` function as an argument and
--- | constructs a `Process` which will update the DOM given an input.
--- |
--- | This function could be reused to create other types of applications based on signal functions
--- | (2D and 3D canvas, text-based, etc.)
-mainLoop :: forall req eff. (Driver req eff -> Eff (HalogenEffects eff) (Tuple HTMLElement (Process req eff))) ->
-                            Eff (HalogenEffects eff) (Tuple HTMLElement (Driver req eff))
-mainLoop buildProcess = do
-  ref <- newRef Nothing
-  go ref
-  where
-  go :: Ref (Maybe { process :: Process req eff, node :: HTMLElement }) ->
-        Eff (HalogenEffects eff) (Tuple HTMLElement (Driver req eff))
-  go ref = do
-    Tuple node process <- buildProcess driver
-    writeRef ref $ Just { process: process, node: node }
-    return (Tuple node driver)
-    where
+requestF :: forall f g a. (Functor f, Functor g, Inject f g) => (forall i. (a -> i) -> f i) -> Free g a
+requestF f = liftF (inj (f id) :: g a)
 
-    driver :: Driver req eff
-    driver req = void $ setTimeout globalWindow 0.0 do
-      ms <- readRef ref
-      case ms of
-        Just { process: process, node: node } -> do
-          let work = runSF process (Tuple req node)
-          node' <- head work
-          writeRef ref $ Just { process: tail work, node: node' }
-        Nothing -> log "Error: An attempt to re-render was made during the initial render."
+actionFC :: forall f g. (Functor g, Inject (Coyoneda f) g) => (forall i. i -> f i) -> Free g Unit
+actionFC f = actionF (liftCoyoneda <<< f)
+
+requestFC :: forall f g a. (Functor g, Inject (Coyoneda f) g) => (forall i. (a -> i) -> f i) -> Free g a
+requestFC f = requestF (liftCoyoneda <<< f)

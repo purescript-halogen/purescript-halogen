@@ -1,10 +1,7 @@
--- | This module defines types for common DOM events
-
+-- | Common DOM event types.
 module Halogen.HTML.Events.Types where
 
-import Prelude
-
-import Data.DOM.Simple.Types
+import Data.DOM.Simple.Types (HTMLElement())
 
 -- | This record synonym captures the properties which appear on every DOM event.
 -- |

@@ -6,14 +6,17 @@ var jshint = require("gulp-jshint");
 var jscs = require("gulp-jscs");
 var purescript = require("gulp-purescript");
 var rimraf = require("rimraf");
+var webpack = require("webpack-stream");
 
 var sources = [
   "src/**/*.purs",
+  "test/**/*.purs",
   "bower_components/purescript-*/src/**/*.purs"
 ];
 
 var foreigns = [
   "src/**/*.js",
+  "test/**/*.js",
   "bower_components/purescript-*/src/**/*.js"
 ];
 
@@ -43,20 +46,17 @@ gulp.task("docs", ["clean-docs"], function() {
     src: sources,
     docgen: {
       "Halogen": "docs/Halogen.md",
-      "Halogen.Component": "docs/Halogen-Component.md",
-      "Halogen.HTML.Events.Types": "docs/Halogen-Events.md",
-      "Halogen.HTML.Events": "docs/Halogen-Events.md",
-      "Halogen.HTML.Events.Handler": "docs/Halogen-Events.md",
-      "Halogen.HTML.Events.Monad": "docs/Halogen-Events.md",
-      "Halogen.HTML.Events.Forms": "docs/Halogen-Forms.md",
-      "Halogen.HTML.CSS": "docs/Halogen-HTML-CSS.md",
-      "Halogen.HTML.Renderer.VirtualDOM": "docs/Halogen-HTML-Renderer.md",
-      "Halogen.HTML.Renderer.String": "docs/Halogen-HTML-Renderer.md",
-      "Halogen.HTML": "docs/Halogen-HTML.md",
-      "Halogen.Mixin.Router": "docs/Halogen-Mixin-Router.md",
-      "Halogen.Mixin.UndoRedo": "docs/Halogen-Mixin-UndoRedo.md",
-      "Halogen.Signal": "docs/Halogen-Signal.md",
-      "Halogen.HTML.Target": "docs/Halogen-Target.md"
+      "Halogen.Component": "docs/Halogen/Component.md",
+      "Halogen.Effects": "docs/Halogen/Effects.md",
+      "Halogen.HTML": "docs/Halogen/HTML.md",
+      "Halogen.HTML.CSS": "docs/Halogen/HTML/CSS.md",
+      "Halogen.HTML.Events": "docs/Halogen/HTML/Events.md",
+      "Halogen.HTML.Events.Forms": "docs/Halogen/HTML/Events/Forms.md",
+      "Halogen.HTML.Events.Handler": "docs/Halogen/HTML/Events/Handler.md",
+      "Halogen.HTML.Events.Types": "docs/Halogen/HTML/Events/Types.md",
+      "Halogen.HTML.Properties": "docs/Halogen/HTML/Properties.md",
+      "Halogen.HTML.Renderer.String": "docs/Halogen/HTML/Renderer/String.md",
+      "Halogen.HTML.Renderer.VirtualDOM": "docs/Halogen/HTML/Renderer/VirtualDOM.md",
     }
   });
 });
@@ -66,4 +66,22 @@ gulp.task("dotpsci", function () {
     .pipe(gulp.dest("."));
 });
 
-gulp.task("default", ["make", "docs", "dotpsci"]);
+gulp.task("prebundle", ["make"], function() {
+  return purescript.pscBundle({
+    src: "output/**/*.js",
+    output: "tmp/test.js",
+    module: "Test.Main",
+    main: "Test.Main"
+  });
+});
+
+gulp.task("bundle", ["prebundle"], function () {
+  return gulp.src("tmp/test.js")
+    .pipe(webpack({
+      resolve: { modulesDirectories: ["node_modules"] },
+      output: { filename: "test.js" }
+    }))
+    .pipe(gulp.dest("tmp"));
+});
+
+gulp.task("default", ["bundle", "docs", "dotpsci"]);

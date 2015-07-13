@@ -1,38 +1,33 @@
-module Halogen.HTML.Renderer.VirtualDOM
-  ( renderHTML
-  ) where
+module Halogen.HTML.Renderer.VirtualDOM (renderHTML) where
 
 import Prelude
 
-import Data.Function
-import Data.Foldable (for_, foldMap)
-import Data.Monoid
-import Data.Exists
+import Control.Monad.Eff (Eff())
 
-import Control.Monad.Eff
-import Control.Monad.Eff.Unsafe (unsafeInterleaveEff)
+import Data.Exists (runExists)
+import Data.ExistsR (runExistsR)
+import Data.Foldable (foldMap)
+import Data.Function (runFn2)
 
-import qualified Halogen.HTML as H
-import qualified Halogen.HTML.Attributes as A
-
-import Halogen.HTML.Events.Types
-import Halogen.HTML.Events.Handler
-import Halogen.Internal.VirtualDOM
-
-renderAttr :: forall i eff. (i -> Eff eff Unit) -> A.Attr i -> Props
-renderAttr _  (A.Attr e) = runExists (\(A.AttrF _ key value) -> runFn2 prop (A.runAttributeName key) value) e
-renderAttr dr (A.Handler e) = A.runExistsR (\(A.HandlerF name k) ->
-  runFn2 handlerProp (A.runEventName name) \ev -> do
-    a <- unsafeInterleaveEff $ runEventHandler ev (k ev)
-    dr a) e
-renderAttr dr (A.Initializer i) = initProp (dr i)
-renderAttr dr (A.Finalizer i) = finalizerProp (dr i)
+import Halogen.Effects (HalogenEffects())
+import Halogen.HTML (HTML(..), runTagName)
+import Halogen.HTML.Events.Handler (runEventHandler)
+import Halogen.HTML.Properties (Prop(..), PropF(..), HandlerF(..), runPropName, runEventName)
+import qualified Halogen.Internal.VirtualDOM as V
 
 -- | Render a `HTML` document to a virtual DOM node
 -- |
 -- | The first argument is an event handler.
-renderHTML :: forall p i eff. (i -> Eff eff Unit) -> H.HTML p i -> VTree
+renderHTML :: forall p f eff. (forall i. f i -> Eff (HalogenEffects eff) i) -> HTML p (f Unit) -> V.VTree
 renderHTML f = go
   where
-  go (H.Text s) = vtext s
-  go (H.Element name attrs els) = vnode (H.runTagName name) (foldMap (renderAttr f) attrs) (map go els)
+  go (Text s) = V.vtext s
+  go (Element name attrs els) = V.vnode (runTagName name) (foldMap (renderAttr f) attrs) (map go els)
+
+renderAttr :: forall f eff. (forall i. f i -> Eff (HalogenEffects eff) i) -> Prop (f Unit) -> V.Props
+renderAttr _  (Prop e) = runExists (\(PropF key value _) ->
+  runFn2 V.prop (runPropName key) value) e
+renderAttr dr (Handler e) = runExistsR (\(HandlerF name k) ->
+  runFn2 V.handlerProp (runEventName name) \ev -> runEventHandler ev (k ev) >>= dr) e
+renderAttr dr (Initializer i) = V.initProp (dr i)
+renderAttr dr (Finalizer i) = V.finalizerProp (dr i)

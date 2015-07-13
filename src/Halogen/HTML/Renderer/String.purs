@@ -1,34 +1,27 @@
-module Halogen.HTML.Renderer.String
-  ( renderHTMLToString
-  ) where
+module Halogen.HTML.Renderer.String (renderHTML) where
 
 import Prelude
 
-import Data.Maybe
 import Data.Array (mapMaybe)
-import Data.Function
-import Data.String (joinWith)
+import Data.Exists (runExists)
 import Data.Foldable (foldMap)
-import Data.Monoid
-import Data.Exists
-
-import Control.Monad.Eff
-import Control.Monad.Eff.Unsafe (unsafeInterleaveEff)
+import Data.Maybe (Maybe(..))
+import Data.String (joinWith)
+import Data.Tuple (Tuple(..))
 
 import qualified Halogen.HTML as H
-import qualified Halogen.HTML.Attributes as A
-
-import Halogen.HTML.Events.Types
-
-renderAttr :: forall i. A.Attr i -> Maybe String
-renderAttr (A.Attr e) = runExists (\(A.AttrF f key value) -> Just $ A.runAttributeName key <> "=\"" <> f key value <> "\"") e
-renderAttr _ = Nothing
+import qualified Halogen.HTML.Properties as A
 
 -- | Render a HTML document as a `String`, usually for testing purposes.
-renderHTMLToString :: forall p i. H.HTML p i -> String
-renderHTMLToString (H.Text s) = s
-renderHTMLToString (H.Element name attrs els) =
+renderHTML :: forall p i. H.HTML p i -> String
+renderHTML (H.Text s) = s
+renderHTML (H.Element name attrs els) =
   "<" <> H.runTagName name <>
   " " <> joinWith " " (mapMaybe renderAttr attrs) <>
-  ">" <> foldMap renderHTMLToString els <>
+  ">" <> foldMap renderHTML els <>
   "</" <> H.runTagName name <> ">"
+
+renderAttr :: forall i. A.Prop i -> Maybe String
+renderAttr (A.Prop e) = runExists (\(A.PropF propName value attr) ->
+  (\(Tuple attrName f) -> A.runAttrName attrName <> "=\"" <> f attrName propName value <> "\"") <$> attr) e
+renderAttr _ = Nothing

@@ -1,34 +1,27 @@
--- | This module defines the `EventHandler` functor, which can be used
--- | to perform standard operations on HTML events.
-
+-- | The `EventHandler` monad, used to perform standard operations on HTML
+-- | events.
 module Halogen.HTML.Events.Handler
   ( EventHandler()
-
   , preventDefault
   , stopPropagation
   , stopImmediatePropagation
-
   , runEventHandler
   ) where
 
 import Prelude
 
-import DOM
-
-import Data.Maybe
-import Data.Tuple
-import Data.Array ()
-import Data.Foldable (for_)
-
 import Control.Apply ((*>))
+import Control.Monad.Eff (Eff())
+import Control.Monad.Writer (Writer(), runWriter)
+import Control.Monad.Writer.Class (tell)
 import Control.Plus (empty)
-import Control.Monad.Eff
 
-import Control.Monad.Writer
-import Control.Monad.Writer.Trans
-import Control.Monad.Writer.Class
+import Data.Foldable (for_)
+import Data.Tuple (Tuple(..))
 
-import Halogen.HTML.Events.Types
+import DOM (DOM())
+
+import Halogen.HTML.Events.Types (Event())
 
 data EventUpdate
   = PreventDefault
