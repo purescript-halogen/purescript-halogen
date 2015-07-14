@@ -1,28 +1,7 @@
 ## Module Halogen.HTML.CSS
 
-This module defines an adapter between the `purescript-halogen` and `purescript-css` libraries.
-
-#### `Styles`
-
-``` purescript
-newtype Styles
-  = Styles (StrMap String)
-```
-
-A newtype for CSS styles
-
-##### Instances
-``` purescript
-instance stylesIsProp :: IsProp Styles
-```
-
-#### `runStyles`
-
-``` purescript
-runStyles :: Styles -> StrMap String
-```
-
-Unpack CSS styles
+This module defines an adapter between the `purescript-halogen` and
+`purescript-css` libraries.
 
 #### `style`
 

@@ -1,5 +1,4 @@
 -- | Convenience functions for working with form events.
-
 module Halogen.HTML.Events.Forms
   ( onValueChange
   , onValueInput
@@ -8,15 +7,12 @@ module Halogen.HTML.Events.Forms
 
 import Prelude
 
-import Control.Alternative (Alternative)
-import Control.Plus (empty)
-
 import Data.Either (either)
-import Data.Foreign (Foreign(), toForeign)
+import Data.Foreign (toForeign)
 import Data.Foreign.Class (IsForeign, readProp)
 
+import Halogen.HTML.Core (Prop(), eventName, handler)
 import Halogen.HTML.Events.Handler (EventHandler())
-import Halogen.HTML.Properties (Prop(), handler, eventName)
 
 -- | Attach event handler to event `key` with getting `prop` field as an
 -- | argument of `handler`.

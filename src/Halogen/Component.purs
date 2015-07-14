@@ -23,8 +23,8 @@ import Data.Void (Void())
 
 import DOM (DOM())
 
-import Halogen.HTML (HTML(), install)
 import Halogen.HTML.Renderer.VirtualDOM (renderHTML)
+import Halogen.HTML.Core (HTML(), install)
 import Halogen.Internal.VirtualDOM (VTree(), createElement, diff, patch)
 
 import qualified Data.Map as M

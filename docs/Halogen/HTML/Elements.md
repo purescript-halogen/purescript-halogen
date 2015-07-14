@@ -1,66 +1,12 @@
-## Module Halogen.HTML
+## Module Halogen.HTML.Elements
 
-This module defines the HTML types required by the Halogen library, and provides
-smart constructors for HTML5 elements.
-
-#### `HTML`
-
-``` purescript
-data HTML p i
-  = Text String
-  | Element TagName (Array (Prop i)) (Array (HTML p i))
-  | Placeholder p
-```
-
-An initial encoding of HTML nodes.
-
-##### Instances
-``` purescript
-instance bifunctorHTML :: Bifunctor HTML
-instance functorHTML :: Functor (HTML p)
-```
+Smart constructors for HTML5 elements.
 
 #### `text`
 
 ``` purescript
 text :: forall p i. String -> HTML p i
 ```
-
-#### `element`
-
-``` purescript
-element :: forall p i. TagName -> Array (Prop i) -> Array (HTML p i) -> HTML p i
-```
-
-#### `install`
-
-``` purescript
-install :: forall p p' i i' m. (Applicative m) => (p -> m (HTML p' i')) -> (i -> i') -> HTML p i -> m (HTML p' i')
-```
-
-#### `TagName`
-
-``` purescript
-newtype TagName
-```
-
-A type-safe wrapper for a HTML tag name
-
-#### `tagName`
-
-``` purescript
-tagName :: String -> TagName
-```
-
-Create a tag name
-
-#### `runTagName`
-
-``` purescript
-runTagName :: TagName -> String
-```
-
-Unwrap a `TagName` to get the tag name as a `String`.
 
 #### `a`
 

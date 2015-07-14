@@ -6,13 +6,15 @@ import Control.Monad.Eff (Eff())
 
 import Data.Exists (runExists)
 import Data.ExistsR (runExistsR)
-import Data.Foldable (foldMap)
+import Data.Foldable (foldl, foldMap)
 import Data.Function (runFn2)
+import Data.Maybe (Maybe(..), maybe)
+import Data.Monoid (mempty)
+import Data.Nullable (toNullable)
 
 import Halogen.Effects (HalogenEffects())
-import Halogen.HTML (HTML(..), runTagName)
+import Halogen.HTML.Core (HTML(..), Prop(..), PropF(..), HandlerF(..), runNamespace, runTagName, runPropName, runAttrName, runEventName)
 import Halogen.HTML.Events.Handler (runEventHandler)
-import Halogen.HTML.Properties (Prop(..), PropF(..), HandlerF(..), runPropName, runEventName)
 import qualified Halogen.Internal.VirtualDOM as V
 
 -- | Render a `HTML` document to a virtual DOM node
@@ -22,12 +24,25 @@ renderHTML :: forall p f eff. (forall i. f i -> Eff (HalogenEffects eff) i) -> H
 renderHTML f = go
   where
   go (Text s) = V.vtext s
-  go (Element name attrs els) = V.vnode (runTagName name) (foldMap (renderAttr f) attrs) (map go els)
+  go (Element ns name props els) =
+    let ns' = toNullable $ runNamespace <$> ns
+        key = toNullable $ foldl findKey Nothing props
+        props' = foldMap (renderProp f) props
+    in V.vnode ns' (runTagName name) key props' (go <$> els)
+  go (Placeholder _) = V.vtext ""
 
-renderAttr :: forall f eff. (forall i. f i -> Eff (HalogenEffects eff) i) -> Prop (f Unit) -> V.Props
-renderAttr _  (Prop e) = runExists (\(PropF key value _) ->
+renderProp :: forall f eff. (forall i. f i -> Eff (HalogenEffects eff) i) -> Prop (f Unit) -> V.Props
+renderProp _  (Prop e) = runExists (\(PropF key value _) ->
   runFn2 V.prop (runPropName key) value) e
-renderAttr dr (Handler e) = runExistsR (\(HandlerF name k) ->
+renderProp _  (Attr ns name value) =
+  let attrName = maybe "" (\ns' -> runNamespace ns' <> ":") ns <> runAttrName name
+  in runFn2 V.attr attrName value
+renderProp dr (Handler e) = runExistsR (\(HandlerF name k) ->
   runFn2 V.handlerProp (runEventName name) \ev -> runEventHandler ev (k ev) >>= dr) e
-renderAttr dr (Initializer i) = V.initProp (dr i)
-renderAttr dr (Finalizer i) = V.finalizerProp (dr i)
+renderProp dr (Initializer f) = V.initProp (dr <<< f)
+renderProp dr (Finalizer f) = V.finalizerProp (dr <<< f)
+renderProp _ _ = mempty
+
+findKey :: forall i. Maybe String -> Prop i -> Maybe String
+findKey _ (Key k) = Just k
+findKey r _ = r

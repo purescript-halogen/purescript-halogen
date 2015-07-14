@@ -1,40 +1,6 @@
--- | This module enumerates some common HTML attributes, and provides additional
--- | helper functions for working with CSS classes.
-
+-- | This module provides `Prop` values for some common HTML attributes.
 module Halogen.HTML.Properties
-  ( Prop(..)
-  , prop
-  , handler
-  , initializer
-  , finalizer
-
-  , AttrName()
-  , attrName
-  , runAttrName
-
-  , AttrNS()
-  , attrNS
-  , runAttrNS
-
-  , PropName()
-  , propName
-  , runPropName
-
-  , ClassName()
-  , className
-  , runClassName
-
-  , EventName()
-  , eventName
-  , runEventName
-
-  , IsProp
-  , toPropString
-
-  , PropF(..)
-  , HandlerF(..)
-
-  , key
+  ( key
   , alt
   , charset
   , class_
@@ -65,135 +31,17 @@ module Halogen.HTML.Properties
 
 import Prelude
 
-import Data.Either (either)
-import Data.Exists (Exists(), mkExists)
-import Data.ExistsR (ExistsR(), mkExistsR, runExistsR)
 import Data.Maybe (Maybe(..))
 import Data.String (joinWith)
-import Data.Tuple (Tuple(..))
 
-import Halogen.HTML.Events.Handler (EventHandler())
+import Halogen.HTML.Core (Prop(..), ClassName(), prop, propName, attrName, runClassName)
 import Halogen.HTML.Events.Types (Event())
+import Halogen.HTML.Events.Handler (EventHandler())
 
--- | A single attribute is either
--- |
--- | - An attribute
--- | - An event handler
-data Prop i
-  = Prop (Exists PropF)
-  | Attr (Maybe AttrNS) AttrName String
-  | Handler (ExistsR (HandlerF i))
-  | Initializer i
-  | Finalizer i
-
-instance functorProp :: Functor Prop where
-  map _ (Prop e) = Prop e
-  map _ (Attr ns k v) = Attr ns k v
-  -- map f (Handler e) = runExistsR (\(HandlerF name k) -> Handler (mkExistsR (HandlerF name (\e -> f <$> k e)))) e
-  map f (Initializer i) = Initializer (f i)
-  map f (Finalizer i) = Finalizer (f i)
-
--- | Create an attribute
-prop :: forall value i. (IsProp value) => PropName value -> Maybe AttrName -> value -> Prop i
-prop name attr v = Prop (mkExists (PropF name v (flip Tuple toPropString <$> attr)))
-
--- | Create an event handler
-handler :: forall fields i. EventName fields -> (Event fields -> EventHandler i) -> Prop i
-handler name k = Handler (mkExistsR (HandlerF name k))
-
--- | Attach an initializer.
-initializer :: forall i. i -> Prop i
-initializer = Initializer
-
--- | Attach a finalizer.
-finalizer :: forall i. i -> Prop i
-finalizer = Finalizer
-
--- | The data which represents a typed attribute, hidden inside an existential package in
--- | the `Prop` type.
-data PropF value = PropF (PropName value) value (Maybe (Tuple AttrName (AttrName -> PropName value -> value -> String)))
-
--- | The data which represents a typed event handler, hidden inside an existential package in
--- | the `Prop` type.
-data HandlerF i fields = HandlerF (EventName fields) (Event fields -> EventHandler i)
-
--- | A type-safe wrapper for attribute names
--- |
--- | The phantom type `value` describes the type of value which this attribute requires.
-newtype PropName value = PropName String
-
--- | Create an attribute name
-propName :: forall value. String -> PropName value
-propName = PropName
-
--- | Unpack an attribute name
-runPropName :: forall value. PropName value -> String
-runPropName (PropName s) = s
-
-newtype AttrNS = AttrNS String
-
-attrNS :: String -> AttrNS
-attrNS = AttrNS
-
-runAttrNS :: AttrNS -> String
-runAttrNS (AttrNS ns) = ns
-
-newtype AttrName = AttrName String
-
-attrName :: String -> AttrName
-attrName = AttrName
-
-runAttrName :: AttrName -> String
-runAttrName (AttrName ns) = ns
-
--- | A wrapper for strings which are used as CSS classes
-newtype ClassName = ClassName String
-
--- Create a class name
-className :: String -> ClassName
-className = ClassName
-
--- | Unpack a class name
-runClassName :: ClassName -> String
-runClassName (ClassName s) = s
-
--- | A type-safe wrapper for event names.
--- |
--- | The phantom type `fields` describes the event type which we can expect to exist on events
--- | corresponding to this name.
-newtype EventName (fields :: # *) = EventName String
-
--- Create an event name
-eventName :: forall fields. String -> EventName fields
-eventName = EventName
-
--- | Unpack an event name
-runEventName :: forall fields. EventName fields -> String
-runEventName (EventName s) = s
-
--- | This type class captures those types which can be used as attribute values.
--- |
--- | `toPropString` is an alternative to `show`, and is needed by `prop` in the string renderer.
-class IsProp a where
-  toPropString :: AttrName -> PropName a -> a -> String
-
-instance stringIsProp :: IsProp String where
-  toPropString _ _ s = s
-
-instance intIsProp :: IsProp Int where
-  toPropString _ _ i = show i
-
-instance numberIsProp :: IsProp Number where
-  toPropString _ _ n = show n
-
-instance booleanIsProp :: IsProp Boolean where
-  toPropString name _ true = runAttrName name
-  toPropString _ _ false = ""
-
--- | The `key` property associates a unique key with a node, which can be used to
--- | implement a more efficient diff/patch.
+-- | The `key` property associates a unique key with a node, which can be used
+-- | to implement a more efficient diff/patch.
 key :: forall i. String -> Prop i
-key = prop (propName "key") Nothing
+key = Key
 
 alt :: forall i. String -> Prop i
 alt = prop (propName "alt") (Just $ attrName "alt")
@@ -243,7 +91,7 @@ title = prop (propName "title") (Just $ attrName "title")
 type_ :: forall i. String -> Prop i
 type_ = prop (propName "type") (Just $ attrName "type")
 
--- TODO: string rendering of value will need custom handling depending on element type
+-- TODO: string rendering of `value` will need custom handling depending on element type
 value :: forall i. String -> Prop i
 value = prop (propName "value") (Just $ attrName "value")
 

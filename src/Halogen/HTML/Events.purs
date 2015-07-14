@@ -1,19 +1,18 @@
 -- | This module defines well-typed wrappers for common DOM events, so that
 -- | they may be safely embedded in HTML documents.
-
 module Halogen.HTML.Events where
 
 import Prelude
 
-import Control.Monad.Free (Free(), liftF)
+import Control.Monad.Free (Free())
 
 import Data.Coyoneda (Coyoneda(), liftCoyoneda)
-import Data.Inject (Inject, inj)
+import Data.Inject (Inject)
 
 import Halogen (actionF, actionFC)
 import Halogen.HTML.Events.Handler (EventHandler())
 import Halogen.HTML.Events.Types (Event(), MouseEvent(), FocusEvent(), KeyboardEvent())
-import Halogen.HTML.Properties (Prop(), handler, eventName)
+import Halogen.HTML.Core (Prop(), handler, eventName)
 
 inputF :: forall f g a. (Functor f, Functor g, Inject f g) => (forall i. a -> i -> f i) -> a -> EventHandler (Free g Unit)
 inputF f x = pure $ actionF (f x)

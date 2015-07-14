@@ -1,6 +1,9 @@
--- | This module defines an adapter between the `purescript-halogen` and `purescript-css` libraries.
-
-module Halogen.HTML.CSS where
+-- | This module defines an adapter between the `purescript-halogen` and
+-- | `purescript-css` libraries.
+module Halogen.HTML.CSS
+  ( style
+  , stylesheet
+  ) where
 
 import Prelude
 
@@ -16,7 +19,8 @@ import Css.Property (Key(), Value())
 import Css.Render (render, renderedSheet, collect)
 import Css.Stylesheet (Css(), Rule(..), runS)
 
-import qualified Halogen.HTML as H
+import Halogen.HTML.Core (HTML(), Prop(), IsProp, prop, propName, attrName)
+import qualified Halogen.HTML.Elements as H
 import qualified Halogen.HTML.Properties as P
 
 -- | A newtype for CSS styles
@@ -26,7 +30,7 @@ newtype Styles = Styles (SM.StrMap String)
 runStyles :: Styles -> SM.StrMap String
 runStyles (Styles m) = m
 
-instance stylesIsProp :: P.IsProp Styles where
+instance stylesIsProp :: IsProp Styles where
   toPropString _ _ (Styles m) = joinWith "; " $ (\(Tuple key value) -> key <> ": " <> value) <$> fromList (SM.toList m)
 
 -- | Render a set of rules as an inline style.
@@ -38,8 +42,8 @@ instance stylesIsProp :: P.IsProp Styles where
 -- |                      display block ]
 -- |       [ ... ]
 -- | ```
-style :: forall i. Css -> P.Prop i
-style = P.prop (P.propName "style") (Just $ P.attrName "style") <<< Styles <<< rules <<< runS
+style :: forall i. Css -> Prop i
+style = prop (propName "style") (Just $ attrName "style") <<< Styles <<< rules <<< runS
   where
   rules :: Array Rule -> SM.StrMap String
   rules rs = SM.fromList (toList properties)
@@ -55,7 +59,7 @@ style = P.prop (P.propName "style") (Just $ P.attrName "style") <<< Styles <<< r
   rights = mapMaybe (either (const Nothing) Just)
 
 -- | Render a set of rules as a `style` element.
-stylesheet :: forall p i. Css -> H.HTML p i
+stylesheet :: forall p i. Css -> HTML p i
 stylesheet css = H.style [ P.type_ "text/css" ] [ H.text content ]
   where
   content = fromMaybe "" $ renderedSheet $ render css
