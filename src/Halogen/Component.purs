@@ -70,8 +70,6 @@ component r q = Component { render: renderPure r, query: q }
 renderPure :: forall s p i. (s -> (HTML p i)) -> State s (HTML p i)
 renderPure = gets
 
-foreign import todo :: forall a. a
-
 installer :: forall s f g p s' f' p' q q'. (Ord p, Monad g, Plus g)
           => (q -> Either p q')
           -> (p' -> q')
