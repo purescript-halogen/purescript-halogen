@@ -36,6 +36,24 @@ component :: forall s f g p. (s -> HTML p (f Unit)) -> (forall i. f i -> StateT 
 renderPure :: forall s p i. (s -> HTML p i) -> State s (HTML p i)
 ```
 
+#### `todo`
+
+``` purescript
+todo :: forall a. a
+```
+
+#### `installR`
+
+``` purescript
+installR :: forall s f g pl pr s' f' p'. (Ord pr, Plus g) => Component s f (QueryT s s' f' pr p' g) (Either pl pr) -> (pr -> Tuple s' (Component s' f' g p')) -> Component (InstalledState s s' f' pl p' g) (Coproduct f (ChildF pr f')) g (Either pl p')
+```
+
+#### `installL`
+
+``` purescript
+installL :: forall s f g pl pr s' f' p'. (Ord pl, Plus g) => Component s f (QueryT s s' f' pl p' g) (Either pl pr) -> (pl -> Tuple s' (Component s' f' g p')) -> Component (InstalledState s s' f' pr p' g) (Coproduct f (ChildF pl f')) g (Either pr p')
+```
+
 #### `installAll`
 
 ``` purescript

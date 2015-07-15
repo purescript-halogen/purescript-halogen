@@ -24,7 +24,7 @@ import Data.Void (Void())
 import DOM (DOM())
 
 import Halogen.HTML.Renderer.VirtualDOM (renderHTML)
-import Halogen.HTML.Core (HTML(), install)
+import Halogen.HTML.Core (HTML(..), install)
 import Halogen.Internal.VirtualDOM (VTree(), createElement, diff, patch)
 
 import qualified Data.Map as M
@@ -49,19 +49,66 @@ component r q = Component { render: renderPure r, query: q }
 renderPure :: forall s p i. (s -> (HTML p i)) -> State s (HTML p i)
 renderPure = gets
 
+foreign import todo :: forall a. a
+
 -- installR :: forall s f g pl pr s' f' p'. (Ord pr, Plus g)
 --          => Component s f (QueryT s s' f' pr p' g) (Either pl pr)
 --          -> (pr -> Tuple s' (Component s' f' g p'))
 --          -> Component (InstalledState s s' f' pl p' g) (Coproduct f (ChildF pr f')) g (Either pl p')
 -- installR (Component c) f = todo
 
--- installL :: forall s f g pl pr s' f' p'. (Ord pl, Plus g)
---          => Component s f (QueryT s s' f' pl p' g) (Either pl pr)
---          -> (pl -> Tuple s' (Component s' f' g p'))
---          -> Component (InstalledState s s' f' pr p' g) (Coproduct f (ChildF pl f')) g (Either pr p')
--- installL (Component c) f = todo
+installL :: forall s f g pl pr s' f' p'. (Ord pl, Monad g, Plus g)
+         => Component s f (QueryT s s' f' pl p' g) (Either pl pr)
+         -> (pl -> Tuple s' (Component s' f' g p'))
+         -> Component (InstalledState s s' f' pl p' g) (Coproduct f (ChildF pl f')) g (Either pr p')
+installL (Component c) f = Component { render: render, query: query }
+  where
 
-installAll :: forall s f g p s' f' p'. (Ord p, Functor f, Functor f', Monad g, Plus g)
+  render :: State (InstalledState s s' f' pl p' g) (HTML (Either pr p') ((Coproduct f (ChildF pl f')) Unit))
+  render = do
+    st <- get :: _ (InstalledState s s' f' pl p' g)
+    case runState c.render st.parent of
+      Tuple html s -> do
+        -- Empty the state so that we don't keep children that are no longer
+        -- being rendered...
+        put { parent: s, children: M.empty :: M.Map pl (ComponentState s' f' g p') }
+        -- ... but then pass through the old state so we can lookup child
+        -- components that are being re-rendered
+        install (renderChild st) left html
+
+  renderChild :: InstalledState s s' f' pl p' g
+              -> Either pl pr
+              -> State (InstalledState s s' f' pl p' g) (HTML (Either pr p') ((Coproduct f (ChildF pl f')) Unit))
+  renderChild st (Left p) = renderChild' st p $ case M.lookup p st.children of
+    Just sc -> sc
+    Nothing -> f p
+  renderChild st (Right pr) = pure $ Placeholder $ Left pr
+
+  renderChild' :: InstalledState s s' f' pl p' g
+               -> pl
+               -> ComponentState s' f' g p'
+               -> State (InstalledState s s' f' pl p' g) (HTML (Either pr p') ((Coproduct f (ChildF pl f')) Unit))
+  renderChild' st p (Tuple s comp@(Component c)) = case runState c.render s of
+    Tuple html s' -> do
+      put st { children = M.insert p (Tuple s' comp) st.children }
+      pure $ lmap Right $ right <<< ChildF p <$> html
+
+  query :: forall i. (Coproduct f (ChildF pl f')) i
+                  -> StateT (InstalledState s s' f' pl p' g) g i
+  query fi = coproduct (pure empty) queryChild fi
+
+  queryChild :: forall i. ChildF pl f' i
+                       -> StateT (InstalledState s s' f' pl p' g) g i
+  queryChild (ChildF p q) = do
+    st <- get :: _ (InstalledState s s' f' pl p' g)
+    case M.lookup p st.children of
+      Nothing -> empty
+      Just (Tuple s comp@(Component c)) -> do
+        Tuple i s' <- lift $ runStateT (c.query q) s
+        put st { children = M.insert p (Tuple s' comp) st.children }
+        pure i
+
+installAll :: forall s f g p s' f' p'. (Ord p, Monad g, Plus g)
            => Component s f (QueryT s s' f' p p' g) p
            -> (p -> Tuple s' (Component s' f' g p'))
            -> Component (InstalledState s s' f' p p' g) (Coproduct f (ChildF p f')) g p'
