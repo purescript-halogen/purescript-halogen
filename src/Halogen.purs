@@ -25,7 +25,7 @@ import Data.Maybe (Maybe(..))
 import Data.Tuple (Tuple(..))
 import Data.Void (Void())
 
-import Halogen.Component (Component(..))
+import Halogen.Component (Component(), renderComponent, queryComponent)
 import Halogen.Effects (HalogenEffects())
 import Halogen.HTML.Renderer.VirtualDOM (renderHTML)
 import Halogen.Internal.VirtualDOM (VTree(), createElement, diff, patch)
@@ -41,8 +41,7 @@ type Driver f eff = forall i. f i -> Eff (HalogenEffects eff) i
 runUI :: forall eff s f. Component s f (Eff (HalogenEffects eff)) Void
       -> s
       -> Eff (HalogenEffects eff) { node :: HTMLElement, driver :: Driver f eff }
-runUI (Component c) s =
-  case runState c.render s of
+runUI c s = case renderComponent c s of
     Tuple html s' -> do
       ref <- newRef Nothing
       let vtree = renderHTML (driver ref) html
@@ -58,8 +57,8 @@ runUI (Component c) s =
     case refVal of
       Nothing -> throwException $ error "Error: An attempt to re-render was made during the initial render."
       Just { node: node, vtree: prev, state: s } -> do
-        Tuple i s' <- runStateT (c.query q) s
-        case runState c.render s' of
+        Tuple i s' <- queryComponent c q s
+        case renderComponent c s' of
           Tuple html s'' -> do
             let next = renderHTML (driver ref) html
             node' <- patch (diff prev next) node
