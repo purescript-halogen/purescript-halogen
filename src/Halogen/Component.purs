@@ -3,6 +3,8 @@ module Halogen.Component
   , ComponentF()
   , ComponentFC()
   , component
+  , componentF
+  , componentFC
   , renderComponent
   , queryComponent
   , ComponentState()
@@ -21,7 +23,8 @@ import Control.Monad.Aff (Aff())
 import Control.Monad.Eff.Class (liftEff)
 import Control.Monad.Eff.Console (CONSOLE())
 import Control.Monad.Eff.Ref (REF(), Ref(), newRef, writeRef, readRef)
-import Control.Monad.Free (Free(), FreeC())
+import Control.Monad.Free (Free(), FreeC(), runFreeM, runFreeCM)
+import Control.Monad.Rec.Class (MonadRec)
 import Control.Monad.State (State(), runState)
 import Control.Monad.State.Class (MonadState, get, gets, put)
 import Control.Monad.State.Trans (StateT(), runStateT)
@@ -29,6 +32,7 @@ import Control.Monad.Trans (MonadTrans, lift)
 import Control.Plus (Plus, empty)
 
 import Data.Bifunctor (lmap)
+import Data.Coyoneda (Natural())
 import Data.DOM.Simple.Types (HTMLElement())
 import Data.Either (Either(..), either)
 import Data.Functor.Coproduct (Coproduct(), coproduct, left, right)
@@ -66,6 +70,12 @@ instance functorComponent :: Functor (Component s f g) where
 
 component :: forall s f g p. (s -> HTML p (f Unit)) -> (forall i. f i -> StateT s g i) -> Component s f g p
 component r q = Component { render: renderPure r, query: q }
+
+componentF :: forall s f g p. (MonadRec g, Functor f) => (s -> HTML p (Free f Unit)) -> (Natural f (StateT s g)) -> ComponentF s f g p
+componentF r e = component r (runFreeM e)
+
+componentFC :: forall s f g p. (MonadRec g) => (s -> HTML p (FreeC f Unit)) -> (Natural f (StateT s g)) -> ComponentFC s f g p
+componentFC r e = component r (runFreeCM e)
 
 renderPure :: forall s p i. (s -> (HTML p i)) -> State s (HTML p i)
 renderPure = gets
