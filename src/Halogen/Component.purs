@@ -60,7 +60,7 @@ newtype Component s f g p = Component
 type ComponentF s f = Component s (Free f)
 type ComponentFC s f = Component s (FreeC f)
 
-type Render s p i = s -> HTML p i
+type Render s p f = s -> HTML p (f Unit)
 type RenderF s p f = s -> HTML p (Free f Unit)
 type RenderFC s p f = s -> HTML p (FreeC f Unit)
 
@@ -78,7 +78,7 @@ instance functorComponent :: Functor (Component s f g) where
               , query: c.query
               }
 
-component :: forall s f g p. (s -> HTML p (f Unit)) -> (forall i. f i -> StateT s g i) -> Component s f g p
+component :: forall s f g p. Render s p f -> Eval f s g -> Component s f g p
 component r q = Component { render: renderPure r, query: q }
 
 componentF :: forall s f g p. (MonadRec g, Functor f) => RenderF s p f -> Eval f s g -> ComponentF s f g p
