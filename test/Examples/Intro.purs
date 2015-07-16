@@ -3,12 +3,9 @@ module Main where
 import Prelude
 
 import Control.Monad.Eff (Eff())
-import Control.Monad.Free (FreeC())
 import Control.Monad.Rec.Class (MonadRec)
 import Control.Monad.State.Class (modify)
-import Control.Monad.State.Trans (StateT())
 
-import Data.Coyoneda (Natural())
 import Data.Functor (($>))
 
 import Halogen
@@ -29,14 +26,14 @@ ui :: forall g p. (MonadRec g) => ComponentFC State Input g p
 ui = componentFC render eval
   where
 
-  render :: State -> H.HTML p (FreeC Input Unit)
+  render :: RenderFC State p Input
   render (State s) =
     H.div_ [ H.h1_ [ H.text "Toggle Button" ]
            , H.button [ E.onClick (E.inputFC_ ToggleState) ]
                       [ H.text (if s.on then "On" else "Off") ]
            ]
 
-  eval :: Natural Input (StateT State g)
+  eval :: Eval Input State g
   eval (ToggleState next) = modify (\(State s) -> State { on: not s.on }) $> next
 
 -- | Run the app

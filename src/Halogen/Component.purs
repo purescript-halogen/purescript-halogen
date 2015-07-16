@@ -2,6 +2,10 @@ module Halogen.Component
   ( Component()
   , ComponentF()
   , ComponentFC()
+  , Render()
+  , RenderF()
+  , RenderFC()
+  , Eval()
   , component
   , componentF
   , componentFC
@@ -56,6 +60,12 @@ newtype Component s f g p = Component
 type ComponentF s f = Component s (Free f)
 type ComponentFC s f = Component s (FreeC f)
 
+type Render s p i = s -> HTML p i
+type RenderF s p f = s -> HTML p (Free f Unit)
+type RenderFC s p f = s -> HTML p (FreeC f Unit)
+
+type Eval f s g = Natural f (StateT s g)
+
 renderComponent :: forall s f g p. Component s f g p -> s -> Tuple (HTML p (f Unit)) s
 renderComponent (Component c) = runState c.render
 
@@ -71,10 +81,10 @@ instance functorComponent :: Functor (Component s f g) where
 component :: forall s f g p. (s -> HTML p (f Unit)) -> (forall i. f i -> StateT s g i) -> Component s f g p
 component r q = Component { render: renderPure r, query: q }
 
-componentF :: forall s f g p. (MonadRec g, Functor f) => (s -> HTML p (Free f Unit)) -> (Natural f (StateT s g)) -> ComponentF s f g p
+componentF :: forall s f g p. (MonadRec g, Functor f) => RenderF s p f -> Eval f s g -> ComponentF s f g p
 componentF r e = component r (runFreeM e)
 
-componentFC :: forall s f g p. (MonadRec g) => (s -> HTML p (FreeC f Unit)) -> (Natural f (StateT s g)) -> ComponentFC s f g p
+componentFC :: forall s f g p. (MonadRec g) => RenderFC s p f -> Eval f s g -> ComponentFC s f g p
 componentFC r e = component r (runFreeCM e)
 
 renderPure :: forall s p i. (s -> (HTML p i)) -> State s (HTML p i)

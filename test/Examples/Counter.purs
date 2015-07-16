@@ -3,12 +3,9 @@ module Test.Example.Counter where
 import Prelude
 
 import Control.Monad.Eff (Eff())
-import Control.Monad.Free (FreeC(), runFreeCM)
 import Control.Monad.Rec.Class (MonadRec)
 import Control.Monad.State.Class (modify)
-import Control.Monad.State.Trans (StateT())
 
-import Data.Coyoneda (Natural())
 import Data.DOM.Simple.Window (globalWindow, setInterval)
 import Data.Functor (($>))
 
@@ -32,13 +29,13 @@ ui :: forall g p. (MonadRec g) => ComponentFC State Input g p
 ui = componentFC render eval
   where
 
-  render :: State -> H.HTML p (FreeC Input Unit)
+  render :: RenderFC State p Input
   render (State n) =
     H.div_ [ H.h1 [ P.id_ "header" ] [ H.text "counter" ]
            , H.p_ [ H.text (show n) ]
            ]
 
-  eval :: Natural Input (StateT State g)
+  eval :: Eval Input State g
   eval (Tick next) = modify (\(State n) -> State (n + 1)) $> next
 
 -- | Run the app
