@@ -2,7 +2,9 @@ module Halogen.HTML.Renderer.VirtualDOM (renderHTML) where
 
 import Prelude
 
+import Control.Monad.Aff (Aff(), runAff)
 import Control.Monad.Eff (Eff())
+import Control.Monad.Eff.Exception (throwException)
 
 import Data.Exists (runExists)
 import Data.ExistsR (runExistsR)
@@ -20,7 +22,7 @@ import qualified Halogen.Internal.VirtualDOM as V
 -- | Render a `HTML` document to a virtual DOM node
 -- |
 -- | The first argument is an event handler.
-renderHTML :: forall p f eff. (forall i. f i -> Eff (HalogenEffects eff) i) -> HTML p (f Unit) -> V.VTree
+renderHTML :: forall p f eff. (forall i. f i -> Aff (HalogenEffects eff) i) -> HTML p (f Unit) -> V.VTree
 renderHTML f = go
   where
   go (Text s) = V.vtext s
@@ -31,17 +33,20 @@ renderHTML f = go
     in V.vnode ns' (runTagName name) key props' (go <$> els)
   go (Placeholder _) = V.vtext ""
 
-renderProp :: forall f eff. (forall i. f i -> Eff (HalogenEffects eff) i) -> Prop (f Unit) -> V.Props
+renderProp :: forall f eff. (forall i. f i -> Aff (HalogenEffects eff) i) -> Prop (f Unit) -> V.Props
 renderProp _  (Prop e) = runExists (\(PropF key value _) ->
   runFn2 V.prop (runPropName key) value) e
 renderProp _  (Attr ns name value) =
   let attrName = maybe "" (\ns' -> runNamespace ns' <> ":") ns <> runAttrName name
   in runFn2 V.attr attrName value
 renderProp dr (Handler e) = runExistsR (\(HandlerF name k) ->
-  runFn2 V.handlerProp (runEventName name) \ev -> runEventHandler ev (k ev) >>= dr) e
-renderProp dr (Initializer f) = V.initProp (dr <<< f)
-renderProp dr (Finalizer f) = V.finalizerProp (dr <<< f)
+  runFn2 V.handlerProp (runEventName name) \ev -> handleAff $ runEventHandler ev (k ev) >>= dr) e
+renderProp dr (Initializer f) = V.initProp (handleAff <<< dr <<< f)
+renderProp dr (Finalizer f) = V.finalizerProp (handleAff <<< dr <<< f)
 renderProp _ _ = mempty
+
+handleAff :: forall eff a. Aff (HalogenEffects eff) a -> Eff (HalogenEffects eff) Unit
+handleAff = runAff throwException (const (pure unit))
 
 findKey :: forall i. Maybe String -> Prop i -> Maybe String
 findKey _ (Key k) = Just k

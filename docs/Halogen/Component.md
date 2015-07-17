@@ -23,6 +23,30 @@ type ComponentF s f = Component s (Free f)
 type ComponentFC s f = Component s (FreeC f)
 ```
 
+#### `Render`
+
+``` purescript
+type Render s p f = s -> HTML p (f Unit)
+```
+
+#### `RenderF`
+
+``` purescript
+type RenderF s p f = s -> HTML p (Free f Unit)
+```
+
+#### `RenderFC`
+
+``` purescript
+type RenderFC s p f = s -> HTML p (FreeC f Unit)
+```
+
+#### `Eval`
+
+``` purescript
+type Eval f s g = Natural f (StateT s g)
+```
+
 #### `renderComponent`
 
 ``` purescript
@@ -38,7 +62,19 @@ queryComponent :: forall s f g p i. Component s f g p -> f i -> s -> g (Tuple i 
 #### `component`
 
 ``` purescript
-component :: forall s f g p. (s -> HTML p (f Unit)) -> (forall i. f i -> StateT s g i) -> Component s f g p
+component :: forall s f g p. Render s p f -> Eval f s g -> Component s f g p
+```
+
+#### `componentF`
+
+``` purescript
+componentF :: forall s f g p. (MonadRec g, Functor f) => RenderF s p f -> Eval f s g -> ComponentF s f g p
+```
+
+#### `componentFC`
+
+``` purescript
+componentFC :: forall s f g p. (MonadRec g) => RenderFC s p f -> Eval f s g -> ComponentFC s f g p
 ```
 
 #### `installL`

@@ -1,12 +1,13 @@
-module Test.Example.Counter where
+module Example.Counter where
 
 import Prelude
 
+import Control.Apply ((*>))
+import Control.Monad.Aff (Aff(), launchAff, later')
 import Control.Monad.Eff (Eff())
 import Control.Monad.Rec.Class (MonadRec)
 import Control.Monad.State.Class (modify)
 
-import Data.DOM.Simple.Window (globalWindow, setInterval)
 import Data.Functor (($>))
 
 import Halogen
@@ -40,8 +41,10 @@ ui = componentFC render eval
 
 -- | Run the app
 main :: Eff (HalogenEffects ()) Unit
-main = do
-  ui <- runUI ui initialState
-  appendToBody ui.node
-  setInterval globalWindow 1000.0 $ ui.driver (actionFC Tick)
-  pure unit
+main = launchAff $ do
+  { node: node, driver: driver } <- runUI ui initialState
+  appendToBody node
+  setInterval 1000 $ driver (actionFC Tick)
+
+setInterval :: forall e a. Int -> Aff e a -> Aff e Unit
+setInterval ms a = later' ms (a *> setInterval ms a)

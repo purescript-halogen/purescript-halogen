@@ -1,7 +1,8 @@
-module Main where
+module Example.Intro where
 
 import Prelude
 
+import Control.Monad.Aff (launchAff)
 import Control.Monad.Eff (Eff())
 import Control.Monad.Rec.Class (MonadRec)
 import Control.Monad.State.Class (modify)
@@ -38,6 +39,6 @@ ui = componentFC render eval
 
 -- | Run the app
 main :: Eff (HalogenEffects ()) Unit
-main = do
-  ui <- runUI ui initialState
-  appendToBody ui.node
+main = launchAff $ do
+  { node: node } <- runUI ui initialState
+  appendToBody node

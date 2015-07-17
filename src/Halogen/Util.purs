@@ -4,6 +4,7 @@ import Prelude
 
 import Control.Bind ((>=>))
 import Control.Monad.Eff (Eff())
+import Control.Monad.Eff.Class (MonadEff, liftEff)
 
 import Data.DOM.Simple.Document (body)
 import Data.DOM.Simple.Element (appendChild)
@@ -12,5 +13,5 @@ import Data.DOM.Simple.Window (globalWindow, document)
 
 import DOM (DOM())
 
-appendToBody :: forall eff. HTMLElement -> Eff (dom :: DOM | eff) Unit
-appendToBody e = document globalWindow >>= (body >=> flip appendChild e)
+appendToBody :: forall m eff. (MonadEff (dom :: DOM | eff) m) => HTMLElement -> m Unit
+appendToBody e = liftEff $ document globalWindow >>= (body >=> flip appendChild e)

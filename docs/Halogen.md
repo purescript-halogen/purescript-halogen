@@ -3,13 +3,13 @@
 #### `Driver`
 
 ``` purescript
-type Driver f eff = forall i. f i -> Eff (HalogenEffects eff) i
+type Driver f eff = forall i. f i -> Aff (HalogenEffects eff) i
 ```
 
 #### `runUI`
 
 ``` purescript
-runUI :: forall eff s f. Component s f (Eff (HalogenEffects eff)) Void -> s -> Eff (HalogenEffects eff) { node :: HTMLElement, driver :: Driver f eff }
+runUI :: forall eff s f. Component s f (Aff (HalogenEffects eff)) Void -> s -> Aff (HalogenEffects eff) { node :: HTMLElement, driver :: Driver f eff }
 ```
 
 #### `actionF`

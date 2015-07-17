@@ -3,7 +3,7 @@
 #### `HalogenEffects`
 
 ``` purescript
-type HalogenEffects eff = (dom :: DOM, ref :: REF, console :: CONSOLE, err :: EXCEPTION | eff)
+type HalogenEffects eff = (dom :: DOM, avar :: AVAR, console :: CONSOLE, err :: EXCEPTION | eff)
 ```
 
 

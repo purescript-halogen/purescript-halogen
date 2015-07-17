@@ -71,8 +71,8 @@ gulp.task("prebundle", ["make"], function() {
   return purescript.pscBundle({
     src: "output/**/*.js",
     output: "tmp/test.js",
-    module: "Test.Main",
-    main: "Test.Main"
+    module: "Examples.Ajax",
+    main: "Examples.Ajax"
   });
 });
 
