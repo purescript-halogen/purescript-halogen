@@ -1217,13 +1217,7 @@ td_ :: forall p i. Array (HTML p i) -> HTML p i
 #### `textarea`
 
 ``` purescript
-textarea :: forall p i. Array (Prop i) -> Array (HTML p i) -> HTML p i
-```
-
-#### `textarea_`
-
-``` purescript
-textarea_ :: forall p i. Array (HTML p i) -> HTML p i
+textarea :: forall p i. Array (Prop i) -> HTML p i
 ```
 
 #### `tfoot`

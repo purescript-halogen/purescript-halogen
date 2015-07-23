@@ -3,9 +3,18 @@
   "license": "Apache 2.0",
   "repository": "git@github.com:slamdata/purescript-halogen.git",
   "contributors": [
-    "Phil Freeman <paf31@cantab.net>"
+    "Phil Freeman <paf31@cantab.net>",
+    "John A. De Goes <john@degoes.net>",
+    "Gary Burgess <gary.burgess@gmail.com>"
   ],
+  "scripts": {
+    "postinstall": "bower install",
+    "build": "gulp",
+    "example-counter": "bower link && cd examples/counter && bower link purescript-halogen && gulp",
+    "example-ajax": "bower link && cd examples/ajax && bower link purescript-halogen && gulp"
+  },
   "devDependencies": {
+    "bower": "^1.4.1",
     "gulp": "^3.8.11",
     "gulp-jscs": "^1.6.0",
     "gulp-jshint": "^1.11.2",
@@ -14,6 +23,7 @@
     "webpack-stream": "^2.0.0"
   },
   "dependencies": {
+    "purescript": "^0.7.1",
     "virtual-dom": "^2.0.1"
   }
 }

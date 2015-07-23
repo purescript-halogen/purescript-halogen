@@ -109,7 +109,7 @@ module Halogen.HTML.Elements
   , table         , table_
   , tbody         , tbody_
   , td            , td_
-  , textarea      , textarea_
+  , textarea
   , tfoot         , tfoot_
   , th            , th_
   , thead         , thead_
@@ -734,11 +734,8 @@ td xs = element (tagName "td") xs
 td_ :: forall p i. Array (HTML p i) -> HTML p i
 td_ = td []
 
-textarea :: forall p i. Array (Prop i) -> Array (HTML p i) -> HTML p i
-textarea xs = element (tagName "textarea") xs
-
-textarea_ :: forall p i. Array (HTML p i) -> HTML p i
-textarea_ = textarea []
+textarea :: forall p i. Array (Prop i) -> HTML p i
+textarea xs = element (tagName "textarea") xs []
 
 tfoot :: forall p i. Array (Prop i) -> Array (HTML p i) -> HTML p i
 tfoot xs = element (tagName "tfoot") xs

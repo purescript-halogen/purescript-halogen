@@ -67,22 +67,4 @@ gulp.task("dotpsci", function () {
     .pipe(gulp.dest("."));
 });
 
-gulp.task("prebundle", ["make"], function() {
-  return purescript.pscBundle({
-    src: "output/**/*.js",
-    output: "tmp/test.js",
-    module: "Examples.Ajax",
-    main: "Examples.Ajax"
-  });
-});
-
-gulp.task("bundle", ["prebundle"], function () {
-  return gulp.src("tmp/test.js")
-    .pipe(webpack({
-      resolve: { modulesDirectories: ["node_modules"] },
-      output: { filename: "test.js" }
-    }))
-    .pipe(gulp.dest("tmp"));
-});
-
-gulp.task("default", ["bundle", "docs", "dotpsci"]);
+gulp.task("default", ["make", "docs", "dotpsci"]);

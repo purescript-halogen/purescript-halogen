@@ -21,12 +21,11 @@
     "purescript-css": "^0.3.0",
     "purescript-exists": "^0.2.0",
     "purescript-foreign": "^0.5.0",
-    "purescript-free": "^0.5.0",
+    "purescript-free": "garyb/purescript-free#all-additions",
     "purescript-nullable": "^0.2.0",
     "purescript-profunctor": "^0.3.0",
-    "purescript-refs": "^0.2.0",
     "purescript-simple-dom": "6358414013eb3106d695e3e19488609f82d903e9",
     "purescript-unsafe-coerce": "^0.1.0",
-    "purescript-void": "garyb/purescript-void#0.7-update"
+    "purescript-void": "^0.3.0"
   }
 }

@@ -3,14 +3,18 @@ module Example.Counter where
 import Prelude
 
 import Control.Apply ((*>))
-import Control.Monad.Aff (Aff(), launchAff, later')
+import Control.Monad.Aff (Aff(), runAff, later')
 import Control.Monad.Eff (Eff())
 import Control.Monad.Rec.Class (MonadRec)
-import Control.Monad.State.Class (modify)
+import Control.Monad.Eff.Exception (throwException)
+import Control.Monad.Free
 
 import Data.Functor (($>))
+import Data.Functor.Coproduct
+import Data.Coyoneda
 
 import Halogen
+import Halogen.Query.StateF
 import Halogen.Util (appendToBody)
 import qualified Halogen.HTML as H
 import qualified Halogen.HTML.Properties as P
@@ -41,10 +45,12 @@ ui = componentFC render eval
 
 -- | Run the app
 main :: Eff (HalogenEffects ()) Unit
-main = launchAff $ do
+main = runAff throwException (const (pure unit)) $ do
   { node: node, driver: driver } <- runUI ui initialState
   appendToBody node
   setInterval 1000 $ driver (actionFC Tick)
 
 setInterval :: forall e a. Int -> Aff e a -> Aff e Unit
-setInterval ms a = later' ms (a *> setInterval ms a)
+setInterval ms a = later' ms $ do
+  a
+  setInterval ms a

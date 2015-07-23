@@ -16,12 +16,11 @@ import Control.Monad.Aff.AVar
 import Control.Monad.Eff (Eff())
 import Control.Monad.Eff.Class (liftEff)
 import Control.Monad.Eff.Exception (throwException, error)
-import Control.Monad.Eff.Ref (Ref(), newRef, writeRef, readRef)
 import Control.Monad.Free
 import Control.Monad.State (runState)
 import Control.Monad.State.Trans (runStateT)
 
-import Data.Coyoneda (Coyoneda(), liftCoyoneda)
+import Data.Coyoneda (Natural(), Coyoneda(), liftCoyoneda)
 import Data.DOM.Simple.Types (HTMLElement())
 import Data.Inject (Inject, inj)
 import Data.Maybe (Maybe(..))
@@ -29,9 +28,11 @@ import Data.Tuple (Tuple(..))
 import Data.Void (Void())
 
 import Halogen.Component (Component(), renderComponent, queryComponent)
+import Data.Functor.Coproduct (Coproduct(), coproduct)
 import Halogen.Effects (HalogenEffects())
 import Halogen.HTML.Renderer.VirtualDOM (renderHTML)
 import Halogen.Internal.VirtualDOM (VTree(), createElement, diff, patch)
+import Halogen.Query.StateF (StateF(), stateN)
 
 type DriverState s =
   { node :: HTMLElement
@@ -55,15 +56,24 @@ runUI c s = case renderComponent c s of
   where
 
   driver :: AVar (DriverState s) -> Driver f eff
-  driver ref q = do
-    { node: node, vtree: prev, state: s } <- takeVar ref
-    Tuple i s' <- queryComponent c q s
-    case renderComponent c s' of
-      Tuple html s'' -> do
-        let next = renderHTML (driver ref) html
-        node' <- liftEff $ patch (diff prev next) node
-        putVar ref { node: node', vtree: next, state: s'' }
-        pure i
+  driver ref q = runFreeM (eval ref) (queryComponent c q)
+
+  eval :: AVar (DriverState s)
+       -> Natural (Coproduct (StateF s) (Aff (HalogenEffects eff)))
+                  (Aff (HalogenEffects eff))
+  eval ref = coproduct runStateStep id
+    where
+    runStateStep :: Natural (StateF s) (Aff (HalogenEffects eff))
+    runStateStep i = do
+      { node: node, vtree: prev, state: s } <- takeVar ref
+      case runState (stateN i) s of
+        Tuple i' s' ->
+          case renderComponent c s' of
+            Tuple html s'' -> do
+              let next = renderHTML (driver ref) html
+              node' <- liftEff $ patch (diff prev next) node
+              putVar ref { node: node', vtree: next, state: s'' }
+              pure i'
 
 actionF :: forall f g. (Functor f, Functor g, Inject f g) => (forall i. i -> f i) -> Free g Unit
 actionF f = liftF (inj (f unit) :: g Unit)
