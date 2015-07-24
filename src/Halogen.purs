@@ -77,20 +77,48 @@ runUI c s = case renderComponent c s of
               putVar ref { node: node', vtree: next, state: s'' }
               pure i'
 
+-- | Lifts an "action" from `f Unit` into the query algebra `Free g Unit`.
+-- |
+-- | An action only causes effects and has no result value - for example,
+-- | event handlers within the HTML will raise actions.
+-- |
+-- | Commonly `g` and `f` may be the same `Functor`, but when using `Coproduct`
+-- | to combine multiple algebras this function performs the work of generating
+-- | the correct value for the composite algebra.
 actionF :: forall f g. (Functor f, Functor g, Inject f g) => (forall i. i -> f i) -> Free g Unit
 actionF f = liftFI (f unit)
 
+-- | A version of `actionF` that lifts values into `Free g Unit` via `Coyoneda`.
+-- | This is useful in cases where `g` is a `Coproduct` containing `Coyoneda f`.
 actionCF :: forall f g. (Functor g, Inject (Coyoneda f) g) => (forall i. i -> f i) -> Free g Unit
 actionCF f = actionF (liftCoyoneda <<< f)
 
+-- | A version of `actionF` that lifts values into `FreeC g Unit`.
+-- | This is useful in cases where `g` is a `Coproduct` and none of its
+-- | components have `Functor` instances - wrapping the entire `Coproduct` in
+-- | `Coyoneda` give us the `Functor` instance for free.
 actionFC :: forall f g. (Inject f g) => (forall i. i -> f i) -> FreeC g Unit
 actionFC f = liftFCI (f unit)
 
+-- | Lifts an "request" from `f a` into the query algebra `Free g a`.
+-- |
+-- | A request can cause effects as well as fetching some information from a
+-- | component.
+-- |
+-- | Commonly `g` and `f` may be the same `Functor`, but when using `Coproduct`
+-- | to combine multiple algebras this function performs the work of generating
+-- | the correct value for the composite algebra.
 requestF :: forall f g a. (Functor f, Functor g, Inject f g) => (forall i. (a -> i) -> f i) -> Free g a
 requestF f = liftFI (f id)
 
+-- | A version of `requestF` that lifts values into `Free g a` via `Coyoneda`.
+-- | This is useful in cases where `g` is a `Coproduct` containing `Coyoneda f`.
 requestCF :: forall f g a. (Functor g, Inject (Coyoneda f) g) => (forall i. (a -> i) -> f i) -> Free g a
 requestCF f = requestF (liftCoyoneda <<< f)
 
+-- | A version of `requestF` that lifts values into `FreeC g a`.
+-- | This is useful in cases where `g` is a `Coproduct` and none of its
+-- | components have `Functor` instances - wrapping the entire `Coproduct` in
+-- | `Coyoneda` give us the `Functor` instance for free.
 requestFC :: forall f g a. (Inject f g) => (forall i. (a -> i) -> f i) -> FreeC g a
 requestFC f = liftFCI (f id)
