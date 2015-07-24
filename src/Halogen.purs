@@ -2,8 +2,10 @@ module Halogen
   ( Driver()
   , runUI
   , actionF
+  , actionCF
   , actionFC
   , requestF
+  , requestCF
   , requestFC
   , module Halogen.Component
   , module Halogen.Effects
@@ -76,13 +78,19 @@ runUI c s = case renderComponent c s of
               pure i'
 
 actionF :: forall f g. (Functor f, Functor g, Inject f g) => (forall i. i -> f i) -> Free g Unit
-actionF f = liftF (inj (f unit) :: g Unit)
+actionF f = liftFI (f unit)
+
+actionCF :: forall f g. (Functor g, Inject (Coyoneda f) g) => (forall i. i -> f i) -> Free g Unit
+actionCF f = actionF (liftCoyoneda <<< f)
+
+actionFC :: forall f g. (Inject f g) => (forall i. i -> f i) -> FreeC g Unit
+actionFC f = liftFCI (f unit)
 
 requestF :: forall f g a. (Functor f, Functor g, Inject f g) => (forall i. (a -> i) -> f i) -> Free g a
-requestF f = liftF (inj (f id) :: g a)
+requestF f = liftFI (f id)
 
-actionFC :: forall f g. (Functor g, Inject (Coyoneda f) g) => (forall i. i -> f i) -> Free g Unit
-actionFC f = actionF (liftCoyoneda <<< f)
+requestCF :: forall f g a. (Functor g, Inject (Coyoneda f) g) => (forall i. (a -> i) -> f i) -> Free g a
+requestCF f = requestF (liftCoyoneda <<< f)
 
-requestFC :: forall f g a. (Functor g, Inject (Coyoneda f) g) => (forall i. (a -> i) -> f i) -> Free g a
-requestFC f = requestF (liftCoyoneda <<< f)
+requestFC :: forall f g a. (Inject f g) => (forall i. (a -> i) -> f i) -> FreeC g a
+requestFC f = liftFCI (f id)

@@ -17,8 +17,8 @@ module Halogen.Component
   , installL
   , installR
   , installAll
-  , QueryT()
-  -- , query
+  , QueryF()
+  , query
   ) where
 
 import Prelude
@@ -35,7 +35,7 @@ import Data.Bifunctor (lmap)
 import Data.Coyoneda (Natural())
 import Data.Either (Either(..), either)
 import Data.Functor.Coproduct (Coproduct(), coproduct, left, right)
-import Data.Maybe (Maybe(..))
+import Data.Maybe (Maybe(..), maybe)
 import Data.Tuple (Tuple(..), fst, snd)
 import Data.Void (Void())
 
@@ -44,38 +44,65 @@ import Halogen.Query.StateF (StateF(..), get)
 
 import qualified Data.Map as M
 
+-- | Data type for Halogen components.
+-- | - `s` - the type of the component state
+-- | - `f` - the component's query algebra
+-- | - `g` - the monad handling the component's non-state effects
+-- | - `p` - the type of placeholders within the component, used to specify
+-- |         "holes" in which child components can be installed.
 newtype Component s f g p = Component
   { render :: State s (HTML p (f Unit))
   , query  :: Natural f (Free (Coproduct (StateF s) g))
   }
 
+instance functorComponent :: Functor (Component s f g) where
+  map f (Component c) = Component { render: lmap f <$> c.render, query: c.query }
+
+-- | A type alias for a Halogen component using `Free` for its query algebra.
 type ComponentF s f = Component s (Free f)
+
+-- | A type alias for a Halogen component using `FreeC` for their query algebra.
+-- | This removes the need to write an explicit `Functor` instance for `f`.
 type ComponentFC s f = Component s (FreeC f)
 
+-- | A type alias for a component `render` function.
 type Render s p f = s -> HTML p (f Unit)
+
+-- | A type alias for a component `render` function where the component is using
+-- | `Free` for its query algebra.
 type RenderF s p f = s -> HTML p (Free f Unit)
+
+-- | A type alias for a component `render` function where the component is using
+-- | `FreeC` for its query algebra.
 type RenderFC s p f = s -> HTML p (FreeC f Unit)
 
+-- | A type alias for a component `query` function that a value from the
+-- | component's query algebra and returns a `Free` monad with state and `g`
+-- | effects.
 type Eval f s g = Natural f (Free (Coproduct (StateF s) g))
 
+-- | Runs a component's `render` function with the specified state, returning
+-- | the generated `HTML` and new state.
 renderComponent :: forall s f g p. Component s f g p -> s -> Tuple (HTML p (f Unit)) s
 renderComponent (Component c) = runState c.render
 
+-- | Runs a compnent's `query` function with the specified query input and
+-- | returns the pending computation as a `Free` monad.
 queryComponent :: forall s f g p i. Component s f g p -> f i -> Free (Coproduct (StateF s) g) i
 queryComponent (Component c) q = c.query q
 
-instance functorComponent :: Functor (Component s f g) where
-  map f (Component c) =
-    Component { render: lmap f <$> c.render
-              , query: c.query
-              }
-
+-- | Builds a new `Component` from a `Render` and `Eval` function.
 component :: forall s f g p. Render s p f -> Eval f s g -> Component s f g p
 component r q = Component { render: CMS.gets r, query: q }
 
+-- | Builds a new `Component` from a `Render` and `Eval` function where the
+-- | component is using `Free` for its query algebra.
 componentF :: forall s f g p. (Functor f, Functor g) => RenderF s p f -> Eval f s g -> ComponentF s f g p
 componentF r e = component r (\fa -> bindF fa e)
 
+-- | Builds a new `Component` from a `Render` and `Eval` function where the
+-- | component is using `FreeC` for its query algebra. This removes the need to
+-- | write an explicit `Functor` instance for `f`.
 componentFC :: forall s f g p. (Functor g) => RenderFC s p f -> Eval f s g -> ComponentFC s f g p
 componentFC r e = component r (\fa -> bindFC fa e)
 
@@ -94,10 +121,10 @@ instance functorChildF :: (Functor f) => Functor (ChildF p f) where
 installer :: forall s f g p s' f' p' q q'. (Ord p, Monad g, Plus g)
           => (q -> Either p q')
           -> (p' -> q')
-          -> Component s f (QueryT s s' f' p p' g) q
+          -> Component s f (QueryF s s' f' p p' g) q
           -> (p -> ComponentState s' f' g p')
           -> Component (InstalledState s s' f' p p' g) (Coproduct f (ChildF p f')) g q'
-installer fromQ toQ' c f = Component { render: render, query: query }
+installer fromQ toQ' c f = Component { render: render, query: eval }
   where
 
   render :: State (InstalledState s s' f' p p' g) (HTML q' ((Coproduct f (ChildF p f')) Unit))
@@ -130,76 +157,42 @@ installer fromQ toQ' c f = Component { render: render, query: query }
       CMS.put st { children = M.insert p (Tuple s' c) st.children }
       pure $ lmap toQ' $ right <<< ChildF p <$> html
 
-  query :: Eval (Coproduct f (ChildF p f')) (InstalledState s s' f' p p' g) g
-  query = coproduct (const empty') queryChild
+  eval :: Eval (Coproduct f (ChildF p f')) (InstalledState s s' f' p p' g) g
+  eval = coproduct (const empty') queryChild
 
   queryChild :: Eval (ChildF p f') (InstalledState s s' f' p p' g) g
-  queryChild (ChildF p q) = do
-    st <- get :: _ (InstalledState s s' f' p p' g)
-    case M.lookup p st.children of
-      Nothing -> empty'
-      Just (Tuple s' c') -> mapF (coproduct (left <<< remapStateAction s' c') right) (queryComponent c' q)
-      where
-      remapStateAction :: s' -> Component s' f' g p' -> Natural (StateF s') (StateF (InstalledState s s' f' p p' g))
-      remapStateAction s' c' (Get k) = Get (\_ -> k s')
-      remapStateAction s' c' (Modify f next) = Modify (\st -> { parent: st.parent, children: M.insert p (Tuple (f s') c') st.children }) next
+  queryChild (ChildF p q) = query p q >>= maybe empty' pure
 
 empty' :: forall f g a. (Functor f, Plus g) => Free (Coproduct f g) a
 empty' = liftF (right empty :: Coproduct f g a)
 
 installL :: forall s f g pl pr s' f' p'. (Ord pl, Monad g, Plus g)
-         => Component s f (QueryT s s' f' pl p' g) (Either pl pr)
+         => Component s f (QueryF s s' f' pl p' g) (Either pl pr)
          -> (pl -> ComponentState s' f' g p')
          -> Component (InstalledState s s' f' pl p' g) (Coproduct f (ChildF pl f')) g (Either p' pr)
 installL = installer (either Left (Right <<< Right)) Left
 
 installR :: forall s f g pl pr s' f' p'. (Ord pr, Monad g, Plus g)
-         => Component s f (QueryT s s' f' pr p' g) (Either pl pr)
+         => Component s f (QueryF s s' f' pr p' g) (Either pl pr)
          -> (pr -> ComponentState s' f' g p')
          -> Component (InstalledState s s' f' pr p' g) (Coproduct f (ChildF pr f')) g (Either pl p')
 installR = installer (either (Right <<< Left) Left) Right
 
 installAll :: forall s f g p s' f' p'. (Ord p, Monad g, Plus g)
-           => Component s f (QueryT s s' f' p p' g) p
+           => Component s f (QueryF s s' f' p p' g) p
            -> (p -> ComponentState s' f' g p')
            -> Component (InstalledState s s' f' p p' g) (Coproduct f (ChildF p f')) g p'
 installAll = installer Left id
 
-newtype QueryT s s' f' p p' g a = QueryT (StateT (InstalledState s s' f' p p' g) g a)
+type QueryF s s' f' p p' g = Free (Coproduct (StateF (InstalledState s s' f' p p' g)) g)
 
-runQueryT :: forall s s' f' p p' g a. QueryT s s' f' p p' g a -> StateT (InstalledState s s' f' p p' g) g a
-runQueryT (QueryT a) = a
+query :: forall s s' f' p p' g i. (Functor g, Ord p) => p -> f' i -> QueryF s s' f' p p' g (Maybe i)
+query p q = do
+  st <- get :: _ (InstalledState s s' f' p p' g)
+  case M.lookup p st.children of
+    Nothing -> pure Nothing
+    Just (Tuple s' c') -> Just <$> mapF (coproduct (left <<< remapStateAction p s' c') right) (queryComponent c' q)
 
--- query :: forall s s' f' p p' g. (Monad g, Ord p) => p -> (forall i. f' i -> QueryT s s' f' p p' g (Maybe i))
--- query p q = QueryT do
---   st <- get :: _ (InstalledState s s' f' p p' g)
---   case M.lookup p st.children of
---     Nothing -> pure Nothing
---     Just (Tuple s c) -> do
---       Tuple i s' <- lift $ queryComponent c q s
---       put st { children = M.insert p (Tuple s' c) st.children }
---       pure (Just i)
-
-instance functorQueryT :: (Monad g) => Functor (QueryT s s' f' p p' g) where
-  map f (QueryT a) = QueryT (map f a)
-
-instance applyQueryT :: (Monad g) => Apply (QueryT s s' f' p p' g) where
-  apply (QueryT f) (QueryT a) = QueryT (apply f a)
-
-instance applicativeQueryT :: (Monad g) => Applicative (QueryT s s' f' p p' g) where
-  pure = QueryT <<< pure
-
-instance bindQueryT :: (Monad g) => Bind (QueryT s s' f' p p' g) where
-  bind (QueryT a) f = QueryT (a >>= runQueryT <<< f)
-
-instance monadQueryT :: (Monad g) => Monad (QueryT s s' f' p p' g)
-
-instance monadStateQueryT :: (Monad g) => CMS.MonadState s (QueryT s s' f' p p' g) where
-  state f = QueryT do
-    st <- CMS.get
-    let s' = f st.parent
-    CMS.put st { parent = snd s' }
-    pure $ fst s'
-
-instance monadTransQueryT :: MonadTrans (QueryT s s' f' p p') where
-  lift = QueryT <<< lift
+remapStateAction :: forall s s' f f' p p' g. (Ord p) => p -> s' -> Component s' f' g p' -> Natural (StateF s') (StateF (InstalledState s s' f' p p' g))
+remapStateAction p s' c' (Get k) = Get (\_ -> k s')
+remapStateAction p s' c' (Modify f next) = Modify (\st -> { parent: st.parent, children: M.insert p (Tuple (f s') c') st.children }) next

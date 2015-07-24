@@ -4,12 +4,12 @@ module Halogen.HTML.Events where
 
 import Prelude
 
-import Control.Monad.Free (Free())
+import Control.Monad.Free (Free(), FreeC())
 
 import Data.Coyoneda (Coyoneda(), liftCoyoneda)
 import Data.Inject (Inject)
 
-import Halogen (actionF, actionFC)
+import Halogen (actionF, actionCF, actionFC)
 import Halogen.HTML.Events.Handler (EventHandler())
 import Halogen.HTML.Events.Types (Event(), MouseEvent(), FocusEvent(), KeyboardEvent())
 import Halogen.HTML.Core (Prop(), handler, eventName)
@@ -17,13 +17,19 @@ import Halogen.HTML.Core (Prop(), handler, eventName)
 inputF :: forall f g a. (Functor f, Functor g, Inject f g) => (forall i. a -> i -> f i) -> a -> EventHandler (Free g Unit)
 inputF f x = pure $ actionF (f x)
 
+inputCF :: forall f g a. (Functor g, Inject (Coyoneda f) g) => (forall i. a -> i -> f i) -> a -> EventHandler (Free g Unit)
+inputCF f x = pure $ actionCF (f x)
+
+inputFC :: forall f g a. (Inject f g) => (forall i. a -> i -> f i) -> a -> EventHandler (FreeC g Unit)
+inputFC f x = pure $ actionFC (f x)
+
 inputF_ :: forall f g a. (Functor f, Functor g, Inject f g) => (forall i. i -> f i) -> a -> EventHandler (Free g Unit)
 inputF_ f _ = pure $ actionF f
 
-inputFC :: forall f g a. (Functor g, Inject (Coyoneda f) g) => (forall i. a -> i -> f i) -> a -> EventHandler (Free g Unit)
-inputFC f x = pure $ actionFC (f x)
+inputCF_ :: forall f g a. (Functor g, Inject (Coyoneda f) g) => (forall i. i -> f i) -> a -> EventHandler (Free g Unit)
+inputCF_ f _ = pure $ actionCF f
 
-inputFC_ :: forall f g a. (Functor g, Inject (Coyoneda f) g) => (forall i. i -> f i) -> a -> EventHandler (Free g Unit)
+inputFC_ :: forall f g a. (Inject f g) => (forall i. i -> f i) -> a -> EventHandler (FreeC g Unit)
 inputFC_ f _ = pure $ actionFC f
 
 onAbort	:: forall i. (Event () -> EventHandler i) -> Prop i
