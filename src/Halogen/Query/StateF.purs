@@ -1,5 +1,5 @@
 module Halogen.Query.StateF
-  ( StateF()
+  ( StateF(..)
   , get
   , gets
   , modify
