@@ -38,6 +38,7 @@ import Data.Functor.Coproduct (Coproduct(), coproduct, left, right)
 import Data.Maybe (Maybe(..), maybe)
 import Data.Tuple (Tuple(..), fst, snd)
 import Data.Void (Void())
+import qualified Data.Maybe.Unsafe as U
 
 import Halogen.HTML.Core (HTML(..), install)
 import Halogen.Query.StateF (StateF(..), get)
@@ -191,8 +192,10 @@ query p q = do
   st <- get :: _ (InstalledState s s' f' p p' g)
   case M.lookup p st.children of
     Nothing -> pure Nothing
-    Just (Tuple s' c') -> Just <$> mapF (coproduct (left <<< remapStateAction p s' c') right) (queryComponent c' q)
+    Just (Tuple _ c) -> Just <$> mapF (coproduct (left <<< remapStateAction p) right) (queryComponent c q)
 
-remapStateAction :: forall s s' f f' p p' g. (Ord p) => p -> s' -> Component s' f' g p' -> Natural (StateF s') (StateF (InstalledState s s' f' p p' g))
-remapStateAction p s' c' (Get k) = Get (\_ -> k s')
-remapStateAction p s' c' (Modify f next) = Modify (\st -> { parent: st.parent, children: M.insert p (Tuple (f s') c') st.children }) next
+remapStateAction :: forall s s' f f' p p' g. (Ord p) => p -> Natural (StateF s') (StateF (InstalledState s s' f' p p' g))
+remapStateAction p (Get k) =
+  Get (\st -> k $ U.fromJust $ fst <$> M.lookup p st.children)
+remapStateAction p (Modify f next) =
+  Modify (\st -> { parent: st.parent, children: M.update (Just <<< lmap f) p st.children }) next
