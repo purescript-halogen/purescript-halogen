@@ -95,7 +95,8 @@ returns the pending computation as a `Free` monad.
 component :: forall s f g p. Render s p f -> Eval f s g -> Component s f g p
 ```
 
-Builds a new `Component` from a `Render` and `Eval` function.
+Builds a new [`Component`](#component) from a [`Render`](#render) and
+[`Eval`](#eval) function.
 
 #### `componentF`
 
@@ -103,8 +104,8 @@ Builds a new `Component` from a `Render` and `Eval` function.
 componentF :: forall s f g p. (Functor f, Functor g) => RenderF s p f -> Eval f s g -> ComponentF s f g p
 ```
 
-Builds a new `Component` from a `Render` and `Eval` function where the
-component is using `Free` for its query algebra.
+Builds a new [`ComponentF`](#componentf) from a [`RenderF`](#renderf) and
+[`Eval`](#eval) function.
 
 #### `componentFC`
 
@@ -112,9 +113,8 @@ component is using `Free` for its query algebra.
 componentFC :: forall s f g p. (Functor g) => RenderFC s p f -> Eval f s g -> ComponentFC s f g p
 ```
 
-Builds a new `Component` from a `Render` and `Eval` function where the
-component is using `FreeC` for its query algebra. This removes the need to
-write an explicit `Functor` instance for `f`.
+Builds a new [`ComponentFC`](#componentfc) from a [`RenderFC`](#renderfc)
+and [`Eval`](#eval) function.
 
 #### `ComponentState`
 

@@ -92,20 +92,20 @@ renderComponent (Component c) = runState c.render
 queryComponent :: forall s f g p i. Component s f g p -> f i -> Free (Coproduct (StateF s) g) i
 queryComponent (Component c) q = c.query q
 
--- | Builds a new `Component` from a `Render` and `Eval` function.
+-- | Builds a new [`Component`](#component) from a [`Render`](#render) and
+-- | [`Eval`](#eval) function.
 component :: forall s f g p. Render s p f -> Eval f s g -> Component s f g p
 component r q = Component { render: CMS.gets r, query: q }
 
--- | Builds a new `Component` from a `Render` and `Eval` function where the
--- | component is using `Free` for its query algebra.
+-- | Builds a new [`ComponentF`](#componentf) from a [`RenderF`](#renderf) and
+-- | [`Eval`](#eval) function.
 componentF :: forall s f g p. (Functor f, Functor g) => RenderF s p f -> Eval f s g -> ComponentF s f g p
-componentF r e = component r (\fa -> bindF fa e)
+componentF r e = component r (`bindF` e)
 
--- | Builds a new `Component` from a `Render` and `Eval` function where the
--- | component is using `FreeC` for its query algebra. This removes the need to
--- | write an explicit `Functor` instance for `f`.
+-- | Builds a new [`ComponentFC`](#componentfc) from a [`RenderFC`](#renderfc)
+-- | and [`Eval`](#eval) function.
 componentFC :: forall s f g p. (Functor g) => RenderFC s p f -> Eval f s g -> ComponentFC s f g p
-componentFC r e = component r (\fa -> bindFC fa e)
+componentFC r e = component r (`bindFC` e)
 
 type ComponentState s f g p = Tuple s (Component s f g p)
 

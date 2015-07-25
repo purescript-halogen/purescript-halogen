@@ -43,8 +43,8 @@ type DriverState s = { node :: HTMLElement, vtree :: VTree, state :: s }
 -- | Runs the top level UI component for a Halogen app, returning a generated
 -- | HTML element that can be attached to the DOM and a driver function that
 -- | can be used to send actions and requests into the component (see the
--- | `actionF`, `requestF`, and related variations for more details on querying
--- | the driver).
+-- | [`actionF`](#actionf), [`requestF`](#requestF), and related variations for
+-- | more details on querying the driver).
 runUI :: forall eff s f. Component s f (Aff (HalogenEffects eff)) Void
       -> s
       -> Aff (HalogenEffects eff) { node :: HTMLElement, driver :: Driver f eff }
