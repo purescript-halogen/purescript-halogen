@@ -9,22 +9,34 @@ they may be safely embedded in HTML documents.
 inputF :: forall f g a. (Functor f, Functor g, Inject f g) => (forall i. a -> i -> f i) -> a -> EventHandler (Free g Unit)
 ```
 
+#### `inputCF`
+
+``` purescript
+inputCF :: forall f g a. (Functor g, Inject (Coyoneda f) g) => (forall i. a -> i -> f i) -> a -> EventHandler (Free g Unit)
+```
+
+#### `inputFC`
+
+``` purescript
+inputFC :: forall f g a. (Inject f g) => (forall i. a -> i -> f i) -> a -> EventHandler (FreeC g Unit)
+```
+
 #### `inputF_`
 
 ``` purescript
 inputF_ :: forall f g a. (Functor f, Functor g, Inject f g) => (forall i. i -> f i) -> a -> EventHandler (Free g Unit)
 ```
 
-#### `inputFC`
+#### `inputCF_`
 
 ``` purescript
-inputFC :: forall f g a. (Functor g, Inject (Coyoneda f) g) => (forall i. a -> i -> f i) -> a -> EventHandler (Free g Unit)
+inputCF_ :: forall f g a. (Functor g, Inject (Coyoneda f) g) => (forall i. i -> f i) -> a -> EventHandler (Free g Unit)
 ```
 
 #### `inputFC_`
 
 ``` purescript
-inputFC_ :: forall f g a. (Functor g, Inject (Coyoneda f) g) => (forall i. i -> f i) -> a -> EventHandler (Free g Unit)
+inputFC_ :: forall f g a. (Inject f g) => (forall i. i -> f i) -> a -> EventHandler (FreeC g Unit)
 ```
 
 #### `onAbort`
