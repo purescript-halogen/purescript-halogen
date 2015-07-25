@@ -9,16 +9,14 @@ import DOM (DOM())
 -- | manageable:
 -- |
 -- | ```purescript
--- | type AppEffects eff = HalogenEffects ( ajax :: AJAX, console :: CONSOLE | eff )
+-- | type AppEffects eff = HalogenEffects (ajax :: AJAX, console :: CONSOLE | eff)
+-- |
+-- | ui :: forall eff p. Component State Input (Aff (AppEffects eff)) p
+-- | ui = ...
 -- |
 -- | main :: Eff (AppEffects ()) Unit
 -- | main = launchAff $ do
--- |   app <- runUI app state
+-- |   app <- runUI ui state
 -- |   ...
 -- | ```
-type HalogenEffects eff =
-  ( dom :: DOM
-  , avar :: AVAR
-  , err :: EXCEPTION
-  | eff
-  )
+type HalogenEffects eff = (avar :: AVAR, err :: EXCEPTION, dom :: DOM | eff)
