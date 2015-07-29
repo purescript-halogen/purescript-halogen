@@ -1,4 +1,3 @@
-/dist
-!/dist/index.html
+/dist/example.js
 /output
 /bower_components
