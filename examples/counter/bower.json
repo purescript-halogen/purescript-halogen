@@ -1,17 +1,7 @@
 {
   "name": "counter",
-  "version": "1.0.0",
-  "moduleType": [
-    "node"
-  ],
-  "ignore": [
-    "**/.*",
-    "node_modules",
-    "bower_components",
-    "output"
-  ],
+  "private": true,
   "dependencies": {
-    "purescript-halogen": "master",
-    "purescript-halogen-bootstrap": "master"
+    "purescript-halogen": "*"
   }
 }

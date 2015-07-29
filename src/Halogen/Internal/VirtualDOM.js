@@ -3,12 +3,17 @@
 
 // module Halogen.Internal.VirtualDOM
 
-exports.emptyProps = {};
-
 // jshint maxparams: 2
 exports.prop = function (key, value) {
   var props = {};
   props[key] = value;
+  return props;
+};
+
+// jshint maxparams: 2
+exports.attr = function (key, value) {
+  var props = { attributes: {} };
+  props.attributes[key] = value;
   return props;
 };
 
@@ -31,39 +36,56 @@ exports.handlerProp = function (key, f) {
 
 // jshint maxparams: 1
 exports.initProp = function (f) {
-  var props = {};
+  var hasRun = false;
   var Hook = function () {};
-  // jshint maxparams: 3
-  Hook.prototype.hook = function (node, prop, prev) {
-    if (typeof prev === "undefined") f();
+  Hook.prototype.hook = function (node) {
+    if (!hasRun) {
+      hasRun = true;
+      f(node)();
+    }
   };
-  props["halogen-init"] = new Hook(f);
-  return props;
+  return { "halogen-init": new Hook(f) };
 };
 
 exports.finalizerProp = function (f) {
-  var props = {};
+  var hasRun = false;
   var Hook = function () {};
-  Hook.prototype.hook = function () { };
-  Hook.prototype.unhook = function () {
-    f();
+  Hook.prototype.unhook = function (node) {
+    if (!hasRun) {
+      hasRun = true;
+      f(node)();
+    }
   };
-  props["halogen-finalizer"] = new Hook(f);
-  return props;
+  return { "halogen-final": new Hook(f) };
 };
 
-// jshint maxparams: 2
-exports.concatProps = function (p1, p2) {
-  var props = {};
-  var key;
-  for (key in p1) {
-    if (p1.hasOwnProperty(key)) props[key] = p1[key];
-  }
-  for (key in p2) {
-    if (p2.hasOwnProperty(key)) props[key] = p2[key];
-  }
-  return props;
-};
+exports.concatProps = function () {
+  // jshint maxparams: 2
+  var hOP = Object.prototype.hasOwnProperty;
+  var copy = function (props, result) {
+    for (var key in props) {
+      if (hOP.call(props, key)) {
+        if (key === "attributes") {
+          var attrs = props[key];
+          var resultAttrs = result[key] || (result[key] = {});
+          for (var attr in attrs) {
+            if (hOP.call(attrs, attr)) {
+              resultAttrs[attr] = attrs[attr];
+            }
+          }
+        } else {
+          result[key] = props[key];
+        }
+      }
+    }
+    return result;
+  };
+  return function (p1, p2) {
+    return copy(p2, copy(p1, {}));
+  };
+}();
+
+exports.emptyProps = {};
 
 exports.createElement = function () {
   var vcreateElement = require("virtual-dom/create-element");
@@ -102,23 +124,17 @@ exports.vtext = function () {
 exports.vnode = function () {
   var VirtualNode = require("virtual-dom/vnode/vnode");
   var SoftSetHook = require("virtual-dom/virtual-hyperscript/hooks/soft-set-hook");
-  return function (name) {
-    return function (attr) {
-      return function (children) {
-        var props = {
-          attributes: {}
+  return function (namespace) {
+    return function (name) {
+      return function (key) {
+        return function (props) {
+          return function (children) {
+            if (name === "input" && props.value !== undefined) {
+              props.value = new SoftSetHook(props.value);
+            }
+            return new VirtualNode(name, props, children, key, namespace);
+          };
         };
-        for (var key in attr) {
-          if (key.indexOf("data-") === 0 || key === "readonly") {
-            props.attributes[key] = attr[key];
-          } else {
-            props[key] = attr[key];
-          }
-        }
-        if (name === "input" && props.value !== undefined) {
-          props.value = new SoftSetHook(props.value);
-        }
-        return new VirtualNode(name, props, children, attr.key);
       };
     };
   };
