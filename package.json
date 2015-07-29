@@ -10,8 +10,10 @@
   "scripts": {
     "postinstall": "bower install",
     "build": "gulp",
-    "example-counter": "bower link && cd examples/counter && bower link purescript-halogen && gulp",
-    "example-ajax": "bower link && cd examples/ajax && bower link purescript-halogen && gulp"
+    "example-ace": "bower link && cd examples/ace && bower link purescript-halogen && gulp",
+    "example-ajax": "bower link && cd examples/ajax && bower link purescript-halogen && gulp",
+    "example-components": "bower link && cd examples/components && bower link purescript-halogen && gulp",
+    "example-counter": "bower link && cd examples/counter && bower link purescript-halogen && gulp"
   },
   "devDependencies": {
     "bower": "^1.4.1",

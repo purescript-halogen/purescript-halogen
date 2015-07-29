@@ -15,6 +15,7 @@ module Halogen.Internal.VirtualDOM
   , patch
   , vtext
   , vnode
+  , widget
   ) where
 
 import Prelude
@@ -76,3 +77,8 @@ foreign import vtext :: String -> VTree
 -- | Create a virtual DOM tree which represents an element with properties
 -- | (namespace, tag name, key, properties, children).
 foreign import vnode :: Nullable String -> String -> Nullable String -> Props -> Array VTree -> VTree
+
+foreign import widget :: forall eff. Eff (dom :: DOM | eff) HTMLElement
+                                  -> (HTMLElement -> Eff (dom :: DOM | eff) (Nullable HTMLElement))
+                                  -> (HTMLElement -> Eff (dom :: DOM | eff) Unit)
+                                  -> VTree

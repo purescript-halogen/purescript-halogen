@@ -18,6 +18,12 @@ Data type for Halogen components.
 instance functorComponent :: Functor (Component s f g)
 ```
 
+#### `natG`
+
+``` purescript
+natG :: forall s f g g' p. (Functor g, Functor g') => Natural g g' -> Component s f g p -> Component s f g' p
+```
+
 #### `ComponentF`
 
 ``` purescript
@@ -29,7 +35,7 @@ A type alias for a Halogen component using `Free` for its query algebra.
 #### `ComponentFC`
 
 ``` purescript
-type ComponentFC s f = Component s (FreeC f)
+type ComponentFC s f = ComponentF s (Coyoneda f)
 ```
 
 A type alias for a Halogen component using `FreeC` for their query algebra.
@@ -46,7 +52,7 @@ A type alias for a component `render` function.
 #### `RenderF`
 
 ``` purescript
-type RenderF s p f = s -> HTML p (Free f Unit)
+type RenderF s p f = Render s p (Free f)
 ```
 
 A type alias for a component `render` function where the component is using
@@ -55,7 +61,7 @@ A type alias for a component `render` function where the component is using
 #### `RenderFC`
 
 ``` purescript
-type RenderFC s p f = s -> HTML p (FreeC f Unit)
+type RenderFC s p f = RenderF s p (Coyoneda f)
 ```
 
 A type alias for a component `render` function where the component is using
@@ -83,7 +89,7 @@ the generated `HTML` and new state.
 #### `queryComponent`
 
 ``` purescript
-queryComponent :: forall s f g p i. Component s f g p -> f i -> Free (Coproduct (StateF s) g) i
+queryComponent :: forall s f g p. Component s f g p -> Eval f s g
 ```
 
 Runs a compnent's `query` function with the specified query input and
@@ -167,6 +173,12 @@ type QueryF s s' f' p p' g = Free (Coproduct (StateF (InstalledState s s' f' p p
 
 ``` purescript
 query :: forall s s' f' p p' g i. (Functor g, Ord p) => p -> f' i -> QueryF s s' f' p p' g (Maybe i)
+```
+
+#### `liftQuery`
+
+``` purescript
+liftQuery :: forall s s' f' p p' g i. (Functor g) => QueryF s s' f' p p' g i -> Free (Coproduct (StateF s) (QueryF s s' f' p p' g)) i
 ```
 
 

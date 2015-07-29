@@ -206,6 +206,12 @@ body_ :: forall p i. Array (HTML p i) -> HTML p i
 br :: forall p i. Array (Prop i) -> HTML p i
 ```
 
+#### `br_`
+
+``` purescript
+br_ :: forall p i. HTML p i
+```
+
 #### `button`
 
 ``` purescript
@@ -636,6 +642,12 @@ header_ :: forall p i. Array (HTML p i) -> HTML p i
 
 ``` purescript
 hr :: forall p i. Array (Prop i) -> HTML p i
+```
+
+#### `hr_`
+
+``` purescript
+hr_ :: forall p i. HTML p i
 ```
 
 #### `html`

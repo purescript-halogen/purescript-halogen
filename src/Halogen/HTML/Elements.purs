@@ -18,7 +18,7 @@ module Halogen.HTML.Elements
   , big           , big_
   , blockquote    , blockquote_
   , body          , body_
-  , br
+  , br            , br_
   , button        , button_
   , canvas
   , caption       , caption_
@@ -56,7 +56,7 @@ module Halogen.HTML.Elements
   , h6            , h6_
   , head          , head_
   , header        , header_
-  , hr
+  , hr            , hr_
   , html          , html_
   , i             , i_
   , iframe
@@ -229,6 +229,9 @@ body_ = body []
 
 br :: forall p i. Array (Prop i) -> HTML p i
 br props = element (tagName "br") props []
+
+br_ :: forall p i. HTML p i
+br_ = br []
 
 button :: forall p i. Array (Prop i) -> Array (HTML p i) -> HTML p i
 button xs = element (tagName "button") xs
@@ -445,6 +448,9 @@ header_ = header []
 
 hr :: forall p i. Array (Prop i) -> HTML p i
 hr props = element (tagName "hr") props []
+
+hr_ :: forall p i. HTML p i
+hr_ = hr []
 
 html :: forall p i. Array (Prop i) -> Array (HTML p i) -> HTML p i
 html xs = element (tagName "html") xs
