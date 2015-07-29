@@ -9,6 +9,7 @@ module Halogen.HTML.Renderer.VirtualDOM
 import Prelude
 
 import Control.Alt ((<|>))
+import Control.Monad (when)
 import Control.Monad.Aff (Aff(), runAff)
 import Control.Monad.Eff (Eff())
 import Control.Monad.Eff.Exception (throwException)
@@ -22,7 +23,7 @@ import Data.ExistsR (runExistsR)
 import Data.Foldable (foldl, fold, find)
 import Data.Function (runFn2)
 import Data.List (List(..), (:))
-import Data.Maybe (Maybe(..), maybe)
+import Data.Maybe (Maybe(..), maybe, isNothing)
 import Data.Monoid (mempty)
 import Data.Nullable (toNullable)
 import Data.Traversable (traverse)
@@ -108,12 +109,13 @@ ifprop :: forall eff f i. RenderState
 ifprop oldState getter modifier mkProp dr f = do
   fs <- gets getter
   let fbox = mkMemoBox f
-  case find (eq fbox <<< fst) (getter oldState) <|> find (eq fbox <<< fst) fs of
-    Nothing -> do
-      let prop = mkProp (handleAff <<< dr <<< f)
-      modify (modifier (Tuple fbox prop : fs))
-      pure prop
-    Just (Tuple _ prop) -> pure prop
+      lastMemo = find (eq fbox <<< fst) (getter oldState)
+      currentMemo = find (eq fbox <<< fst) fs
+      prop = case lastMemo <|> currentMemo of
+        Nothing -> mkProp (handleAff <<< dr <<< f)
+        Just (Tuple _ prop') -> prop'
+  when (isNothing currentMemo) $ modify (modifier (Tuple fbox prop : fs))
+  pure prop
 
 handleAff :: forall eff a. Aff (HalogenEffects eff) a -> Eff (HalogenEffects eff) Unit
 handleAff = runAff throwException (const (pure unit))
