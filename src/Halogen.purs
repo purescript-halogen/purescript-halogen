@@ -28,7 +28,7 @@ import Data.Void (Void())
 
 import Halogen.Component (Component(), renderComponent, queryComponent)
 import Halogen.Effects (HalogenEffects())
-import Halogen.HTML.Renderer.VirtualDOM (renderHTML)
+import Halogen.HTML.Renderer.VirtualDOM (RenderState(), emptyRenderState, renderHTML)
 import Halogen.Internal.VirtualDOM (VTree(), createElement, diff, patch)
 import Halogen.Query.StateF (StateF(), stateN)
 
@@ -38,7 +38,12 @@ import Halogen.Query.StateF (StateF(), stateN)
 type Driver f eff = Natural f (Aff (HalogenEffects eff))
 
 -- | Type alias used internally to track the driver's persistent state.
-type DriverState s = { node :: HTMLElement, vtree :: VTree, state :: s }
+type DriverState s =
+  { node :: HTMLElement
+  , vtree :: VTree
+  , state :: s
+  , memo :: RenderState
+  }
 
 -- | Runs the top level UI component for a Halogen app, returning a generated
 -- | HTML element that can be attached to the DOM and a driver function that
@@ -51,10 +56,11 @@ runUI :: forall eff s f. Component s f (Aff (HalogenEffects eff)) Void
 runUI c s = case renderComponent c s of
     Tuple html s' -> do
       ref <- makeVar
-      let vtree = renderHTML (driver ref) html
-          node = createElement vtree
-      putVar ref { node: node, vtree: vtree, state: s' }
-      pure { node: node, driver: driver ref }
+      case renderHTML (driver ref) html emptyRenderState of
+        Tuple vtree memo -> do
+          let node = createElement vtree
+          putVar ref { node: node, vtree: vtree, state: s', memo: memo }
+          pure { node: node, driver: driver ref }
 
   where
 
@@ -68,15 +74,16 @@ runUI c s = case renderComponent c s of
     where
     runStateStep :: Natural (StateF s) (Aff (HalogenEffects eff))
     runStateStep i = do
-      { node: node, vtree: prev, state: s } <- takeVar ref
+      { node: node, vtree: vtree, state: s, memo: memo } <- takeVar ref
       case runState (stateN i) s of
         Tuple i' s' ->
           case renderComponent c s' of
             Tuple html s'' -> do
-              let next = renderHTML (driver ref) html
-              node' <- liftEff $ patch (diff prev next) node
-              putVar ref { node: node', vtree: next, state: s'' }
-              pure i'
+              case renderHTML (driver ref) html memo of
+                Tuple vtree' memo' -> do
+                  node' <- liftEff $ patch (diff vtree vtree') node
+                  putVar ref { node: node', vtree: vtree', state: s'', memo: memo' }
+                  pure i'
 
 -- | Takes a data constructor of `f` and creates an "action", lifting it into
 -- | the query algebra `Free g Unit`. An "action" only causes effects and has

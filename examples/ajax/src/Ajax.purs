@@ -76,13 +76,16 @@ ui = componentFC render eval
              , H.p_ [ H.text (if st.busy then "Working..." else "") ]
              ]
              ++ flip foldMap st.result \js ->
-                [ H.div [ H.Initializer (\el -> actionFC (Init el))
-                        , H.Finalizer (\el -> actionFC (Final el))
+                [ H.div [ initializer
+                        , finalizer
                         ]
                         [ H.h2_ [ H.text "javascript output:" ]
                         , H.pre_ [ H.code_ [ H.text js ] ]
                         ]
                 ]
+
+  initializer = H.Initializer (\el -> actionFC (Init el))
+  finalizer = H.Finalizer (\el -> actionFC (Final el))
 
   eval :: Eval Input State (Aff AppEffects)
   eval (SetCode code next) = modify (_ { code = code, result = Nothing :: Maybe String }) $> next
