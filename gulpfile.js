@@ -6,7 +6,6 @@ var jshint = require("gulp-jshint");
 var jscs = require("gulp-jscs");
 var purescript = require("gulp-purescript");
 var rimraf = require("rimraf");
-var webpack = require("webpack-stream");
 
 var sources = [
   "src/**/*.purs",
@@ -49,7 +48,6 @@ gulp.task("docs", ["clean-docs"], function() {
       "Halogen.Component": "docs/Halogen/Component.md",
       "Halogen.Effects": "docs/Halogen/Effects.md",
       "Halogen.HTML.Core": "docs/Halogen/HTML/Core.md",
-      "Halogen.HTML.CSS": "docs/Halogen/HTML/CSS.md",
       "Halogen.HTML.Elements": "docs/Halogen/HTML/Elements.md",
       "Halogen.HTML.Events": "docs/Halogen/HTML/Events.md",
       "Halogen.HTML.Events.Forms": "docs/Halogen/HTML/Events/Forms.md",
