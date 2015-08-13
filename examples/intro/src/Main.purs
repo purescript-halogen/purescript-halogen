@@ -1,49 +1,44 @@
-module Main where
+module Example.Intro where
 
-import Data.Void
-import Data.Tuple
-import Data.Either
+import Prelude
 
-import Control.Bind
-import Control.Monad.Eff
+import Control.Apply ((*>))
+import Control.Monad.Aff (Aff(), runAff, later')
+import Control.Monad.Eff (Eff())
+import Control.Monad.Eff.Exception (throwException)
 
-import DOM
-
-import Data.DOM.Simple.Document
-import Data.DOM.Simple.Element
-import Data.DOM.Simple.Types
-import Data.DOM.Simple.Window
+import Data.Functor (($>))
 
 import Halogen
-import Halogen.Signal
-import Halogen.Component
-
+import Halogen.Query.StateF (modify)
+import Halogen.Util (appendToBody)
 import qualified Halogen.HTML as H
-import qualified Halogen.HTML.Attributes as A
-import qualified Halogen.HTML.Events as A
-
-appendToBody :: forall eff. HTMLElement -> Eff (dom :: DOM | eff) Unit
-appendToBody e = document globalWindow >>= (body >=> flip appendChild e)
+import qualified Halogen.HTML.Events as E
 
 -- | The state of the application
 newtype State = State { on :: Boolean }
 
+initialState :: State
+initialState = State { on: false }
+
 -- | Inputs to the state machine
-data Input = ToggleState
+data Input a = ToggleState a
 
-ui :: forall m eff. (Applicative m) => Component m Input Input
-ui = render <$> stateful (State { on: false }) update
+ui :: forall g p. (Functor g) => Component State Input g p
+ui = component render eval
   where
-  render :: State -> H.HTML (m Input)
-  render (State s) = H.div_
-    [ H.h1_ [ H.text "Toggle Button" ]
-    , H.button [ A.onClick (A.input_ ToggleState) ] 
-               [ H.text (if s.on then "On" else "Off") ]
-    ]    
-      
-  update :: State -> Input -> State
-  update (State s) ToggleState = State { on: not s.on }
 
-main = do
-  Tuple node _ <- runUI ui
-  appendToBody node
+  render :: Render State Input p
+  render (State state) = H.div_
+    [ H.h1_ [ H.text "Toggle Button" ]
+    , H.button [ E.onClick (E.input_ ToggleState) ]
+               [ H.text (if state.on then "On" else "Off") ]
+    ]
+
+  eval :: Eval Input State Input g
+  eval (ToggleState next) = modify (\(State state) -> State { on: not state.on }) $> next
+
+main :: Eff (HalogenEffects ()) Unit
+main = runAff throwException (const (pure unit)) $ do
+  app <- runUI ui initialState
+  appendToBody app.node

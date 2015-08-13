@@ -1,48 +1,35 @@
--- | Convenience functions for working with form elements.
-
+-- | Convenience functions for working with form events.
 module Halogen.HTML.Events.Forms
-  ( onValueChanged
+  ( onValueChange
+  , onValueInput
   , onChecked
-  , onInput
   ) where
 
 import Prelude
 
-import DOM
+import Data.Either (either)
+import Data.Foreign (toForeign)
+import Data.Foreign.Class (IsForeign, readProp)
+import Data.Maybe (Maybe(..))
 
-import Data.Maybe
-import Data.Either
-import Data.Foreign
-import Data.Foreign.Class
-import Data.Traversable (traverse)
+import Halogen.HTML.Core (Prop(), eventName, handler')
+import Halogen.HTML.Events.Handler (EventHandler())
 
-import Control.Plus
-import Control.Alternative
+-- | Attach event handler to event `key` with getting `prop` field as an
+-- | argument of `handler`.
+addForeignPropHandler :: forall f value. (IsForeign value) => String -> String -> (value -> EventHandler (f Unit)) -> Prop (f Unit)
+addForeignPropHandler key prop f = handler' (eventName key) (either (const $ pure Nothing) (map Just <<< f) <<< readProp prop <<< toForeign <<< _.target)
 
-import Halogen.HTML.Events.Handler
+-- | Attach an event handler which will produce an input when the value of an
+-- | input field changes.
+onValueChange :: forall f. (String -> EventHandler (f Unit)) -> Prop (f Unit)
+onValueChange = addForeignPropHandler "change" "value"
 
-import qualified Halogen.HTML.Attributes as H
+-- | Attach an event handler which will fire on input.
+onValueInput :: forall f. (String -> EventHandler (f Unit)) -> Prop (f Unit)
+onValueInput = addForeignPropHandler "input" "value"
 
--- | Attach event handler to event ```key``` with getting ```prop``` field
--- | as an argument of handler
-addForeignPropHandler :: forall f i value. (Alternative f, IsForeign value) => String -> String -> (value -> EventHandler (f i)) -> H.Attr (f i)
-addForeignPropHandler key prop f = H.handler (H.eventName key) (\e -> handler (toForeign e.target))
-  where
-  handler :: Foreign -> EventHandler (f i)
-  handler e = case readProp prop e of
-                Left _ -> pure empty
-                Right i -> f i
-
--- | Attach an event handler which will produce an input when the value of an input field changes
--- |
--- | An input will not be produced if the value cannot be cast to the appropriate type.
-onValueChanged :: forall value f i. (Alternative f, IsForeign value) => (value -> EventHandler (f i)) -> H.Attr (f i)
-onValueChanged = addForeignPropHandler "change" "value"
-
--- | Attach an event handler which will fire when a checkbox is checked or unchecked
-onChecked :: forall f i. (Alternative f) => (Boolean -> EventHandler (f i)) -> H.Attr (f i)
+-- | Attach an event handler which will fire when a checkbox is checked or
+-- | unchecked.
+onChecked :: forall f. (Boolean -> EventHandler (f Unit)) -> Prop (f Unit)
 onChecked = addForeignPropHandler "change" "checked"
-
--- | Attach an event handler which will fire on input
-onInput :: forall f i. (Alternative f) => (String -> EventHandler (f i)) -> H.Attr (f i)
-onInput = addForeignPropHandler "input" "value"

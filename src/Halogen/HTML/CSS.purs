@@ -1,10 +1,7 @@
--- | This module defines an adapter between the `purescript-halogen` and `purescript-css` libraries.
-
+-- | This module defines an adapter between the `purescript-halogen` and
+-- | `purescript-css` libraries.
 module Halogen.HTML.CSS
-  ( Styles(..)
-  , runStyles
-
-  , style
+  ( style
   , stylesheet
   ) where
 
@@ -16,15 +13,15 @@ import Data.List (fromList, toList)
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.String (joinWith)
 import Data.Tuple (Tuple(..))
-
 import qualified Data.StrMap as SM
 
 import Css.Property (Key(), Value())
 import Css.Render (render, renderedSheet, collect)
 import Css.Stylesheet (Css(), Rule(..), runS)
 
-import qualified Halogen.HTML as H
-import qualified Halogen.HTML.Attributes as A
+import Halogen.HTML.Core (HTML(), Prop(), IsProp, prop, propName, attrName)
+import qualified Halogen.HTML.Elements as H
+import qualified Halogen.HTML.Properties as P
 
 -- | A newtype for CSS styles
 newtype Styles = Styles (SM.StrMap String)
@@ -33,8 +30,8 @@ newtype Styles = Styles (SM.StrMap String)
 runStyles :: Styles -> SM.StrMap String
 runStyles (Styles m) = m
 
-instance stylesIsAttribute :: A.IsAttribute Styles where
-  toAttrString _ (Styles m) = joinWith "; " $ (\(Tuple key value) -> key <> ": " <> value) <$> fromList (SM.toList m)
+instance stylesIsProp :: IsProp Styles where
+  toPropString _ _ (Styles m) = joinWith "; " $ (\(Tuple key value) -> key <> ": " <> value) <$> fromList (SM.toList m)
 
 -- | Render a set of rules as an inline style.
 -- |
@@ -45,8 +42,8 @@ instance stylesIsAttribute :: A.IsAttribute Styles where
 -- |                      display block ]
 -- |       [ ... ]
 -- | ```
-style :: forall i. Css -> A.Attr i
-style = A.attr (A.attributeName "style") <<< Styles <<< rules <<< runS
+style :: forall i. Css -> Prop i
+style = prop (propName "style") (Just $ attrName "style") <<< Styles <<< rules <<< runS
   where
   rules :: Array Rule -> SM.StrMap String
   rules rs = SM.fromList (toList properties)
@@ -62,7 +59,7 @@ style = A.attr (A.attributeName "style") <<< Styles <<< rules <<< runS
   rights = mapMaybe (either (const Nothing) Just)
 
 -- | Render a set of rules as a `style` element.
-stylesheet :: forall i. Css -> H.HTML i
-stylesheet css = H.style [ A.type_ "text/css" ] [ H.text content ]
+stylesheet :: forall p i. Css -> HTML p i
+stylesheet css = H.style [ P.type_ "text/css" ] [ H.text content ]
   where
   content = fromMaybe "" $ renderedSheet $ render css

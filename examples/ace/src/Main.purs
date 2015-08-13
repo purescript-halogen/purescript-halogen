@@ -1,122 +1,87 @@
 module Main where
 
-import Data.Void
-import Data.Maybe
-import Data.Tuple
-import Data.Either
-import Data.Function
-import Data.Foldable (for_)
+import Prelude
 
-import Control.Functor (($>))
-import Control.Bind
-import Control.Monad (when)
-import Control.Monad.Eff
-import Control.Monad.Eff.Ref
+import Control.Monad.Aff (Aff(), runAff)
+import Control.Monad.Aff.AVar (AVAR())
+import Control.Monad.Eff (Eff())
+import Control.Monad.Eff.Console (CONSOLE())
+import Control.Monad.Eff.Exception (throwException)
 
-import DOM
-
-import Data.DOM.Simple.Document
-import Data.DOM.Simple.Element
-import Data.DOM.Simple.Types
-import Data.DOM.Simple.Window
-
-import Debug.Trace
+import Data.Const (Const())
+import Data.Functor (($>))
+import Data.Maybe (Maybe(..), fromMaybe)
+import Data.Tuple (Tuple(..))
+import Data.Void (Void())
 
 import Halogen
-import Halogen.Signal
-import Halogen.Component
-
+import Halogen.Util (appendToBody)
+import Halogen.Query.StateF (modify)
 import qualified Halogen.HTML as H
-import qualified Halogen.HTML.Attributes as A
-import qualified Halogen.HTML.Events as A
+import qualified Halogen.HTML.Events as E
 
-import qualified Halogen.Themes.Bootstrap3 as B
+import Ace.Types (ACE())
+import AceComponent (AceState(), AceInput(..), AceEffects(), ace, initAceState)
 
-import Ace
-import Ace.Types (EAce(), Editor())
+-- | The application state, which stores the current text, and the string most
+-- | recently copied to the clipboard.
+type State = { text :: String, copied :: Maybe String }
 
-import qualified Ace.Editor as Editor
-import qualified Ace.EditSession as Session
-
-foreign import createEditorNode
-  "function createEditorNode() {\
-  \  return document.createElement('div');\
-  \}" :: forall eff. Eff (dom :: DOM | eff) HTMLElement
-
--- | The application state, which stores the current text, and the string most recently 
--- | copied to the clipboard.
-data State = State String (Maybe String)
+initialState :: State
+initialState = { text: "", copied: Nothing }
 
 -- | The type of inputs to the component.
-data Input = TextCopied String | TextChanged String
+data Input a = ClearText a
 
--- | Custom attributes
-dataAceText :: forall i. String -> A.Attr i
-dataAceText = A.attr $ A.attributeName "data-ace-text"
+-- | The placeholder for the ace component. As it is only going to be used once
+-- | in this demo the `Eq` and `Ord` instances are trivial. If the component was
+-- | going to be used multiple times these would need a proper implementation
+-- | for the individual components to function correctly.
+data AcePlaceholder = AcePlaceholder
 
--- | Using `combine` and `mapP` and some `Profunctor` trickery, we can make the types
--- | match what is required by `runUI`.
--- |
--- | `combine` takes a function which renders two `HTML` elements side-by-side, and
--- | combines the `Component`s, taking the sum of the input types.
-ui :: forall m eff. (Applicative m) => Component m Input Input
-ui = render <$> stateful (State "" Nothing) update
+instance eqAcePlaceholder :: Eq AcePlaceholder where
+  eq _ _ = true
+
+instance ordAcePlaceholder :: Ord AcePlaceholder where
+  compare _ _ = EQ
+
+-- | The parent component that the ace component will be installed into.
+container :: forall p eff. ParentComponentP State AceState Input AceInput (Aff (AceEffects eff)) (ChildF AcePlaceholder AceInput) (Const Void) AcePlaceholder p
+container = component' render eval peek
   where
-  render :: State -> H.HTML (m Input)
-  render (State text copied) =
-    H.div [ A.class_ B.container ]
-          [ H.h1_ [ H.text "ace editor" ]
-          , H.div_ [ H.p_ [ H.button [ A.classes [ B.btn, B.btnPrimary ]
-                                     , A.onClick (A.input_ (TextChanged ""))
-                                     ] [ H.text "Clear" ]
-                          ]
-                   , H.p_ [ H.text (maybe "" ("Text copied: " <>) copied) ]
-                   ]
-          , H.div [ dataAceText text ] []
-          ]
-          
-  update :: State -> Input -> State
-  update (State text _) (TextCopied copied) = State text (Just copied)
-  update (State _ copied) (TextChanged text) = State text copied
 
-main = do
-  -- A RefVal is used to manage widget state.
-  -- In practice, this data store might need to be more complex, mapping component IDs to individual states.
-  editorRef <- newRef Nothing    
-    
-  Tuple node driver <- runUIWith ui (updateAce editorRef)
-  
-  doc <- document globalWindow
-  b <- body doc
-  b `appendChild` node
-  
-  -- Set up the Ace editor
-  els <- querySelector "[data-ace-text]" b
-  for_ els \el -> do
-    -- Setup the Ace editor
-    editor <- Ace.editNode el ace
-    session <- Editor.getSession editor
-    writeRef editorRef (Just editor)
-    Editor.setTheme "ace/theme/monokai" editor
-    -- Set up event handlers
-    Editor.onCopy editor (driver <<< TextCopied)
-    Session.onChange session do
-      text <- Editor.getValue editor
-      driver $ TextChanged text
-      
-  where 
-  updateAce :: RefVal _ -> Input -> HTMLElement -> _ -> Eff _ Unit
-  updateAce editorRef (TextChanged _) el _ = do
-    doc <- document globalWindow
-    b <- body doc
-    els <- querySelector "[data-ace-text]" b
+  render :: Render State Input AcePlaceholder
+  render { text: text, copied: copied } =
+    H.div_ [ H.h1_ [ H.text "ace editor" ]
+           , H.div_ [ H.p_ [ H.button [ E.onClick (E.input_ ClearText) ]
+                                      [ H.text "Clear" ]
+                           ]
+                    ]
+           , H.div_ [ H.Placeholder AcePlaceholder ]
+           , H.p_ [ H.text ("Current text: " ++ text) ]
+           , H.p_ [ H.text ("Copied text: " ++ fromMaybe "" copied) ]
+           ]
 
-    Just editor <- readRef editorRef
-    
-    for_ els \el -> do
-      -- Set the editor's content to the current value
-      text <- getAttribute "data-ace-text" el
-      current <- Editor.getValue editor
-      when (text /= current) $ void $
-        Editor.setValue text Nothing editor
-  updateAce _ _ _ _ = return unit
+  eval :: Eval Input State Input (QueryF State AceState AceInput (Aff (AceEffects eff)) AcePlaceholder p)
+  eval (ClearText next) = do
+    liftQuery $ query AcePlaceholder (action $ ChangeText "")
+    pure next
+
+  -- | Peek allows us to observe inputs going to the child components, here
+  -- | we're using it to observe when the text is changed or copied inside the
+  -- | ace component, and igoring all other inputs.
+  peek :: Peek State Input (QueryF State AceState AceInput (Aff (AceEffects eff)) AcePlaceholder p) (ChildF AcePlaceholder AceInput)
+  peek (ChildF AcePlaceholder q) = case q of
+    ChangeText text _ -> modify _ { text = text }
+    CopiedText text _ -> modify _ { copied = Just text }
+    _ -> pure unit
+
+-- | The main UI component - the parent component with installed ace component.
+ui :: forall p eff. InstalledComponentP State AceState Input AceInput (Aff (AceEffects eff)) (ChildF AcePlaceholder AceInput) (Const Void) AcePlaceholder p
+ui = install' container \AcePlaceholder -> Tuple (ace "test") initAceState
+
+-- | Run the Halogen app.
+main :: Eff (HalogenEffects (ace :: ACE, console :: CONSOLE)) Unit
+main = runAff throwException (const (pure unit)) $ do
+  app <- runUI ui (installedState initialState)
+  appendToBody app.node
