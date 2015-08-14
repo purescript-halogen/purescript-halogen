@@ -18,12 +18,13 @@ import Control.Monad.Rec.Class (forever)
 import Control.Monad.State (runState)
 import Control.Monad.Trans (lift)
 
-import Data.DOM.Simple.Types (HTMLElement())
 import Data.Functor.Coproduct (Coproduct(), coproduct)
 import Data.Inject (Inject, inj)
 import Data.NaturalTransformation (Natural())
 import Data.Tuple (Tuple(..))
 import Data.Void (Void())
+
+import DOM.HTML.Types (HTMLElement())
 
 import Halogen.Component (ComponentP(), renderComponent, queryComponent)
 import Halogen.Effects (HalogenEffects())

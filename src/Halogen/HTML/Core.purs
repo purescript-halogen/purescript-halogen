@@ -45,7 +45,6 @@ import Prelude
 import Control.Monad.Eff (Eff())
 
 import Data.Bifunctor (Bifunctor, rmap)
-import Data.DOM.Simple.Types (HTMLElement())
 import Data.Exists (Exists(), mkExists)
 import Data.ExistsR (ExistsR(), mkExistsR, runExistsR)
 import Data.Maybe (Maybe(..))
@@ -54,6 +53,7 @@ import Data.Traversable (traverse)
 import Data.Tuple (Tuple(..))
 
 import DOM (DOM())
+import DOM.HTML.Types (HTMLElement())
 
 import Halogen.HTML.Events.Handler (EventHandler())
 import Halogen.HTML.Events.Types (Event())

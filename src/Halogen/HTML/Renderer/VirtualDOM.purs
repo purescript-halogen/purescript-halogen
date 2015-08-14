@@ -14,7 +14,6 @@ import Control.Monad.Eff.Exception (throwException)
 import Control.Monad.State (State(), runState)
 import Control.Monad.State.Class (gets, modify)
 
-import Data.DOM.Simple.Types (HTMLElement())
 import Data.Exists (runExists)
 import Data.ExistsR (runExistsR)
 import Data.Foldable (foldl, fold, find)
@@ -27,6 +26,8 @@ import Data.Nullable (toNullable)
 import Data.Traversable (traverse)
 import Data.Tuple (Tuple(..), fst)
 import qualified Data.StrMap as SM
+
+import DOM.HTML.Types (HTMLElement())
 
 import Halogen.Effects (HalogenEffects())
 import Halogen.HTML.Core (HTML(..), Prop(..), PropF(..), HandlerF(..), runNamespace, runTagName, runPropName, runAttrName, runEventName)
