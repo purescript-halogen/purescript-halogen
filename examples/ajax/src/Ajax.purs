@@ -10,12 +10,13 @@ import Control.Monad.Eff.Class (liftEff)
 import Control.Monad.Free (liftFI)
 import qualified Control.Monad.Eff.Console as C
 
-import Data.DOM.Simple.Types (HTMLElement())
 import Data.Either (Either(..))
 import Data.Foldable (foldMap)
 import Data.Foreign.Class (readProp)
 import Data.Functor (($>))
 import Data.Maybe (Maybe(..))
+
+import DOM.HTML.Types (HTMLElement())
 
 import Halogen
 import Halogen.Query.StateF (modify)

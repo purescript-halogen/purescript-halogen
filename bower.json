@@ -21,14 +21,12 @@
   "dependencies": {
     "purescript-aff-coroutines": "^0.2.0",
     "purescript-const": "^0.5.0",
+    "purescript-dom": "^0.2.0",
     "purescript-foreign": "^0.7.0",
-    "purescript-free": "7b1566995eba2edfbf157e860850c594c9112e49",
+    "purescript-free": "^0.7.0",
+    "purescript-maps": "^0.5.0",
     "purescript-nullable": "^0.2.0",
-    "purescript-simple-dom": "^0.1.0",
     "purescript-unsafe-coerce": "^0.1.0",
     "purescript-void": "^0.3.0"
-  },
-  "resolutions": {
-    "purescript-strings": "^0.7.0"
   }
 }

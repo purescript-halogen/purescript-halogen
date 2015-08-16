@@ -22,12 +22,12 @@ import Prelude
 
 import Control.Monad.Eff (Eff())
 
-import Data.DOM.Simple.Types (HTMLElement())
 import Data.Monoid (Monoid)
 import Data.Nullable (Nullable())
 import Data.Function (Fn2(), runFn2)
 
 import DOM (DOM())
+import DOM.HTML.Types (HTMLElement())
 
 -- | Virtual DOM nodes
 data VTree

@@ -8,8 +8,9 @@ import Control.Monad.Aff.AVar (AVAR())
 import Control.Monad.Eff.Class (liftEff)
 import Control.Monad.Eff.Console (CONSOLE(), log)
 
-import Data.DOM.Simple.Types (HTMLElement())
 import Data.Maybe (Maybe(..))
+
+import DOM.HTML.Types (HTMLElement())
 
 import Halogen
 import Halogen.Query.StateF (modify, gets)
