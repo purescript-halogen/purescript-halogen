@@ -2,10 +2,7 @@
   "name": "ace",
   "private": true,
   "dependencies": {
-    "purescript-ace": "^0.5.0",
+    "purescript-ace": "^0.8.0",
     "purescript-halogen": "*"
-  },
-  "resolutions": {
-    "purescript-simple-dom": "^0.1.0"
   }
 }
