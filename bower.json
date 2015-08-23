@@ -21,7 +21,7 @@
   "dependencies": {
     "purescript-aff-coroutines": "^0.2.0",
     "purescript-const": "^0.5.0",
-    "purescript-dom": "^0.2.1",
+    "purescript-dom": "^0.2.3",
     "purescript-foreign": "^0.7.0",
     "purescript-free": "^0.7.0",
     "purescript-maps": "^0.5.0",

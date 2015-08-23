@@ -23,7 +23,7 @@ appendToBody :: forall m eff. (MonadEff (dom :: DOM | eff) m) => HTMLElement -> 
 appendToBody e = liftEff $ do
   addEventListener load (eventListener onLoad) false <<< windowToEventTarget =<< window
   where
-  onLoad :: Event -> Eff (dom :: DOM) Unit
+  onLoad :: forall eff. Event -> Eff (dom :: DOM | eff) Unit
   onLoad _ = do
     b <- toMaybe <$> ((body <=< document) =<< window)
     case b of
