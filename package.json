@@ -22,8 +22,8 @@
     "gulp": "^3.8.11",
     "gulp-jscs": "^1.6.0",
     "gulp-jshint": "^1.11.2",
-    "gulp-purescript": "^0.5.0",
-    "purescript": "^0.7.2",
+    "gulp-purescript": "^0.6.0",
+    "purescript": "^0.7.4-rc.2",
     "rimraf": "^2.4.1",
     "webpack-stream": "^2.0.0"
   },

@@ -3,7 +3,7 @@ module Test.DocExamples.Query.StateF.Get where
 import Prelude
 import Control.Monad.Free (Free())
 import Halogen.Component (Eval())
-import Halogen.Query.StateF (get)
+import Halogen.Query (get)
 
 data Input a = GetState (State -> a)
 type State = Unit

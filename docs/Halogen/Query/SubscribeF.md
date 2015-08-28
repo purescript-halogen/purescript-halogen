@@ -67,22 +67,10 @@ The subscribe algebra.
 instance functorSubscribeF :: Functor (SubscribeF f g)
 ```
 
-#### `subscribe`
-
-``` purescript
-subscribe :: forall f g h. (Inject (SubscribeF f g) h) => EventSource f g -> Free h Unit
-```
-
-Injects a `Subscribe` action for a particular `EventSource` into a `Free`
-monad that is making use of the subscribe algebra.
-
-This allows `subscribe` to be used conveniently when operating in the
-`eval` function for a component.
-
 #### `remapSubscribe`
 
 ``` purescript
-remapSubscribe :: forall f1 f2 g a. (Functor g) => Natural f1 f2 -> SubscribeF f1 g a -> SubscribeF f2 g a
+remapSubscribe :: forall f g h a. (Functor h) => Natural f g -> SubscribeF f h a -> SubscribeF g h a
 ```
 
 Changes the generating functor for an `EventSource`. Used internally by

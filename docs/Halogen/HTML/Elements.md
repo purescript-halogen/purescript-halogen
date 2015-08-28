@@ -2,12 +2,6 @@
 
 Smart constructors for HTML5 elements.
 
-#### `text`
-
-``` purescript
-text :: forall p i. String -> HTML p i
-```
-
 #### `a`
 
 ``` purescript

@@ -16,7 +16,6 @@ import Data.Tuple (Tuple(..))
 import Data.Void (Void())
 
 import Halogen
-import Halogen.Query.StateF (StateF(), modify)
 import Halogen.Util (appendToBody)
 import qualified Halogen.HTML as H
 import qualified Halogen.HTML.Properties as P

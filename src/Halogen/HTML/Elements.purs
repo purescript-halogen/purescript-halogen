@@ -1,7 +1,6 @@
 -- | Smart constructors for HTML5 elements.
 module Halogen.HTML.Elements
-  ( text
-  , a             , a_
+  ( a             , a_
   , abbr          , abbr_
   , acronym       , acronym_
   , address       , address_
@@ -127,9 +126,6 @@ module Halogen.HTML.Elements
 
 import Prelude hiding (sub, div, map)
 import Halogen.HTML.Core (HTML(..), Prop(), TagName(), tagName, element)
-
-text :: forall p i. String -> HTML p i
-text = Text
 
 a :: forall p i. Array (Prop i) -> Array (HTML p i) -> HTML p i
 a xs = element (tagName "a") xs
