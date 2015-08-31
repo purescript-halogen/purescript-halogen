@@ -46,7 +46,9 @@ gulp.task("docs", ["clean-docs"], function() {
     docgen: {
       "Halogen": "docs/Halogen.md",
       "Halogen.Component": "docs/Halogen/Component.md",
+      "Halogen.Driver": "docs/Halogen/Driver.md",
       "Halogen.Effects": "docs/Halogen/Effects.md",
+      "Halogen.HTML": "docs/Halogen/HTML.md",
       "Halogen.HTML.Core": "docs/Halogen/HTML/Core.md",
       "Halogen.HTML.Elements": "docs/Halogen/HTML/Elements.md",
       "Halogen.HTML.Events": "docs/Halogen/HTML/Events.md",
@@ -56,6 +58,7 @@ gulp.task("docs", ["clean-docs"], function() {
       "Halogen.HTML.Properties": "docs/Halogen/HTML/Properties.md",
       "Halogen.HTML.Renderer.String": "docs/Halogen/HTML/Renderer/String.md",
       "Halogen.HTML.Renderer.VirtualDOM": "docs/Halogen/HTML/Renderer/VirtualDOM.md",
+      "Halogen.Query": "docs/Halogen/Query.md",
       "Halogen.Query.StateF": "docs/Halogen/Query/StateF.md",
       "Halogen.Query.SubscribeF": "docs/Halogen/Query/SubscribeF.md",
       "Halogen.Util": "docs/Halogen/Util.md",
