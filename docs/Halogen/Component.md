@@ -28,14 +28,6 @@ type Component s f g = ComponentP s f g (Const Void)
 
 A type alias for Halogen components where `peek` is not used.
 
-#### `HalogenF`
-
-``` purescript
-type HalogenF s f g = Coproduct (StateF s) (Coproduct (SubscribeF f g) g)
-```
-
-A type alias for the final Halogen component algebra.
-
 #### `Render`
 
 ``` purescript

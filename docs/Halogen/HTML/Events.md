@@ -6,13 +6,13 @@ they may be safely embedded in HTML documents.
 #### `input`
 
 ``` purescript
-input :: forall f g a. (Inject f g) => (forall i. a -> i -> f i) -> a -> EventHandler (g Unit)
+input :: forall f a. (forall i. a -> i -> f i) -> a -> EventHandler (f Unit)
 ```
 
 #### `input_`
 
 ``` purescript
-input_ :: forall f g a. (Inject f g) => (forall i. i -> f i) -> a -> EventHandler (g Unit)
+input_ :: forall f a. (forall i. i -> f i) -> a -> EventHandler (f Unit)
 ```
 
 #### `onAbort`

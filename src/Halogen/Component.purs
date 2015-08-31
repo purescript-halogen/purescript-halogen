@@ -1,7 +1,6 @@
 module Halogen.Component
   ( ComponentP()
   , Component()
-  , HalogenF()
   , Render()
   , Eval()
   , Peek()
@@ -58,7 +57,8 @@ import qualified Data.Map as M
 import qualified Data.Maybe.Unsafe as U
 
 import Halogen.HTML.Core (HTML(..), substPlaceholder)
-import Halogen.Query.StateF (StateF(..), get)
+import Halogen.Query (HalogenF(), get)
+import Halogen.Query.StateF (StateF(), mapState)
 import Halogen.Query.SubscribeF (SubscribeF(), subscribeN, remapSubscribe, hoistSubscribe)
 
 -- | Data type for Halogen components.
@@ -80,9 +80,6 @@ type Component s f g = ComponentP s f g (Const Void)
 
 instance functorComponent :: Functor (ComponentP s f g o) where
   map f (Component c) = Component { render: lmap f <$> c.render, eval: c.eval, peek: c.peek }
-
--- | A type alias for the final Halogen component algebra.
-type HalogenF s f g = Coproduct (StateF s) (Coproduct (SubscribeF f g) g)
 
 -- | A type alias for a component `render` function.
 type Render s f p = s -> HTML p (f Unit)
@@ -128,7 +125,7 @@ component r q = component' r q (const $ pure unit)
 -- | code using `liftEff'` won't require decorating its usage with explicit
 -- | type signatures.
 liftEff' :: forall eff a s f g. (MonadEff eff g, Functor g) => Eff eff a -> Free (HalogenF s f g) a
-liftEff' e = liftF $ (right $ right $ liftEff e) :: HalogenF s f g a
+liftEff' = liftF <<< right <<< right <<< liftEff
 
 -- | A type synonym for a component combined with its state. Used when
 -- | installing components to a component with initial state for a placeholder.
@@ -162,12 +159,11 @@ installedState :: forall s s' f' g o' p p'. (Ord p) => s -> InstalledStateP s s'
 installedState = { parent: _, children: M.empty }
 
 mapStateFParent :: forall s s' f f' g o p p'. Natural (StateF s) (StateF (InstalledStateP s s' f' g o p p'))
-mapStateFParent (Get k) = Get (\st -> k st.parent)
-mapStateFParent (Modify f next) = Modify (\st -> { parent: f st.parent, children: st.children }) next
+mapStateFParent = mapState (_.parent) (\f st -> { parent: f st.parent, children: st.children })
 
 mapStateFChild :: forall s s' f f' g o p p'. (Ord p) => p -> Natural (StateF s') (StateF (InstalledStateP s s' f' g o p p'))
-mapStateFChild p (Get k) = Get (\st -> k $ U.fromJust $ snd <$> M.lookup p st.children)
-mapStateFChild p (Modify f next) = Modify (\st -> { parent: st.parent, children: M.update (Just <<< rmap f) p st.children }) next
+mapStateFChild p = mapState (\st -> U.fromJust $ snd <$> M.lookup p st.children)
+                            (\f st -> { parent: st.parent, children: M.update (Just <<< rmap f) p st.children })
 
 -- | An intermediate algebra that component containers "produce" (use as their
 -- | `g` type variable).
@@ -191,7 +187,7 @@ query :: forall s s' f' p p' o g i. (Functor g, Ord p)
       -> f' i
       -> QueryFP s s' f' g o p p' (Maybe i)
 query p q = do
-  st <- get :: _ (InstalledStateP s s' f' g o p p')
+  st <- get
   case M.lookup p st.children of
     Nothing -> pure Nothing
     Just (Tuple c _) -> Just <$> mapF (coproduct (left <<< mapStateFChild p) (right <<< coproduct (left <<< remapSubscribe (ChildF p)) right)) (queryComponent c q)
@@ -200,7 +196,7 @@ query p q = do
 -- | `eval` function.
 liftQuery :: forall s s' f f' g o' p p'. (Functor g)
           => Eval (QueryFP s s' f' g o' p p') s f (QueryFP s s' f' g o' p p')
-liftQuery qf = liftF $ right (right qf) :: HalogenF s f (QueryFP s s' f' g o' p p') _
+liftQuery qf = liftF (right (right qf))
 
 installer :: forall s s' f f' g o' p p' q q'. (Plus g, Ord p)
           => (q -> Either p q')
@@ -280,7 +276,7 @@ render :: forall s s' f f' g o o' p p' q q'. (Ord p)
        -> (p -> ComponentStateP s' f' g o' p')
        -> State (InstalledStateP s s' f' g o' p p') (HTML q' ((Coproduct f (ChildF p f')) Unit))
 render fromQ toQ' c f = do
-    st <- CMS.get :: _ (InstalledStateP s s' f' g o' p p')
+    st <- CMS.get
     case renderComponent c st.parent of
       Tuple html s -> do
         -- Empty the state so that we don't keep children that are no longer
@@ -314,12 +310,12 @@ queryParent :: forall s s' f f' g o o' p p' q. (Functor g)
 queryParent c q = foldFree (coproduct mergeParentStateF (coproduct (runSubscribeF (queryParent c)) liftChildF)) (queryComponent c q)
 
 mergeParentStateF :: forall s s' f f' g o' p p'. Eval (StateF s) (InstalledStateP s s' f' g o' p p') (Coproduct f (ChildF p f')) g
-mergeParentStateF sf = liftF $ left (mapStateFParent sf) :: HalogenF (InstalledStateP s s' f' g o' p p') (Coproduct f (ChildF p f')) g _
+mergeParentStateF = liftF <<< left <<< mapStateFParent
 
 runSubscribeF :: forall s s' f f' g o' p p'. (Functor g)
               => Eval f (InstalledStateP s s' f' g o' p p') (Coproduct f (ChildF p f')) g
               -> Eval (SubscribeF f (Free (HalogenF (InstalledStateP s s' f' g o' p p') (ChildF p f') g))) (InstalledStateP s s' f' g o' p p') (Coproduct f (ChildF p f')) g
-runSubscribeF queryParent = subscribeN (forever $ lift <<< queryParent =<< await) <<< hoistSubscribe liftChildF
+runSubscribeF queryParent' = subscribeN (forever $ lift <<< queryParent' =<< await) <<< hoistSubscribe liftChildF
 
 liftChildF :: forall s s' f f' g o' p p'. (Functor g)
            => Eval (Free (HalogenF (InstalledStateP s s' f' g o' p p') (ChildF p f') g)) (InstalledStateP s s' f' g o' p p') (Coproduct f (ChildF p f')) g
@@ -330,4 +326,4 @@ queryChild :: forall s s' f f' g o' p p'. (Plus g, Ord p)
 queryChild (ChildF p q) = mapF (coproduct left (right <<< coproduct (left <<< remapSubscribe right) right)) (query p q) >>= maybe empty' pure
 
 empty' :: forall f g h a. (Functor f, Functor g, Plus h) => Free (Coproduct f (Coproduct g h)) a
-empty' = liftF (right (right empty :: Coproduct g h a) :: Coproduct f (Coproduct g h) a)
+empty' = liftF $ right (right empty)

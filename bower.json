@@ -8,22 +8,23 @@
   ],
   "description": "A declarative, type-safe UI library for PureScript",
   "keywords": [
-    "purescript"
+    "purescript",
+    "halogen",
+    "ui"
   ],
   "license": "Apache 2.0",
   "ignore": [
     "**/.*",
     "node_modules",
     "bower_components",
-    "test",
-    "tests"
+    "test"
   ],
   "dependencies": {
-    "purescript-aff-coroutines": "^0.2.0",
+    "purescript-aff-coroutines": "^0.3.0",
     "purescript-const": "^0.5.0",
-    "purescript-dom": "^0.2.3",
+    "purescript-dom": "^0.2.6",
     "purescript-foreign": "^0.7.0",
-    "purescript-free": "^0.7.0",
+    "purescript-free": "^0.8.0",
     "purescript-maps": "^0.5.0",
     "purescript-nullable": "^0.2.0",
     "purescript-unsafe-coerce": "^0.1.0",

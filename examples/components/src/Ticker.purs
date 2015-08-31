@@ -5,7 +5,6 @@ import Prelude
 import Data.Functor (($>))
 
 import Halogen
-import Halogen.Query.StateF (modify, get)
 import qualified Halogen.HTML as H
 import qualified Halogen.HTML.Properties as P
 import qualified Halogen.HTML.Events as E

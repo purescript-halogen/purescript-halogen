@@ -11,7 +11,6 @@ import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Void (Void())
 
 import Halogen
-import Halogen.Query.StateF (modify)
 import qualified Halogen.HTML as H
 import qualified Halogen.HTML.Properties as P
 import qualified Halogen.HTML.Events as E

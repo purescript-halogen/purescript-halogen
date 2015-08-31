@@ -5,7 +5,6 @@ module Halogen.Query.SubscribeF
   , eventSource
   , eventSource_
   , SubscribeF(..)
-  , subscribe
   , remapSubscribe
   , hoistSubscribe
   , subscribeN
@@ -21,13 +20,11 @@ import Control.Monad.Aff (Aff())
 import Control.Monad.Aff.AVar (AVAR())
 import Control.Monad.Eff (Eff())
 import Control.Monad.Eff.Class (MonadEff)
-import Control.Monad.Free (Free(), liftFI)
 import Control.Monad.Rec.Class (MonadRec)
 
 import Data.Bifunctor (lmap)
 import Data.Either (Either(..))
 import Data.Functor (($>))
-import Data.Inject (Inject)
 import Data.NaturalTransformation (Natural())
 
 -- | A type alias for a coroutine producer used to represent a subscribable
@@ -77,17 +74,9 @@ data SubscribeF f g a = Subscribe (EventSource f g) a
 instance functorSubscribeF :: Functor (SubscribeF f g) where
   map f (Subscribe p next) = Subscribe p (f next)
 
--- | Injects a `Subscribe` action for a particular `EventSource` into a `Free`
--- | monad that is making use of the subscribe algebra.
--- |
--- | This allows `subscribe` to be used conveniently when operating in the
--- | `eval` function for a component.
-subscribe :: forall f g h. (Inject (SubscribeF f g) h) => EventSource f g -> Free h Unit
-subscribe p = liftFI (Subscribe p unit)
-
 -- | Changes the generating functor for an `EventSource`. Used internally by
 -- | Halogen when installing components.
-remapSubscribe :: forall f1 f2 g a. (Functor g) => (Natural f1 f2) -> SubscribeF f1 g a -> SubscribeF f2 g a
+remapSubscribe :: forall f g h a. (Functor h) => (Natural f g) -> SubscribeF f h a -> SubscribeF g h a
 remapSubscribe nat (Subscribe p next) = Subscribe (interpret (lmap nat) p) next
 
 -- | Changes the underlying monad for an `EventSource`. Used internally by

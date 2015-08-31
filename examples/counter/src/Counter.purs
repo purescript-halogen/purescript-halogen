@@ -10,7 +10,6 @@ import Control.Monad.Eff.Exception (throwException)
 import Data.Functor (($>))
 
 import Halogen
-import Halogen.Query.StateF (modify)
 import Halogen.Util (appendToBody)
 import qualified Halogen.HTML as H
 import qualified Halogen.HTML.Properties as P

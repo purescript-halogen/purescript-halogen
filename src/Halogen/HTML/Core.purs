@@ -1,7 +1,6 @@
 --| The core types and smart constructors for the HTML DSL.
 module Halogen.HTML.Core
   ( HTML(..)
-  , WidgetF(..)
   , element
   , substPlaceholder
 
@@ -62,14 +61,7 @@ import Halogen.HTML.Events.Types (Event())
 data HTML p i
   = Text String
   | Element (Maybe Namespace) TagName (Array (Prop i)) (Array (HTML p i))
-  | Widget WidgetF
   | Placeholder p
-
-data WidgetF =
-  WidgetF { init :: forall eff. Eff (dom :: DOM | eff) HTMLElement
-          , update :: forall eff. HTMLElement -> Eff (dom :: DOM | eff) (Nullable HTMLElement)
-          , destroy :: forall eff. HTMLElement -> Eff (dom :: DOM | eff) Unit
-          }
 
 instance bifunctorHTML :: Bifunctor HTML where
   bimap f g = go

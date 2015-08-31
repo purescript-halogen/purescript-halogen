@@ -13,8 +13,6 @@ import Data.Maybe (Maybe(..))
 import DOM.HTML.Types (HTMLElement())
 
 import Halogen
-import Halogen.Query.StateF (modify, gets)
-import Halogen.Query.SubscribeF (EventSource(), eventSource_, eventSource, subscribe)
 import qualified Halogen.HTML as H
 
 import Ace.Types (ACE(), Editor())
@@ -26,7 +24,6 @@ type AceState = { editor :: Maybe Editor }
 data AceInput a
   = Init HTMLElement a
   | ChangeText String a
-  | CopiedText String a
 
 initAceState :: AceState
 initAceState = { editor: Nothing }
@@ -40,6 +37,7 @@ ace key = component render eval
   render :: Render AceState AceInput p
   render = const $ H.div [ initializer ] []
 
+  initializer :: Prop AceInput
   initializer = H.Initializer ("ace-" ++ key ++ "-init") (\el -> action (Init el))
 
   eval :: Eval AceInput AceState AceInput (Aff (AceEffects eff))
@@ -47,17 +45,9 @@ ace key = component render eval
     editor <- liftEff' $ Ace.editNode el Ace.ace
     modify _ { editor = Just editor }
     session <- liftEff' $ Editor.getSession editor
-
-    let onChange :: EventSource AceInput (Aff (AceEffects eff))
-        onChange = eventSource_ (Session.onChange session) $ do
-          text <- liftEff $ Editor.getValue editor
-          pure $ action (ChangeText text)
-    subscribe onChange
-
-    let onCopied :: EventSource AceInput (Aff (AceEffects eff))
-        onCopied = eventSource (Editor.onCopy editor) $ pure <<< action <<< CopiedText
-    subscribe onCopied
-
+    subscribe $ eventSource_ (Session.onChange session) $ do
+      text <- liftEff $ Editor.getValue editor
+      pure $ action (ChangeText text)
     pure next
   eval (ChangeText text next) = do
     liftEff' $ log text
@@ -69,4 +59,3 @@ ace key = component render eval
         when (text /= current) $ void $ liftEff' $ Editor.setValue text Nothing editor
         pure next
     pure next
-  eval (CopiedText text next) = pure next
