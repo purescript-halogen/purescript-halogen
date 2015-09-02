@@ -1,0 +1,39 @@
+module Example.ComponentB where
+
+import Prelude
+
+import Data.Functor (($>))
+import Data.Generic (Generic, gEq, gCompare)
+
+import Halogen
+import qualified Halogen.HTML as H
+import qualified Halogen.HTML.Events as E
+
+newtype StateB = StateB { on :: Boolean }
+
+initStateB = StateB { on: false }
+
+data InputB a
+  = ToggleStateB a
+  | GetStateB (Boolean -> a)
+
+data PlaceholderB = PlaceholderB
+
+derive instance genericPlaceholderB :: Generic PlaceholderB
+instance eqPlaceholderB :: Eq PlaceholderB where eq = gEq
+instance ordPlaceholderB :: Ord PlaceholderB where compare = gCompare
+
+componentB :: forall g p. (Functor g) => Component StateB InputB g p
+componentB = component render eval
+  where
+
+  render :: Render StateB InputB p
+  render (StateB state) = H.div_
+    [ H.h1_ [ H.text "Toggle Button B" ]
+    , H.button [ E.onClick (E.input_ ToggleStateB) ]
+               [ H.text (if state.on then "On" else "Off") ]
+    ]
+
+  eval :: Eval InputB StateB InputB g
+  eval (ToggleStateB next) = modify (\(StateB state) -> StateB { on: not state.on }) $> next
+  eval (GetStateB k) = gets (\(StateB state) -> state.on) >>= pure <<< k

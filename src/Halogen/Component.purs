@@ -29,6 +29,11 @@ module Halogen.Component
   , install'
   , installL'
   , installR'
+  , transform
+  , transformL
+  , transformR
+  , transformL'
+  , transformR'
   ) where
 
 import Prelude
@@ -44,15 +49,17 @@ import Control.Monad.State (State(), runState)
 import Control.Monad.Trans (lift)
 import Control.Plus (Plus, empty)
 import qualified Control.Monad.State.Class as CMS
+import qualified Control.Monad.State.Trans as CMS
 
-import Data.Bifunctor (lmap, rmap)
+import Data.Bifunctor (bimap, lmap, rmap)
 import Data.Const (Const())
 import Data.Either (Either(..), either)
-import Data.Functor.Coproduct (Coproduct(), coproduct, left, right)
+import Data.Functor.Coproduct (Coproduct(..), runCoproduct, coproduct, left, right)
 import Data.Maybe (Maybe(..), maybe, fromMaybe')
 import Data.NaturalTransformation (Natural())
 import Data.Tuple (Tuple(..), snd)
 import Data.Void (Void())
+import qualified Data.Either.Unsafe as U
 import qualified Data.Map as M
 import qualified Data.Maybe.Unsafe as U
 
@@ -327,3 +334,45 @@ queryChild (ChildF p q) = mapF (coproduct left (right <<< coproduct (left <<< re
 
 empty' :: forall f g h a. (Functor f, Functor g, Plus h) => Free (Coproduct f (Coproduct g h)) a
 empty' = liftF $ right (right empty)
+
+adaptState :: forall s t m a. (Monad m) => (s -> t) -> (t -> s) -> CMS.StateT s m a -> CMS.StateT t m a
+adaptState st ts (CMS.StateT f) = CMS.StateT \state -> f (ts state) >>= \(Tuple a s) -> pure $ Tuple a (st s)
+
+transform :: forall s s' f f' g o o' p p'. (Functor g)
+          => (s -> s')
+          -> (s' -> s)
+          -> Natural f f'
+          -> Natural f' f
+          -> Natural o' o
+          -> (p -> p')
+          -> ComponentP s f g o p
+          -> ComponentP s' f' g o' p'
+transform sTo sFrom fTo fFrom oFrom tp (Component c) =
+  Component { render: bimap tp fTo <$> adaptState sTo sFrom c.render
+            , eval: mapF natHF <<< c.eval <<< fFrom
+            , peek: mapF natHF <<< c.peek <<< oFrom
+            }
+  where
+  natHF :: Natural (HalogenF s f g) (HalogenF s' f' g)
+  natHF = coproduct (left <<< mapState sFrom (\f s -> sTo (f (sFrom s))))
+                    (right <<< coproduct (left <<< remapSubscribe fTo) right)
+
+transformL :: forall sl sr fl fr g p. (Functor g)
+           => Component sl fl g p
+           -> Component (Either sl sr) (Coproduct fl fr) g p
+transformL = transform Left U.fromLeft left (U.fromLeft <<< runCoproduct) id id
+
+transformR :: forall sl sr fl fr g p. (Functor g)
+           => Component sr fr g p
+           -> Component (Either sl sr) (Coproduct fl fr) g p
+transformR = transform Right U.fromRight right (U.fromRight <<< runCoproduct) id id
+
+transformL' :: forall sl sr fl fr g ol or pl pr. (Functor g)
+            => ComponentP sl fl g ol pl
+            -> ComponentP (Either sl sr) (Coproduct fl fr) g (Coproduct ol or) (Either pl pr)
+transformL' = transform Left U.fromLeft left (U.fromLeft <<< runCoproduct) (U.fromLeft <<< runCoproduct) Left
+
+transformR' :: forall sl sr fl fr g ol or pl pr. (Functor g)
+            => ComponentP sr fr g or pr
+            -> ComponentP (Either sl sr) (Coproduct fl fr) g (Coproduct ol or) (Either pl pr)
+transformR' = transform Right U.fromRight right (U.fromRight <<< runCoproduct) (U.fromRight <<< runCoproduct) Right
