@@ -44,8 +44,11 @@ gulp.task("docs", ["clean-docs"], function() {
   return purescript.pscDocs({
     src: sources,
     docgen: {
+      "Data.ExistsR": "docs/Data/ExistsR.md",
+      "Data.Injector": "docs/Data/Injector.md",
       "Halogen": "docs/Halogen.md",
       "Halogen.Component": "docs/Halogen/Component.md",
+      "Halogen.Component.ChildPath": "docs/Halogen/Component/ChildPath.md",
       "Halogen.Driver": "docs/Halogen/Driver.md",
       "Halogen.Effects": "docs/Halogen/Effects.md",
       "Halogen.HTML": "docs/Halogen/HTML.md",

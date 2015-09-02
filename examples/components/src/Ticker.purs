@@ -2,8 +2,6 @@ module Example.Components.Ticker where
 
 import Prelude
 
-import Data.Functor (($>))
-
 import Halogen
 import qualified Halogen.HTML as H
 import qualified Halogen.HTML.Properties as P
@@ -27,7 +25,9 @@ ticker = component render eval
            ]
 
   eval :: Eval TickInput TickState TickInput g
-  eval (Tick next) = modify (\(TickState n) -> TickState (n + 1)) $> next
-  eval (GetTick k) = do
+  eval (Tick next) = do
+    modify (\(TickState n) -> TickState (n + 1))
+    pure next
+  eval (GetTick continue) = do
     TickState n <- get
-    pure (k n)
+    pure (continue n)

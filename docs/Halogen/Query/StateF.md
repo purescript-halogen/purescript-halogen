@@ -25,6 +25,9 @@ instance functorStateF :: Functor (StateF s)
 mapState :: forall s t a. (t -> s) -> ((s -> s) -> t -> t) -> StateF s a -> StateF t a
 ```
 
+Map over the state value using a function to extract the new state value
+from the old state, and a function for modifying the state.
+
 #### `stateN`
 
 ``` purescript

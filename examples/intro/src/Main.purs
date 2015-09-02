@@ -2,12 +2,9 @@ module Example.Intro where
 
 import Prelude
 
-import Control.Apply ((*>))
-import Control.Monad.Aff (Aff(), runAff, later')
+import Control.Monad.Aff (runAff)
 import Control.Monad.Eff (Eff())
 import Control.Monad.Eff.Exception (throwException)
-
-import Data.Functor (($>))
 
 import Halogen
 import Halogen.Util (appendToBody)
@@ -15,10 +12,10 @@ import qualified Halogen.HTML as H
 import qualified Halogen.HTML.Events as E
 
 -- | The state of the application
-newtype State = State { on :: Boolean }
+type State = { on :: Boolean }
 
 initialState :: State
-initialState = State { on: false }
+initialState = { on: false }
 
 -- | Inputs to the state machine
 data Input a = ToggleState a
@@ -28,14 +25,16 @@ ui = component render eval
   where
 
   render :: Render State Input p
-  render (State state) = H.div_
+  render state = H.div_
     [ H.h1_ [ H.text "Toggle Button" ]
     , H.button [ E.onClick (E.input_ ToggleState) ]
                [ H.text (if state.on then "On" else "Off") ]
     ]
 
   eval :: Eval Input State Input g
-  eval (ToggleState next) = modify (\(State state) -> State { on: not state.on }) $> next
+  eval (ToggleState next) = do
+    modify (\state -> { on: not state.on })
+    pure next
 
 main :: Eff (HalogenEffects ()) Unit
 main = runAff throwException (const (pure unit)) $ do

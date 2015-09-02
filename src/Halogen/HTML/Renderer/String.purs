@@ -20,7 +20,7 @@ renderHTML (Element ns name attrs els) =
      " " <> joinWith " " (mapMaybe renderAttr attrs) <>
      ">" <> foldMap renderHTML els <>
      "</" <> tagName <> ">"
-renderHTML (Placeholder _) = ""
+renderHTML (Slot _) = ""
 
 -- TODO: attr rendering
 renderAttr :: forall i. Prop i -> Maybe String
