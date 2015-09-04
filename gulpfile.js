@@ -46,6 +46,7 @@ gulp.task("docs", ["clean-docs"], function() {
     docgen: {
       "Halogen": "docs/Halogen.md",
       "Halogen.Component": "docs/Halogen/Component.md",
+      "Halogen.Component.Inject": "docs/Halogen/Component/Inject.md",
       "Halogen.Driver": "docs/Halogen/Driver.md",
       "Halogen.Effects": "docs/Halogen/Effects.md",
       "Halogen.HTML": "docs/Halogen/HTML.md",

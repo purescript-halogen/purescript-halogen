@@ -53,8 +53,8 @@ uiContainer = component render eval
 
   eval :: Eval Input State Input (QueryF State TickState TickInput g TickPlaceholder p)
   eval (ReadTicks next) = do
-    a <- liftQuery $ query (TickPlaceholder "A") (request GetTick)
-    b <- liftQuery $ query (TickPlaceholder "B") (request GetTick)
+    a <- query (TickPlaceholder "A") (request GetTick)
+    b <- query (TickPlaceholder "B") (request GetTick)
     modify (\_ -> { tickA: a, tickB: b })
     pure next
 

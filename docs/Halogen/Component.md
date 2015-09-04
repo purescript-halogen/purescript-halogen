@@ -121,6 +121,12 @@ installing components to a component with initial state for a placeholder.
 type ComponentState s f g p = ComponentStateP s f g (Const Void) p
 ```
 
+#### `createChild`
+
+``` purescript
+createChild :: forall s s' f f' g o p p'. (Functor g) => InjectC s s' f f' p p' -> ComponentP s f g o p -> s -> ComponentStateP s' f' g o p
+```
+
 #### `InstalledStateP`
 
 ``` purescript
@@ -208,10 +214,10 @@ algebra with the child component's placeholder when querying.
 instance functorChildF :: (Functor f) => Functor (ChildF p f)
 ```
 
-#### `query`
+#### `mkQuery`
 
 ``` purescript
-query :: forall s s' f' p p' o g i. (Functor g, Ord p) => p -> f' i -> QueryFP s s' f' g o p p' (Maybe i)
+mkQuery :: forall s s' f' p p' o g i. (Functor g, Ord p) => p -> f' i -> QueryFP s s' f' g o p p' (Maybe i)
 ```
 
 Creates a query for a child component where `p` is the placeholder
@@ -219,6 +225,12 @@ addressing the component and `f' i` in the input query.
 
 If a component is not found for the placeholder the result of the query
 will be `Nothing`.
+
+#### `mkQuery'`
+
+``` purescript
+mkQuery' :: forall s s' s'' f f' g o p p' p'' i. (Functor g, Ord p') => InjectC s'' s' f f' p p' -> p -> f i -> QueryFP s s' f' g o p' p'' (Maybe i)
+```
 
 #### `liftQuery`
 
@@ -229,22 +241,22 @@ liftQuery :: forall s s' f f' g o' p p'. (Functor g) => Eval (QueryFP s s' f' g 
 Lifts a value in the `QueryF` algebra into the monad used by a component's
 `eval` function.
 
+#### `query`
+
+``` purescript
+query :: forall s s' f f' g o' p p' i. (Functor g, Ord p) => p -> f' i -> Free (HalogenF s f (QueryFP s s' f' g o' p p')) (Maybe i)
+```
+
+#### `query'`
+
+``` purescript
+query' :: forall s s' s'' f f' f'' g o' p p' p'' i. (Functor g, Ord p) => InjectC s'' s' f'' f' p'' p -> p'' -> f'' i -> Free (HalogenF s f (QueryFP s s' f' g o' p p')) (Maybe i)
+```
+
 #### `install`
 
 ``` purescript
 install :: forall s s' f f' g o' p p'. (Plus g, Ord p) => ParentComponent s s' f f' g o' p p' -> (p -> ComponentStateP s' f' g o' p') -> InstalledComponent s s' f f' g o' p p'
-```
-
-#### `installL`
-
-``` purescript
-installL :: forall s s' f f' g o' pl pr p'. (Plus g, Ord pl) => Component s f (QueryFP s s' f' g o' pl p') (Either pl pr) -> (pl -> ComponentStateP s' f' g o' p') -> Component (InstalledStateP s s' f' g o' pl p') (Coproduct f (ChildF pl f')) g (Either p' pr)
-```
-
-#### `installR`
-
-``` purescript
-installR :: forall s s' f f' g o' pl pr p'. (Plus g, Ord pr) => Component s f (QueryFP s s' f' g o' pr p') (Either pl pr) -> (pr -> ComponentStateP s' f' g o' p') -> Component (InstalledStateP s s' f' g o' pr p') (Coproduct f (ChildF pr f')) g (Either pl p')
 ```
 
 #### `install'`
@@ -253,16 +265,10 @@ installR :: forall s s' f f' g o' pl pr p'. (Plus g, Ord pr) => Component s f (Q
 install' :: forall s s' f f' g o' p p'. (Plus g, Ord p) => ParentComponentP s s' f f' g (ChildF p f') o' p p' -> (p -> ComponentStateP s' f' g o' p') -> InstalledComponentP s s' f f' g (ChildF p f') o' p p'
 ```
 
-#### `installL'`
+#### `transform`
 
 ``` purescript
-installL' :: forall s s' f f' g o' pl pr p'. (Plus g, Ord pl) => ComponentP s f (QueryFP s s' f' g o' pl p') (ChildF pl f') (Either pl pr) -> (pl -> ComponentStateP s' f' g o' p') -> ComponentP (InstalledStateP s s' f' g o' pl p') (Coproduct f (ChildF pl f')) g (ChildF pl f') (Either p' pr)
-```
-
-#### `installR'`
-
-``` purescript
-installR' :: forall s s' f f' g o' pl pr p'. (Plus g, Ord pr) => ComponentP s f (QueryFP s s' f' g o' pr p') (ChildF pr f') (Either pl pr) -> (pr -> ComponentStateP s' f' g o' p') -> ComponentP (InstalledStateP s s' f' g o' pr p') (Coproduct f (ChildF pr f')) g (ChildF pr f') (Either pl p')
+transform :: forall s s' f f' g o o' p p'. (Functor g) => (s -> s') -> (s' -> s) -> Natural f f' -> Natural f' f -> Natural o' o -> (p -> p') -> ComponentP s f g o p -> ComponentP s' f' g o' p'
 ```
 
 

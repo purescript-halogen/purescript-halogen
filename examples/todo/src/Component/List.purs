@@ -43,7 +43,7 @@ list = component' render eval peek
   peek :: Peek State ListInput (QueryF State Task TaskInput g TaskPlaceholder p) (ChildF TaskPlaceholder TaskInput)
   peek (ChildF p q) = case q of
     Remove _ -> do
-      wasComplete <- liftQuery $ query p (request IsCompleted)
+      wasComplete <- query p (request IsCompleted)
       when (fromMaybe false wasComplete) $ modify $ updateNumCompleted (`sub` 1)
       modify (removeTask p)
     ToggleCompleted b _ -> modify $ updateNumCompleted (if b then (+ 1) else (`sub` 1))

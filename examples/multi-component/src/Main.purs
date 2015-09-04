@@ -18,6 +18,7 @@ import Data.Tuple (Tuple(..))
 import Data.Void (Void())
 
 import Halogen
+import Halogen.Component.Inject (inl, inr, (:>))
 import Halogen.Util (appendToBody)
 import qualified Halogen.HTML as H
 import qualified Halogen.HTML.Events as E
@@ -37,33 +38,37 @@ type ChildState = Either3 StateA StateB StateC
 type ChildInput = Coproduct3 InputA InputB InputC
 type ChildPlaceholder = Either3 PlaceholderA PlaceholderB PlaceholderC
 
+injA = inl :> inl
+injB = inl :> inr
+injC = inr
+
 parent :: forall g p. (Functor g) => ParentComponent State ChildState Input ChildInput g (Const Void) ChildPlaceholder p
 parent = component render eval
   where
 
   render :: Render State Input ChildPlaceholder
   render (State state) = H.div_
-    [ H.div_ [ H.placeholder $ either1of3 PlaceholderA ]
-    , H.div_ [ H.placeholder $ either2of3 PlaceholderB ]
-    , H.div_ [ H.placeholder $ either3of3 PlaceholderC ]
+    [ H.div_ [ H.placeholder' injA PlaceholderA ]
+    , H.div_ [ H.placeholder' injB PlaceholderB ]
+    , H.div_ [ H.placeholder' injC PlaceholderC ]
     , H.div_ [ H.text $ "Current states: " ++ show state.a ++ " / " ++ show state.b ++ " / " ++ show state.c ]
     , H.button [ E.onClick (E.input_ ReadStates) ] [ H.text "Read states" ]
     ]
 
   eval :: Eval Input State Input (QueryF State ChildState ChildInput g ChildPlaceholder p)
   eval (ReadStates next) = do
-    a <- liftQuery $ query (either1of3 PlaceholderA) (coproduct1of3 $ request GetStateA)
-    b <- liftQuery $ query (either2of3 PlaceholderB) (coproduct2of3 $ request GetStateB)
-    c <- liftQuery $ query (either3of3 PlaceholderC) (coproduct3of3 $ request GetStateC)
+    a <- query' injA PlaceholderA (request GetStateA)
+    b <- query' injB PlaceholderB (request GetStateB)
+    c <- query' injC PlaceholderC (request GetStateC)
     modify (const $ State { a: a, b: b, c: c })
     pure next
 
 ui :: forall g p. (Monad g, Plus g) => InstalledComponent State ChildState Input ChildInput g (Const Void) ChildPlaceholder p
 ui = install parent (either3 installA installB installC)
   where
-  installA PlaceholderA = Tuple (transformL $ transformL componentA) (either1of3 initStateA)
-  installB PlaceholderB = Tuple (transformL $ transformR componentB) (either2of3 initStateB)
-  installC PlaceholderC = Tuple (transformR componentC) (either3of3 initStateC)
+  installA PlaceholderA = createChild injA componentA initStateA
+  installB PlaceholderB = createChild injB componentB initStateB
+  installC PlaceholderC = createChild injC componentC initStateC
 
 main = launchAff $ do
   app <- runUI ui (installedState initialState)

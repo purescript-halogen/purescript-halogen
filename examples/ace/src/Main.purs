@@ -51,13 +51,13 @@ container = component' render eval peek
                                       [ H.text "Clear" ]
                            ]
                     ]
-           , H.div_ [ H.Placeholder AcePlaceholder ]
+           , H.div_ [ H.placeholder AcePlaceholder ]
            , H.p_ [ H.text ("Current text: " ++ text) ]
            ]
 
   eval :: Eval Input State Input (QueryF State AceState AceInput (Aff (AceEffects eff)) AcePlaceholder p)
   eval (ClearText next) = do
-    liftQuery $ query AcePlaceholder (action $ ChangeText "")
+    query AcePlaceholder (action $ ChangeText "")
     pure next
 
   -- | Peek allows us to observe inputs going to the child components, here

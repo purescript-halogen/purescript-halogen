@@ -21,25 +21,22 @@ module Halogen.Component
   , ChildF(..)
   , QueryFP()
   , QueryF()
-  , query
+  , mkQuery
+  , mkQuery'
   , liftQuery
+  , query
+  , query'
   , install
-  , installL
-  , installR
   , install'
-  , installL'
-  , installR'
   , transform
-  , transformL
-  , transformR
-  , transformL'
-  , transformR'
-  ) where
+  , createChild
+  )
+  where
 
 import Prelude
 
 import Control.Apply ((<*))
-import Control.Bind ((=<<))
+import Control.Bind ((=<<), (<=<), (>=>))
 import Control.Coroutine (await)
 import Control.Monad.Eff (Eff())
 import Control.Monad.Eff.Class (MonadEff, liftEff)
@@ -67,6 +64,8 @@ import Halogen.HTML.Core (HTML(..), substPlaceholder)
 import Halogen.Query (HalogenF(), get)
 import Halogen.Query.StateF (StateF(), mapState)
 import Halogen.Query.SubscribeF (SubscribeF(), subscribeN, remapSubscribe, hoistSubscribe)
+
+import Halogen.Component.Inject
 
 -- | Data type for Halogen components.
 -- | - `s` - the type of the component state
@@ -139,6 +138,9 @@ liftEff' = liftF <<< right <<< right <<< liftEff
 type ComponentStateP s f g o p = Tuple (ComponentP s f g o p) s
 type ComponentState s f g p = ComponentStateP s f g (Const Void) p
 
+createChild :: forall s s' f f' g o p p'. (Functor g) => InjectC s s' f f' p p' -> ComponentP s f g o p -> s -> ComponentStateP s' f' g o p
+createChild i c s = Tuple (transform' i c) (injState i s)
+
 -- | The type used by component containers for their state where `s` is the
 -- | state local to the container, `p` is the type of placeholder used by the
 -- | container, and the remaining parameters are the type variables for the
@@ -189,15 +191,22 @@ instance functorChildF :: (Functor f) => Functor (ChildF p f) where
 -- |
 -- | If a component is not found for the placeholder the result of the query
 -- | will be `Nothing`.
-query :: forall s s' f' p p' o g i. (Functor g, Ord p)
+mkQuery :: forall s s' f' p p' o g i. (Functor g, Ord p)
       => p
       -> f' i
       -> QueryFP s s' f' g o p p' (Maybe i)
-query p q = do
+mkQuery p q = do
   st <- get
   case M.lookup p st.children of
     Nothing -> pure Nothing
     Just (Tuple c _) -> Just <$> mapF (coproduct (left <<< mapStateFChild p) (right <<< coproduct (left <<< remapSubscribe (ChildF p)) right)) (queryComponent c q)
+
+mkQuery' :: forall s s' s'' f f' g o p p' p'' i. (Functor g, Ord p')
+       => InjectC s'' s' f f' p p'
+       -> p
+       -> f i
+       -> QueryFP s s' f' g o p' p'' (Maybe i)
+mkQuery' i p q = mkQuery (injPlaceholder i p) (injQuery i q)
 
 -- | Lifts a value in the `QueryF` algebra into the monad used by a component's
 -- | `eval` function.
@@ -205,17 +214,31 @@ liftQuery :: forall s s' f f' g o' p p'. (Functor g)
           => Eval (QueryFP s s' f' g o' p p') s f (QueryFP s s' f' g o' p p')
 liftQuery qf = liftF (right (right qf))
 
-installer :: forall s s' f f' g o' p p' q q'. (Plus g, Ord p)
-          => (q -> Either p q')
+query :: forall s s' f f' g o' p p' i. (Functor g, Ord p)
+      => p
+      -> f' i
+      -> Free (HalogenF s f (QueryFP s s' f' g o' p p')) (Maybe i)
+query p q = liftQuery (mkQuery p q)
+
+query' :: forall s s' s'' f f' f'' g o' p p' p'' i. (Functor g, Ord p)
+      => InjectC s'' s' f'' f' p'' p
+      -> p''
+      -> f'' i
+      -> Free (HalogenF s f (QueryFP s s' f' g o' p p')) (Maybe i)
+query' i p q = liftQuery (mkQuery' i p q)
+
+installer :: forall s s' f f' g o' p p' q q' x. (Plus g, Ord p)
+          => (q -> Either x q')
+          -> (x -> p)
           -> (p' -> q')
           -> Component s f (QueryFP s s' f' g o' p p') q
-          -> (p -> ComponentStateP s' f' g o' p')
+          -> (x -> ComponentStateP s' f' g o' p')
           -> Component (InstalledStateP s s' f' g o' p p') (Coproduct f (ChildF p f')) g q'
-installer fromQ toQ' c f = Component { render: render', eval: eval, peek: const (pure unit) }
+installer fromQ toP toQ' c f = Component { render: render', eval: eval, peek: const (pure unit) }
   where
 
   render' :: State (InstalledStateP s s' f' g o' p p') (HTML q' ((Coproduct f (ChildF p f')) Unit))
-  render' = render fromQ toQ' c f
+  render' = render fromQ toP toQ' c f
 
   eval :: Eval (Coproduct f (ChildF p f')) (InstalledStateP s s' f' g o' p p') (Coproduct f (ChildF p f')) g
   eval = coproduct (queryParent c) queryChild
@@ -224,19 +247,7 @@ install :: forall s s' f f' g o' p p'. (Plus g, Ord p)
        => ParentComponent s s' f f' g o' p p'
        -> (p -> ComponentStateP s' f' g o' p')
        -> InstalledComponent s s' f f' g o' p p'
-install = installer Left id
-
-installL :: forall s s' f f' g o' pl pr p'. (Plus g, Ord pl)
-         => Component s f (QueryFP s s' f' g o' pl p') (Either pl pr)
-         -> (pl -> ComponentStateP s' f' g o' p')
-         -> Component (InstalledStateP s s' f' g o' pl p') (Coproduct f (ChildF pl f')) g (Either p' pr)
-installL = installer (either Left (Right <<< Right)) Left
-
-installR :: forall s s' f f' g o' pl pr p'. (Plus g, Ord pr)
-         => Component s f (QueryFP s s' f' g o' pr p') (Either pl pr)
-         -> (pr -> ComponentStateP s' f' g o' p')
-         -> Component (InstalledStateP s s' f' g o' pr p') (Coproduct f (ChildF pr f')) g (Either pl p')
-installR = installer (either (Right <<< Left) Left) Right
+install = installer Left id id
 
 installer' :: forall s s' f f' g o' p p' q q'. (Plus g, Ord p)
            => (q -> Either p q')
@@ -248,7 +259,7 @@ installer' fromQ toQ' c f = Component { render: render', eval: eval, peek: peek 
   where
 
   render' :: State (InstalledStateP s s' f' g o' p p') (HTML q' ((Coproduct f (ChildF p f')) Unit))
-  render' = render fromQ toQ' c f
+  render' = render fromQ id toQ' c f
 
   eval :: Eval (Coproduct f (ChildF p f')) (InstalledStateP s s' f' g o' p p') (Coproduct f (ChildF p f')) g
   eval = coproduct (queryParent c) (\q -> queryChild q <* peek q)
@@ -264,25 +275,14 @@ install' :: forall s s' f f' g o' p p'. (Plus g, Ord p)
         -> InstalledComponentP s s' f f' g (ChildF p f') o' p p'
 install' = installer' Left id
 
-installL' :: forall s s' f f' g o' pl pr p'. (Plus g, Ord pl)
-          => ComponentP s f (QueryFP s s' f' g o' pl p') (ChildF pl f') (Either pl pr)
-          -> (pl -> ComponentStateP s' f' g o' p')
-          -> ComponentP (InstalledStateP s s' f' g o' pl p') (Coproduct f (ChildF pl f')) g (ChildF pl f') (Either p' pr)
-installL' = installer' (either Left (Right <<< Right)) Left
-
-installR' :: forall s s' f f' g o' pl pr p'. (Plus g, Ord pr)
-          => ComponentP s f (QueryFP s s' f' g o' pr p') (ChildF pr f') (Either pl pr)
-          -> (pr -> ComponentStateP s' f' g o' p')
-          -> ComponentP (InstalledStateP s s' f' g o' pr p') (Coproduct f (ChildF pr f')) g (ChildF pr f') (Either pl p')
-installR' = installer' (either (Right <<< Left) Left) Right
-
-render :: forall s s' f f' g o o' p p' q q'. (Ord p)
-       => (q -> Either p q')
+render :: forall s s' f f' g o o' p p' q q' x. (Ord p)
+       => (q -> Either x q')
+       -> (x -> p)
        -> (p' -> q')
        -> ComponentP s f (QueryFP s s' f' g o' p p') o q
-       -> (p -> ComponentStateP s' f' g o' p')
+       -> (x -> ComponentStateP s' f' g o' p')
        -> State (InstalledStateP s s' f' g o' p p') (HTML q' ((Coproduct f (ChildF p f')) Unit))
-render fromQ toQ' c f = do
+render fromQ toP toQ' c f = do
     st <- CMS.get
     case renderComponent c st.parent of
       Tuple html s -> do
@@ -299,8 +299,8 @@ render fromQ toQ' c f = do
               -> q
               -> State (InstalledStateP s s' f' g o' p p') (HTML q' ((Coproduct f (ChildF p f')) Unit))
   renderChild st p = case fromQ p of
-    Left p' -> renderChild' st p' $ fromMaybe' (\_ -> f p') (M.lookup p' st.children)
-    Right p' -> pure $ Placeholder p'
+    Left x -> renderChild' st (toP x) $ fromMaybe' (\_ -> f x) (M.lookup (toP x) st.children)
+    Right q' -> pure $ Placeholder q'
 
   renderChild' :: InstalledStateP s s' f' g o' p p'
                -> p
@@ -330,7 +330,7 @@ liftChildF = mapF (coproduct left (right <<< coproduct (left <<< remapSubscribe 
 
 queryChild :: forall s s' f f' g o' p p'. (Plus g, Ord p)
            => Eval (ChildF p f') (InstalledStateP s s' f' g o' p p') (Coproduct f (ChildF p f')) g
-queryChild (ChildF p q) = mapF (coproduct left (right <<< coproduct (left <<< remapSubscribe right) right)) (query p q) >>= maybe empty' pure
+queryChild (ChildF p q) = mapF (coproduct left (right <<< coproduct (left <<< remapSubscribe right) right)) (mkQuery p q) >>= maybe empty' pure
 
 empty' :: forall f g h a. (Functor f, Functor g, Plus h) => Free (Coproduct f (Coproduct g h)) a
 empty' = liftF $ right (right empty)
@@ -357,22 +357,8 @@ transform sTo sFrom fTo fFrom oFrom tp (Component c) =
   natHF = coproduct (left <<< mapState sFrom (\f s -> sTo (f (sFrom s))))
                     (right <<< coproduct (left <<< remapSubscribe fTo) right)
 
-transformL :: forall sl sr fl fr g p. (Functor g)
-           => Component sl fl g p
-           -> Component (Either sl sr) (Coproduct fl fr) g p
-transformL = transform Left U.fromLeft left (U.fromLeft <<< runCoproduct) id id
-
-transformR :: forall sl sr fl fr g p. (Functor g)
-           => Component sr fr g p
-           -> Component (Either sl sr) (Coproduct fl fr) g p
-transformR = transform Right U.fromRight right (U.fromRight <<< runCoproduct) id id
-
-transformL' :: forall sl sr fl fr g ol or pl pr. (Functor g)
-            => ComponentP sl fl g ol pl
-            -> ComponentP (Either sl sr) (Coproduct fl fr) g (Coproduct ol or) (Either pl pr)
-transformL' = transform Left U.fromLeft left (U.fromLeft <<< runCoproduct) (U.fromLeft <<< runCoproduct) Left
-
-transformR' :: forall sl sr fl fr g ol or pl pr. (Functor g)
-            => ComponentP sr fr g or pr
-            -> ComponentP (Either sl sr) (Coproduct fl fr) g (Coproduct ol or) (Either pl pr)
-transformR' = transform Right U.fromRight right (U.fromRight <<< runCoproduct) (U.fromRight <<< runCoproduct) Right
+transform' :: forall s s' f f' g o p p'. (Functor g)
+           => InjectC s s' f f' p p'
+           -> ComponentP s f g o p
+           -> ComponentP s' f' g o p
+transform' i = transform (injState i) (U.fromJust <<< prjState i) (injQuery i) (U.fromJust <<< prjQuery i) id id
