@@ -39,8 +39,7 @@ type EventSource f g = Producer (f Unit) g Unit
 -- | For example:
 -- |
 -- | ``` purescript
--- | let onCopied :: EventSource (Free AceInput) (Aff (AceEffects eff))
--- |     onCopied = eventSource (Editor.onCopy editor) \text -> do
+-- | let onCopied = eventSource (Editor.onCopy editor) \text -> do
 -- |       pure $ actionF (TextCopied text)
 -- | ```
 -- | (Taken from the Ace component example)
@@ -57,8 +56,7 @@ eventSource attach handle = produce \emit -> attach (emit <<< Left <=< handle)
 -- | For example:
 -- |
 -- | ``` purescript
--- | let onChange :: EventSource (Free AceInput) (Aff (AceEffects eff))
--- |     onChange = eventSource_ (Session.onChange session) do
+-- | let onChange = eventSource_ (Session.onChange session) do
 -- |       text <- liftEff $ Editor.getValue editor
 -- |       pure $ actionF (ChangeText text)
 -- | ```
@@ -87,5 +85,5 @@ hoistSubscribe nat (Subscribe p next) = Subscribe (hoistFreeT nat p) next
 -- | A natural transformation for interpreting the subscribe algebra as its
 -- | underlying monad, via a coroutine consumer. Used internally by Halogen in
 -- | component installation and `runUI`.
-subscribeN :: forall eff m f g. (MonadRec g) => Consumer (f Unit) g Unit -> Natural (SubscribeF f g) g
+subscribeN :: forall f g. (MonadRec g) => Consumer (f Unit) g Unit -> Natural (SubscribeF f g) g
 subscribeN c (Subscribe p next) = runProcess (p $$ c) $> next

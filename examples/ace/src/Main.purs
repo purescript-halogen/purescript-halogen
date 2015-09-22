@@ -32,45 +32,45 @@ initialState = { text: "" }
 -- | The type of inputs to the component.
 data Input a = ClearText a
 
--- | The placeholder for the ace component.
-data AcePlaceholder = AcePlaceholder
+-- | The slot for the ace component.
+data AceSlot = AceSlot
 
-derive instance genericAcePlaceholder :: Generic AcePlaceholder
-instance eqAcePlaceholder :: Eq AcePlaceholder where eq = gEq
-instance ordAcePlaceholder :: Ord AcePlaceholder where compare = gCompare
+derive instance genericAceSlot :: Generic AceSlot
+instance eqAceSlot :: Eq AceSlot where eq = gEq
+instance ordAceSlot :: Ord AceSlot where compare = gCompare
 
 -- | The parent component that the ace component will be installed into.
-container :: forall p eff. ParentComponentP State AceState Input AceInput (Aff (AceEffects eff)) (ChildF AcePlaceholder AceInput) (Const Void) AcePlaceholder p
+container :: forall p eff. ParentComponentP State AceState Input AceInput (Aff (AceEffects eff)) AceSlot p
 container = component' render eval peek
   where
 
-  render :: Render State Input AcePlaceholder
+  render :: Render State Input AceSlot
   render { text: text } =
     H.div_ [ H.h1_ [ H.text "ace editor" ]
            , H.div_ [ H.p_ [ H.button [ E.onClick (E.input_ ClearText) ]
                                       [ H.text "Clear" ]
                            ]
                     ]
-           , H.div_ [ H.placeholder AcePlaceholder ]
+           , H.div_ [ H.slot AceSlot ]
            , H.p_ [ H.text ("Current text: " ++ text) ]
            ]
 
-  eval :: Eval Input State Input (QueryF State AceState AceInput (Aff (AceEffects eff)) AcePlaceholder p)
+  eval :: Eval Input State Input (QueryF State AceState AceInput (Aff (AceEffects eff)) AceSlot p)
   eval (ClearText next) = do
-    query AcePlaceholder (action $ ChangeText "")
+    query AceSlot (action $ ChangeText "")
     pure next
 
   -- | Peek allows us to observe inputs going to the child components, here
   -- | we're using it to observe when the text is changed inside the ace
   -- | component, and igoring any other inputs.
-  peek :: Peek State Input (QueryF State AceState AceInput (Aff (AceEffects eff)) AcePlaceholder p) (ChildF AcePlaceholder AceInput)
-  peek (ChildF AcePlaceholder q) = case q of
+  peek :: Peek State Input (QueryF State AceState AceInput (Aff (AceEffects eff)) AceSlot p) (ChildF AceSlot AceInput)
+  peek (ChildF AceSlot q) = case q of
     ChangeText text _ -> modify _ { text = text }
     _ -> pure unit
 
 -- | The main UI component - the parent component with installed ace component.
-ui :: forall p eff. InstalledComponentP State AceState Input AceInput (Aff (AceEffects eff)) (ChildF AcePlaceholder AceInput) (Const Void) AcePlaceholder p
-ui = install' container \AcePlaceholder -> Tuple (ace "test") initAceState
+ui :: forall p eff. InstalledComponent State AceState Input AceInput (Aff (AceEffects eff)) AceSlot p
+ui = install' container \AceSlot -> Tuple (ace "test") initAceState
 
 -- | Run the Halogen app.
 main :: Eff (HalogenEffects (ace :: ACE, console :: CONSOLE)) Unit

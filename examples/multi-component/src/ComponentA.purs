@@ -4,6 +4,7 @@ import Prelude
 
 import Data.Functor (($>))
 import Data.Generic (Generic, gEq, gCompare)
+import Data.Void
 
 import Halogen
 import qualified Halogen.HTML as H
@@ -17,11 +18,11 @@ data InputA a
   = ToggleStateA a
   | GetStateA (Boolean -> a)
 
-data PlaceholderA = PlaceholderA
+data SlotA = SlotA
 
-derive instance genericPlaceholderA :: Generic PlaceholderA
-instance eqPlaceholderA :: Eq PlaceholderA where eq = gEq
-instance ordPlaceholderA :: Ord PlaceholderA where compare = gCompare
+derive instance genericSlotA :: Generic SlotA
+instance eqSlotA :: Eq SlotA where eq = gEq
+instance ordSlotA :: Ord SlotA where compare = gCompare
 
 componentA :: forall g p. (Functor g) => Component StateA InputA g p
 componentA = component render eval

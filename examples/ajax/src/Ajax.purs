@@ -3,21 +3,16 @@ module Example.Ajax where
 import Prelude
 
 import Control.Alt ((<|>))
-import Control.Monad.Aff (Aff(), launchAff)
-import Control.Monad.Aff.Console (log)
+import Control.Monad.Aff (Aff(), runAff)
 import Control.Monad.Eff (Eff())
-import Control.Monad.Eff.Class (liftEff)
-import Control.Monad.Eff.Exception (EXCEPTION())
+import Control.Monad.Eff.Exception (throwException)
 import Control.Monad.Free (liftFI)
-import qualified Control.Monad.Eff.Console as C
 
 import Data.Either (Either(..))
 import Data.Foldable (foldMap)
 import Data.Foreign.Class (readProp)
 import Data.Functor (($>))
 import Data.Maybe (Maybe(..))
-
-import DOM.HTML.Types (HTMLElement())
 
 import Halogen
 import Halogen.Util (appendToBody)
@@ -53,10 +48,10 @@ data Input a
   | MakeRequest String a
 
 -- | The effects used in the app.
-type AppEffects = HalogenEffects (ajax :: AJAX)
+type AppEffects eff = HalogenEffects (ajax :: AJAX | eff)
 
 -- | The definition for the app's main UI component.
-ui :: forall eff p. Component State Input (Aff AppEffects) p
+ui :: forall eff p. Component State Input (Aff (AppEffects eff)) p
 ui = component render eval
   where
 
@@ -81,7 +76,7 @@ ui = component render eval
                          ]
                 ]
 
-  eval :: Eval Input State Input (Aff AppEffects)
+  eval :: Eval Input State Input (Aff (AppEffects eff))
   eval (SetCode code next) = modify (_ { code = code, result = Nothing :: Maybe String }) $> next
   eval (MakeRequest code next) = do
     modify (_ { busy = true })
@@ -99,6 +94,7 @@ fetchJS code = do
     Left _ -> "Invalid response"
 
 -- | Run the app.
-main = launchAff $ do
+main :: Eff (AppEffects ()) Unit
+main = runAff throwException (const (pure unit)) $ do
   app <- runUI ui initialState
   appendToBody app.node

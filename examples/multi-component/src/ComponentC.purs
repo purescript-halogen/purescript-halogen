@@ -17,11 +17,11 @@ data InputC a
   = ToggleStateC a
   | GetStateC (Boolean -> a)
 
-data PlaceholderC = PlaceholderC
+data SlotC = SlotC
 
-derive instance genericPlaceholderC :: Generic PlaceholderC
-instance eqPlaceholderC :: Eq PlaceholderC where eq = gEq
-instance ordPlaceholderC :: Ord PlaceholderC where compare = gCompare
+derive instance genericSlotC :: Generic SlotC
+instance eqSlotC :: Eq SlotC where eq = gEq
+instance ordSlotC :: Ord SlotC where compare = gCompare
 
 componentC :: forall g p. (Functor g) => Component StateC InputC g p
 componentC = component render eval

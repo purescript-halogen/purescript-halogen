@@ -7,13 +7,13 @@ module Halogen.HTML
 import Prelude ((<<<))
 import Halogen.HTML.Core
 import Halogen.HTML.Elements
-import Halogen.Component.Inject (InjectC(), injPlaceholder)
+import Halogen.Component.Inject (InjectC(), injSlot)
 
 text :: forall p i. String -> HTML p i
 text = Text
 
-placeholder :: forall p i. p -> HTML p i
-placeholder = Placeholder
+slot :: forall p i. p -> HTML p i
+slot = Slot
 
-placeholder' :: forall s s' f f' p p' i. InjectC s s' f f' p p' -> p -> HTML p' i
-placeholder' i = Placeholder <<< injPlaceholder i
+slot' :: forall s s' f f' p p' i. InjectC s s' f f' p p' -> p -> HTML p' i
+slot' i = Slot <<< injSlot i

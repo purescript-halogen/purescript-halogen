@@ -16,9 +16,6 @@ instance semigroupoidInject :: Semigroupoid Inject where
 instance categoryInject :: Category Inject where
   id = Inject id Just
 
-todo :: forall a. a
-todo = Unsafe.Coerce.unsafeCoerce unit
-
 inj :: forall a b. Inject a b -> a -> b
 inj (Inject f _) = f
 
@@ -51,11 +48,11 @@ injQuery (InjectC _ injQ _) = inj injQ
 prjQuery :: forall s s' f f' p p' a. InjectC s s' f f' p p' -> f' a -> Maybe (f a)
 prjQuery (InjectC _ injQ _) = prj injQ
 
-injPlaceholder :: forall s s' f f' p p'. InjectC s s' f f' p p' -> p -> p'
-injPlaceholder (InjectC _ _ injP) = inj injP
+injSlot :: forall s s' f f' p p'. InjectC s s' f f' p p' -> p -> p'
+injSlot (InjectC _ _ injP) = inj injP
 
-prjPlaceholder :: forall s s' f f' p p'. InjectC s s' f f' p p' -> p' -> Maybe p
-prjPlaceholder (InjectC _ _ injP) = prj injP
+prjSlot :: forall s s' f f' p p'. InjectC s s' f f' p p' -> p' -> Maybe p
+prjSlot (InjectC _ _ injP) = prj injP
 
 composeInjC :: forall s t u f g h p q r. InjectC t u g h q r -> InjectC s t f g p q -> InjectC s u f h p r
 composeInjC (InjectC f h j) (InjectC g i k) = InjectC (f <<< g) (h <<< i) (j <<< k)

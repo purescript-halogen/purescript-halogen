@@ -13,12 +13,6 @@ instance semigroupoidInject :: Semigroupoid Inject
 instance categoryInject :: Category Inject
 ```
 
-#### `todo`
-
-``` purescript
-todo :: forall a. a
-```
-
 #### `inj`
 
 ``` purescript
@@ -86,16 +80,16 @@ injQuery :: forall s s' f f' p p'. InjectC s s' f f' p p' -> Natural f f'
 prjQuery :: forall s s' f f' p p' a. InjectC s s' f f' p p' -> f' a -> Maybe (f a)
 ```
 
-#### `injPlaceholder`
+#### `injSlot`
 
 ``` purescript
-injPlaceholder :: forall s s' f f' p p'. InjectC s s' f f' p p' -> p -> p'
+injSlot :: forall s s' f f' p p'. InjectC s s' f f' p p' -> p -> p'
 ```
 
-#### `prjPlaceholder`
+#### `prjSlot`
 
 ``` purescript
-prjPlaceholder :: forall s s' f f' p p'. InjectC s s' f f' p p' -> p' -> Maybe p
+prjSlot :: forall s s' f f' p p'. InjectC s s' f f' p p' -> p' -> Maybe p
 ```
 
 #### `composeInjC`

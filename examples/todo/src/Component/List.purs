@@ -23,24 +23,24 @@ import Component.Task
 data ListInput a = NewTask a
 
 -- | The list component definition.
-list :: forall g p. (Functor g) => ParentComponentP State Task ListInput TaskInput g (ChildF TaskPlaceholder TaskInput) (Const Void) TaskPlaceholder p
+list :: forall g p. (Functor g) => ParentComponentP State Task ListInput TaskInput g TaskSlot p
 list = component' render eval peek
   where
 
-  render :: Render State ListInput TaskPlaceholder
+  render :: Render State ListInput TaskSlot
   render st =
     H.div_ [ H.h1_ [ H.text "Todo list" ]
            , H.p_ [ H.button [ E.onClick (E.input_ NewTask) ]
                              [ H.text "New Task" ]
                   ]
-           , H.ul_ (map (H.Placeholder <<< TaskPlaceholder) st.tasks)
+           , H.ul_ (map (H.Slot <<< TaskSlot) st.tasks)
            , H.p_ [ H.text $ show st.numCompleted ++ " / " ++ show (length st.tasks) ++ " complete" ]
            ]
 
-  eval :: Eval ListInput State ListInput (QueryF State Task TaskInput g TaskPlaceholder p)
+  eval :: Eval ListInput State ListInput (QueryF State Task TaskInput g TaskSlot p)
   eval (NewTask next) = modify addTask $> next
 
-  peek :: Peek State ListInput (QueryF State Task TaskInput g TaskPlaceholder p) (ChildF TaskPlaceholder TaskInput)
+  peek :: Peek State ListInput (QueryF State Task TaskInput g TaskSlot p) (ChildF TaskSlot TaskInput)
   peek (ChildF p q) = case q of
     Remove _ -> do
       wasComplete <- query p (request IsCompleted)
@@ -54,8 +54,8 @@ addTask :: State -> State
 addTask st = st { nextId = st.nextId + 1, tasks = st.tasks `snoc` st.nextId }
 
 -- | Removes a task from the current state.
-removeTask :: TaskPlaceholder -> State -> State
-removeTask (TaskPlaceholder id) st = st { tasks = filter (/= id) st.tasks }
+removeTask :: TaskSlot -> State -> State
+removeTask (TaskSlot id) st = st { tasks = filter (/= id) st.tasks }
 
 -- | Updates the number of completed tasks.
 updateNumCompleted :: (Int -> Int) -> State -> State
