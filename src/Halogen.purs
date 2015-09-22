@@ -16,3 +16,4 @@ import qualified Halogen.HTML.Core as C
 
 type HTML p i = C.HTML p (i Unit)
 type Prop i = C.Prop (i Unit)
+

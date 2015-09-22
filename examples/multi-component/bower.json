@@ -1,0 +1,8 @@
+{
+  "name": "multi-install",
+  "private": true,
+  "dependencies": {
+    "purescript-generics": "^0.5.1",
+    "purescript-halogen": "*"
+  }
+}

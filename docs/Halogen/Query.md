@@ -6,8 +6,8 @@
 action :: forall f. (Unit -> f Unit) -> f Unit
 ```
 
-Takes a data constructor of `f` and creates an "action". An "action" only
-causes effects and has no result value.
+Takes a data constructor of query algebra `f` and creates an "action". An
+"action" only causes effects and has no result value.
 
 For example:
 
@@ -24,8 +24,9 @@ sendTick driver = driver (action Tick)
 request :: forall f a. (forall i. (a -> i) -> f i) -> f a
 ```
 
-Takes a data constructor of `f` and creates a "request". A "request" can
-cause effects as well as fetching some information from a component.
+Takes a data constructor of query algebra `f` and creates a "request". A
+"request" can cause effects as well as fetching some information from a
+component.
 
 For example:
 

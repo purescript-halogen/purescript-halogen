@@ -56,7 +56,7 @@ renderHTML f html st = runState (go html) emptyRenderState
           key = toNullable $ foldl findKey Nothing props
       V.vnode ns' tag key <$> (fold <$> traverse (renderProp f st) props)
                           <*> traverse go els
-  go (Placeholder _) = pure $ V.vtext ""
+  go (Slot _) = pure $ V.vtext ""
 
 renderProp :: forall f eff. (forall i. f i -> Aff (HalogenEffects eff) i) -> RenderState -> Prop (f Unit) -> State RenderState V.Props
 renderProp _ _ (Prop e) = pure $ runExists (\(PropF key value _) ->
@@ -80,7 +80,7 @@ renderProp _ _ _ = pure mempty
 -- | the current render cycle.
 -- |
 -- | TODO: use ST StrMap?
-ifprop :: forall eff f i. RenderState
+ifprop :: forall eff f. RenderState
                      -> (RenderState -> SM.StrMap V.Props)
                      -> (SM.StrMap V.Props -> RenderState -> RenderState)
                      -> String

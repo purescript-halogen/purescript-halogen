@@ -4,37 +4,35 @@ module Halogen.Component
   , Render()
   , Eval()
   , Peek()
+  , PeekP()
   , renderComponent
   , queryComponent
   , component
   , component'
   , liftEff'
-  , ComponentStateP()
   , ComponentState()
-  , InstalledStateP()
   , InstalledState()
   , ParentComponentP()
   , ParentComponent()
-  , InstalledComponentP()
   , InstalledComponent()
   , installedState
   , ChildF(..)
-  , QueryFP()
   , QueryF()
-  , query
+  , mkQuery
+  , mkQuery'
   , liftQuery
+  , query
+  , query'
   , install
-  , installL
-  , installR
   , install'
-  , installL'
-  , installR'
-  ) where
+  , createChild
+  )
+  where
 
 import Prelude
 
 import Control.Apply ((<*))
-import Control.Bind ((=<<))
+import Control.Bind ((=<<), (<=<), (>=>))
 import Control.Coroutine (await)
 import Control.Monad.Eff (Eff())
 import Control.Monad.Eff.Class (MonadEff, liftEff)
@@ -44,22 +42,26 @@ import Control.Monad.State (State(), runState)
 import Control.Monad.Trans (lift)
 import Control.Plus (Plus, empty)
 import qualified Control.Monad.State.Class as CMS
+import qualified Control.Monad.State.Trans as CMS
 
-import Data.Bifunctor (lmap, rmap)
+import Data.Bifunctor (bimap, lmap, rmap)
 import Data.Const (Const())
 import Data.Either (Either(..), either)
-import Data.Functor.Coproduct (Coproduct(), coproduct, left, right)
+import Data.Functor.Coproduct (Coproduct(..), runCoproduct, coproduct, left, right)
 import Data.Maybe (Maybe(..), maybe, fromMaybe')
 import Data.NaturalTransformation (Natural())
 import Data.Tuple (Tuple(..), snd)
 import Data.Void (Void())
+import qualified Data.Either.Unsafe as U
 import qualified Data.Map as M
 import qualified Data.Maybe.Unsafe as U
 
-import Halogen.HTML.Core (HTML(..), substPlaceholder)
+import Halogen.HTML.Core (HTML(..), fillSlot)
 import Halogen.Query (HalogenF(), get)
 import Halogen.Query.StateF (StateF(), mapState)
 import Halogen.Query.SubscribeF (SubscribeF(), subscribeN, remapSubscribe, hoistSubscribe)
+
+import Halogen.Component.Inject
 
 -- | Data type for Halogen components.
 -- | - `s` - the type of the component state
@@ -67,12 +69,12 @@ import Halogen.Query.SubscribeF (SubscribeF(), subscribeN, remapSubscribe, hoist
 -- | - `g` - the monad handling the component's non-state effects
 -- | - `o` - the type of values observable via `peek`, used to allow parent
 -- |         components to see queries their children have acted upon.
--- | - `p` - the type of placeholders within the component, used to specify
--- |         "holes" in which child components can be installed.
+-- | - `p` - the type of slots within the component, used to specify locations
+-- |         at which child components can be installed.
 newtype ComponentP s f g o p = Component
   { render :: State s (HTML p (f Unit))
   , eval   :: Eval f s f g
-  , peek   :: Peek s f g o
+  , peek   :: PeekP s f g o
   }
 
 -- | A type alias for Halogen components where `peek` is not used.
@@ -91,7 +93,10 @@ type Eval i s f g = Natural i (Free (HalogenF s f g))
 
 -- | A type alias for a component `peek` function that observes inputs to child
 -- | components.
-type Peek s f g o = forall a. o a -> Free (HalogenF s f g) Unit
+type Peek s s' f f' g p p' = PeekP s f (QueryF s s' f' g p p') (ChildF p f')
+
+-- | A lower level form of the `Peek` type synonym, used internally.
+type PeekP s f g o = forall a. o a -> Free (HalogenF s f g) Unit
 
 -- | Runs a component's `render` function with the specified state, returning
 -- | the generated `HTML` and new state.
@@ -103,19 +108,19 @@ renderComponent (Component c) = runState c.render
 queryComponent :: forall s f g o p. ComponentP s f g o p -> Eval f s f g
 queryComponent (Component c) = c.eval
 
-peekComponent :: forall s f g o p. ComponentP s f g o p -> Peek s f g o
+peekComponent :: forall s s' f f' g p p'. ParentComponentP s s' f f' g p p' -> Peek s s' f f' g p p'
 peekComponent (Component c) = c.peek
 
 -- | Builds a new [`ComponentP`](#componentp) from a [`Render`](#render),
 -- | [`Eval`](#eval), and [`Peek`](#peek) function. This is used in cases where
 -- | defining a parent component that needs to observe inputs to its children.
-component' :: forall s f g o p. Render s f p -> Eval f s f g -> Peek s f g o -> ComponentP s f g o p
+component' :: forall s s' f f' g p p'. Render s f p -> Eval f s f (QueryF s s' f' g p p') -> Peek s s' f f' g p p' -> ParentComponentP s s' f f' g p p'
 component' r q p = Component { render: CMS.gets r, eval: q, peek: p }
 
 -- | Builds a new [`Component`](#component) from a [`Render`](#render) and
 -- | [`Eval`](#eval) function.
 component :: forall s f g p. Render s f p -> Eval f s f g -> Component s f g p
-component r q = component' r q (const $ pure unit)
+component r q = Component { render: CMS.gets r, eval: q, peek: const (pure unit) }
 
 -- | Interacting with the DOM will usually be done via `Eff`, but we tend to
 -- | operate in `Aff` when using Halogen, so this function helps lift an `Eff`
@@ -127,203 +132,201 @@ component r q = component' r q (const $ pure unit)
 liftEff' :: forall eff a s f g. (MonadEff eff g, Functor g) => Eff eff a -> Free (HalogenF s f g) a
 liftEff' = liftF <<< right <<< right <<< liftEff
 
--- | A type synonym for a component combined with its state. Used when
--- | installing components to a component with initial state for a placeholder.
-type ComponentStateP s f g o p = Tuple (ComponentP s f g o p) s
-type ComponentState s f g p = ComponentStateP s f g (Const Void) p
+-- | A type synonym for a component combined with its state. This is used when
+-- | installing components into slots.
+type ComponentState s f g p = Tuple (Component s f g p) s
 
--- | The type used by component containers for their state where `s` is the
--- | state local to the container, `p` is the type of placeholder used by the
--- | container, and the remaining parameters are the type variables for the
--- | child components.
-type InstalledStateP s s' f' g o' p p' =
-  { parent   :: s
-  , children :: M.Map p (ComponentStateP s' f' g o' p')
-  }
-type InstalledState s s' f g p p' = InstalledStateP s s' f g (Const Void) p p'
+createChild :: forall s s' f f' g p p' q. (Functor g) => InjectC s s' f f' p p' -> Component s f g q -> s -> ComponentState s' f' g q
+createChild i c s = Tuple (transform i c) (injState i s)
 
 -- | A type alias used to simplify the type signature for a `Component s f g p`
 -- | that is intended to have components of type `Component s' f' g p'`
 -- | installed into it.
-type ParentComponentP s s' f f' g o o' p p' = ComponentP s f (QueryFP s s' f' g o' p p') o p
-type ParentComponent s s' f f' g o' p p' = ParentComponentP s s' f f' g (Const Void) o' p p'
+type ParentComponent s s' f f' g p p' = Component s f (QueryF s s' f' g p p') p
+
+-- | A type alias similar to `ParentComponent`, but for components that `peek`
+-- | on their children.
+type ParentComponentP s s' f f' g p p' = ComponentP s f (QueryF s s' f' g p p') (ChildF p f') p
 
 -- | A type alias use to simplify the type signature for a `Component s f g p`
 -- | that has had components of type `Component s' f' g p'` installed into it.
-type InstalledComponentP s s' f f' g o o' p p' = ComponentP (InstalledStateP s s' f' g o' p p') (Coproduct f (ChildF p f')) g o p'
-type InstalledComponent s s' f f' g o' p p' = InstalledComponentP s s' f f' g (Const Void) o' p p'
+type InstalledComponent s s' f f' g p p' = Component (InstalledState s s' f' g p p') (Coproduct f (ChildF p f')) g p'
+
+-- | The type used by component containers for their state where `s` is the
+-- | state local to the container, `p` is the type of slot used by the
+-- | container, and the remaining parameters are the type variables for the
+-- | child components.
+type InstalledState s s' f' g p p' =
+  { parent   :: s
+  , children :: M.Map p (ComponentState s' f' g p')
+  }
 
 -- | Creates an initial `InstalledState` value for a component container based
 -- | on a state value for the container.
-installedState :: forall s s' f' g o' p p'. (Ord p) => s -> InstalledStateP s s' f' g o' p p'
+installedState :: forall s s' f' g p p'. (Ord p) => s -> InstalledState s s' f' g p p'
 installedState = { parent: _, children: M.empty }
 
-mapStateFParent :: forall s s' f f' g o p p'. Natural (StateF s) (StateF (InstalledStateP s s' f' g o p p'))
+mapStateFParent :: forall s s' f' g p p'. Natural (StateF s) (StateF (InstalledState s s' f' g p p'))
 mapStateFParent = mapState (_.parent) (\f st -> { parent: f st.parent, children: st.children })
 
-mapStateFChild :: forall s s' f f' g o p p'. (Ord p) => p -> Natural (StateF s') (StateF (InstalledStateP s s' f' g o p p'))
+mapStateFChild :: forall s s' f' g p p'. (Ord p) => p -> Natural (StateF s') (StateF (InstalledState s s' f' g p p'))
 mapStateFChild p = mapState (\st -> U.fromJust $ snd <$> M.lookup p st.children)
                             (\f st -> { parent: st.parent, children: M.update (Just <<< rmap f) p st.children })
 
 -- | An intermediate algebra that component containers "produce" (use as their
 -- | `g` type variable).
-type QueryFP s s' f' g o' p p' = Free (HalogenF (InstalledStateP s s' f' g o' p p') (ChildF p f') g)
-type QueryF s s' f' g p p' = QueryFP s s' f' g (Const Void) p p'
+type QueryF s s' f' g p p' = Free (HalogenF (InstalledState s s' f' g p p') (ChildF p f') g)
 
 -- | An intermediate algebra used to associate values from a child component's
--- | algebra with the child component's placeholder when querying.
+-- | algebra with the slot the component was installed into.
 data ChildF p f i = ChildF p (f i)
 
 instance functorChildF :: (Functor f) => Functor (ChildF p f) where
   map f (ChildF p fi) = ChildF p (f <$> fi)
 
--- | Creates a query for a child component where `p` is the placeholder
--- | addressing the component and `f' i` in the input query.
+-- | Creates a query for a child component where `p` is the slot the component
+-- | was installed into  and `f' i` in the input query.
 -- |
--- | If a component is not found for the placeholder the result of the query
+-- | If a component is not found for the slot the result of the query
 -- | will be `Nothing`.
-query :: forall s s' f' p p' o g i. (Functor g, Ord p)
+mkQuery :: forall s s' f' p p' g i. (Functor g, Ord p)
       => p
       -> f' i
-      -> QueryFP s s' f' g o p p' (Maybe i)
-query p q = do
+      -> QueryF s s' f' g p p' (Maybe i)
+mkQuery p q = do
   st <- get
   case M.lookup p st.children of
     Nothing -> pure Nothing
     Just (Tuple c _) -> Just <$> mapF (coproduct (left <<< mapStateFChild p) (right <<< coproduct (left <<< remapSubscribe (ChildF p)) right)) (queryComponent c q)
 
+mkQuery' :: forall s s' s'' f f' g p p' p'' i. (Functor g, Ord p')
+       => InjectC s'' s' f f' p p'
+       -> p
+       -> f i
+       -> QueryF s s' f' g p' p'' (Maybe i)
+mkQuery' i p q = mkQuery (injSlot i p) (injQuery i q)
+
 -- | Lifts a value in the `QueryF` algebra into the monad used by a component's
 -- | `eval` function.
-liftQuery :: forall s s' f f' g o' p p'. (Functor g)
-          => Eval (QueryFP s s' f' g o' p p') s f (QueryFP s s' f' g o' p p')
+liftQuery :: forall s s' f f' g p p'. (Functor g)
+          => Eval (QueryF s s' f' g p p') s f (QueryF s s' f' g p p')
 liftQuery qf = liftF (right (right qf))
 
-installer :: forall s s' f f' g o' p p' q q'. (Plus g, Ord p)
-          => (q -> Either p q')
-          -> (p' -> q')
-          -> Component s f (QueryFP s s' f' g o' p p') q
-          -> (p -> ComponentStateP s' f' g o' p')
-          -> Component (InstalledStateP s s' f' g o' p p') (Coproduct f (ChildF p f')) g q'
-installer fromQ toQ' c f = Component { render: render', eval: eval, peek: const (pure unit) }
+query :: forall s s' f f' g p p' i. (Functor g, Ord p)
+      => p
+      -> f' i
+      -> Free (HalogenF s f (QueryF s s' f' g p p')) (Maybe i)
+query p q = liftQuery (mkQuery p q)
+
+query' :: forall s s' s'' f f' f'' g p p' p'' i. (Functor g, Ord p)
+      => InjectC s'' s' f'' f' p'' p
+      -> p''
+      -> f'' i
+      -> Free (HalogenF s f (QueryF s s' f' g p p')) (Maybe i)
+query' i p q = liftQuery (mkQuery' i p q)
+
+install :: forall s s' f f' g p p'. (Plus g, Ord p)
+       => ParentComponent s s' f f' g p p'
+       -> (p -> ComponentState s' f' g p')
+       -> InstalledComponent s s' f f' g p p'
+install c f = Component { render: render c f, eval: eval, peek: const (pure unit) }
   where
-
-  render' :: State (InstalledStateP s s' f' g o' p p') (HTML q' ((Coproduct f (ChildF p f')) Unit))
-  render' = render fromQ toQ' c f
-
-  eval :: Eval (Coproduct f (ChildF p f')) (InstalledStateP s s' f' g o' p p') (Coproduct f (ChildF p f')) g
+  eval :: Eval (Coproduct f (ChildF p f')) (InstalledState s s' f' g p p') (Coproduct f (ChildF p f')) g
   eval = coproduct (queryParent c) queryChild
 
-install :: forall s s' f f' g o' p p'. (Plus g, Ord p)
-       => ParentComponent s s' f f' g o' p p'
-       -> (p -> ComponentStateP s' f' g o' p')
-       -> InstalledComponent s s' f f' g o' p p'
-install = installer Left id
-
-installL :: forall s s' f f' g o' pl pr p'. (Plus g, Ord pl)
-         => Component s f (QueryFP s s' f' g o' pl p') (Either pl pr)
-         -> (pl -> ComponentStateP s' f' g o' p')
-         -> Component (InstalledStateP s s' f' g o' pl p') (Coproduct f (ChildF pl f')) g (Either p' pr)
-installL = installer (either Left (Right <<< Right)) Left
-
-installR :: forall s s' f f' g o' pl pr p'. (Plus g, Ord pr)
-         => Component s f (QueryFP s s' f' g o' pr p') (Either pl pr)
-         -> (pr -> ComponentStateP s' f' g o' p')
-         -> Component (InstalledStateP s s' f' g o' pr p') (Coproduct f (ChildF pr f')) g (Either pl p')
-installR = installer (either (Right <<< Left) Left) Right
-
-installer' :: forall s s' f f' g o' p p' q q'. (Plus g, Ord p)
-           => (q -> Either p q')
-           -> (p' -> q')
-           -> ComponentP s f (QueryFP s s' f' g o' p p') (ChildF p f') q
-           -> (p -> ComponentStateP s' f' g o' p')
-           -> ComponentP (InstalledStateP s s' f' g o' p p') (Coproduct f (ChildF p f')) g (ChildF p f') q'
-installer' fromQ toQ' c f = Component { render: render', eval: eval, peek: peek }
+install' :: forall s s' f f' g p p'. (Plus g, Ord p)
+        => ParentComponentP s s' f f' g p p'
+        -> (p -> ComponentState s' f' g p')
+        -> InstalledComponent s s' f f' g p p'
+install' c f = Component { render: render c f, eval: eval, peek: const (pure unit) }
   where
-
-  render' :: State (InstalledStateP s s' f' g o' p p') (HTML q' ((Coproduct f (ChildF p f')) Unit))
-  render' = render fromQ toQ' c f
-
-  eval :: Eval (Coproduct f (ChildF p f')) (InstalledStateP s s' f' g o' p p') (Coproduct f (ChildF p f')) g
+  eval :: Eval (Coproduct f (ChildF p f')) (InstalledState s s' f' g p p') (Coproduct f (ChildF p f')) g
   eval = coproduct (queryParent c) (\q -> queryChild q <* peek q)
 
-  peek :: Peek (InstalledStateP s s' f' g o' p p') (Coproduct f (ChildF p f')) g (ChildF p f')
+  peek :: PeekP (InstalledState s s' f' g p p') (Coproduct f (ChildF p f')) g (ChildF p f')
   peek q =
     let runSubscribeF' = runSubscribeF (queryParent c)
     in foldFree (coproduct mergeParentStateF (coproduct runSubscribeF' liftChildF)) (peekComponent c q)
 
-install' :: forall s s' f f' g o' p p'. (Plus g, Ord p)
-        => ParentComponentP s s' f f' g (ChildF p f') o' p p'
-        -> (p -> ComponentStateP s' f' g o' p')
-        -> InstalledComponentP s s' f f' g (ChildF p f') o' p p'
-install' = installer' Left id
-
-installL' :: forall s s' f f' g o' pl pr p'. (Plus g, Ord pl)
-          => ComponentP s f (QueryFP s s' f' g o' pl p') (ChildF pl f') (Either pl pr)
-          -> (pl -> ComponentStateP s' f' g o' p')
-          -> ComponentP (InstalledStateP s s' f' g o' pl p') (Coproduct f (ChildF pl f')) g (ChildF pl f') (Either p' pr)
-installL' = installer' (either Left (Right <<< Right)) Left
-
-installR' :: forall s s' f f' g o' pl pr p'. (Plus g, Ord pr)
-          => ComponentP s f (QueryFP s s' f' g o' pr p') (ChildF pr f') (Either pl pr)
-          -> (pr -> ComponentStateP s' f' g o' p')
-          -> ComponentP (InstalledStateP s s' f' g o' pr p') (Coproduct f (ChildF pr f')) g (ChildF pr f') (Either pl p')
-installR' = installer' (either (Right <<< Left) Left) Right
-
-render :: forall s s' f f' g o o' p p' q q'. (Ord p)
-       => (q -> Either p q')
-       -> (p' -> q')
-       -> ComponentP s f (QueryFP s s' f' g o' p p') o q
-       -> (p -> ComponentStateP s' f' g o' p')
-       -> State (InstalledStateP s s' f' g o' p p') (HTML q' ((Coproduct f (ChildF p f')) Unit))
-render fromQ toQ' c f = do
+render :: forall s s' f f' g o p p'. (Ord p)
+       => ComponentP s f (QueryF s s' f' g p p') o p
+       -> (p -> ComponentState s' f' g p')
+       -> State (InstalledState s s' f' g p p') (HTML p' ((Coproduct f (ChildF p f')) Unit))
+render c f = do
     st <- CMS.get
     case renderComponent c st.parent of
       Tuple html s -> do
         -- Empty the state so that we don't keep children that are no longer
         -- being rendered...
-        CMS.put { parent: s, children: M.empty :: M.Map p (ComponentStateP s' f' g o' p') }
+        CMS.put { parent: s, children: M.empty :: M.Map p (ComponentState s' f' g p') }
         -- ...but then pass through the old state so we can lookup child
         -- components that are being re-rendered
-        substPlaceholder (renderChild st) left html
+        fillSlot (renderChild st) left html
 
   where
 
-  renderChild :: InstalledStateP s s' f' g o' p p'
-              -> q
-              -> State (InstalledStateP s s' f' g o' p p') (HTML q' ((Coproduct f (ChildF p f')) Unit))
-  renderChild st p = case fromQ p of
-    Left p' -> renderChild' st p' $ fromMaybe' (\_ -> f p') (M.lookup p' st.children)
-    Right p' -> pure $ Placeholder p'
+  renderChild :: InstalledState s s' f' g p p'
+              -> p
+              -> State (InstalledState s s' f' g p p') (HTML p' ((Coproduct f (ChildF p f')) Unit))
+  renderChild st p = renderChild' st p $ fromMaybe' (\_ -> f p) (M.lookup p st.children)
 
-  renderChild' :: InstalledStateP s s' f' g o' p p'
+  renderChild' :: InstalledState s s' f' g p p'
                -> p
-               -> ComponentStateP s' f' g o' p'
-               -> State (InstalledStateP s s' f' g o' p p') (HTML q' ((Coproduct f (ChildF p f')) Unit))
+               -> ComponentState s' f' g p'
+               -> State (InstalledState s s' f' g p p') (HTML p' ((Coproduct f (ChildF p f')) Unit))
   renderChild' st p (Tuple c s) = case renderComponent c s of
     Tuple html s' -> do
       CMS.modify (\st -> st { children = M.insert p (Tuple c s') st.children })
-      pure $ lmap toQ' $ right <<< ChildF p <$> html
+      pure $ right <<< ChildF p <$> html
 
-queryParent :: forall s s' f f' g o o' p p' q. (Functor g)
-            => ComponentP s f (QueryFP s s' f' g o' p p') o q
-            -> Eval f (InstalledStateP s s' f' g o' p p') (Coproduct f (ChildF p f')) g
+queryParent :: forall s s' f f' g o p p' q. (Functor g)
+            => ComponentP s f (QueryF s s' f' g p p') o q
+            -> Eval f (InstalledState s s' f' g p p') (Coproduct f (ChildF p f')) g
 queryParent c q = foldFree (coproduct mergeParentStateF (coproduct (runSubscribeF (queryParent c)) liftChildF)) (queryComponent c q)
 
-mergeParentStateF :: forall s s' f f' g o' p p'. Eval (StateF s) (InstalledStateP s s' f' g o' p p') (Coproduct f (ChildF p f')) g
+mergeParentStateF :: forall s s' f f' g p p'. Eval (StateF s) (InstalledState s s' f' g p p') (Coproduct f (ChildF p f')) g
 mergeParentStateF = liftF <<< left <<< mapStateFParent
 
-runSubscribeF :: forall s s' f f' g o' p p'. (Functor g)
-              => Eval f (InstalledStateP s s' f' g o' p p') (Coproduct f (ChildF p f')) g
-              -> Eval (SubscribeF f (Free (HalogenF (InstalledStateP s s' f' g o' p p') (ChildF p f') g))) (InstalledStateP s s' f' g o' p p') (Coproduct f (ChildF p f')) g
+runSubscribeF :: forall s s' f f' g p p'. (Functor g)
+              => Eval f (InstalledState s s' f' g p p') (Coproduct f (ChildF p f')) g
+              -> Eval (SubscribeF f (Free (HalogenF (InstalledState s s' f' g p p') (ChildF p f') g))) (InstalledState s s' f' g p p') (Coproduct f (ChildF p f')) g
 runSubscribeF queryParent' = subscribeN (forever $ lift <<< queryParent' =<< await) <<< hoistSubscribe liftChildF
 
-liftChildF :: forall s s' f f' g o' p p'. (Functor g)
-           => Eval (Free (HalogenF (InstalledStateP s s' f' g o' p p') (ChildF p f') g)) (InstalledStateP s s' f' g o' p p') (Coproduct f (ChildF p f')) g
+liftChildF :: forall s s' f f' g p p'. (Functor g)
+           => Eval (Free (HalogenF (InstalledState s s' f' g p p') (ChildF p f') g)) (InstalledState s s' f' g p p') (Coproduct f (ChildF p f')) g
 liftChildF = mapF (coproduct left (right <<< coproduct (left <<< remapSubscribe right) right))
 
-queryChild :: forall s s' f f' g o' p p'. (Plus g, Ord p)
-           => Eval (ChildF p f') (InstalledStateP s s' f' g o' p p') (Coproduct f (ChildF p f')) g
-queryChild (ChildF p q) = mapF (coproduct left (right <<< coproduct (left <<< remapSubscribe right) right)) (query p q) >>= maybe empty' pure
+queryChild :: forall s s' f f' g p p'. (Plus g, Ord p)
+           => Eval (ChildF p f') (InstalledState s s' f' g p p') (Coproduct f (ChildF p f')) g
+queryChild (ChildF p q) = mapF (coproduct left (right <<< coproduct (left <<< remapSubscribe right) right)) (mkQuery p q) >>= maybe empty' pure
 
 empty' :: forall f g h a. (Functor f, Functor g, Plus h) => Free (Coproduct f (Coproduct g h)) a
 empty' = liftF $ right (right empty)
+
+adaptState :: forall s t m a. (Monad m) => (s -> t) -> (t -> s) -> CMS.StateT s m a -> CMS.StateT t m a
+adaptState st ts (CMS.StateT f) = CMS.StateT \state -> f (ts state) >>= \(Tuple a s) -> pure $ Tuple a (st s)
+
+transform' :: forall s s' f f' g o o' p p'. (Functor g)
+           => (s -> s')
+           -> (s' -> s)
+           -> Natural f f'
+           -> Natural f' f
+           -> Natural o' o
+           -> (p -> p')
+           -> ComponentP s f g o p
+           -> ComponentP s' f' g o' p'
+transform' sTo sFrom fTo fFrom oFrom tp (Component c) =
+  Component { render: bimap tp fTo <$> adaptState sTo sFrom c.render
+            , eval: mapF natHF <<< c.eval <<< fFrom
+            , peek: mapF natHF <<< c.peek <<< oFrom
+            }
+  where
+  natHF :: Natural (HalogenF s f g) (HalogenF s' f' g)
+  natHF = coproduct (left <<< mapState sFrom (\f s -> sTo (f (sFrom s))))
+                    (right <<< coproduct (left <<< remapSubscribe fTo) right)
+
+transform :: forall s s' f f' g p p' q. (Functor g)
+          => InjectC s s' f f' p p'
+          -> Component s f g q
+          -> Component s' f' g q
+transform i = transform' (injState i) (U.fromJust <<< prjState i) (injQuery i) (U.fromJust <<< prjQuery i) id id

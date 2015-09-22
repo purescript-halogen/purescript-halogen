@@ -17,7 +17,7 @@ import Model
 import Component.List
 import Component.Task
 
-ui :: forall g p. (Plus g) => InstalledComponentP State Task ListInput TaskInput g (ChildF TaskPlaceholder TaskInput) (Const Void) TaskPlaceholder p
+ui :: forall g p. (Plus g) => InstalledComponent State Task ListInput TaskInput g TaskSlot p
 ui = install' list mkTask
 
 main :: Eff (HalogenEffects ()) Unit

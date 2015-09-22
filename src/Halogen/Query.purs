@@ -10,7 +10,7 @@ module Halogen.Query
   , module Halogen.Query.SubscribeF
   ) where
 
-import Prelude (($), Unit(), unit, id)
+import Prelude (Unit(), unit, id)
 
 import Control.Monad.Free (Free(), liftF)
 
@@ -19,8 +19,8 @@ import Data.Functor.Coproduct (Coproduct(), left, right)
 import Halogen.Query.StateF (StateF(..))
 import Halogen.Query.SubscribeF (SubscribeF(..), EventSource(), eventSource, eventSource_)
 
--- | Takes a data constructor of `f` and creates an "action". An "action" only
--- | causes effects and has no result value.
+-- | Takes a data constructor of query algebra `f` and creates an "action". An
+-- | "action" only causes effects and has no result value.
 -- |
 -- | For example:
 -- |
@@ -31,10 +31,11 @@ import Halogen.Query.SubscribeF (SubscribeF(..), EventSource(), eventSource, eve
 -- | sendTick driver = driver (action Tick)
 -- | ```
 action :: forall f. (Unit -> f Unit) -> f Unit
-action = ($ unit)
+action act = act unit
 
--- | Takes a data constructor of `f` and creates a "request". A "request" can
--- | cause effects as well as fetching some information from a component.
+-- | Takes a data constructor of query algebra `f` and creates a "request". A
+-- | "request" can cause effects as well as fetching some information from a
+-- | component.
 -- |
 -- | For example:
 -- |
@@ -45,7 +46,7 @@ action = ($ unit)
 -- | getTickCount driver = driver (request GetTickCount)
 -- | ```
 request :: forall f a. (forall i. (a -> i) -> f i) -> f a
-request = ($ id)
+request req = req id
 
 -- | A type alias for the full Halogen component algebra.
 type HalogenF s f g = Coproduct (StateF s) (Coproduct (SubscribeF f g) g)

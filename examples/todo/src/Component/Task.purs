@@ -20,20 +20,19 @@ data TaskInput a
   | Remove a
   | IsCompleted (Boolean -> a)
 
--- | The placeholder used when installing task components into a parent
--- | component.
-data TaskPlaceholder = TaskPlaceholder TaskId
+-- | The slot used when installing task components into a parent component.
+newtype TaskSlot = TaskSlot TaskId
 
-instance eqTaskPlaceholder :: Eq TaskPlaceholder where
-  eq (TaskPlaceholder x) (TaskPlaceholder y) = x == y
+instance eqTaskSlot :: Eq TaskSlot where
+  eq (TaskSlot x) (TaskSlot y) = x == y
 
-instance ordTaskPlaceholder :: Ord TaskPlaceholder where
-  compare (TaskPlaceholder x) (TaskPlaceholder y) = compare x y
+instance ordTaskSlot :: Ord TaskSlot where
+  compare (TaskSlot x) (TaskSlot y) = compare x y
 
--- | Creates a `ComponentState` entry based on a `TaskPlaceholder`, used to
+-- | Creates a `ComponentState` entry based on a `TaskSlot`, used to
 -- | install task components into a parent component.
-mkTask :: forall g p. (Functor g) => TaskPlaceholder -> ComponentState Task TaskInput g p
-mkTask (TaskPlaceholder _) = Tuple task { description: "", completed: false }
+mkTask :: forall g p. (Functor g) => TaskSlot -> ComponentState Task TaskInput g p
+mkTask (TaskSlot _) = Tuple task { description: "", completed: false }
 
 -- | The task component definition.
 task :: forall g p. (Functor g) => Component Task TaskInput g p
@@ -48,7 +47,7 @@ task = component render eval
                     , E.onChecked (E.input ToggleCompleted)
                     ]
           , H.input [ P.type_ "text"
-                    , P.placeholder "Task description"
+                    , P.slot "Task description"
                     , P.value t.description
                     , E.onValueChange (E.input UpdateDescription)
                     ]
@@ -62,4 +61,4 @@ task = component render eval
   eval (UpdateDescription desc next) = modify (_ { description = desc }) $> next
   eval (ToggleCompleted b next) = modify (_ { completed = b }) $> next
   eval (Remove next) = pure next
-  eval (IsCompleted k) = gets (_.completed) >>= pure <<< k
+  eval (IsCompleted continue) = gets (_.completed) >>= pure <<< continue

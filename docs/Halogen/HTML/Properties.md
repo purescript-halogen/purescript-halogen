@@ -161,10 +161,10 @@ checked :: forall i. Boolean -> Prop i
 selected :: forall i. Boolean -> Prop i
 ```
 
-#### `placeholder`
+#### `slot`
 
 ``` purescript
-placeholder :: forall i. String -> Prop i
+slot :: forall i. String -> Prop i
 ```
 
 

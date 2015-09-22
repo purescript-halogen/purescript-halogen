@@ -8,7 +8,7 @@ The core types and smart constructors for the HTML DSL.
 data HTML p i
   = Text String
   | Element (Maybe Namespace) TagName (Array (Prop i)) (Array (HTML p i))
-  | Placeholder p
+  | Slot p
 ```
 
 An initial encoding of HTML nodes.
@@ -25,10 +25,10 @@ instance functorHTML :: Functor (HTML p)
 element :: forall p i. TagName -> Array (Prop i) -> Array (HTML p i) -> HTML p i
 ```
 
-#### `substPlaceholder`
+#### `fillSlot`
 
 ``` purescript
-substPlaceholder :: forall p p' i i' m. (Applicative m) => (p -> m (HTML p' i')) -> (i -> i') -> HTML p i -> m (HTML p' i')
+fillSlot :: forall p p' i i' m. (Applicative m) => (p -> m (HTML p' i')) -> (i -> i') -> HTML p i -> m (HTML p' i')
 ```
 
 #### `Prop`
