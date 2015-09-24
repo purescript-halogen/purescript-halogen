@@ -1,17 +1,20 @@
 ## Module Data.Injector
 
+#### `Prism`
+
+``` purescript
+type Prism s t a b = forall p f. (Choice p, Applicative f) => p a (f b) -> p s (f t)
+```
+
+Compatible with `Prism` from `purescript-lens`.
+
 #### `Injector`
 
 ``` purescript
-data Injector a b
-  = Injector (a -> b) (b -> Maybe a)
+type Injector s a = Prism a a s s
 ```
 
-##### Instances
-``` purescript
-instance semigroupoidInjector :: Semigroupoid Injector
-instance categoryInjector :: Category Injector
-```
+Compatible with `PrismP` from `purescript-lens`.
 
 #### `inj`
 
