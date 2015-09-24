@@ -46,7 +46,7 @@ import qualified Control.Monad.State.Trans as CMS
 import Data.Bifunctor (bimap, lmap, rmap)
 import Data.Const (Const())
 import Data.Either (Either(..), either)
-import Data.Functor.Coproduct (Coproduct(..), runCoproduct, coproduct, left, right)
+import Data.Functor.Coproduct (Coproduct(..), coproduct, left, right)
 import Data.Maybe (Maybe(..), maybe, fromMaybe')
 import Data.NaturalTransformation (Natural())
 import Data.Tuple (Tuple(..), snd)
