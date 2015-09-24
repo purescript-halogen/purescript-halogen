@@ -9,9 +9,8 @@ import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Generic (Generic, gEq, gCompare)
 
 import Halogen
-import qualified Halogen.HTML as H
-import qualified Halogen.HTML.Events as E
-import qualified Halogen.HTML.Events.Forms as E
+import qualified Halogen.HTML.Indexed as H
+import qualified Halogen.HTML.Events.Indexed as E
 
 import Model
 import Component.Task

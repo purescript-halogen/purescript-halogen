@@ -3,9 +3,9 @@ module Example.Components.Ticker where
 import Prelude
 
 import Halogen
-import qualified Halogen.HTML as H
-import qualified Halogen.HTML.Properties as P
-import qualified Halogen.HTML.Events as E
+import qualified Halogen.HTML.Indexed as H
+import qualified Halogen.HTML.Properties.Indexed as P
+import qualified Halogen.HTML.Events.Indexed as E
 
 data TickState = TickState Int
 

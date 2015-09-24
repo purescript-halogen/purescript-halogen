@@ -15,110 +15,112 @@ import Halogen.HTML.Events.Handler (EventHandler(), preventDefault, stopPropagat
 import Halogen.HTML.Events.Types (Event(), MouseEvent(), FocusEvent(), KeyboardEvent())
 import Halogen.HTML.Core (Prop(), handler, eventName)
 
+type EventProp e i = (Event e -> EventHandler i) -> Prop i
+
 input :: forall f a. (forall i. a -> i -> f i) -> a -> EventHandler (f Unit)
 input f x = pure $ action (f x)
 
 input_ :: forall f a. (forall i. i -> f i) -> a -> EventHandler (f Unit)
 input_ f _ = pure $ action f
 
-onAbort	:: forall i. (Event () -> EventHandler i) -> Prop i
+onAbort :: forall i. EventProp () i
 onAbort = handler (eventName "abort")
 
-onBeforeUnload :: forall i. (Event () -> EventHandler i) -> Prop i
+onBeforeUnload :: forall i. EventProp () i
 onBeforeUnload = handler (eventName "beforeunload")
 
-onError :: forall i. (Event () -> EventHandler i) -> Prop i
+onError :: forall i. EventProp () i
 onError = handler (eventName "error")
 
-onHashChange :: forall i. (Event () -> EventHandler i) -> Prop i
+onHashChange :: forall i. EventProp () i
 onHashChange = handler (eventName "hashchange")
 
-onLoad :: forall i. (Event () -> EventHandler i) -> Prop i
+onLoad :: forall i. EventProp () i
 onLoad = handler (eventName "load")
 
-onPageShow :: forall i. (Event () -> EventHandler i) -> Prop i
+onPageShow :: forall i. EventProp () i
 onPageShow = handler (eventName "pageshow")
 
-onPageHide :: forall i. (Event () -> EventHandler i) -> Prop i
+onPageHide :: forall i. EventProp () i
 onPageHide = handler (eventName "pagehide")
 
-onResize :: forall i. (Event () -> EventHandler i) -> Prop i
+onResize :: forall i. EventProp () i
 onResize = handler (eventName "resize")
 
-onScroll :: forall i. (Event () -> EventHandler i) -> Prop i
+onScroll :: forall i. EventProp () i
 onScroll = handler (eventName "scroll")
 
-onUnload :: forall i. (Event () -> EventHandler i) -> Prop i
+onUnload :: forall i. EventProp () i
 onUnload = handler (eventName "unload")
 
-onChange :: forall i. (Event () -> EventHandler i) -> Prop i
+onChange :: forall i. EventProp () i
 onChange = handler (eventName "change")
 
-onInput :: forall i. (Event () -> EventHandler i) -> Prop i
+onInput :: forall i. EventProp () i
 onInput = handler (eventName "input")
 
-onInvalid :: forall i. (Event () -> EventHandler i) -> Prop i
+onInvalid :: forall i. EventProp () i
 onInvalid = handler (eventName "invalid")
 
-onReset :: forall i. (Event () -> EventHandler i) -> Prop i
+onReset :: forall i. EventProp () i
 onReset = handler (eventName "reset")
 
-onSearch :: forall i. (Event () -> EventHandler i) -> Prop i
+onSearch :: forall i. EventProp () i
 onSearch = handler (eventName "search")
 
-onSelect :: forall i. (Event () -> EventHandler i) -> Prop i
+onSelect :: forall i. EventProp () i
 onSelect = handler (eventName "select")
 
-onSubmit :: forall i. (Event () -> EventHandler i) -> Prop i
+onSubmit :: forall i. EventProp () i
 onSubmit = handler (eventName "submit")
 
-onClick :: forall i. (Event MouseEvent -> EventHandler i) -> Prop i
+onClick :: forall i. EventProp MouseEvent i
 onClick = handler (eventName "click")
 
-onContextMenu :: forall i. (Event MouseEvent -> EventHandler i) -> Prop i
+onContextMenu :: forall i. EventProp MouseEvent i
 onContextMenu = handler (eventName "contextmenu")
 
-onDoubleClick :: forall i. (Event MouseEvent -> EventHandler i) -> Prop i
+onDoubleClick :: forall i. EventProp MouseEvent i
 onDoubleClick = handler (eventName "dblclick")
 
-onMouseDown :: forall i. (Event MouseEvent -> EventHandler i) -> Prop i
+onMouseDown :: forall i. EventProp MouseEvent i
 onMouseDown = handler (eventName "mousedown")
 
-onMouseEnter :: forall i. (Event MouseEvent -> EventHandler i) -> Prop i
+onMouseEnter :: forall i. EventProp MouseEvent i
 onMouseEnter = handler (eventName "mouseenter")
 
-onMouseLeave :: forall i. (Event MouseEvent -> EventHandler i) -> Prop i
+onMouseLeave :: forall i. EventProp MouseEvent i
 onMouseLeave = handler (eventName "mouseleave")
 
-onMouseMove :: forall i. (Event MouseEvent -> EventHandler i) -> Prop i
+onMouseMove :: forall i. EventProp MouseEvent i
 onMouseMove = handler (eventName "mousemove")
 
-onMouseOver :: forall i. (Event MouseEvent -> EventHandler i) -> Prop i
+onMouseOver :: forall i. EventProp MouseEvent i
 onMouseOver = handler (eventName "mouseover")
 
-onMouseOut :: forall i. (Event MouseEvent -> EventHandler i) -> Prop i
+onMouseOut :: forall i. EventProp MouseEvent i
 onMouseOut = handler (eventName "mouseout")
 
-onMouseUp :: forall i. (Event MouseEvent -> EventHandler i) -> Prop i
+onMouseUp :: forall i. EventProp MouseEvent i
 onMouseUp = handler (eventName "mouseup")
 
-onKeyDown :: forall i. (Event KeyboardEvent -> EventHandler i) -> Prop i
+onKeyDown :: forall i. EventProp KeyboardEvent i
 onKeyDown = handler (eventName "keydown")
 
-onKeyPress :: forall i. (Event KeyboardEvent -> EventHandler i) -> Prop i
+onKeyPress :: forall i. EventProp KeyboardEvent i
 onKeyPress = handler (eventName "keypress")
 
-onKeyUp :: forall i. (Event KeyboardEvent -> EventHandler i) -> Prop i
+onKeyUp :: forall i. EventProp KeyboardEvent i
 onKeyUp = handler (eventName "keyup")
 
-onBlur :: forall i. (Event FocusEvent -> EventHandler i) -> Prop i
+onBlur :: forall i. EventProp FocusEvent i
 onBlur = handler (eventName "blur")
 
-onFocus :: forall i. (Event FocusEvent -> EventHandler i) -> Prop i
+onFocus :: forall i. EventProp FocusEvent i
 onFocus = handler (eventName "focus")
 
-onFocusIn :: forall i. (Event FocusEvent -> EventHandler i) -> Prop i
+onFocusIn :: forall i. EventProp FocusEvent i
 onFocusIn = handler (eventName "focusin")
 
-onFocusOut :: forall i. (Event FocusEvent -> EventHandler i) -> Prop i
+onFocusOut :: forall i. EventProp FocusEvent i
 onFocusOut = handler (eventName "focusout")

@@ -4,7 +4,8 @@
   "authors": [
     "Gary Burgess <gary.burgess@gmail.com>",
     "John A. De Goes <john@degoes.net>",
-    "Phil Freeman <paf31@cantab.net>"
+    "Phil Freeman <paf31@cantab.net>",
+    "Jon Sterling <jon@jonmsterling.com>"
   ],
   "description": "A declarative, type-safe UI library for PureScript",
   "keywords": [

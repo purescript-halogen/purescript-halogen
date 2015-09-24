@@ -5,8 +5,8 @@ import Prelude
 import Data.Generic (Generic, gEq, gCompare)
 
 import Halogen
-import qualified Halogen.HTML as H
-import qualified Halogen.HTML.Events as E
+import qualified Halogen.HTML.Indexed as H
+import qualified Halogen.HTML.Events.Indexed as E
 
 newtype StateB = StateB { on :: Boolean }
 
