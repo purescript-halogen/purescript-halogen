@@ -45,7 +45,7 @@ uiContainer = component render eval
                   ]
            ]
 
-  eval :: Eval Input State Input (QueryF State TickState TickInput g TickSlot p)
+  eval :: Eval Input State Input (QueryF State TickState Input TickInput g TickSlot p)
   eval (ReadTicks next) = do
     a <- query (TickSlot "A") (request GetTick)
     b <- query (TickSlot "B") (request GetTick)

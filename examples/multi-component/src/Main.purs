@@ -55,7 +55,7 @@ parent = component render eval
     , H.button [ E.onClick (E.input_ ReadStates) ] [ H.text "Read states" ]
     ]
 
-  eval :: Eval Input State Input (QueryF State ChildStates ChildInputs g ChildSlots p)
+  eval :: Eval Input State Input (QueryF State ChildStates Input ChildInputs g ChildSlots p)
   eval (ReadStates next) = do
     a <- query' cpA SlotA (request GetStateA)
     b <- query' cpB SlotB (request GetStateB)
