@@ -2,7 +2,7 @@
 module Halogen.HTML.Core
   ( HTML(..)
   , element
-  , substPlaceholder
+  , fillSlot
 
   , Prop(..)
   , PropF(..)
@@ -61,14 +61,14 @@ import Halogen.HTML.Events.Types (Event())
 data HTML p i
   = Text String
   | Element (Maybe Namespace) TagName (Array (Prop i)) (Array (HTML p i))
-  | Placeholder p
+  | Slot p
 
 instance bifunctorHTML :: Bifunctor HTML where
   bimap f g = go
     where
     go (Text s) = Text s
     go (Element ns name props els) = Element ns name ((g <$>) <$> props) (go <$> els)
-    go (Placeholder p) = Placeholder (f p)
+    go (Slot p) = Slot (f p)
 
 instance functorHTML :: Functor (HTML p) where
   map = rmap
@@ -76,10 +76,10 @@ instance functorHTML :: Functor (HTML p) where
 element :: forall p i. TagName -> Array (Prop i) -> Array (HTML p i) -> HTML p i
 element = Element Nothing
 
-substPlaceholder :: forall p p' i i' m. (Applicative m) => (p -> m (HTML p' i')) -> (i -> i') -> HTML p i -> m (HTML p' i')
-substPlaceholder _ _ (Text s) = pure $ Text s
-substPlaceholder f g (Element ns name props els) = Element ns name ((g <$>) <$> props) <$> traverse (substPlaceholder f g) els
-substPlaceholder f _ (Placeholder p) = f p
+fillSlot :: forall p p' i i' m. (Applicative m) => (p -> m (HTML p' i')) -> (i -> i') -> HTML p i -> m (HTML p' i')
+fillSlot _ _ (Text s) = pure $ Text s
+fillSlot f g (Element ns name props els) = Element ns name ((g <$>) <$> props) <$> traverse (fillSlot f g) els
+fillSlot f _ (Slot p) = f p
 
 -- | A property can be:
 -- | - A JavaScript property for an element (typed, and may not have a

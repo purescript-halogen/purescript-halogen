@@ -12,8 +12,8 @@ Data type for Halogen components.
 - `g` - the monad handling the component's non-state effects
 - `o` - the type of values observable via `peek`, used to allow parent
         components to see queries their children have acted upon.
-- `p` - the type of placeholders within the component, used to specify
-        "holes" in which child components can be installed.
+- `p` - the type of slots within the component, used to specify locations
+        at which child components can be installed.
 
 ##### Instances
 ``` purescript
@@ -49,11 +49,19 @@ component algebra.
 #### `Peek`
 
 ``` purescript
-type Peek s f g o = forall a. o a -> Free (HalogenF s f g) Unit
+type Peek s s' f f' g p p' = PeekP s f (QueryF s s' f' g p p') (ChildF p f')
 ```
 
 A type alias for a component `peek` function that observes inputs to child
 components.
+
+#### `PeekP`
+
+``` purescript
+type PeekP s f g o = forall a. o a -> Free (HalogenF s f g) Unit
+```
+
+A lower level form of the `Peek` type synonym, used internally.
 
 #### `renderComponent`
 
@@ -73,16 +81,6 @@ queryComponent :: forall s f g o p. ComponentP s f g o p -> Eval f s f g
 Runs a compnent's `query` function with the specified query input and
 returns the pending computation as a `Free` monad.
 
-#### `component'`
-
-``` purescript
-component' :: forall s f g o p. Render s f p -> Eval f s f g -> Peek s f g o -> ComponentP s f g o p
-```
-
-Builds a new [`ComponentP`](#componentp) from a [`Render`](#render),
-[`Eval`](#eval), and [`Peek`](#peek) function. This is used in cases where
-defining a parent component that needs to observe inputs to its children.
-
 #### `component`
 
 ``` purescript
@@ -92,106 +90,99 @@ component :: forall s f g p. Render s f p -> Eval f s f g -> Component s f g p
 Builds a new [`Component`](#component) from a [`Render`](#render) and
 [`Eval`](#eval) function.
 
-#### `liftEff'`
+#### `component'`
 
 ``` purescript
-liftEff' :: forall eff a s f g. (MonadEff eff g, Functor g) => Eff eff a -> Free (HalogenF s f g) a
+component' :: forall s s' f f' g p p'. Render s f p -> Eval f s f (QueryF s s' f' g p p') -> Peek s s' f f' g p p' -> ParentComponentP s s' f f' g p p'
 ```
 
-Interacting with the DOM will usually be done via `Eff`, but we tend to
-operate in `Aff` when using Halogen, so this function helps lift an `Eff`
-action into an `Aff` or any other `MonadEff`-instance-providing-type.
+Builds a new [`ComponentP`](#componentp) from a [`Render`](#render),
+[`Eval`](#eval), and [`Peek`](#peek) function. This is used in cases where
+defining a parent component that needs to observe inputs to its children.
 
-This is identical to `liftFI <<< liftEff`, but typed in such a way that
-code using `liftEff'` won't require decorating its usage with explicit
-type signatures.
-
-#### `ComponentStateP`
+#### `ChildState`
 
 ``` purescript
-type ComponentStateP s f g o p = Tuple (ComponentP s f g o p) s
+type ChildState s f g p = Tuple (Component s f g p) s
 ```
 
-A type synonym for a component combined with its state. Used when
-installing components to a component with initial state for a placeholder.
+A type synonym for a component combined with its state. This is used when
+installing components into slots.
 
-#### `ComponentState`
+#### `createChild`
 
 ``` purescript
-type ComponentState s f g p = ComponentStateP s f g (Const Void) p
+createChild :: forall s f g p. Component s f g p -> s -> ChildState s f g p
 ```
 
-#### `InstalledStateP`
+Creates a `ChildState` for a component.
+
+#### `createChild'`
 
 ``` purescript
-type InstalledStateP s s' f' g o' p p' = { parent :: s, children :: Map p (ComponentStateP s' f' g o' p') }
+createChild' :: forall s s' f f' g p p' q. (Functor g) => ChildPath s s' f f' p p' -> Component s f g q -> s -> ChildState s' f' g q
 ```
 
-The type used by component containers for their state where `s` is the
-state local to the container, `p` is the type of placeholder used by the
-container, and the remaining parameters are the type variables for the
-child components.
+Creates a `ChildState` for a component that is being installed into a
+parent with multiple different types of child component.
 
-#### `InstalledState`
+#### `ParentComponent`
 
 ``` purescript
-type InstalledState s s' f g p p' = InstalledStateP s s' f g (Const Void) p p'
-```
-
-#### `ParentComponentP`
-
-``` purescript
-type ParentComponentP s s' f f' g o o' p p' = ComponentP s f (QueryFP s s' f' g o' p p') o p
+type ParentComponent s s' f f' g p p' = Component s f (QueryF s s' f' g p p') p
 ```
 
 A type alias used to simplify the type signature for a `Component s f g p`
 that is intended to have components of type `Component s' f' g p'`
 installed into it.
 
-#### `ParentComponent`
+#### `ParentComponentP`
 
 ``` purescript
-type ParentComponent s s' f f' g o' p p' = ParentComponentP s s' f f' g (Const Void) o' p p'
+type ParentComponentP s s' f f' g p p' = ComponentP s f (QueryF s s' f' g p p') (ChildF p f') p
 ```
 
-#### `InstalledComponentP`
+A type alias similar to `ParentComponent`, but for components that `peek`
+on their children.
+
+#### `InstalledComponent`
 
 ``` purescript
-type InstalledComponentP s s' f f' g o o' p p' = ComponentP (InstalledStateP s s' f' g o' p p') (Coproduct f (ChildF p f')) g o p'
+type InstalledComponent s s' f f' g p p' = Component (InstalledState s s' f' g p p') (Coproduct f (ChildF p f')) g p'
 ```
 
 A type alias use to simplify the type signature for a `Component s f g p`
 that has had components of type `Component s' f' g p'` installed into it.
 
-#### `InstalledComponent`
+#### `InstalledState`
 
 ``` purescript
-type InstalledComponent s s' f f' g o' p p' = InstalledComponentP s s' f f' g (Const Void) o' p p'
+type InstalledState s s' f' g p p' = { parent :: s, children :: Map p (ChildState s' f' g p') }
 ```
+
+The type used by component containers for their state where `s` is the
+state local to the container, `p` is the type of slot used by the
+container, and the remaining parameters are the type variables for the
+child components.
 
 #### `installedState`
 
 ``` purescript
-installedState :: forall s s' f' g o' p p'. (Ord p) => s -> InstalledStateP s s' f' g o' p p'
+installedState :: forall s s' f' g p p'. (Ord p) => s -> InstalledState s s' f' g p p'
 ```
 
 Creates an initial `InstalledState` value for a component container based
 on a state value for the container.
 
-#### `QueryFP`
-
-``` purescript
-type QueryFP s s' f' g o' p p' = Free (HalogenF (InstalledStateP s s' f' g o' p p') (ChildF p f') g)
-```
-
-An intermediate algebra that component containers "produce" (use as their
-`g` type variable).
-
 #### `QueryF`
 
 ``` purescript
-type QueryF s s' f' g p p' = QueryFP s s' f' g (Const Void) p p'
+type QueryF s s' f' g p p' = Free (HalogenF (InstalledState s s' f' g p p') (ChildF p f') g)
 ```
+
+An intermediate algebra that parent components "produce" from their `eval`
+and `peek` functions. This takes the place of `g` when compared to a leaf
+(non-parent) component.
 
 #### `ChildF`
 
@@ -201,7 +192,7 @@ data ChildF p f i
 ```
 
 An intermediate algebra used to associate values from a child component's
-algebra with the child component's placeholder when querying.
+algebra with the slot the component was installed into.
 
 ##### Instances
 ``` purescript
@@ -211,19 +202,46 @@ instance functorChildF :: (Functor f) => Functor (ChildF p f)
 #### `query`
 
 ``` purescript
-query :: forall s s' f' p p' o g i. (Functor g, Ord p) => p -> f' i -> QueryFP s s' f' g o p p' (Maybe i)
+query :: forall s s' f f' g p p' i. (Functor g, Ord p) => p -> f' i -> Free (HalogenF s f (QueryF s s' f' g p p')) (Maybe i)
 ```
 
-Creates a query for a child component where `p` is the placeholder
-addressing the component and `f' i` in the input query.
+Queries a child component, for use within a parent component's `eval` or
+`peek` function.
 
-If a component is not found for the placeholder the result of the query
+#### `query'`
+
+``` purescript
+query' :: forall s s' s'' f f' f'' g p p' p'' i. (Functor g, Ord p) => ChildPath s'' s' f'' f' p'' p -> p'' -> f'' i -> Free (HalogenF s f (QueryF s s' f' g p p')) (Maybe i)
+```
+
+A version of [`query`](#query) for use when a parent component has multiple
+types of child component.
+
+#### `mkQuery`
+
+``` purescript
+mkQuery :: forall s s' f' p p' g i. (Functor g, Ord p) => p -> f' i -> QueryF s s' f' g p p' (Maybe i)
+```
+
+Creates a query for a child component where `p` is the slot the component
+was installed into and `f' i` in the input query.
+
+If a component is not found for the slot the result of the query
 will be `Nothing`.
+
+#### `mkQuery'`
+
+``` purescript
+mkQuery' :: forall s s' s'' f f' g p p' p'' i. (Functor g, Ord p') => ChildPath s'' s' f f' p p' -> p -> f i -> QueryF s s' f' g p' p'' (Maybe i)
+```
+
+A version of [`mkQuery`](#mkQuery) for use when a parent component has
+multiple types of child component.
 
 #### `liftQuery`
 
 ``` purescript
-liftQuery :: forall s s' f f' g o' p p'. (Functor g) => Eval (QueryFP s s' f' g o' p p') s f (QueryFP s s' f' g o' p p')
+liftQuery :: forall s s' f f' g p p'. (Functor g) => Eval (QueryF s s' f' g p p') s f (QueryF s s' f' g p p')
 ```
 
 Lifts a value in the `QueryF` algebra into the monad used by a component's
@@ -232,37 +250,19 @@ Lifts a value in the `QueryF` algebra into the monad used by a component's
 #### `install`
 
 ``` purescript
-install :: forall s s' f f' g o' p p'. (Plus g, Ord p) => ParentComponent s s' f f' g o' p p' -> (p -> ComponentStateP s' f' g o' p') -> InstalledComponent s s' f f' g o' p p'
+install :: forall s s' f f' g p p'. (Plus g, Ord p) => ParentComponent s s' f f' g p p' -> (p -> ChildState s' f' g p') -> InstalledComponent s s' f f' g p p'
 ```
 
-#### `installL`
-
-``` purescript
-installL :: forall s s' f f' g o' pl pr p'. (Plus g, Ord pl) => Component s f (QueryFP s s' f' g o' pl p') (Either pl pr) -> (pl -> ComponentStateP s' f' g o' p') -> Component (InstalledStateP s s' f' g o' pl p') (Coproduct f (ChildF pl f')) g (Either p' pr)
-```
-
-#### `installR`
-
-``` purescript
-installR :: forall s s' f f' g o' pl pr p'. (Plus g, Ord pr) => Component s f (QueryFP s s' f' g o' pr p') (Either pl pr) -> (pr -> ComponentStateP s' f' g o' p') -> Component (InstalledStateP s s' f' g o' pr p') (Coproduct f (ChildF pr f')) g (Either pl p')
-```
+Installs children into a parent component by using a function that produces
+`ChildState` values for a given slot.
 
 #### `install'`
 
 ``` purescript
-install' :: forall s s' f f' g o' p p'. (Plus g, Ord p) => ParentComponentP s s' f f' g (ChildF p f') o' p p' -> (p -> ComponentStateP s' f' g o' p') -> InstalledComponentP s s' f f' g (ChildF p f') o' p p'
+install' :: forall s s' f f' g p p'. (Plus g, Ord p) => ParentComponentP s s' f f' g p p' -> (p -> ChildState s' f' g p') -> InstalledComponent s s' f f' g p p'
 ```
 
-#### `installL'`
-
-``` purescript
-installL' :: forall s s' f f' g o' pl pr p'. (Plus g, Ord pl) => ComponentP s f (QueryFP s s' f' g o' pl p') (ChildF pl f') (Either pl pr) -> (pl -> ComponentStateP s' f' g o' p') -> ComponentP (InstalledStateP s s' f' g o' pl p') (Coproduct f (ChildF pl f')) g (ChildF pl f') (Either p' pr)
-```
-
-#### `installR'`
-
-``` purescript
-installR' :: forall s s' f f' g o' pl pr p'. (Plus g, Ord pr) => ComponentP s f (QueryFP s s' f' g o' pr p') (ChildF pr f') (Either pl pr) -> (pr -> ComponentStateP s' f' g o' p') -> ComponentP (InstalledStateP s s' f' g o' pr p') (Coproduct f (ChildF pr f')) g (ChildF pr f') (Either pl p')
-```
+A version of [`install`](#install) for use with parent components that
+`peek` on their children.
 
 

@@ -26,8 +26,7 @@ Creates an `EventSource` for an event listener that accepts one argument.
 For example:
 
 ``` purescript
-let onCopied :: EventSource (Free AceInput) (Aff (AceEffects eff))
-    onCopied = eventSource (Editor.onCopy editor) \text -> do
+let onCopied = eventSource (Editor.onCopy editor) \text -> do
       pure $ actionF (TextCopied text)
 ```
 (Taken from the Ace component example)
@@ -46,8 +45,7 @@ Creates an `EventSource` for an event listener that accepts no arguments.
 For example:
 
 ``` purescript
-let onChange :: EventSource (Free AceInput) (Aff (AceEffects eff))
-    onChange = eventSource_ (Session.onChange session) do
+let onChange = eventSource_ (Session.onChange session) do
       text <- liftEff $ Editor.getValue editor
       pure $ actionF (ChangeText text)
 ```
@@ -88,7 +86,7 @@ Halogen when installing components.
 #### `subscribeN`
 
 ``` purescript
-subscribeN :: forall eff m f g. (MonadRec g) => Consumer (f Unit) g Unit -> Natural (SubscribeF f g) g
+subscribeN :: forall f g. (MonadRec g) => Consumer (f Unit) g Unit -> Natural (SubscribeF f g) g
 ```
 
 A natural transformation for interpreting the subscribe algebra as its

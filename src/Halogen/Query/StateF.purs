@@ -24,6 +24,8 @@ instance functorStateF :: Functor (StateF s) where
   map f (Get k) = Get (f <<< k)
   map f (Modify g next) = Modify g (f next)
 
+-- | Map over the state value using a function to extract the new state value
+-- | from the old state, and a function for modifying the state.
 mapState :: forall s t a. (t -> s) -> ((s -> s) -> t -> t) -> StateF s a -> StateF t a
 mapState f _ (Get k) = Get (k <<< f)
 mapState _ f (Modify g next) = Modify (f g) next

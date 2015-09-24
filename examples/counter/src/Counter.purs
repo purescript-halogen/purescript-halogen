@@ -2,12 +2,9 @@ module Example.Counter where
 
 import Prelude
 
-import Control.Apply ((*>))
 import Control.Monad.Aff (Aff(), runAff, later')
 import Control.Monad.Eff (Eff())
 import Control.Monad.Eff.Exception (throwException)
-
-import Data.Functor (($>))
 
 import Halogen
 import Halogen.Util (appendToBody)
@@ -15,7 +12,7 @@ import qualified Halogen.HTML as H
 import qualified Halogen.HTML.Properties as P
 
 -- | The state of the application
-data State = State Int
+newtype State = State Int
 
 -- | The initial state
 initialState :: State
@@ -36,7 +33,9 @@ ui = component render eval
            ]
 
   eval :: Eval Input State Input g
-  eval (Tick next) = modify (\(State n) -> State (n + 1)) $> next
+  eval (Tick next) = do
+    modify (\(State n) -> State (n + 1))
+    pure next
 
 -- | Run the app
 main :: Eff (HalogenEffects ()) Unit

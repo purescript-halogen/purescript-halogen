@@ -26,7 +26,7 @@ module Halogen.HTML.Properties
   , enabled
   , checked
   , selected
-  , placeholder
+  , slot
   ) where
 
 import Prelude
@@ -119,5 +119,5 @@ checked = prop (propName "checked") (Just $ attrName "checked")
 selected :: forall i. Boolean -> Prop i
 selected = prop (propName "selected") (Just $ attrName "selected")
 
-placeholder :: forall i. String -> Prop i
-placeholder = prop (propName "placeholder") (Just $ attrName "placeholder")
+slot :: forall i. String -> Prop i
+slot = prop (propName "slot") (Just $ attrName "slot")

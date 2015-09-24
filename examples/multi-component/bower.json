@@ -1,5 +1,5 @@
 {
-  "name": "todo",
+  "name": "multi-component",
   "private": true,
   "dependencies": {
     "purescript-generics": "^0.6.1",

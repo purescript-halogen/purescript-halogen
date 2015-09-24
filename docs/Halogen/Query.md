@@ -6,8 +6,8 @@
 action :: forall f. (Unit -> f Unit) -> f Unit
 ```
 
-Takes a data constructor of `f` and creates an "action". An "action" only
-causes effects and has no result value.
+Takes a data constructor of query algebra `f` and creates an "action". An
+"action" only causes effects and has no result value.
 
 For example:
 
@@ -24,8 +24,9 @@ sendTick driver = driver (action Tick)
 request :: forall f a. (forall i. (a -> i) -> f i) -> f a
 ```
 
-Takes a data constructor of `f` and creates a "request". A "request" can
-cause effects as well as fetching some information from a component.
+Takes a data constructor of query algebra `f` and creates a "request". A
+"request" can cause effects as well as fetching some information from a
+component.
 
 For example:
 
@@ -113,5 +114,25 @@ subscribe :: forall s f g. EventSource f g -> Free (HalogenF s f g) Unit
 
 Provides a way of having a component subscribe to an `EventSource` from
 within an `Eval` or `Peek` function.
+
+#### `liftAff'`
+
+``` purescript
+liftAff' :: forall eff a s f g. (MonadAff eff g, Functor g) => Aff eff a -> Free (HalogenF s f g) a
+```
+
+A convenience function for lifting an `Aff` action directly into a
+`Free HalogenF` when there is a `MonadAff` instance for the current `g`,
+without the need to use `liftFI $ liftAff $ ...`.
+
+#### `liftEff'`
+
+``` purescript
+liftEff' :: forall eff a s f g. (MonadEff eff g, Functor g) => Eff eff a -> Free (HalogenF s f g) a
+```
+
+A convenience function for lifting an `Eff` action directly into a
+`Free HalogenF` when there is a `MonadEff` instance for the current `g`,
+without the need to use `liftFI $ liftEff $ ...`.
 
 
