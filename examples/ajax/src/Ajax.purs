@@ -16,10 +16,9 @@ import Data.Maybe (Maybe(..))
 
 import Halogen
 import Halogen.Util (appendToBody)
-import qualified Halogen.HTML as H
-import qualified Halogen.HTML.Events as E
-import qualified Halogen.HTML.Events.Forms as E
-import qualified Halogen.HTML.Properties as P
+import qualified Halogen.HTML.Indexed as H
+import qualified Halogen.HTML.Events.Indexed as E
+import qualified Halogen.HTML.Properties.Indexed as P
 
 import Network.HTTP.Affjax (AJAX(), post)
 

@@ -2,6 +2,19 @@
 
 This module provides `Prop` values for some common HTML attributes.
 
+#### `LengthLiteral`
+
+``` purescript
+data LengthLiteral
+  = Pixels Number
+  | Percent Number
+```
+
+##### Instances
+``` purescript
+instance lengthLiteralIsProp :: IsProp LengthLiteral
+```
+
 #### `key`
 
 ``` purescript
@@ -56,7 +69,7 @@ for :: forall i. String -> Prop i
 #### `height`
 
 ``` purescript
-height :: forall i. Number -> Prop i
+height :: forall i. LengthLiteral -> Prop i
 ```
 
 #### `href`
@@ -116,7 +129,7 @@ value :: forall i. String -> Prop i
 #### `width`
 
 ``` purescript
-width :: forall i. Number -> Prop i
+width :: forall i. LengthLiteral -> Prop i
 ```
 
 #### `disabled`
@@ -161,10 +174,10 @@ checked :: forall i. Boolean -> Prop i
 selected :: forall i. Boolean -> Prop i
 ```
 
-#### `slot`
+#### `placeholder`
 
 ``` purescript
-slot :: forall i. String -> Prop i
+placeholder :: forall i. String -> Prop i
 ```
 
 

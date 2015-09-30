@@ -3,10 +3,9 @@ module Component.Task where
 import Prelude
 
 import Halogen
-import qualified Halogen.HTML as H
-import qualified Halogen.HTML.Properties as P
-import qualified Halogen.HTML.Events as E
-import qualified Halogen.HTML.Events.Forms as E
+import qualified Halogen.HTML.Indexed as H
+import qualified Halogen.HTML.Properties.Indexed as P
+import qualified Halogen.HTML.Events.Indexed as E
 
 import Model
 
@@ -24,13 +23,13 @@ task = component render eval
 
   render :: Render Task TaskInput p
   render t =
-    H.li_ [ H.input [ P.type_ "checkbox"
+    H.li_ [ H.input [ P.inputType P.InputCheckbox
                     , P.title "Mark as completed"
                     , P.checked t.completed
                     , E.onChecked (E.input ToggleCompleted)
                     ]
-          , H.input [ P.type_ "text"
-                    , P.slot "Task description"
+          , H.input [ P.inputType P.InputText
+                    , P.placeholder "Task description"
                     , P.value t.description
                     , E.onValueChange (E.input UpdateDescription)
                     ]

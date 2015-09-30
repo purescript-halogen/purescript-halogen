@@ -3,6 +3,12 @@
 This module defines well-typed wrappers for common DOM events, so that
 they may be safely embedded in HTML documents.
 
+#### `EventProp`
+
+``` purescript
+type EventProp e i = (Event e -> EventHandler i) -> Prop i
+```
+
 #### `input`
 
 ``` purescript
@@ -18,205 +24,205 @@ input_ :: forall f a. (forall i. i -> f i) -> a -> EventHandler (f Unit)
 #### `onAbort`
 
 ``` purescript
-onAbort :: forall i. (Event () -> EventHandler i) -> Prop i
+onAbort :: forall i. EventProp () i
 ```
 
 #### `onBeforeUnload`
 
 ``` purescript
-onBeforeUnload :: forall i. (Event () -> EventHandler i) -> Prop i
+onBeforeUnload :: forall i. EventProp () i
 ```
 
 #### `onError`
 
 ``` purescript
-onError :: forall i. (Event () -> EventHandler i) -> Prop i
+onError :: forall i. EventProp () i
 ```
 
 #### `onHashChange`
 
 ``` purescript
-onHashChange :: forall i. (Event () -> EventHandler i) -> Prop i
+onHashChange :: forall i. EventProp () i
 ```
 
 #### `onLoad`
 
 ``` purescript
-onLoad :: forall i. (Event () -> EventHandler i) -> Prop i
+onLoad :: forall i. EventProp () i
 ```
 
 #### `onPageShow`
 
 ``` purescript
-onPageShow :: forall i. (Event () -> EventHandler i) -> Prop i
+onPageShow :: forall i. EventProp () i
 ```
 
 #### `onPageHide`
 
 ``` purescript
-onPageHide :: forall i. (Event () -> EventHandler i) -> Prop i
+onPageHide :: forall i. EventProp () i
 ```
 
 #### `onResize`
 
 ``` purescript
-onResize :: forall i. (Event () -> EventHandler i) -> Prop i
+onResize :: forall i. EventProp () i
 ```
 
 #### `onScroll`
 
 ``` purescript
-onScroll :: forall i. (Event () -> EventHandler i) -> Prop i
+onScroll :: forall i. EventProp () i
 ```
 
 #### `onUnload`
 
 ``` purescript
-onUnload :: forall i. (Event () -> EventHandler i) -> Prop i
+onUnload :: forall i. EventProp () i
 ```
 
 #### `onChange`
 
 ``` purescript
-onChange :: forall i. (Event () -> EventHandler i) -> Prop i
+onChange :: forall i. EventProp () i
 ```
 
 #### `onInput`
 
 ``` purescript
-onInput :: forall i. (Event () -> EventHandler i) -> Prop i
+onInput :: forall i. EventProp () i
 ```
 
 #### `onInvalid`
 
 ``` purescript
-onInvalid :: forall i. (Event () -> EventHandler i) -> Prop i
+onInvalid :: forall i. EventProp () i
 ```
 
 #### `onReset`
 
 ``` purescript
-onReset :: forall i. (Event () -> EventHandler i) -> Prop i
+onReset :: forall i. EventProp () i
 ```
 
 #### `onSearch`
 
 ``` purescript
-onSearch :: forall i. (Event () -> EventHandler i) -> Prop i
+onSearch :: forall i. EventProp () i
 ```
 
 #### `onSelect`
 
 ``` purescript
-onSelect :: forall i. (Event () -> EventHandler i) -> Prop i
+onSelect :: forall i. EventProp () i
 ```
 
 #### `onSubmit`
 
 ``` purescript
-onSubmit :: forall i. (Event () -> EventHandler i) -> Prop i
+onSubmit :: forall i. EventProp () i
 ```
 
 #### `onClick`
 
 ``` purescript
-onClick :: forall i. (Event MouseEvent -> EventHandler i) -> Prop i
+onClick :: forall i. EventProp MouseEvent i
 ```
 
 #### `onContextMenu`
 
 ``` purescript
-onContextMenu :: forall i. (Event MouseEvent -> EventHandler i) -> Prop i
+onContextMenu :: forall i. EventProp MouseEvent i
 ```
 
 #### `onDoubleClick`
 
 ``` purescript
-onDoubleClick :: forall i. (Event MouseEvent -> EventHandler i) -> Prop i
+onDoubleClick :: forall i. EventProp MouseEvent i
 ```
 
 #### `onMouseDown`
 
 ``` purescript
-onMouseDown :: forall i. (Event MouseEvent -> EventHandler i) -> Prop i
+onMouseDown :: forall i. EventProp MouseEvent i
 ```
 
 #### `onMouseEnter`
 
 ``` purescript
-onMouseEnter :: forall i. (Event MouseEvent -> EventHandler i) -> Prop i
+onMouseEnter :: forall i. EventProp MouseEvent i
 ```
 
 #### `onMouseLeave`
 
 ``` purescript
-onMouseLeave :: forall i. (Event MouseEvent -> EventHandler i) -> Prop i
+onMouseLeave :: forall i. EventProp MouseEvent i
 ```
 
 #### `onMouseMove`
 
 ``` purescript
-onMouseMove :: forall i. (Event MouseEvent -> EventHandler i) -> Prop i
+onMouseMove :: forall i. EventProp MouseEvent i
 ```
 
 #### `onMouseOver`
 
 ``` purescript
-onMouseOver :: forall i. (Event MouseEvent -> EventHandler i) -> Prop i
+onMouseOver :: forall i. EventProp MouseEvent i
 ```
 
 #### `onMouseOut`
 
 ``` purescript
-onMouseOut :: forall i. (Event MouseEvent -> EventHandler i) -> Prop i
+onMouseOut :: forall i. EventProp MouseEvent i
 ```
 
 #### `onMouseUp`
 
 ``` purescript
-onMouseUp :: forall i. (Event MouseEvent -> EventHandler i) -> Prop i
+onMouseUp :: forall i. EventProp MouseEvent i
 ```
 
 #### `onKeyDown`
 
 ``` purescript
-onKeyDown :: forall i. (Event KeyboardEvent -> EventHandler i) -> Prop i
+onKeyDown :: forall i. EventProp KeyboardEvent i
 ```
 
 #### `onKeyPress`
 
 ``` purescript
-onKeyPress :: forall i. (Event KeyboardEvent -> EventHandler i) -> Prop i
+onKeyPress :: forall i. EventProp KeyboardEvent i
 ```
 
 #### `onKeyUp`
 
 ``` purescript
-onKeyUp :: forall i. (Event KeyboardEvent -> EventHandler i) -> Prop i
+onKeyUp :: forall i. EventProp KeyboardEvent i
 ```
 
 #### `onBlur`
 
 ``` purescript
-onBlur :: forall i. (Event FocusEvent -> EventHandler i) -> Prop i
+onBlur :: forall i. EventProp FocusEvent i
 ```
 
 #### `onFocus`
 
 ``` purescript
-onFocus :: forall i. (Event FocusEvent -> EventHandler i) -> Prop i
+onFocus :: forall i. EventProp FocusEvent i
 ```
 
 #### `onFocusIn`
 
 ``` purescript
-onFocusIn :: forall i. (Event FocusEvent -> EventHandler i) -> Prop i
+onFocusIn :: forall i. EventProp FocusEvent i
 ```
 
 #### `onFocusOut`
 
 ``` purescript
-onFocusOut :: forall i. (Event FocusEvent -> EventHandler i) -> Prop i
+onFocusOut :: forall i. EventProp FocusEvent i
 ```
 
 
