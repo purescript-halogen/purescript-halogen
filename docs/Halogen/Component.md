@@ -99,7 +99,7 @@ Builds a new [`Component`](#component) from a [`Render`](#render) and
 #### `component'`
 
 ``` purescript
-component' :: forall s s' f f' g p p'. Render s f p -> Eval f s f (QueryF s s' f f' g p p') -> Peek s s' f f' g p p' -> ParentComponentP s s' f f' g p p'
+component' :: forall s s' f f' g p p'. Render s f p -> EvalP f s s' f f' g p p' -> Peek s s' f f' g p p' -> ParentComponentP s s' f f' g p p'
 ```
 
 Builds a new [`ComponentP`](#componentp) from a [`Render`](#render),
@@ -247,7 +247,7 @@ multiple types of child component.
 #### `liftQuery`
 
 ``` purescript
-liftQuery :: forall s s' f f' g p p'. (Functor g) => Eval (QueryF s s' f f' g p p') s f (QueryF s s' f f' g p p')
+liftQuery :: forall s s' f f' g p p'. (Functor g) => EvalP (QueryF s s' f f' g p p') s s' f f' g p p'
 ```
 
 Lifts a value in the `QueryF` algebra into the monad used by a component's
