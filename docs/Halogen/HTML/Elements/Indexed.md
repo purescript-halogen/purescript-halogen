@@ -371,7 +371,7 @@ iframe :: forall p i. NoninteractiveLeaf (onLoad :: I, sandbox :: I, scrolling :
 #### `img`
 
 ``` purescript
-img :: forall p i. Leaf (crossorigin :: I, height :: I, ismap :: I, longdesc :: I, onAbort :: I, onError :: I, onLoad :: I, src :: I, usemap :: I, width :: I) p i
+img :: forall p i. Leaf (alt :: I, crossorigin :: I, height :: I, ismap :: I, longdesc :: I, onAbort :: I, onError :: I, onLoad :: I, src :: I, usemap :: I, width :: I) p i
 ```
 
 #### `input`
@@ -587,7 +587,7 @@ section :: forall p i. Node () p i
 #### `select`
 
 ``` purescript
-select :: forall p i. Node (autofocus :: I, disabled :: I, form :: I, multiple :: I, onChange :: I, onScroll :: I, required :: I, size :: I) p i
+select :: forall p i. Node (autofocus :: I, disabled :: I, form :: I, multiple :: I, onChange :: I, onScroll :: I, required :: I, size :: I, value :: I) p i
 ```
 
 #### `small`

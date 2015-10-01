@@ -52,6 +52,8 @@ component algebra.
 type EvalP i s s' f f' g p p' = Eval i s f (QueryF s s' f f' g p p')
 ```
 
+A convenience variation on `Eval` for parent components.
+
 #### `Peek`
 
 ``` purescript
