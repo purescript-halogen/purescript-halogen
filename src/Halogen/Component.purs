@@ -90,6 +90,7 @@ type Render s f p = s -> HTML p (f Unit)
 -- | component algebra.
 type Eval i s f g = Natural i (Free (HalogenF s f g))
 
+-- | A convenience variation on `Eval` for parent components.
 type EvalP i s s' f f' g p p' = Eval i s f (QueryF s s' f f' g p p')
 
 -- | A type alias for a component `peek` function that observes inputs to child
@@ -121,7 +122,7 @@ component r q = Component { render: CMS.gets r, eval: q, peek: const (pure unit)
 -- | Builds a new [`ComponentP`](#componentp) from a [`Render`](#render),
 -- | [`Eval`](#eval), and [`Peek`](#peek) function. This is used in cases where
 -- | defining a parent component that needs to observe inputs to its children.
-component' :: forall s s' f f' g p p'. Render s f p -> Eval f s f (QueryF s s' f f' g p p') -> Peek s s' f f' g p p' -> ParentComponentP s s' f f' g p p'
+component' :: forall s s' f f' g p p'. Render s f p -> EvalP f s s' f f' g p p' -> Peek s s' f f' g p p' -> ParentComponentP s s' f f' g p p'
 component' r q p = Component { render: CMS.gets r, eval: q, peek: p }
 
 -- | A type synonym for a component combined with its state. This is used when
@@ -221,7 +222,7 @@ mkQuery' i p q = mkQuery (injSlot i p) (injQuery i q)
 -- | Lifts a value in the `QueryF` algebra into the monad used by a component's
 -- | `eval` function.
 liftQuery :: forall s s' f f' g p p'. (Functor g)
-          => Eval (QueryF s s' f f' g p p') s f (QueryF s s' f f' g p p')
+          => EvalP (QueryF s s' f f' g p p') s s' f f' g p p'
 liftQuery qf = liftF (right (right qf))
 
 -- | Installs children into a parent component by using a function that produces
