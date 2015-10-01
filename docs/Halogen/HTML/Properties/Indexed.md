@@ -38,7 +38,7 @@ key :: forall ρ i. String -> IProp (key :: I | ρ) i
 #### `alt`
 
 ``` purescript
-alt :: forall ρ i. String -> IProp (key :: I | ρ) i
+alt :: forall ρ i. String -> IProp (alt :: I | ρ) i
 ```
 
 #### `charset`
