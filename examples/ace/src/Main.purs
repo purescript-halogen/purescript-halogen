@@ -49,7 +49,7 @@ container = component' render eval peek
            , H.p_ [ H.text ("Current text: " ++ text) ]
            ]
 
-  eval :: Eval Input State Input (QueryF State AceState AceInput (Aff (AceEffects eff)) AceSlot p)
+  eval :: EvalP Input State AceState Input AceInput (Aff (AceEffects eff)) AceSlot p
   eval (ClearText next) = do
     query (AceSlot "test-ace") (action $ ChangeText "")
     pure next

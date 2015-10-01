@@ -40,7 +40,7 @@ list = component' render eval peek
            , H.p_ [ H.text $ show st.numCompleted ++ " / " ++ show (length st.tasks) ++ " complete" ]
            ]
 
-  eval :: Eval ListInput State ListInput (QueryF State Task TaskInput g ListSlot p)
+  eval :: Eval ListInput State ListInput (QueryF State Task ListInput TaskInput g ListSlot p)
   eval (NewTask next) = do
     modify addTask
     pure next

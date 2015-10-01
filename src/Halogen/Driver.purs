@@ -40,6 +40,7 @@ type DriverState s =
   , vtree :: VTree
   , state :: s
   , memo :: RenderState
+  , renderPending :: Boolean
   }
 
 -- | Runs the top level UI component for a Halogen app, returning a generated
@@ -56,31 +57,46 @@ runUI c s = case renderComponent c s of
       case renderHTML (driver ref) html emptyRenderState of
         Tuple vtree memo -> do
           let node = createElement vtree
-          putVar ref { node: node, vtree: vtree, state: s', memo: memo }
+          putVar ref { node: node, vtree: vtree, state: s', memo: memo, renderPending: false }
           pure { node: node, driver: driver ref }
 
   where
 
   driver :: AVar (DriverState s) -> Driver f eff
-  driver ref q = runFreeM (eval ref) (queryComponent c q)
+  driver ref q = do
+    x <- runFreeM (eval ref) (queryComponent c q)
+    render ref
+    pure x
 
   eval :: AVar (DriverState s)
        -> Natural (HalogenF s f (Aff (HalogenEffects eff)))
                   (Aff (HalogenEffects eff))
-  eval ref = coproduct evalState (coproduct (subscribeN consumer) id)
+  eval ref = coproduct evalState (coproduct runSubscribe runAff)
     where
     evalState :: Natural (StateF s) (Aff (HalogenEffects eff))
     evalState i = do
-      { node: node, vtree: vtree, state: s, memo: memo } <- takeVar ref
-      case runState (stateN i) s of
-        Tuple i' s' ->
-          case renderComponent c s' of
-            Tuple html s'' -> do
-              case renderHTML (driver ref) html memo of
-                Tuple vtree' memo' -> do
-                  node' <- liftEff $ patch (diff vtree vtree') node
-                  putVar ref { node: node', vtree: vtree', state: s'', memo: memo' }
-                  pure i'
+      ds <- takeVar ref
+      case runState (stateN i) ds.state of
+        Tuple i' s' -> do
+          putVar ref { node: ds.node, vtree: ds.vtree, state: s', memo: ds.memo, renderPending: true }
+          pure i'
 
-    consumer :: Consumer (f Unit) (Aff (HalogenEffects eff)) Unit
-    consumer = forever $ await >>= lift <<< driver ref
+    runAff :: Natural (Aff (HalogenEffects eff)) (Aff (HalogenEffects eff))
+    runAff g = do
+      render ref
+      g
+
+    runSubscribe :: Natural (SubscribeF f (Aff (HalogenEffects eff))) (Aff (HalogenEffects eff))
+    runSubscribe = subscribeN $ forever $ await >>= lift <<< driver ref
+
+  render :: AVar (DriverState s) -> Aff (HalogenEffects eff) Unit
+  render ref = do
+    ds <- takeVar ref
+    if not ds.renderPending
+      then putVar ref ds
+      else case renderComponent c ds.state of
+        Tuple html s'' -> do
+          case renderHTML (driver ref) html ds.memo of
+            Tuple vtree' memo' -> do
+              node' <- liftEff $ patch (diff ds.vtree vtree') ds.node
+              putVar ref { node: node', vtree: vtree', state: s'', memo: memo', renderPending: false }

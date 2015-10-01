@@ -46,10 +46,16 @@ A type alias for a component `eval` function that takes a value from the
 component's query algebra and returns a `Free` monad of the Halogen
 component algebra.
 
+#### `EvalP`
+
+``` purescript
+type EvalP i s s' f f' g p p' = Eval i s f (QueryF s s' f f' g p p')
+```
+
 #### `Peek`
 
 ``` purescript
-type Peek s s' f f' g p p' = PeekP s f (QueryF s s' f' g p p') (ChildF p f')
+type Peek s s' f f' g p p' = PeekP s f (QueryF s s' f f' g p p') (ChildF p f')
 ```
 
 A type alias for a component `peek` function that observes inputs to child
@@ -93,7 +99,7 @@ Builds a new [`Component`](#component) from a [`Render`](#render) and
 #### `component'`
 
 ``` purescript
-component' :: forall s s' f f' g p p'. Render s f p -> Eval f s f (QueryF s s' f' g p p') -> Peek s s' f f' g p p' -> ParentComponentP s s' f f' g p p'
+component' :: forall s s' f f' g p p'. Render s f p -> Eval f s f (QueryF s s' f f' g p p') -> Peek s s' f f' g p p' -> ParentComponentP s s' f f' g p p'
 ```
 
 Builds a new [`ComponentP`](#componentp) from a [`Render`](#render),
@@ -129,7 +135,7 @@ parent with multiple different types of child component.
 #### `ParentComponent`
 
 ``` purescript
-type ParentComponent s s' f f' g p p' = Component s f (QueryF s s' f' g p p') p
+type ParentComponent s s' f f' g p p' = Component s f (QueryF s s' f f' g p p') p
 ```
 
 A type alias used to simplify the type signature for a `Component s f g p`
@@ -139,7 +145,7 @@ installed into it.
 #### `ParentComponentP`
 
 ``` purescript
-type ParentComponentP s s' f f' g p p' = ComponentP s f (QueryF s s' f' g p p') (ChildF p f') p
+type ParentComponentP s s' f f' g p p' = ComponentP s f (QueryF s s' f f' g p p') (ChildF p f') p
 ```
 
 A type alias similar to `ParentComponent`, but for components that `peek`
@@ -148,7 +154,7 @@ on their children.
 #### `InstalledComponent`
 
 ``` purescript
-type InstalledComponent s s' f f' g p p' = Component (InstalledState s s' f' g p p') (Coproduct f (ChildF p f')) g p'
+type InstalledComponent s s' f f' g p p' = Component (InstalledState s s' f f' g p p') (Coproduct f (ChildF p f')) g p'
 ```
 
 A type alias use to simplify the type signature for a `Component s f g p`
@@ -157,7 +163,7 @@ that has had components of type `Component s' f' g p'` installed into it.
 #### `InstalledState`
 
 ``` purescript
-type InstalledState s s' f' g p p' = { parent :: s, children :: Map p (ChildState s' f' g p') }
+type InstalledState s s' f f' g p p' = { parent :: s, children :: Map p (ChildState s' f' g p'), memo :: Map p (HTML p' (Coproduct f (ChildF p f') Unit)) }
 ```
 
 The type used by component containers for their state where `s` is the
@@ -168,7 +174,7 @@ child components.
 #### `installedState`
 
 ``` purescript
-installedState :: forall s s' f' g p p'. (Ord p) => s -> InstalledState s s' f' g p p'
+installedState :: forall s s' f f' g p p'. (Ord p) => s -> InstalledState s s' f f' g p p'
 ```
 
 Creates an initial `InstalledState` value for a component container based
@@ -177,7 +183,7 @@ on a state value for the container.
 #### `QueryF`
 
 ``` purescript
-type QueryF s s' f' g p p' = Free (HalogenF (InstalledState s s' f' g p p') (ChildF p f') g)
+type QueryF s s' f f' g p p' = Free (HalogenF (InstalledState s s' f f' g p p') (ChildF p f') g)
 ```
 
 An intermediate algebra that parent components "produce" from their `eval`
@@ -202,7 +208,7 @@ instance functorChildF :: (Functor f) => Functor (ChildF p f)
 #### `query`
 
 ``` purescript
-query :: forall s s' f f' g p p' i. (Functor g, Ord p) => p -> f' i -> Free (HalogenF s f (QueryF s s' f' g p p')) (Maybe i)
+query :: forall s s' f f' g p p' i. (Functor g, Ord p) => p -> f' i -> Free (HalogenF s f (QueryF s s' f f' g p p')) (Maybe i)
 ```
 
 Queries a child component, for use within a parent component's `eval` or
@@ -211,7 +217,7 @@ Queries a child component, for use within a parent component's `eval` or
 #### `query'`
 
 ``` purescript
-query' :: forall s s' s'' f f' f'' g p p' p'' i. (Functor g, Ord p) => ChildPath s'' s' f'' f' p'' p -> p'' -> f'' i -> Free (HalogenF s f (QueryF s s' f' g p p')) (Maybe i)
+query' :: forall s s' s'' f f' f'' g p p' p'' i. (Functor g, Ord p') => ChildPath s s' f f' p p' -> p -> f i -> Free (HalogenF s'' f'' (QueryF s'' s' f'' f' g p' p'')) (Maybe i)
 ```
 
 A version of [`query`](#query) for use when a parent component has multiple
@@ -220,7 +226,7 @@ types of child component.
 #### `mkQuery`
 
 ``` purescript
-mkQuery :: forall s s' f' p p' g i. (Functor g, Ord p) => p -> f' i -> QueryF s s' f' g p p' (Maybe i)
+mkQuery :: forall s s' f f' p p' g i. (Functor g, Ord p) => p -> f' i -> QueryF s s' f f' g p p' (Maybe i)
 ```
 
 Creates a query for a child component where `p` is the slot the component
@@ -232,7 +238,7 @@ will be `Nothing`.
 #### `mkQuery'`
 
 ``` purescript
-mkQuery' :: forall s s' s'' f f' g p p' p'' i. (Functor g, Ord p') => ChildPath s'' s' f f' p p' -> p -> f i -> QueryF s s' f' g p' p'' (Maybe i)
+mkQuery' :: forall s s' s'' f f' f'' g p p' p'' i. (Functor g, Ord p') => ChildPath s s' f f' p p' -> p -> f i -> QueryF s'' s' f'' f' g p' p'' (Maybe i)
 ```
 
 A version of [`mkQuery`](#mkQuery) for use when a parent component has
@@ -241,7 +247,7 @@ multiple types of child component.
 #### `liftQuery`
 
 ``` purescript
-liftQuery :: forall s s' f f' g p p'. (Functor g) => Eval (QueryF s s' f' g p p') s f (QueryF s s' f' g p p')
+liftQuery :: forall s s' f f' g p p'. (Functor g) => Eval (QueryF s s' f f' g p p') s f (QueryF s s' f f' g p p')
 ```
 
 Lifts a value in the `QueryF` algebra into the monad used by a component's
