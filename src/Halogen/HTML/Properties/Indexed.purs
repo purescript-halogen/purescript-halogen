@@ -88,7 +88,7 @@ data I
 key :: forall ρ i. String -> IProp (key :: I | ρ) i
 key = refine <<< P.key
 
-alt :: forall ρ i. String -> IProp (key :: I | ρ) i
+alt :: forall ρ i. String -> IProp (alt :: I | ρ) i
 alt = refine <<< P.alt
 
 charset :: forall ρ i. String -> IProp (charset :: I | ρ) i
