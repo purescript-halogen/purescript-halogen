@@ -6,8 +6,10 @@ module Halogen.Query
   , gets
   , modify
   , subscribe
+  , liftH
   , liftAff'
   , liftEff'
+  , hoistHalogenF
   , module Halogen.Query.StateF
   , module Halogen.Query.SubscribeF
   ) where
@@ -20,10 +22,11 @@ import Control.Monad.Eff (Eff())
 import Control.Monad.Eff.Class (MonadEff, liftEff)
 import Control.Monad.Free (Free(), liftF)
 
-import Data.Functor.Coproduct (Coproduct(), left, right)
+import Data.NaturalTransformation (Natural())
+import Data.Functor.Coproduct (Coproduct(), coproduct, left, right)
 
 import Halogen.Query.StateF (StateF(..))
-import Halogen.Query.SubscribeF (SubscribeF(..), EventSource(), eventSource, eventSource_)
+import Halogen.Query.SubscribeF (SubscribeF(..), EventSource(), eventSource, eventSource_, hoistSubscribe)
 
 -- | Takes a data constructor of query algebra `f` and creates an "action". An
 -- | "action" only causes effects and has no result value.
@@ -111,14 +114,23 @@ modify f = liftF (left (Modify f unit))
 subscribe :: forall s f g. EventSource f g -> Free (HalogenF s f g) Unit
 subscribe p = liftF (right (left (Subscribe p unit)))
 
+-- | A convenience function for lifting a `g` value directly into
+-- | `Free HalogenF` without the need to use `liftF $ right $ right $ ...`.
+liftH :: forall a s f g. g a -> Free (HalogenF s f g) a
+liftH = liftF <<< right <<< right
+
 -- | A convenience function for lifting an `Aff` action directly into a
 -- | `Free HalogenF` when there is a `MonadAff` instance for the current `g`,
 -- | without the need to use `liftFI $ liftAff $ ...`.
 liftAff' :: forall eff a s f g. (MonadAff eff g, Functor g) => Aff eff a -> Free (HalogenF s f g) a
-liftAff' = liftF <<< right <<< right <<< liftAff
+liftAff' = liftH <<< liftAff
 
 -- | A convenience function for lifting an `Eff` action directly into a
 -- | `Free HalogenF` when there is a `MonadEff` instance for the current `g`,
 -- | without the need to use `liftFI $ liftEff $ ...`.
 liftEff' :: forall eff a s f g. (MonadEff eff g, Functor g) => Eff eff a -> Free (HalogenF s f g) a
-liftEff' = liftF <<< right <<< right <<< liftEff
+liftEff' = liftH <<< liftEff
+
+-- | Changes the underlying `g` monad for a `HalogenF` value.
+hoistHalogenF :: forall s f g h. (Functor h) => Natural g h -> Natural (HalogenF s f g) (HalogenF s f h)
+hoistHalogenF nat = coproduct left (right <<< coproduct (left <<< hoistSubscribe nat) (right <<< nat))

@@ -273,4 +273,13 @@ install' :: forall s s' f f' g p p'. (Plus g, Ord p) => ParentComponentP s s' f 
 A version of [`install`](#install) for use with parent components that
 `peek` on their children.
 
+#### `interpret`
+
+``` purescript
+interpret :: forall s f g g' p. (Functor g') => Natural g g' -> Component s f g p -> Component s f g' p
+```
+
+Changes the component's `g` type. A use case for this would be to interpret
+some `Free` monad as `Aff` so the component can be used with `runUI`.
+
 
