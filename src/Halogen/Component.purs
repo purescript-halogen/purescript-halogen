@@ -27,6 +27,7 @@ module Halogen.Component
   , query'
   , install
   , install'
+  , interpret
   ) where
 
 import Prelude
@@ -58,7 +59,7 @@ import qualified Data.Maybe.Unsafe as U
 
 import Halogen.Component.ChildPath (ChildPath(), injState, injQuery, injSlot, prjState, prjQuery, prjSlot)
 import Halogen.HTML.Core (HTML(..), fillSlot)
-import Halogen.Query (HalogenF(), get, modify)
+import Halogen.Query (HalogenF(), get, modify, hoistHalogenF)
 import Halogen.Query.StateF (StateF(), mapState)
 import Halogen.Query.SubscribeF (SubscribeF(), subscribeN, remapSubscribe, hoistSubscribe)
 
@@ -348,3 +349,12 @@ transform :: forall s s' f f' g p p' q. (Functor g)
           -> Component s f g q
           -> Component s' f' g q
 transform i = transform' (injState i) (U.fromJust <<< prjState i) (injQuery i) (U.fromJust <<< prjQuery i) id id
+
+-- | Changes the component's `g` type. A use case for this would be to interpret
+-- | some `Free` monad as `Aff` so the component can be used with `runUI`.
+interpret :: forall s f g g' p. (Functor g') => Natural g g' -> Component s f g p -> Component s f g' p
+interpret nat (Component c) =
+  Component { render: c.render
+            , eval: mapF (hoistHalogenF nat) <<< c.eval
+            , peek: mapF (hoistHalogenF nat) <<< c.peek
+            }

@@ -115,6 +115,15 @@ subscribe :: forall s f g. EventSource f g -> Free (HalogenF s f g) Unit
 Provides a way of having a component subscribe to an `EventSource` from
 within an `Eval` or `Peek` function.
 
+#### `liftH`
+
+``` purescript
+liftH :: forall a s f g. g a -> Free (HalogenF s f g) a
+```
+
+A convenience function for lifting a `g` value directly into
+`Free HalogenF` without the need to use `liftF $ right $ right $ ...`.
+
 #### `liftAff'`
 
 ``` purescript
@@ -134,5 +143,13 @@ liftEff' :: forall eff a s f g. (MonadEff eff g, Functor g) => Eff eff a -> Free
 A convenience function for lifting an `Eff` action directly into a
 `Free HalogenF` when there is a `MonadEff` instance for the current `g`,
 without the need to use `liftFI $ liftEff $ ...`.
+
+#### `hoistHalogenF`
+
+``` purescript
+hoistHalogenF :: forall s f g h. (Functor h) => Natural g h -> Natural (HalogenF s f g) (HalogenF s f h)
+```
+
+Changes the underlying `g` monad for a `HalogenF` value.
 
 
