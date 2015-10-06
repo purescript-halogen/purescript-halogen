@@ -15,8 +15,9 @@
     "example-components": "bower link && cd examples/components && bower link purescript-halogen && gulp",
     "example-counter": "bower link && cd examples/counter && bower link purescript-halogen && gulp",
     "example-intro": "bower link && cd examples/intro && bower link purescript-halogen && gulp",
-    "example-todo": "bower link && cd examples/todo && bower link purescript-halogen && gulp",
-    "example-multi-component": "bower link && cd examples/multi-component && bower link purescript-halogen && gulp"
+    "example-interpret": "bower link && cd examples/interpret && bower link purescript-halogen && gulp",
+    "example-multi-component": "bower link && cd examples/multi-component && bower link purescript-halogen && gulp",
+    "example-todo": "bower link && cd examples/todo && bower link purescript-halogen && gulp"
   },
   "devDependencies": {
     "bower": "^1.4.1",

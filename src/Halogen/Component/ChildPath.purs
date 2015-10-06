@@ -4,7 +4,7 @@ import Prelude ((<<<))
 
 import Data.Either (Either())
 import Data.Functor.Coproduct (Coproduct())
-import Data.Injector (Injector(), prj, inj, injLE, injLC, injRE, injRC)
+import Data.Injector (Injector(), prj, inj, injI, injLE, injLC, injRE, injRC)
 import Data.Maybe (Maybe())
 import Data.NaturalTransformation (Natural())
 
@@ -30,6 +30,10 @@ cpL = ChildPath injLE injLC injLE
 -- | component's `Either` and `Coproduct`s choices.
 cpR :: forall s t f g p q. ChildPath s (Either t s) f (Coproduct g f) p (Either q p)
 cpR = ChildPath injRE injRC injRE
+
+-- | An identity `ChildPath`.
+cpI :: forall s f p. ChildPath s s f f p p
+cpI = ChildPath injI injI injI
 
 -- | Uses a `ChildPath` definition to get a state value of type `s'` from a
 -- | value of type `s`. Used internally by Halogen.

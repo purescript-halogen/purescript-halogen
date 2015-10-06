@@ -21,7 +21,7 @@ import Data.Void (Void())
 
 import DOM.HTML.Types (HTMLElement())
 
-import Halogen.Component (ComponentP(), renderComponent, queryComponent)
+import Halogen.Component (Component(), renderComponent, queryComponent)
 import Halogen.Effects (HalogenEffects())
 import Halogen.HTML.Renderer.VirtualDOM (RenderState(), emptyRenderState, renderHTML)
 import Halogen.Internal.VirtualDOM (VTree(), createElement, diff, patch)
@@ -48,7 +48,7 @@ type DriverState s =
 -- | can be used to send actions and requests into the component (see the
 -- | [`action`](#action), [`request`](#request), and related variations for
 -- | more details on querying the driver).
-runUI :: forall s f eff o. ComponentP s f (Aff (HalogenEffects eff)) o Void
+runUI :: forall s f eff. Component s f (Aff (HalogenEffects eff)) Void
       -> s
       -> Aff (HalogenEffects eff) { node :: HTMLElement, driver :: Driver f eff }
 runUI c s = case renderComponent c s of

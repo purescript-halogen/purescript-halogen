@@ -26,7 +26,9 @@ module Halogen.Component
   , query
   , query'
   , install
+  , installWithState
   , install'
+  , installWithState'
   , interpret
   ) where
 
@@ -232,7 +234,15 @@ install :: forall s s' f f' g p p'. (Plus g, Ord p)
         => ParentComponent s s' f f' g p p'
         -> (p -> ChildState s' f' g p')
         -> InstalledComponent s s' f f' g p p'
-install c f = Component { render: render c f, eval: eval, peek: const (pure unit) }
+install c f = installWithState c (const f)
+
+-- | A version of [`install`](#install) that gives us access to the parent's
+-- | state while installing children.
+installWithState :: forall s s' f f' g p p'. (Plus g, Ord p)
+                 => ParentComponent s s' f f' g p p'
+                 -> (s -> p -> ChildState s' f' g p')
+                 -> InstalledComponent s s' f f' g p p'
+installWithState c f = Component { render: render c f, eval: eval, peek: const (pure unit) }
   where
   eval :: Eval (Coproduct f (ChildF p f')) (InstalledState s s' f f' g p p') (Coproduct f (ChildF p f')) g
   eval = coproduct (queryParent c) queryChild
@@ -243,7 +253,15 @@ install' :: forall s s' f f' g p p'. (Plus g, Ord p)
         => ParentComponentP s s' f f' g p p'
         -> (p -> ChildState s' f' g p')
         -> InstalledComponent s s' f f' g p p'
-install' c f = Component { render: render c f, eval: eval, peek: const (pure unit) }
+install' c f = installWithState' c (const f)
+
+-- | A version of [`install'`](#install') that gives us access to the parent's
+-- | state while installing children.
+installWithState' :: forall s s' f f' g p p'. (Plus g, Ord p)
+                  => ParentComponentP s s' f f' g p p'
+                  -> (s -> p -> ChildState s' f' g p')
+                  -> InstalledComponent s s' f f' g p p'
+installWithState' c f = Component { render: render c f, eval: eval, peek: const (pure unit) }
   where
   eval :: Eval (Coproduct f (ChildF p f')) (InstalledState s s' f f' g p p') (Coproduct f (ChildF p f')) g
   eval = coproduct (queryParent c) (\q -> queryChild q <* peek q)
@@ -262,31 +280,32 @@ mapStateFChild p = mapState (\st -> U.fromJust $ snd <$> M.lookup p st.children)
 
 render :: forall s s' f f' g o p p'. (Ord p)
        => ComponentP s f (QueryF s s' f f' g p p') o p
-       -> (p -> ChildState s' f' g p')
+       -> (s -> p -> ChildState s' f' g p')
        -> State (InstalledState s s' f f' g p p') (HTML p' ((Coproduct f (ChildF p f')) Unit))
 render c f = do
     st <- CMS.get
     case renderComponent c st.parent of
-      Tuple html s -> do
+      Tuple html parentState -> do
         -- Empty the state so that we don't keep children that are no longer
         -- being rendered...
-        CMS.put { parent: s, children: M.empty :: M.Map p (ChildState s' f' g p'), memo: M.empty :: M.Map p (HTML p' (Coproduct f (ChildF p f') Unit)) }
+        CMS.put { parent: parentState, children: M.empty :: M.Map p (ChildState s' f' g p'), memo: M.empty :: M.Map p (HTML p' (Coproduct f (ChildF p f') Unit)) }
         -- ...but then pass through the old state so we can lookup child
         -- components that are being re-rendered
-        fillSlot (renderChild st) left html
+        fillSlot (renderChild st parentState) left html
 
   where
 
   renderChild :: InstalledState s s' f f' g p p'
+              -> s
               -> p
               -> State (InstalledState s s' f f' g p p') (HTML p' ((Coproduct f (ChildF p f')) Unit))
-  renderChild st p =
+  renderChild st parentState p =
     let childState = M.lookup p st.children
     in case M.lookup p st.memo of
       Just html -> do
         CMS.modify (\st' -> { parent: st'.parent, children: M.alter (const childState) p st'.children, memo: M.insert p html st'.memo } :: InstalledState s s' f f' g p p')
         pure html
-      Nothing -> renderChild' p $ fromMaybe' (\_ -> f p) childState
+      Nothing -> renderChild' p $ fromMaybe' (\_ -> f parentState p) childState
 
   renderChild' :: p
                -> ChildState s' f' g p'

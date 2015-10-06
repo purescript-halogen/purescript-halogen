@@ -264,6 +264,15 @@ install :: forall s s' f f' g p p'. (Plus g, Ord p) => ParentComponent s s' f f'
 Installs children into a parent component by using a function that produces
 `ChildState` values for a given slot.
 
+#### `installWithState`
+
+``` purescript
+installWithState :: forall s s' f f' g p p'. (Plus g, Ord p) => ParentComponent s s' f f' g p p' -> (s -> p -> ChildState s' f' g p') -> InstalledComponent s s' f f' g p p'
+```
+
+A version of [`install`](#install) that gives us access to the parent's
+state while installing children.
+
 #### `install'`
 
 ``` purescript
@@ -272,6 +281,15 @@ install' :: forall s s' f f' g p p'. (Plus g, Ord p) => ParentComponentP s s' f 
 
 A version of [`install`](#install) for use with parent components that
 `peek` on their children.
+
+#### `installWithState'`
+
+``` purescript
+installWithState' :: forall s s' f f' g p p'. (Plus g, Ord p) => ParentComponentP s s' f f' g p p' -> (s -> p -> ChildState s' f' g p') -> InstalledComponent s s' f f' g p p'
+```
+
+A version of [`install'`](#install') that gives us access to the parent's
+state while installing children.
 
 #### `interpret`
 

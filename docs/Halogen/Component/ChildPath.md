@@ -47,6 +47,14 @@ cpR :: forall s t f g p q. ChildPath s (Either t s) f (Coproduct g f) p (Either 
 A `ChildPath` that represents taking the right-hand choice for each of a
 component's `Either` and `Coproduct`s choices.
 
+#### `cpI`
+
+``` purescript
+cpI :: forall s f p. ChildPath s s f f p p
+```
+
+An identity `ChildPath`.
+
 #### `injState`
 
 ``` purescript

@@ -3,13 +3,14 @@ module Data.Injector
   , Injector()
   , inj
   , prj
+  , injI
   , injLE
   , injLC
   , injRE
   , injRC
   ) where
 
-import Prelude (Applicative, (<<<), const, pure, map)
+import Prelude (Applicative, (<<<), id, const, pure, map)
 
 import Data.Const (Const(..), getConst)
 import Data.Either (Either(..), either)
@@ -50,6 +51,9 @@ prism f g = dimap g (either pure (map f)) <<< PF.right
 
 prism' :: forall s a b. (b -> s) -> (s -> Maybe a) -> Prism s s a b
 prism' f g = prism f (\s -> maybe (Left s) Right (g s))
+
+injI :: forall a. Injector a a
+injI = prism' id Just
 
 injLE :: forall a b. Injector a (Either a b)
 injLE = prism' Left (either Just (const Nothing))

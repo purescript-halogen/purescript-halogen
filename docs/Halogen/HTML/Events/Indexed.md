@@ -3,223 +3,223 @@
 #### `IEventProp`
 
 ``` purescript
-type IEventProp ρ e i = (Event e -> EventHandler i) -> IProp ρ i
+type IEventProp r e i = (Event e -> EventHandler i) -> IProp r i
 ```
 
 #### `onAbort`
 
 ``` purescript
-onAbort :: forall ρ i. IEventProp (onAbort :: I | ρ) () i
+onAbort :: forall r i. IEventProp (onAbort :: I | r) () i
 ```
 
 #### `onBeforeUnload`
 
 ``` purescript
-onBeforeUnload :: forall ρ i. IEventProp (onBeforeUnload :: I | ρ) () i
+onBeforeUnload :: forall r i. IEventProp (onBeforeUnload :: I | r) () i
 ```
 
 #### `onError`
 
 ``` purescript
-onError :: forall ρ i. IEventProp (onError :: I | ρ) () i
+onError :: forall r i. IEventProp (onError :: I | r) () i
 ```
 
 #### `onHashChange`
 
 ``` purescript
-onHashChange :: forall ρ i. IEventProp (onHashChange :: I | ρ) () i
+onHashChange :: forall r i. IEventProp (onHashChange :: I | r) () i
 ```
 
 #### `onLoad`
 
 ``` purescript
-onLoad :: forall ρ i. IEventProp (onLoad :: I | ρ) () i
+onLoad :: forall r i. IEventProp (onLoad :: I | r) () i
 ```
 
 #### `onPageShow`
 
 ``` purescript
-onPageShow :: forall ρ i. IEventProp (onPageShow :: I | ρ) () i
+onPageShow :: forall r i. IEventProp (onPageShow :: I | r) () i
 ```
 
 #### `onPageHide`
 
 ``` purescript
-onPageHide :: forall ρ i. IEventProp (onPageHide :: I | ρ) () i
+onPageHide :: forall r i. IEventProp (onPageHide :: I | r) () i
 ```
 
 #### `onResize`
 
 ``` purescript
-onResize :: forall ρ i. IEventProp (onResize :: I | ρ) () i
+onResize :: forall r i. IEventProp (onResize :: I | r) () i
 ```
 
 #### `onScroll`
 
 ``` purescript
-onScroll :: forall ρ i. IEventProp (onScroll :: I | ρ) () i
+onScroll :: forall r i. IEventProp (onScroll :: I | r) () i
 ```
 
 #### `onUnload`
 
 ``` purescript
-onUnload :: forall ρ i. IEventProp (onUnload :: I | ρ) () i
+onUnload :: forall r i. IEventProp (onUnload :: I | r) () i
 ```
 
 #### `onChange`
 
 ``` purescript
-onChange :: forall ρ i. IEventProp (onChange :: I | ρ) () i
+onChange :: forall r i. IEventProp (onChange :: I | r) () i
 ```
 
 #### `onInput`
 
 ``` purescript
-onInput :: forall ρ i. IEventProp (onInput :: I | ρ) () i
+onInput :: forall r i. IEventProp (onInput :: I | r) () i
 ```
 
 #### `onInvalid`
 
 ``` purescript
-onInvalid :: forall ρ i. IEventProp (onInvalid :: I | ρ) () i
+onInvalid :: forall r i. IEventProp (onInvalid :: I | r) () i
 ```
 
 #### `onReset`
 
 ``` purescript
-onReset :: forall ρ i. IEventProp (onReset :: I | ρ) () i
+onReset :: forall r i. IEventProp (onReset :: I | r) () i
 ```
 
 #### `onSearch`
 
 ``` purescript
-onSearch :: forall ρ i. IEventProp (onSearch :: I | ρ) () i
+onSearch :: forall r i. IEventProp (onSearch :: I | r) () i
 ```
 
 #### `onSelect`
 
 ``` purescript
-onSelect :: forall ρ i. IEventProp (onSelect :: I | ρ) () i
+onSelect :: forall r i. IEventProp (onSelect :: I | r) () i
 ```
 
 #### `onSubmit`
 
 ``` purescript
-onSubmit :: forall ρ i. IEventProp (onSubmit :: I | ρ) () i
+onSubmit :: forall r i. IEventProp (onSubmit :: I | r) () i
 ```
 
 #### `onClick`
 
 ``` purescript
-onClick :: forall ρ i. IEventProp (onClick :: I | ρ) MouseEvent i
+onClick :: forall r i. IEventProp (onClick :: I | r) MouseEvent i
 ```
 
 #### `onContextMenu`
 
 ``` purescript
-onContextMenu :: forall ρ i. IEventProp (onContextMenu :: I | ρ) MouseEvent i
+onContextMenu :: forall r i. IEventProp (onContextMenu :: I | r) MouseEvent i
 ```
 
 #### `onDoubleClick`
 
 ``` purescript
-onDoubleClick :: forall ρ i. IEventProp (onDoubleClick :: I | ρ) MouseEvent i
+onDoubleClick :: forall r i. IEventProp (onDoubleClick :: I | r) MouseEvent i
 ```
 
 #### `onMouseDown`
 
 ``` purescript
-onMouseDown :: forall ρ i. IEventProp (onMouseDown :: I | ρ) MouseEvent i
+onMouseDown :: forall r i. IEventProp (onMouseDown :: I | r) MouseEvent i
 ```
 
 #### `onMouseLeave`
 
 ``` purescript
-onMouseLeave :: forall ρ i. IEventProp (onMouseLeave :: I | ρ) MouseEvent i
+onMouseLeave :: forall r i. IEventProp (onMouseLeave :: I | r) MouseEvent i
 ```
 
 #### `onMouseMove`
 
 ``` purescript
-onMouseMove :: forall ρ i. IEventProp (onMouseMove :: I | ρ) MouseEvent i
+onMouseMove :: forall r i. IEventProp (onMouseMove :: I | r) MouseEvent i
 ```
 
 #### `onMouseOver`
 
 ``` purescript
-onMouseOver :: forall ρ i. IEventProp (onMouseOver :: I | ρ) MouseEvent i
+onMouseOver :: forall r i. IEventProp (onMouseOver :: I | r) MouseEvent i
 ```
 
 #### `onMouseOut`
 
 ``` purescript
-onMouseOut :: forall ρ i. IEventProp (onMouseOut :: I | ρ) MouseEvent i
+onMouseOut :: forall r i. IEventProp (onMouseOut :: I | r) MouseEvent i
 ```
 
 #### `onMouseUp`
 
 ``` purescript
-onMouseUp :: forall ρ i. IEventProp (onMouseUp :: I | ρ) MouseEvent i
+onMouseUp :: forall r i. IEventProp (onMouseUp :: I | r) MouseEvent i
 ```
 
 #### `onKeyDown`
 
 ``` purescript
-onKeyDown :: forall ρ i. IEventProp (onKeyDown :: I | ρ) KeyboardEvent i
+onKeyDown :: forall r i. IEventProp (onKeyDown :: I | r) KeyboardEvent i
 ```
 
 #### `onKeyPress`
 
 ``` purescript
-onKeyPress :: forall ρ i. IEventProp (onKeyPress :: I | ρ) KeyboardEvent i
+onKeyPress :: forall r i. IEventProp (onKeyPress :: I | r) KeyboardEvent i
 ```
 
 #### `onKeyUp`
 
 ``` purescript
-onKeyUp :: forall ρ i. IEventProp (onKeyUp :: I | ρ) KeyboardEvent i
+onKeyUp :: forall r i. IEventProp (onKeyUp :: I | r) KeyboardEvent i
 ```
 
 #### `onBlur`
 
 ``` purescript
-onBlur :: forall ρ i. IEventProp (onBlur :: I | ρ) FocusEvent i
+onBlur :: forall r i. IEventProp (onBlur :: I | r) FocusEvent i
 ```
 
 #### `onFocus`
 
 ``` purescript
-onFocus :: forall ρ i. IEventProp (onFocus :: I | ρ) FocusEvent i
+onFocus :: forall r i. IEventProp (onFocus :: I | r) FocusEvent i
 ```
 
 #### `onFocusIn`
 
 ``` purescript
-onFocusIn :: forall ρ i. IEventProp (onFocusIn :: I | ρ) FocusEvent i
+onFocusIn :: forall r i. IEventProp (onFocusIn :: I | r) FocusEvent i
 ```
 
 #### `onFocusOut`
 
 ``` purescript
-onFocusOut :: forall ρ i. IEventProp (onFocusOut :: I | ρ) FocusEvent i
+onFocusOut :: forall r i. IEventProp (onFocusOut :: I | r) FocusEvent i
 ```
 
 #### `onValueChange`
 
 ``` purescript
-onValueChange :: forall ρ f. (String -> EventHandler (f Unit)) -> IProp (value :: I, onChange :: I | ρ) (f Unit)
+onValueChange :: forall r f. (String -> EventHandler (f Unit)) -> IProp (value :: I, onChange :: I | r) (f Unit)
 ```
 
 #### `onValueInput`
 
 ``` purescript
-onValueInput :: forall ρ f. (String -> EventHandler (f Unit)) -> IProp (value :: I, onInput :: I | ρ) (f Unit)
+onValueInput :: forall r f. (String -> EventHandler (f Unit)) -> IProp (value :: I, onInput :: I | r) (f Unit)
 ```
 
 #### `onChecked`
 
 ``` purescript
-onChecked :: forall ρ f. (Boolean -> EventHandler (f Unit)) -> IProp (checked :: I, onChange :: I | ρ) (f Unit)
+onChecked :: forall r f. (Boolean -> EventHandler (f Unit)) -> IProp (checked :: I, onChange :: I | r) (f Unit)
 ```
 
 
