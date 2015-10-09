@@ -73,7 +73,7 @@ data Input a
   | GetState (Boolean -> a)
 ```
 
-Here `ToggleState` is an action and `GetState` is a request - the difference being the location of the query algebra's type parameter. For actions the parameter is used as a value, for requests it appears in the return type of a function. This how the the previously mentioned typed queries work - when a request is formed using the `GetState` constructor, we know the result type must be a `Boolean` due to the way the query processor handles constructors of this shape.
+Here `ToggleState` is an action and `GetState` is a request - the difference being the location of the query algebra's type parameter. For actions the parameter is used as a value, for requests it appears in the return type of a function. This is how the previously mentioned typed queries work: when a request is formed using the `GetState` constructor, we know the result type must be a `Boolean` due to the way the query processor handles constructors of this shape.
 
 The functions `action` and `request` in the `Halogen.Query` module can be used to make queries when used with constructors of the appropriate shape (for example, `action ToggleState` or `request GetState`).
 
@@ -135,7 +135,7 @@ F.onChecked (E.input SetOption)
 F.onValueInput (E.input SetText)
 ```
 
-It is also possible to declare an event listeners that makes use of the `preventDefault`, `stopPropagation`, and `stopImmediatePropagation` event methods, at the same time as sending inputs to `eval`. To do this, the `input` and `input_` functions are omitted, and instead the listener should look something like this:
+It is also possible to declare an event listener that makes use of the `preventDefault`, `stopPropagation`, and `stopImmediatePropagation` event methods, at the same time as sending inputs to `eval`. To do this, the `input` and `input_` functions are omitted, and instead the listener should look something like this:
 
 ``` purescript
 E.onClick (\_ -> EH.preventDefault $> action ToggleState)
