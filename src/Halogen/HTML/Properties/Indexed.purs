@@ -319,6 +319,7 @@ type GlobalAttributes ρ =
   , title :: I
   , class :: I
   , spellcheck :: I
+  , key :: I
   | ρ
   )
 
