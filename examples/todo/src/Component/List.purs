@@ -45,7 +45,7 @@ list = component' render eval peek
     modify addTask
     pure next
 
-  peek :: Peek State Task ListInput TaskInput g ListSlot p
+  peek :: Peek (ChildF ListSlot TaskInput) State Task ListInput TaskInput g ListSlot p
   peek (ChildF p q) = case q of
     Remove _ -> do
       wasComplete <- query p (request IsCompleted)
