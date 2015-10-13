@@ -26,7 +26,9 @@ module Halogen.Component
   , query
   , query'
   , install
+  , installWithState
   , install'
+  , installWithState'
   , interpret
   ) where
 
@@ -74,7 +76,7 @@ import Halogen.Query.SubscribeF (SubscribeF(), subscribeN, remapSubscribe, hoist
 newtype ComponentP s f g o p = Component
   { render :: State s (HTML p (f Unit))
   , eval   :: Eval f s f g
-  , peek   :: PeekP s f g o
+  , peek   :: PeekP o s f g
   }
 
 -- | A type alias for Halogen components where `peek` is not used.
@@ -96,10 +98,10 @@ type EvalP i s s' f f' g p p' = Eval i s f (QueryF s s' f f' g p p')
 
 -- | A type alias for a component `peek` function that observes inputs to child
 -- | components.
-type Peek s s' f f' g p p' = PeekP s f (QueryF s s' f f' g p p') (ChildF p f')
+type Peek i s s' f f' g p p' = PeekP i s f (QueryF s s' f f' g p p')
 
 -- | A lower level form of the `Peek` type synonym, used internally.
-type PeekP s f g o = forall a. o a -> Free (HalogenF s f g) Unit
+type PeekP i s f g = forall a. i a -> Free (HalogenF s f g) Unit
 
 -- | Runs a component's `render` function with the specified state, returning
 -- | the generated `HTML` and new state.
@@ -112,7 +114,7 @@ queryComponent :: forall s f g o p. ComponentP s f g o p -> Eval f s f g
 queryComponent (Component c) = c.eval
 
 -- | Runs a parent component's `peek` function.
-peekComponent :: forall s f g o p. ComponentP s f g o p -> PeekP s f g o
+peekComponent :: forall s f g o p. ComponentP s f g o p -> PeekP o s f g
 peekComponent (Component c) = c.peek
 
 -- | Builds a new [`Component`](#component) from a [`Render`](#render) and
@@ -123,7 +125,7 @@ component r q = Component { render: CMS.gets r, eval: q, peek: const (pure unit)
 -- | Builds a new [`ComponentP`](#componentp) from a [`Render`](#render),
 -- | [`Eval`](#eval), and [`Peek`](#peek) function. This is used in cases where
 -- | defining a parent component that needs to observe inputs to its children.
-component' :: forall s s' f f' g p p'. Render s f p -> EvalP f s s' f f' g p p' -> Peek s s' f f' g p p' -> ParentComponentP s s' f f' g p p'
+component' :: forall s s' f f' g p p'. Render s f p -> EvalP f s s' f f' g p p' -> Peek (ChildF p f') s s' f f' g p p' -> ParentComponentP s s' f f' g p p'
 component' r q p = Component { render: CMS.gets r, eval: q, peek: p }
 
 -- | A type synonym for a component combined with its state. This is used when
@@ -232,7 +234,15 @@ install :: forall s s' f f' g p p'. (Plus g, Ord p)
         => ParentComponent s s' f f' g p p'
         -> (p -> ChildState s' f' g p')
         -> InstalledComponent s s' f f' g p p'
-install c f = Component { render: render c f, eval: eval, peek: const (pure unit) }
+install c f = installWithState c (const f)
+
+-- | A version of [`install`](#install) that gives us access to the parent's
+-- | state while installing children.
+installWithState :: forall s s' f f' g p p'. (Plus g, Ord p)
+                 => ParentComponent s s' f f' g p p'
+                 -> (s -> p -> ChildState s' f' g p')
+                 -> InstalledComponent s s' f f' g p p'
+installWithState c f = Component { render: render c f, eval: eval, peek: const (pure unit) }
   where
   eval :: Eval (Coproduct f (ChildF p f')) (InstalledState s s' f f' g p p') (Coproduct f (ChildF p f')) g
   eval = coproduct (queryParent c) queryChild
@@ -243,12 +253,20 @@ install' :: forall s s' f f' g p p'. (Plus g, Ord p)
         => ParentComponentP s s' f f' g p p'
         -> (p -> ChildState s' f' g p')
         -> InstalledComponent s s' f f' g p p'
-install' c f = Component { render: render c f, eval: eval, peek: const (pure unit) }
+install' c f = installWithState' c (const f)
+
+-- | A version of [`install'`](#install') that gives us access to the parent's
+-- | state while installing children.
+installWithState' :: forall s s' f f' g p p'. (Plus g, Ord p)
+                  => ParentComponentP s s' f f' g p p'
+                  -> (s -> p -> ChildState s' f' g p')
+                  -> InstalledComponent s s' f f' g p p'
+installWithState' c f = Component { render: render c f, eval: eval, peek: const (pure unit) }
   where
   eval :: Eval (Coproduct f (ChildF p f')) (InstalledState s s' f f' g p p') (Coproduct f (ChildF p f')) g
   eval = coproduct (queryParent c) (\q -> queryChild q <* peek q)
 
-  peek :: PeekP (InstalledState s s' f f' g p p') (Coproduct f (ChildF p f')) g (ChildF p f')
+  peek :: PeekP (ChildF p f') (InstalledState s s' f f' g p p') (Coproduct f (ChildF p f')) g
   peek q =
     let runSubscribeF' = runSubscribeF (queryParent c)
     in foldFree (coproduct mergeParentStateF (coproduct runSubscribeF' liftChildF)) (peekComponent c q)
@@ -262,31 +280,32 @@ mapStateFChild p = mapState (\st -> U.fromJust $ snd <$> M.lookup p st.children)
 
 render :: forall s s' f f' g o p p'. (Ord p)
        => ComponentP s f (QueryF s s' f f' g p p') o p
-       -> (p -> ChildState s' f' g p')
+       -> (s -> p -> ChildState s' f' g p')
        -> State (InstalledState s s' f f' g p p') (HTML p' ((Coproduct f (ChildF p f')) Unit))
 render c f = do
     st <- CMS.get
     case renderComponent c st.parent of
-      Tuple html s -> do
+      Tuple html parentState -> do
         -- Empty the state so that we don't keep children that are no longer
         -- being rendered...
-        CMS.put { parent: s, children: M.empty :: M.Map p (ChildState s' f' g p'), memo: M.empty :: M.Map p (HTML p' (Coproduct f (ChildF p f') Unit)) }
+        CMS.put { parent: parentState, children: M.empty :: M.Map p (ChildState s' f' g p'), memo: M.empty :: M.Map p (HTML p' (Coproduct f (ChildF p f') Unit)) }
         -- ...but then pass through the old state so we can lookup child
         -- components that are being re-rendered
-        fillSlot (renderChild st) left html
+        fillSlot (renderChild st parentState) left html
 
   where
 
   renderChild :: InstalledState s s' f f' g p p'
+              -> s
               -> p
               -> State (InstalledState s s' f f' g p p') (HTML p' ((Coproduct f (ChildF p f')) Unit))
-  renderChild st p =
+  renderChild st parentState p =
     let childState = M.lookup p st.children
     in case M.lookup p st.memo of
       Just html -> do
         CMS.modify (\st' -> { parent: st'.parent, children: M.alter (const childState) p st'.children, memo: M.insert p html st'.memo } :: InstalledState s s' f f' g p p')
         pure html
-      Nothing -> renderChild' p $ fromMaybe' (\_ -> f p) childState
+      Nothing -> renderChild' p $ fromMaybe' (\_ -> f parentState p) childState
 
   renderChild' :: p
                -> ChildState s' f' g p'

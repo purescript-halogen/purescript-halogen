@@ -28,6 +28,12 @@ inj :: forall a b. Injector a b -> a -> b
 prj :: forall a b. Injector a b -> b -> Maybe a
 ```
 
+#### `injI`
+
+``` purescript
+injI :: forall a. Injector a a
+```
+
 #### `injLE`
 
 ``` purescript

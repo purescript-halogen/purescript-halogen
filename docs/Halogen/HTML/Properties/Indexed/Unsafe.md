@@ -3,11 +3,11 @@
 #### `IProp`
 
 ``` purescript
-newtype IProp (ρ :: # *) i
+newtype IProp (r :: # *) i
   = IProp (Prop i)
 ```
 
-The phantom row `ρ` can be thought of as a context which is synthesized in the
+The phantom row `r` can be thought of as a context which is synthesized in the
 course of constructing a refined HTML expression.
 
 

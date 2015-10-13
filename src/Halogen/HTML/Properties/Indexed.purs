@@ -71,69 +71,69 @@ import qualified Halogen.HTML.Properties (LengthLiteral(..)) as PExport
 import qualified Halogen.HTML.Properties.Indexed.Unsafe as Unsafe
 import Halogen.HTML.Core (Prop(..), ClassName(), prop, propName, attrName, runClassName)
 
--- | The phantom row `ρ` can be thought of as a context which is synthesized in the
+-- | The phantom row `r` can be thought of as a context which is synthesized in the
 -- | course of constructing a refined HTML expression.
-type IProp (ρ :: # *) i = Unsafe.IProp ρ i
+type IProp (r :: # *) i = Unsafe.IProp r i
 
 -- | The refined property can be erased into a normal one.
-erase :: forall ρ i. IProp ρ i -> Prop i
+erase :: forall r i. IProp r i -> Prop i
 erase (Unsafe.IProp p) = p
 
-refine :: forall ρ i. Prop i -> IProp ρ i
+refine :: forall r i. Prop i -> IProp r i
 refine = Unsafe.IProp
 
 -- | A dummy type to use in the phantom row.
 data I
 
-key :: forall ρ i. String -> IProp (key :: I | ρ) i
+key :: forall r i. String -> IProp (key :: I | r) i
 key = refine <<< P.key
 
-alt :: forall ρ i. String -> IProp (alt :: I | ρ) i
+alt :: forall r i. String -> IProp (alt :: I | r) i
 alt = refine <<< P.alt
 
-charset :: forall ρ i. String -> IProp (charset :: I | ρ) i
+charset :: forall r i. String -> IProp (charset :: I | r) i
 charset = refine <<< P.charset
 
-class_ :: forall ρ i. ClassName -> IProp (class :: I | ρ) i
+class_ :: forall r i. ClassName -> IProp (class :: I | r) i
 class_ = refine <<< P.class_
 
-classes :: forall ρ i. Array ClassName -> IProp (class :: I | ρ) i
+classes :: forall r i. Array ClassName -> IProp (class :: I | r) i
 classes = refine <<< P.classes
 
-colSpan :: forall ρ i. Int -> IProp (colSpan :: I | ρ) i
+colSpan :: forall r i. Int -> IProp (colSpan :: I | r) i
 colSpan = refine <<< P.colSpan
 
-rowSpan :: forall ρ i. Int -> IProp (rowSpan :: I | ρ) i
+rowSpan :: forall r i. Int -> IProp (rowSpan :: I | r) i
 rowSpan = refine <<< P.rowSpan
 
-for :: forall ρ i. String -> IProp (for :: I | ρ) i
+for :: forall r i. String -> IProp (for :: I | r) i
 for = refine <<< P.for
 
-height :: forall ρ i. P.LengthLiteral -> IProp (height :: I | ρ) i
+height :: forall r i. P.LengthLiteral -> IProp (height :: I | r) i
 height = refine <<< P.height
 
-width :: forall ρ i. P.LengthLiteral -> IProp (width :: I | ρ) i
+width :: forall r i. P.LengthLiteral -> IProp (width :: I | r) i
 width = refine <<< P.width
 
-href :: forall ρ i. String -> IProp (href :: I | ρ) i
+href :: forall r i. String -> IProp (href :: I | r) i
 href = refine <<< P.href
 
-id_ :: forall ρ i. String -> IProp (id :: I | ρ) i
+id_ :: forall r i. String -> IProp (id :: I | r) i
 id_ = refine <<< P.id_
 
-name :: forall ρ i. String -> IProp (name :: I | ρ) i
+name :: forall r i. String -> IProp (name :: I | r) i
 name = refine <<< P.name
 
-rel :: forall ρ i. String -> IProp (rel :: I | ρ) i
+rel :: forall r i. String -> IProp (rel :: I | r) i
 rel = refine <<< P.rel
 
-src :: forall ρ i. String -> IProp (src :: I | ρ) i
+src :: forall r i. String -> IProp (src :: I | r) i
 src = refine <<< P.src
 
-target :: forall ρ i. String -> IProp (target :: I | ρ) i
+target :: forall r i. String -> IProp (target :: I | r) i
 target = refine <<< P.target
 
-title :: forall ρ i. String -> IProp (title :: I | ρ) i
+title :: forall r i. String -> IProp (title :: I | r) i
 title = refine <<< P.title
 
 data InputType
@@ -188,7 +188,7 @@ renderInputType ty =
     InputUrl -> "url"
     InputWeek -> "week"
 
-inputType :: forall ρ i. InputType -> IProp (inputType :: I | ρ) i
+inputType :: forall r i. InputType -> IProp (inputType :: I | r) i
 inputType = refine <<< P.type_ <<< renderInputType
 
 data MenuType
@@ -203,7 +203,7 @@ renderMenuType ty =
     MenuContext -> "context"
     MenuToolbar -> "toolbar"
 
-menuType :: forall ρ i. MenuType -> IProp (menuType :: I | ρ) i
+menuType :: forall r i. MenuType -> IProp (menuType :: I | r) i
 menuType = refine <<< P.type_ <<< renderMenuType
 
 data MenuitemType
@@ -218,7 +218,7 @@ renderMenuitemType ty =
     MenuitemCheckbox -> "checkbox"
     MenuitemRadio -> "radio"
 
-menuitemType :: forall ρ i. MenuitemType -> IProp (menuitemType :: I | ρ) i
+menuitemType :: forall r i. MenuitemType -> IProp (menuitemType :: I | r) i
 menuitemType= refine <<< P.type_ <<< renderMenuitemType
 
 type MediaType =
@@ -238,7 +238,7 @@ renderMediaType ty = ty.type ++ "/" ++ ty.subtype ++ renderParameters ty.paramet
     renderParameter :: Tuple String String -> String
     renderParameter (Tuple k v) = k ++ "=" ++ v
 
-mediaType :: forall ρ i. MediaType -> IProp (mediaType :: I | ρ) i
+mediaType :: forall r i. MediaType -> IProp (mediaType :: I | r) i
 mediaType = refine <<< P.type_ <<< renderMediaType
 
 data ButtonType
@@ -253,7 +253,7 @@ renderButtonType ty =
     ButtonSubmit -> "submit"
     ButtonReset -> "reset"
 
-buttonType :: forall ρ i. ButtonType -> IProp (buttonType :: I | ρ) i
+buttonType :: forall r i. ButtonType -> IProp (buttonType :: I | r) i
 buttonType = refine <<< P.type_ <<< renderButtonType
 
 data CaseType
@@ -283,52 +283,52 @@ renderOrderedListType ty =
         Lowercase -> "a"
         Uppercase -> "A"
 
-olType :: forall ρ i. OrderedListType -> IProp (olType :: I | ρ) i
+olType :: forall r i. OrderedListType -> IProp (olType :: I | r) i
 olType = refine <<< P.type_ <<< renderOrderedListType
 
-value :: forall ρ i. String -> IProp (value :: I | ρ) i
+value :: forall r i. String -> IProp (value :: I | r) i
 value = refine <<< P.value
 
-disabled :: forall ρ i. Boolean -> IProp (disabled :: I | ρ) i
+disabled :: forall r i. Boolean -> IProp (disabled :: I | r) i
 disabled = refine <<< P.disabled
 
-required :: forall ρ i. Boolean -> IProp (required :: I | ρ) i
+required :: forall r i. Boolean -> IProp (required :: I | r) i
 required = refine <<< P.required
 
-readonly :: forall ρ i. Boolean -> IProp (readonly :: I | ρ) i
+readonly :: forall r i. Boolean -> IProp (readonly :: I | r) i
 readonly = refine <<< P.readonly
 
-spellcheck :: forall ρ i. Boolean -> IProp (spellcheck :: I | ρ) i
+spellcheck :: forall r i. Boolean -> IProp (spellcheck :: I | r) i
 spellcheck = refine <<< P.spellcheck
 
-enabled :: forall ρ i. Boolean -> IProp (disabled :: I | ρ) i
+enabled :: forall r i. Boolean -> IProp (disabled :: I | r) i
 enabled = disabled <<< not
 
-checked :: forall ρ i. Boolean -> IProp (checked :: I | ρ) i
+checked :: forall r i. Boolean -> IProp (checked :: I | r) i
 checked = refine <<< P.checked
 
-selected :: forall ρ i. Boolean -> IProp (selected :: I | ρ) i
+selected :: forall r i. Boolean -> IProp (selected :: I | r) i
 selected = refine <<< P.selected
 
-placeholder :: forall ρ i. String -> IProp (placeholder :: I | ρ) i
+placeholder :: forall r i. String -> IProp (placeholder :: I | r) i
 placeholder = refine <<< P.placeholder
 
-type GlobalAttributes ρ =
+type GlobalAttributes r =
   ( id :: I
   , name :: I
   , title :: I
   , class :: I
   , spellcheck :: I
   , key :: I
-  | ρ
+  | r
   )
 
-type GlobalEvents ρ =
+type GlobalEvents r =
   ( onContextMenu :: I
-  | ρ
+  | r
   )
 
-type MouseEvents ρ =
+type MouseEvents r =
   ( onDoubleClick :: I
   , onClick :: I
   , onMouseDown :: I
@@ -338,23 +338,23 @@ type MouseEvents ρ =
   , onMouseOver :: I
   , onMouseOut :: I
   , onMouseUp :: I
-  | ρ
+  | r
   )
 
-type KeyEvents ρ =
+type KeyEvents r =
   ( onKeyDown :: I
   , onKeyUp :: I
   , onKeyPress :: I
-  | ρ
+  | r
   )
 
-type FocusEvents ρ =
+type FocusEvents r =
   ( onBlur :: I
   , onFocus :: I
   , onFocusIn :: I
   , onFocusOut :: I
-  | ρ
+  | r
   )
 
-type InteractiveEvents ρ = FocusEvents (KeyEvents (MouseEvents ρ))
-type GlobalProperties ρ = GlobalAttributes (GlobalEvents ρ)
+type InteractiveEvents r = FocusEvents (KeyEvents (MouseEvents r))
+type GlobalProperties r = GlobalAttributes (GlobalEvents r)

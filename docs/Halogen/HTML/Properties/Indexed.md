@@ -7,16 +7,16 @@ unrefined versions.
 #### `IProp`
 
 ``` purescript
-type IProp (ρ :: # *) i = IProp ρ i
+type IProp (r :: # *) i = IProp r i
 ```
 
-The phantom row `ρ` can be thought of as a context which is synthesized in the
+The phantom row `r` can be thought of as a context which is synthesized in the
 course of constructing a refined HTML expression.
 
 #### `erase`
 
 ``` purescript
-erase :: forall ρ i. IProp ρ i -> Prop i
+erase :: forall r i. IProp r i -> Prop i
 ```
 
 The refined property can be erased into a normal one.
@@ -32,103 +32,103 @@ A dummy type to use in the phantom row.
 #### `key`
 
 ``` purescript
-key :: forall ρ i. String -> IProp (key :: I | ρ) i
+key :: forall r i. String -> IProp (key :: I | r) i
 ```
 
 #### `alt`
 
 ``` purescript
-alt :: forall ρ i. String -> IProp (alt :: I | ρ) i
+alt :: forall r i. String -> IProp (alt :: I | r) i
 ```
 
 #### `charset`
 
 ``` purescript
-charset :: forall ρ i. String -> IProp (charset :: I | ρ) i
+charset :: forall r i. String -> IProp (charset :: I | r) i
 ```
 
 #### `class_`
 
 ``` purescript
-class_ :: forall ρ i. ClassName -> IProp (class :: I | ρ) i
+class_ :: forall r i. ClassName -> IProp (class :: I | r) i
 ```
 
 #### `classes`
 
 ``` purescript
-classes :: forall ρ i. Array ClassName -> IProp (class :: I | ρ) i
+classes :: forall r i. Array ClassName -> IProp (class :: I | r) i
 ```
 
 #### `colSpan`
 
 ``` purescript
-colSpan :: forall ρ i. Int -> IProp (colSpan :: I | ρ) i
+colSpan :: forall r i. Int -> IProp (colSpan :: I | r) i
 ```
 
 #### `rowSpan`
 
 ``` purescript
-rowSpan :: forall ρ i. Int -> IProp (rowSpan :: I | ρ) i
+rowSpan :: forall r i. Int -> IProp (rowSpan :: I | r) i
 ```
 
 #### `for`
 
 ``` purescript
-for :: forall ρ i. String -> IProp (for :: I | ρ) i
+for :: forall r i. String -> IProp (for :: I | r) i
 ```
 
 #### `height`
 
 ``` purescript
-height :: forall ρ i. LengthLiteral -> IProp (height :: I | ρ) i
+height :: forall r i. LengthLiteral -> IProp (height :: I | r) i
 ```
 
 #### `width`
 
 ``` purescript
-width :: forall ρ i. LengthLiteral -> IProp (width :: I | ρ) i
+width :: forall r i. LengthLiteral -> IProp (width :: I | r) i
 ```
 
 #### `href`
 
 ``` purescript
-href :: forall ρ i. String -> IProp (href :: I | ρ) i
+href :: forall r i. String -> IProp (href :: I | r) i
 ```
 
 #### `id_`
 
 ``` purescript
-id_ :: forall ρ i. String -> IProp (id :: I | ρ) i
+id_ :: forall r i. String -> IProp (id :: I | r) i
 ```
 
 #### `name`
 
 ``` purescript
-name :: forall ρ i. String -> IProp (name :: I | ρ) i
+name :: forall r i. String -> IProp (name :: I | r) i
 ```
 
 #### `rel`
 
 ``` purescript
-rel :: forall ρ i. String -> IProp (rel :: I | ρ) i
+rel :: forall r i. String -> IProp (rel :: I | r) i
 ```
 
 #### `src`
 
 ``` purescript
-src :: forall ρ i. String -> IProp (src :: I | ρ) i
+src :: forall r i. String -> IProp (src :: I | r) i
 ```
 
 #### `target`
 
 ``` purescript
-target :: forall ρ i. String -> IProp (target :: I | ρ) i
+target :: forall r i. String -> IProp (target :: I | r) i
 ```
 
 #### `title`
 
 ``` purescript
-title :: forall ρ i. String -> IProp (title :: I | ρ) i
+title :: forall r i. String -> IProp (title :: I | r) i
 ```
 
 #### `InputType`
@@ -163,7 +163,7 @@ data InputType
 #### `inputType`
 
 ``` purescript
-inputType :: forall ρ i. InputType -> IProp (inputType :: I | ρ) i
+inputType :: forall r i. InputType -> IProp (inputType :: I | r) i
 ```
 
 #### `MenuType`
@@ -178,7 +178,7 @@ data MenuType
 #### `menuType`
 
 ``` purescript
-menuType :: forall ρ i. MenuType -> IProp (menuType :: I | ρ) i
+menuType :: forall r i. MenuType -> IProp (menuType :: I | r) i
 ```
 
 #### `MenuitemType`
@@ -193,7 +193,7 @@ data MenuitemType
 #### `menuitemType`
 
 ``` purescript
-menuitemType :: forall ρ i. MenuitemType -> IProp (menuitemType :: I | ρ) i
+menuitemType :: forall r i. MenuitemType -> IProp (menuitemType :: I | r) i
 ```
 
 #### `MediaType`
@@ -205,7 +205,7 @@ type MediaType = { type :: String, subtype :: String, parameters :: Array (Tuple
 #### `mediaType`
 
 ``` purescript
-mediaType :: forall ρ i. MediaType -> IProp (mediaType :: I | ρ) i
+mediaType :: forall r i. MediaType -> IProp (mediaType :: I | r) i
 ```
 
 #### `ButtonType`
@@ -220,7 +220,7 @@ data ButtonType
 #### `buttonType`
 
 ``` purescript
-buttonType :: forall ρ i. ButtonType -> IProp (buttonType :: I | ρ) i
+buttonType :: forall r i. ButtonType -> IProp (buttonType :: I | r) i
 ```
 
 #### `CaseType`
@@ -250,103 +250,103 @@ data OrderedListType
 #### `olType`
 
 ``` purescript
-olType :: forall ρ i. OrderedListType -> IProp (olType :: I | ρ) i
+olType :: forall r i. OrderedListType -> IProp (olType :: I | r) i
 ```
 
 #### `value`
 
 ``` purescript
-value :: forall ρ i. String -> IProp (value :: I | ρ) i
+value :: forall r i. String -> IProp (value :: I | r) i
 ```
 
 #### `disabled`
 
 ``` purescript
-disabled :: forall ρ i. Boolean -> IProp (disabled :: I | ρ) i
+disabled :: forall r i. Boolean -> IProp (disabled :: I | r) i
 ```
 
 #### `required`
 
 ``` purescript
-required :: forall ρ i. Boolean -> IProp (required :: I | ρ) i
+required :: forall r i. Boolean -> IProp (required :: I | r) i
 ```
 
 #### `readonly`
 
 ``` purescript
-readonly :: forall ρ i. Boolean -> IProp (readonly :: I | ρ) i
+readonly :: forall r i. Boolean -> IProp (readonly :: I | r) i
 ```
 
 #### `spellcheck`
 
 ``` purescript
-spellcheck :: forall ρ i. Boolean -> IProp (spellcheck :: I | ρ) i
+spellcheck :: forall r i. Boolean -> IProp (spellcheck :: I | r) i
 ```
 
 #### `enabled`
 
 ``` purescript
-enabled :: forall ρ i. Boolean -> IProp (disabled :: I | ρ) i
+enabled :: forall r i. Boolean -> IProp (disabled :: I | r) i
 ```
 
 #### `checked`
 
 ``` purescript
-checked :: forall ρ i. Boolean -> IProp (checked :: I | ρ) i
+checked :: forall r i. Boolean -> IProp (checked :: I | r) i
 ```
 
 #### `selected`
 
 ``` purescript
-selected :: forall ρ i. Boolean -> IProp (selected :: I | ρ) i
+selected :: forall r i. Boolean -> IProp (selected :: I | r) i
 ```
 
 #### `placeholder`
 
 ``` purescript
-placeholder :: forall ρ i. String -> IProp (placeholder :: I | ρ) i
+placeholder :: forall r i. String -> IProp (placeholder :: I | r) i
 ```
 
 #### `GlobalAttributes`
 
 ``` purescript
-type GlobalAttributes ρ = (id :: I, name :: I, title :: I, class :: I, spellcheck :: I | ρ)
+type GlobalAttributes r = (id :: I, name :: I, title :: I, class :: I, spellcheck :: I, key :: I | r)
 ```
 
 #### `GlobalEvents`
 
 ``` purescript
-type GlobalEvents ρ = (onContextMenu :: I | ρ)
+type GlobalEvents r = (onContextMenu :: I | r)
 ```
 
 #### `MouseEvents`
 
 ``` purescript
-type MouseEvents ρ = (onDoubleClick :: I, onClick :: I, onMouseDown :: I, onMouseEnter :: I, onMouseLeave :: I, onMouseMove :: I, onMouseOver :: I, onMouseOut :: I, onMouseUp :: I | ρ)
+type MouseEvents r = (onDoubleClick :: I, onClick :: I, onMouseDown :: I, onMouseEnter :: I, onMouseLeave :: I, onMouseMove :: I, onMouseOver :: I, onMouseOut :: I, onMouseUp :: I | r)
 ```
 
 #### `KeyEvents`
 
 ``` purescript
-type KeyEvents ρ = (onKeyDown :: I, onKeyUp :: I, onKeyPress :: I | ρ)
+type KeyEvents r = (onKeyDown :: I, onKeyUp :: I, onKeyPress :: I | r)
 ```
 
 #### `FocusEvents`
 
 ``` purescript
-type FocusEvents ρ = (onBlur :: I, onFocus :: I, onFocusIn :: I, onFocusOut :: I | ρ)
+type FocusEvents r = (onBlur :: I, onFocus :: I, onFocusIn :: I, onFocusOut :: I | r)
 ```
 
 #### `InteractiveEvents`
 
 ``` purescript
-type InteractiveEvents ρ = FocusEvents (KeyEvents (MouseEvents ρ))
+type InteractiveEvents r = FocusEvents (KeyEvents (MouseEvents r))
 ```
 
 #### `GlobalProperties`
 
 ``` purescript
-type GlobalProperties ρ = GlobalAttributes (GlobalEvents ρ)
+type GlobalProperties r = GlobalAttributes (GlobalEvents r)
 ```
 
 

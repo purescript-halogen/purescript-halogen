@@ -57,7 +57,7 @@ container = component' render eval peek
   -- | Peek allows us to observe inputs going to the child components, here
   -- | we're using it to observe when the text is changed inside the ace
   -- | component, and igoring any other inputs.
-  peek :: Peek State AceState Input AceInput (Aff (AceEffects eff)) AceSlot p
+  peek :: Peek (ChildF AceSlot AceInput) State AceState Input AceInput (Aff (AceEffects eff)) AceSlot p
   peek (ChildF _ q) = case q of
     ChangeText text _ -> modify _ { text = text }
     _ -> pure unit

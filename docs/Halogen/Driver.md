@@ -13,7 +13,7 @@ query has been fulfilled.
 #### `runUI`
 
 ``` purescript
-runUI :: forall s f eff o. ComponentP s f (Aff (HalogenEffects eff)) o Void -> s -> Aff (HalogenEffects eff) { node :: HTMLElement, driver :: Driver f eff }
+runUI :: forall s f eff. Component s f (Aff (HalogenEffects eff)) Void -> s -> Aff (HalogenEffects eff) { node :: HTMLElement, driver :: Driver f eff }
 ```
 
 Runs the top level UI component for a Halogen app, returning a generated

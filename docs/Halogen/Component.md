@@ -57,7 +57,7 @@ A convenience variation on `Eval` for parent components.
 #### `Peek`
 
 ``` purescript
-type Peek s s' f f' g p p' = PeekP s f (QueryF s s' f f' g p p') (ChildF p f')
+type Peek i s s' f f' g p p' = PeekP i s f (QueryF s s' f f' g p p')
 ```
 
 A type alias for a component `peek` function that observes inputs to child
@@ -66,7 +66,7 @@ components.
 #### `PeekP`
 
 ``` purescript
-type PeekP s f g o = forall a. o a -> Free (HalogenF s f g) Unit
+type PeekP i s f g = forall a. i a -> Free (HalogenF s f g) Unit
 ```
 
 A lower level form of the `Peek` type synonym, used internally.
@@ -101,7 +101,7 @@ Builds a new [`Component`](#component) from a [`Render`](#render) and
 #### `component'`
 
 ``` purescript
-component' :: forall s s' f f' g p p'. Render s f p -> EvalP f s s' f f' g p p' -> Peek s s' f f' g p p' -> ParentComponentP s s' f f' g p p'
+component' :: forall s s' f f' g p p'. Render s f p -> EvalP f s s' f f' g p p' -> Peek (ChildF p f') s s' f f' g p p' -> ParentComponentP s s' f f' g p p'
 ```
 
 Builds a new [`ComponentP`](#componentp) from a [`Render`](#render),
@@ -264,6 +264,15 @@ install :: forall s s' f f' g p p'. (Plus g, Ord p) => ParentComponent s s' f f'
 Installs children into a parent component by using a function that produces
 `ChildState` values for a given slot.
 
+#### `installWithState`
+
+``` purescript
+installWithState :: forall s s' f f' g p p'. (Plus g, Ord p) => ParentComponent s s' f f' g p p' -> (s -> p -> ChildState s' f' g p') -> InstalledComponent s s' f f' g p p'
+```
+
+A version of [`install`](#install) that gives us access to the parent's
+state while installing children.
+
 #### `install'`
 
 ``` purescript
@@ -272,6 +281,15 @@ install' :: forall s s' f f' g p p'. (Plus g, Ord p) => ParentComponentP s s' f 
 
 A version of [`install`](#install) for use with parent components that
 `peek` on their children.
+
+#### `installWithState'`
+
+``` purescript
+installWithState' :: forall s s' f f' g p p'. (Plus g, Ord p) => ParentComponentP s s' f f' g p p' -> (s -> p -> ChildState s' f' g p') -> InstalledComponent s s' f f' g p p'
+```
+
+A version of [`install'`](#install') that gives us access to the parent's
+state while installing children.
 
 #### `interpret`
 
