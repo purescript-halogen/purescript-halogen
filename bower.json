@@ -28,6 +28,7 @@
     "purescript-free": "^0.9.0",
     "purescript-maps": "^0.5.0",
     "purescript-nullable": "^0.2.0",
+    "purescript-profunctor": "^0.3.1",
     "purescript-unsafe-coerce": "^0.1.0",
     "purescript-void": "^0.3.0"
   }
