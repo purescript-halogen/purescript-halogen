@@ -653,7 +653,7 @@ tbody :: forall p i. Node (onScroll :: I) p i
 #### `td`
 
 ``` purescript
-td :: forall p i. Node (colspan :: I, headers :: I, rowspan :: I) p i
+td :: forall p i. Node (colSpan :: I, headers :: I, rowSpan :: I) p i
 ```
 
 #### `textarea`
@@ -671,7 +671,7 @@ tfoot :: forall p i. Node (onScroll :: I) p i
 #### `th`
 
 ``` purescript
-th :: forall p i. Node (abbr :: I, colspan :: I, headers :: I, rowspan :: I, scope :: I, sorted :: I) p i
+th :: forall p i. Node (abbr :: I, colSpan :: I, headers :: I, rowSpan :: I, scope :: I, sorted :: I) p i
 ```
 
 #### `thead`
