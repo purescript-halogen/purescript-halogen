@@ -572,7 +572,7 @@ table = unsafeCoerce E.table
 tbody :: forall p i. Node (onScroll :: I) p i
 tbody = unsafeCoerce E.tbody
 
-td :: forall p i. Node (colspan :: I, headers :: I, rowspan :: I) p i
+td :: forall p i. Node (colSpan :: I, headers :: I, rowSpan :: I) p i
 td = unsafeCoerce E.td
 
 textarea :: forall p i. Leaf (autofocus :: I, cols :: I, disabled :: I, form :: I, maxlength :: I, onChange :: I, onInput :: I, onScroll :: I, onSelect :: I, placeholder :: I, readonly :: I, required :: I, rows :: I, value :: I, wrap :: I) p i
@@ -581,7 +581,7 @@ textarea = unsafeCoerce E.textarea
 tfoot :: forall p i. Node (onScroll :: I) p i
 tfoot = unsafeCoerce E.tfoot
 
-th :: forall p i. Node (abbr :: I, colspan :: I, headers :: I, rowspan :: I, scope :: I, sorted :: I) p i
+th :: forall p i. Node (abbr :: I, colSpan :: I, headers :: I, rowSpan :: I, scope :: I, sorted :: I) p i
 th = unsafeCoerce E.th
 
 thead :: forall p i. Node () p i
