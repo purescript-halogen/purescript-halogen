@@ -1,13 +1,35 @@
 ## Module Halogen.Query
 
+#### `Action`
+
+``` purescript
+type Action f = Unit -> f Unit
+```
+
+Type synonym for an "action" - An action only causes effects and has no
+result value.
+
+In a query algebra, an action is any constructor that carries the algebra's
+type variable as a value. For example:
+
+``` purescript
+data Input a
+  = SomeAction a
+  | SomeOtherAction String a
+  | NotAnAction (Boolean -> a)
+```
+
+Both `SomeAction` and `SomeOtherAction` have `a` as a value so they are
+considered actions, whereas `NotAnAction` has `a` as the result of a
+function so is considered to be a "request" (see below).
+
 #### `action`
 
 ``` purescript
-action :: forall f. (Unit -> f Unit) -> f Unit
+action :: forall f. Action f -> f Unit
 ```
 
-Takes a data constructor of query algebra `f` and creates an "action". An
-"action" only causes effects and has no result value.
+Takes a data constructor of query algebra `f` and creates an action.
 
 For example:
 
@@ -18,15 +40,29 @@ sendTick :: forall eff. Driver Input eff -> Aff (HalogenEffects eff) Unit
 sendTick driver = driver (action Tick)
 ```
 
+#### `Request`
+
+``` purescript
+type Request f a = forall i. (a -> i) -> f i
+```
+
+Type synonym for an "request" - a request can cause effects as well as
+fetching some information from a component.
+
+In a query algebra, an action is any constructor that carries the algebra's
+type variable as the return value of a function. For example:
+
+``` purescript
+data Input a = SomeRequest (Boolean -> a)
+```
+
 #### `request`
 
 ``` purescript
-request :: forall f a. (forall i. (a -> i) -> f i) -> f a
+request :: forall f a. Request f a -> f a
 ```
 
-Takes a data constructor of query algebra `f` and creates a "request". A
-"request" can cause effects as well as fetching some information from a
-component.
+Takes a data constructor of query algebra `f` and creates a request.
 
 For example:
 

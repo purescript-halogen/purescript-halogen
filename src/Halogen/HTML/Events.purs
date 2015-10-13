@@ -10,17 +10,17 @@ import Prelude
 
 import Control.Monad.Free (Free())
 
-import Halogen.Query (action)
+import Halogen.Query (Action(), action)
 import Halogen.HTML.Events.Handler (EventHandler(), preventDefault, stopPropagation, stopImmediatePropagation)
 import Halogen.HTML.Events.Types (Event(), MouseEvent(), FocusEvent(), KeyboardEvent())
 import Halogen.HTML.Core (Prop(), handler, eventName)
 
 type EventProp e i = (Event e -> EventHandler i) -> Prop i
 
-input :: forall f a. (forall i. a -> i -> f i) -> a -> EventHandler (f Unit)
+input :: forall f a. (a -> Action f) -> a -> EventHandler (f Unit)
 input f x = pure $ action (f x)
 
-input_ :: forall f a. (forall i. i -> f i) -> a -> EventHandler (f Unit)
+input_ :: forall f a. Action f -> a -> EventHandler (f Unit)
 input_ f _ = pure $ action f
 
 onAbort :: forall i. EventProp () i

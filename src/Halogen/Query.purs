@@ -1,5 +1,7 @@
 module Halogen.Query
-  ( action
+  ( Action()
+  , action
+  , Request()
   , request
   , HalogenF()
   , get
@@ -28,8 +30,25 @@ import Data.Functor.Coproduct (Coproduct(), coproduct, left, right)
 import Halogen.Query.StateF (StateF(..))
 import Halogen.Query.SubscribeF (SubscribeF(..), EventSource(), eventSource, eventSource_, hoistSubscribe)
 
--- | Takes a data constructor of query algebra `f` and creates an "action". An
--- | "action" only causes effects and has no result value.
+-- | Type synonym for an "action" - An action only causes effects and has no
+-- | result value.
+-- |
+-- | In a query algebra, an action is any constructor that carries the algebra's
+-- | type variable as a value. For example:
+-- |
+-- | ``` purescript
+-- | data Input a
+-- |   = SomeAction a
+-- |   | SomeOtherAction String a
+-- |   | NotAnAction (Boolean -> a)
+-- | ```
+-- |
+-- | Both `SomeAction` and `SomeOtherAction` have `a` as a value so they are
+-- | considered actions, whereas `NotAnAction` has `a` as the result of a
+-- | function so is considered to be a "request" (see below).
+type Action f = Unit -> f Unit
+
+-- | Takes a data constructor of query algebra `f` and creates an action.
 -- |
 -- | For example:
 -- |
@@ -39,12 +58,21 @@ import Halogen.Query.SubscribeF (SubscribeF(..), EventSource(), eventSource, eve
 -- | sendTick :: forall eff. Driver Input eff -> Aff (HalogenEffects eff) Unit
 -- | sendTick driver = driver (action Tick)
 -- | ```
-action :: forall f. (Unit -> f Unit) -> f Unit
+action :: forall f. Action f -> f Unit
 action act = act unit
 
--- | Takes a data constructor of query algebra `f` and creates a "request". A
--- | "request" can cause effects as well as fetching some information from a
--- | component.
+-- | Type synonym for an "request" - a request can cause effects as well as
+-- | fetching some information from a component.
+-- |
+-- | In a query algebra, an action is any constructor that carries the algebra's
+-- | type variable as the return value of a function. For example:
+-- |
+-- | ``` purescript
+-- | data Input a = SomeRequest (Boolean -> a)
+-- | ```
+type Request f a = forall i. (a -> i) -> f i
+
+-- | Takes a data constructor of query algebra `f` and creates a request.
 -- |
 -- | For example:
 -- |
@@ -54,7 +82,7 @@ action act = act unit
 -- | getTickCount :: forall eff. Driver Input eff -> Aff (HalogenEffects eff) Int
 -- | getTickCount driver = driver (request GetTickCount)
 -- | ```
-request :: forall f a. (forall i. (a -> i) -> f i) -> f a
+request :: forall f a. Request f a -> f a
 request req = req id
 
 -- | A type alias for the full Halogen component algebra.

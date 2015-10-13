@@ -12,13 +12,13 @@ type EventProp e i = (Event e -> EventHandler i) -> Prop i
 #### `input`
 
 ``` purescript
-input :: forall f a. (forall i. a -> i -> f i) -> a -> EventHandler (f Unit)
+input :: forall f a. (a -> Action f) -> a -> EventHandler (f Unit)
 ```
 
 #### `input_`
 
 ``` purescript
-input_ :: forall f a. (forall i. i -> f i) -> a -> EventHandler (f Unit)
+input_ :: forall f a. Action f -> a -> EventHandler (f Unit)
 ```
 
 #### `onAbort`
