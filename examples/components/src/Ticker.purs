@@ -13,11 +13,11 @@ data TickInput a
   = Tick a
   | GetTick (Int -> a)
 
-ticker :: forall g p. (Functor g) => Component TickState TickInput g p
+ticker :: forall g. (Functor g) => Component TickState TickInput g
 ticker = component render eval
   where
 
-  render :: Render TickState TickInput p
+  render :: Render TickState TickInput
   render (TickState n) =
     H.div_ [ H.h1 [ P.id_ "header" ] [ H.text "counter" ]
            , H.p_ [ H.text (show n) ]

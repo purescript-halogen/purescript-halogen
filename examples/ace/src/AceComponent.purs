@@ -30,11 +30,11 @@ initAceState = { editor: Nothing }
 
 type AceEffects eff = (ace :: ACE, avar :: AVAR, console :: CONSOLE | eff)
 
-ace :: forall p eff. String -> Component AceState AceInput (Aff (AceEffects eff)) p
+ace :: forall eff. String -> Component AceState AceInput (Aff (AceEffects eff))
 ace key = component render eval
   where
 
-  render :: Render AceState AceInput p
+  render :: Render AceState AceInput
   render = const $ H.div [ initializer ] []
 
   initializer :: Prop AceInput

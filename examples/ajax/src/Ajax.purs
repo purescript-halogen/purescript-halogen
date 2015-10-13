@@ -50,11 +50,11 @@ data Input a
 type AppEffects eff = HalogenEffects (ajax :: AJAX | eff)
 
 -- | The definition for the app's main UI component.
-ui :: forall eff p. Component State Input (Aff (AppEffects eff)) p
+ui :: forall eff. Component State Input (Aff (AppEffects eff))
 ui = component render eval
   where
 
-  render :: Render State Input p
+  render :: Render State Input
   render st =
     H.div_ $ [ H.h1_ [ H.text "ajax example / trypurescript" ]
              , H.h2_ [ H.text "purescript input:" ]

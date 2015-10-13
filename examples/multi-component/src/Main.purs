@@ -42,11 +42,11 @@ cpB = cpR :> cpL
 cpC :: ChildPath StateC ChildStates InputC ChildInputs SlotC ChildSlots
 cpC = cpR :> cpR
 
-parent :: forall g p. (Functor g) => ParentComponent State ChildStates Input ChildInputs g ChildSlots p
-parent = component render eval
+parent :: forall g. (Functor g) => ParentComponent State ChildStates Input ChildInputs g ChildSlots
+parent = parentComponent render eval
   where
 
-  render :: Render State Input ChildSlots
+  render :: RenderP State Input ChildSlots
   render (State state) = H.div_
     [ H.div_ [ H.slot' cpA SlotA ]
     , H.div_ [ H.slot' cpB SlotB ]
@@ -55,7 +55,7 @@ parent = component render eval
     , H.button [ E.onClick (E.input_ ReadStates) ] [ H.text "Read states" ]
     ]
 
-  eval :: EvalP Input State ChildStates Input ChildInputs g ChildSlots p
+  eval :: EvalP Input State ChildStates Input ChildInputs g ChildSlots
   eval (ReadStates next) = do
     a <- query' cpA SlotA (request GetStateA)
     b <- query' cpB SlotB (request GetStateB)
@@ -63,7 +63,7 @@ parent = component render eval
     modify (const $ State { a: a, b: b, c: c })
     pure next
 
-ui :: forall g p. (Plus g) => InstalledComponent State ChildStates Input ChildInputs g ChildSlots p
+ui :: forall g. (Plus g) => InstalledComponent State ChildStates Input ChildInputs g ChildSlots
 ui = install parent (either installA (either installB installC))
   where
   installA SlotA = createChild' cpA componentA initStateA

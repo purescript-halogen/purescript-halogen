@@ -48,7 +48,7 @@ type DriverState s =
 -- | can be used to send actions and requests into the component (see the
 -- | [`action`](#action), [`request`](#request), and related variations for
 -- | more details on querying the driver).
-runUI :: forall s f eff. Component s f (Aff (HalogenEffects eff)) Void
+runUI :: forall s f eff. Component s f (Aff (HalogenEffects eff))
       -> s
       -> Aff (HalogenEffects eff) { node :: HTMLElement, driver :: Driver f eff }
 runUI c s = case renderComponent c s of
