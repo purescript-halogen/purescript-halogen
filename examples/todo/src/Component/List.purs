@@ -26,11 +26,11 @@ instance eqListSlot :: Eq ListSlot where eq = gEq
 instance ordListSlot :: Ord ListSlot where compare = gCompare
 
 -- | The list component definition.
-list :: forall g p. (Functor g) => ParentComponentP State Task ListInput TaskInput g ListSlot p
-list = component' render eval peek
+list :: forall g. (Functor g) => ParentComponentP State Task ListInput TaskInput g ListSlot
+list = parentComponent' render eval peek
   where
 
-  render :: Render State ListInput ListSlot
+  render :: RenderP State ListInput ListSlot
   render st =
     H.div_ [ H.h1_ [ H.text "Todo list" ]
            , H.p_ [ H.button [ E.onClick (E.input_ NewTask) ]
@@ -40,12 +40,12 @@ list = component' render eval peek
            , H.p_ [ H.text $ show st.numCompleted ++ " / " ++ show (length st.tasks) ++ " complete" ]
            ]
 
-  eval :: EvalP ListInput State Task ListInput TaskInput g ListSlot p
+  eval :: EvalP ListInput State Task ListInput TaskInput g ListSlot
   eval (NewTask next) = do
     modify addTask
     pure next
 
-  peek :: Peek (ChildF ListSlot TaskInput) State Task ListInput TaskInput g ListSlot p
+  peek :: Peek (ChildF ListSlot TaskInput) State Task ListInput TaskInput g ListSlot
   peek (ChildF p q) = case q of
     Remove _ -> do
       wasComplete <- query p (request IsCompleted)

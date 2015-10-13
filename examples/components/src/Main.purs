@@ -30,11 +30,11 @@ derive instance genericTickSlot :: Generic TickSlot
 instance eqTickSlot :: Eq TickSlot where eq = gEq
 instance ordTickSlot :: Ord TickSlot where compare = gCompare
 
-uiContainer :: forall g p. (Functor g) => ParentComponent State TickState Input TickInput g TickSlot p
-uiContainer = component render eval
+uiContainer :: forall g. (Functor g) => ParentComponent State TickState Input TickInput g TickSlot
+uiContainer = parentComponent render eval
   where
 
-  render :: Render State Input TickSlot
+  render :: RenderP State Input TickSlot
   render st =
     H.div_ [ H.slot (TickSlot "A")
            , H.slot (TickSlot "B")
@@ -44,14 +44,14 @@ uiContainer = component render eval
                   ]
            ]
 
-  eval :: EvalP Input State TickState Input TickInput g TickSlot p
+  eval :: EvalP Input State TickState Input TickInput g TickSlot
   eval (ReadTicks next) = do
     a <- query (TickSlot "A") (request GetTick)
     b <- query (TickSlot "B") (request GetTick)
     modify (\_ -> { tickA: a, tickB: b })
     pure next
 
-ui :: forall g p. (Plus g) => InstalledComponent State TickState Input TickInput g TickSlot p
+ui :: forall g p. (Plus g) => InstalledComponent State TickState Input TickInput g TickSlot
 ui = install uiContainer mkTicker
   where
   mkTicker (TickSlot "A") = createChild ticker (TickState 100)

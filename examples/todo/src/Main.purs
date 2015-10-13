@@ -14,7 +14,7 @@ import Model
 import Component.List
 import Component.Task
 
-ui :: forall g p. (Plus g) => InstalledComponent State Task ListInput TaskInput g ListSlot p
+ui :: forall g. (Plus g) => InstalledComponent State Task ListInput TaskInput g ListSlot
 ui = install' list mkTask
   where
   mkTask (ListSlot _) = createChild task { description: "", completed: false }

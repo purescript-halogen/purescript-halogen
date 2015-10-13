@@ -34,11 +34,11 @@ instance eqAceSlot :: Eq AceSlot where eq = gEq
 instance ordAceSlot :: Ord AceSlot where compare = gCompare
 
 -- | The parent component that the ace component will be installed into.
-container :: forall p eff. ParentComponentP State AceState Input AceInput (Aff (AceEffects eff)) AceSlot p
-container = component' render eval peek
+container :: forall eff. ParentComponentP State AceState Input AceInput (Aff (AceEffects eff)) AceSlot
+container = parentComponent' render eval peek
   where
 
-  render :: Render State Input AceSlot
+  render :: RenderP State Input AceSlot
   render { text: text } =
     H.div_ [ H.h1_ [ H.text "ace editor" ]
            , H.div_ [ H.p_ [ H.button [ E.onClick (E.input_ ClearText) ]
@@ -49,7 +49,7 @@ container = component' render eval peek
            , H.p_ [ H.text ("Current text: " ++ text) ]
            ]
 
-  eval :: EvalP Input State AceState Input AceInput (Aff (AceEffects eff)) AceSlot p
+  eval :: EvalP Input State AceState Input AceInput (Aff (AceEffects eff)) AceSlot
   eval (ClearText next) = do
     query (AceSlot "test-ace") (action $ ChangeText "")
     pure next
@@ -57,13 +57,13 @@ container = component' render eval peek
   -- | Peek allows us to observe inputs going to the child components, here
   -- | we're using it to observe when the text is changed inside the ace
   -- | component, and igoring any other inputs.
-  peek :: Peek (ChildF AceSlot AceInput) State AceState Input AceInput (Aff (AceEffects eff)) AceSlot p
+  peek :: Peek (ChildF AceSlot AceInput) State AceState Input AceInput (Aff (AceEffects eff)) AceSlot
   peek (ChildF _ q) = case q of
     ChangeText text _ -> modify _ { text = text }
     _ -> pure unit
 
 -- | The main UI component - the parent component with installed ace component.
-ui :: forall p eff. InstalledComponent State AceState Input AceInput (Aff (AceEffects eff)) AceSlot p
+ui :: forall eff. InstalledComponent State AceState Input AceInput (Aff (AceEffects eff)) AceSlot
 ui = install' container mkAce
   where
   mkAce (AceSlot name) = createChild (ace name) initAceState
