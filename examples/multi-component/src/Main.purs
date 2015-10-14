@@ -42,33 +42,26 @@ cpB = cpR :> cpL
 cpC :: ChildPath StateC ChildStates InputC ChildInputs SlotC ChildSlots
 cpC = cpR :> cpR
 
-parent :: forall g. (Functor g) => ParentComponent State ChildStates Input ChildInputs g ChildSlots
-parent = parentComponent render eval
+ui :: forall g. (Plus g) => ParentComponent State ChildStates Input ChildInputs g ChildSlots
+ui = parentComponent' render eval (const (pure unit))
   where
 
-  render :: RenderP State Input ChildSlots
+  render :: RenderParent State ChildStates Input ChildInputs g ChildSlots
   render (State state) = H.div_
-    [ H.div_ [ H.slot' cpA SlotA ]
-    , H.div_ [ H.slot' cpB SlotB ]
-    , H.div_ [ H.slot' cpC SlotC ]
+    [ H.div_ [ H.slot' cpA SlotA componentA \_ -> initStateA ]
+    , H.div_ [ H.slot' cpB SlotB componentB \_ -> initStateB ]
+    , H.div_ [ H.slot' cpC SlotC componentC \_ -> initStateC ]
     , H.div_ [ H.text $ "Current states: " ++ show state.a ++ " / " ++ show state.b ++ " / " ++ show state.c ]
     , H.button [ E.onClick (E.input_ ReadStates) ] [ H.text "Read states" ]
     ]
 
-  eval :: EvalP Input State ChildStates Input ChildInputs g ChildSlots
+  eval :: EvalParent Input State ChildStates Input ChildInputs g ChildSlots
   eval (ReadStates next) = do
     a <- query' cpA SlotA (request GetStateA)
     b <- query' cpB SlotB (request GetStateB)
     c <- query' cpC SlotC (request GetStateC)
     modify (const $ State { a: a, b: b, c: c })
     pure next
-
-ui :: forall g. (Plus g) => InstalledComponent State ChildStates Input ChildInputs g ChildSlots
-ui = install parent (either installA (either installB installC))
-  where
-  installA SlotA = createChild' cpA componentA initStateA
-  installB SlotB = createChild' cpB componentB initStateB
-  installC SlotC = createChild' cpC componentC initStateC
 
 main :: Eff (HalogenEffects ()) Unit
 main = runAff throwException (const (pure unit)) $ do

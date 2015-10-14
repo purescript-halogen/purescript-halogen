@@ -27,31 +27,31 @@ initialState = { text: "" }
 data Input a = ClearText a
 
 -- | The slot for the ace component.
-newtype AceSlot = AceSlot String
+data AceSlot = AceSlot
 
 derive instance genericAceSlot :: Generic AceSlot
 instance eqAceSlot :: Eq AceSlot where eq = gEq
 instance ordAceSlot :: Ord AceSlot where compare = gCompare
 
--- | The parent component that the ace component will be installed into.
-container :: forall eff. ParentComponentP State AceState Input AceInput (Aff (AceEffects eff)) AceSlot
-container = parentComponent' render eval peek
+-- | The main UI component
+ui :: forall eff. ParentComponent State AceState Input AceInput (Aff (AceEffects eff)) AceSlot
+ui = parentComponent' render eval peek
   where
 
-  render :: RenderP State Input AceSlot
+  render :: RenderParent State AceState Input AceInput (Aff (AceEffects eff)) AceSlot
   render { text: text } =
     H.div_ [ H.h1_ [ H.text "ace editor" ]
            , H.div_ [ H.p_ [ H.button [ E.onClick (E.input_ ClearText) ]
                                       [ H.text "Clear" ]
                            ]
                     ]
-           , H.div_ [ H.slot $ AceSlot "test-ace" ]
+           , H.div_ [ H.slot AceSlot (ace "test-ace") \_ -> initAceState ]
            , H.p_ [ H.text ("Current text: " ++ text) ]
            ]
 
-  eval :: EvalP Input State AceState Input AceInput (Aff (AceEffects eff)) AceSlot
+  eval :: EvalParent Input State AceState Input AceInput (Aff (AceEffects eff)) AceSlot
   eval (ClearText next) = do
-    query (AceSlot "test-ace") (action $ ChangeText "")
+    query AceSlot $ action (ChangeText "")
     pure next
 
   -- | Peek allows us to observe inputs going to the child components, here
@@ -61,12 +61,6 @@ container = parentComponent' render eval peek
   peek (ChildF _ q) = case q of
     ChangeText text _ -> modify _ { text = text }
     _ -> pure unit
-
--- | The main UI component - the parent component with installed ace component.
-ui :: forall eff. InstalledComponent State AceState Input AceInput (Aff (AceEffects eff)) AceSlot
-ui = install' container mkAce
-  where
-  mkAce (AceSlot name) = createChild (ace name) initAceState
 
 -- | Run the Halogen app.
 main :: Eff (HalogenEffects (ace :: ACE, console :: CONSOLE)) Unit

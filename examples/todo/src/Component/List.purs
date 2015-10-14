@@ -2,6 +2,7 @@ module Component.List where
 
 import Prelude
 
+import Control.Plus (Plus)
 import Control.Monad (when)
 
 import Data.Array (snoc, filter, length)
@@ -19,33 +20,33 @@ import Component.Task
 data ListInput a = NewTask a
 
 -- | The slot value that is filled by tasks during the install process.
-newtype ListSlot = ListSlot TaskId
+newtype TaskSlot = TaskSlot TaskId
 
-derive instance genericListSlot :: Generic ListSlot
-instance eqListSlot :: Eq ListSlot where eq = gEq
-instance ordListSlot :: Ord ListSlot where compare = gCompare
+derive instance genericTaskSlot :: Generic TaskSlot
+instance eqTaskSlot :: Eq TaskSlot where eq = gEq
+instance ordTaskSlot :: Ord TaskSlot where compare = gCompare
 
 -- | The list component definition.
-list :: forall g. (Functor g) => ParentComponentP State Task ListInput TaskInput g ListSlot
+list :: forall g. (Plus g) => ParentComponent State Task ListInput TaskInput g TaskSlot
 list = parentComponent' render eval peek
   where
 
-  render :: RenderP State ListInput ListSlot
+  render :: RenderParent State Task ListInput TaskInput g TaskSlot
   render st =
     H.div_ [ H.h1_ [ H.text "Todo list" ]
            , H.p_ [ H.button [ E.onClick (E.input_ NewTask) ]
                              [ H.text "New Task" ]
                   ]
-           , H.ul_ (map (H.slot <<< ListSlot) st.tasks)
+           , H.ul_ (map (\tid -> H.slot (TaskSlot tid) task \_ -> initialTask) st.tasks)
            , H.p_ [ H.text $ show st.numCompleted ++ " / " ++ show (length st.tasks) ++ " complete" ]
            ]
 
-  eval :: EvalP ListInput State Task ListInput TaskInput g ListSlot
+  eval :: EvalParent ListInput State Task ListInput TaskInput g TaskSlot
   eval (NewTask next) = do
     modify addTask
     pure next
 
-  peek :: Peek (ChildF ListSlot TaskInput) State Task ListInput TaskInput g ListSlot
+  peek :: Peek (ChildF TaskSlot TaskInput) State Task ListInput TaskInput g TaskSlot
   peek (ChildF p q) = case q of
     Remove _ -> do
       wasComplete <- query p (request IsCompleted)
@@ -59,8 +60,8 @@ addTask :: State -> State
 addTask st = st { nextId = st.nextId + 1, tasks = st.tasks `snoc` st.nextId }
 
 -- | Removes a task from the current state.
-removeTask :: ListSlot -> State -> State
-removeTask (ListSlot id) st = st { tasks = filter (/= id) st.tasks }
+removeTask :: TaskSlot -> State -> State
+removeTask (TaskSlot id) st = st { tasks = filter (/= id) st.tasks }
 
 -- | Updates the number of completed tasks.
 updateNumCompleted :: (Int -> Int) -> State -> State

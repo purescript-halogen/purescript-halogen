@@ -30,32 +30,26 @@ derive instance genericTickSlot :: Generic TickSlot
 instance eqTickSlot :: Eq TickSlot where eq = gEq
 instance ordTickSlot :: Ord TickSlot where compare = gCompare
 
-uiContainer :: forall g. (Functor g) => ParentComponent State TickState Input TickInput g TickSlot
-uiContainer = parentComponent render eval
+ui :: forall g. (Plus g) => ParentComponent State TickState Input TickInput g TickSlot
+ui = parentComponent' render eval (const (pure unit))
   where
 
-  render :: RenderP State Input TickSlot
+  render :: RenderParent State TickState Input TickInput g TickSlot
   render st =
-    H.div_ [ H.slot (TickSlot "A")
-           , H.slot (TickSlot "B")
+    H.div_ [ H.slot (TickSlot "A") ticker \_ -> TickState 100
+           , H.slot (TickSlot "B") ticker \_ -> TickState 0
            , H.p_ [ H.p_ [ H.text $ "Last tick readings - A: " ++ (maybe "No reading" show st.tickA) ++ ", B: " ++ (maybe "No reading" show st.tickB) ]
                   , H.button [ E.onClick (E.input_ ReadTicks) ]
                              [ H.text "Update reading" ]
                   ]
            ]
 
-  eval :: EvalP Input State TickState Input TickInput g TickSlot
+  eval :: EvalParent Input State TickState Input TickInput g TickSlot
   eval (ReadTicks next) = do
     a <- query (TickSlot "A") (request GetTick)
     b <- query (TickSlot "B") (request GetTick)
     modify (\_ -> { tickA: a, tickB: b })
     pure next
-
-ui :: forall g p. (Plus g) => InstalledComponent State TickState Input TickInput g TickSlot
-ui = install uiContainer mkTicker
-  where
-  mkTicker (TickSlot "A") = createChild ticker (TickState 100)
-  mkTicker (TickSlot _) = createChild ticker (TickState 0)
 
 main :: Eff (HalogenEffects ()) Unit
 main = runAff throwException (const (pure unit)) $ do
