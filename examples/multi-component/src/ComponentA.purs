@@ -12,7 +12,7 @@ newtype StateA = StateA { on :: Boolean }
 
 initStateA = StateA { on: false }
 
-data InputA a
+data QueryA a
   = ToggleStateA a
   | GetStateA (Boolean -> a)
 
@@ -22,18 +22,18 @@ derive instance genericSlotA :: Generic SlotA
 instance eqSlotA :: Eq SlotA where eq = gEq
 instance ordSlotA :: Ord SlotA where compare = gCompare
 
-componentA :: forall g. (Functor g) => Component StateA InputA g
+componentA :: forall g. (Functor g) => Component StateA QueryA g
 componentA = component render eval
   where
 
-  render :: Render StateA InputA
+  render :: Render StateA QueryA
   render (StateA state) = H.div_
     [ H.h1_ [ H.text "Toggle Button A" ]
     , H.button [ E.onClick (E.input_ ToggleStateA) ]
                [ H.text (if state.on then "On" else "Off") ]
     ]
 
-  eval :: Eval InputA StateA InputA g
+  eval :: Eval QueryA StateA QueryA g
   eval (ToggleStateA next) = do
     modify (\(StateA state) -> StateA { on: not state.on })
     pure next

@@ -7,13 +7,14 @@ newtype ComponentP s f g o p
 ```
 
 Data type for Halogen components.
-- `s` - the type of the component state
+- `s` - the component's state
 - `f` - the component's query algebra
-- `g` - the monad handling the component's non-state effects
+- `g` - a functor integrated into the component's query algebra that allows
+        embedding of external DSLs or handling of effects.
 - `o` - the type of values observable via `peek`, used to allow parent
         components to see queries their children have acted upon.
-- `p` - the type of slots within the component, used to specify locations
-        at which child components can be installed.
+- `p` - the type of slot addresses within the component - these values
+        allow queries to child components to be specifically addressed.
 
 ##### Instances
 ``` purescript
@@ -34,7 +35,8 @@ A type alias for self-contained Halogen components.
 type RenderP s f p = s -> HTML p (f Unit)
 ```
 
-A low level form of the `Render` and `RenderParent` synonyms, used internally.
+A low level form of the `Render` and `RenderParent` synonyms, used
+internally.
 
 #### `Render`
 
@@ -42,7 +44,8 @@ A low level form of the `Render` and `RenderParent` synonyms, used internally.
 type Render s f = RenderP s f Void
 ```
 
-A type alias for a component `render` function.
+A type alias for a component `render` function - takes the component's
+current state and returns a `HTML` value.
 
 #### `Eval`
 
@@ -50,9 +53,12 @@ A type alias for a component `render` function.
 type Eval i s f g = Natural i (Free (HalogenF s f g))
 ```
 
-A type alias for a component `eval` function that takes a value from the
-component's query algebra and returns a `Free` monad of the Halogen
-component algebra.
+A type alias for a component `eval` function - takes a functorial value `i`
+and returns a `Free` of the Halogen component algebra.
+
+Usually `i` will be the same type as `f`, but sometimes it is useful to be
+able to break up an `Eval` function into different parts, in which case
+`i`'s type may differ.
 
 #### `component`
 
@@ -60,7 +66,7 @@ component algebra.
 component :: forall s f g. Render s f -> Eval f s f g -> Component s f g
 ```
 
-Builds a self-contained component with no children.
+Builds a self-contained component with no possible children.
 
 #### `RenderParent`
 
@@ -68,7 +74,8 @@ Builds a self-contained component with no children.
 type RenderParent s s' f f' g p = RenderP s f (SlotConstructor s' f' g p)
 ```
 
-A variation on `Render` for parent components.
+A variation on `Render` for parent components - the function follows the
+same form but the type representation is different.
 
 #### `SlotConstructor`
 
@@ -85,7 +92,8 @@ The type used for slots in the HTML rendered by parent components.
 type EvalParent i s s' f f' g p = Eval i s f (QueryF s s' f f' g p)
 ```
 
-A variation on `Eval` for parent components.
+A variation on `Eval` for parent components - the function follows the
+same form but the type representation is different.
 
 #### `PeekP`
 
@@ -110,7 +118,7 @@ components.
 parentComponent :: forall s s' f f' g p. (Plus g, Ord p) => RenderParent s s' f f' g p -> EvalParent f s s' f f' g p -> Component (InstalledState s s' f f' g p) (Coproduct f (ChildF p f')) g
 ```
 
-Builds a component that can contain child components.
+Builds a component that may contain child components.
 
 #### `parentComponent'`
 
@@ -118,15 +126,9 @@ Builds a component that can contain child components.
 parentComponent' :: forall s s' f f' g p. (Plus g, Ord p) => RenderParent s s' f f' g p -> EvalParent f s s' f f' g p -> Peek (ChildF p f') s s' f f' g p -> Component (InstalledState s s' f f' g p) (Coproduct f (ChildF p f')) g
 ```
 
-Builds a component that can contain child components and supports the
-`peek` operation to allow the parent to observe queries that descendant
-components have processed.
-
-#### `ParentComponent`
-
-``` purescript
-type ParentComponent s s' f f' g p = Component (InstalledState s s' f f' g p) (Coproduct f (ChildF p f')) g
-```
+Builds a component that may contain child components and additionally
+supports the `peek` operation to allow the parent to observe queries that
+descendant components have processed.
 
 #### `InstalledState`
 
@@ -145,8 +147,8 @@ child components.
 installedState :: forall s s' f f' g p. (Ord p) => s -> InstalledState s s' f f' g p
 ```
 
-Creates an initial `InstalledState` value for a component container based
-on a state value for the container.
+Lifts a state value into an `InstalledState` value. Useful when providing
+an initial state value for a parent component.
 
 #### `QueryF`
 
@@ -224,8 +226,10 @@ Lifts a value in the `QueryF` algebra into the monad used by a component's
 #### `transformChild`
 
 ``` purescript
-transformChild :: forall s s' f f' g p p' o q. (Functor g) => ChildPath s s' f f' p p' -> ComponentP s f g o q -> ComponentP s' f' g o q
+transformChild :: forall s s' f f' g p p'. (Functor g) => ChildPath s s' f f' p p' -> Component s f g -> Component s' f' g
 ```
+
+Transforms a `Component`'s types using a `ChildPath` definition.
 
 #### `interpret`
 

@@ -41,8 +41,8 @@ fact n = n * fact (n - 1)
 main = print (fact 20)
 """
 
--- | Inputs to the state machine.
-data Input a
+-- | Querys to the state machine.
+data Query a
   = SetCode String a
   | MakeRequest String a
 
@@ -50,11 +50,11 @@ data Input a
 type AppEffects eff = HalogenEffects (ajax :: AJAX | eff)
 
 -- | The definition for the app's main UI component.
-ui :: forall eff. Component State Input (Aff (AppEffects eff))
+ui :: forall eff. Component State Query (Aff (AppEffects eff))
 ui = component render eval
   where
 
-  render :: Render State Input
+  render :: Render State Query
   render st =
     H.div_ $ [ H.h1_ [ H.text "ajax example / trypurescript" ]
              , H.h2_ [ H.text "purescript input:" ]
@@ -75,7 +75,7 @@ ui = component render eval
                          ]
                 ]
 
-  eval :: Eval Input State Input (Aff (AppEffects eff))
+  eval :: Eval Query State Query (Aff (AppEffects eff))
   eval (SetCode code next) = modify (_ { code = code, result = Nothing :: Maybe String }) $> next
   eval (MakeRequest code next) = do
     modify (_ { busy = true })

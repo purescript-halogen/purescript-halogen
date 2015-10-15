@@ -5,7 +5,7 @@ import Halogen
 import Control.Monad.Aff (Aff())
 import Control.Monad.Free (Free())
 
-data Input a = GetTickCount (Int -> a)
+data Query a = GetTickCount (Int -> a)
 
-getTickCount :: forall eff. Driver Input eff -> Aff (HalogenEffects eff) Int
+getTickCount :: forall eff. Driver Query eff -> Aff (HalogenEffects eff) Int
 getTickCount driver = driver (request GetTickCount)

@@ -27,26 +27,29 @@ newtype State = State { a :: Maybe Boolean, b :: Maybe Boolean, c :: Maybe Boole
 initialState :: State
 initialState = State { a: Nothing, b: Nothing, c: Nothing }
 
-data Input a = ReadStates a
+data Query a = ReadStates a
 
-type ChildStates = Either StateA (Either StateB StateC)
-type ChildInputs = Coproduct InputA (Coproduct InputB InputC)
-type ChildSlots = Either SlotA (Either SlotB SlotC)
+type ChildState = Either StateA (Either StateB StateC)
+type ChildQuery = Coproduct QueryA (Coproduct QueryB QueryC)
+type ChildSlot = Either SlotA (Either SlotB SlotC)
 
-cpA :: ChildPath StateA ChildStates InputA ChildInputs SlotA ChildSlots
+cpA :: ChildPath StateA ChildState QueryA ChildQuery SlotA ChildSlot
 cpA = cpL
 
-cpB :: ChildPath StateB ChildStates InputB ChildInputs SlotB ChildSlots
+cpB :: ChildPath StateB ChildState QueryB ChildQuery SlotB ChildSlot
 cpB = cpR :> cpL
 
-cpC :: ChildPath StateC ChildStates InputC ChildInputs SlotC ChildSlots
+cpC :: ChildPath StateC ChildState QueryC ChildQuery SlotC ChildSlot
 cpC = cpR :> cpR
 
-ui :: forall g. (Plus g) => ParentComponent State ChildStates Input ChildInputs g ChildSlots
+type StateP g = InstalledState State ChildState Query ChildQuery g ChildSlot
+type QueryP = Coproduct Query (ChildF ChildSlot ChildQuery)
+
+ui :: forall g. (Plus g) => Component (StateP g) QueryP g
 ui = parentComponent' render eval (const (pure unit))
   where
 
-  render :: RenderParent State ChildStates Input ChildInputs g ChildSlots
+  render :: RenderParent State ChildState Query ChildQuery g ChildSlot
   render (State state) = H.div_
     [ H.div_ [ H.slot' cpA SlotA \_ -> { component: componentA, initialState: initStateA } ]
     , H.div_ [ H.slot' cpB SlotB \_ -> { component: componentB, initialState: initStateB } ]
@@ -55,7 +58,7 @@ ui = parentComponent' render eval (const (pure unit))
     , H.button [ E.onClick (E.input_ ReadStates) ] [ H.text "Read states" ]
     ]
 
-  eval :: EvalParent Input State ChildStates Input ChildInputs g ChildSlots
+  eval :: EvalParent Query State ChildState Query ChildQuery g ChildSlot
   eval (ReadStates next) = do
     a <- query' cpA SlotA (request GetStateA)
     b <- query' cpB SlotB (request GetStateB)

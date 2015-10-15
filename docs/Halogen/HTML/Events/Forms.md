@@ -8,7 +8,7 @@ Convenience functions for working with form events.
 onValueChange :: forall f. (String -> EventHandler (f Unit)) -> Prop (f Unit)
 ```
 
-Attach an event handler which will produce an input when the value of an
+Attaches an event handler which will produce an input when the value of an
 input field changes.
 
 #### `onValueInput`
@@ -17,7 +17,7 @@ input field changes.
 onValueInput :: forall f. (String -> EventHandler (f Unit)) -> Prop (f Unit)
 ```
 
-Attach an event handler which will fire on input.
+Attaches an event handler which will fire on input.
 
 #### `onChecked`
 
@@ -25,7 +25,7 @@ Attach an event handler which will fire on input.
 onChecked :: forall f. (Boolean -> EventHandler (f Unit)) -> Prop (f Unit)
 ```
 
-Attach an event handler which will fire when a checkbox is checked or
+Attaches an event handler which will fire when a checkbox is checked or
 unchecked.
 
 

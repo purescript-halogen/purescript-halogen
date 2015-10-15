@@ -5,10 +5,10 @@ import Control.Monad.Free (Free())
 import Halogen.Component (Eval())
 import Halogen.Query (gets)
 
-data Input a = GetX (Number -> a)
-newtype State = State { x :: Number, y :: Number }
+data Query a = GetX (Number -> a)
+type State = { x :: Number, y :: Number }
 
-eval :: forall g. (Functor g) => Eval Input State (Free Input) g
+eval :: forall g. Eval Query State Query g
 eval (GetX k) = do
-  x <- gets \(State st) -> st.x
+  x <- gets _.x
   pure (k x)

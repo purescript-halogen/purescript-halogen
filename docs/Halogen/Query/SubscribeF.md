@@ -72,7 +72,7 @@ remapSubscribe :: forall f g h a. (Functor h) => Natural f g -> SubscribeF f h a
 ```
 
 Changes the generating functor for an `EventSource`. Used internally by
-Halogen when installing components.
+Halogen.
 
 #### `hoistSubscribe`
 
@@ -81,7 +81,7 @@ hoistSubscribe :: forall f g h a. (Functor h) => Natural g h -> SubscribeF f g a
 ```
 
 Changes the underlying monad for an `EventSource`. Used internally by
-Halogen when installing components.
+Halogen.
 
 #### `subscribeN`
 
@@ -90,7 +90,6 @@ subscribeN :: forall f g. (MonadRec g) => Consumer (f Unit) g Unit -> Natural (S
 ```
 
 A natural transformation for interpreting the subscribe algebra as its
-underlying monad, via a coroutine consumer. Used internally by Halogen in
-component installation and `runUI`.
+underlying monad, via a coroutine consumer. Used internally by Halogen.
 
 

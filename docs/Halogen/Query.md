@@ -1,5 +1,8 @@
 ## Module Halogen.Query
 
+Functions and types used to describe the `HalogenF` algebra used in a
+component's `eval` and `peek` functions.
+
 #### `Action`
 
 ``` purescript
@@ -13,7 +16,7 @@ In a query algebra, an action is any constructor that carries the algebra's
 type variable as a value. For example:
 
 ``` purescript
-data Input a
+data Query a
   = SomeAction a
   | SomeOtherAction String a
   | NotAnAction (Boolean -> a)
@@ -21,7 +24,7 @@ data Input a
 
 Both `SomeAction` and `SomeOtherAction` have `a` as a value so they are
 considered actions, whereas `NotAnAction` has `a` as the result of a
-function so is considered to be a "request" (see below).
+function so is considered to be a "request" ([see below](#Request)).
 
 #### `action`
 
@@ -34,9 +37,9 @@ Takes a data constructor of query algebra `f` and creates an action.
 For example:
 
 ```purescript
-data Input a = Tick a
+data Query a = Tick a
 
-sendTick :: forall eff. Driver Input eff -> Aff (HalogenEffects eff) Unit
+sendTick :: forall eff. Driver Query eff -> Aff (HalogenEffects eff) Unit
 sendTick driver = driver (action Tick)
 ```
 
@@ -53,7 +56,7 @@ In a query algebra, an action is any constructor that carries the algebra's
 type variable as the return value of a function. For example:
 
 ``` purescript
-data Input a = SomeRequest (Boolean -> a)
+data Query a = SomeRequest (Boolean -> a)
 ```
 
 #### `request`
@@ -67,9 +70,9 @@ Takes a data constructor of query algebra `f` and creates a request.
 For example:
 
 ```purescript
-data Input a = GetTickCount (Int -> a)
+data Query a = GetTickCount (Int -> a)
 
-getTickCount :: forall eff. Driver Input eff -> Aff (HalogenEffects eff) Int
+getTickCount :: forall eff. Driver Query eff -> Aff (HalogenEffects eff) Int
 getTickCount driver = driver (request GetTickCount)
 ```
 
@@ -79,7 +82,7 @@ getTickCount driver = driver (request GetTickCount)
 type HalogenF s f g = Coproduct (StateF s) (Coproduct (SubscribeF f g) g)
 ```
 
-A type alias for the full Halogen component algebra.
+A type alias for the Halogen component algebra.
 
 #### `get`
 
@@ -93,9 +96,9 @@ instead of operating in some `StateT`, uses the `HalogenF` algebra. For
 example:
 
 ``` purescript
-data Input a = GetState (State -> a)
+data Query a = GetState (State -> a)
 
-eval :: forall g. (Functor g) => Eval Input (Free Input) State g
+eval :: forall g. Eval Query State Query g
 eval (GetState k) = do
   currentState <- get
   pure (k currentState)
@@ -112,12 +115,12 @@ returning the result. Useful in cases where only a portion of the state is
 desired. For example:
 
 ``` purescript
-data Input a = GetX (Number -> a)
-newtype State = State { x :: Number, y :: Number }
+data Query a = GetX (Number -> a)
+type State = { x :: Number, y :: Number }
 
-eval :: forall g. (Functor g) => Eval Input (Free Input) State g
+eval :: forall g. Eval Query State Query g
 eval (GetX k) = do
-  x <- gets \(State st) -> st.x
+  x <- gets _.x
   pure (k x)
 ```
 
@@ -133,10 +136,10 @@ instead of operating in some `StateT`, uses the `HalogenF` algebra. For
 example:
 
 ``` purescript
-data Input a = Increment a
+data Query a = Increment a
 type State = Int
 
-eval :: Eval Input (Free Input) State g
+eval :: forall g. Eval Query State Query g
 eval (Increment next) = do
   modify (+ 1)
   pure next
@@ -168,7 +171,7 @@ liftAff' :: forall eff a s f g. (MonadAff eff g, Functor g) => Aff eff a -> Free
 
 A convenience function for lifting an `Aff` action directly into a
 `Free HalogenF` when there is a `MonadAff` instance for the current `g`,
-without the need to use `liftFI $ liftAff $ ...`.
+without the need to use `liftH $ liftAff $ ...`.
 
 #### `liftEff'`
 
@@ -178,7 +181,7 @@ liftEff' :: forall eff a s f g. (MonadEff eff g, Functor g) => Eff eff a -> Free
 
 A convenience function for lifting an `Eff` action directly into a
 `Free HalogenF` when there is a `MonadEff` instance for the current `g`,
-without the need to use `liftFI $ liftEff $ ...`.
+without the need to use `liftH $ liftEff $ ...`.
 
 #### `hoistHalogenF`
 
@@ -186,6 +189,6 @@ without the need to use `liftFI $ liftEff $ ...`.
 hoistHalogenF :: forall s f g h. (Functor h) => Natural g h -> Natural (HalogenF s f g) (HalogenF s f h)
 ```
 
-Changes the underlying `g` monad for a `HalogenF` value.
+Changes the `g` for a `HalogenF`. Used internally by Halogen.
 
 

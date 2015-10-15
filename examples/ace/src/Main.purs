@@ -8,6 +8,7 @@ import Control.Monad.Eff.Console (CONSOLE())
 import Control.Monad.Eff.Exception (throwException)
 
 import Data.Generic (Generic, gEq, gCompare)
+import Data.Functor.Coproduct (Coproduct())
 
 import Halogen
 import Halogen.Util (appendToBody)
@@ -15,30 +16,35 @@ import qualified Halogen.HTML.Indexed as H
 import qualified Halogen.HTML.Events.Indexed as E
 
 import Ace.Types (ACE())
-import AceComponent (AceState(), AceInput(..), AceEffects(), ace, initAceState)
+import AceComponent (AceState(), AceQuery(..), AceEffects(), ace, initAceState)
 
--- | The application state, which stores the current text in the editor.
+-- | The application state, which in this case just stores the current text in
+-- | the editor.
 type State = { text :: String }
 
 initialState :: State
 initialState = { text: "" }
 
--- | The type of inputs to the component.
-data Input a = ClearText a
+-- | The query algebra for the app.
+data Query a = ClearText a
 
--- | The slot for the ace component.
+-- | The slot address type for the Ace component.
 data AceSlot = AceSlot
 
 derive instance genericAceSlot :: Generic AceSlot
 instance eqAceSlot :: Eq AceSlot where eq = gEq
 instance ordAceSlot :: Ord AceSlot where compare = gCompare
 
--- | The main UI component
-ui :: forall eff. ParentComponent State AceState Input AceInput (Aff (AceEffects eff)) AceSlot
+-- | Synonyms for the "installed" version of the state and query algebra.
+type StateP eff = InstalledState State AceState Query AceQuery (Aff (AceEffects eff)) AceSlot
+type QueryP = Coproduct Query (ChildF AceSlot AceQuery)
+
+-- | The main UI component definition.
+ui :: forall eff. Component (StateP eff) QueryP (Aff (AceEffects eff))
 ui = parentComponent' render eval peek
   where
 
-  render :: RenderParent State AceState Input AceInput (Aff (AceEffects eff)) AceSlot
+  render :: RenderParent State AceState Query AceQuery (Aff (AceEffects eff)) AceSlot
   render { text: text } =
     H.div_ [ H.h1_ [ H.text "ace editor" ]
            , H.div_ [ H.p_ [ H.button [ E.onClick (E.input_ ClearText) ]
@@ -49,20 +55,19 @@ ui = parentComponent' render eval peek
            , H.p_ [ H.text ("Current text: " ++ text) ]
            ]
 
-  eval :: EvalParent Input State AceState Input AceInput (Aff (AceEffects eff)) AceSlot
+  eval :: EvalParent Query State AceState Query AceQuery (Aff (AceEffects eff)) AceSlot
   eval (ClearText next) = do
     query AceSlot $ action (ChangeText "")
     pure next
 
-  -- | Peek allows us to observe inputs going to the child components, here
-  -- | we're using it to observe when the text is changed inside the ace
-  -- | component, and igoring any other inputs.
-  peek :: Peek (ChildF AceSlot AceInput) State AceState Input AceInput (Aff (AceEffects eff)) AceSlot
-  peek (ChildF _ q) = case q of
-    ChangeText text _ -> modify _ { text = text }
-    _ -> pure unit
+  -- Peek allows us to observe inputs going to the child components, here
+  -- we're using it to observe when the text is changed inside the ace
+  -- component, and igoring any other inputs.
+  peek :: Peek (ChildF AceSlot AceQuery) State AceState Query AceQuery (Aff (AceEffects eff)) AceSlot
+  peek (ChildF _ (ChangeText text _)) = modify _ { text = text }
+  peek _ = pure unit
 
--- | Run the Halogen app.
+-- | Run the app!
 main :: Eff (HalogenEffects (ace :: ACE, console :: CONSOLE)) Unit
 main = runAff throwException (const (pure unit)) $ do
   app <- runUI ui (installedState initialState)

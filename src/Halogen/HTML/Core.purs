@@ -73,9 +73,11 @@ instance bifunctorHTML :: Bifunctor HTML where
 instance functorHTML :: Functor (HTML p) where
   map = rmap
 
+-- | A smart constructor for HTML elements.
 element :: forall p i. TagName -> Array (Prop i) -> Array (HTML p i) -> HTML p i
 element = Element Nothing
 
+-- | Populates the slot placeholder values in a `HTML` value.
 fillSlot :: forall p p' i i' m. (Applicative m) => (p -> m (HTML p' i')) -> (i -> i') -> HTML p i -> m (HTML p' i')
 fillSlot _ _ (Text s) = pure $ Text s
 fillSlot f g (Element ns name props els) = Element ns name ((g <$>) <$> props) <$> traverse (fillSlot f g) els
@@ -173,7 +175,8 @@ runTagName (TagName s) = s
 
 -- | A type-safe wrapper for property names.
 -- |
--- | The phantom type `value` describes the type of value which this property requires.
+-- | The phantom type `value` describes the type of value which this property
+-- | requires.
 newtype PropName value = PropName String
 
 -- | Create an attribute name
@@ -195,8 +198,8 @@ runAttrName (AttrName ns) = ns
 
 -- | A type-safe wrapper for event names.
 -- |
--- | The phantom type `fields` describes the event type which we can expect to exist on events
--- | corresponding to this name.
+-- | The phantom type `fields` describes the event type which we can expect to
+-- | exist on events corresponding to this name.
 newtype EventName (fields :: # *) = EventName String
 
 -- Create an event name

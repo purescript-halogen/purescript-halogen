@@ -1,8 +1,7 @@
 ## Module Halogen.Query.StateF
 
 A part of the `HalogenF` algebra that replicates a `MonadState`-like
-interface, used to represent state changes in a component in the result of
-a component’s `eval` function.
+interface.
 
 #### `StateF`
 
@@ -35,6 +34,6 @@ stateN :: forall s m. (Monad m, MonadState s m) => Natural (StateF s) m
 ```
 
 A natural transformation for interpreting the state algebra as some
-`MonadState`-supporting monad. Used internally by Halogen in `runUI`.
+`MonadState`-supporting monad. Used internally by Halogen.
 
 
