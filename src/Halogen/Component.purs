@@ -104,7 +104,7 @@ component r e = component' r e (const (pure unit))
 type RenderParent s s' f f' g p = RenderP s f (SlotConstructor s' f' g p)
 
 -- | The type used for slots in the HTML rendered by parent components.
-data SlotConstructor s' f' g p = SlotConstructor p (Component s' f' g) (Unit -> s')
+data SlotConstructor s' f' g p = SlotConstructor p (Unit -> { component :: Component s' f' g, initialState :: s' })
 
 -- | A variation on `Eval` for parent components.
 type EvalParent i s s' f f' g p = Eval i s f (QueryF s s' f f' g p)
@@ -247,13 +247,17 @@ render rc = do
   renderChild :: InstalledState s s' f f' g p
               -> SlotConstructor s' f' g p
               -> State (InstalledState s s' f f' g p) (HTML Void ((Coproduct f (ChildF p f')) Unit))
-  renderChild st (SlotConstructor p c f) =
+  renderChild st (SlotConstructor p def) =
     let childState = M.lookup p st.children
     in case M.lookup p st.memo of
       Just html -> do
         CMS.modify (\st' -> { parent: st'.parent, children: M.alter (const childState) p st'.children, memo: M.insert p html st'.memo } :: InstalledState s s' f f' g p)
         pure html
-      Nothing -> renderChild' p c (fromMaybe' f (map snd childState))
+      Nothing -> case childState of
+        Just (Tuple c s) -> renderChild' p c s
+        Nothing ->
+          let def' = def unit
+          in renderChild' p def'.component def'.initialState
 
   renderChild' :: p
                -> Component s' f' g
