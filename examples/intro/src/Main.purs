@@ -20,11 +20,11 @@ initialState = { on: false }
 -- | Inputs to the state machine
 data Input a = ToggleState a
 
-ui :: forall g p. (Functor g) => Component State Input g p
+ui :: forall g. (Functor g) => Component State Input g
 ui = component render eval
   where
 
-  render :: Render State Input p
+  render :: Render State Input
   render state = H.div_
     [ H.h1_ [ H.text "Toggle Button" ]
     , H.button [ E.onClick (E.input_ ToggleState) ]

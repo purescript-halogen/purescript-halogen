@@ -31,11 +31,11 @@ type Output = Free OutputF
 output :: String -> Output Unit
 output msg = liftF (Log msg unit)
 
-ui :: forall p. Component State Input Output p
+ui :: Component State Input Output
 ui = component render eval
   where
 
-  render :: Render State Input p
+  render :: Render State Input
   render state = H.div_
     [ H.h1_ [ H.text "Toggle Button" ]
     , H.button [ E.onClick (E.input_ ToggleState) ]
@@ -48,7 +48,7 @@ ui = component render eval
     liftH $ output "State was toggled"
     pure next
 
-ui' :: forall eff p. Component State Input (Aff (HalogenEffects (console :: CONSOLE | eff))) p
+ui' :: forall eff. Component State Input (Aff (HalogenEffects (console :: CONSOLE | eff)))
 ui' = interpret (foldFree evalOutput) ui
   where
   evalOutput :: Natural OutputF (Aff (HalogenEffects (console :: CONSOLE | eff)))

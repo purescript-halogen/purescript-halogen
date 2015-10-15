@@ -22,11 +22,11 @@ derive instance genericSlotA :: Generic SlotA
 instance eqSlotA :: Eq SlotA where eq = gEq
 instance ordSlotA :: Ord SlotA where compare = gCompare
 
-componentA :: forall g p. (Functor g) => Component StateA InputA g p
+componentA :: forall g. (Functor g) => Component StateA InputA g
 componentA = component render eval
   where
 
-  render :: Render StateA InputA p
+  render :: Render StateA InputA
   render (StateA state) = H.div_
     [ H.h1_ [ H.text "Toggle Button A" ]
     , H.button [ E.onClick (E.input_ ToggleStateA) ]

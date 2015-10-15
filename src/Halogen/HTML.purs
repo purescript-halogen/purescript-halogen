@@ -4,16 +4,28 @@ module Halogen.HTML
   , module Halogen.HTML.Elements
   ) where
 
-import Prelude ((<<<))
+import Prelude ((<<<), Unit(), unit, Functor)
+import Data.Bifunctor (bimap)
 import Halogen.HTML.Core
 import Halogen.HTML.Elements
-import Halogen.Component.ChildPath (ChildPath(), injSlot)
+import Halogen.Component (Component(), SlotConstructor(..), transformChild)
+import Halogen.Component.ChildPath (ChildPath(), injSlot, injState)
 
 text :: forall p i. String -> HTML p i
 text = Text
 
-slot :: forall p i. p -> HTML p i
-slot = Slot
+slot :: forall s f g p i
+      . p
+     -> Component s f g
+     -> (Unit -> s)
+     -> HTML (SlotConstructor s f g p) i
+slot p c s = Slot (SlotConstructor p c s)
 
-slot' :: forall s s' f f' p p' i. ChildPath s s' f f' p p' -> p -> HTML p' i
-slot' i = Slot <<< injSlot i
+slot' :: forall s s' f f' g p p' i
+       . (Functor g)
+      => ChildPath s s' f f' p p'
+      -> p
+      -> Component s f g
+      -> (Unit -> s)
+      -> HTML (SlotConstructor s' f' g p') i
+slot' i p c s = Slot (SlotConstructor (injSlot i p) (transformChild i c) (\_ -> injState i (s unit)))

@@ -17,11 +17,11 @@ data TaskInput a
   | IsCompleted (Boolean -> a)
 
 -- | The task component definition.
-task :: forall g p. (Functor g) => Component Task TaskInput g p
+task :: forall g. (Functor g) => Component Task TaskInput g
 task = component render eval
   where
 
-  render :: Render Task TaskInput p
+  render :: Render Task TaskInput
   render t =
     H.li_ [ H.input [ P.inputType P.InputCheckbox
                     , P.title "Mark as completed"

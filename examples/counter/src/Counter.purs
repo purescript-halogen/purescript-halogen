@@ -22,11 +22,11 @@ initialState = State 0
 data Input a = Tick a
 
 -- | The main UI component.
-ui :: forall g p. (Functor g) => Component State Input g p
+ui :: forall g. (Functor g) => Component State Input g
 ui = component render eval
   where
 
-  render :: Render State Input p
+  render :: Render State Input
   render (State n) =
     H.div_ [ H.h1 [ P.id_ "header" ] [ H.text "counter" ]
            , H.p_ [ H.text (show n) ]
