@@ -74,7 +74,7 @@ A variation on `Render` for parent components.
 
 ``` purescript
 data SlotConstructor s' f' g p
-  = SlotConstructor p (Component s' f' g) (Unit -> s')
+  = SlotConstructor p (Unit -> { component :: Component s' f' g, initialState :: s' })
 ```
 
 The type used for slots in the HTML rendered by parent components.

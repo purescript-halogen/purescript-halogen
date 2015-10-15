@@ -8,6 +8,7 @@ import Control.Monad.Eff.Exception (throwException)
 import Control.Plus (Plus)
 
 import Data.Generic (Generic, gEq, gCompare)
+import Data.Lazy (defer)
 import Data.Maybe (Maybe(..), maybe)
 
 import Halogen
@@ -36,9 +37,11 @@ ui = parentComponent' render eval (const (pure unit))
 
   render :: RenderParent State TickState Input TickInput g TickSlot
   render st =
-    H.div_ [ H.slot (TickSlot "A") ticker \_ -> TickState 100
-           , H.slot (TickSlot "B") ticker \_ -> TickState 0
-           , H.p_ [ H.p_ [ H.text $ "Last tick readings - A: " ++ (maybe "No reading" show st.tickA) ++ ", B: " ++ (maybe "No reading" show st.tickB) ]
+    H.div_ [ H.slot (TickSlot "A") \_ -> { component: ticker, initialState: TickState 100 }
+           , H.slot (TickSlot "B") \_ -> { component: ticker, initialState: TickState 0 }
+           , H.p_ [ H.p_ [ H.text $ "Last tick readings - A: " ++ (maybe "No reading" show st.tickA)
+                                                    ++ ", B: " ++ (maybe "No reading" show st.tickB)
+                         ]
                   , H.button [ E.onClick (E.input_ ReadTicks) ]
                              [ H.text "Update reading" ]
                   ]

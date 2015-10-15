@@ -48,9 +48,9 @@ ui = parentComponent' render eval (const (pure unit))
 
   render :: RenderParent State ChildStates Input ChildInputs g ChildSlots
   render (State state) = H.div_
-    [ H.div_ [ H.slot' cpA SlotA componentA \_ -> initStateA ]
-    , H.div_ [ H.slot' cpB SlotB componentB \_ -> initStateB ]
-    , H.div_ [ H.slot' cpC SlotC componentC \_ -> initStateC ]
+    [ H.div_ [ H.slot' cpA SlotA \_ -> { component: componentA, initialState: initStateA } ]
+    , H.div_ [ H.slot' cpB SlotB \_ -> { component: componentB, initialState: initStateB } ]
+    , H.div_ [ H.slot' cpC SlotC \_ -> { component: componentC, initialState: initStateC } ]
     , H.div_ [ H.text $ "Current states: " ++ show state.a ++ " / " ++ show state.b ++ " / " ++ show state.c ]
     , H.button [ E.onClick (E.input_ ReadStates) ] [ H.text "Read states" ]
     ]

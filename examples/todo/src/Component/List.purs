@@ -37,9 +37,12 @@ list = parentComponent' render eval peek
            , H.p_ [ H.button [ E.onClick (E.input_ NewTask) ]
                              [ H.text "New Task" ]
                   ]
-           , H.ul_ (map (\tid -> H.slot (TaskSlot tid) task \_ -> initialTask) st.tasks)
+           , H.ul_ (map renderTask st.tasks)
            , H.p_ [ H.text $ show st.numCompleted ++ " / " ++ show (length st.tasks) ++ " complete" ]
            ]
+
+  renderTask :: TaskId -> HTML (SlotConstructor Task TaskInput g TaskSlot) ListInput
+  renderTask taskId = H.slot (TaskSlot taskId) \_ -> { component: task, initialState: initialTask }
 
   eval :: EvalParent ListInput State Task ListInput TaskInput g TaskSlot
   eval (NewTask next) = do
