@@ -7,6 +7,10 @@
     "Phil Freeman <paf31@cantab.net>",
     "Jon Sterling <jon@jonmsterling.com>"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/slamdata/purescript-halogen.git"
+  },
   "description": "A declarative, type-safe UI library for PureScript",
   "keywords": [
     "purescript",
