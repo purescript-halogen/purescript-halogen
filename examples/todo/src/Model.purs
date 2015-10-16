@@ -6,9 +6,9 @@ type TaskId = Int
 
 type Task = { description :: String, completed :: Boolean }
 
-type State = { tasks :: Array TaskId, nextId :: TaskId, numCompleted :: Int }
+type List = { tasks :: Array TaskId, nextId :: TaskId, numCompleted :: Int }
 
-initialList :: State
+initialList :: List
 initialList = { tasks: [], nextId: 1, numCompleted: 0 }
 
 initialTask :: Task

@@ -7,7 +7,8 @@ unrefined versions.
 #### `IProp`
 
 ``` purescript
-type IProp (r :: # *) i = IProp r i
+type IProp (r :: # *
+) i = IProp r i
 ```
 
 The phantom row `r` can be thought of as a context which is synthesized in the

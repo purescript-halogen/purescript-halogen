@@ -10,18 +10,18 @@ import qualified Halogen.HTML.Events.Indexed as E
 import Model
 
 -- | The task component query algebra.
-data TaskInput a
+data TaskQuery a
   = UpdateDescription String a
   | ToggleCompleted Boolean a
   | Remove a
   | IsCompleted (Boolean -> a)
 
 -- | The task component definition.
-task :: forall g. (Functor g) => Component Task TaskInput g
+task :: forall g. (Functor g) => Component Task TaskQuery g
 task = component render eval
   where
 
-  render :: Render Task TaskInput
+  render :: Render Task TaskQuery
   render t =
     H.li_ [ H.input [ P.inputType P.InputCheckbox
                     , P.title "Mark as completed"
@@ -39,7 +39,7 @@ task = component render eval
                      [ H.text "✖" ]
           ]
 
-  eval :: Eval TaskInput Task TaskInput g
+  eval :: Eval TaskQuery Task TaskQuery g
   eval (UpdateDescription desc next) = do
     modify (_ { description = desc })
     pure next

@@ -6,7 +6,6 @@ import Control.Monad (when)
 import Control.Monad.Aff (Aff())
 import Control.Monad.Aff.AVar (AVAR())
 import Control.Monad.Eff.Class (liftEff)
-import Control.Monad.Eff.Console (CONSOLE(), log)
 
 import Data.Maybe (Maybe(..))
 
@@ -19,43 +18,56 @@ import Ace.Types (ACE(), Editor())
 import qualified Ace.Editor as Editor
 import qualified Ace.EditSession as Session
 
+-- | The state for the ace component - we only need a reference to the editor,
+-- | as Ace editor has its own internal state that we can query instead of
+-- | replicating it within Halogen.
 type AceState = { editor :: Maybe Editor }
-
-data AceInput a
-  = Init HTMLElement a
-  | ChangeText String a
 
 initAceState :: AceState
 initAceState = { editor: Nothing }
 
-type AceEffects eff = (ace :: ACE, avar :: AVAR, console :: CONSOLE | eff)
+-- | A basic query algebra for the Ace component
+data AceQuery a
+  = Init HTMLElement a
+  | ChangeText String a
 
-ace :: forall eff. String -> Component AceState AceInput (Aff (AceEffects eff))
+-- | Effects embedding the Ace editor requires
+type AceEffects eff = (ace :: ACE, avar :: AVAR | eff)
+
+-- | The Ace component definition. We accept a key here to give each instance
+-- | of the ace component a unique initializer key - recycling an initializer
+-- | may result in unexpected behaviours.
+ace :: forall eff. String -> Component AceState AceQuery (Aff (AceEffects eff))
 ace key = component render eval
   where
 
-  render :: Render AceState AceInput
+  -- As we're embedding a 3rd party component we only need to create a
+  -- placeholder div here and attach the initializer property.
+  render :: Render AceState AceQuery
   render = const $ H.div [ initializer ] []
 
-  initializer :: Prop AceInput
+  -- Setup the initializer property that will raise the `Init` action in `eval`
+  -- once our placeholder div has been added to the DOM.
+  initializer :: Prop AceQuery
   initializer = H.Initializer ("ace-" ++ key ++ "-init") (\el -> action (Init el))
 
-  eval :: Eval AceInput AceState AceInput (Aff (AceEffects eff))
+  -- The query algebra for the component handles the initialization of the Ace
+  -- editor as well as responding to the `ChangeText` action that allows us to
+  -- alter the editor's state.
+  eval :: Eval AceQuery AceState AceQuery (Aff (AceEffects eff))
   eval (Init el next) = do
     editor <- liftEff' $ Ace.editNode el Ace.ace
     modify _ { editor = Just editor }
     session <- liftEff' $ Editor.getSession editor
-    subscribe $ eventSource_ (Session.onChange session) $ do
-      text <- liftEff $ Editor.getValue editor
+    subscribe $ eventSource_ (Session.onChange session) do
+      text <- Editor.getValue editor
       pure $ action (ChangeText text)
     pure next
   eval (ChangeText text next) = do
-    liftEff' $ log text
-    state <- gets (_.editor)
+    state <- gets _.editor
     case state of
-      Nothing -> pure next
+      Nothing -> pure unit
       Just editor -> do
         current <- liftEff' $ Editor.getValue editor
         when (text /= current) $ void $ liftEff' $ Editor.setValue text Nothing editor
-        pure next
     pure next

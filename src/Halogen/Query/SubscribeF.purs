@@ -57,7 +57,7 @@ eventSource attach handle = produce \emit -> attach (emit <<< Left <=< handle)
 -- |
 -- | ``` purescript
 -- | let onChange = eventSource_ (Session.onChange session) do
--- |       text <- liftEff $ Editor.getValue editor
+-- |       text <- Editor.getValue editor
 -- |       pure $ actionF (ChangeText text)
 -- | ```
 -- | (Taken from the Ace component example)
@@ -73,17 +73,16 @@ instance functorSubscribeF :: Functor (SubscribeF f g) where
   map f (Subscribe p next) = Subscribe p (f next)
 
 -- | Changes the generating functor for an `EventSource`. Used internally by
--- | Halogen when installing components.
+-- | Halogen.
 remapSubscribe :: forall f g h a. (Functor h) => (Natural f g) -> SubscribeF f h a -> SubscribeF g h a
 remapSubscribe nat (Subscribe p next) = Subscribe (interpret (lmap nat) p) next
 
 -- | Changes the underlying monad for an `EventSource`. Used internally by
--- | Halogen when installing components.
+-- | Halogen.
 hoistSubscribe :: forall f g h a. (Functor h) => (Natural g h) -> SubscribeF f g a -> SubscribeF f h a
 hoistSubscribe nat (Subscribe p next) = Subscribe (hoistFreeT nat p) next
 
 -- | A natural transformation for interpreting the subscribe algebra as its
--- | underlying monad, via a coroutine consumer. Used internally by Halogen in
--- | component installation and `runUI`.
+-- | underlying monad, via a coroutine consumer. Used internally by Halogen.
 subscribeN :: forall f g. (MonadRec g) => Consumer (f Unit) g Unit -> Natural (SubscribeF f g) g
 subscribeN c (Subscribe p next) = runProcess (p $$ c) $> next

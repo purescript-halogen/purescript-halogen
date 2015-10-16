@@ -19,6 +19,8 @@ import DOM.HTML.Types (HTMLElement(), htmlElementToNode, windowToEventTarget)
 import DOM.HTML.Window (document)
 import DOM.Node.Node (appendChild)
 
+-- | A utility for appending an `HTMLElement` to the current document's `body`
+-- | element once the document has loaded.
 appendToBody :: forall m eff. (MonadEff (dom :: DOM | eff) m) => HTMLElement -> m Unit
 appendToBody e = liftEff $ do
   addEventListener load (eventListener onLoad) false <<< windowToEventTarget =<< window

@@ -5,7 +5,7 @@ import Halogen
 import Control.Monad.Aff (Aff())
 import Control.Monad.Free (Free())
 
-data Input a = Tick a
+data Query a = Tick a
 
-sendTick :: forall eff. Driver Input eff -> Aff (HalogenEffects eff) Unit
+sendTick :: forall eff. Driver Query eff -> Aff (HalogenEffects eff) Unit
 sendTick driver = driver (action Tick)

@@ -11,11 +11,11 @@ import DOM (DOM())
 -- | ```purescript
 -- | type AppEffects eff = HalogenEffects (ajax :: AJAX, console :: CONSOLE | eff)
 -- |
--- | ui :: forall eff p. Component State Input (Aff (AppEffects eff)) p
+-- | ui :: forall eff. Component State Query (Aff (AppEffects eff))
 -- | ui = ...
 -- |
 -- | main :: Eff (AppEffects ()) Unit
--- | main = launchAff $ do
+-- | main = runAff throwException (const (pure unit)) $ do
 -- |   app <- runUI ui state
 -- |   ...
 -- | ```

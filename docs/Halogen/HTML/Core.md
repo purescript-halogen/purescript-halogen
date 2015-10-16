@@ -25,11 +25,15 @@ instance functorHTML :: Functor (HTML p)
 element :: forall p i. TagName -> Array (Prop i) -> Array (HTML p i) -> HTML p i
 ```
 
+A smart constructor for HTML elements.
+
 #### `fillSlot`
 
 ``` purescript
 fillSlot :: forall p p' i i' m. (Applicative m) => (p -> m (HTML p' i')) -> (i -> i') -> HTML p i -> m (HTML p' i')
 ```
+
+Populates the slot placeholder values in a `HTML` value.
 
 #### `Prop`
 
@@ -181,7 +185,8 @@ newtype PropName value
 
 A type-safe wrapper for property names.
 
-The phantom type `value` describes the type of value which this property requires.
+The phantom type `value` describes the type of value which this property
+requires.
 
 #### `propName`
 
@@ -222,13 +227,14 @@ runAttrName :: AttrName -> String
 #### `EventName`
 
 ``` purescript
-newtype EventName (fields :: # *)
+newtype EventName (fields :: # *
+)
 ```
 
 A type-safe wrapper for event names.
 
-The phantom type `fields` describes the event type which we can expect to exist on events
-corresponding to this name.
+The phantom type `fields` describes the event type which we can expect to
+exist on events corresponding to this name.
 
 #### `eventName`
 

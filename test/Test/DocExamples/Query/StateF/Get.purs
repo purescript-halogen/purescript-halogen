@@ -5,10 +5,10 @@ import Control.Monad.Free (Free())
 import Halogen.Component (Eval())
 import Halogen.Query (get)
 
-data Input a = GetState (State -> a)
+data Query a = GetState (State -> a)
 type State = Unit
 
-eval :: forall g. (Functor g) => Eval Input State (Free Input) g
+eval :: forall g. Eval Query State Query g
 eval (GetState k) = do
   currentState <- get
   pure (k currentState)

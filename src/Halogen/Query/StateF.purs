@@ -1,6 +1,5 @@
 -- | A part of the `HalogenF` algebra that replicates a `MonadState`-like
--- | interface, used to represent state changes in a component in the result of
--- | a component’s `eval` function.
+-- | interface.
 module Halogen.Query.StateF
   ( StateF(..)
   , mapState
@@ -31,7 +30,7 @@ mapState f _ (Get k) = Get (k <<< f)
 mapState _ f (Modify g next) = Modify (f g) next
 
 -- | A natural transformation for interpreting the state algebra as some
--- | `MonadState`-supporting monad. Used internally by Halogen in `runUI`.
+-- | `MonadState`-supporting monad. Used internally by Halogen.
 stateN :: forall s m. (Monad m, CMS.MonadState s m) => Natural (StateF s) m
 stateN (Get k) = CMS.get >>= pure <<< k
 stateN (Modify f next) = CMS.modify f $> next

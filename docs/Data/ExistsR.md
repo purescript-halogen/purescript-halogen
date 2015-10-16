@@ -3,7 +3,8 @@
 #### `ExistsR`
 
 ``` purescript
-data ExistsR (f :: # * -> *)
+data ExistsR (f :: # * -> *
+)
 ```
 
 A variant of `Exists` that works for type constructors that accept a _row_
