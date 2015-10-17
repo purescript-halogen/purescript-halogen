@@ -23,7 +23,7 @@ import DOM.HTML.Types (HTMLElement())
 
 import Halogen.Component (Component(), renderComponent, queryComponent)
 import Halogen.Effects (HalogenEffects())
-import Halogen.HTML.Renderer.VirtualDOM (RenderState(), emptyRenderState, renderHTML)
+import Halogen.HTML.Renderer.VirtualDOM (renderHTML)
 import Halogen.Internal.VirtualDOM (VTree(), createElement, diff, patch)
 import Halogen.Query (HalogenF())
 import Halogen.Query.StateF (StateF(), stateN)
@@ -39,7 +39,6 @@ type DriverState s =
   { node :: HTMLElement
   , vtree :: VTree
   , state :: s
-  , memo :: RenderState
   , renderPending :: Boolean
   }
 
@@ -58,11 +57,10 @@ runUI :: forall s f eff. Component s f (Aff (HalogenEffects eff))
 runUI c s = case renderComponent c s of
     Tuple html s' -> do
       ref <- makeVar
-      case renderHTML (driver ref) html emptyRenderState of
-        Tuple vtree memo -> do
-          let node = createElement vtree
-          putVar ref { node: node, vtree: vtree, state: s', memo: memo, renderPending: false }
-          pure { node: node, driver: driver ref }
+      let vtree = renderHTML (driver ref) html
+          node = createElement vtree
+      putVar ref { node: node, vtree: vtree, state: s', renderPending: false }
+      pure { node: node, driver: driver ref }
 
   where
 
@@ -82,7 +80,7 @@ runUI c s = case renderComponent c s of
       ds <- takeVar ref
       case runState (stateN i) ds.state of
         Tuple i' s' -> do
-          putVar ref { node: ds.node, vtree: ds.vtree, state: s', memo: ds.memo, renderPending: true }
+          putVar ref { node: ds.node, vtree: ds.vtree, state: s', renderPending: true }
           pure i'
 
     runAff :: Natural (Aff (HalogenEffects eff)) (Aff (HalogenEffects eff))
@@ -100,7 +98,6 @@ runUI c s = case renderComponent c s of
       then putVar ref ds
       else case renderComponent c ds.state of
         Tuple html s'' -> do
-          case renderHTML (driver ref) html ds.memo of
-            Tuple vtree' memo' -> do
-              node' <- liftEff $ patch (diff ds.vtree vtree') ds.node
-              putVar ref { node: node', vtree: vtree', state: s'', memo: memo', renderPending: false }
+          let vtree' = renderHTML (driver ref) html
+          node' <- liftEff $ patch (diff ds.vtree vtree') ds.node
+          putVar ref { node: node', vtree: vtree', state: s'', renderPending: false }

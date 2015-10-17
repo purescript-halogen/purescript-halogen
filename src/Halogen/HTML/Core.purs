@@ -99,16 +99,16 @@ data Prop i
   | Attr (Maybe Namespace) AttrName String
   | Key String
   | Handler (ExistsR (HandlerF i))
-  | Initializer String (HTMLElement -> i)
-  | Finalizer String (HTMLElement -> i)
+  | Initializer (HTMLElement -> i)
+  | Finalizer (HTMLElement -> i)
 
 instance functorProp :: Functor Prop where
   map _ (Prop e) = Prop e
   map _ (Key k) = Key k
   map _ (Attr ns k v) = Attr ns k v
   map f (Handler e) = runExistsR (\(HandlerF name k) -> Handler (mkExistsR (HandlerF name (map (map f) <<< k)))) e
-  map f (Initializer k g) = Initializer k (f <<< g)
-  map f (Finalizer k g) = Finalizer k (f <<< g)
+  map f (Initializer g) = Initializer (f <<< g)
+  map f (Finalizer g) = Finalizer (f <<< g)
 
 -- | The data which represents a typed property, hidden inside an existential
 -- | package in the `Prop` type.

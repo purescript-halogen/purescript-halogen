@@ -46,10 +46,8 @@ ace key = component render eval
   render :: Render AceState AceQuery
   render = const $ H.div [ initializer ] []
 
-  -- Setup the initializer property that will raise the `Init` action in `eval`
-  -- once our placeholder div has been added to the DOM.
-  initializer :: Prop AceQuery
-  initializer = H.Initializer ("ace-" ++ key ++ "-init") (\el -> action (Init el))
+  initializer :: Prop AceInput
+  initializer = H.Initializer \el -> action (Init el)
 
   -- The query algebra for the component handles the initialization of the Ace
   -- editor as well as responding to the `ChangeText` action that allows us to

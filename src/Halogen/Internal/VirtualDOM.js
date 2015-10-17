@@ -17,46 +17,57 @@ exports.attr = function (key, value) {
   return props;
 };
 
+function HandlerHook (key, f) {
+  this.key = key;
+  this.callback = function(e) {
+    f(e)();
+  }
+}
+
+HandlerHook.prototype = {
+  hook: function (node) {
+    node.addEventListener(this.key, this.callback);
+  },
+  unhook: function (node) {
+    node.removeEventListener(this.key, this.callback);
+  }
+};
+
 // jshint maxparams: 2
 exports.handlerProp = function (key, f) {
   var props = {};
-  var Hook = function () {};
-  Hook.prototype.callback = function (e) {
-    f(e)();
-  };
-  Hook.prototype.hook = function (node) {
-    node.addEventListener(key, this.callback);
-  };
-  Hook.prototype.unhook = function (node) {
-    node.removeEventListener(key, this.callback);
-  };
-  props["halogen-hook-" + key] = new Hook(f);
+  props["halogen-hook-" + key] = new HandlerHook(key, f);
   return props;
 };
 
-// jshint maxparams: 1
+function ifHookFn (node, prop, diff) {
+  if (typeof diff === "undefined") {
+    this.f(node)();
+  }
+}
+
+function InitHook (f) {
+  this.f = f;
+}
+
+InitHook.prototype = {
+  hook: ifHookFn
+};
+
 exports.initProp = function (f) {
-  var hasRun = false;
-  var Hook = function () {};
-  Hook.prototype.hook = function (node) {
-    if (!hasRun) {
-      hasRun = true;
-      f(node)();
-    }
-  };
-  return { "halogen-init": new Hook(f) };
+  return { "halogen-init": new InitHook(f) };
+};
+
+function FinalHook (f) {
+  this.f = f;
+}
+
+FinalHook.prototype = {
+  unhook: ifHookFn
 };
 
 exports.finalizerProp = function (f) {
-  var hasRun = false;
-  var Hook = function () {};
-  Hook.prototype.unhook = function (node) {
-    if (!hasRun) {
-      hasRun = true;
-      f(node)();
-    }
-  };
-  return { "halogen-final": new Hook(f) };
+  return { "halogen-final": new FinalHook(f) };
 };
 
 exports.concatProps = function () {
