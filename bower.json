@@ -13,6 +13,10 @@
     "halogen",
     "ui"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/slamdata/purescript-halogen.git"
+  },
   "license": "Apache 2.0",
   "ignore": [
     "**/.*",

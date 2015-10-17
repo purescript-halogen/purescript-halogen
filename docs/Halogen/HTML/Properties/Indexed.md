@@ -7,8 +7,7 @@ unrefined versions.
 #### `IProp`
 
 ``` purescript
-type IProp (r :: # *
-) i = IProp r i
+type IProp (r :: # *) i = IProp r i
 ```
 
 The phantom row `r` can be thought of as a context which is synthesized in the
@@ -308,10 +307,22 @@ selected :: forall r i. Boolean -> IProp (selected :: I | r) i
 placeholder :: forall r i. String -> IProp (placeholder :: I | r) i
 ```
 
+#### `initializer`
+
+``` purescript
+initializer :: forall r i. (HTMLElement -> i) -> IProp (initializer :: I | r) i
+```
+
+#### `finalizer`
+
+``` purescript
+finalizer :: forall r i. (HTMLElement -> i) -> IProp (finalizer :: I | r) i
+```
+
 #### `GlobalAttributes`
 
 ``` purescript
-type GlobalAttributes r = (id :: I, name :: I, title :: I, class :: I, spellcheck :: I, key :: I | r)
+type GlobalAttributes r = (id :: I, name :: I, title :: I, class :: I, spellcheck :: I, key :: I, initializer :: I, finalizer :: I | r)
 ```
 
 #### `GlobalEvents`

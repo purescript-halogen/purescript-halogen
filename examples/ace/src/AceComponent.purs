@@ -27,12 +27,12 @@ type AceState = { editor :: Maybe Editor }
 initAceState :: AceState
 initAceState = { editor: Nothing }
 
--- | A basic query algebra for the Ace component
+-- | A basic query algebra for the Ace component.
 data AceQuery a
   = Init HTMLElement a
   | ChangeText String a
 
--- | Effects embedding the Ace editor requires
+-- | Effects embedding the Ace editor requires.
 type AceEffects eff = (ace :: ACE, avar :: AVAR | eff)
 
 -- | The Ace component definition. We accept a key here to give each instance
@@ -45,10 +45,7 @@ ace = component render eval
   -- As we're embedding a 3rd party component we only need to create a
   -- placeholder div here and attach the initializer property.
   render :: Render AceState AceQuery
-  render = const $ H.div [ initializer ] []
-
-  initializer :: Prop AceQuery
-  initializer = P.initializer \el -> action (Init el)
+  render = const $ H.div [ P.initializer \el -> action (Init el) ] []
 
   -- The query algebra for the component handles the initialization of the Ace
   -- editor as well as responding to the `ChangeText` action that allows us to

@@ -11,17 +11,13 @@ import Halogen.Util (appendToBody)
 import qualified Halogen.HTML.Indexed as H
 import qualified Halogen.HTML.Properties.Indexed as P
 
--- | The state of the application
 newtype State = State Int
 
--- | The initial state
 initialState :: State
 initialState = State 0
 
--- | Querys to the state machine
 data Query a = Tick a
 
--- | The main UI component.
 ui :: forall g. (Functor g) => Component State Query g
 ui = component render eval
   where

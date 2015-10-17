@@ -19,9 +19,9 @@ exports.attr = function (key, value) {
 
 function HandlerHook (key, f) {
   this.key = key;
-  this.callback = function(e) {
+  this.callback = function (e) {
     f(e)();
-  }
+  };
 }
 
 HandlerHook.prototype = {
@@ -40,12 +40,15 @@ exports.handlerProp = function (key, f) {
   return props;
 };
 
+// jshint maxparams: 3
 function ifHookFn (node, prop, diff) {
+  // jshint validthis: true
   if (typeof diff === "undefined") {
     this.f(node)();
   }
 }
 
+// jshint maxparams: 1
 function InitHook (f) {
   this.f = f;
 }
