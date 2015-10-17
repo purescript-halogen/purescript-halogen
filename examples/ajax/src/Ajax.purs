@@ -22,7 +22,7 @@ import qualified Halogen.HTML.Properties.Indexed as P
 
 import Network.HTTP.Affjax (AJAX(), post)
 
--- | The state of the application
+-- | The state of the component.
 type State = { busy :: Boolean, code :: String, result :: Maybe String }
 
 initialState :: State
@@ -41,7 +41,7 @@ fact n = n * fact (n - 1)
 main = print (fact 20)
 """
 
--- | Querys to the state machine.
+-- | The component query algebra.
 data Query a
   = SetCode String a
   | MakeRequest String a

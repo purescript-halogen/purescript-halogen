@@ -43,8 +43,8 @@ data Prop i
   | Attr (Maybe Namespace) AttrName String
   | Key String
   | Handler (ExistsR (HandlerF i))
-  | Initializer String (HTMLElement -> i)
-  | Finalizer String (HTMLElement -> i)
+  | Initializer (HTMLElement -> i)
+  | Finalizer (HTMLElement -> i)
 ```
 
 A property can be:
@@ -227,8 +227,7 @@ runAttrName :: AttrName -> String
 #### `EventName`
 
 ``` purescript
-newtype EventName (fields :: # *
-)
+newtype EventName (fields :: # *)
 ```
 
 A type-safe wrapper for event names.

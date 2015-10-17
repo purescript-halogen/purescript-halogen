@@ -3,8 +3,7 @@
 #### `IProp`
 
 ``` purescript
-newtype IProp (r :: # *
-) i
+newtype IProp (r :: # *) i
   = IProp (Prop i)
 ```
 

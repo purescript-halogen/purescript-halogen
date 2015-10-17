@@ -180,4 +180,16 @@ selected :: forall i. Boolean -> Prop i
 placeholder :: forall i. String -> Prop i
 ```
 
+#### `initializer`
+
+``` purescript
+initializer :: forall i. (HTMLElement -> i) -> Prop i
+```
+
+#### `finalizer`
+
+``` purescript
+finalizer :: forall i. (HTMLElement -> i) -> Prop i
+```
+
 

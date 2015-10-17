@@ -15,17 +15,14 @@ import Halogen.Util (appendToBody)
 import qualified Halogen.HTML.Indexed as H
 import qualified Halogen.HTML.Events.Indexed as E
 
--- | The state of the application
 type State = { on :: Boolean }
 
 initialState :: State
 initialState = { on: false }
 
--- | Querys to the state machine
 data Query a = ToggleState a
 
 data OutputF a = Log String a
-
 type Output = Free OutputF
 
 output :: String -> Output Unit

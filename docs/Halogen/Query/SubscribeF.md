@@ -46,7 +46,7 @@ For example:
 
 ``` purescript
 let onChange = eventSource_ (Session.onChange session) do
-      text <- liftEff $ Editor.getValue editor
+      text <- Editor.getValue editor
       pure $ actionF (ChangeText text)
 ```
 (Taken from the Ace component example)
