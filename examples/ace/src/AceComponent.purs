@@ -13,6 +13,7 @@ import DOM.HTML.Types (HTMLElement())
 
 import Halogen
 import qualified Halogen.HTML as H
+import qualified Halogen.HTML.Properties as P
 
 import Ace.Types (ACE(), Editor())
 import qualified Ace.Editor as Editor
@@ -37,8 +38,8 @@ type AceEffects eff = (ace :: ACE, avar :: AVAR | eff)
 -- | The Ace component definition. We accept a key here to give each instance
 -- | of the ace component a unique initializer key - recycling an initializer
 -- | may result in unexpected behaviours.
-ace :: forall eff. String -> Component AceState AceQuery (Aff (AceEffects eff))
-ace key = component render eval
+ace :: forall eff. Component AceState AceQuery (Aff (AceEffects eff))
+ace = component render eval
   where
 
   -- As we're embedding a 3rd party component we only need to create a
@@ -46,10 +47,8 @@ ace key = component render eval
   render :: Render AceState AceQuery
   render = const $ H.div [ initializer ] []
 
-  -- Setup the initializer property that will raise the `Init` action in `eval`
-  -- once our placeholder div has been added to the DOM.
   initializer :: Prop AceQuery
-  initializer = H.Initializer ("ace-" ++ key ++ "-init") (\el -> action (Init el))
+  initializer = P.initializer \el -> action (Init el)
 
   -- The query algebra for the component handles the initialization of the Ace
   -- editor as well as responding to the `ChangeText` action that allows us to

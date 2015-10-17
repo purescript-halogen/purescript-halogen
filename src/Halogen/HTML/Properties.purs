@@ -27,6 +27,8 @@ module Halogen.HTML.Properties
   , checked
   , selected
   , placeholder
+  , initializer
+  , finalizer
   , LengthLiteral(..)
   ) where
 
@@ -34,6 +36,8 @@ import Prelude
 
 import Data.Maybe (Maybe(..))
 import Data.String (joinWith)
+
+import DOM.HTML.Types (HTMLElement())
 
 import Halogen.HTML.Core (Prop(..), ClassName(), IsProp, prop, propName, attrName, runClassName)
 import Halogen.HTML.Events.Types (Event())
@@ -132,3 +136,9 @@ selected = prop (propName "selected") (Just $ attrName "selected")
 
 placeholder :: forall i. String -> Prop i
 placeholder = prop (propName "placeholder") (Just $ attrName "placeholder")
+
+initializer :: forall i. (HTMLElement -> i) -> Prop i
+initializer = Initializer
+
+finalizer :: forall i. (HTMLElement -> i) -> Prop i
+finalizer = Finalizer

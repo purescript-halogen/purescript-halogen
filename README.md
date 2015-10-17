@@ -483,7 +483,7 @@ The [Ace editor example](examples/ace) illustrates the creation of a basic widge
 
 A widget is constructed using the standard `component` function but taking advantage of some features that are not used when defining a normal component.
 
-Even though we’re embedding an external component in our page we still need to render a `HTML` value, so the suggested way of doing this is to generate a single empty element such as a `div` and then attach the special `Initializer` property to it to handle setup once the element has been rendered to the page. From the Ace example:
+Even though we’re embedding an external component in our page we still need to render a `HTML` value, so the suggested way of doing this is to generate a single empty element such as a `div` and then attach the special `initializer` property to it to handle setup once the element has been rendered to the page. From the Ace example:
 
 ``` purescript
 ace :: forall eff. String -> Component AceState AceQuery (Aff (AceEffects eff))
@@ -506,14 +506,10 @@ The `Initializer` property allows us to define an action that will run on the wi
 
 ``` purescript
 initializer :: Prop AceQuery
-initializer = H.Initializer ("ace-" ++ key ++ "-init") (\el -> action (Init el))
+initializer = P.initializer \el -> action (Init el)
 ```
 
-We also have to pass a string key for the initializer that is used to memoize the result. This is an unfortunate implementation detail Halogen exposes that is prone to unexpected behaviour if used improperly – it is important to ensure that every `Initializer` in a component hierarchy has a unique value. 
-
-In the Ace example we achieve this by accepting a `key` value when constructing the widget and build this into the `Initializer` key - the idea being the parent could provide a unique key for each instance of the Ace editor that it embeds.
-
-There is also a `Finalizer` property that works in a similar way to the `Initializer` but runs when the rendered HTML element is being removed from the DOM instead, to allow any cleanup that may be required when removing the widget.
+There is also a `finalizer` property that works in a similar way to the `initializer` but runs when the rendered HTML element is being removed from the DOM instead, to allow any cleanup that may be required when removing the widget.
 
 #### Initializing the widget
 

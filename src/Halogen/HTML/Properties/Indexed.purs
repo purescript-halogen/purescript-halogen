@@ -51,6 +51,9 @@ module Halogen.HTML.Properties.Indexed
   , selected
   , placeholder
 
+  , initializer
+  , finalizer
+
   , module PExport
 
   , GlobalAttributes()
@@ -66,6 +69,7 @@ import Prelude
 import Data.Tuple
 import Data.Foldable
 import qualified Data.Array as A
+import DOM.HTML.Types (HTMLElement())
 import qualified Halogen.HTML.Properties as P
 import qualified Halogen.HTML.Properties (LengthLiteral(..)) as PExport
 import qualified Halogen.HTML.Properties.Indexed.Unsafe as Unsafe
@@ -313,6 +317,12 @@ selected = refine <<< P.selected
 placeholder :: forall r i. String -> IProp (placeholder :: I | r) i
 placeholder = refine <<< P.placeholder
 
+initializer :: forall r i. (HTMLElement -> i) -> IProp (initializer :: I | r) i
+initializer = refine <<< P.initializer
+
+finalizer :: forall r i. (HTMLElement -> i) -> IProp (finalizer :: I | r) i
+finalizer = refine <<< P.finalizer
+
 type GlobalAttributes r =
   ( id :: I
   , name :: I
@@ -320,6 +330,8 @@ type GlobalAttributes r =
   , class :: I
   , spellcheck :: I
   , key :: I
+  , initializer :: I
+  , finalizer :: I
   | r
   )
 
