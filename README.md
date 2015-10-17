@@ -477,7 +477,7 @@ Halogen was designed with supporting “3rd party components” in mind, to allo
 
 This is an area that may have room for improvement in the future but certainly is powerful enough to make useful widgets possible.
 
-The [Ace editor exampe](examples/ace) illustrates the creation of a basic widget.
+The [Ace editor example](examples/ace) illustrates the creation of a basic widget.
 
 #### A widget component
 
