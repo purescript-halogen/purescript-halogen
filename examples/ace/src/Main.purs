@@ -51,7 +51,7 @@ ui = parentComponent' render eval peek
                                       [ H.text "Clear" ]
                            ]
                     ]
-           , H.div_ [ H.slot AceSlot \_ -> { component: ace "test-ace", initialState: initAceState } ]
+           , H.div_ [ H.slot AceSlot \_ -> { component: ace, initialState: initAceState } ]
            , H.p_ [ H.text ("Current text: " ++ text) ]
            ]
 

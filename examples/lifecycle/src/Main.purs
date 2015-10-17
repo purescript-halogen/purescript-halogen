@@ -18,15 +18,15 @@ type State = { events :: Array String, on :: Boolean }
 initialState :: State
 initialState = { events: [], on: true }
 
--- | Inputs to the state machine
-data Input a = ToggleState a
+-- | Queries to the state machine
+data Query a = ToggleState a
              | AddEvent String a
 
-ui :: forall g. (Functor g) => Component State Input g
+ui :: forall g. (Functor g) => Component State Query g
 ui = component render eval
   where
 
-  render :: Render State Input
+  render :: Render State Query
   render state = H.div_
     [ H.h1_ [ H.text "Toggle Button" ]
     , H.button [ E.onClick (E.input_ ToggleState) ]
@@ -39,7 +39,7 @@ ui = component render eval
     , H.ul_ (map (\event -> H.li_ [ H.text event ]) state.events)
     ]
 
-  eval :: Eval Input State Input g
+  eval :: Eval Query State Query g
   eval (ToggleState next) = do
     modify (\state -> state { on = not state.on })
     pure next
@@ -48,6 +48,6 @@ ui = component render eval
     pure next
 
 main :: Eff (HalogenEffects ()) Unit
-main = runAff throwException (const (pure unit)) $ do
+main = runAff throwException (const (pure unit)) do
   app <- runUI ui initialState
   appendToBody app.node

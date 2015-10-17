@@ -4,28 +4,17 @@ module Halogen.HTML.Renderer.VirtualDOM
 
 import Prelude
 
-import Control.Alt ((<|>))
-import Control.Monad (when)
 import Control.Monad.Aff (Aff(), runAff)
 import Control.Monad.Eff (Eff())
 import Control.Monad.Eff.Exception (throwException)
-import Control.Monad.State (State(), runState)
-import Control.Monad.State.Class (gets, modify)
 
 import Data.Exists (runExists)
 import Data.ExistsR (runExistsR)
-import Data.Foldable (foldl, fold, foldMap, find)
+import Data.Foldable (foldl, foldMap)
 import Data.Function (runFn2)
-import Data.List (List(..), (:))
-import Data.Maybe (Maybe(..), maybe, isNothing)
+import Data.Maybe (Maybe(..), maybe)
 import Data.Monoid (mempty)
-import Data.NaturalTransformation (Natural())
 import Data.Nullable (toNullable)
-import Data.Traversable (traverse)
-import Data.Tuple (Tuple(..), fst)
-import qualified Data.StrMap as SM
-
-import DOM.HTML.Types (HTMLElement())
 
 import Halogen.Effects (HalogenEffects())
 import Halogen.HTML.Core (HTML(..), Prop(..), PropF(..), HandlerF(..), runNamespace, runTagName, runPropName, runAttrName, runEventName)
