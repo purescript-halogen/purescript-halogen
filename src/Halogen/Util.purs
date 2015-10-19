@@ -36,11 +36,7 @@ appendTo query e = onLoad $ \_ -> do
 -- | A utility for appending an `HTMLElement` to the current document's `body`
 -- | element once the document has loaded.
 appendToBody :: forall m eff. (MonadEff (dom :: DOM | eff) m) => HTMLElement -> m Unit
-appendToBody e = onLoad $ \_ -> do
-    b <- toMaybe <$> ((body <=< document) =<< window)
-    case b of
-      Nothing -> pure unit
-      Just b' -> void $ appendChild (htmlElementToNode e) (htmlElementToNode b')
+appendToBody = appendTo "body"
 
 onLoad :: forall m eff. (MonadEff (dom :: DOM | eff) m)
        => (Event -> Eff (dom :: DOM | eff) Unit) -> m Unit
