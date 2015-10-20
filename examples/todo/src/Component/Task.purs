@@ -2,6 +2,8 @@ module Component.Task where
 
 import Prelude
 
+import Data.NaturalTransformation (Natural())
+
 import Halogen
 import qualified Halogen.HTML.Indexed as H
 import qualified Halogen.HTML.Properties.Indexed as P
@@ -21,7 +23,7 @@ task :: forall g. (Functor g) => Component Task TaskQuery g
 task = component render eval
   where
 
-  render :: Render Task TaskQuery
+  render :: Task -> ComponentHTML TaskQuery
   render t =
     H.li_ [ H.input [ P.inputType P.InputCheckbox
                     , P.title "Mark as completed"
@@ -39,7 +41,7 @@ task = component render eval
                      [ H.text "✖" ]
           ]
 
-  eval :: Eval TaskQuery Task TaskQuery g
+  eval :: Natural TaskQuery (ComponentDSL Task TaskQuery g)
   eval (UpdateDescription desc next) = do
     modify (_ { description = desc })
     pure next

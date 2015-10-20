@@ -9,6 +9,7 @@ import Data.Array (snoc, filter, length)
 import Data.Functor.Coproduct (Coproduct())
 import Data.Generic (Generic, gEq, gCompare)
 import Data.Maybe (Maybe(..), fromMaybe)
+import Data.NaturalTransformation (Natural())
 
 import Halogen
 import qualified Halogen.HTML.Indexed as H
@@ -35,7 +36,7 @@ list :: forall g. (Plus g) => Component (State g) Query g
 list = parentComponent' render eval peek
   where
 
-  render :: RenderParent List Task ListQuery TaskQuery g TaskSlot
+  render :: List -> ParentHTML Task ListQuery TaskQuery g TaskSlot
   render st =
     H.div_ [ H.h1_ [ H.text "Todo list" ]
            , H.p_ [ H.button [ E.onClick (E.input_ NewTask) ]
@@ -45,15 +46,15 @@ list = parentComponent' render eval peek
            , H.p_ [ H.text $ show st.numCompleted ++ " / " ++ show (length st.tasks) ++ " complete" ]
            ]
 
-  renderTask :: TaskId -> HTML (SlotConstructor Task TaskQuery g TaskSlot) ListQuery
+  renderTask :: TaskId -> ParentHTML Task ListQuery TaskQuery g TaskSlot
   renderTask taskId = H.slot (TaskSlot taskId) \_ -> { component: task, initialState: initialTask }
 
-  eval :: EvalParent ListQuery List Task ListQuery TaskQuery g TaskSlot
+  eval :: Natural ListQuery (ParentDSL List Task ListQuery TaskQuery g TaskSlot)
   eval (NewTask next) = do
     modify addTask
     pure next
 
-  peek :: Peek (ChildF TaskSlot TaskQuery) List Task ListQuery TaskQuery g TaskSlot
+  peek :: forall a. ChildF TaskSlot TaskQuery a -> ParentDSL List Task ListQuery TaskQuery g TaskSlot Unit
   peek (ChildF p q) = case q of
     Remove _ -> do
       wasComplete <- query p (request IsCompleted)
