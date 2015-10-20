@@ -1,11 +1,15 @@
 module Halogen.Component
   ( ComponentP()
   , Component()
+  , ComponentHTML()
   , Render()
+  , ComponentDSL()
   , Eval()
   , component
+  , ParentHTML()
   , RenderParent()
   , SlotConstructor(..)
+  , ParentDSL()
   , EvalParent()
   , Peek()
   , parentComponent
@@ -23,8 +27,6 @@ module Halogen.Component
   , transformChild
   , renderComponent
   , queryComponent
-  , RenderP()
-  , PeekP()
   ) where
 
 import Prelude
@@ -89,9 +91,15 @@ type Component s f g = ComponentP s f g (Const Void) Void
 -- | internally.
 type RenderP s f p = s -> HTML p (f Unit)
 
+-- | The type for `HTML` rendered by a self-contained component.
+type ComponentHTML f = HTML Void (f Unit)
+
 -- | A type alias for a component `render` function - takes the component's
 -- | current state and returns a `HTML` value.
-type Render s f = RenderP s f Void
+type Render s f = s -> ComponentHTML f
+
+-- | The DSL used in the `eval` function for self-contained components.
+type ComponentDSL s f g = Free (HalogenF s f g)
 
 -- | A type alias for a component `eval` function - takes a functorial value `i`
 -- | and returns a `Free` of the Halogen component algebra.
@@ -99,29 +107,35 @@ type Render s f = RenderP s f Void
 -- | Usually `i` will be the same type as `f`, but sometimes it is useful to be
 -- | able to break up an `Eval` function into different parts, in which case
 -- | `i`'s type may differ.
-type Eval i s f g = Natural i (Free (HalogenF s f g))
+type Eval i s f g = Natural i (ComponentDSL s f g)
 
 -- | Builds a self-contained component with no possible children.
 component :: forall s f g. Render s f -> Eval f s f g -> Component s f g
 component r e = component' r e (const (pure unit))
 
+-- | The type for `HTML` rendered by a parent component.
+type ParentHTML s' f f' g p = HTML (SlotConstructor s' f' g p) (f Unit)
+
 -- | A variation on `Render` for parent components - the function follows the
 -- | same form but the type representation is different.
-type RenderParent s s' f f' g p = RenderP s f (SlotConstructor s' f' g p)
+type RenderParent s s' f f' g p = s -> ParentHTML s' f f' g p
 
 -- | The type used for slots in the HTML rendered by parent components.
 data SlotConstructor s' f' g p = SlotConstructor p (Unit -> { component :: Component s' f' g, initialState :: s' })
 
+-- | The DSL used in the `eval` and `peek` functions for parent components.
+type ParentDSL s s' f f' g p = ComponentDSL s f (QueryF s s' f f' g p)
+
 -- | A variation on `Eval` for parent components - the function follows the
 -- | same form but the type representation is different.
-type EvalParent i s s' f f' g p = Eval i s f (QueryF s s' f f' g p)
+type EvalParent i s s' f f' g p = Natural i (ParentDSL s s' f f' g p)
 
 -- | A low level form of the `Peek` type synonym, used internally.
 type PeekP i s f g = forall a. i a -> Free (HalogenF s f g) Unit
 
 -- | A type alias for a component `peek` function that observes inputs to child
 -- | components.
-type Peek i s s' f f' g p = PeekP i s f (QueryF s s' f f' g p)
+type Peek i s s' f f' g p = forall a. i a -> ParentDSL s s' f f' g p Unit
 
 -- | Builds a component that may contain child components.
 parentComponent :: forall s s' f f' g p
