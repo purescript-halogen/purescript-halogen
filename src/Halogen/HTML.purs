@@ -50,7 +50,7 @@ mkSlot p comp state = slot p \_ -> { component: comp, initialState: state }
 -- | a collection to make slots.
 -- | 
 -- | ```purescript
--- | map (indexedSlot TaskSlot task initialTask)
+-- | map (H.indexedSlot TaskSlot task initialTask) state.taskList
 -- | ```
 indexedSlot :: forall s f g p i a
              . (a -> p)
