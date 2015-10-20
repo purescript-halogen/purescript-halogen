@@ -173,6 +173,15 @@ A convenience function for lifting an `Aff` action directly into a
 `Free HalogenF` when there is a `MonadAff` instance for the current `g`,
 without the need to use `liftH $ liftAff $ ...`.
 
+#### `liftAff''`
+
+``` purescript
+liftAff'' :: forall eff a s s' f f' g. (MonadAff eff g, Functor g) => Aff eff a -> Free (HalogenF s f (Free (HalogenF s' f' g))) a
+```
+
+A version of `liftAff'` that can be used in the `eval` or `peek` function
+of a parent component.
+
 #### `liftEff'`
 
 ``` purescript
@@ -182,6 +191,15 @@ liftEff' :: forall eff a s f g. (MonadEff eff g, Functor g) => Eff eff a -> Free
 A convenience function for lifting an `Eff` action directly into a
 `Free HalogenF` when there is a `MonadEff` instance for the current `g`,
 without the need to use `liftH $ liftEff $ ...`.
+
+#### `liftEff''`
+
+``` purescript
+liftEff'' :: forall eff a s s' f f' g. (MonadEff eff g, Functor g) => Eff eff a -> Free (HalogenF s f (Free (HalogenF s' f' g))) a
+```
+
+A version of `liftEff'` that can be used in the `eval` or `peek` function
+of a parent component.
 
 #### `hoistHalogenF`
 

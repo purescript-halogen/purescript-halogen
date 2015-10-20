@@ -12,7 +12,9 @@ module Halogen.Query
   , subscribe
   , liftH
   , liftAff'
+  , liftAff''
   , liftEff'
+  , liftEff''
   , hoistHalogenF
   , module Halogen.Query.StateF
   , module Halogen.Query.SubscribeF
@@ -155,11 +157,21 @@ liftH = liftF <<< right <<< right
 liftAff' :: forall eff a s f g. (MonadAff eff g, Functor g) => Aff eff a -> Free (HalogenF s f g) a
 liftAff' = liftH <<< liftAff
 
+-- | A version of `liftAff'` that can be used in the `eval` or `peek` function
+-- | of a parent component.
+liftAff'' :: forall eff a s s' f f' g. (MonadAff eff g, Functor g) => Aff eff a -> Free (HalogenF s f (Free (HalogenF s' f' g))) a
+liftAff'' = liftH <<< liftAff'
+
 -- | A convenience function for lifting an `Eff` action directly into a
 -- | `Free HalogenF` when there is a `MonadEff` instance for the current `g`,
 -- | without the need to use `liftH $ liftEff $ ...`.
 liftEff' :: forall eff a s f g. (MonadEff eff g, Functor g) => Eff eff a -> Free (HalogenF s f g) a
 liftEff' = liftH <<< liftEff
+
+-- | A version of `liftEff'` that can be used in the `eval` or `peek` function
+-- | of a parent component.
+liftEff'' :: forall eff a s s' f f' g. (MonadEff eff g, Functor g) => Eff eff a -> Free (HalogenF s f (Free (HalogenF s' f' g))) a
+liftEff'' = liftH <<< liftEff'
 
 -- | Changes the `g` for a `HalogenF`. Used internally by Halogen.
 hoistHalogenF :: forall s f g h. (Functor h) => Natural g h -> Natural (HalogenF s f g) (HalogenF s f h)
