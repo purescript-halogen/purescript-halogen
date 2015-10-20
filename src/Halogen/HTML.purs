@@ -30,6 +30,36 @@ slot :: forall s f g p i
      -> HTML (SlotConstructor s f g p) i
 slot p l = Slot (SlotConstructor p l)
 
+-- | A convenience function around `slot`. Where `slot` allows you to define
+-- | the function to call in order to initialize the component, `mkSlot` only
+-- | lets you pass a component and initial state in.
+-- | 
+-- | ```purescript
+-- | H.div_ [ H.mkSlot (TickSlot "A") ticker (TickState 100)
+-- |        , H.mkSlot (TickSlot "B") ticker (TkcState 0)
+-- |        ]
+-- | ```
+mkSlot :: forall s f g p i
+        . p
+       -> Component s f g
+       -> s
+       -> HTML (SlotConstructor s f g p) i
+mkSlot p comp state = slot p \_ -> { component: comp, initialState: state }
+
+-- | A convenience function around `slot` intended for use when mapping over
+-- | a collection to make slots.
+-- | 
+-- | ```purescript
+-- | map (H.indexedSlot TaskSlot task initialTask) state.taskList
+-- | ```
+indexedSlot :: forall s f g p i a
+             . (a -> p)
+            -> Component s f g
+            -> s
+            -> a
+            -> HTML (SlotConstructor s f g p) i
+indexedSlot p comp state i = mkSlot (p i) comp state
+
 -- | Defines a slot for a child component when a parent has multiple types of
 -- | child component. Takes the `ChildPath` for the child component's type, a
 -- | slot "address" value and a thunked constructor.
