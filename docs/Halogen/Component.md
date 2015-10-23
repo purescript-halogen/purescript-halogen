@@ -238,6 +238,12 @@ liftQuery :: forall s s' f f' g p. (Functor g) => EvalParent (QueryF s s' f f' g
 Lifts a value in the `QueryF` algebra into the monad used by a component's
 `eval` function.
 
+#### `transform`
+
+``` purescript
+transform :: forall s s' f f' g. (Functor g) => (s -> s') -> (s' -> s) -> Natural f f' -> Natural f' f -> Component s f g -> Component s' f' g
+```
+
 #### `transformChild`
 
 ``` purescript
