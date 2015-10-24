@@ -63,7 +63,6 @@ gulp.task("docs", ["clean-docs"], function() {
       "Halogen.HTML.Events.Types": "docs/Halogen/HTML/Events/Types.md",
       "Halogen.HTML.Properties": "docs/Halogen/HTML/Properties.md",
       "Halogen.HTML.Properties.Indexed": "docs/Halogen/HTML/Properties/Indexed.md",
-      "Halogen.HTML.Properties.Indexed.Unsafe": "docs/Halogen/HTML/Properties/Indexed/Unsafe.md",
       "Halogen.HTML.Renderer.String": "docs/Halogen/HTML/Renderer/String.md",
       "Halogen.HTML.Renderer.VirtualDOM": "docs/Halogen/HTML/Renderer/VirtualDOM.md",
       "Halogen.Query": "docs/Halogen/Query.md",
