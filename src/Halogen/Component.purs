@@ -8,7 +8,8 @@ module Halogen.Component
   , component
   , ParentHTML()
   , RenderParent()
-  , SlotConstructor(..)
+  , SlotConstructor()
+  , slotConstructor
   , ParentDSL()
   , EvalParent()
   , Peek()
@@ -24,6 +25,7 @@ module Halogen.Component
   , query
   , query'
   , interpret
+  , transform
   , transformChild
   , renderComponent
   , queryComponent
@@ -122,6 +124,14 @@ type RenderParent s s' f f' g p = s -> ParentHTML s' f f' g p
 
 -- | The type used for slots in the HTML rendered by parent components.
 data SlotConstructor s' f' g p = SlotConstructor p (Unit -> { component :: Component s' f' g, initialState :: s' })
+
+-- | Creates a `SlotConstructor` from a slot address value and thunked
+-- | constructor.
+slotConstructor :: forall s f g p
+                 . p
+                -> (Unit -> { component :: Component s f g, initialState :: s })
+                -> SlotConstructor s f g p
+slotConstructor = SlotConstructor
 
 -- | The DSL used in the `eval` and `peek` functions for parent components.
 type ParentDSL s s' f f' g p = ComponentDSL s f (QueryF s s' f f' g p)
@@ -316,15 +326,16 @@ queryChild (ChildF p q) = do
 adaptState :: forall s t m a. (Monad m) => (s -> t) -> (t -> s) -> CMS.StateT s m a -> CMS.StateT t m a
 adaptState st ts (CMS.StateT f) = CMS.StateT \state -> f (ts state) >>= \(Tuple a s) -> pure $ Tuple a (st s)
 
-transform' :: forall s s' f f' g
-            . (Functor g)
-           => (s -> s')
-           -> (s' -> s)
-           -> Natural f f'
-           -> Natural f' f
-           -> Component s f g
-           -> Component s' f' g
-transform' sTo sFrom fTo fFrom (Component c) =
+-- | Transforms a `Component`'s types.
+transform :: forall s s' f f' g
+           . (Functor g)
+          => (s -> s')
+          -> (s' -> s)
+          -> Natural f f'
+          -> Natural f' f
+          -> Component s f g
+          -> Component s' f' g
+transform sTo sFrom fTo fFrom (Component c) =
   Component { render: map fTo <$> adaptState sTo sFrom c.render
             , eval: mapF natHF <<< c.eval <<< fFrom
             , peek: mapF natHF <<< c.peek
@@ -340,10 +351,10 @@ transformChild :: forall s s' f f' g p p'
                => ChildPath s s' f f' p p'
                -> Component s f g
                -> Component s' f' g
-transformChild i = transform' (injState i)
-                              (U.fromJust <<< prjState i)
-                              (injQuery i)
-                              (U.fromJust <<< prjQuery i)
+transformChild i = transform (injState i)
+                             (U.fromJust <<< prjState i)
+                             (injQuery i)
+                             (U.fromJust <<< prjQuery i)
 
 -- | Changes the component's `g` type. A use case for this would be to interpret
 -- | some `Free` monad as `Aff` so the component can be used with `runUI`.

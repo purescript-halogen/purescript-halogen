@@ -96,10 +96,18 @@ same form but the type representation is different.
 
 ``` purescript
 data SlotConstructor s' f' g p
-  = SlotConstructor p (Unit -> { component :: Component s' f' g, initialState :: s' })
 ```
 
 The type used for slots in the HTML rendered by parent components.
+
+#### `slotConstructor`
+
+``` purescript
+slotConstructor :: forall s f g p. p -> (Unit -> { component :: Component s f g, initialState :: s }) -> SlotConstructor s f g p
+```
+
+Creates a `SlotConstructor` from a slot address value and thunked
+constructor.
 
 #### `ParentDSL`
 
@@ -237,6 +245,14 @@ liftQuery :: forall s s' f f' g p. (Functor g) => EvalParent (QueryF s s' f f' g
 
 Lifts a value in the `QueryF` algebra into the monad used by a component's
 `eval` function.
+
+#### `transform`
+
+``` purescript
+transform :: forall s s' f f' g. (Functor g) => (s -> s') -> (s' -> s) -> Natural f f' -> Natural f' f -> Component s f g -> Component s' f' g
+```
+
+Transforms a `Component`'s types.
 
 #### `transformChild`
 
