@@ -7,19 +7,11 @@ unrefined versions.
 #### `IProp`
 
 ``` purescript
-type IProp (r :: # *) i = IProp r i
+newtype IProp (r :: # *) i
 ```
 
 The phantom row `r` can be thought of as a context which is synthesized in the
 course of constructing a refined HTML expression.
-
-#### `erase`
-
-``` purescript
-erase :: forall r i. IProp r i -> Prop i
-```
-
-The refined property can be erased into a normal one.
 
 #### `I`
 

@@ -3,8 +3,6 @@
 -- | unrefined versions.
 module Halogen.HTML.Properties.Indexed
   ( IProp()
-  , erase
-
   , I()
 
   , ButtonType(..)
@@ -66,79 +64,76 @@ module Halogen.HTML.Properties.Indexed
   ) where
 
 import Prelude
-import Data.Tuple
+
 import Data.Foldable
+import Data.Tuple
 import qualified Data.Array as A
+
+import Unsafe.Coerce (unsafeCoerce)
+
 import DOM.HTML.Types (HTMLElement())
-import qualified Halogen.HTML.Properties as P
-import qualified Halogen.HTML.Properties (LengthLiteral(..)) as PExport
-import qualified Halogen.HTML.Properties.Indexed.Unsafe as Unsafe
+
 import Halogen.HTML.Core (Prop(..), ClassName(), prop, propName, attrName, runClassName)
+import qualified Halogen.HTML.Properties (LengthLiteral(..)) as PExport
+import qualified Halogen.HTML.Properties as P
 
 -- | The phantom row `r` can be thought of as a context which is synthesized in the
 -- | course of constructing a refined HTML expression.
-type IProp (r :: # *) i = Unsafe.IProp r i
-
--- | The refined property can be erased into a normal one.
-erase :: forall r i. IProp r i -> Prop i
-erase (Unsafe.IProp p) = p
-
-refine :: forall r i. Prop i -> IProp r i
-refine = Unsafe.IProp
+newtype IProp (r :: # *) i = IProp (Prop i)
 
 -- | A dummy type to use in the phantom row.
 data I
 
 key :: forall r i. String -> IProp (key :: I | r) i
-key = refine <<< P.key
+key = unsafeCoerce P.key
 
 alt :: forall r i. String -> IProp (alt :: I | r) i
-alt = refine <<< P.alt
+alt = unsafeCoerce P.alt
 
 charset :: forall r i. String -> IProp (charset :: I | r) i
-charset = refine <<< P.charset
+charset = unsafeCoerce P.charset
 
 class_ :: forall r i. ClassName -> IProp (class :: I | r) i
-class_ = refine <<< P.class_
+class_ = unsafeCoerce P.class_
 
 classes :: forall r i. Array ClassName -> IProp (class :: I | r) i
-classes = refine <<< P.classes
+classes = unsafeCoerce P.classes
 
 colSpan :: forall r i. Int -> IProp (colSpan :: I | r) i
-colSpan = refine <<< P.colSpan
+colSpan = unsafeCoerce P.colSpan
 
 rowSpan :: forall r i. Int -> IProp (rowSpan :: I | r) i
-rowSpan = refine <<< P.rowSpan
+rowSpan = unsafeCoerce P.rowSpan
 
 for :: forall r i. String -> IProp (for :: I | r) i
-for = refine <<< P.for
+for = unsafeCoerce P.for
 
 height :: forall r i. P.LengthLiteral -> IProp (height :: I | r) i
-height = refine <<< P.height
+height = unsafeCoerce P.height
 
 width :: forall r i. P.LengthLiteral -> IProp (width :: I | r) i
-width = refine <<< P.width
+width = unsafeCoerce P.width
 
 href :: forall r i. String -> IProp (href :: I | r) i
-href = refine <<< P.href
+href = unsafeCoerce P.href
 
 id_ :: forall r i. String -> IProp (id :: I | r) i
-id_ = refine <<< P.id_
+id_ = unsafeCoerce P.id_
 
 name :: forall r i. String -> IProp (name :: I | r) i
-name = refine <<< P.name
+name = unsafeCoerce P.name
 
 rel :: forall r i. String -> IProp (rel :: I | r) i
-rel = refine <<< P.rel
+rel = unsafeCoerce P.rel
 
 src :: forall r i. String -> IProp (src :: I | r) i
-src = refine <<< P.src
+src = unsafeCoerce P.src
 
 target :: forall r i. String -> IProp (target :: I | r) i
-target = refine <<< P.target
+target = unsafeCoerce P.target
 
 title :: forall r i. String -> IProp (title :: I | r) i
-title = refine <<< P.title
+title = unsafeCoerce P.title
 
 data InputType
   = InputButton
@@ -193,7 +188,7 @@ renderInputType ty =
     InputWeek -> "week"
 
 inputType :: forall r i. InputType -> IProp (inputType :: I | r) i
-inputType = refine <<< P.type_ <<< renderInputType
+inputType = unsafeCoerce P.type_ <<< renderInputType
 
 data MenuType
   = MenuList
@@ -208,7 +203,7 @@ renderMenuType ty =
     MenuToolbar -> "toolbar"
 
 menuType :: forall r i. MenuType -> IProp (menuType :: I | r) i
-menuType = refine <<< P.type_ <<< renderMenuType
+menuType = unsafeCoerce P.type_ <<< renderMenuType
 
 data MenuitemType
   = MenuitemCommand
@@ -223,7 +218,7 @@ renderMenuitemType ty =
     MenuitemRadio -> "radio"
 
 menuitemType :: forall r i. MenuitemType -> IProp (menuitemType :: I | r) i
-menuitemType= refine <<< P.type_ <<< renderMenuitemType
+menuitemType= unsafeCoerce P.type_ <<< renderMenuitemType
 
 type MediaType =
   { type :: String
@@ -243,7 +238,7 @@ renderMediaType ty = ty.type ++ "/" ++ ty.subtype ++ renderParameters ty.paramet
     renderParameter (Tuple k v) = k ++ "=" ++ v
 
 mediaType :: forall r i. MediaType -> IProp (mediaType :: I | r) i
-mediaType = refine <<< P.type_ <<< renderMediaType
+mediaType = unsafeCoerce P.type_ <<< renderMediaType
 
 data ButtonType
   = ButtonButton
@@ -258,7 +253,7 @@ renderButtonType ty =
     ButtonReset -> "reset"
 
 buttonType :: forall r i. ButtonType -> IProp (buttonType :: I | r) i
-buttonType = refine <<< P.type_ <<< renderButtonType
+buttonType = unsafeCoerce P.type_ <<< renderButtonType
 
 data CaseType
   = Uppercase
@@ -288,40 +283,40 @@ renderOrderedListType ty =
         Uppercase -> "A"
 
 olType :: forall r i. OrderedListType -> IProp (olType :: I | r) i
-olType = refine <<< P.type_ <<< renderOrderedListType
+olType = unsafeCoerce P.type_ <<< renderOrderedListType
 
 value :: forall r i. String -> IProp (value :: I | r) i
-value = refine <<< P.value
+value = unsafeCoerce P.value
 
 disabled :: forall r i. Boolean -> IProp (disabled :: I | r) i
-disabled = refine <<< P.disabled
+disabled = unsafeCoerce P.disabled
 
 required :: forall r i. Boolean -> IProp (required :: I | r) i
-required = refine <<< P.required
+required = unsafeCoerce P.required
 
 readonly :: forall r i. Boolean -> IProp (readonly :: I | r) i
-readonly = refine <<< P.readonly
+readonly = unsafeCoerce P.readonly
 
 spellcheck :: forall r i. Boolean -> IProp (spellcheck :: I | r) i
-spellcheck = refine <<< P.spellcheck
+spellcheck = unsafeCoerce P.spellcheck
 
 enabled :: forall r i. Boolean -> IProp (disabled :: I | r) i
 enabled = disabled <<< not
 
 checked :: forall r i. Boolean -> IProp (checked :: I | r) i
-checked = refine <<< P.checked
+checked = unsafeCoerce P.checked
 
 selected :: forall r i. Boolean -> IProp (selected :: I | r) i
-selected = refine <<< P.selected
+selected = unsafeCoerce P.selected
 
 placeholder :: forall r i. String -> IProp (placeholder :: I | r) i
-placeholder = refine <<< P.placeholder
+placeholder = unsafeCoerce P.placeholder
 
 initializer :: forall r i. (HTMLElement -> i) -> IProp (initializer :: I | r) i
-initializer = refine <<< P.initializer
+initializer = unsafeCoerce P.initializer
 
 finalizer :: forall r i. (HTMLElement -> i) -> IProp (finalizer :: I | r) i
-finalizer = refine <<< P.finalizer
+finalizer = unsafeCoerce P.finalizer
 
 type GlobalAttributes r =
   ( id :: I

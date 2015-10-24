@@ -127,7 +127,7 @@ module Halogen.HTML.Elements.Indexed
 import Prelude hiding (map, div, sub)
 import qualified Prelude as Prelude
 import Halogen.HTML.Core (HTML(..), Prop(), TagName(), tagName, element)
-import Halogen.HTML.Properties.Indexed hiding (title, erase)
+import Halogen.HTML.Properties.Indexed hiding (title)
 import qualified Halogen.HTML.Properties.Indexed as P
 import qualified Halogen.HTML.Elements as E
 import qualified Halogen.HTML.Elements
