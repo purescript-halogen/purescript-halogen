@@ -13,7 +13,7 @@ import Prelude ((<<<), Unit(), unit, Functor, (<$>))
 
 import Data.Bifunctor (bimap)
 
-import Halogen.Component (Component(), SlotConstructor(..), transformChild)
+import Halogen.Component (Component(), SlotConstructor(), slotConstructor, transformChild)
 import Halogen.Component.ChildPath (ChildPath(), injSlot, injState)
 import Halogen.HTML.Core
 import Halogen.HTML.Elements
@@ -28,7 +28,7 @@ slot :: forall s f g p i
       . p
      -> (Unit -> { component :: Component s f g, initialState :: s })
      -> HTML (SlotConstructor s f g p) i
-slot p l = Slot (SlotConstructor p l)
+slot p l = Slot (slotConstructor p l)
 
 -- | Defines a slot for a child component when a parent has multiple types of
 -- | child component. Takes the `ChildPath` for the child component's type, a
@@ -39,7 +39,7 @@ slot' :: forall s s' f f' g p p' i
       -> p
       -> (Unit -> { component :: Component s f g, initialState :: s })
       -> HTML (SlotConstructor s' f' g p') i
-slot' i p l = Slot (SlotConstructor (injSlot i p) (transform <$> l))
+slot' i p l = Slot (slotConstructor (injSlot i p) (transform <$> l))
   where
   transform def =
     { component: transformChild i def.component

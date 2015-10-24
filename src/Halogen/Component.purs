@@ -8,7 +8,8 @@ module Halogen.Component
   , component
   , ParentHTML()
   , RenderParent()
-  , SlotConstructor(..)
+  , SlotConstructor()
+  , slotConstructor
   , ParentDSL()
   , EvalParent()
   , Peek()
@@ -123,6 +124,14 @@ type RenderParent s s' f f' g p = s -> ParentHTML s' f f' g p
 
 -- | The type used for slots in the HTML rendered by parent components.
 data SlotConstructor s' f' g p = SlotConstructor p (Unit -> { component :: Component s' f' g, initialState :: s' })
+
+-- | Creates a `SlotConstructor` from a slot address value and thunked
+-- | constructor.
+slotConstructor :: forall s f g p
+                 . p
+                -> (Unit -> { component :: Component s f g, initialState :: s })
+                -> SlotConstructor s f g p
+slotConstructor = SlotConstructor
 
 -- | The DSL used in the `eval` and `peek` functions for parent components.
 type ParentDSL s s' f f' g p = ComponentDSL s f (QueryF s s' f f' g p)
@@ -317,6 +326,7 @@ queryChild (ChildF p q) = do
 adaptState :: forall s t m a. (Monad m) => (s -> t) -> (t -> s) -> CMS.StateT s m a -> CMS.StateT t m a
 adaptState st ts (CMS.StateT f) = CMS.StateT \state -> f (ts state) >>= \(Tuple a s) -> pure $ Tuple a (st s)
 
+-- | Transforms a `Component`'s types.
 transform :: forall s s' f f' g
            . (Functor g)
           => (s -> s')
