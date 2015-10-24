@@ -8,6 +8,7 @@ unrefined versions.
 
 ``` purescript
 newtype IProp (r :: # *) i
+  = IProp (Prop i)
 ```
 
 The phantom row `r` can be thought of as a context which is synthesized in the
@@ -314,7 +315,7 @@ finalizer :: forall r i. (HTMLElement -> i) -> IProp (finalizer :: I | r) i
 #### `GlobalAttributes`
 
 ``` purescript
-type GlobalAttributes r = (id :: I, name :: I, title :: I, class :: I, spellcheck :: I, key :: I, initializer :: I, finalizer :: I | r)
+type GlobalAttributes r = (id :: I, name :: I, title :: I, class :: I, style :: I, spellcheck :: I, key :: I, initializer :: I, finalizer :: I | r)
 ```
 
 #### `GlobalEvents`

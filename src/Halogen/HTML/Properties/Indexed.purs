@@ -2,7 +2,7 @@
 -- | used to ensure correctness by construction, and then erased into the standard
 -- | unrefined versions.
 module Halogen.HTML.Properties.Indexed
-  ( IProp()
+  ( IProp(..)
   , I()
 
   , ButtonType(..)
@@ -312,6 +312,9 @@ selected = unsafeCoerce P.selected
 placeholder :: forall r i. String -> IProp (placeholder :: I | r) i
 placeholder = unsafeCoerce P.placeholder
 
+autocomplete :: forall r i. Boolean -> IProp (autocomplete :: I | r) i
+autocomplete = unsafeCoerce P.autocomplete
+
 initializer :: forall r i. (HTMLElement -> i) -> IProp (initializer :: I | r) i
 initializer = unsafeCoerce P.initializer
 
@@ -323,6 +326,7 @@ type GlobalAttributes r =
   , name :: I
   , title :: I
   , class :: I
+  , style :: I
   , spellcheck :: I
   , key :: I
   , initializer :: I

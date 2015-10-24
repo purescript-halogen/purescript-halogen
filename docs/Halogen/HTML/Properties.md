@@ -180,6 +180,12 @@ selected :: forall i. Boolean -> Prop i
 placeholder :: forall i. String -> Prop i
 ```
 
+#### `autocomplete`
+
+``` purescript
+autocomplete :: forall i. Boolean -> Prop i
+```
+
 #### `initializer`
 
 ``` purescript
