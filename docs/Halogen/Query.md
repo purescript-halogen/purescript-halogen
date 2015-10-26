@@ -79,10 +79,24 @@ getTickCount driver = driver (request GetTickCount)
 #### `HalogenF`
 
 ``` purescript
-type HalogenF s f g = Coproduct (StateF s) (Coproduct (SubscribeF f g) g)
+data HalogenF s f g a
+  = StateHF (StateF s a)
+  | SubscribeHF (SubscribeF f g a)
+  | QueryHF (g a)
+  | HaltHF
 ```
 
-A type alias for the Halogen component algebra.
+The Halogen component algebra
+
+##### Instances
+``` purescript
+instance functorHalogenF :: (Functor g) => Functor (HalogenF s f g)
+instance injectStateHF :: Inject (StateF s) (HalogenF s f g)
+instance injectSubscribeHF :: Inject (SubscribeF f g) (HalogenF s f g)
+instance injectQueryHF :: Inject g (HalogenF s f g)
+instance altHalogenF :: (Functor g) => Alt (HalogenF s f g)
+instance plusHalogenF :: (Functor g) => Plus (HalogenF s f g)
+```
 
 #### `get`
 
@@ -182,6 +196,14 @@ liftEff' :: forall eff a s f g. (MonadEff eff g, Functor g) => Eff eff a -> Free
 A convenience function for lifting an `Eff` action directly into a
 `Free HalogenF` when there is a `MonadEff` instance for the current `g`,
 without the need to use `liftH $ liftEff $ ...`.
+
+#### `transformHF`
+
+``` purescript
+transformHF :: forall s s' f f' g g'. (Functor g, Functor g') => Natural (StateF s) (StateF s') -> Natural f f' -> Natural g g' -> Natural (HalogenF s f g) (HalogenF s' f' g')
+```
+
+Change all the parameters of `HalogenF`.
 
 #### `hoistHalogenF`
 

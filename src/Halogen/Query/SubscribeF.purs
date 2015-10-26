@@ -7,6 +7,7 @@ module Halogen.Query.SubscribeF
   , SubscribeF(..)
   , remapSubscribe
   , hoistSubscribe
+  , transformSubscribe
   , subscribeN
   ) where
 
@@ -43,9 +44,11 @@ type EventSource f g = Producer (f Unit) g Unit
 -- |       pure $ actionF (TextCopied text)
 -- | ```
 -- | (Taken from the Ace component example)
-eventSource :: forall eff a f. ((a -> Eff (avar :: AVAR | eff) Unit) -> Eff (avar :: AVAR | eff) Unit)
-                            -> (a -> Eff (avar :: AVAR | eff) (f Unit))
-                            -> EventSource f (Aff (avar :: AVAR | eff))
+eventSource
+  :: forall eff a f
+   . ((a -> Eff (avar :: AVAR | eff) Unit) -> Eff (avar :: AVAR | eff) Unit)
+  -> (a -> Eff (avar :: AVAR | eff) (f Unit))
+  -> EventSource f (Aff (avar :: AVAR | eff))
 eventSource attach handle = produce \emit -> attach (emit <<< Left <=< handle)
 
 -- | Creates an `EventSource` for an event listener that accepts no arguments.
@@ -61,9 +64,11 @@ eventSource attach handle = produce \emit -> attach (emit <<< Left <=< handle)
 -- |       pure $ actionF (ChangeText text)
 -- | ```
 -- | (Taken from the Ace component example)
-eventSource_ :: forall eff f. (Eff (avar :: AVAR | eff) Unit -> Eff (avar :: AVAR | eff) Unit)
-                           -> Eff (avar :: AVAR | eff) (f Unit)
-                           -> EventSource f (Aff (avar :: AVAR | eff))
+eventSource_
+  :: forall eff f
+   . (Eff (avar :: AVAR | eff) Unit -> Eff (avar :: AVAR | eff) Unit)
+  -> Eff (avar :: AVAR | eff) (f Unit)
+  -> EventSource f (Aff (avar :: AVAR | eff))
 eventSource_ attach handle = produce \emit -> attach (emit <<< Left =<< handle)
 
 -- | The subscribe algebra.
@@ -74,13 +79,22 @@ instance functorSubscribeF :: Functor (SubscribeF f g) where
 
 -- | Changes the generating functor for an `EventSource`. Used internally by
 -- | Halogen.
-remapSubscribe :: forall f g h a. (Functor h) => (Natural f g) -> SubscribeF f h a -> SubscribeF g h a
-remapSubscribe nat (Subscribe p next) = Subscribe (interpret (lmap nat) p) next
+remapSubscribe :: forall f g h. (Functor h) => Natural f g -> Natural (SubscribeF f h) (SubscribeF g h)
+remapSubscribe eta (Subscribe p next) = Subscribe (interpret (lmap eta) p) next
 
 -- | Changes the underlying monad for an `EventSource`. Used internally by
 -- | Halogen.
-hoistSubscribe :: forall f g h a. (Functor h) => (Natural g h) -> SubscribeF f g a -> SubscribeF f h a
-hoistSubscribe nat (Subscribe p next) = Subscribe (hoistFreeT nat p) next
+hoistSubscribe :: forall f g h. (Functor h) => Natural g h -> Natural (SubscribeF f g) (SubscribeF f h)
+hoistSubscribe eta (Subscribe p next) = Subscribe (hoistFreeT eta p) next
+
+transformSubscribe
+  :: forall f f' g g'
+   . (Functor g, Functor g')
+  => Natural f f'
+  -> Natural g g'
+  -> Natural (SubscribeF f g) (SubscribeF f' g')
+transformSubscribe eta theta (Subscribe p next) =
+  Subscribe (hoistFreeT theta (interpret (lmap eta) p)) next
 
 -- | A natural transformation for interpreting the subscribe algebra as its
 -- | underlying monad, via a coroutine consumer. Used internally by Halogen.

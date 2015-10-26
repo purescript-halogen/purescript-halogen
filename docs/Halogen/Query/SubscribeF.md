@@ -68,7 +68,7 @@ instance functorSubscribeF :: Functor (SubscribeF f g)
 #### `remapSubscribe`
 
 ``` purescript
-remapSubscribe :: forall f g h a. (Functor h) => Natural f g -> SubscribeF f h a -> SubscribeF g h a
+remapSubscribe :: forall f g h. (Functor h) => Natural f g -> Natural (SubscribeF f h) (SubscribeF g h)
 ```
 
 Changes the generating functor for an `EventSource`. Used internally by
@@ -77,11 +77,17 @@ Halogen.
 #### `hoistSubscribe`
 
 ``` purescript
-hoistSubscribe :: forall f g h a. (Functor h) => Natural g h -> SubscribeF f g a -> SubscribeF f h a
+hoistSubscribe :: forall f g h. (Functor h) => Natural g h -> Natural (SubscribeF f g) (SubscribeF f h)
 ```
 
 Changes the underlying monad for an `EventSource`. Used internally by
 Halogen.
+
+#### `transformSubscribe`
+
+``` purescript
+transformSubscribe :: forall f f' g g'. (Functor g, Functor g') => Natural f f' -> Natural g g' -> Natural (SubscribeF f g) (SubscribeF f' g')
+```
 
 #### `subscribeN`
 

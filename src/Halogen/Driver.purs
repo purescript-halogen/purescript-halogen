@@ -13,6 +13,7 @@ import Control.Monad.Free (Free(), runFreeM)
 import Control.Monad.Rec.Class (forever)
 import Control.Monad.State (runState)
 import Control.Monad.Trans (lift)
+import Control.Plus (Plus, empty)
 
 import Data.Functor.Coproduct (Coproduct(), coproduct)
 import Data.NaturalTransformation (Natural())
@@ -25,7 +26,7 @@ import Halogen.Component (Component(), renderComponent, queryComponent)
 import Halogen.Effects (HalogenEffects())
 import Halogen.HTML.Renderer.VirtualDOM (renderHTML)
 import Halogen.Internal.VirtualDOM (VTree(), createElement, diff, patch)
-import Halogen.Query (HalogenF())
+import Halogen.Query (HalogenF(..))
 import Halogen.Query.StateF (StateF(), stateN)
 import Halogen.Query.SubscribeF (SubscribeF(), subscribeN)
 
@@ -51,9 +52,11 @@ type DriverState s =
 -- | The returned driver function allows the "outside world" to communicate
 -- | with the UI - a common use case it to use the driver to changes to the
 -- | application state in combination with a routing library.
-runUI :: forall s f eff. Component s f (Aff (HalogenEffects eff))
-      -> s
-      -> Aff (HalogenEffects eff) { node :: HTMLElement, driver :: Driver f eff }
+runUI
+  :: forall s f eff
+   . Component s f (Aff (HalogenEffects eff))
+  -> s
+  -> Aff (HalogenEffects eff) { node :: HTMLElement, driver :: Driver f eff }
 runUI c s = case renderComponent c s of
     Tuple html s' -> do
       ref <- makeVar
@@ -70,10 +73,15 @@ runUI c s = case renderComponent c s of
     render ref
     pure x
 
-  eval :: AVar (DriverState s)
-       -> Natural (HalogenF s f (Aff (HalogenEffects eff)))
-                  (Aff (HalogenEffects eff))
-  eval ref = coproduct evalState (coproduct runSubscribe runAff)
+  eval
+    :: AVar (DriverState s)
+    -> Natural (HalogenF s f (Aff (HalogenEffects eff))) (Aff (HalogenEffects eff))
+  eval ref h =
+    case h of
+      StateHF q -> evalState q
+      SubscribeHF q -> runSubscribe q
+      QueryHF q -> runAff q
+      HaltHF -> empty
     where
     evalState :: Natural (StateF s) (Aff (HalogenEffects eff))
     evalState i = do

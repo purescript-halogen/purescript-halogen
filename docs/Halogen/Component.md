@@ -130,7 +130,7 @@ components.
 #### `parentComponent`
 
 ``` purescript
-parentComponent :: forall s s' f f' g p. (Plus g, Ord p) => RenderParent s s' f f' g p -> EvalParent f s s' f f' g p -> Component (InstalledState s s' f f' g p) (Coproduct f (ChildF p f')) g
+parentComponent :: forall s s' f f' g p. (Functor g, Ord p) => RenderParent s s' f f' g p -> EvalParent f s s' f f' g p -> Component (InstalledState s s' f f' g p) (Coproduct f (ChildF p f')) g
 ```
 
 Builds a component that may contain child components.
@@ -138,7 +138,7 @@ Builds a component that may contain child components.
 #### `parentComponent'`
 
 ``` purescript
-parentComponent' :: forall s s' f f' g p. (Plus g, Ord p) => RenderParent s s' f f' g p -> EvalParent f s s' f f' g p -> Peek (ChildF p f') s s' f f' g p -> Component (InstalledState s s' f f' g p) (Coproduct f (ChildF p f')) g
+parentComponent' :: forall s s' f f' g p. (Functor g, Ord p) => RenderParent s s' f f' g p -> EvalParent f s s' f f' g p -> Peek (ChildF p f') s s' f f' g p -> Component (InstalledState s s' f f' g p) (Coproduct f (ChildF p f')) g
 ```
 
 Builds a component that may contain child components and additionally
