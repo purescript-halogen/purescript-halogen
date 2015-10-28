@@ -42,17 +42,21 @@ data Query a
   | GetState (Boolean -> a)
 
 -- | The component definition
-myComponent :: forall g. Component State Query g
+myComponent :: forall g. (Functor g) => Component State Query g
 myComponent = component render eval
   where
 
-  render :: Render State Query
+  render :: State -> ComponentHTML Query
   render state =
-    H.div_ [ H.button [ E.onClick (E.input_ ToggleState) ]
-                      [ H.text (if state.on then "On" else "Off") ]
-           ]
+    H.div_
+      [ H.h1_
+          [ H.text "Toggle Button" ]
+      , H.button
+          [ E.onClick (E.input_ ToggleState) ]
+          [ H.text (if state.on then "On" else "Off") ]
+      ]
 
-  eval :: Eval Query State Query g
+  eval :: Natural Query (ComponentDSL State Query g)
   eval (ToggleState next) = do
     modify (\state -> { on: not state.on })
     pure next
@@ -99,10 +103,11 @@ The `render` and `eval` functions will be covered below, but first an explanatio
 
 ### Rendering
 
-The type for a component’s `render` function:
+The types involved in a component’s `render` function:
 
 ``` purescript
-type Render s f = s -> HTML Void (f Unit)
+type Render s f = s -> ComponentHTML f
+type ComponentHTML f = HTML Void (f Unit)
 ```
 
 A `render` function takes the component’s current state value and returns a value constructed using Halogen’s type safe `HTML` DSL, with the ability for elements in the rendered HTML to send actions back to the component, using the query algebra `f`.
@@ -159,10 +164,11 @@ Note that in the above cases we use [`action`](docs/Halogen/Query.md#action-1) t
 
 ### Evaluating queries
 
-The type for a component’s `eval` function:
+The types involved in a component’s `eval` function:
 
 ``` purescript
-type Eval i s f g = Natural i (Free (HalogenF s f g))
+type Eval i s f g = Natural i (ComponentDSL s f g)
+type ComponentDSL s f g = Free (HalogenF s f g)
 ```
 
 Where `Natural` is a type synonym for a natural transformation (`forall a. f a -> g a`). The use of a natural transformation here is what give us the ability to have typed queries, as if we apply a value `f Boolean` to a `Natural f g`, the result has to be a `g Boolean`.
@@ -193,7 +199,7 @@ Here `continue` is the `Boolean -> a` function we defined, so the result value f
 
 The `Free (HalogenF s f g) _` that `eval` functions return allow us to perform state updates for the current component, make use of the monad `g`, and subscribe to event listeners (this latter case is an advanced use case when [building widgets](#widgets-3rd-party-components) – the declarative listeners in the `HTML` DSL should be used where possible).
 
-[`HalogenF`](docs/Halogen/Query.md#HalogenF) is actually a composite (coproduct) of 3 separate functors (algebras) which provide the different abilities just mentioned. The state-based algebra is defined in [`Halogen.Query.StateF`](docs/Halogen/Query/StateF.md) and [`Halogen.Query`](docs/Halogen/Query.md) provides an interface much like that provided by the standard `State` monad:
+[`HalogenF`](docs/Halogen/Query.md#HalogenF) is actually a composite of 3 separate functors (algebras) which provide the different abilities just mentioned. The state-based algebra is defined in [`Halogen.Query.StateF`](docs/Halogen/Query/StateF.md) and [`Halogen.Query`](docs/Halogen/Query.md) provides an interface much like that provided by the standard `State` monad:
 
 - [`get`](docs/Halogen/Query.md#get) retrieves the entire current state value
 - [`gets f`](docs/Halogen/Query.md#gets) uses `f` to map the state value, generally used to extract a part of the state 
@@ -234,9 +240,11 @@ There is a third helper function of a similar nature, [`liftH`](docs/Halogen/Que
 To render our component (or tree of components) on the page we need to pass it to the [`runUI`](docs/Halogen/Driver.md#runui) function in [`Halogen.Driver`](docs/Halogen/Driver.md):
 
 ``` purescript
-runUI :: forall s f eff. Component s f (Aff (HalogenEffects eff))
-      -> s
-      -> Aff (HalogenEffects eff) { node :: HTMLElement, driver :: Driver f eff }
+runUI
+  :: forall s f eff
+   . Component s f (Aff (HalogenEffects eff))
+  -> s
+  -> Aff (HalogenEffects eff) { node :: HTMLElement, driver :: Driver f eff }
 ```
 
 What this does is take our component and its initial state, and then returns an HTML element and driver function via `Aff`. The HTML element is the node created for our component (so we can attach it to the DOM wherever we please), and the driver function is a mechanism for querying the component “from the outside” – that is to say, send queries that don’t originate within the Halogen component structure.
@@ -275,11 +283,12 @@ So far the examples have only concerned a single component, however this will on
 A component that can contain other components is constructed with the `parentComponent` function rather than `component`:
 
 ``` purescript
-parentComponent :: forall s s' f f' g p
-                 . (Plus g, Ord p)
-                => RenderParent s s' f f' g p
-                -> EvalParent f s s' f f' g p
-                -> Component (InstalledState s s' f f' g p) (Coproduct f (ChildF p f')) g
+parentComponent
+  :: forall s s' f f' g p
+   . (Functor g, Ord p)
+  => RenderParent s s' f f' g p
+  -> EvalParent f s s' f f' g p
+  -> Component (InstalledState s s' f f' g p) (Coproduct f (ChildF p f')) g
 ```
 
 The types here may appear a little intimidating but aren’t really any more complicated than with the standard `component`:
@@ -290,20 +299,28 @@ The types here may appear a little intimidating but aren’t really any more com
 
 `p` is the only new parameter here and is used to specify the value that will be used as the “slot address” which allows queries to be sent to specific child components.
 
-`RenderParent` and `EvalParent` are variations on the previously described `Render` and `Eval` synonyms but do not alter the way the functions are defined, they just require typing differently to support the behaviours of the parent component.
+`RenderParent` and `EvalParent` are variations on the previously described `Render` and `Eval` synonyms but do not alter the way the functions are defined, they just require typing differently to support the behaviours of the parent component:
 
-The `g` constraint from `component` is strengthened from `Functor` to `Plus` here as Halogen internally needs to be able to deal with cases of a query “failing” if a child component is missing when processing a query.
+``` purescript
+type RenderParent s s' f f' g p = s -> ParentHTML s' f f' g p
+type ParentHTML s' f f' g p = HTML (SlotConstructor s' f' g p) (f Unit)
 
-When setting up parent components it is recommended to use type synonyms in the state and query algebra slots. Taking [the “components” example](examples/components) for instance, we define `StateP` and `QueryP` synonyms for the component we’re constructing:
+type EvalParent i s s' f f' g p = Natural i (ParentDSL s s' f f' g p)
+type ParentDSL s s' f f' g p = ComponentDSL s f (QueryF s s' f f' g p)
+```
+
+These differ from the non-`Parent` synonyms by swapping out the `Void` in `HTML` for `SlotConstructor ...` and the `g` of `ComponentDSL` becomes `QueryF ...`. These changes us allow us to perfom the necessary plumbing when installing child components into a parent.
+
+When setting up parent components it is recommended to define your own type synonyms for the state and query algebra. Taking [the “components” example](examples/components) for instance, we define `StateP` and `QueryP` synonyms for the component we’re constructing:
 
 ``` purescript
 type StateP g = InstalledState State TickState Query TickQuery g TickSlot
 type QueryP = Coproduct Query (ChildF TickSlot TickQuery)
 
-ui :: forall g. (Plus g) => Component (StateP g) QueryP g
+ui :: forall g. (Functor g) => Component (StateP g) QueryP g
 ```
 
-Defining synonyms like these becomes especially important if the component is going to be installed inside yet another component – providing synonyms like these mean the types only ever have to refer “one level down” and avoid unreadable deeply nested types.
+Defining synonyms like these becomes especially important if the component is going to be installed inside yet another component – the types only ever have to refer “one level down” and unreadable deeply nested types are avoided.
 
 #### Slots
 
@@ -324,12 +341,13 @@ instance ordTickSlot :: Ord TickSlot where compare = gCompare
 Slot values can then be inserted into the `HTML` for the parent component using the [`slot`](docs/Halogen/HTML.md#slot) smart constructor:
 
 ``` purescript
-render :: RenderParent State TickState Query TickQuery g TickSlot
+render :: State -> ParentHTML TickState Query TickQuery g TickSlot
 render st =
-  H.div_ [ H.slot (TickSlot "A") \_ -> { component: ticker, initialState: TickState 100 }
-         , H.slot (TickSlot "B") \_ -> { component: ticker, initialState: TickState 0 }
+  H.div_
+    [ H.slot (TickSlot "A") \_ -> { component: ticker, initialState: TickState 100 }
+    , H.slot (TickSlot "B") \_ -> { component: ticker, initialState: TickState 0 }
          -- ... snip ...
-         ]
+    ]
 ```
 
 This simple case illustrates a static child component setup, but dynamic structures can also be created by mapping a function that returns slot values over part of the component’s state.
@@ -384,18 +402,19 @@ eval (Remove next) = pure next
 When constructing a parent component that supports peeking we use a variation on `parentComponent`:
 
 ``` purescript
-parentComponent' :: forall s s' f f' g p
-                  . (Plus g, Ord p)
-                 => RenderParent s s' f f' g p
-                 -> EvalParent f s s' f f' g p
-                 -> Peek (ChildF p f') s s' f f' g p
-                 -> Component (InstalledState s s' f f' g p) (Coproduct f (ChildF p f')) g
+parentComponent'
+  :: forall s s' f f' g p
+   . (Functor g, Ord p)
+  => RenderParent s s' f f' g p
+  -> EvalParent f s s' f f' g p
+  -> Peek (ChildF p f') s s' f f' g p
+  -> Component (InstalledState s s' f f' g p) (Coproduct f (ChildF p f')) g
 ```
 
 The only change being the addition of the argument typed with `Peek`. This is another synonym for a function:
 
 ``` purescript
-type Peek i s s' f f' g p p' = forall a. i a -> Free (HalogenF s f (QueryF s s' f f' g p p')) Unit
+type Peek i s s' f f' g p p' = forall a. i a -> ParentDSL s s' f f' g p Unit
 ```
 
 This is much like the `eval` function, but instead of using a natural transformation here we’re throwing away the input type and always returning a `Unit` value. This is necessary so that we don’t have to match every possible case of the child’s query algebra.
@@ -546,13 +565,17 @@ Event and callback handling are both handled with the same mechanism: the `subsc
 An `EventSource` can be constructed with one of two helper functions:
 
 ``` purescript
-eventSource :: forall eff a f. ((a -> Eff (avar :: AVAR | eff) Unit) -> Eff (avar :: AVAR | eff) Unit)
-                            -> (a -> Eff (avar :: AVAR | eff) (f Unit))
-                            -> EventSource f (Aff (avar :: AVAR | eff))
+eventSource
+  :: forall eff a f
+   . ((a -> Eff (avar :: AVAR | eff) Unit) -> Eff (avar :: AVAR | eff) Unit)
+  -> (a -> Eff (avar :: AVAR | eff) (f Unit))
+  -> EventSource f (Aff (avar :: AVAR | eff))
 
-eventSource_ :: forall eff f. (Eff (avar :: AVAR | eff) Unit -> Eff (avar :: AVAR | eff) Unit)
-                           -> Eff (avar :: AVAR | eff) (f Unit)
-                           -> EventSource f (Aff (avar :: AVAR | eff))
+eventSource_
+  :: forall eff f
+   . (Eff (avar :: AVAR | eff) Unit -> Eff (avar :: AVAR | eff) Unit)
+  -> Eff (avar :: AVAR | eff) (f Unit)
+  -> EventSource f (Aff (avar :: AVAR | eff))
 ```
 
 Both of these have a rather difficult looking type signatures but are fairly straightforward to use.

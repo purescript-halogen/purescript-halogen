@@ -26,14 +26,14 @@ componentA :: forall g. (Functor g) => Component StateA QueryA g
 componentA = component render eval
   where
 
-  render :: Render StateA QueryA
+  render :: StateA -> ComponentHTML QueryA
   render (StateA state) = H.div_
     [ H.h1_ [ H.text "Toggle Button A" ]
     , H.button [ E.onClick (E.input_ ToggleStateA) ]
                [ H.text (if state.on then "On" else "Off") ]
     ]
 
-  eval :: Eval QueryA StateA QueryA g
+  eval :: Natural QueryA (ComponentDSL StateA QueryA g)
   eval (ToggleStateA next) = do
     modify (\(StateA state) -> StateA { on: not state.on })
     pure next

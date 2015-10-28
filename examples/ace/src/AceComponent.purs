@@ -44,13 +44,13 @@ ace = component render eval
 
   -- As we're embedding a 3rd party component we only need to create a
   -- placeholder div here and attach the initializer property.
-  render :: Render AceState AceQuery
+  render :: AceState -> ComponentHTML AceQuery
   render = const $ H.div [ P.initializer \el -> action (Init el) ] []
 
   -- The query algebra for the component handles the initialization of the Ace
   -- editor as well as responding to the `ChangeText` action that allows us to
   -- alter the editor's state.
-  eval :: Eval AceQuery AceState AceQuery (Aff (AceEffects eff))
+  eval :: Natural AceQuery (ComponentDSL AceState AceQuery (Aff (AceEffects eff)))
   eval (Init el next) = do
     editor <- liftEff' $ Ace.editNode el Ace.ace
     modify _ { editor = Just editor }

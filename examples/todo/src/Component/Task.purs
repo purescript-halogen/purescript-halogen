@@ -2,8 +2,6 @@ module Component.Task where
 
 import Prelude
 
-import Data.NaturalTransformation (Natural())
-
 import Halogen
 import qualified Halogen.HTML.Indexed as H
 import qualified Halogen.HTML.Properties.Indexed as P

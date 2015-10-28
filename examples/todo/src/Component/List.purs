@@ -9,7 +9,6 @@ import Data.Array (snoc, filter, length)
 import Data.Functor.Coproduct (Coproduct())
 import Data.Generic (Generic, gEq, gCompare)
 import Data.Maybe (Maybe(..), fromMaybe)
-import Data.NaturalTransformation (Natural())
 
 import Halogen
 import qualified Halogen.HTML.Indexed as H
@@ -32,7 +31,7 @@ type State g = InstalledState List Task ListQuery TaskQuery g TaskSlot
 type Query = Coproduct ListQuery (ChildF TaskSlot TaskQuery)
 
 -- | The list component definition.
-list :: forall g. (Plus g) => Component (State g) Query g
+list :: forall g. (Functor g) => Component (State g) Query g
 list = parentComponent' render eval peek
   where
 
