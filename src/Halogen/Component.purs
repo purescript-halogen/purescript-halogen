@@ -1,6 +1,5 @@
 module Halogen.Component
-  ( ComponentP()
-  , Component()
+  ( Component()
   , ComponentHTML()
   , Render()
   , ComponentDSL()
@@ -68,29 +67,10 @@ import Halogen.Query.SubscribeF (SubscribeF(), subscribeN, remapSubscribe, hoist
 -- | - `f` - the component's query algebra
 -- | - `g` - a functor integrated into the component's query algebra that allows
 -- |         embedding of external DSLs or handling of effects.
--- | - `o` - the type of values observable via `peek`, used to allow parent
--- |         components to see queries their children have acted upon.
--- | - `p` - the type of slot addresses within the component - these values
--- |         allow queries to child components to be specifically addressed.
-newtype ComponentP s f g o p = Component
-  { render :: State s (HTML p (f Unit))
+newtype Component s f g = Component
+  { render :: State s (HTML Void (f Unit))
   , eval :: Eval f s f g
-  , peek :: PeekP o s f g
   }
-
-instance functorComponent :: Functor (ComponentP s f g o) where
-  map f (Component c) = Component { render: lmap f <$> c.render, eval: c.eval, peek: c.peek }
-
--- | A low level constructor for building components.
-component' :: forall s f g o p. RenderP s f p -> Eval f s f g -> PeekP o s f g -> ComponentP s f g o p
-component' r e p = Component { render: CMS.gets r, eval: e, peek: p }
-
--- | A type alias for self-contained Halogen components.
-type Component s f g = ComponentP s f g (Const Void) Void
-
--- | A low level form of the `Render` and `RenderParent` synonyms, used
--- | internally.
-type RenderP s f p = s -> HTML p (f Unit)
 
 -- | The type for `HTML` rendered by a self-contained component.
 type ComponentHTML f = HTML Void (f Unit)
@@ -112,7 +92,7 @@ type Eval i s f g = Natural i (ComponentDSL s f g)
 
 -- | Builds a self-contained component with no possible children.
 component :: forall s f g. Render s f -> Eval f s f g -> Component s f g
-component r e = component' r e (const (pure unit))
+component r e = Component { render: CMS.gets r, eval: e }
 
 -- | The type for `HTML` rendered by a parent component.
 type ParentHTML s' f f' g p = HTML (SlotConstructor s' f' g p) (f Unit)
@@ -131,9 +111,6 @@ type ParentDSL s s' f f' g p = ComponentDSL s f (QueryF s s' f f' g p)
 -- | same form but the type representation is different.
 type EvalParent i s s' f f' g p = Natural i (ParentDSL s s' f f' g p)
 
--- | A low level form of the `Peek` type synonym, used internally.
-type PeekP i s f g = forall a. i a -> Free (HalogenF s f g) Unit
-
 -- | A type alias for a component `peek` function that observes inputs to child
 -- | components.
 type Peek i s s' f f' g p = forall a. i a -> ParentDSL s s' f f' g p Unit
@@ -145,7 +122,7 @@ parentComponent
   => RenderParent s s' f f' g p
   -> EvalParent f s s' f f' g p
   -> Component (InstalledState s s' f f' g p) (Coproduct f (ChildF p f')) g
-parentComponent r e = Component { render: render r, eval: eval, peek: const (pure unit) }
+parentComponent r e = Component { render: render r, eval: eval }
   where
   eval :: Eval (Coproduct f (ChildF p f')) (InstalledState s s' f f' g p) (Coproduct f (ChildF p f')) g
   eval = coproduct (queryParent e) queryChild
@@ -160,12 +137,12 @@ parentComponent'
   -> EvalParent f s s' f f' g p
   -> Peek (ChildF p f') s s' f f' g p
   -> Component (InstalledState s s' f f' g p) (Coproduct f (ChildF p f')) g
-parentComponent' r e p = Component { render: render r, eval: eval, peek: const (pure unit) }
+parentComponent' r e p = Component { render: render r, eval: eval }
   where
   eval :: Eval (Coproduct f (ChildF p f')) (InstalledState s s' f f' g p) (Coproduct f (ChildF p f')) g
   eval = coproduct (queryParent e) \q -> queryChild q <* peek q
 
-  peek :: PeekP (ChildF p f') (InstalledState s s' f f' g p) (Coproduct f (ChildF p f')) g
+  peek :: forall a. ChildF p f' a -> ComponentDSL (InstalledState s s' f f' g p) (Coproduct f (ChildF p f')) g Unit
   peek =
     p >>> foldFree \h ->
       case h of
@@ -369,7 +346,6 @@ transform'
 transform' sTo sFrom fTo fFrom (Component c) =
   Component { render: map fTo <$> adaptState sTo sFrom c.render
             , eval: mapF natHF <<< c.eval <<< fFrom
-            , peek: mapF natHF <<< c.peek
             }
   where
   natHF :: Natural (HalogenF s f g) (HalogenF s' f' g)
@@ -392,23 +368,22 @@ transformChild i =
 -- | Changes the component's `g` type. A use case for this would be to interpret
 -- | some `Free` monad as `Aff` so the component can be used with `runUI`.
 interpret
-  :: forall s f g g' o p
+  :: forall s f g g'
    . (Functor g')
   => Natural g g'
-  -> ComponentP s f g o p
-  -> ComponentP s f g' o p
+  -> Component s f g
+  -> Component s f g'
 interpret nat (Component c) =
   Component { render: c.render
             , eval: mapF (hoistHalogenF nat) <<< c.eval
-            , peek: mapF (hoistHalogenF nat) <<< c.peek
             }
 
 -- | Runs a component's `render` function with the specified state, returning
 -- | the generated `HTML` and new state.
-renderComponent :: forall s f g o p. ComponentP s f g o p -> s -> Tuple (HTML p (f Unit)) s
+renderComponent :: forall s f g p. Component s f g -> s -> Tuple (HTML Void (f Unit)) s
 renderComponent (Component c) = runState c.render
 
 -- | Runs a compnent's `query` function with the specified query input and
 -- | returns the pending computation as a `Free` monad.
-queryComponent :: forall s f g o p. ComponentP s f g o p -> Eval f s f g
+queryComponent :: forall s f g p. Component s f g -> Eval f s f g
 queryComponent (Component c) = c.eval
