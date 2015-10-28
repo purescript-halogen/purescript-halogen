@@ -35,23 +35,27 @@ instance ordTickSlot :: Ord TickSlot where compare = gCompare
 type StateP g = InstalledState State TickState Query TickQuery g TickSlot
 type QueryP = Coproduct Query (ChildF TickSlot TickQuery)
 
-ui :: forall g. (Plus g) => Component (StateP g) QueryP g
+ui :: forall g. (Functor g) => Component (StateP g) QueryP g
 ui = parentComponent' render eval (const (pure unit))
   where
 
-  render :: RenderParent State TickState Query TickQuery g TickSlot
+  render :: State -> ParentHTML TickState Query TickQuery g TickSlot
   render st =
-    H.div_ [ H.slot (TickSlot "A") \_ -> { component: ticker, initialState: TickState 100 }
-           , H.slot (TickSlot "B") \_ -> { component: ticker, initialState: TickState 0 }
-           , H.p_ [ H.p_ [ H.text $ "Last tick readings - A: " ++ (maybe "No reading" show st.tickA)
-                                                    ++ ", B: " ++ (maybe "No reading" show st.tickB)
-                         ]
-                  , H.button [ E.onClick (E.input_ ReadTicks) ]
-                             [ H.text "Update reading" ]
-                  ]
-           ]
+    H.div_
+      [ H.slot (TickSlot "A") \_ -> { component: ticker, initialState: TickState 100 }
+      , H.slot (TickSlot "B") \_ -> { component: ticker, initialState: TickState 0 }
+      , H.p_
+          [ H.p_
+              [ H.text $ "Last tick readings - A: " ++ (maybe "No reading" show st.tickA)
+                                         ++ ", B: " ++ (maybe "No reading" show st.tickB)
+              ]
+          , H.button
+              [ E.onClick (E.input_ ReadTicks) ]
+              [ H.text "Update reading" ]
+          ]
+      ]
 
-  eval :: EvalParent Query State TickState Query TickQuery g TickSlot
+  eval :: Natural Query (ParentDSL State TickState Query TickQuery g TickSlot)
   eval (ReadTicks next) = do
     a <- query (TickSlot "A") (request GetTick)
     b <- query (TickSlot "B") (request GetTick)

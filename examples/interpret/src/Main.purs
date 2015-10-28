@@ -3,12 +3,11 @@ module Example.Intro where
 import Prelude
 
 import Control.Monad.Aff (Aff(), runAff)
+import Control.Monad.Aff.Console (log)
 import Control.Monad.Eff (Eff())
 import Control.Monad.Eff.Console (CONSOLE())
 import Control.Monad.Eff.Exception (throwException)
 import Control.Monad.Free (Free(), liftF, foldFree)
-
-import Data.NaturalTransformation (Natural())
 
 import Halogen
 import Halogen.Util (appendToBody)
@@ -32,14 +31,17 @@ ui :: Component State Query Output
 ui = component render eval
   where
 
-  render :: Render State Query
-  render state = H.div_
-    [ H.h1_ [ H.text "Toggle Button" ]
-    , H.button [ E.onClick (E.input_ ToggleState) ]
-               [ H.text (if state.on then "On" else "Off") ]
-    ]
+  render :: State -> ComponentHTML Query
+  render state =
+    H.div_
+      [ H.h1_
+          [ H.text "Toggle Button" ]
+      , H.button
+          [ E.onClick (E.input_ ToggleState) ]
+          [ H.text (if state.on then "On" else "Off") ]
+      ]
 
-  eval :: Eval Query State Query Output
+  eval :: Natural Query (ComponentDSL State Query Output)
   eval (ToggleState next) = do
     modify (\state -> { on: not state.on })
     liftH $ output "State was toggled"
@@ -50,7 +52,7 @@ ui' = interpret (foldFree evalOutput) ui
   where
   evalOutput :: Natural OutputF (Aff (HalogenEffects (console :: CONSOLE | eff)))
   evalOutput (Log msg next) = do
-    Control.Monad.Aff.Console.log msg
+    log msg
     pure next
 
 main :: Eff (HalogenEffects (console :: CONSOLE)) Unit

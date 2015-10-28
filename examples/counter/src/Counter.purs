@@ -22,13 +22,17 @@ ui :: forall g. (Functor g) => Component State Query g
 ui = component render eval
   where
 
-  render :: Render State Query
+  render :: State -> ComponentHTML Query
   render (State n) =
-    H.div_ [ H.h1 [ P.id_ "header" ] [ H.text "counter" ]
-           , H.p_ [ H.text (show n) ]
-           ]
+    H.div_
+      [ H.h1
+          [ P.id_ "header" ]
+          [ H.text "counter" ]
+      , H.p_
+          [ H.text (show n) ]
+      ]
 
-  eval :: Eval Query State Query g
+  eval :: Natural Query (ComponentDSL State Query g)
   eval (Tick next) = do
     modify (\(State n) -> State (n + 1))
     pure next

@@ -54,32 +54,43 @@ ui :: forall eff. Component State Query (Aff (AppEffects eff))
 ui = component render eval
   where
 
-  render :: Render State Query
+  render :: State -> ComponentHTML Query
   render st =
-    H.div_ $ [ H.h1_ [ H.text "ajax example / trypurescript" ]
-             , H.h2_ [ H.text "purescript input:" ]
-             , H.p_ [ H.textarea [ P.value st.code
-                                 , E.onValueInput (E.input SetCode)
-                                 ]
-                    ]
-             , H.p_ [ H.button [ P.disabled st.busy
-                               , E.onClick (E.input_ (MakeRequest st.code))
-                               ]
-                               [ H.text "Compile" ]
-                    ]
-             , H.p_ [ H.text (if st.busy then "Working..." else "") ]
-             ]
-             ++ flip foldMap st.result \js ->
-                [ H.div_ [ H.h2_ [ H.text "javascript output:" ]
-                         , H.pre_ [ H.code_ [ H.text js ] ]
-                         ]
-                ]
+    H.div_ $
+      [ H.h1_
+          [ H.text "ajax example / trypurescript" ]
+      , H.h2_
+          [ H.text "purescript input:" ]
+      , H.p_
+          [ H.textarea
+              [ P.value st.code
+              , E.onValueInput (E.input SetCode)
+              ]
+          ]
+      , H.p_
+          [ H.button
+              [ P.disabled st.busy
+              , E.onClick (E.input_ (MakeRequest st.code))
+              ]
+              [ H.text "Compile" ]
+          ]
+      , H.p_
+          [ H.text (if st.busy then "Working..." else "") ]
+      ]
+      ++ flip foldMap st.result \js ->
+          [ H.div_
+              [ H.h2_
+                  [ H.text "javascript output:" ]
+              , H.pre_
+                  [ H.code_ [ H.text js ] ]
+              ]
+          ]
 
-  eval :: Eval Query State Query (Aff (AppEffects eff))
+  eval :: Natural Query (ComponentDSL State Query (Aff (AppEffects eff)))
   eval (SetCode code next) = modify (_ { code = code, result = Nothing :: Maybe String }) $> next
   eval (MakeRequest code next) = do
     modify (_ { busy = true })
-    result <- liftFI (fetchJS code)
+    result <- liftAff' (fetchJS code)
     modify (_ { busy = false, result = Just result })
     pure next
 

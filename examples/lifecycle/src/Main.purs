@@ -26,20 +26,27 @@ ui :: forall g. (Functor g) => Component State Query g
 ui = component render eval
   where
 
-  render :: Render State Query
-  render state = H.div_
-    [ H.h1_ [ H.text "Toggle Button" ]
-    , H.button [ E.onClick (E.input_ ToggleState) ]
-               [ H.text (if state.on then "Hide" else "Show") ]
-    , if state.on
-         then H.span [ P.initializer \_ -> action (AddEvent "Initialized")
-                     , P.finalizer \_ -> action (AddEvent "Finalized") ]
-                     [ H.text "Hello, World!" ]
-         else H.text ""
-    , H.ul_ (map (\event -> H.li_ [ H.text event ]) state.events)
-    ]
+  render :: State -> ComponentHTML Query
+  render state =
+    H.div_
+      [ H.h1_
+          [ H.text "Toggle Button" ]
+      , H.button
+          [ E.onClick (E.input_ ToggleState) ]
+          [ H.text (if state.on then "Hide" else "Show") ]
+      , if state.on
+        then
+          H.span
+            [ P.initializer \_ -> action (AddEvent "Initialized")
+            , P.finalizer \_ -> action (AddEvent "Finalized")
+            ]
+            [ H.text "Hello, World!" ]
+        else
+          H.text ""
+      , H.ul_ (map (\event -> H.li_ [ H.text event ]) state.events)
+      ]
 
-  eval :: Eval Query State Query g
+  eval :: Natural Query (ComponentDSL State Query g)
   eval (ToggleState next) = do
     modify (\state -> state { on = not state.on })
     pure next

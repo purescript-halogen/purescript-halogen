@@ -44,18 +44,25 @@ ui :: forall eff. Component (StateP eff) QueryP (Aff (AceEffects eff))
 ui = parentComponent' render eval peek
   where
 
-  render :: RenderParent State AceState Query AceQuery (Aff (AceEffects eff)) AceSlot
+  render :: State -> ParentHTML AceState Query AceQuery (Aff (AceEffects eff)) AceSlot
   render { text: text } =
-    H.div_ [ H.h1_ [ H.text "ace editor" ]
-           , H.div_ [ H.p_ [ H.button [ E.onClick (E.input_ ClearText) ]
-                                      [ H.text "Clear" ]
-                           ]
-                    ]
-           , H.div_ [ H.slot AceSlot \_ -> { component: ace, initialState: initAceState } ]
-           , H.p_ [ H.text ("Current text: " ++ text) ]
-           ]
+    H.div_
+      [ H.h1_
+          [ H.text "ace editor" ]
+      , H.div_
+          [ H.p_
+              [ H.button
+                  [ E.onClick (E.input_ ClearText) ]
+                  [ H.text "Clear" ]
+              ]
+          ]
+      , H.div_
+          [ H.slot AceSlot \_ -> { component: ace, initialState: initAceState } ]
+      , H.p_
+          [ H.text ("Current text: " ++ text) ]
+      ]
 
-  eval :: EvalParent Query State AceState Query AceQuery (Aff (AceEffects eff)) AceSlot
+  eval :: Natural Query (ParentDSL State AceState Query AceQuery (Aff (AceEffects eff)) AceSlot)
   eval (ClearText next) = do
     query AceSlot $ action (ChangeText "")
     pure next
@@ -63,7 +70,7 @@ ui = parentComponent' render eval peek
   -- Peek allows us to observe inputs going to the child components, here
   -- we're using it to observe when the text is changed inside the ace
   -- component, and igoring any other inputs.
-  peek :: Peek (ChildF AceSlot AceQuery) State AceState Query AceQuery (Aff (AceEffects eff)) AceSlot
+  peek :: forall a. ChildF AceSlot AceQuery a -> ParentDSL State AceState Query AceQuery (Aff (AceEffects eff)) AceSlot Unit
   peek (ChildF _ (ChangeText text _)) = modify _ { text = text }
   peek _ = pure unit
 

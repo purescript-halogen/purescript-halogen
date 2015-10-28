@@ -9,9 +9,12 @@ module Halogen
   , module Halogen.Driver
   , module Halogen.Effects
   , module Halogen.Query
+  , module Data.NaturalTransformation
   ) where
 
 import Prelude
+
+import Data.NaturalTransformation (Natural())
 
 import Halogen.Component
 import Halogen.Driver

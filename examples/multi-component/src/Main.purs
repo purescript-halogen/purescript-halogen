@@ -45,11 +45,11 @@ cpC = cpR :> cpR
 type StateP g = InstalledState State ChildState Query ChildQuery g ChildSlot
 type QueryP = Coproduct Query (ChildF ChildSlot ChildQuery)
 
-ui :: forall g. (Plus g) => Component (StateP g) QueryP g
+ui :: forall g. (Functor g) => Component (StateP g) QueryP g
 ui = parentComponent' render eval (const (pure unit))
   where
 
-  render :: RenderParent State ChildState Query ChildQuery g ChildSlot
+  render :: State -> ParentHTML ChildState Query ChildQuery g ChildSlot
   render (State state) = H.div_
     [ H.div_ [ H.slot' cpA SlotA \_ -> { component: componentA, initialState: initStateA } ]
     , H.div_ [ H.slot' cpB SlotB \_ -> { component: componentB, initialState: initStateB } ]
@@ -58,7 +58,7 @@ ui = parentComponent' render eval (const (pure unit))
     , H.button [ E.onClick (E.input_ ReadStates) ] [ H.text "Read states" ]
     ]
 
-  eval :: EvalParent Query State ChildState Query ChildQuery g ChildSlot
+  eval :: Natural Query (ParentDSL State ChildState Query ChildQuery g ChildSlot)
   eval (ReadStates next) = do
     a <- query' cpA SlotA (request GetStateA)
     b <- query' cpB SlotB (request GetStateB)
