@@ -155,7 +155,7 @@ parentComponent' r e p = Component { render: render r, eval: eval }
 -- | state local to the container, `p` is the type of slot used by the
 -- | container, and the remaining parameters are the type variables for the
 -- | child components.
-type InstalledState s s' f f' g p =
+newtype InstalledState s s' f f' g p = InstalledState
   { parent :: s
   , children :: M.Map p (Tuple (Component s' f' g) s')
   , memo :: M.Map p (HTML Void (Coproduct f (ChildF p f') Unit))
@@ -164,7 +164,7 @@ type InstalledState s s' f f' g p =
 -- | Lifts a state value into an `InstalledState` value. Useful when providing
 -- | an initial state value for a parent component.
 installedState :: forall s s' f f' g p. (Ord p) => s -> InstalledState s s' f f' g p
-installedState = { parent: _, children: M.empty, memo: M.empty }
+installedState st = InstalledState { parent: st, children: M.empty, memo: M.empty }
 
 -- | An intermediate algebra that parent components "produce" from their `eval`
 -- | and `peek` functions. This takes the place of `g` when compared to a leaf
@@ -211,7 +211,7 @@ mkQuery
   -> f' i
   -> QueryF s s' f f' g p (Maybe i)
 mkQuery p q = do
-  st <- get
+  InstalledState st <- get
   for (M.lookup p st.children) \(Tuple c _) ->
     mapF (transformHF (mapStateFChild p) (ChildF p) id) (queryComponent c q)
 
@@ -235,13 +235,24 @@ liftQuery
 liftQuery = liftH
 
 mapStateFParent :: forall s s' f f' g p. Natural (StateF s) (StateF (InstalledState s s' f f' g p))
-mapStateFParent = mapState (_.parent) (\f st -> st { parent = f st.parent })
+mapStateFParent =
+  mapState
+    (\(InstalledState st) -> st.parent)
+    (\f (InstalledState st) -> InstalledState
+      { parent: f st.parent
+      , children: st.children
+      , memo: st.memo
+      })
 
 mapStateFChild :: forall s s' f f' g p. (Ord p) => p -> Natural (StateF s') (StateF (InstalledState s s' f f' g p))
 mapStateFChild p =
   mapState
-    (\st -> U.fromJust $ snd <$> M.lookup p st.children)
-    (\f st -> { parent: st.parent, children: M.update (Just <<< rmap f) p st.children, memo: st.memo })
+    (\(InstalledState st) -> U.fromJust $ snd <$> M.lookup p st.children)
+    (\f (InstalledState st) -> InstalledState
+      { parent: st.parent
+      , children: M.update (Just <<< rmap f) p st.children
+      , memo: st.memo
+      })
 
 render
   :: forall s s' f f' g p
@@ -249,18 +260,18 @@ render
   => (s -> HTML (SlotConstructor s' f' g p) (f Unit))
   -> State (InstalledState s s' f f' g p) (HTML Void ((Coproduct f (ChildF p f')) Unit))
 render rc = do
-    st <- CMS.get
+    InstalledState st <- CMS.get
     let html = rc st.parent
     -- Empty the state so that we don't keep children that are no longer
     -- being rendered...
-    CMS.put
+    CMS.put $ InstalledState
       { parent: st.parent
-      , children: M.empty :: M.Map p (Tuple (Component s' f' g) s')
-      , memo: M.empty :: M.Map p (HTML Void (Coproduct f (ChildF p f') Unit))
-      }
+      , children: M.empty
+      , memo: M.empty
+      } :: InstalledState s s' f f' g p
     -- ...but then pass through the old state so we can lookup child
     -- components that are being re-rendered
-    fillSlot (renderChild st) left html
+    fillSlot (renderChild (InstalledState st)) left html
 
   where
 
@@ -268,11 +279,11 @@ render rc = do
     :: InstalledState s s' f f' g p
     -> SlotConstructor s' f' g p
     -> State (InstalledState s s' f f' g p) (HTML Void ((Coproduct f (ChildF p f')) Unit))
-  renderChild st (SlotConstructor p def) =
+  renderChild (InstalledState st) (SlotConstructor p def) =
     let childState = M.lookup p st.children
     in case M.lookup p st.memo of
       Just html -> do
-        CMS.modify \st' ->
+        CMS.modify \(InstalledState st') -> InstalledState
           { parent: st'.parent
           , children: M.alter (const childState) p st'.children
           , memo: M.insert p html st'.memo
@@ -291,7 +302,11 @@ render rc = do
     -> State (InstalledState s s' f f' g p) (HTML Void ((Coproduct f (ChildF p f')) Unit))
   renderChild' p c s = case renderComponent c s of
     Tuple html s' -> do
-      CMS.modify (\st -> { parent: st.parent, children: M.insert p (Tuple c s') st.children, memo: st.memo } :: InstalledState s s' f f' g p)
+      CMS.modify \(InstalledState st) -> InstalledState
+        { parent: st.parent
+        , children: M.insert p (Tuple c s') st.children
+        , memo: st.memo
+        } :: InstalledState s s' f f' g p
       pure $ right <<< ChildF p <$> html
 
 queryParent
@@ -327,7 +342,11 @@ queryChild
    . (Functor g, Ord p)
   => Eval (ChildF p f') (InstalledState s s' f f' g p) (Coproduct f (ChildF p f')) g
 queryChild (ChildF p q) = do
-  modify \st -> { parent: st.parent, children: st.children, memo: M.delete p st.memo }
+  modify \(InstalledState st) -> InstalledState
+    { parent: st.parent
+    , children: st.children
+    , memo: M.delete p st.memo
+    }
   mapF (transformHF id right id) (mkQuery p q)
     >>= maybe (liftF empty) pure
 
