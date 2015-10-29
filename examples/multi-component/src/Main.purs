@@ -46,7 +46,7 @@ type StateP g = InstalledState State ChildState Query ChildQuery g ChildSlot
 type QueryP = Coproduct Query (ChildF ChildSlot ChildQuery)
 
 ui :: forall g. (Functor g) => Component (StateP g) QueryP g
-ui = parentComponent' render eval (const (pure unit))
+ui = parentComponent render eval
   where
 
   render :: State -> ParentHTML ChildState Query ChildQuery g ChildSlot

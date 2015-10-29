@@ -14,6 +14,7 @@
     "example-ajax": "bower link && cd examples/ajax && bower link purescript-halogen && gulp",
     "example-components": "bower link && cd examples/components && bower link purescript-halogen && gulp",
     "example-counter": "bower link && cd examples/counter && bower link purescript-halogen && gulp",
+    "example-deep-peek": "bower link && cd examples/deep-peek && bower link purescript-halogen && gulp",
     "example-interpret": "bower link && cd examples/interpret && bower link purescript-halogen && gulp",
     "example-intro": "bower link && cd examples/intro && bower link purescript-halogen && gulp",
     "example-lifecycle": "bower link && cd examples/lifecycle && bower link purescript-halogen && gulp",
