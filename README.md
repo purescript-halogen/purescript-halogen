@@ -309,7 +309,7 @@ type EvalParent i s s' f f' g p = Natural i (ParentDSL s s' f f' g p)
 type ParentDSL s s' f f' g p = ComponentDSL s f (QueryF s s' f f' g p)
 ```
 
-These differ from the non-`Parent` synonyms by swapping out the `Void` in `HTML` for `SlotConstructor ...` and the `g` of `ComponentDSL` becomes `QueryF ...`. These changes us allow us to perfom the necessary plumbing when installing child components into a parent.
+These differ from the non-`Parent` synonyms by swapping out the `Void` in `HTML` for `SlotConstructor ...` and the `g` of `ComponentDSL` becomes `QueryF ...`. These changes allow us to perfom the necessary plumbing when installing child components into a parent.
 
 When setting up parent components it is recommended to define your own type synonyms for the state and query algebra. Taking [the “components” example](examples/components) for instance, we define `StateP` and `QueryP` synonyms for the component we’re constructing:
 
@@ -442,7 +442,7 @@ This usage of `peek` illustrates another point about its usage: when observing `
 
 Another common case encountered is the need to have different types of child component under the same parent. Halogen does support this, there is a demonstration in [the “multi component” example](examples/multi-component).
 
-We can encapsulate the by using `Either`s for the differing state and slot types, and `Coproduct`s for the query algebra types. Once again, due to the increasing complexity of types, the use of type synonyms helps here. From the example:
+We use `Either`s for the differing state and slot types, and `Coproduct`s for the query algebra types. Once again, due to the increasing complexity of types, the use of type synonyms helps here. From the example:
 
 ``` purescript
 type ChildState = Either StateA (Either StateB StateC)
