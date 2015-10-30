@@ -202,8 +202,8 @@ The `Free (HalogenF s f g) _` that `eval` functions return allow us to perform s
 [`HalogenF`](docs/Halogen/Query.md#HalogenF) is actually a composite of 3 separate functors (algebras) which provide the different abilities just mentioned. The state-based algebra is defined in [`Halogen.Query.StateF`](docs/Halogen/Query/StateF.md) and [`Halogen.Query`](docs/Halogen/Query.md) provides an interface much like that provided by the standard `State` monad:
 
 - [`get`](docs/Halogen/Query.md#get) retrieves the entire current state value
-- [`gets f`](docs/Halogen/Query.md#gets) uses `f` to map the state value, generally used to extract a part of the state 
-- [`modify f`](docs/Halogen/Query.md#modify) uses `f` to update the stored state value 
+- [`gets f`](docs/Halogen/Query.md#gets) uses `f` to map the state value, generally used to extract a part of the state
+- [`modify f`](docs/Halogen/Query.md#modify) uses `f` to update the stored state value
 
 The second algebra is for event subscriptions, defined in [`Halogen.Query.SubscribeF`](docs/Halogen/Query/SubscribeF.md), and will be explained in the [section on widgets](widgets-3rd-party-components).
 
@@ -229,7 +229,7 @@ runRequest input = -- ... make request ...
 
 `runRequest` is a normal `Aff`-returning function. To make use of it in a `Free (HalogenF s f g)` context we use the [`liftAff'`](docs/Halogen/Query.md#liftaff) helper function to lift it into the right place in the `Free`.
 
-Using `Aff` for a component’s `g` means it also inherits the convenience of `Aff`’s async handling behaviour – that is to say we need no explicit callbacks while waiting for async results, in the above example the second [`modify`](docs/Halogen/Query.md#modify) will not be executed until we have the `result` value. 
+Using `Aff` for a component’s `g` means it also inherits the convenience of `Aff`’s async handling behaviour – that is to say we need no explicit callbacks while waiting for async results, in the above example the second [`modify`](docs/Halogen/Query.md#modify) will not be executed until we have the `result` value.
 
 If we want to use an `Eff` based function there is also a [`liftEff'`](docs/Halogen/Query.md#lifteff) helper. [`liftAff'`](docs/Halogen/Query.md#liftaff) makes use of a `MonadAff` constraint and [`liftEff'`](docs/Halogen/Query.md#lifteff) uses the `MonadEff` constraint, so the `g` type does not have to strictly be `Aff` for these functions to work, any monad that provides `MonadAff` and `MonadEff` instances will suffice.
 
@@ -379,7 +379,7 @@ As we have no guarantee that a particular slot value is currently in the rendere
 
 The type of components we’ve described so far only support communication in one way: top-down, from parent to children. Sometimes this isn’t powerful enough to model our user interfaces. For example: if we have a list component and an item component with a delete button, how do we tell the parent to delete the item when the button is clicked?
 
-Allowing children to talk directly to parents would make composition and encapsulation of components problematic, so the solution Halogen adopts is to allow parents to “peek” at the queries their children have received. 
+Allowing children to talk directly to parents would make composition and encapsulation of components problematic, so the solution Halogen adopts is to allow parents to “peek” at the queries their children have received.
 
 Note _have received_ here – the child component is guaranteed to have already processed the query, Halogen does not offer any kind of mechanism for a parent to interfere with queries that are going to its children, only observe them after the fact.
 
@@ -532,7 +532,7 @@ There is also a `finalizer` property that works in a similar way to the `initial
 
 #### Initializing the widget
 
-Now we have the ability to raise some kind of query in response to the element appearing in the DOM we need to define how to initialize our widget. Generally this will involve two things: 
+Now we have the ability to raise some kind of query in response to the element appearing in the DOM we need to define how to initialize our widget. Generally this will involve two things:
 
 1. Calling some function to initialize the 3rd party component and then storing a reference to it in the widget’s state so we can refer to it again later
 2. Subscribing to events or callbacks on the 3rd party component
@@ -541,10 +541,10 @@ Referring back to the Ace example again, that might look something like this:
 
 ``` purescript
 eval (Init el next) = do
-  
+
   -- Initialize the 3rd party component
   editor <- liftEff' $ Ace.editNode el Ace.ace
-  
+
   -- Store the returned value
   modify _ { editor = Just editor }
 
