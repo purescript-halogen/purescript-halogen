@@ -18,7 +18,7 @@ A declarative, type-safe UI library for PureScript.
 
 `purescript-halogen` uses the `virtual-dom` library as a CommonJS dependency. To set up `virtual-dom` in your project, it is recommended that you:
 
-- Install `virtual-dom` as an NPM dependency in your `project.json` file.
+- Install `virtual-dom` as an NPM dependency in your `package.json` file.
 - Use `psc` with `psc-bundle` and then `webpack` or `browserify` to build and link the `virtual-dom` source code into a JS bundle for use in the web browser. See a `gulpfile.js` in one of the example directories for a build setup using `webpack`.
 
 ## Introduction
