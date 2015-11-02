@@ -35,7 +35,7 @@ import Control.Apply ((<*))
 import Control.Bind ((=<<))
 import Control.Coroutine (await)
 import Control.Monad.Eff.Class (MonadEff)
-import Control.Monad.Free (Free(), foldFree, liftF, mapF)
+import Control.Monad.Free (Free(), foldFree, liftF, mapF, runFreeM)
 import Control.Monad.Rec.Class (forever)
 import Control.Monad.State (State(), runState)
 import Control.Monad.Trans (lift)
@@ -210,8 +210,16 @@ mkQuery
   -> QueryF s s' f f' g p (Maybe i)
 mkQuery p q = do
   InstalledState st <- get
-  for (M.lookup p st.children) \(Tuple c _) ->
-    mapF (transformHF (mapStateFChild p) (ChildF p) id) (queryComponent c q)
+  case M.lookup p st.children of
+    Nothing -> pure Nothing
+    Just (Tuple c _) ->
+      queryComponent c q
+        # map Just
+        # mapF (transformHF (mapStateFChild p) (ChildF p) id)
+        # runFreeM \h ->
+            case h of
+              HaltHF -> pure $ pure Nothing
+              _ -> liftF h
 
 -- | A version of [`mkQuery`](#mkQuery) for use when a parent component has
 -- | multiple types of child component.
@@ -416,7 +424,7 @@ interpret nat (Component c) =
 renderComponent :: forall s f g. Component s f g -> s -> Tuple (HTML Void (f Unit)) s
 renderComponent (Component c) = runState c.render
 
--- | Runs a compnent's `query` function with the specified query input and
+-- | Runs a component's `query` function with the specified query input and
 -- | returns the pending computation as a `Free` monad.
 queryComponent :: forall s f g. Component s f g -> Eval f s f g
 queryComponent (Component c) = c.eval

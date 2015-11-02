@@ -131,7 +131,7 @@ descendant components have processed.
 #### `InstalledState`
 
 ``` purescript
-type InstalledState s s' f f' g p = { parent :: s, children :: Map p (Tuple (Component s' f' g) s'), memo :: Map p (HTML Void (Coproduct f (ChildF p f') Unit)) }
+newtype InstalledState s s' f f' g p
 ```
 
 The type used by component containers for their state where `s` is the
@@ -271,7 +271,7 @@ the generated `HTML` and new state.
 queryComponent :: forall s f g. Component s f g -> Eval f s f g
 ```
 
-Runs a compnent's `query` function with the specified query input and
+Runs a component's `query` function with the specified query input and
 returns the pending computation as a `Free` monad.
 
 
