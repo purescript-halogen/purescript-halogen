@@ -9,9 +9,7 @@ module Halogen.HTML
   , module Halogen.HTML.Elements
   ) where
 
-import Prelude ((<<<), Unit(), unit, Functor, (<$>))
-
-import Data.Bifunctor (bimap)
+import Prelude (Unit(), Functor, (<$>))
 
 import Halogen.Component (Component(), SlotConstructor(..), transformChild)
 import Halogen.Component.ChildPath (ChildPath(), injSlot, injState)

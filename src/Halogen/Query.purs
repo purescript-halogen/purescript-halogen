@@ -32,7 +32,6 @@ import Control.Monad.Free (Free(), liftF)
 import Data.Inject
 import Data.Maybe (Maybe(..))
 import Data.NaturalTransformation (Natural())
-import Data.Functor.Coproduct (Coproduct(), coproduct, left, right)
 
 import Halogen.Query.StateF (StateF(..), mapState)
 import Halogen.Query.SubscribeF (SubscribeF(..), EventSource(), eventSource, eventSource_, hoistSubscribe, transformSubscribe)

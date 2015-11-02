@@ -14,7 +14,7 @@ module Halogen.Query.SubscribeF
 import Prelude
 
 import Control.Bind ((<=<), (=<<))
-import Control.Coroutine (Producer(), Consumer(), runProcess, emit, ($$))
+import Control.Coroutine (Producer(), Consumer(), runProcess, ($$))
 import Control.Coroutine.Aff (produce)
 import Control.Monad.Free.Trans (hoistFreeT, interpret)
 import Control.Monad.Aff (Aff())

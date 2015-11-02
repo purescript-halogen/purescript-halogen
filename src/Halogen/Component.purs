@@ -22,8 +22,9 @@ module Halogen.Component
   , liftQuery
   , query
   , query'
-  , interpret
+  , transform
   , transformChild
+  , interpret
   , renderComponent
   , queryComponent
   ) where
@@ -31,10 +32,9 @@ module Halogen.Component
 import Prelude
 
 import Control.Apply ((<*))
-import Control.Bind ((=<<), (<=<), (>=>))
+import Control.Bind ((=<<))
 import Control.Coroutine (await)
-import Control.Monad.Eff (Eff())
-import Control.Monad.Eff.Class (MonadEff, liftEff)
+import Control.Monad.Eff.Class (MonadEff)
 import Control.Monad.Free (Free(), foldFree, liftF, mapF)
 import Control.Monad.Rec.Class (forever)
 import Control.Monad.State (State(), runState)
@@ -43,24 +43,22 @@ import Control.Plus (empty)
 import qualified Control.Monad.State.Class as CMS
 import qualified Control.Monad.State.Trans as CMS
 
-import Data.Bifunctor (bimap, lmap, rmap)
-import Data.Const (Const())
-import Data.Either (Either(..), either)
+import Data.Bifunctor (bimap, rmap)
 import Data.Functor.Coproduct (Coproduct(..), coproduct, left, right)
-import Data.Maybe (Maybe(..), maybe, fromMaybe')
+import Data.Maybe (Maybe(..), maybe)
 import Data.NaturalTransformation (Natural())
+import Data.Profunctor.Choice (Choice)
 import Data.Traversable (for)
 import Data.Tuple (Tuple(..), snd)
 import Data.Void (Void())
-import qualified Data.Either.Unsafe as U
 import qualified Data.Map as M
 import qualified Data.Maybe.Unsafe as U
 
-import Halogen.Component.ChildPath (ChildPath(), injState, injQuery, injSlot, prjState, prjQuery, prjSlot)
+import Halogen.Component.ChildPath (ChildPath(), injState, injQuery, injSlot, prjState, prjQuery)
 import Halogen.HTML.Core (HTML(..), fillSlot)
 import Halogen.Query (HalogenF(..), get, modify, liftH, hoistHalogenF, transformHF)
-import Halogen.Query.StateF (StateF(), mapState)
-import Halogen.Query.SubscribeF (SubscribeF(), subscribeN, remapSubscribe, hoistSubscribe)
+import Halogen.Query.StateF (StateF(..), mapState)
+import Halogen.Query.SubscribeF (SubscribeF(), subscribeN, hoistSubscribe, transformSubscribe)
 
 -- | Data type for Halogen components.
 -- | - `s` - the component's state
@@ -331,25 +329,46 @@ queryChild (ChildF p q) = do
   mapF (transformHF id right id) (mkQuery p q)
     >>= maybe (liftF empty) pure
 
-adaptState :: forall s t m a. (Monad m) => (s -> t) -> (t -> s) -> CMS.StateT s m a -> CMS.StateT t m a
-adaptState st ts (CMS.StateT f) = CMS.StateT \state -> f (ts state) >>= \(Tuple a s) -> pure $ Tuple a (st s)
-
-transform'
+-- | Transforms a `Component`'s types using partial mapping functions.
+-- |
+-- | If the initial state provided to the component fails the transformation an
+-- | empty component will be rendered. If either of the transformations fail the
+-- | component will "halt" (evaluate to `empty`), so care must be taken when
+-- | handling transformed components to ensure they receive the intended query
+-- | values and initial state type.
+-- |
+-- | Halogen itself will never cause a `transform`ed component to halt; this
+-- | situation will only arise when the initial state is incorrect or a bad
+-- | externally constructed query is passed to the component.
+transform
   :: forall s s' f f' g
    . (Functor g)
   => (s -> s')
-  -> (s' -> s)
-  -> Natural f f'
-  -> Natural f' f
+  -> (s' -> Maybe s)
+  -> (forall a. f a -> f' a)
+  -> (forall a. f' a -> Maybe (f a))
   -> Component s f g
   -> Component s' f' g
-transform' sTo sFrom fTo fFrom (Component c) =
-  Component { render: map fTo <$> adaptState sTo sFrom c.render
-            , eval: mapF natHF <<< c.eval <<< fFrom
-            }
+transform reviewS previewS reviewQ previewQ (Component c) =
+  Component
+    { render: maybe (pure $ Text "") render' <<< previewS =<< CMS.get
+    , eval: maybe (liftF HaltHF) (foldFree go <<< c.eval) <<< previewQ
+    }
   where
-  natHF :: Natural (HalogenF s f g) (HalogenF s' f' g)
-  natHF = transformHF (mapState sFrom (\f s -> sTo (f (sFrom s)))) fTo id
+
+  render' :: s -> State s' (HTML Void (f' Unit))
+  render' st = CMS.StateT (\_ -> bimap (map reviewQ) reviewS <$> CMS.runStateT c.render st)
+
+  go :: Natural (HalogenF s f g) (Free (HalogenF s' f' g))
+  go (StateHF (Get k)) =
+    liftF <<< maybe HaltHF (\st' -> StateHF (Get (k <<< const st'))) <<< previewS =<< get
+  go (StateHF (Modify f next)) = liftF $ StateHF (Modify (modifyState f) next)
+  go (SubscribeHF q) = liftF $ SubscribeHF (transformSubscribe reviewQ id q)
+  go (QueryHF q) = liftF $ QueryHF q
+  go HaltHF = liftF HaltHF
+
+  modifyState :: (s -> s) -> s' -> s'
+  modifyState f s' = maybe s' (reviewS <<< f) (previewS s')
 
 -- | Transforms a `Component`'s types using a `ChildPath` definition.
 transformChild
@@ -358,12 +377,7 @@ transformChild
   => ChildPath s s' f f' p p'
   -> Component s f g
   -> Component s' f' g
-transformChild i =
-  transform'
-    (injState i)
-    (U.fromJust <<< prjState i)
-    (injQuery i)
-    (U.fromJust <<< prjQuery i)
+transformChild i = transform (injState i) (prjState i) (injQuery i) (prjQuery i)
 
 -- | Changes the component's `g` type. A use case for this would be to interpret
 -- | some `Free` monad as `Aff` so the component can be used with `runUI`.
@@ -380,10 +394,10 @@ interpret nat (Component c) =
 
 -- | Runs a component's `render` function with the specified state, returning
 -- | the generated `HTML` and new state.
-renderComponent :: forall s f g p. Component s f g -> s -> Tuple (HTML Void (f Unit)) s
+renderComponent :: forall s f g. Component s f g -> s -> Tuple (HTML Void (f Unit)) s
 renderComponent (Component c) = runState c.render
 
 -- | Runs a compnent's `query` function with the specified query input and
 -- | returns the pending computation as a `Free` monad.
-queryComponent :: forall s f g p. Component s f g -> Eval f s f g
+queryComponent :: forall s f g. Component s f g -> Eval f s f g
 queryComponent (Component c) = c.eval

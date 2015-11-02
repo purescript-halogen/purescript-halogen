@@ -41,8 +41,6 @@ import Data.String (joinWith)
 import DOM.HTML.Types (HTMLElement())
 
 import Halogen.HTML.Core (Prop(..), ClassName(), IsProp, prop, propName, attrName, runClassName)
-import Halogen.HTML.Events.Types (Event())
-import Halogen.HTML.Events.Handler (EventHandler())
 
 data LengthLiteral
   = Pixels Number

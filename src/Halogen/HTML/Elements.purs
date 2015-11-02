@@ -125,7 +125,7 @@ module Halogen.HTML.Elements
   ) where
 
 import Prelude hiding (sub, div, map)
-import Halogen.HTML.Core (HTML(..), Prop(), TagName(), tagName, element)
+import Halogen.HTML.Core (HTML(..), Prop(), tagName, element)
 
 a :: forall p i. Array (Prop i) -> Array (HTML p i) -> HTML p i
 a xs = element (tagName "a") xs

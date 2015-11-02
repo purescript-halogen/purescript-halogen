@@ -73,7 +73,7 @@ import Unsafe.Coerce (unsafeCoerce)
 
 import DOM.HTML.Types (HTMLElement())
 
-import Halogen.HTML.Core (Prop(..), ClassName(), prop, propName, attrName, runClassName)
+import Halogen.HTML.Core (Prop(), ClassName())
 import qualified Halogen.HTML.Properties (LengthLiteral(..)) as PExport
 import qualified Halogen.HTML.Properties as P
 

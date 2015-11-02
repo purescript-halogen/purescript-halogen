@@ -3,7 +3,6 @@ module Test.DocExamples.Action where
 import Prelude
 import Halogen
 import Control.Monad.Aff (Aff())
-import Control.Monad.Free (Free())
 
 data Query a = Tick a
 
