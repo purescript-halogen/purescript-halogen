@@ -586,7 +586,7 @@ Both of these have a rather difficult looking type signatures but are fairly str
 data Query a = TextCopied String a
 
 eventSource (Editor.onCopy editor) \text -> do
-  pure $ actionF (TextCopied text)
+  pure $ action (TextCopied text)
 ```
 
 `eventSource'` is for cases where we have a callback that provides no return value:
@@ -594,7 +594,7 @@ eventSource (Editor.onCopy editor) \text -> do
 ``` purescript
 eventSource_ (Session.onChange session) do
   text <- Editor.getValue editor
-  pure $ actionF (ChangeText text)
+  pure $ action (ChangeText text)
 ```
 
 We’re operating in `Eff` in the `do` in these examples so we can talk to the wrapped component, but then need to return a query as a result that will then be processed by the widget `eval`.
