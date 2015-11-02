@@ -43,7 +43,6 @@ import Prelude
 
 import Unsafe.Coerce (unsafeCoerce)
 
-import Halogen.HTML.Core (Prop())
 import Halogen.HTML.Events.Handler (EventHandler())
 import Halogen.HTML.Events.Types (Event(), MouseEvent(), FocusEvent(), KeyboardEvent())
 import Halogen.HTML.Properties.Indexed (IProp(), I())

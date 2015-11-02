@@ -8,8 +8,6 @@ module Halogen.HTML.Events
 
 import Prelude
 
-import Control.Monad.Free (Free())
-
 import Halogen.Query (Action(), action)
 import Halogen.HTML.Events.Handler (EventHandler(), preventDefault, stopPropagation, stopImmediatePropagation)
 import Halogen.HTML.Events.Types (Event(), MouseEvent(), FocusEvent(), KeyboardEvent())

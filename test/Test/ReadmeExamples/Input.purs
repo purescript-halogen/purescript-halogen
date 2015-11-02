@@ -1,7 +1,6 @@
 module Test.ReadmeExamples.Input where
 
 import Prelude
-import Halogen
 import qualified Halogen.HTML.Events.Indexed as E
 import qualified Halogen.HTML.Properties.Indexed as P
 

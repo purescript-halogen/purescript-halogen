@@ -6,20 +6,18 @@ module Halogen.Driver
 import Prelude
 
 import Control.Bind ((=<<))
-import Control.Coroutine (Consumer(), await)
+import Control.Coroutine (await)
 import Control.Monad.Aff (Aff(), forkAff)
 import Control.Monad.Aff.AVar (AVar(), makeVar, putVar, takeVar)
 import Control.Monad.Eff.Class (liftEff)
-import Control.Monad.Free (Free(), runFreeM)
+import Control.Monad.Free (runFreeM)
 import Control.Monad.Rec.Class (forever)
 import Control.Monad.State (runState)
 import Control.Monad.Trans (lift)
 import Control.Plus (Plus, empty)
 
-import Data.Functor.Coproduct (Coproduct(), coproduct)
 import Data.NaturalTransformation (Natural())
 import Data.Tuple (Tuple(..))
-import Data.Void (Void())
 
 import DOM.HTML.Types (HTMLElement())
 

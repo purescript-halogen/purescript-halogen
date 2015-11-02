@@ -1,9 +1,9 @@
 ## Module Halogen.Component
 
-#### `ComponentP`
+#### `Component`
 
 ``` purescript
-newtype ComponentP s f g o p
+newtype Component s f g
 ```
 
 Data type for Halogen components.
@@ -11,23 +11,6 @@ Data type for Halogen components.
 - `f` - the component's query algebra
 - `g` - a functor integrated into the component's query algebra that allows
         embedding of external DSLs or handling of effects.
-- `o` - the type of values observable via `peek`, used to allow parent
-        components to see queries their children have acted upon.
-- `p` - the type of slot addresses within the component - these values
-        allow queries to child components to be specifically addressed.
-
-##### Instances
-``` purescript
-instance functorComponent :: Functor (ComponentP s f g o)
-```
-
-#### `Component`
-
-``` purescript
-type Component s f g = ComponentP s f g (Const Void) Void
-```
-
-A type alias for self-contained Halogen components.
 
 #### `ComponentHTML`
 
@@ -238,6 +221,24 @@ liftQuery :: forall s s' f f' g p. (Functor g) => EvalParent (QueryF s s' f f' g
 Lifts a value in the `QueryF` algebra into the monad used by a component's
 `eval` function.
 
+#### `transform`
+
+``` purescript
+transform :: forall s s' f f' g. (Functor g) => (s -> s') -> (s' -> Maybe s) -> (forall a. f a -> f' a) -> (forall a. f' a -> Maybe (f a)) -> Component s f g -> Component s' f' g
+```
+
+Transforms a `Component`'s types using partial mapping functions.
+
+If the initial state provided to the component fails the transformation an
+empty component will be rendered. If either of the transformations fail the
+component will "halt" (evaluate to `empty`), so care must be taken when
+handling transformed components to ensure they receive the intended query
+values and initial state type.
+
+Halogen itself will never cause a `transform`ed component to halt; this
+situation will only arise when the initial state is incorrect or a bad
+externally constructed query is passed to the component.
+
 #### `transformChild`
 
 ``` purescript
@@ -249,7 +250,7 @@ Transforms a `Component`'s types using a `ChildPath` definition.
 #### `interpret`
 
 ``` purescript
-interpret :: forall s f g g' o p. (Functor g') => Natural g g' -> ComponentP s f g o p -> ComponentP s f g' o p
+interpret :: forall s f g g'. (Functor g') => Natural g g' -> Component s f g -> Component s f g'
 ```
 
 Changes the component's `g` type. A use case for this would be to interpret
@@ -258,7 +259,7 @@ some `Free` monad as `Aff` so the component can be used with `runUI`.
 #### `renderComponent`
 
 ``` purescript
-renderComponent :: forall s f g o p. ComponentP s f g o p -> s -> Tuple (HTML p (f Unit)) s
+renderComponent :: forall s f g. Component s f g -> s -> Tuple (HTML Void (f Unit)) s
 ```
 
 Runs a component's `render` function with the specified state, returning
@@ -267,7 +268,7 @@ the generated `HTML` and new state.
 #### `queryComponent`
 
 ``` purescript
-queryComponent :: forall s f g o p. ComponentP s f g o p -> Eval f s f g
+queryComponent :: forall s f g. Component s f g -> Eval f s f g
 ```
 
 Runs a compnent's `query` function with the specified query input and

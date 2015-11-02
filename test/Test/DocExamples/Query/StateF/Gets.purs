@@ -1,7 +1,6 @@
 module Test.DocExamples.Query.StateF.Gets where
 
 import Prelude
-import Control.Monad.Free (Free())
 import Halogen.Component (Eval())
 import Halogen.Query (gets)
 
