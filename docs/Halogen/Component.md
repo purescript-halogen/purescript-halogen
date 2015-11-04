@@ -131,7 +131,7 @@ descendant components have processed.
 #### `InstalledState`
 
 ``` purescript
-type InstalledState s s' f f' g p = { parent :: s, children :: Map p (Tuple (Component s' f' g) s'), memo :: Map p (HTML Void (Coproduct f (ChildF p f') Unit)) }
+newtype InstalledState s s' f f' g p
 ```
 
 The type used by component containers for their state where `s` is the
