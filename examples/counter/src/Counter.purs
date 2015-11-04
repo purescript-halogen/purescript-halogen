@@ -7,7 +7,7 @@ import Control.Monad.Eff (Eff())
 import Control.Monad.Eff.Exception (throwException)
 
 import Halogen
-import Halogen.Util (appendToBody)
+import Halogen.Util (appendToBody, onLoad)
 import qualified Halogen.HTML.Indexed as H
 import qualified Halogen.HTML.Properties.Indexed as P
 
@@ -41,7 +41,7 @@ ui = component render eval
 main :: Eff (HalogenEffects ()) Unit
 main = runAff throwException (const (pure unit)) $ do
   { node: node, driver: driver } <- runUI ui initialState
-  appendToBody node
+  onLoad $ appendToBody node
   setInterval 1000 $ driver (action Tick)
 
 setInterval :: forall e a. Int -> Aff e a -> Aff e Unit

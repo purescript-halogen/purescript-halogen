@@ -8,7 +8,7 @@ import Control.Monad.Eff.Exception (throwException)
 import Control.Plus (Plus)
 
 import Halogen
-import Halogen.Util (appendToBody)
+import Halogen.Util (appendToBody, onLoad)
 
 import Model
 import Component.List
@@ -17,4 +17,4 @@ import Component.Task
 main :: Eff (HalogenEffects ()) Unit
 main = runAff throwException (const (pure unit)) $ do
   app <- runUI list (installedState initialList)
-  appendToBody app.node
+  onLoad $ appendToBody app.node

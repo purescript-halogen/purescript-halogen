@@ -7,7 +7,7 @@ import Control.Monad.Eff (Eff())
 import Control.Monad.Eff.Exception (throwException)
 
 import Halogen
-import Halogen.Util (appendToBody)
+import Halogen.Util (appendToBody, onLoad)
 import qualified Halogen.HTML.Indexed as H
 import qualified Halogen.HTML.Properties.Indexed as P
 import qualified Halogen.HTML.Events.Indexed as E
@@ -57,4 +57,4 @@ ui = component render eval
 main :: Eff (HalogenEffects ()) Unit
 main = runAff throwException (const (pure unit)) do
   app <- runUI ui initialState
-  appendToBody app.node
+  onLoad $ appendToBody app.node
