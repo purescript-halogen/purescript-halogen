@@ -14,3 +14,4 @@ script:
   - npm run example-intro
   - npm run example-multi-component
   - npm run example-todo
+  - npm run example-keyboard-shortcuts

@@ -4,6 +4,7 @@ module Halogen.Query.SubscribeF
   ( EventSource()
   , eventSource
   , eventSource_
+  , catEventSource
   , SubscribeF(..)
   , remapSubscribe
   , hoistSubscribe
@@ -22,14 +23,15 @@ import Control.Monad.Aff (Aff())
 import Control.Monad.Aff.AVar (AVAR())
 import Control.Monad.Eff (Eff())
 import Control.Monad.Eff.Class (MonadEff)
-import Control.Monad.Maybe.Trans
 import Control.Monad.Rec.Class (MonadRec)
 import Control.Plus (Plus, empty)
 
-import Data.Identity
 import Data.Bifunctor (Bifunctor, lmap)
+import Data.Const (Const())
 import Data.Either (Either(..))
 import Data.Functor (($>))
+import Data.Functor.Coproduct (Coproduct(), coproduct)
+import Data.Identity
 import Data.Maybe (Maybe(..), maybe)
 import Data.NaturalTransformation (Natural())
 
@@ -79,6 +81,18 @@ eventSource_
 eventSource_ attach handle =
   SCR.producerToStallingProducer $ produce \emit ->
     attach (emit <<< Left =<< handle)
+
+-- | Take an `EventSource` with events in `1 + f` to one with events in `f`.
+-- | This is useful for simultaneously filtering and handling events.
+catEventSource
+  :: forall f g
+   . (MonadRec g)
+  => EventSource (Coproduct (Const Unit) f) g
+  -> EventSource f g
+catEventSource =
+  SCR.catMaybes
+    <<< SCR.mapStallingProducer (coproduct (\_ -> Nothing) Just)
+
 
 -- | The subscribe algebra.
 data SubscribeF f g a = Subscribe (EventSource f g) a
