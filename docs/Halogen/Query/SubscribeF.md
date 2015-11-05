@@ -6,7 +6,7 @@ listeners.
 #### `EventSource`
 
 ``` purescript
-type EventSource f g = Producer (f Unit) g Unit
+type EventSource f g = StallingProducer (f Unit) g Unit
 ```
 
 A type alias for a coroutine producer used to represent a subscribable
