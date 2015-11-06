@@ -15,7 +15,7 @@ import Data.Maybe (Maybe(..), maybe)
 import Data.Void (Void(), absurd)
 
 import Halogen
-import Halogen.Util (appendToBody)
+import Halogen.Util (appendToBody, onLoad)
 import qualified Halogen.HTML.Indexed as H
 import qualified Halogen.HTML.Events.Indexed as E
 
@@ -79,4 +79,4 @@ ui = parentComponent' render eval peek
 main :: Eff (HalogenEffects ()) Unit
 main = runAff throwException (const (pure unit)) $ do
   app <- runUI ui (installedState initialState)
-  appendToBody app.node
+  onLoad $ appendToBody app.node

@@ -10,7 +10,7 @@ import Control.Monad.Eff.Exception (throwException)
 import Control.Monad.Free (Free(), liftF, foldFree)
 
 import Halogen
-import Halogen.Util (appendToBody)
+import Halogen.Util (appendToBody, onLoad)
 import qualified Halogen.HTML.Indexed as H
 import qualified Halogen.HTML.Events.Indexed as E
 
@@ -58,4 +58,4 @@ ui' = interpret (foldFree evalOutput) ui
 main :: Eff (HalogenEffects (console :: CONSOLE)) Unit
 main = runAff throwException (const (pure unit)) $ do
   app <- runUI ui' initialState
-  appendToBody app.node
+  onLoad $ appendToBody app.node
