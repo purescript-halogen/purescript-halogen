@@ -4,6 +4,7 @@ module Halogen.Query.SubscribeF
   ( EventSource()
   , eventSource
   , eventSource_
+  , catEventSource
   , SubscribeF(..)
   , remapSubscribe
   , hoistSubscribe
@@ -14,23 +15,29 @@ module Halogen.Query.SubscribeF
 import Prelude
 
 import Control.Bind ((<=<), (=<<))
-import Control.Coroutine (Producer(), Consumer(), runProcess, ($$))
+import Control.Coroutine as CR
+import Control.Coroutine.Stalling as SCR
 import Control.Coroutine.Aff (produce)
-import Control.Monad.Free.Trans (hoistFreeT, interpret)
+import Control.Monad.Free.Trans (hoistFreeT, interpret, runFreeT)
 import Control.Monad.Aff (Aff())
 import Control.Monad.Aff.AVar (AVAR())
 import Control.Monad.Eff (Eff())
 import Control.Monad.Eff.Class (MonadEff)
 import Control.Monad.Rec.Class (MonadRec)
+import Control.Plus (Plus, empty)
 
-import Data.Bifunctor (lmap)
+import Data.Bifunctor (Bifunctor, lmap)
+import Data.Const (Const())
 import Data.Either (Either(..))
 import Data.Functor (($>))
+import Data.Functor.Coproduct (Coproduct(), coproduct)
+import Data.Identity
+import Data.Maybe (Maybe(..), maybe)
 import Data.NaturalTransformation (Natural())
 
 -- | A type alias for a coroutine producer used to represent a subscribable
 -- | source of events.
-type EventSource f g = Producer (f Unit) g Unit
+type EventSource f g = SCR.StallingProducer (f Unit) g Unit
 
 -- | Creates an `EventSource` for an event listener that accepts one argument.
 -- |
@@ -49,7 +56,9 @@ eventSource
    . ((a -> Eff (avar :: AVAR | eff) Unit) -> Eff (avar :: AVAR | eff) Unit)
   -> (a -> Eff (avar :: AVAR | eff) (f Unit))
   -> EventSource f (Aff (avar :: AVAR | eff))
-eventSource attach handle = produce \emit -> attach (emit <<< Left <=< handle)
+eventSource attach handle =
+  SCR.producerToStallingProducer $ produce \emit ->
+    attach (emit <<< Left <=< handle)
 
 -- | Creates an `EventSource` for an event listener that accepts no arguments.
 -- |
@@ -69,7 +78,21 @@ eventSource_
    . (Eff (avar :: AVAR | eff) Unit -> Eff (avar :: AVAR | eff) Unit)
   -> Eff (avar :: AVAR | eff) (f Unit)
   -> EventSource f (Aff (avar :: AVAR | eff))
-eventSource_ attach handle = produce \emit -> attach (emit <<< Left =<< handle)
+eventSource_ attach handle =
+  SCR.producerToStallingProducer $ produce \emit ->
+    attach (emit <<< Left =<< handle)
+
+-- | Take an `EventSource` with events in `1 + f` to one with events in `f`.
+-- | This is useful for simultaneously filtering and handling events.
+catEventSource
+  :: forall f g
+   . (MonadRec g)
+  => EventSource (Coproduct (Const Unit) f) g
+  -> EventSource f g
+catEventSource =
+  SCR.catMaybes
+    <<< SCR.mapStallingProducer (coproduct (\_ -> Nothing) Just)
+
 
 -- | The subscribe algebra.
 data SubscribeF f g a = Subscribe (EventSource f g) a
@@ -98,5 +121,5 @@ transformSubscribe eta theta (Subscribe p next) =
 
 -- | A natural transformation for interpreting the subscribe algebra as its
 -- | underlying monad, via a coroutine consumer. Used internally by Halogen.
-subscribeN :: forall f g. (MonadRec g) => Consumer (f Unit) g Unit -> Natural (SubscribeF f g) g
-subscribeN c (Subscribe p next) = runProcess (p $$ c) $> next
+subscribeN :: forall f g. (MonadRec g) => CR.Consumer (f Unit) g Unit -> Natural (SubscribeF f g) g
+subscribeN c (Subscribe p next) = SCR.runStallingProcess (p SCR.$$? c) $> next

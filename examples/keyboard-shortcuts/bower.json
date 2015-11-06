@@ -1,0 +1,7 @@
+{
+  "name": "keyboard-shortcuts",
+  "private": true,
+  "dependencies": {
+    "purescript-halogen": "*"
+  }
+}
