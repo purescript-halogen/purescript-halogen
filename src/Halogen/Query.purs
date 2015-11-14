@@ -10,6 +10,7 @@ module Halogen.Query
   , gets
   , modify
   , subscribe
+  , subscribe'
   , liftH
   , liftAff'
   , liftEff'
@@ -28,6 +29,7 @@ import Control.Monad.Aff.Class (MonadAff, liftAff)
 import Control.Monad.Eff (Eff())
 import Control.Monad.Eff.Class (MonadEff, liftEff)
 import Control.Monad.Free (Free(), liftF)
+import Control.Monad.Free.Trans (hoistFreeT)
 
 import Data.Inject
 import Data.Maybe (Maybe(..))
@@ -178,9 +180,14 @@ modify :: forall s f g. (s -> s) -> Free (HalogenF s f g) Unit
 modify f = liftF (StateHF (Modify f unit))
 
 -- | Provides a way of having a component subscribe to an `EventSource` from
--- | within an `Eval` or `Peek` function.
+-- | within an `Eval` function.
 subscribe :: forall s f g. EventSource f g -> Free (HalogenF s f g) Unit
 subscribe p = liftF (SubscribeHF (Subscribe p unit))
+
+-- | Provides a way of having a parent component subscribe to an `EventSource`
+-- | from within an `Eval` or `Peek` function.
+subscribe' :: forall s s' f f' g. EventSource f g -> Free (HalogenF s f (Free (HalogenF s' f' g))) Unit
+subscribe' = subscribe <<< hoistFreeT liftH
 
 -- | A convenience function for lifting a `g` value directly into
 -- | `Free HalogenF` without the need to use `liftF $ right $ right $ ...`.

@@ -166,7 +166,16 @@ subscribe :: forall s f g. EventSource f g -> Free (HalogenF s f g) Unit
 ```
 
 Provides a way of having a component subscribe to an `EventSource` from
-within an `Eval` or `Peek` function.
+within an `Eval` function.
+
+#### `subscribe'`
+
+``` purescript
+subscribe' :: forall s s' f f' g. EventSource f g -> Free (HalogenF s f (Free (HalogenF s' f' g))) Unit
+```
+
+Provides a way of having a parent component subscribe to an `EventSource`
+from within an `Eval` or `Peek` function.
 
 #### `liftH`
 
