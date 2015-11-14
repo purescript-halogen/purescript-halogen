@@ -33,32 +33,30 @@ import Prelude
 
 import Control.Apply ((<*))
 import Control.Bind ((=<<))
-import Control.Coroutine (await)
 import Control.Monad.Eff.Class (MonadEff)
 import Control.Monad.Free (Free(), foldFree, liftF, mapF)
-import Control.Monad.Rec.Class (forever)
+import Control.Monad.Free.Trans as FT
 import Control.Monad.State (State(), runState)
-import Control.Monad.Trans (lift)
-import Control.Plus (empty)
-import qualified Control.Monad.State.Class as CMS
-import qualified Control.Monad.State.Trans as CMS
+import Control.Monad.State.Class as CMS
+import Control.Monad.State.Trans as CMS
 
-import Data.Bifunctor (bimap, rmap)
-import Data.Functor.Coproduct (Coproduct(..), coproduct, left, right)
+import Data.Bifunctor (bimap, lmap, rmap)
+import Data.Functor.Coproduct (Coproduct(), coproduct, left, right)
+import Data.Map as M
 import Data.Maybe (Maybe(..), maybe)
+import Data.Maybe.Unsafe as U
 import Data.NaturalTransformation (Natural())
 import Data.Profunctor.Choice (Choice)
 import Data.Traversable (for)
 import Data.Tuple (Tuple(..), snd)
 import Data.Void (Void())
-import qualified Data.Map as M
-import qualified Data.Maybe.Unsafe as U
 
 import Halogen.Component.ChildPath (ChildPath(), injState, injQuery, injSlot, prjState, prjQuery)
 import Halogen.HTML.Core (HTML(..), fillSlot)
-import Halogen.Query (HalogenF(..), get, modify, liftH, hoistHalogenF, transformHF)
+import Halogen.Query (get, modify, liftH)
+import Halogen.Query.EventSource (EventSource(..), ParentEventSource(), runEventSource, fromParentEventSource)
+import Halogen.Query.HalogenF (HalogenF(), HalogenFP(..), hoistHalogenF, transformHF)
 import Halogen.Query.StateF (StateF(..), mapState)
-import Halogen.Query.SubscribeF (SubscribeF(), subscribeN, hoistSubscribe, transformSubscribe)
 
 -- | Data type for Halogen components.
 -- | - `s` - the component's state
@@ -103,7 +101,7 @@ type RenderParent s s' f f' g p = s -> ParentHTML s' f f' g p
 data SlotConstructor s' f' g p = SlotConstructor p (Unit -> { component :: Component s' f' g, initialState :: s' })
 
 -- | The DSL used in the `eval` and `peek` functions for parent components.
-type ParentDSL s s' f f' g p = ComponentDSL s f (QueryF s s' f f' g p)
+type ParentDSL s s' f f' g p = Free (HalogenFP ParentEventSource s f (QueryF s s' f f' g p))
 
 -- | A variation on `Eval` for parent components - the function follows the
 -- | same form but the type representation is different.
@@ -138,16 +136,7 @@ parentComponent'
 parentComponent' r e p = Component { render: render r, eval: eval }
   where
   eval :: Eval (Coproduct f (ChildF p f')) (InstalledState s s' f f' g p) (Coproduct f (ChildF p f')) g
-  eval = coproduct (queryParent e) \q -> queryChild q <* peek q
-
-  peek :: forall a. ChildF p f' a -> ComponentDSL (InstalledState s s' f f' g p) (Coproduct f (ChildF p f')) g Unit
-  peek =
-    p >>> foldFree \h ->
-      case h of
-        StateHF q -> mergeParentStateF q
-        SubscribeHF q -> runSubscribeF (queryParent e) q
-        QueryHF q -> liftChildF q
-        HaltHF -> liftF empty
+  eval = coproduct (queryParent e) \q -> queryChild q <* queryParent p q
 
 -- | The type used by component containers for their state where `s` is the
 -- | state local to the container, `p` is the type of slot used by the
@@ -183,7 +172,7 @@ query
    . (Functor g, Ord p)
   => p
   -> f' i
-  -> Free (HalogenF s f (QueryF s s' f f' g p)) (Maybe i)
+  -> Free (HalogenFP ParentEventSource s f (QueryF s s' f f' g p)) (Maybe i)
 query p q = liftQuery (mkQuery p q)
 
 -- | A version of [`query`](#query) for use when a parent component has multiple
@@ -194,7 +183,7 @@ query'
   => ChildPath s s' f f' p p'
   -> p
   -> f i
-  -> Free (HalogenF s'' f'' (QueryF s'' s' f'' f' g p')) (Maybe i)
+  -> Free (HalogenFP ParentEventSource s'' f'' (QueryF s'' s' f'' f' g p')) (Maybe i)
 query' i p q = liftQuery (mkQuery' i p q)
 
 -- | Creates a query for a child component where `p` is the slot the component
@@ -308,26 +297,21 @@ render rc = do
       pure $ right <<< ChildF p <$> html
 
 queryParent
-  :: forall s s' f f' g p. (Functor g)
-  => EvalParent f s s' f f' g p
-  -> Eval f (InstalledState s s' f f' g p) (Coproduct f (ChildF p f')) g
+  :: forall s s' f f' g p a q r. (Functor g)
+  => (q a -> ParentDSL s s' f f' g p r)
+  -> q a
+  -> ComponentDSL (InstalledState s s' f f' g p) (Coproduct f (ChildF p f')) g r
 queryParent f =
   f >>> foldFree \h ->
     case h of
       StateHF q -> mergeParentStateF q
-      SubscribeHF q -> runSubscribeF (queryParent f) q
+      SubscribeHF es next ->
+        liftF $ SubscribeHF (EventSource (FT.interpret (lmap left) (runEventSource (fromParentEventSource es)))) next
       QueryHF q -> liftChildF q
-      HaltHF -> liftF empty
+      HaltHF -> liftF HaltHF
 
 mergeParentStateF :: forall s s' f f' g p. Eval (StateF s) (InstalledState s s' f f' g p) (Coproduct f (ChildF p f')) g
 mergeParentStateF = liftF <<< StateHF <<< mapStateFParent
-
-runSubscribeF
-  :: forall s s' f f' g p
-   . (Functor g)
-  => Eval f (InstalledState s s' f f' g p) (Coproduct f (ChildF p f')) g
-  -> Eval (SubscribeF f (Free (HalogenF (InstalledState s s' f f' g p) (ChildF p f') g))) (InstalledState s s' f f' g p) (Coproduct f (ChildF p f')) g
-runSubscribeF queryParent' = subscribeN (forever $ lift <<< queryParent' =<< await) <<< hoistSubscribe liftChildF
 
 liftChildF
   :: forall s s' f f' g p
@@ -346,7 +330,7 @@ queryChild (ChildF p q) = do
     , memo: M.delete p st.memo
     }
   mapF (transformHF id right id) (mkQuery p q)
-    >>= maybe (liftF empty) pure
+    >>= maybe (liftF HaltHF) pure
 
 -- | Transforms a `Component`'s types using partial mapping functions.
 -- |
@@ -382,7 +366,7 @@ transform reviewS previewS reviewQ previewQ (Component c) =
   go (StateHF (Get k)) =
     liftF <<< maybe HaltHF (\st' -> StateHF (Get (k <<< const st'))) <<< previewS =<< get
   go (StateHF (Modify f next)) = liftF $ StateHF (Modify (modifyState f) next)
-  go (SubscribeHF q) = liftF $ SubscribeHF (transformSubscribe reviewQ id q)
+  go (SubscribeHF es next) = liftF $ SubscribeHF (EventSource (FT.interpret (lmap reviewQ) (runEventSource es))) next
   go (QueryHF q) = liftF $ QueryHF q
   go HaltHF = liftF HaltHF
 

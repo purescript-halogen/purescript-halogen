@@ -87,7 +87,7 @@ The type used for slots in the HTML rendered by parent components.
 #### `ParentDSL`
 
 ``` purescript
-type ParentDSL s s' f f' g p = ComponentDSL s f (QueryF s s' f f' g p)
+type ParentDSL s s' f f' g p = Free (HalogenFP ParentEventSource s f (QueryF s s' f f' g p))
 ```
 
 The DSL used in the `eval` and `peek` functions for parent components.
@@ -176,7 +176,7 @@ instance functorChildF :: (Functor f) => Functor (ChildF p f)
 #### `query`
 
 ``` purescript
-query :: forall s s' f f' g p i. (Functor g, Ord p) => p -> f' i -> Free (HalogenF s f (QueryF s s' f f' g p)) (Maybe i)
+query :: forall s s' f f' g p i. (Functor g, Ord p) => p -> f' i -> Free (HalogenFP ParentEventSource s f (QueryF s s' f f' g p)) (Maybe i)
 ```
 
 Queries a child component, for use within a parent component's `eval` or
@@ -185,7 +185,7 @@ Queries a child component, for use within a parent component's `eval` or
 #### `query'`
 
 ``` purescript
-query' :: forall s s' s'' f f' f'' g p p' i. (Functor g, Ord p') => ChildPath s s' f f' p p' -> p -> f i -> Free (HalogenF s'' f'' (QueryF s'' s' f'' f' g p')) (Maybe i)
+query' :: forall s s' s'' f f' f'' g p p' i. (Functor g, Ord p') => ChildPath s s' f f' p p' -> p -> f i -> Free (HalogenFP ParentEventSource s'' f'' (QueryF s'' s' f'' f' g p')) (Maybe i)
 ```
 
 A version of [`query`](#query) for use when a parent component has multiple

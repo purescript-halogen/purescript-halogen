@@ -1,16 +1,17 @@
-## Module Halogen.Query.SubscribeF
-
-A part of the `HalogenF` algebra that allows subscription to event
-listeners.
+## Module Halogen.Query.EventSource
 
 #### `EventSource`
 
 ``` purescript
-type EventSource f g = StallingProducer (f Unit) g Unit
+newtype EventSource f g
+  = EventSource (StallingProducer (f Unit) g Unit)
 ```
 
-A type alias for a coroutine producer used to represent a subscribable
-source of events.
+#### `runEventSource`
+
+``` purescript
+runEventSource :: forall f g. EventSource f g -> StallingProducer (f Unit) g Unit
+```
 
 #### `eventSource`
 
@@ -60,51 +61,22 @@ catEventSource :: forall f g. (MonadRec g) => EventSource (Coproduct (Const Unit
 Take an `EventSource` with events in `1 + f` to one with events in `f`.
 This is useful for simultaneously filtering and handling events.
 
-#### `SubscribeF`
+#### `ParentEventSource`
 
 ``` purescript
-data SubscribeF f g a
-  = Subscribe (EventSource f g) a
+data ParentEventSource :: (* -> *) -> (* -> *) -> *
 ```
 
-The subscribe algebra.
-
-##### Instances
-``` purescript
-instance functorSubscribeF :: Functor (SubscribeF f g)
-```
-
-#### `remapSubscribe`
+#### `toParentEventSource`
 
 ``` purescript
-remapSubscribe :: forall f g h. (Functor h) => Natural f g -> Natural (SubscribeF f h) (SubscribeF g h)
+toParentEventSource :: forall f g h. EventSource f h -> ParentEventSource f (Free (g h))
 ```
 
-Changes the generating functor for an `EventSource`. Used internally by
-Halogen.
-
-#### `hoistSubscribe`
+#### `fromParentEventSource`
 
 ``` purescript
-hoistSubscribe :: forall f g h. (Functor h) => Natural g h -> Natural (SubscribeF f g) (SubscribeF f h)
+fromParentEventSource :: forall f g h. ParentEventSource f (Free (g h)) -> EventSource f h
 ```
-
-Changes the underlying monad for an `EventSource`. Used internally by
-Halogen.
-
-#### `transformSubscribe`
-
-``` purescript
-transformSubscribe :: forall f f' g g'. (Functor g, Functor g') => Natural f f' -> Natural g g' -> Natural (SubscribeF f g) (SubscribeF f' g')
-```
-
-#### `subscribeN`
-
-``` purescript
-subscribeN :: forall f g. (MonadRec g) => Consumer (f Unit) g Unit -> Natural (SubscribeF f g) g
-```
-
-A natural transformation for interpreting the subscribe algebra as its
-underlying monad, via a coroutine consumer. Used internally by Halogen.
 
 

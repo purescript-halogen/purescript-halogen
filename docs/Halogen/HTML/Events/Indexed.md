@@ -132,6 +132,12 @@ onDoubleClick :: forall r i. IEventProp (onDoubleClick :: I | r) MouseEvent i
 onMouseDown :: forall r i. IEventProp (onMouseDown :: I | r) MouseEvent i
 ```
 
+#### `onMouseEnter`
+
+``` purescript
+onMouseEnter :: forall r i. IEventProp (onMouseEnter :: I | r) MouseEvent i
+```
+
 #### `onMouseLeave`
 
 ``` purescript
