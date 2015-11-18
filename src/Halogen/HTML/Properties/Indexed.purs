@@ -48,7 +48,9 @@ module Halogen.HTML.Properties.Indexed
   , checked
   , selected
   , placeholder
-
+  , autocomplete
+  , autofocus
+  
   , initializer
   , finalizer
 
@@ -314,6 +316,9 @@ placeholder = unsafeCoerce P.placeholder
 
 autocomplete :: forall r i. Boolean -> IProp (autocomplete :: I | r) i
 autocomplete = unsafeCoerce P.autocomplete
+
+autofocus :: forall r i. Boolean -> IProp (autofocus :: I | r) i
+autofocus = unsafeCoerce P.autofocus
 
 initializer :: forall r i. (HTMLElement -> i) -> IProp (initializer :: I | r) i
 initializer = unsafeCoerce P.initializer

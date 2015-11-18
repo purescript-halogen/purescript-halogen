@@ -300,6 +300,18 @@ selected :: forall r i. Boolean -> IProp (selected :: I | r) i
 placeholder :: forall r i. String -> IProp (placeholder :: I | r) i
 ```
 
+#### `autocomplete`
+
+``` purescript
+autocomplete :: forall r i. Boolean -> IProp (autocomplete :: I | r) i
+```
+
+#### `autofocus`
+
+``` purescript
+autofocus :: forall r i. Boolean -> IProp (autofocus :: I | r) i
+```
+
 #### `initializer`
 
 ``` purescript

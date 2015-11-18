@@ -30,6 +30,7 @@ task = component render eval
                     ]
           , H.input [ P.inputType P.InputText
                     , P.placeholder "Task description"
+                    , P.autofocus true
                     , P.value t.description
                     , E.onValueChange (E.input UpdateDescription)
                     ]
