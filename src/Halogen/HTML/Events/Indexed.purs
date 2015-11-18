@@ -21,6 +21,7 @@ module Halogen.HTML.Events.Indexed
   , onContextMenu
   , onDoubleClick
   , onMouseDown
+  , onMouseEnter  
   , onMouseLeave
   , onMouseMove
   , onMouseOver
@@ -114,6 +115,9 @@ onDoubleClick = unsafeCoerce E.onDoubleClick
 
 onMouseDown :: forall r i. IEventProp (onMouseDown :: I | r) MouseEvent i
 onMouseDown = unsafeCoerce E.onMouseDown
+
+onMouseEnter :: forall r i. IEventProp (onMouseEnter :: I | r) MouseEvent i
+onMouseEnter = unsafeCoerce E.onMouseEnter
 
 onMouseLeave :: forall r i. IEventProp (onMouseLeave :: I | r) MouseEvent i
 onMouseLeave = unsafeCoerce E.onMouseLeave
