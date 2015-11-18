@@ -9,6 +9,7 @@ module Halogen.Query
   , gets
   , modify
   , subscribe
+  , subscribe'
   , liftH
   , liftAff'
   , liftEff'
