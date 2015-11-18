@@ -9,7 +9,6 @@ import Control.Plus (Plus)
 
 import Data.Functor.Coproduct (Coproduct())
 import Data.Generic (Generic, gEq, gCompare)
-import Data.Lazy (defer)
 import Data.Maybe (Maybe(..), maybe)
 
 import Halogen

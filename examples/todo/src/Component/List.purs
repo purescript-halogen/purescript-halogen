@@ -8,7 +8,7 @@ import Control.Monad (when)
 import Data.Array (snoc, filter, length)
 import Data.Functor.Coproduct (Coproduct())
 import Data.Generic (Generic, gEq, gCompare)
-import Data.Maybe (Maybe(..), fromMaybe)
+import Data.Maybe (fromMaybe)
 
 import Halogen
 import qualified Halogen.HTML.Indexed as H

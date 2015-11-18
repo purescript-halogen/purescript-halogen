@@ -9,7 +9,6 @@ import Data.Maybe (Maybe(..))
 
 import Halogen
 import qualified Halogen.HTML.Indexed as H
-import qualified Halogen.HTML.Properties.Indexed as P
 import qualified Halogen.HTML.Events.Indexed as E
 
 import Example.Components.Ticker

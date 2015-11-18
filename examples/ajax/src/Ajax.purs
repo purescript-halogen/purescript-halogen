@@ -6,7 +6,6 @@ import Control.Alt ((<|>))
 import Control.Monad.Aff (Aff(), runAff)
 import Control.Monad.Eff (Eff())
 import Control.Monad.Eff.Exception (throwException)
-import Control.Monad.Free (liftFI)
 
 import Data.Either (Either(..))
 import Data.Foldable (foldMap)

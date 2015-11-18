@@ -10,6 +10,7 @@ import qualified Halogen.HTML.Events.Indexed as E
 
 newtype StateB = StateB { on :: Boolean }
 
+initStateB :: StateB
 initStateB = StateB { on: false }
 
 data QueryB a

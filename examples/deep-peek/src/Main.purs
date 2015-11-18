@@ -10,14 +10,11 @@ import Control.Plus (Plus)
 import Data.Const (Const(), getConst)
 import Data.Functor.Coproduct (Coproduct(), coproduct)
 import Data.Generic (Generic, gEq, gCompare)
-import Data.Lazy (defer)
-import Data.Maybe (Maybe(..), maybe)
 import Data.Void (Void(), absurd)
 
 import Halogen
 import Halogen.Util (appendToBody, onLoad)
 import qualified Halogen.HTML.Indexed as H
-import qualified Halogen.HTML.Events.Indexed as E
 
 import Example.Components.List
 import Example.Components.Ticker

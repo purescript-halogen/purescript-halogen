@@ -7,9 +7,8 @@ import Control.Monad.Eff (Eff())
 import Control.Monad.Eff.Exception (throwException)
 import Control.Plus (Plus)
 
-import Data.Either (Either(..), either)
+import Data.Either (Either(..))
 import Data.Functor.Coproduct (Coproduct())
-import Data.Generic (Generic, gEq, gCompare)
 import Data.Maybe (Maybe(..))
 
 import Halogen

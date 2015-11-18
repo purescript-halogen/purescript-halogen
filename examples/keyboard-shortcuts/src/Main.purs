@@ -2,36 +2,26 @@ module Example.Main where
 
 import Prelude
 
-import Control.Coroutine as CR
-import Control.Coroutine.Stalling as SCR
-
 import Control.Monad.Aff as A
 import Control.Monad.Aff.AVar as A
 import Control.Monad.Aff (runAff)
 import Control.Monad.Eff (Eff())
 import Control.Monad.Eff.Exception (throwException)
-import Control.Monad.Rec.Class as MR
-import Control.Plus as P
 
 import Data.Const
 import Data.Functor.Coproduct
-import Data.Functor (($>))
-import Data.String as S
 import Data.Char as CH
-import Data.Maybe as M
 
 import DOM as DOM
-import DOM.Node.Types as DOM
 import DOM.HTML as DOM
 import DOM.HTML.Window as DOM
 import DOM.HTML.Types as DOM
 
 import Halogen
 import Halogen.Util (appendToBody)
-import Halogen.Query.SubscribeF as H
+import Halogen.Query.EventSource as H
 import Halogen.HTML.Indexed as H
 import Halogen.HTML.Properties.Indexed as P
-import Halogen.HTML.Events.Indexed as E
 
 import Keyboard as K
 
