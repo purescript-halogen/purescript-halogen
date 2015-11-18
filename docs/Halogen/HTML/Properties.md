@@ -6,13 +6,8 @@ This module provides `Prop` values for some common HTML attributes.
 
 ``` purescript
 data LengthLiteral
-  = Pixels Number
+  = Pixels Int
   | Percent Number
-```
-
-##### Instances
-``` purescript
-instance lengthLiteralIsProp :: IsProp LengthLiteral
 ```
 
 #### `key`
