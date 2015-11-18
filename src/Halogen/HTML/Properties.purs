@@ -43,14 +43,12 @@ import DOM.HTML.Types (HTMLElement())
 import Halogen.HTML.Core (Prop(..), ClassName(), IsProp, prop, propName, attrName, runClassName)
 
 data LengthLiteral
-  = Pixels Number
+  = Pixels Int
   | Percent Number
 
-instance lengthLiteralIsProp :: IsProp LengthLiteral where
-  toPropString _ _ lit =
-    case lit of
-      Pixels n -> show n
-      Percent n -> show n ++ "%"
+printLengthLiteral :: LengthLiteral -> String
+printLengthLiteral (Pixels n) = show n
+printLengthLiteral (Percent n) = show n ++ "%"
 
 -- | The `key` property associates a unique key with a node, which can be used
 -- | to implement a more efficient diff/patch.
@@ -79,7 +77,7 @@ for :: forall i. String -> Prop i
 for = prop (propName "htmlFor") (Just $ attrName "for")
 
 height :: forall i. LengthLiteral -> Prop i
-height = prop (propName "height") (Just $ attrName "height")
+height = prop (propName "height") (Just $ attrName "height") <<< printLengthLiteral
 
 href :: forall i. String -> Prop i
 href = prop (propName "href") (Just $ attrName "href")
@@ -110,7 +108,7 @@ value :: forall i. String -> Prop i
 value = prop (propName "value") (Just $ attrName "value")
 
 width :: forall i. LengthLiteral -> Prop i
-width = prop (propName "width") (Just $ attrName "width")
+width = prop (propName "width") (Just $ attrName "width") <<< printLengthLiteral
 
 disabled :: forall i. Boolean -> Prop i
 disabled = prop (propName "disabled") (Just $ attrName "disabled")
