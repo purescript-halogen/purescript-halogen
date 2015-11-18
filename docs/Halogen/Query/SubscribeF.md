@@ -51,6 +51,15 @@ let onChange = eventSource_ (Session.onChange session) do
 ```
 (Taken from the Ace component example)
 
+#### `catEventSource`
+
+``` purescript
+catEventSource :: forall f g. (MonadRec g) => EventSource (Coproduct (Const Unit) f) g -> EventSource f g
+```
+
+Take an `EventSource` with events in `1 + f` to one with events in `f`.
+This is useful for simultaneously filtering and handling events.
+
 #### `SubscribeF`
 
 ``` purescript

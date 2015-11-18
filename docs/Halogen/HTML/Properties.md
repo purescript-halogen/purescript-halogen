@@ -181,6 +181,12 @@ placeholder :: forall i. String -> Prop i
 autocomplete :: forall i. Boolean -> Prop i
 ```
 
+#### `autofocus`
+
+``` purescript
+autofocus :: forall i. Boolean -> Prop i
+```
+
 #### `initializer`
 
 ``` purescript
