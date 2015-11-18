@@ -12,7 +12,6 @@ import Halogen.Util (appendToBody, onLoad)
 
 import Model
 import Component.List
-import Component.Task
 
 main :: Eff (HalogenEffects ()) Unit
 main = runAff throwException (const (pure unit)) $ do

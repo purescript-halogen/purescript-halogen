@@ -22,8 +22,8 @@ gulp.task("prebundle", ["make"], function() {
   return purescript.pscBundle({
     src: "output/**/*.js",
     output: "dist/example.js",
-    module: "Example.Intro",
-    main: "Example.Intro"
+    module: "Example.Interpret",
+    main: "Example.Interpret"
   });
 });
 

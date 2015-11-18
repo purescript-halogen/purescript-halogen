@@ -66,8 +66,9 @@ gulp.task("docs", ["clean-docs"], function() {
       "Halogen.HTML.Renderer.String": "docs/Halogen/HTML/Renderer/String.md",
       "Halogen.HTML.Renderer.VirtualDOM": "docs/Halogen/HTML/Renderer/VirtualDOM.md",
       "Halogen.Query": "docs/Halogen/Query.md",
+      "Halogen.Query.EventSource": "docs/Halogen/Query/EventSource.md",
+      "Halogen.Query.HalogenF": "docs/Halogen/Query/HalogenF.md",
       "Halogen.Query.StateF": "docs/Halogen/Query/StateF.md",
-      "Halogen.Query.SubscribeF": "docs/Halogen/Query/SubscribeF.md",
       "Halogen.Util": "docs/Halogen/Util.md",
     }
   });

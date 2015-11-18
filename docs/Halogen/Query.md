@@ -76,32 +76,10 @@ getTickCount :: forall eff. Driver Query eff -> Aff (HalogenEffects eff) Int
 getTickCount driver = driver (request GetTickCount)
 ```
 
-#### `HalogenF`
-
-``` purescript
-data HalogenF s f g a
-  = StateHF (StateF s a)
-  | SubscribeHF (SubscribeF f g a)
-  | QueryHF (g a)
-  | HaltHF
-```
-
-The Halogen component algebra
-
-##### Instances
-``` purescript
-instance functorHalogenF :: (Functor g) => Functor (HalogenF s f g)
-instance injectStateHF :: Inject (StateF s) (HalogenF s f g)
-instance injectSubscribeHF :: Inject (SubscribeF f g) (HalogenF s f g)
-instance injectQueryHF :: Inject g (HalogenF s f g)
-instance altHalogenF :: (Functor g) => Alt (HalogenF s f g)
-instance plusHalogenF :: (Functor g) => Plus (HalogenF s f g)
-```
-
 #### `get`
 
 ``` purescript
-get :: forall s f g. Free (HalogenF s f g) s
+get :: forall e s f g. Free (HalogenFP e s f g) s
 ```
 
 Provides a way of accessing the current component's state within an `Eval`
@@ -121,7 +99,7 @@ eval (GetState k) = do
 #### `gets`
 
 ``` purescript
-gets :: forall s f g a. (s -> a) -> Free (HalogenF s f g) a
+gets :: forall e s f g a. (s -> a) -> Free (HalogenFP e s f g) a
 ```
 
 A version of [`get`](#get) that maps over the retrieved state before
@@ -141,7 +119,7 @@ eval (GetX k) = do
 #### `modify`
 
 ``` purescript
-modify :: forall s f g. (s -> s) -> Free (HalogenF s f g) Unit
+modify :: forall e s f g. (s -> s) -> Free (HalogenFP e s f g) Unit
 ```
 
 Provides a way of modifying the current component's state within an `Eval`
@@ -162,16 +140,16 @@ eval (Increment next) = do
 #### `subscribe`
 
 ``` purescript
-subscribe :: forall s f g. EventSource f g -> Free (HalogenF s f g) Unit
+subscribe :: forall s f g. EventSource f g -> Free (HalogenFP EventSource s f g) Unit
 ```
 
 Provides a way of having a component subscribe to an `EventSource` from
-within an `Eval` or `Peek` function.
+within an `Eval` function.
 
 #### `liftH`
 
 ``` purescript
-liftH :: forall a s f g. g a -> Free (HalogenF s f g) a
+liftH :: forall a e s f g. g a -> Free (HalogenFP e s f g) a
 ```
 
 A convenience function for lifting a `g` value directly into
@@ -180,7 +158,7 @@ A convenience function for lifting a `g` value directly into
 #### `liftAff'`
 
 ``` purescript
-liftAff' :: forall eff a s f g. (MonadAff eff g, Functor g) => Aff eff a -> Free (HalogenF s f g) a
+liftAff' :: forall eff a e s f g. (MonadAff eff g) => Aff eff a -> Free (HalogenFP e s f g) a
 ```
 
 A convenience function for lifting an `Aff` action directly into a
@@ -190,27 +168,11 @@ without the need to use `liftH $ liftAff $ ...`.
 #### `liftEff'`
 
 ``` purescript
-liftEff' :: forall eff a s f g. (MonadEff eff g, Functor g) => Eff eff a -> Free (HalogenF s f g) a
+liftEff' :: forall eff a e s f g. (MonadEff eff g) => Eff eff a -> Free (HalogenFP e s f g) a
 ```
 
 A convenience function for lifting an `Eff` action directly into a
 `Free HalogenF` when there is a `MonadEff` instance for the current `g`,
 without the need to use `liftH $ liftEff $ ...`.
-
-#### `transformHF`
-
-``` purescript
-transformHF :: forall s s' f f' g g'. (Functor g, Functor g') => Natural (StateF s) (StateF s') -> Natural f f' -> Natural g g' -> Natural (HalogenF s f g) (HalogenF s' f' g')
-```
-
-Change all the parameters of `HalogenF`.
-
-#### `hoistHalogenF`
-
-``` purescript
-hoistHalogenF :: forall s f g h. (Functor h) => Natural g h -> Natural (HalogenF s f g) (HalogenF s f h)
-```
-
-Changes the `g` for a `HalogenF`. Used internally by Halogen.
 
 

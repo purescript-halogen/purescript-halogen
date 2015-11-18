@@ -5,7 +5,6 @@ import Prelude
 import Control.Monad (when)
 import Control.Monad.Aff (Aff())
 import Control.Monad.Aff.AVar (AVAR())
-import Control.Monad.Eff.Class (liftEff)
 
 import Data.Maybe (Maybe(..))
 
