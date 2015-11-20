@@ -170,7 +170,7 @@ algebra with the slot the component was installed into.
 
 ##### Instances
 ``` purescript
-instance functorChildF :: (Functor f) => Functor (ChildF p f)
+(Functor f) => Functor (ChildF p f)
 ```
 
 #### `query`

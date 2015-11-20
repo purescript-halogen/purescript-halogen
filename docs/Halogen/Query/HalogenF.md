@@ -14,11 +14,11 @@ The Halogen component algebra
 
 ##### Instances
 ``` purescript
-instance functorHalogenF :: (Functor g) => Functor (HalogenFP e s f g)
-instance injectStateHF :: Inject (StateF s) (HalogenFP e s f g)
-instance injectQueryHF :: Inject g (HalogenFP e s f g)
-instance altHalogenF :: (Functor g) => Alt (HalogenFP e s f g)
-instance plusHalogenF :: (Functor g) => Plus (HalogenFP e s f g)
+(Functor g) => Functor (HalogenFP e s f g)
+Inject (StateF s) (HalogenFP e s f g)
+Inject g (HalogenFP e s f g)
+(Functor g) => Alt (HalogenFP e s f g)
+(Functor g) => Plus (HalogenFP e s f g)
 ```
 
 #### `HalogenF`

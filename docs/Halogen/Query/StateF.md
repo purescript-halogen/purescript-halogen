@@ -15,7 +15,7 @@ The state algebra.
 
 ##### Instances
 ``` purescript
-instance functorStateF :: Functor (StateF s)
+Functor (StateF s)
 ```
 
 #### `mapState`

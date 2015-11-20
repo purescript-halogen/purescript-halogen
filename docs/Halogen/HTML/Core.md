@@ -15,8 +15,8 @@ An initial encoding of HTML nodes.
 
 ##### Instances
 ``` purescript
-instance bifunctorHTML :: Bifunctor HTML
-instance functorHTML :: Functor (HTML p)
+Bifunctor HTML
+Functor (HTML p)
 ```
 
 #### `element`
@@ -61,7 +61,7 @@ A property can be:
 
 ##### Instances
 ``` purescript
-instance functorProp :: Functor Prop
+Functor Prop
 ```
 
 #### `PropF`
@@ -123,10 +123,10 @@ in the string renderer.
 
 ##### Instances
 ``` purescript
-instance stringIsProp :: IsProp String
-instance intIsProp :: IsProp Int
-instance numberIsProp :: IsProp Number
-instance booleanIsProp :: IsProp Boolean
+IsProp String
+IsProp Int
+IsProp Number
+IsProp Boolean
 ```
 
 #### `Namespace`

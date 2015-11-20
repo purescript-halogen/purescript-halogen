@@ -26,11 +26,11 @@ H.a [ E.onClick \_ -> E.preventDefault $> clickHandler ]
 
 ##### Instances
 ``` purescript
-instance functorEventHandler :: Functor EventHandler
-instance applyEventHandler :: Apply EventHandler
-instance applicativeEventHandler :: Applicative EventHandler
-instance bindEventHandler :: Bind EventHandler
-instance monadEventHandler :: Monad EventHandler
+Functor EventHandler
+Apply EventHandler
+Applicative EventHandler
+Bind EventHandler
+Monad EventHandler
 ```
 
 #### `preventDefault`
