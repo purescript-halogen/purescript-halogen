@@ -10,17 +10,17 @@
   "scripts": {
     "postinstall": "bower install",
     "build": "gulp",
-    "example-ace": "bower link && cd examples/ace && bower link purescript-halogen && gulp",
-    "example-ajax": "bower link && cd examples/ajax && bower link purescript-halogen && gulp",
-    "example-components": "bower link && cd examples/components && bower link purescript-halogen && gulp",
-    "example-counter": "bower link && cd examples/counter && bower link purescript-halogen && gulp",
-    "example-deep-peek": "bower link && cd examples/deep-peek && bower link purescript-halogen && gulp",
-    "example-interpret": "bower link && cd examples/interpret && bower link purescript-halogen && gulp",
-    "example-intro": "bower link && cd examples/intro && bower link purescript-halogen && gulp",
-    "example-lifecycle": "bower link && cd examples/lifecycle && bower link purescript-halogen && gulp",
-    "example-multi-component": "bower link && cd examples/multi-component && bower link purescript-halogen && gulp",
-    "example-todo": "bower link && cd examples/todo && bower link purescript-halogen && gulp",
-    "example-keyboard-shortcuts": "bower link && cd examples/keyboard-shortcuts && bower link purescript-halogen && gulp"
+    "example-ace": "bower link && cd examples/ace && bower link purescript-halogen && bower install && gulp",
+    "example-ajax": "bower link && cd examples/ajax && bower link purescript-halogen && bower install && gulp",
+    "example-components": "bower link && cd examples/components && bower link purescript-halogen && bower install && gulp",
+    "example-counter": "bower link && cd examples/counter && bower link purescript-halogen && bower install && gulp",
+    "example-deep-peek": "bower link && cd examples/deep-peek && bower link purescript-halogen && bower install && gulp",
+    "example-interpret": "bower link && cd examples/interpret && bower link purescript-halogen && bower install && gulp",
+    "example-intro": "bower link && cd examples/intro && bower link purescript-halogen && bower install && gulp",
+    "example-lifecycle": "bower link && cd examples/lifecycle && bower link purescript-halogen && bower install && gulp",
+    "example-multi-component": "bower link && cd examples/multi-component && bower link purescript-halogen && bower install && gulp",
+    "example-todo": "bower link && cd examples/todo && bower link purescript-halogen && bower install && gulp",
+    "example-keyboard-shortcuts": "bower link && cd examples/keyboard-shortcuts && bower link purescript-halogen && bower install && gulp"
   },
   "devDependencies": {
     "bower": "^1.4.1",
@@ -28,7 +28,7 @@
     "gulp-jscs": "^1.6.0",
     "gulp-jshint": "^1.11.2",
     "gulp-purescript": "^0.7.0",
-    "purescript": "^0.7.5",
+    "purescript": "^0.7.6",
     "rimraf": "^2.4.1",
     "webpack-stream": "^2.0.0"
   },
