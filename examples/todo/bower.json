@@ -2,7 +2,7 @@
   "name": "todo",
   "private": true,
   "dependencies": {
-    "purescript-generics": "^0.6.1",
+    "purescript-generics": "^0.7.0",
     "purescript-halogen": "*"
   }
 }

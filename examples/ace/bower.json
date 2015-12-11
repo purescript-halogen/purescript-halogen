@@ -3,7 +3,7 @@
   "private": true,
   "dependencies": {
     "purescript-ace": "^0.8.0",
-    "purescript-generics": "^0.6.1",
+    "purescript-generics": "^0.7.0",
     "purescript-halogen": "*"
   }
 }
