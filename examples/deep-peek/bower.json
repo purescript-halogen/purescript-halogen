@@ -2,7 +2,7 @@
   "name": "deep-peek",
   "private": true,
   "dependencies": {
-    "purescript-generics": "^0.6.2",
+    "purescript-generics": "^0.7.0",
     "purescript-halogen": "*"
   }
 }
