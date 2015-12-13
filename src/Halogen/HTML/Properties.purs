@@ -5,6 +5,8 @@ module Halogen.HTML.Properties
   , charset
   , class_
   , classes
+  , cols
+  , rows
   , colSpan
   , rowSpan
   , for
@@ -67,6 +69,12 @@ class_ = prop (propName "className") (Just $ attrName "class") <<< runClassName
 
 classes :: forall i. Array ClassName -> Prop i
 classes = prop (propName "className") (Just $ attrName "class") <<< joinWith " " <<< map runClassName
+
+cols :: forall i. Int -> Prop i
+cols = prop (propName "cols") (Just $ attrName "cols")
+
+rows :: forall i. Int -> Prop i
+rows = prop (propName "rows") (Just $ attrName "rows")
 
 colSpan :: forall i. Int -> Prop i
 colSpan = prop (propName "colSpan") (Just $ attrName "colspan")
