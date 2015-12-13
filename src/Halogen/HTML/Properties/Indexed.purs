@@ -18,6 +18,8 @@ module Halogen.HTML.Properties.Indexed
   , alt
   , charset
   , class_, classes
+  , cols
+  , rows
   , colSpan
   , rowSpan
   , for
@@ -50,7 +52,7 @@ module Halogen.HTML.Properties.Indexed
   , placeholder
   , autocomplete
   , autofocus
-  
+
   , initializer
   , finalizer
 
@@ -100,6 +102,12 @@ class_ = unsafeCoerce P.class_
 
 classes :: forall r i. Array ClassName -> IProp (class :: I | r) i
 classes = unsafeCoerce P.classes
+
+cols :: forall r i. Int -> IProp (cols :: I | r) i
+cols = unsafeCoerce P.cols
+
+rows :: forall r i. Int -> IProp (rows :: I | r) i
+rows = unsafeCoerce P.rows
 
 colSpan :: forall r i. Int -> IProp (colSpan :: I | r) i
 colSpan = unsafeCoerce P.colSpan
