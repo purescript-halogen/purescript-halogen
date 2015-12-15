@@ -329,7 +329,7 @@ Slot address values will usually be a `newtype` wrapper around some kind of valu
 Slot address types requires an `Ord` instance to be defined for them to be usable within a component. An easy way of doing this is taking advantage of PureScript’s generic deriving and the [`purescript-generics`](https://github.com/purescript/purescript-generics) library to generate a default instance, for example, from [the “components” example](examples/components):
 
 ``` purescript
-import Data.Generics (Generic, gEq, gCompare)
+import Data.Generic (Generic, gEq, gCompare)
 
 newtype TickSlot = TickSlot String
 
