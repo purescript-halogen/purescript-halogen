@@ -8,6 +8,7 @@ module Halogen.Query
   , get
   , gets
   , modify
+  , set
   , subscribe
   , subscribe'
   , liftH
@@ -18,7 +19,7 @@ module Halogen.Query
   , module Halogen.Query.StateF
   ) where
 
-import Prelude (Unit(), unit, id, Functor, (<<<))
+import Prelude (Unit(), unit, id, const, Functor, (<<<))
 
 import Control.Alt (Alt)
 import Control.Monad.Aff (Aff())
@@ -136,6 +137,12 @@ gets = liftF <<< StateHF <<< Get
 -- | ```
 modify :: forall e s f g. (s -> s) -> Free (HalogenFP e s f g) Unit
 modify f = liftF (StateHF (Modify f unit))
+
+-- | Provides a way of replacing the current component's state within an `Eval`
+-- | or `Peek` function. This is much like `set` for the `State` monad, but
+-- | instead of operating in some `StateT`, uses the `HalogenF` algebra.
+set :: forall e s f g. s -> Free (HalogenFP e s f g) Unit
+set = modify <<< const
 
 -- | Provides a way of having a component subscribe to an `EventSource` from
 -- | within an `Eval` function.

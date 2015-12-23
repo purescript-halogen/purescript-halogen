@@ -137,6 +137,16 @@ eval (Increment next) = do
   pure next
 ```
 
+#### `set`
+
+``` purescript
+set :: forall e s f g. s -> Free (HalogenFP e s f g) Unit
+```
+
+Provides a way of replacing the current component's state within an `Eval`
+or `Peek` function. This is much like `set` for the `State` monad, but
+instead of operating in some `StateT`, uses the `HalogenF` algebra.
+
 #### `subscribe`
 
 ``` purescript
