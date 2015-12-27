@@ -9,12 +9,12 @@ module Halogen.HTML
   , module Halogen.HTML.Elements
   ) where
 
-import Prelude (Unit(), Functor, (<$>))
+import Prelude (Unit(), class Functor, (<$>))
 
 import Halogen.Component (Component(), SlotConstructor(..), transformChild)
 import Halogen.Component.ChildPath (ChildPath(), injSlot, injState)
-import Halogen.HTML.Core
-import Halogen.HTML.Elements
+import Halogen.HTML.Core (..)
+import Halogen.HTML.Elements (..)
 
 -- | Constructs a text node `HTML` value.
 text :: forall p i. String -> HTML p i

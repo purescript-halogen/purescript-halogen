@@ -5,7 +5,8 @@
   "contributors": [
     "Phil Freeman <paf31@cantab.net>",
     "John A. De Goes <john@degoes.net>",
-    "Gary Burgess <gary.burgess@gmail.com>"
+    "Gary Burgess <gary.burgess@gmail.com>",
+    "Trevis Elser <trevis.elser@gmail.com>"
   ],
   "scripts": {
     "postinstall": "bower install",
@@ -28,7 +29,7 @@
     "gulp-jscs": "^1.6.0",
     "gulp-jshint": "^1.11.2",
     "gulp-purescript": "^0.7.0",
-    "purescript": "^0.7.6",
+    "purescript": "^0.8.0",
     "rimraf": "^2.4.1",
     "webpack-stream": "^2.0.0"
   },

@@ -11,7 +11,7 @@ module Halogen.HTML.Core
   , handler
   , handler'
 
-  , IsProp
+  , class IsProp
   , toPropString
 
   , Namespace()
@@ -39,9 +39,9 @@ module Halogen.HTML.Core
   , runClassName
   ) where
 
-import Prelude
+import Prelude (..)
 
-import Data.Bifunctor (Bifunctor, rmap)
+import Data.Bifunctor (class Bifunctor, rmap)
 import Data.Exists (Exists(), mkExists)
 import Data.ExistsR (ExistsR(), mkExistsR, runExistsR)
 import Data.Maybe (Maybe(..))

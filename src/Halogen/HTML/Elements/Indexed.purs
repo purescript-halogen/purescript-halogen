@@ -126,8 +126,8 @@ module Halogen.HTML.Elements.Indexed
 
 import Halogen.HTML.Core (HTML())
 import Halogen.HTML.Properties.Indexed hiding (title)
-import qualified Halogen.HTML.Elements as E
-import qualified Halogen.HTML.Elements
+import Halogen.HTML.Elements (..) as E
+import Halogen.HTML.Elements
   ( a_
   , abbr_
   , acronym_
@@ -236,7 +236,7 @@ import qualified Halogen.HTML.Elements
   , video_
   ) as Unrefined
 
-import Unsafe.Coerce
+import Unsafe.Coerce (..)
 
 -- | An HTML element that admits children.
 type Node r p i
@@ -613,4 +613,3 @@ video = unsafeCoerce E.video
 
 wbr :: forall p i. Leaf () p i
 wbr = unsafeCoerce E.wbr
-

@@ -29,24 +29,24 @@ module Halogen.Component
   , queryComponent
   ) where
 
-import Prelude
+import Prelude (..)
 
 import Control.Apply ((<*))
 import Control.Bind ((=<<))
-import Control.Monad.Eff.Class (MonadEff)
+import Control.Monad.Eff.Class (class MonadEff)
 import Control.Monad.Free (Free(), foldFree, liftF, mapF)
-import Control.Monad.Free.Trans as FT
+import Control.Monad.Free.Trans (..) as FT
 import Control.Monad.State (State(), runState)
-import Control.Monad.State.Class as CMS
-import Control.Monad.State.Trans as CMS
+import Control.Monad.State.Class (..) as CMS
+import Control.Monad.State.Trans (..) as CMS
 
 import Data.Bifunctor (bimap, lmap, rmap)
 import Data.Functor.Coproduct (Coproduct(), coproduct, left, right)
-import Data.Map as M
+import Data.Map (..) as M
 import Data.Maybe (Maybe(..), maybe)
-import Data.Maybe.Unsafe as U
+import Data.Maybe.Unsafe (..) as U
 import Data.NaturalTransformation (Natural())
-import Data.Profunctor.Choice (Choice)
+import Data.Profunctor.Choice (class Choice)
 import Data.Traversable (for)
 import Data.Tuple (Tuple(..), snd)
 import Data.Void (Void())

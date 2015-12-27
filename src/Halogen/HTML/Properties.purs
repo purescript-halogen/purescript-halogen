@@ -36,14 +36,14 @@ module Halogen.HTML.Properties
   , LengthLiteral(..)
   ) where
 
-import Prelude
+import Prelude (..)
 
 import Data.Maybe (Maybe(..))
 import Data.String (joinWith)
 
 import DOM.HTML.Types (HTMLElement())
 
-import Halogen.HTML.Core (Prop(..), ClassName(), IsProp, prop, propName, attrName, runClassName)
+import Halogen.HTML.Core (Prop(..), ClassName(), class IsProp, prop, propName, attrName, runClassName)
 
 data LengthLiteral
   = Pixels Int
