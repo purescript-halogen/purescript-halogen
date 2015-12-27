@@ -4,11 +4,11 @@ module Halogen.Util
   , onLoad
   ) where
 
-import Prelude
+import Prelude (..)
 
 import Control.Bind ((<=<), (=<<))
 import Control.Monad.Eff (Eff())
-import Control.Monad.Eff.Class (MonadEff, liftEff)
+import Control.Monad.Eff.Class (class MonadEff, liftEff)
 
 import Data.Maybe (Maybe(..))
 import Data.Nullable (toMaybe)

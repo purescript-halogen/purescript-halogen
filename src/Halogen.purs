@@ -12,15 +12,15 @@ module Halogen
   , module Data.NaturalTransformation
   ) where
 
-import Prelude
+import Prelude (..)
 
 import Data.NaturalTransformation (Natural())
 
-import Halogen.Component
-import Halogen.Driver
-import Halogen.Effects
-import Halogen.Query
-import qualified Halogen.HTML.Core as C
+import Halogen.Component (..)
+import Halogen.Driver (..)
+import Halogen.Effects (..)
+import Halogen.Query (..)
+import Halogen.HTML.Core (..) as C
 
 -- | A specialised version of the `Halogen.HTML.Core.HTML` type where `i` is
 -- | `* -> *` kinded to match the kind of a component query algebra.

@@ -67,19 +67,19 @@ module Halogen.HTML.Properties.Indexed
   , GlobalProperties()
   ) where
 
-import Prelude
+import Prelude (..)
 
-import Data.Foldable
-import Data.Tuple
-import qualified Data.Array as A
+import Data.Foldable (..)
+import Data.Tuple (..)
+import Data.Array (..) as A
 
 import Unsafe.Coerce (unsafeCoerce)
 
 import DOM.HTML.Types (HTMLElement())
 
 import Halogen.HTML.Core (Prop(), ClassName())
-import qualified Halogen.HTML.Properties (LengthLiteral(..)) as PExport
-import qualified Halogen.HTML.Properties as P
+import Halogen.HTML.Properties (LengthLiteral(..)) as PExport
+import Halogen.HTML.Properties (..) as P
 
 -- | The phantom row `r` can be thought of as a context which is synthesized in the
 -- | course of constructing a refined HTML expression.

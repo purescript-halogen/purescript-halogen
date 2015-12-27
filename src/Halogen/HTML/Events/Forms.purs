@@ -5,11 +5,11 @@ module Halogen.HTML.Events.Forms
   , onChecked
   ) where
 
-import Prelude
+import Prelude (..)
 
 import Data.Either (either)
 import Data.Foreign (toForeign)
-import Data.Foreign.Class (IsForeign, readProp)
+import Data.Foreign.Class (class IsForeign, readProp)
 import Data.Maybe (Maybe(..))
 
 import Halogen.HTML.Core (Prop(), eventName, handler')

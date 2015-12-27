@@ -18,16 +18,16 @@ module Halogen.Query
   , module Halogen.Query.StateF
   ) where
 
-import Prelude (Unit(), unit, id, Functor, (<<<))
+import Prelude (Unit(), unit, id, class Functor, (<<<))
 
-import Control.Alt (Alt)
+import Control.Alt (class Alt)
 import Control.Monad.Aff (Aff())
-import Control.Monad.Aff.Class (MonadAff, liftAff)
+import Control.Monad.Aff.Class (class MonadAff, liftAff)
 import Control.Monad.Eff (Eff())
-import Control.Monad.Eff.Class (MonadEff, liftEff)
+import Control.Monad.Eff.Class (class MonadEff, liftEff)
 import Control.Monad.Free (Free(), liftF)
 
-import Data.Inject (Inject)
+import Data.Inject (class Inject)
 
 import Halogen.Query.EventSource (EventSource(), ParentEventSource(), eventSource, eventSource_, toParentEventSource)
 import Halogen.Query.HalogenF (HalogenF(), HalogenFP(..))

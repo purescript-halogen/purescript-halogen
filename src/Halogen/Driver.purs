@@ -3,12 +3,12 @@ module Halogen.Driver
   , runUI
   ) where
 
-import Prelude
+import Prelude (..)
 
 import Control.Bind ((=<<))
 import Control.Coroutine (await)
 import Control.Coroutine.Stalling (($$?))
-import Control.Coroutine.Stalling as SCR
+import Control.Coroutine.Stalling (..) as SCR
 import Control.Monad.Aff (Aff(), forkAff)
 import Control.Monad.Aff.AVar (AVar(), makeVar, putVar, takeVar)
 import Control.Monad.Eff.Class (liftEff)
@@ -16,7 +16,7 @@ import Control.Monad.Free (runFreeM)
 import Control.Monad.Rec.Class (forever)
 import Control.Monad.State (runState)
 import Control.Monad.Trans (lift)
-import Control.Plus (Plus, empty)
+import Control.Plus (class Plus, empty)
 
 import Data.NaturalTransformation (Natural())
 import Data.Tuple (Tuple(..))

@@ -6,7 +6,7 @@ module Halogen.HTML.Events
   , module Halogen.HTML.Events.Types
   ) where
 
-import Prelude
+import Prelude (..)
 
 import Halogen.Query (Action(), action)
 import Halogen.HTML.Events.Handler (EventHandler(), preventDefault, stopPropagation, stopImmediatePropagation)

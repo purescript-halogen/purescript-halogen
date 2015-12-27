@@ -2,7 +2,7 @@ module Halogen.HTML.Renderer.VirtualDOM
   ( renderHTML
   ) where
 
-import Prelude
+import Prelude (..)
 
 import Control.Monad.Aff (Aff(), runAff)
 import Control.Monad.Eff (Eff())
@@ -19,7 +19,7 @@ import Data.Nullable (toNullable)
 import Halogen.Effects (HalogenEffects())
 import Halogen.HTML.Core (HTML(..), Prop(..), PropF(..), HandlerF(..), runNamespace, runTagName, runPropName, runAttrName, runEventName)
 import Halogen.HTML.Events.Handler (runEventHandler)
-import qualified Halogen.Internal.VirtualDOM as V
+import Halogen.Internal.VirtualDOM (..) as V
 
 -- | Render a `HTML` document to a virtual DOM node
 -- |

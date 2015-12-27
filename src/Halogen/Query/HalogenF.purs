@@ -7,12 +7,12 @@ module Halogen.Query.HalogenF
 
 import Prelude
 
-import Control.Alt (Alt)
-import Control.Plus (Plus)
+import Control.Alt (class Alt)
+import Control.Plus (class Plus)
 import Control.Monad.Free.Trans (hoistFreeT, bimapFreeT)
 
 import Data.Bifunctor (lmap)
-import Data.Inject (Inject)
+import Data.Inject (class Inject)
 import Data.Maybe (Maybe(..))
 import Data.NaturalTransformation (Natural())
 

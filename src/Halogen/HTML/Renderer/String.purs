@@ -1,6 +1,6 @@
 module Halogen.HTML.Renderer.String (renderHTML) where
 
-import Prelude
+import Prelude (..)
 
 import Data.Array (mapMaybe)
 import Data.Exists (runExists)
