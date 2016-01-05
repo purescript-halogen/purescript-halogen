@@ -2,6 +2,41 @@
 module Halogen.HTML.Properties
   ( key
   , alt
+  , ariaActivedescendant
+  , ariaAtomic
+  , ariaAutocomplete
+  , ariaBusy
+  , ariaChecked
+  , ariaControls
+  , ariaDescribedby
+  , ariaDisabled
+  , ariaDropeffect
+  , ariaExpanded
+  , ariaFlowto
+  , ariaGrabbed
+  , ariaHaspopup
+  , ariaHidden
+  , ariaInvalid
+  , ariaLabel
+  , ariaLabelledby
+  , ariaLevel
+  , ariaLive
+  , ariaMultiline
+  , ariaMultiselectable
+  , ariaOrientation
+  , ariaOwns
+  , ariaPosinset
+  , ariaPressed
+  , ariaReadonly
+  , ariaRelevant
+  , ariaRequired
+  , ariaSelected
+  , ariaSetsize
+  , ariaSort
+  , ariaValuemax
+  , ariaValuemin
+  , ariaValuenow
+  , ariaValuetext
   , charset
   , class_
   , classes
@@ -57,6 +92,111 @@ printLengthLiteral (Percent n) = show n ++ "%"
 -- | to implement a more efficient diff/patch.
 key :: forall i. String -> Prop i
 key = Key
+
+ariaActivedescendant :: forall i. String -> Prop i
+ariaActivedescendant = prop (propName "aria-activedescendant") (Just $ attrName "aria-activedescendant")
+
+ariaAtomic :: forall i. String -> Prop i
+ariaAtomic = prop (propName "aria-atomic") (Just $ attrName "aria-atomic")
+
+ariaAutocomplete :: forall i. String -> Prop i
+ariaAutocomplete = prop (propName "aria-autocomplete") (Just $ attrName "aria-autocomplete")
+
+ariaBusy :: forall i. String -> Prop i
+ariaBusy = prop (propName "aria-busy") (Just $ attrName "aria-busy")
+
+ariaChecked :: forall i. String -> Prop i
+ariaChecked = prop (propName "aria-checked") (Just $ attrName "aria-checked")
+
+ariaControls :: forall i. String -> Prop i
+ariaControls = prop (propName "aria-controls") (Just $ attrName "aria-controls")
+
+ariaDescribedby :: forall i. String -> Prop i
+ariaDescribedby = prop (propName "aria-describedby") (Just $ attrName "aria-describedby")
+
+ariaDisabled :: forall i. String -> Prop i
+ariaDisabled = prop (propName "aria-disabled") (Just $ attrName "aria-disabled")
+
+ariaDropeffect :: forall i. String -> Prop i
+ariaDropeffect = prop (propName "aria-dropeffect") (Just $ attrName "aria-dropeffect")
+
+ariaExpanded :: forall i. String -> Prop i
+ariaExpanded = prop (propName "aria-expanded") (Just $ attrName "aria-expanded")
+
+ariaFlowto :: forall i. String -> Prop i
+ariaFlowto = prop (propName "aria-flowto") (Just $ attrName "aria-flowto")
+
+ariaGrabbed :: forall i. String -> Prop i
+ariaGrabbed = prop (propName "aria-grabbed") (Just $ attrName "aria-grabbed")
+
+ariaHaspopup :: forall i. String -> Prop i
+ariaHaspopup = prop (propName "aria-haspopup") (Just $ attrName "aria-haspopup")
+
+ariaHidden :: forall i. String -> Prop i
+ariaHidden = prop (propName "aria-hidden") (Just $ attrName "aria-hidden")
+
+ariaInvalid :: forall i. String -> Prop i
+ariaInvalid = prop (propName "aria-invalid") (Just $ attrName "aria-invalid")
+
+ariaLabel :: forall i. String -> Prop i
+ariaLabel = prop (propName "aria-label") (Just $ attrName "aria-label")
+
+ariaLabelledby :: forall i. String -> Prop i
+ariaLabelledby = prop (propName "aria-labelledby") (Just $ attrName "aria-labelledby")
+
+ariaLevel :: forall i. String -> Prop i
+ariaLevel = prop (propName "aria-level") (Just $ attrName "aria-level")
+
+ariaLive :: forall i. String -> Prop i
+ariaLive = prop (propName "aria-live") (Just $ attrName "aria-live")
+
+ariaMultiline :: forall i. String -> Prop i
+ariaMultiline = prop (propName "aria-multiline") (Just $ attrName "aria-multiline")
+
+ariaMultiselectable :: forall i. String -> Prop i
+ariaMultiselectable = prop (propName "aria-multiselectable") (Just $ attrName "aria-multiselectable")
+
+ariaOrientation :: forall i. String -> Prop i
+ariaOrientation = prop (propName "aria-orientation") (Just $ attrName "aria-orientation")
+
+ariaOwns :: forall i. String -> Prop i
+ariaOwns = prop (propName "aria-owns") (Just $ attrName "aria-owns")
+
+ariaPosinset :: forall i. String -> Prop i
+ariaPosinset = prop (propName "aria-posinset") (Just $ attrName "aria-posinset")
+
+ariaPressed :: forall i. String -> Prop i
+ariaPressed = prop (propName "aria-pressed") (Just $ attrName "aria-pressed")
+
+ariaReadonly :: forall i. String -> Prop i
+ariaReadonly = prop (propName "aria-readonly") (Just $ attrName "aria-readonly")
+
+ariaRelevant :: forall i. String -> Prop i
+ariaRelevant = prop (propName "aria-relevant") (Just $ attrName "aria-relevant")
+
+ariaRequired :: forall i. String -> Prop i
+ariaRequired = prop (propName "aria-required") (Just $ attrName "aria-required")
+
+ariaSelected :: forall i. String -> Prop i
+ariaSelected = prop (propName "aria-selected") (Just $ attrName "aria-selected")
+
+ariaSetsize :: forall i. String -> Prop i
+ariaSetsize = prop (propName "aria-setsize") (Just $ attrName "aria-setsize")
+
+ariaSort :: forall i. String -> Prop i
+ariaSort = prop (propName "aria-sort") (Just $ attrName "aria-sort")
+
+ariaValuemax :: forall i. String -> Prop i
+ariaValuemax = prop (propName "aria-valuemax") (Just $ attrName "aria-valuemax")
+
+ariaValuemin :: forall i. String -> Prop i
+ariaValuemin = prop (propName "aria-valuemin") (Just $ attrName "aria-valuemin")
+
+ariaValuenow :: forall i. String -> Prop i
+ariaValuenow = prop (propName "aria-valuenow") (Just $ attrName "aria-valuenow")
+
+ariaValuetext :: forall i. String -> Prop i
+ariaValuetext = prop (propName "aria-valuetext") (Just $ attrName "aria-valuetext")
 
 alt :: forall i. String -> Prop i
 alt = prop (propName "alt") (Just $ attrName "alt")

@@ -15,6 +15,43 @@ module Halogen.HTML.Properties.Indexed
   , CaseType(..)
 
   , key
+
+  , ariaActivedescendant
+  , ariaAtomic
+  , ariaAutocomplete
+  , ariaBusy
+  , ariaChecked
+  , ariaControls
+  , ariaDescribedby
+  , ariaDisabled
+  , ariaDropeffect
+  , ariaExpanded
+  , ariaFlowto
+  , ariaGrabbed
+  , ariaHaspopup
+  , ariaHidden
+  , ariaInvalid
+  , ariaLabel
+  , ariaLabelledby
+  , ariaLevel
+  , ariaLive
+  , ariaMultiline
+  , ariaMultiselectable
+  , ariaOrientation
+  , ariaOwns
+  , ariaPosinset
+  , ariaPressed
+  , ariaReadonly
+  , ariaRelevant
+  , ariaRequired
+  , ariaSelected
+  , ariaSetsize
+  , ariaSort
+  , ariaValuemax
+  , ariaValuemin
+  , ariaValuenow
+  , ariaValuetext
+
   , alt
   , charset
   , class_, classes
@@ -90,6 +127,111 @@ data I
 
 key :: forall r i. String -> IProp (key :: I | r) i
 key = unsafeCoerce P.key
+
+ariaActivedescendant :: forall r i. String -> IProp (ariaActivedescendant :: I | r) i
+ariaActivedescendant = unsafeCoerce P.ariaActivedescendant
+
+ariaAtomic :: forall r i. String -> IProp (ariaAtomic :: I | r) i
+ariaAtomic = unsafeCoerce P.ariaAtomic
+
+ariaAutocomplete :: forall r i. String -> IProp (ariaAutocomplete :: I | r) i
+ariaAutocomplete = unsafeCoerce P.ariaAutocomplete
+
+ariaBusy :: forall r i. String -> IProp (ariaBusy :: I | r) i
+ariaBusy = unsafeCoerce P.ariaBusy
+
+ariaChecked :: forall r i. String -> IProp (ariaChecked :: I | r) i
+ariaChecked = unsafeCoerce P.ariaChecked
+
+ariaControls :: forall r i. String -> IProp (ariaControls :: I | r) i
+ariaControls = unsafeCoerce P.ariaControls
+
+ariaDescribedby :: forall r i. String -> IProp (ariaDescribedby :: I | r) i
+ariaDescribedby = unsafeCoerce P.ariaDescribedby
+
+ariaDisabled :: forall r i. String -> IProp (ariaDisabled :: I | r) i
+ariaDisabled = unsafeCoerce P.ariaDisabled
+
+ariaDropeffect :: forall r i. String -> IProp (ariaDropeffect :: I | r) i
+ariaDropeffect = unsafeCoerce P.ariaDropeffect
+
+ariaExpanded :: forall r i. String -> IProp (ariaExpanded :: I | r) i
+ariaExpanded = unsafeCoerce P.ariaExpanded
+
+ariaFlowto :: forall r i. String -> IProp (ariaFlowto :: I | r) i
+ariaFlowto = unsafeCoerce P.ariaFlowto
+
+ariaGrabbed :: forall r i. String -> IProp (ariaGrabbed :: I | r) i
+ariaGrabbed = unsafeCoerce P.ariaGrabbed
+
+ariaHaspopup :: forall r i. String -> IProp (ariaHaspopup :: I | r) i
+ariaHaspopup = unsafeCoerce P.ariaHaspopup
+
+ariaHidden :: forall r i. String -> IProp (ariaHidden :: I | r) i
+ariaHidden = unsafeCoerce P.ariaHidden
+
+ariaInvalid :: forall r i. String -> IProp (ariaInvalid :: I | r) i
+ariaInvalid = unsafeCoerce P.ariaInvalid
+
+ariaLabel :: forall r i. String -> IProp (ariaLabel :: I | r) i
+ariaLabel = unsafeCoerce P.ariaLabel
+
+ariaLabelledby :: forall r i. String -> IProp (ariaLabelledby :: I | r) i
+ariaLabelledby = unsafeCoerce P.ariaLabelledby
+
+ariaLevel :: forall r i. String -> IProp (ariaLevel :: I | r) i
+ariaLevel = unsafeCoerce P.ariaLevel
+
+ariaLive :: forall r i. String -> IProp (ariaLive :: I | r) i
+ariaLive = unsafeCoerce P.ariaLive
+
+ariaMultiline :: forall r i. String -> IProp (ariaMultiline :: I | r) i
+ariaMultiline = unsafeCoerce P.ariaMultiline
+
+ariaMultiselectable :: forall r i. String -> IProp (ariaMultiselectable :: I | r) i
+ariaMultiselectable = unsafeCoerce P.ariaMultiselectable
+
+ariaOrientation :: forall r i. String -> IProp (ariaOrientation :: I | r) i
+ariaOrientation = unsafeCoerce P.ariaOrientation
+
+ariaOwns :: forall r i. String -> IProp (ariaOwns :: I | r) i
+ariaOwns = unsafeCoerce P.ariaOwns
+
+ariaPosinset :: forall r i. String -> IProp (ariaPosinset :: I | r) i
+ariaPosinset = unsafeCoerce P.ariaPosinset
+
+ariaPressed :: forall r i. String -> IProp (ariaPressed :: I | r) i
+ariaPressed = unsafeCoerce P.ariaPressed
+
+ariaReadonly :: forall r i. String -> IProp (ariaReadonly :: I | r) i
+ariaReadonly = unsafeCoerce P.ariaReadonly
+
+ariaRelevant :: forall r i. String -> IProp (ariaRelevant :: I | r) i
+ariaRelevant = unsafeCoerce P.ariaRelevant
+
+ariaRequired :: forall r i. String -> IProp (ariaRequired :: I | r) i
+ariaRequired = unsafeCoerce P.ariaRequired
+
+ariaSelected :: forall r i. String -> IProp (ariaSelected :: I | r) i
+ariaSelected = unsafeCoerce P.ariaSelected
+
+ariaSetsize :: forall r i. String -> IProp (ariaSetsize :: I | r) i
+ariaSetsize = unsafeCoerce P.ariaSetsize
+
+ariaSort :: forall r i. String -> IProp (ariaSort :: I | r) i
+ariaSort = unsafeCoerce P.ariaSort
+
+ariaValuemax :: forall r i. String -> IProp (ariaValuemax :: I | r) i
+ariaValuemax = unsafeCoerce P.ariaValuemax
+
+ariaValuemin :: forall r i. String -> IProp (ariaValuemin :: I | r) i
+ariaValuemin = unsafeCoerce P.ariaValuemin
+
+ariaValuenow :: forall r i. String -> IProp (ariaValuenow :: I | r) i
+ariaValuenow = unsafeCoerce P.ariaValuenow
+
+ariaValuetext :: forall r i. String -> IProp (ariaValuetext :: I | r) i
+ariaValuetext = unsafeCoerce P.ariaValuetext
 
 alt :: forall r i. String -> IProp (alt :: I | r) i
 alt = unsafeCoerce P.alt

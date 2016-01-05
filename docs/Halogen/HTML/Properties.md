@@ -19,6 +19,216 @@ key :: forall i. String -> Prop i
 The `key` property associates a unique key with a node, which can be used
 to implement a more efficient diff/patch.
 
+#### `ariaActivedescendant`
+
+``` purescript
+ariaActivedescendant :: forall i. String -> Prop i
+```
+
+#### `ariaAtomic`
+
+``` purescript
+ariaAtomic :: forall i. String -> Prop i
+```
+
+#### `ariaAutocomplete`
+
+``` purescript
+ariaAutocomplete :: forall i. String -> Prop i
+```
+
+#### `ariaBusy`
+
+``` purescript
+ariaBusy :: forall i. String -> Prop i
+```
+
+#### `ariaChecked`
+
+``` purescript
+ariaChecked :: forall i. String -> Prop i
+```
+
+#### `ariaControls`
+
+``` purescript
+ariaControls :: forall i. String -> Prop i
+```
+
+#### `ariaDescribedby`
+
+``` purescript
+ariaDescribedby :: forall i. String -> Prop i
+```
+
+#### `ariaDisabled`
+
+``` purescript
+ariaDisabled :: forall i. String -> Prop i
+```
+
+#### `ariaDropeffect`
+
+``` purescript
+ariaDropeffect :: forall i. String -> Prop i
+```
+
+#### `ariaExpanded`
+
+``` purescript
+ariaExpanded :: forall i. String -> Prop i
+```
+
+#### `ariaFlowto`
+
+``` purescript
+ariaFlowto :: forall i. String -> Prop i
+```
+
+#### `ariaGrabbed`
+
+``` purescript
+ariaGrabbed :: forall i. String -> Prop i
+```
+
+#### `ariaHaspopup`
+
+``` purescript
+ariaHaspopup :: forall i. String -> Prop i
+```
+
+#### `ariaHidden`
+
+``` purescript
+ariaHidden :: forall i. String -> Prop i
+```
+
+#### `ariaInvalid`
+
+``` purescript
+ariaInvalid :: forall i. String -> Prop i
+```
+
+#### `ariaLabel`
+
+``` purescript
+ariaLabel :: forall i. String -> Prop i
+```
+
+#### `ariaLabelledby`
+
+``` purescript
+ariaLabelledby :: forall i. String -> Prop i
+```
+
+#### `ariaLevel`
+
+``` purescript
+ariaLevel :: forall i. String -> Prop i
+```
+
+#### `ariaLive`
+
+``` purescript
+ariaLive :: forall i. String -> Prop i
+```
+
+#### `ariaMultiline`
+
+``` purescript
+ariaMultiline :: forall i. String -> Prop i
+```
+
+#### `ariaMultiselectable`
+
+``` purescript
+ariaMultiselectable :: forall i. String -> Prop i
+```
+
+#### `ariaOrientation`
+
+``` purescript
+ariaOrientation :: forall i. String -> Prop i
+```
+
+#### `ariaOwns`
+
+``` purescript
+ariaOwns :: forall i. String -> Prop i
+```
+
+#### `ariaPosinset`
+
+``` purescript
+ariaPosinset :: forall i. String -> Prop i
+```
+
+#### `ariaPressed`
+
+``` purescript
+ariaPressed :: forall i. String -> Prop i
+```
+
+#### `ariaReadonly`
+
+``` purescript
+ariaReadonly :: forall i. String -> Prop i
+```
+
+#### `ariaRelevant`
+
+``` purescript
+ariaRelevant :: forall i. String -> Prop i
+```
+
+#### `ariaRequired`
+
+``` purescript
+ariaRequired :: forall i. String -> Prop i
+```
+
+#### `ariaSelected`
+
+``` purescript
+ariaSelected :: forall i. String -> Prop i
+```
+
+#### `ariaSetsize`
+
+``` purescript
+ariaSetsize :: forall i. String -> Prop i
+```
+
+#### `ariaSort`
+
+``` purescript
+ariaSort :: forall i. String -> Prop i
+```
+
+#### `ariaValuemax`
+
+``` purescript
+ariaValuemax :: forall i. String -> Prop i
+```
+
+#### `ariaValuemin`
+
+``` purescript
+ariaValuemin :: forall i. String -> Prop i
+```
+
+#### `ariaValuenow`
+
+``` purescript
+ariaValuenow :: forall i. String -> Prop i
+```
+
+#### `ariaValuetext`
+
+``` purescript
+ariaValuetext :: forall i. String -> Prop i
+```
+
 #### `alt`
 
 ``` purescript
@@ -41,6 +251,18 @@ class_ :: forall i. ClassName -> Prop i
 
 ``` purescript
 classes :: forall i. Array ClassName -> Prop i
+```
+
+#### `cols`
+
+``` purescript
+cols :: forall i. Int -> Prop i
+```
+
+#### `rows`
+
+``` purescript
+rows :: forall i. Int -> Prop i
 ```
 
 #### `colSpan`
