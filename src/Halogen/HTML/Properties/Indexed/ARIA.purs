@@ -1,38 +1,38 @@
 module Halogen.HTML.Properties.Indexed.ARIA
-  ( ariaAtomic
-  , ariaAutocomplete
-  , ariaBusy
-  , ariaChecked
-  , ariaControls
-  , ariaDescribedby
-  , ariaDisabled
-  , ariaDropeffect
-  , ariaExpanded
-  , ariaFlowto
-  , ariaGrabbed
-  , ariaHaspopup
-  , ariaHidden
-  , ariaInvalid
-  , ariaLabel
-  , ariaLabelledby
-  , ariaLevel
-  , ariaLive
-  , ariaMultiline
-  , ariaMultiselectable
-  , ariaOrientation
-  , ariaOwns
-  , ariaPosinset
-  , ariaPressed
-  , ariaReadonly
-  , ariaRelevant
-  , ariaRequired
-  , ariaSelected
-  , ariaSetsize
-  , ariaSort
-  , ariaValuemax
-  , ariaValuemin
-  , ariaValuenow
-  , ariaValuetext
+  ( atomic
+  , autoComplete
+  , busy
+  , checked
+  , controls
+  , describedBy
+  , disabled
+  , dropEffect
+  , expanded
+  , flowTo
+  , grabbed
+  , hasPopup
+  , hidden
+  , invalid
+  , label
+  , labelledBy
+  , level
+  , live
+  , multiLine
+  , multiSelectable
+  , orientation
+  , owns
+  , posInSet
+  , pressed
+  , readOnly
+  , relevant
+  , required
+  , selected
+  , setSize
+  , sort
+  , valueMax
+  , valueMin
+  , valueNow
+  , valueText
   , role
   ) where
 
@@ -43,110 +43,110 @@ import Unsafe.Coerce (unsafeCoerce)
 import Halogen.HTML.Properties.Indexed (IProp())
 import qualified Halogen.HTML.Properties.ARIA as P
 
-ariaActivedescendant :: forall r i. String -> IProp r i
-ariaActivedescendant = unsafeCoerce P.ariaActivedescendant
+activeDescendant :: forall r i. String -> IProp r i
+activeDescendant = unsafeCoerce P.activeDescendant
 
-ariaAtomic :: forall r i. String -> IProp r i
-ariaAtomic = unsafeCoerce P.ariaAtomic
+atomic :: forall r i. String -> IProp r i
+atomic = unsafeCoerce P.atomic
 
-ariaAutocomplete :: forall r i. String -> IProp r i
-ariaAutocomplete = unsafeCoerce P.ariaAutocomplete
+autoComplete :: forall r i. String -> IProp r i
+autoComplete = unsafeCoerce P.autoComplete
 
-ariaBusy :: forall r i. String -> IProp r i
-ariaBusy = unsafeCoerce P.ariaBusy
+busy :: forall r i. String -> IProp r i
+busy = unsafeCoerce P.busy
 
-ariaChecked :: forall r i. String -> IProp r i
-ariaChecked = unsafeCoerce P.ariaChecked
+checked :: forall r i. String -> IProp r i
+checked = unsafeCoerce P.checked
 
-ariaControls :: forall r i. String -> IProp r i
-ariaControls = unsafeCoerce P.ariaControls
+controls :: forall r i. String -> IProp r i
+controls = unsafeCoerce P.controls
 
-ariaDescribedby :: forall r i. String -> IProp r i
-ariaDescribedby = unsafeCoerce P.ariaDescribedby
+describedBy :: forall r i. String -> IProp r i
+describedBy = unsafeCoerce P.describedBy
 
-ariaDisabled :: forall r i. String -> IProp r i
-ariaDisabled = unsafeCoerce P.ariaDisabled
+disabled :: forall r i. String -> IProp r i
+disabled = unsafeCoerce P.disabled
 
-ariaDropeffect :: forall r i. String -> IProp r i
-ariaDropeffect = unsafeCoerce P.ariaDropeffect
+dropEffect :: forall r i. String -> IProp r i
+dropEffect = unsafeCoerce P.dropEffect
 
-ariaExpanded :: forall r i. String -> IProp r i
-ariaExpanded = unsafeCoerce P.ariaExpanded
+expanded :: forall r i. String -> IProp r i
+expanded = unsafeCoerce P.expanded
 
-ariaFlowto :: forall r i. String -> IProp r i
-ariaFlowto = unsafeCoerce P.ariaFlowto
+flowTo :: forall r i. String -> IProp r i
+flowTo = unsafeCoerce P.flowTo
 
-ariaGrabbed :: forall r i. String -> IProp r i
-ariaGrabbed = unsafeCoerce P.ariaGrabbed
+grabbed :: forall r i. String -> IProp r i
+grabbed = unsafeCoerce P.grabbed
 
-ariaHaspopup :: forall r i. String -> IProp r i
-ariaHaspopup = unsafeCoerce P.ariaHaspopup
+hasPopup :: forall r i. String -> IProp r i
+hasPopup = unsafeCoerce P.hasPopup
 
-ariaHidden :: forall r i. String -> IProp r i
-ariaHidden = unsafeCoerce P.ariaHidden
+hidden :: forall r i. String -> IProp r i
+hidden = unsafeCoerce P.hidden
 
-ariaInvalid :: forall r i. String -> IProp r i
-ariaInvalid = unsafeCoerce P.ariaInvalid
+invalid :: forall r i. String -> IProp r i
+invalid = unsafeCoerce P.invalid
 
-ariaLabel :: forall r i. String -> IProp r i
-ariaLabel = unsafeCoerce P.ariaLabel
+label :: forall r i. String -> IProp r i
+label = unsafeCoerce P.label
 
-ariaLabelledby :: forall r i. String -> IProp r i
-ariaLabelledby = unsafeCoerce P.ariaLabelledby
+labelledBy :: forall r i. String -> IProp r i
+labelledBy = unsafeCoerce P.labelledBy
 
-ariaLevel :: forall r i. String -> IProp r i
-ariaLevel = unsafeCoerce P.ariaLevel
+level :: forall r i. String -> IProp r i
+level = unsafeCoerce P.level
 
-ariaLive :: forall r i. String -> IProp r i
-ariaLive = unsafeCoerce P.ariaLive
+live :: forall r i. String -> IProp r i
+live = unsafeCoerce P.live
 
-ariaMultiline :: forall r i. String -> IProp r i
-ariaMultiline = unsafeCoerce P.ariaMultiline
+multiLine :: forall r i. String -> IProp r i
+multiLine = unsafeCoerce P.multiLine
 
-ariaMultiselectable :: forall r i. String -> IProp r i
-ariaMultiselectable = unsafeCoerce P.ariaMultiselectable
+multiSelectable :: forall r i. String -> IProp r i
+multiSelectable = unsafeCoerce P.multiSelectable
 
-ariaOrientation :: forall r i. String -> IProp r i
-ariaOrientation = unsafeCoerce P.ariaOrientation
+orientation :: forall r i. String -> IProp r i
+orientation = unsafeCoerce P.orientation
 
-ariaOwns :: forall r i. String -> IProp r i
-ariaOwns = unsafeCoerce P.ariaOwns
+owns :: forall r i. String -> IProp r i
+owns = unsafeCoerce P.owns
 
-ariaPosinset :: forall r i. String -> IProp r i
-ariaPosinset = unsafeCoerce P.ariaPosinset
+posInSet :: forall r i. String -> IProp r i
+posInSet = unsafeCoerce P.posInSet
 
-ariaPressed :: forall r i. String -> IProp r i
-ariaPressed = unsafeCoerce P.ariaPressed
+pressed :: forall r i. String -> IProp r i
+pressed = unsafeCoerce P.pressed
 
-ariaReadonly :: forall r i. String -> IProp r i
-ariaReadonly = unsafeCoerce P.ariaReadonly
+readOnly :: forall r i. String -> IProp r i
+readOnly = unsafeCoerce P.readOnly
 
-ariaRelevant :: forall r i. String -> IProp r i
-ariaRelevant = unsafeCoerce P.ariaRelevant
+relevant :: forall r i. String -> IProp r i
+relevant = unsafeCoerce P.relevant
 
-ariaRequired :: forall r i. String -> IProp r i
-ariaRequired = unsafeCoerce P.ariaRequired
+required :: forall r i. String -> IProp r i
+required = unsafeCoerce P.required
 
-ariaSelected :: forall r i. String -> IProp r i
-ariaSelected = unsafeCoerce P.ariaSelected
+selected :: forall r i. String -> IProp r i
+selected = unsafeCoerce P.selected
 
-ariaSetsize :: forall r i. String -> IProp r i
-ariaSetsize = unsafeCoerce P.ariaSetsize
+setSize :: forall r i. String -> IProp r i
+setSize = unsafeCoerce P.setSize
 
-ariaSort :: forall r i. String -> IProp r i
-ariaSort = unsafeCoerce P.ariaSort
+sort :: forall r i. String -> IProp r i
+sort = unsafeCoerce P.sort
 
-ariaValuemax :: forall r i. String -> IProp r i
-ariaValuemax = unsafeCoerce P.ariaValuemax
+valueMax :: forall r i. String -> IProp r i
+valueMax = unsafeCoerce P.valueMax
 
-ariaValuemin :: forall r i. String -> IProp r i
-ariaValuemin = unsafeCoerce P.ariaValuemin
+valueMin :: forall r i. String -> IProp r i
+valueMin = unsafeCoerce P.valueMin
 
-ariaValuenow :: forall r i. String -> IProp r i
-ariaValuenow = unsafeCoerce P.ariaValuenow
+valueNow :: forall r i. String -> IProp r i
+valueNow = unsafeCoerce P.valueNow
 
-ariaValuetext :: forall r i. String -> IProp r i
-ariaValuetext = unsafeCoerce P.ariaValuetext
+valueText :: forall r i. String -> IProp r i
+valueText = unsafeCoerce P.valueText
 
 role :: forall r i. String -> IProp r i
 role = unsafeCoerce P.role
