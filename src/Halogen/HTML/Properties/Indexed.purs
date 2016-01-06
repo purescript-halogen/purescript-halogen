@@ -15,6 +15,7 @@ module Halogen.HTML.Properties.Indexed
   , CaseType(..)
 
   , key
+
   , alt
   , charset
   , class_, classes

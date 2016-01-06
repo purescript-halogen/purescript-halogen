@@ -52,6 +52,18 @@ class_ :: forall r i. ClassName -> IProp (class :: I | r) i
 classes :: forall r i. Array ClassName -> IProp (class :: I | r) i
 ```
 
+#### `cols`
+
+``` purescript
+cols :: forall r i. Int -> IProp (cols :: I | r) i
+```
+
+#### `rows`
+
+``` purescript
+rows :: forall r i. Int -> IProp (rows :: I | r) i
+```
+
 #### `colSpan`
 
 ``` purescript

@@ -43,6 +43,18 @@ class_ :: forall i. ClassName -> Prop i
 classes :: forall i. Array ClassName -> Prop i
 ```
 
+#### `cols`
+
+``` purescript
+cols :: forall i. Int -> Prop i
+```
+
+#### `rows`
+
+``` purescript
+rows :: forall i. Int -> Prop i
+```
+
 #### `colSpan`
 
 ``` purescript
