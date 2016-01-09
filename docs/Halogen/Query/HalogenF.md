@@ -15,6 +15,8 @@ The Halogen component algebra
 ##### Instances
 ``` purescript
 (Functor g) => Functor (HalogenFP e s f g)
+(FunctorEff eff g) => FunctorEff eff (HalogenFP e s f g)
+(FunctorAff eff g) => FunctorAff eff (HalogenFP e s f g)
 Inject (StateF s) (HalogenFP e s f g)
 Inject g (HalogenFP e s f g)
 (Functor g) => Alt (HalogenFP e s f g)

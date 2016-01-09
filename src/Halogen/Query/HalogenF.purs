@@ -12,6 +12,8 @@ import Control.Plus (Plus)
 import Control.Monad.Free.Trans (hoistFreeT, bimapFreeT)
 
 import Data.Bifunctor (lmap)
+import Data.Functor.Aff (FunctorAff, liftAff)
+import Data.Functor.Eff (FunctorEff, liftEff)
 import Data.Inject (Inject)
 import Data.Maybe (Maybe(..))
 import Data.NaturalTransformation (Natural())
@@ -35,6 +37,12 @@ instance functorHalogenF :: (Functor g) => Functor (HalogenFP e s f g) where
       SubscribeHF es a -> SubscribeHF es (f a)
       QueryHF q -> QueryHF (map f q)
       HaltHF -> HaltHF
+
+instance functorEffHalogenF :: (FunctorEff eff g) => FunctorEff eff (HalogenFP e s f g) where
+  liftEff = QueryHF <<< liftEff
+
+instance functorAffHalogenF :: (FunctorAff eff g) => FunctorAff eff (HalogenFP e s f g) where
+  liftAff = QueryHF <<< liftAff
 
 instance injectStateHF :: Inject (StateF s) (HalogenFP e s f g) where
   inj = StateHF
