@@ -12,10 +12,10 @@ module Halogen.Query.EventSource
 import Prelude
 
 import Control.Bind ((<=<), (=<<))
-import Control.Coroutine.Aff (produce)
+import Control.Coroutine.Aff (produce')
 import Control.Coroutine.Stalling as SCR
-import Control.Monad.Aff (Aff())
 import Control.Monad.Aff.AVar (AVAR())
+import Control.Monad.Aff.Class (MonadAff)
 import Control.Monad.Eff (Eff())
 import Control.Monad.Rec.Class (MonadRec)
 import Control.Monad.Free (Free())
@@ -45,13 +45,14 @@ runEventSource (EventSource es) = es
 -- | ```
 -- | (Taken from the Ace component example)
 eventSource
-  :: forall eff a f
-   . ((a -> Eff (avar :: AVAR | eff) Unit) -> Eff (avar :: AVAR | eff) Unit)
+  :: forall eff a f g
+   . (Monad g, MonadAff (avar :: AVAR | eff) g)
+  => ((a -> Eff (avar :: AVAR | eff) Unit) -> Eff (avar :: AVAR | eff) Unit)
   -> (a -> Eff (avar :: AVAR | eff) (f Unit))
-  -> EventSource f (Aff (avar :: AVAR | eff))
+  -> EventSource f g
 eventSource attach handle =
   EventSource $
-    SCR.producerToStallingProducer $ produce \emit ->
+    SCR.producerToStallingProducer $ produce' \emit ->
       attach (emit <<< Left <=< handle)
 
 -- | Creates an `EventSource` for an event listener that accepts no arguments.
@@ -68,13 +69,14 @@ eventSource attach handle =
 -- | ```
 -- | (Taken from the Ace component example)
 eventSource_
-  :: forall eff f
-   . (Eff (avar :: AVAR | eff) Unit -> Eff (avar :: AVAR | eff) Unit)
+  :: forall eff f g
+   . (Monad g, MonadAff (avar :: AVAR | eff) g)
+  => (Eff (avar :: AVAR | eff) Unit -> Eff (avar :: AVAR | eff) Unit)
   -> Eff (avar :: AVAR | eff) (f Unit)
-  -> EventSource f (Aff (avar :: AVAR | eff))
+  -> EventSource f g
 eventSource_ attach handle =
   EventSource $
-    SCR.producerToStallingProducer $ produce \emit ->
+    SCR.producerToStallingProducer $ produce' \emit ->
       attach (emit <<< Left =<< handle)
 
 -- | Take an `EventSource` with events in `1 + f` to one with events in `f`.

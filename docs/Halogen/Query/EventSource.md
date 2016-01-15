@@ -16,7 +16,7 @@ runEventSource :: forall f g. EventSource f g -> StallingProducer (f Unit) g Uni
 #### `eventSource`
 
 ``` purescript
-eventSource :: forall eff a f. ((a -> Eff (avar :: AVAR | eff) Unit) -> Eff (avar :: AVAR | eff) Unit) -> (a -> Eff (avar :: AVAR | eff) (f Unit)) -> EventSource f (Aff (avar :: AVAR | eff))
+eventSource :: forall eff a f g. (Monad g, MonadAff (avar :: AVAR | eff) g) => ((a -> Eff (avar :: AVAR | eff) Unit) -> Eff (avar :: AVAR | eff) Unit) -> (a -> Eff (avar :: AVAR | eff) (f Unit)) -> EventSource f g
 ```
 
 Creates an `EventSource` for an event listener that accepts one argument.
@@ -35,7 +35,7 @@ let onCopied = eventSource (Editor.onCopy editor) \text -> do
 #### `eventSource_`
 
 ``` purescript
-eventSource_ :: forall eff f. (Eff (avar :: AVAR | eff) Unit -> Eff (avar :: AVAR | eff) Unit) -> Eff (avar :: AVAR | eff) (f Unit) -> EventSource f (Aff (avar :: AVAR | eff))
+eventSource_ :: forall eff f g. (Monad g, MonadAff (avar :: AVAR | eff) g) => (Eff (avar :: AVAR | eff) Unit -> Eff (avar :: AVAR | eff) Unit) -> Eff (avar :: AVAR | eff) (f Unit) -> EventSource f g
 ```
 
 Creates an `EventSource` for an event listener that accepts no arguments.
