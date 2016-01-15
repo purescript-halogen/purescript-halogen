@@ -21,7 +21,7 @@ module Halogen.HTML.Events.Indexed
   , onContextMenu
   , onDoubleClick
   , onMouseDown
-  , onMouseEnter  
+  , onMouseEnter
   , onMouseLeave
   , onMouseMove
   , onMouseOver
@@ -155,11 +155,11 @@ onFocusIn = unsafeCoerce E.onFocusIn
 onFocusOut :: forall r i. IEventProp (onFocusOut :: I | r) FocusEvent i
 onFocusOut = unsafeCoerce E.onFocusOut
 
-onValueChange :: forall r f. (String -> EventHandler (f Unit)) -> IProp (value :: I, onChange :: I | r) (f Unit)
+onValueChange :: forall r i. (String -> EventHandler i) -> IProp (value :: I, onChange :: I | r) i
 onValueChange = unsafeCoerce E.onValueChange
 
-onValueInput :: forall r f. (String -> EventHandler (f Unit)) -> IProp (value :: I, onInput :: I | r) (f Unit)
+onValueInput :: forall r i. (String -> EventHandler i) -> IProp (value :: I, onInput :: I | r) i
 onValueInput = unsafeCoerce E.onValueInput
 
-onChecked :: forall r f. (Boolean -> EventHandler (f Unit)) -> IProp (checked :: I, onChange :: I | r) (f Unit)
+onChecked :: forall r i. (Boolean -> EventHandler i) -> IProp (checked :: I, onChange :: I | r) i
 onChecked = unsafeCoerce E.onChecked
