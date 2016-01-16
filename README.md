@@ -197,7 +197,7 @@ Here `continue` is the `Boolean -> a` function we defined, so the result value f
 
 #### Eval’s free monad
 
-The `Free (HalogenF s f g) _` that `eval` functions return allow us to perform state updates for the current component, make use of the monad `g`, and subscribe to event listeners (this latter case is an advanced use case when [building widgets](#widgets-3rd-party-components) – the declarative listeners in the `HTML` DSL should be used where possible).
+The `Free (HalogenF s f g) _` that `eval` functions return allow us to perform state updates for the current component, subscribe to event listeners (this is an advanced use case when [building widgets](#widgets-3rd-party-components) – the declarative listeners in the `HTML` DSL should be used where possible), and make use of the monad `g`.
 
 [`HalogenF`](docs/Halogen/Query.md#HalogenF) is actually a composite of 3 separate functors (algebras) which provide the different abilities just mentioned. The state-based algebra is defined in [`Halogen.Query.StateF`](docs/Halogen/Query/StateF.md) and [`Halogen.Query`](docs/Halogen/Query.md) provides an interface much like that provided by the standard `State` monad:
 
@@ -414,7 +414,7 @@ parentComponent'
 The only change being the addition of the argument typed with `Peek`. This is another synonym for a function:
 
 ``` purescript
-type Peek i s s' f f' g p p' = forall a. i a -> ParentDSL s s' f f' g p Unit
+type Peek i s s' f f' g p = forall a. i a -> ParentDSL s s' f f' g p Unit
 ```
 
 This is much like the `eval` function, but instead of using a natural transformation here we’re throwing away the input type and always returning a `Unit` value. This is necessary so that we don’t have to match every possible case of the child’s query algebra.
@@ -436,7 +436,7 @@ peek (ChildF p q) = case q of
 
 Here we’re observing when the child has processed a `Remove` query, and when doing so we remove it from the parent’s state and also revise the count for the number of completed and pending tasks. We also observe `ToggleCompleted` queries and likewise update the completed task count accordingly.
 
-This usage of `peek` illustrates another point about its usage: when observing `Remove` we a send a further query to the child in question to check on its completion state, however this does not trigger an infinitely recursive `peek`: any queries to children made inside `peek` or `eval` are not re-observed by `peek`.
+This usage of `peek` illustrates another point about its usage: when observing `Remove` we send a further query to the child in question to check on its completion state, however this does not trigger an infinitely recursive `peek`: any queries to children made inside `peek` or `eval` are not re-observed by `peek`.
 
 #### Multiple types of child component
 
