@@ -213,19 +213,19 @@ onFocusOut :: forall r i. IEventProp (onFocusOut :: I | r) FocusEvent i
 #### `onValueChange`
 
 ``` purescript
-onValueChange :: forall r f. (String -> EventHandler (f Unit)) -> IProp (value :: I, onChange :: I | r) (f Unit)
+onValueChange :: forall r i. (String -> EventHandler i) -> IProp (value :: I, onChange :: I | r) i
 ```
 
 #### `onValueInput`
 
 ``` purescript
-onValueInput :: forall r f. (String -> EventHandler (f Unit)) -> IProp (value :: I, onInput :: I | r) (f Unit)
+onValueInput :: forall r i. (String -> EventHandler i) -> IProp (value :: I, onInput :: I | r) i
 ```
 
 #### `onChecked`
 
 ``` purescript
-onChecked :: forall r f. (Boolean -> EventHandler (f Unit)) -> IProp (checked :: I, onChange :: I | r) (f Unit)
+onChecked :: forall r i. (Boolean -> EventHandler i) -> IProp (checked :: I, onChange :: I | r) i
 ```
 
 
