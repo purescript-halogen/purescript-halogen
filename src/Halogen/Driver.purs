@@ -10,7 +10,7 @@ import Control.Coroutine (await)
 import Control.Coroutine.Stalling (($$?))
 import Control.Coroutine.Stalling as SCR
 import Control.Monad.Aff (Aff(), forkAff)
-import Control.Monad.Aff.AVar (AVar(), makeVar, putVar, takeVar)
+import Control.Monad.Aff.AVar (AVar(), makeVar, makeVar', putVar, takeVar)
 import Control.Monad.Eff.Class (liftEff)
 import Control.Monad.Free (runFreeM)
 import Control.Monad.Rec.Class (forever)
@@ -18,13 +18,18 @@ import Control.Monad.State (runState)
 import Control.Monad.Trans (lift)
 import Control.Plus (Plus, empty)
 
+import Data.Foldable (Foldable, sequence_, traverse_, foldr)
+import Data.List (List(Nil), (:))
+import Data.Maybe (Maybe(..), maybe)
 import Data.NaturalTransformation (Natural())
 import Data.Tuple (Tuple(..))
 
 import DOM.HTML.Types (HTMLElement())
 
-import Halogen.Component (Component(), renderComponent, queryComponent)
+import Halogen.Component (Component(), Eval(), renderComponent, queryComponent, initializeComponent)
+import Halogen.Component.Hook (Hook(..), Finalized(), runFinalized)
 import Halogen.Effects (HalogenEffects())
+import Halogen.HTML.Core (HTML())
 import Halogen.HTML.Renderer.VirtualDOM (renderHTML)
 import Halogen.Internal.VirtualDOM (VTree(), createElement, diff, patch)
 import Halogen.Query (HalogenF(), HalogenFP(..))
@@ -58,13 +63,15 @@ runUI
    . Component s f (Aff (HalogenEffects eff))
   -> s
   -> Aff (HalogenEffects eff) { node :: HTMLElement, driver :: Driver f eff }
-runUI c s = case renderComponent c s of
-    Tuple html s' -> do
-      ref <- makeVar
-      let vtree = renderHTML (driver ref) html
-          node = createElement vtree
-      putVar ref { node: node, vtree: vtree, state: s', renderPending: false }
-      pure { node: node, driver: driver ref }
+runUI c s = do
+  ref <- makeVar
+  let rc = renderComponent c s
+      vtree = renderHTML (driver ref) rc.html
+      node = createElement vtree
+  putVar ref { node: node, vtree: vtree, state: rc.state, renderPending: false }
+  sequence_ $ onInitializers (forkAff <<< driver ref) rc.hooks
+  maybe (pure unit) (driver ref) (initializeComponent c)
+  pure { node: node, driver: driver ref }
 
   where
 
@@ -85,6 +92,7 @@ runUI c s = case renderComponent c s of
           Tuple i' s' -> do
             putVar ref { node: ds.node, vtree: ds.vtree, state: s', renderPending: true }
             pure i'
+
       SubscribeHF es next -> do
         let producer = runEventSource es
             consumer = forever (lift <<< driver ref =<< await)
@@ -95,13 +103,47 @@ runUI c s = case renderComponent c s of
         q
       HaltHF -> empty
 
+  driver'
+    :: forall s' f'
+     . Eval f' s' f' (Aff (HalogenEffects eff))
+    -> s'
+    -> f' Unit
+    -> Aff (HalogenEffects eff) Unit
+  driver' e s i = do
+    ref <- makeVar' s
+    flip runFreeM (e i) \h ->
+      case h of
+        StateHF i -> do
+          ds <- takeVar ref
+          case runState (stateN i) ds of
+            Tuple i' s' -> do
+              putVar ref s'
+              pure i'
+        SubscribeHF _ next -> pure next
+        QueryHF q -> q
+        HaltHF -> empty
+
   render :: AVar (DriverState s) -> Aff (HalogenEffects eff) Unit
   render ref = do
     ds <- takeVar ref
     if not ds.renderPending
       then putVar ref ds
-      else case renderComponent c ds.state of
-        Tuple html s'' -> do
-          let vtree' = renderHTML (driver ref) html
-          node' <- liftEff $ patch (diff ds.vtree vtree') ds.node
-          putVar ref { node: node', vtree: vtree', state: s'', renderPending: false }
+      else do
+        let rc = renderComponent c ds.state
+            vtree' = renderHTML (driver ref) (rc.html)
+        node' <- liftEff $ patch (diff ds.vtree vtree') ds.node
+        putVar ref { node: node', vtree: vtree', state: rc.state, renderPending: false }
+        sequence_ $ onFinalizers (forkAff <<< runFinalized driver') rc.hooks
+        sequence_ $ onInitializers (forkAff <<< driver ref) rc.hooks
+
+onInitializers :: forall m f g r. (Foldable m) => (f Unit -> r) -> m (Hook f g) -> List r
+onInitializers f = foldr go Nil
+  where
+  go (PostRender a) as = f a : as
+  go _              as = as
+
+onFinalizers :: forall m f g r. (Foldable m) => (Finalized g -> r) -> m (Hook f g) -> List r
+onFinalizers f = foldr go Nil
+  where
+  go (Finalized a)  as = f a : as
+  go _              as = as
