@@ -178,7 +178,7 @@ parentComponentSpec
   -> Component (InstalledState s s' f f' g p) (ParentQuery f f' p) g
 parentComponentSpec spec =
   Component
-    { render: renderParent spec.render eval (left <$> spec.finalizer)
+    { render: renderParent spec.render
     , eval: eval
     , initializer: left <$> spec.initializer
     , finalizers: parentFinalizers eval spec.finalizer
@@ -217,7 +217,7 @@ parentComponentSpec'
   => ParentComponentSpecP s s' f f' g p
   -> Component (InstalledState s s' f f' g p) (ParentQuery f f' p) g
 parentComponentSpec' spec = Component
-  { render: renderParent spec.render eval (left <$> spec.finalizer)
+  { render: renderParent spec.render
   , eval: eval
   , initializer: left <$> spec.initializer
   , finalizers: parentFinalizers eval spec.finalizer
@@ -351,10 +351,8 @@ renderParent
   :: forall s s' f f' g p
    . (Ord p)
   => RenderParent s s' f f' g p
-  -> Eval (ParentQuery f f' p) (InstalledState s s' f f' g p) (ParentQuery f f' p) g
-  -> Maybe (ParentQuery f f' p Unit)
   -> RenderM (InstalledState s s' f f' g p) (ParentQuery f f' p) g (ComponentHTML (ParentQuery f f' p))
-renderParent render eval fin = do
+renderParent render = do
     InstalledState st <- CMS.get
     let html = render st.parent
     -- Empty the state so that we don't keep children that are no longer
