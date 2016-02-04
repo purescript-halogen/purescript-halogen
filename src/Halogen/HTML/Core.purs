@@ -44,6 +44,7 @@ import Prelude
 import Data.Bifunctor (Bifunctor, rmap)
 import Data.Exists (Exists(), mkExists)
 import Data.ExistsR (ExistsR(), mkExistsR, runExistsR)
+import Data.Foldable (foldl)
 import Data.Maybe (Maybe(..))
 import Data.Traversable (traverse)
 import Data.Tuple (Tuple(..))
