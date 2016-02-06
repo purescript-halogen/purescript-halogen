@@ -19,9 +19,14 @@ module Halogen.Component
   , QueryF()
   , mkQuery
   , mkQuery'
+  , mkQueries
+  , mkQueries'
   , liftQuery
   , query
   , query'
+  , queryAll
+  , queryAll'
+  , childSlots
   , transform
   , transformChild
   , interpret
@@ -33,7 +38,6 @@ import Prelude
 
 import Control.Apply ((<*))
 import Control.Bind ((=<<))
-import Control.Monad.Eff.Class (MonadEff)
 import Control.Monad.Free (Free(), foldFree, liftF, mapF)
 import Control.Monad.Free.Trans as FT
 import Control.Monad.State (State(), runState)
@@ -42,16 +46,16 @@ import Control.Monad.State.Trans as CMS
 
 import Data.Bifunctor (bimap, lmap, rmap)
 import Data.Functor.Coproduct (Coproduct(), coproduct, left, right)
+import Data.List as L
 import Data.Map as M
 import Data.Maybe (Maybe(..), maybe)
 import Data.Maybe.Unsafe as U
 import Data.NaturalTransformation (Natural())
-import Data.Profunctor.Choice (Choice)
-import Data.Traversable (for)
+import Data.Traversable (for, traverse)
 import Data.Tuple (Tuple(..), snd)
 import Data.Void (Void())
 
-import Halogen.Component.ChildPath (ChildPath(), injState, injQuery, injSlot, prjState, prjQuery)
+import Halogen.Component.ChildPath (ChildPath(..), injState, prjState, injQuery, prjQuery, injSlot, prjSlot)
 import Halogen.HTML.Core (HTML(..), fillSlot)
 import Halogen.Query (get, modify, liftH)
 import Halogen.Query.EventSource (EventSource(..), ParentEventSource(), runEventSource, fromParentEventSource)
@@ -186,6 +190,34 @@ query'
   -> Free (HalogenFP ParentEventSource s'' f'' (QueryF s'' s' f'' f' g p')) (Maybe i)
 query' i p q = liftQuery (mkQuery' i p q)
 
+-- | Queries every child component that is currently installed. For use within
+-- | a parent component's `eval` or `peek` function.
+queryAll
+  :: forall s s' f f' g p i
+   . (Functor g, Ord p)
+  => f' i
+  -> Free (HalogenFP ParentEventSource s f (QueryF s s' f f' g p)) (M.Map p i)
+queryAll q = liftQuery (mkQueries q)
+
+-- | Returns slots of all currently installed child components.
+childSlots
+  :: forall s s' f f' p g
+  . (Functor g, Ord p)
+  => QueryF s s' f f' g p (L.List p)
+childSlots = do
+  InstalledState st <- get
+  pure (M.keys st.children)
+
+-- | A version of [`queryAll](#queryAll) for use when a parent component has
+-- | multiple types of child component.
+queryAll'
+  :: forall s s' s'' f f' f'' g p p' i
+   . (Functor g, Ord p, Ord p')
+  => ChildPath s s' f f' p p'
+  -> f i
+  -> Free (HalogenFP ParentEventSource s'' f'' (QueryF s'' s' f'' f' g p')) (M.Map p i)
+queryAll' i q = liftQuery (mkQueries' i q)
+
 -- | Creates a query for a child component where `p` is the slot the component
 -- | was installed into and `f' i` in the input query.
 -- |
@@ -212,6 +244,31 @@ mkQuery'
   -> f i
   -> QueryF s'' s' f'' f' g p' (Maybe i)
 mkQuery' i p q = mkQuery (injSlot i p) (injQuery i q)
+
+-- | Creates a query for every child component that is currently installed.
+mkQueries
+  :: forall s s' f f' p g i
+   . (Functor g, Ord p)
+  => f' i
+  -> QueryF s s' f f' g p (M.Map p i)
+mkQueries = mkQueries' (ChildPath id id id)
+
+-- | A version of [`mkQueries](#mkQueries) for use when a parent component has
+-- | multiple types of child component.
+mkQueries'
+  :: forall s s' s'' f f' f'' g p p' i
+   . (Functor g, Ord p', Ord p)
+  => ChildPath s s' f f' p p'
+  -> f i
+  -> QueryF s'' s' f'' f' g p' (M.Map p i)
+mkQueries' i q = do
+  InstalledState st <- get
+  M.fromList <<< L.catMaybes <$> traverse mkChildQuery (M.toList st.children)
+  where
+  mkChildQuery (Tuple p' (Tuple c _)) =
+    for (prjSlot i p')
+        \p -> Tuple p <$> mapF (transformHF (mapStateFChild p') (ChildF p') id)
+                               (queryComponent c (injQuery i q))
 
 -- | Lifts a value in the `QueryF` algebra into the monad used by a component's
 -- | `eval` function.
