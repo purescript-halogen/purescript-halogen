@@ -28,9 +28,10 @@ import DOM.HTML.Types (HTMLElement())
 
 import Halogen.Component (Component(), Eval(), renderComponent, queryComponent, initializeComponent)
 import Halogen.Component.Hook (Hook(..), Finalized(), runFinalized)
+import Halogen.Component.Tree (Tree(), TreeF(), runTree)
 import Halogen.Effects (HalogenEffects())
 import Halogen.HTML.Core (HTML())
-import Halogen.HTML.Renderer.VirtualDOM (renderHTML)
+import Halogen.HTML.Renderer.VirtualDOM (renderTree)
 import Halogen.Internal.VirtualDOM (VTree(), createElement, diff, patch)
 import Halogen.Query (HalogenF(), HalogenFP(..))
 import Halogen.Query.StateF (stateN)
@@ -66,7 +67,7 @@ runUI
 runUI c s = do
   ref <- makeVar
   let rc = renderComponent c s
-      vtree = renderHTML (driver ref) rc.html
+      vtree = renderTree (driver ref) rc.tree
       node = createElement vtree
   putVar ref { node: node, vtree: vtree, state: rc.state, renderPending: false }
   sequence_ $ onInitializers (forkAff <<< driver ref) rc.hooks
@@ -130,7 +131,7 @@ runUI c s = do
       then putVar ref ds
       else do
         let rc = renderComponent c ds.state
-            vtree' = renderHTML (driver ref) (rc.html)
+            vtree' = renderTree (driver ref) rc.tree
         node' <- liftEff $ patch (diff ds.vtree vtree') ds.node
         putVar ref { node: node', vtree: vtree', state: rc.state, renderPending: false }
         sequence_ $ onFinalizers (forkAff <<< runFinalized driver') rc.hooks

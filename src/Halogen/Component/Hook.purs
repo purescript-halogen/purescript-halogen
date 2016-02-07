@@ -64,4 +64,3 @@ rmapHook
   -> Hook f g'
 rmapHook g (Finalized a) = Finalized (mapFinalized g a)
 rmapHook _ (PostRender a) = PostRender a
-

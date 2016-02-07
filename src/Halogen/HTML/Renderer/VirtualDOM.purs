@@ -1,5 +1,6 @@
 module Halogen.HTML.Renderer.VirtualDOM
   ( renderHTML
+  , renderTree
   ) where
 
 import Prelude
@@ -22,6 +23,7 @@ import Data.Traversable (traverse)
 import Data.Tuple (Tuple(..))
 
 import Halogen.Effects (HalogenEffects())
+import Halogen.Component.Tree (Tree(), runTree)
 import Halogen.HTML.Core (HTML(..), Prop(..), PropF(..), HandlerF(..), runNamespace, runTagName, runPropName, runAttrName, runEventName)
 import Halogen.HTML.Events.Handler (runEventHandler)
 import qualified Halogen.Internal.VirtualDOM as V
@@ -40,6 +42,22 @@ renderHTML f = go
           key = toNullable $ foldl findKey Nothing props
       in V.vnode ns' tag key (foldMap (renderProp f) props) (map go els)
   go (Slot _) = V.vtext ""
+
+renderTree
+  :: forall p f eff
+   . (forall i. f i -> Aff (HalogenEffects eff) i)
+  -> Tree f p
+  -> V.VTree
+renderTree f =
+  runTree \tree ->
+    let go (Text s) = V.vtext s
+        go (Slot t) = V.widget t tree.eq (renderTree f)
+        go (Element ns name props els) =
+          let ns' = toNullable $ runNamespace <$> ns
+              tag = runTagName name
+              key = toNullable $ foldl findKey Nothing props
+          in V.vnode ns' tag key (foldMap (renderProp f) props) (map go els)
+    in go tree.html
 
 renderProp :: forall f eff. (forall i. f i -> Aff (HalogenEffects eff) i) -> Prop (f Unit) -> V.Props
 renderProp _ (Prop e) = runExists (\(PropF key value _) ->

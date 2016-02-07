@@ -60,11 +60,14 @@ import Data.Void (Void())
 
 import Halogen.Component.ChildPath (ChildPath(), injState, injQuery, injSlot, prjState, prjQuery)
 import Halogen.Component.Hook (Hook(..), Finalized(), finalized, mapFinalized, lmapHook, rmapHook)
+import Halogen.Component.Tree (Tree(), mkTree, mkTree', runTree, graftTree, thunkTree, emptyTree)
 import Halogen.HTML.Core (HTML(..), fillSlot)
 import Halogen.Query (get, modify, liftH, Action())
 import Halogen.Query.EventSource (EventSource(..), ParentEventSource(), runEventSource, fromParentEventSource)
 import Halogen.Query.HalogenF (HalogenF(), HalogenFP(..), hoistHalogenF, transformHF)
 import Halogen.Query.StateF (StateF(..), mapState)
+
+import Unsafe.Coerce (unsafeCoerce)
 
 -- | Data type for Halogen components.
 -- | - `s` - the component's state
@@ -72,7 +75,7 @@ import Halogen.Query.StateF (StateF(..), mapState)
 -- | - `g` - a functor integrated into the component's query algebra that allows
 -- |         embedding of external DSLs or handling of effects.
 newtype Component s f g = Component
-  { render :: RenderM s f g (ComponentHTML f)
+  { render :: RenderM s f g (Tree f Unit)
   , eval :: Eval f s f g
   , initializer :: Maybe (f Unit)
   , finalizers :: s -> Array (Finalized g)
@@ -117,12 +120,20 @@ type ComponentSpec s f g =
 componentSpec :: forall s f g. ComponentSpec s f g -> Component s f g
 componentSpec spec =
   Component
-    { render: CMS.gets spec.render
+    { render: renderTree <$> CMS.gets spec.render
     , eval: spec.eval
     , initializer: spec.initializer
     , finalizers: finalizers
     }
   where
+  renderTree :: ComponentHTML f -> Tree f Unit
+  renderTree html = mkTree'
+    { slot: unit
+    , html: unsafeCoerce html -- Safe because p is Void
+    , eq: \_ _ -> false -- Absurd
+    , thunk: false
+    }
+
   finalizers :: s -> Array (Finalized g)
   finalizers s =
     case spec.finalizer of
@@ -251,7 +262,7 @@ parentFinalizers eval fin (InstalledState s) =
 newtype InstalledState s s' f f' g p = InstalledState
   { parent :: s
   , children :: M.Map p (Tuple (Component s' f' g) s')
-  , memo :: M.Map p (ComponentHTML (ParentQuery f f' p))
+  , memo :: M.Map p (Tree (ParentQuery f f' p) p)
   }
 
 -- | Lifts a state value into an `InstalledState` value. Useful when providing
@@ -351,7 +362,7 @@ renderParent
   :: forall s s' f f' g p
    . (Ord p)
   => RenderParent s s' f f' g p
-  -> RenderM (InstalledState s s' f f' g p) (ParentQuery f f' p) g (ComponentHTML (ParentQuery f f' p))
+  -> RenderM (InstalledState s s' f f' g p) (ParentQuery f f' p) g (Tree (ParentQuery f f' p) Unit)
 renderParent render = do
     InstalledState st <- CMS.get
     let html = render st.parent
@@ -374,24 +385,24 @@ renderParent render = do
           in CMW.tell hooks
         else
           pure unit
-    pure html'
+    pure $ mkTree html'
 
   where
 
   renderChild
     :: InstalledState s s' f f' g p
     -> SlotConstructor s' f' g p
-    -> RenderM (InstalledState s s' f f' g p) (ParentQuery f f' p) g (ComponentHTML (ParentQuery f f' p))
+    -> RenderM (InstalledState s s' f f' g p) (ParentQuery f f' p) g (HTML (Tree (ParentQuery f f' p) p) (ParentQuery f f' p Unit))
   renderChild (InstalledState st) (SlotConstructor p def) =
     let childState = M.lookup p st.children
     in case M.lookup p st.memo of
-      Just html -> do
+      Just tree -> do
         CMS.modify \(InstalledState st') -> InstalledState
           { parent: st'.parent
           , children: M.alter (const childState) p st'.children
-          , memo: M.insert p html st'.memo
+          , memo: M.insert p tree st'.memo
           } :: InstalledState s s' f f' g p
-        pure html
+        pure $ Slot (thunkTree tree)
       Nothing -> case childState of
         Just (Tuple c s) -> renderChild' p c s
         Nothing -> do
@@ -408,24 +419,24 @@ renderParent render = do
     :: p
     -> Component s' f' g
     -> s'
-    -> RenderM (InstalledState s s' f f' g p) (ParentQuery f f' p) g (ComponentHTML (ParentQuery f f' p))
+    -> RenderM (InstalledState s s' f f' g p) (ParentQuery f f' p) g (HTML (Tree (ParentQuery f f' p) p) (ParentQuery f f' p Unit))
   renderChild' p c s = do
     let r = renderComponent c s
-        html = adapt <$> r.html
-
-        adapt :: Natural f' (Coproduct f (ChildF p f'))
-        adapt a = right (ChildF p a)
+        tree = graftTree adapt (const p) r.tree
 
         hooks :: Array (Hook (Coproduct f (ChildF p f')) g)
         hooks = lmapHook adapt <$> r.hooks
+
+        adapt :: Natural f' (Coproduct f (ChildF p f'))
+        adapt a = right (ChildF p a)
 
     CMW.tell hooks
     CMS.modify \(InstalledState st) -> InstalledState
       { parent: st.parent
       , children: M.insert p (Tuple c r.state) st.children
-      , memo: M.insert p html st.memo
+      , memo: M.insert p tree st.memo
       } :: InstalledState s s' f f' g p
-    pure html
+    pure $ Slot tree
 
 queryParent
   :: forall s s' f f' g p a q r. (Functor g)
@@ -485,19 +496,19 @@ transform
   -> Component s' f' g
 transform reviewS previewS reviewQ previewQ (Component c) =
   Component
-    { render: maybe (pure $ Text "") render' <<< previewS =<< CMS.get
+    { render: maybe (pure emptyTree) render' <<< previewS =<< CMS.get
     , eval: maybe (liftF HaltHF) (foldFree go <<< c.eval) <<< previewQ
     , initializer: reviewQ <$> c.initializer
     , finalizers: maybe [] c.finalizers <<< previewS
     }
   where
 
-  render' :: s -> RenderM s' f' g (HTML Void (f' Unit))
+  render' :: s -> RenderM s' f' g (Tree f' Unit)
   render' st =
     CMW.WriterT $ CMS.StateT \_ ->
       case runState (runWriterT c.render) st of
-        Tuple (Tuple html hooks) st' ->
-          pure $ Tuple (Tuple (rmap reviewQ html) (lmapHook reviewQ <$> hooks)) (reviewS st')
+        Tuple (Tuple tree hooks) st' ->
+          pure $ Tuple (Tuple (graftTree reviewQ id tree) (lmapHook reviewQ <$> hooks)) (reviewS st')
 
   go :: Natural (HalogenF s f g) (Free (HalogenF s' f' g))
   go (StateHF (Get k)) =
@@ -535,12 +546,12 @@ interpret nat (Component c) =
     , finalizers: map (mapFinalized nat) <$> c.finalizers
     }
   where
-  render' :: RenderM s f g' (ComponentHTML f)
+  render' :: RenderM s f g' (Tree f Unit)
   render' =
     CMW.WriterT $ CMS.StateT \s ->
       case runState (runWriterT c.render) s of
-        Tuple (Tuple html hooks) s' ->
-          pure $ Tuple (Tuple html (rmapHook nat <$> hooks)) s'
+        Tuple (Tuple tree hooks) s' ->
+          pure $ Tuple (Tuple tree (rmapHook nat <$> hooks)) s'
 
 -- | Runs a component's `render` function with the specified state, returning
 -- | the generated `HTML` and new state.
@@ -548,13 +559,13 @@ renderComponent
   :: forall s f g
    . Component s f g
   -> s
-  -> { html :: HTML Void (f Unit)
+  -> { tree  ::  Tree f Unit
      , hooks :: Array (Hook f g)
      , state :: s
      }
 renderComponent (Component c) s =
   case runState (runWriterT c.render) s of
-    Tuple (Tuple html hooks) state -> { html: html, hooks: hooks, state: state }
+    Tuple (Tuple tree hooks) state -> { tree: tree, hooks: hooks, state: state }
 
 -- | Runs a compnent's `query` function with the specified query input and
 -- | returns the pending computation as a `Free` monad.

@@ -3,6 +3,13 @@
 
 // module Halogen.Internal.VirtualDOM
 
+var vcreateElement = require("virtual-dom/create-element");
+var vdiff = require("virtual-dom/diff");
+var vpatch = require("virtual-dom/patch");
+var VText = require("virtual-dom/vnode/vtext");
+var VirtualNode = require("virtual-dom/vnode/vnode");
+var SoftSetHook = require("virtual-dom/virtual-hyperscript/hooks/soft-set-hook");
+
 // jshint maxparams: 2
 exports.prop = function (key, value) {
   var props = {};
@@ -73,6 +80,40 @@ exports.finalizerProp = function (f) {
   return { "halogen-final": new FinalHook(f) };
 };
 
+function HalogenWidget (tree, eq, render) {
+  this.tree = tree;
+  this.eq = eq;
+  this.render = render;
+  this.vdom = null;
+  this.el = null;
+}
+
+HalogenWidget.prototype = {
+  type: "Widget",
+  init: function () {
+    this.vdom = this.render(this.tree);
+    this.el = vcreateElement(this.vdom);
+    return this.el;
+  },
+  update: function (prev, node) {
+    if (!prev.tree || !prev.vdom || !this.eq(prev.tree.slot)(this.tree.slot)) {
+      return this.init();
+    }
+    if (!this.tree.thunk) {
+      this.vdom = this.render(this.tree);
+      this.el = vpatch(node, vdiff(prev.vdom, this.vdom));
+    }
+  }
+};
+
+exports.widget = function (tree) {
+  return function (eq) {
+    return function (render) {
+      return new HalogenWidget(tree, eq, render);
+    };
+  };
+};
+
 exports.concatProps = function () {
   // jshint maxparams: 2
   var hOP = Object.prototype.hasOwnProperty;
@@ -101,55 +142,39 @@ exports.concatProps = function () {
 
 exports.emptyProps = {};
 
-exports.createElement = function () {
-  var vcreateElement = require("virtual-dom/create-element");
-  return function (vtree) {
-    return vcreateElement(vtree);
-  };
-}();
+exports.createElement = function (vtree) {
+  return vcreateElement(vtree);
+};
 
-exports.diff = function () {
-  var vdiff = require("virtual-dom/diff");
-  return function (vtree1) {
-    return function (vtree2) {
-      return vdiff(vtree1, vtree2);
+exports.diff = function (vtree1) {
+  return function (vtree2) {
+    return vdiff(vtree1, vtree2);
+  };
+};
+
+exports.patch = function (p) {
+  return function (node) {
+    return function () {
+      return vpatch(node, p);
     };
   };
-}();
+};
 
-exports.patch = function () {
-  var vpatch = require("virtual-dom/patch");
-  return function (p) {
-    return function (node) {
-      return function () {
-        return vpatch(node, p);
-      };
-    };
-  };
-}();
+exports.vtext = function (s) {
+  return new VText(s);
+};
 
-exports.vtext = function () {
-  var VText = require("virtual-dom/vnode/vtext");
-  return function (s) {
-    return new VText(s);
-  };
-}();
-
-exports.vnode = function () {
-  var VirtualNode = require("virtual-dom/vnode/vnode");
-  var SoftSetHook = require("virtual-dom/virtual-hyperscript/hooks/soft-set-hook");
-  return function (namespace) {
-    return function (name) {
-      return function (key) {
-        return function (props) {
-          return function (children) {
-            if (name === "input" && props.value !== undefined) {
-              props.value = new SoftSetHook(props.value);
-            }
-            return new VirtualNode(name, props, children, key, namespace);
-          };
+exports.vnode = function (namespace) {
+  return function (name) {
+    return function (key) {
+      return function (props) {
+        return function (children) {
+          if (name === "input" && props.value !== undefined) {
+            props.value = new SoftSetHook(props.value);
+          }
+          return new VirtualNode(name, props, children, key, namespace);
         };
       };
     };
   };
-}();
+};
