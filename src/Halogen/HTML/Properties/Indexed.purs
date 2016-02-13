@@ -56,6 +56,7 @@ module Halogen.HTML.Properties.Indexed
 
   , initializer
   , finalizer
+  , ref
 
   , module PExport
 
@@ -335,6 +336,9 @@ initializer = unsafeCoerce P.initializer
 finalizer :: forall r i. (HTMLElement -> i) -> IProp (finalizer :: I | r) i
 finalizer = unsafeCoerce P.finalizer
 
+ref :: forall r i. (HTMLElement -> i) -> IProp (ref :: I | r) i
+ref = unsafeCoerce P.ref
+
 type GlobalAttributes r =
   ( id :: I
   , name :: I
@@ -345,6 +349,7 @@ type GlobalAttributes r =
   , key :: I
   , initializer :: I
   , finalizer :: I
+  , ref :: I
   | r
   )
 

@@ -60,7 +60,7 @@ import Data.Void (Void())
 
 import Halogen.Component.ChildPath (ChildPath(), injState, injQuery, injSlot, prjState, prjQuery)
 import Halogen.Component.Hook (Hook(..), Finalized(), finalized, mapFinalized, lmapHook, rmapHook)
-import Halogen.Component.Tree (Tree(), mkTree, mkTree', runTree, graftTree, thunkTree, emptyTree)
+import Halogen.Component.Tree (Tree(), mkTree, mkTree', graftTree, thunkTree, emptyTree)
 import Halogen.HTML.Core (HTML(..), fillSlot)
 import Halogen.Query (get, modify, liftH, Action())
 import Halogen.Query.EventSource (EventSource(..), ParentEventSource(), runEventSource, fromParentEventSource)

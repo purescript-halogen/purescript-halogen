@@ -8,7 +8,7 @@ import Control.Monad.Eff (Eff())
 import Control.Monad.Eff.Console (CONSOLE())
 import Control.Monad.Eff.Exception (throwException)
 
-import Data.Array (snoc, filter)
+import Data.Array (snoc, filter, reverse)
 import Data.Maybe (Maybe(..))
 import Data.Functor.Coproduct (Coproduct())
 import Data.Functor.Aff (liftAff)
@@ -35,6 +35,7 @@ initialState =
 data Query a = Initialize a
              | Finalize a
              | Add a
+             | Reverse a
              | Remove Int a
 
 
@@ -60,8 +61,11 @@ ui =
       [ H.button
           [ E.onClick (E.input_ Add) ]
           [ H.text "Add" ]
+      , H.button
+          [ E.onClick (E.input_ Reverse) ]
+          [ H.text "Reverse" ]
       , H.ul_ $ flip map state.slots \id ->
-          H.li_
+          H.li [ P.key (show id) ]
             [ H.button
                 [ E.onClick (E.input_ $ Remove id) ]
                 [ H.text "Remove" ]
@@ -83,6 +87,9 @@ ui =
     pure next
   eval (Remove id next) = do
     modify \s -> s { slots = filter (not <<< eq id) s.slots }
+    pure next
+  eval (Reverse next) = do
+    modify \s -> s { slots = reverse s.slots }
     pure next
 
 main :: Eff (HalogenEffects (console :: CONSOLE)) Unit

@@ -15,8 +15,11 @@ import qualified Halogen.HTML.Indexed as H
 import qualified Halogen.HTML.Properties.Indexed as P
 import qualified Halogen.HTML.Events.Indexed as E
 
+import DOM.HTML.Types (HTMLElement)
+
 data Query a = Initialize a
              | Finalize a
+             | Ref HTMLElement a
 
 type Slot = Unit
 
@@ -39,7 +42,7 @@ child =
 
   render :: Int -> ParentHTML Int Query Query (ChildEff eff) Int
   render id =
-    H.div_
+    H.div [ P.ref (action <<< Ref) ]
       [ H.text ("Child " <> show id)
       , H.ul_
         [ H.slot 0 \_ -> { component: cell, initialState: 0 }
@@ -56,6 +59,10 @@ child =
   eval (Finalize next) = do
     id <- get
     liftAff $ log ("Finalize Child " <> show id)
+    pure next
+  eval (Ref el next) = do
+    id <- get
+    liftAff $ log ("Ref Child " <> show id)
     pure next
 
 cell :: forall eff. Component Int Query (ChildEff eff)
