@@ -16,6 +16,7 @@ module Halogen.Component
   , InstalledState()
   , installedState
   , ChildF(..)
+  , runChildF
   , QueryF()
   , mkQuery
   , mkQuery'
@@ -165,6 +166,10 @@ type QueryF s s' f f' g p = Free (HalogenF (InstalledState s s' f f' g p) (Child
 -- | An intermediate algebra used to associate values from a child component's
 -- | algebra with the slot the component was installed into.
 data ChildF p f i = ChildF p (f i)
+
+-- | Extracts the query part from a ChildF value, discarding the slot value.
+runChildF :: forall p f i. ChildF p f i -> f i
+runChildF (ChildF _ q) = q
 
 instance functorChildF :: (Functor f) => Functor (ChildF p f) where
   map f (ChildF p fi) = ChildF p (f <$> fi)
