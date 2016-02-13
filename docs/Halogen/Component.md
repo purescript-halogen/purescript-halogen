@@ -173,6 +173,14 @@ algebra with the slot the component was installed into.
 (Functor f) => Functor (ChildF p f)
 ```
 
+#### `runChildF`
+
+``` purescript
+runChildF :: forall p f i. ChildF p f i -> f i
+```
+
+Extracts the query part from a ChildF value, discarding the slot value.
+
 #### `query`
 
 ``` purescript
@@ -190,6 +198,32 @@ query' :: forall s s' s'' f f' f'' g p p' i. (Functor g, Ord p') => ChildPath s 
 
 A version of [`query`](#query) for use when a parent component has multiple
 types of child component.
+
+#### `queryAll`
+
+``` purescript
+queryAll :: forall s s' f f' g p i. (Functor g, Ord p) => f' i -> Free (HalogenFP ParentEventSource s f (QueryF s s' f f' g p)) (Map p i)
+```
+
+Queries every child component that is currently installed. For use within
+a parent component's `eval` or `peek` function.
+
+#### `childSlots`
+
+``` purescript
+childSlots :: forall s s' f f' p g. (Functor g, Ord p) => QueryF s s' f f' g p (List p)
+```
+
+Returns slots of all currently installed child components.
+
+#### `queryAll'`
+
+``` purescript
+queryAll' :: forall s s' s'' f f' f'' g p p' i. (Functor g, Ord p, Ord p') => ChildPath s s' f f' p p' -> f i -> Free (HalogenFP ParentEventSource s'' f'' (QueryF s'' s' f'' f' g p')) (Map p i)
+```
+
+A version of [`queryAll](#queryAll) for use when a parent component has
+multiple types of child component.
 
 #### `mkQuery`
 
@@ -210,6 +244,23 @@ mkQuery' :: forall s s' s'' f f' f'' g p p' i. (Functor g, Ord p') => ChildPath 
 ```
 
 A version of [`mkQuery`](#mkQuery) for use when a parent component has
+multiple types of child component.
+
+#### `mkQueries`
+
+``` purescript
+mkQueries :: forall s s' f f' p g i. (Functor g, Ord p) => f' i -> QueryF s s' f f' g p (Map p i)
+```
+
+Creates a query for every child component that is currently installed.
+
+#### `mkQueries'`
+
+``` purescript
+mkQueries' :: forall s s' s'' f f' f'' g p p' i. (Functor g, Ord p', Ord p) => ChildPath s s' f f' p p' -> f i -> QueryF s'' s' f'' f' g p' (Map p i)
+```
+
+A version of [`mkQueries](#mkQueries) for use when a parent component has
 multiple types of child component.
 
 #### `liftQuery`
