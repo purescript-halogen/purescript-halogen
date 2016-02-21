@@ -93,6 +93,5 @@ ui =
     pure next
 
 main :: Eff (HalogenEffects (console :: CONSOLE)) Unit
-main = runAff throwException (const (pure unit)) do
-  app <- runUI ui (installedState initialState)
-  onLoad $ appendToBody app.node
+main = onLoad $ runAff throwException (const (pure unit)) do
+  void $ runUI' "body" ui (installedState initialState)
