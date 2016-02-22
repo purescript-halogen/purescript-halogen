@@ -2,9 +2,16 @@ module Example.Lifecycle where
 
 import Prelude
 
-import Control.Monad.Aff (runAff)
+import Control.Monad.Aff (runAff, Aff())
+import Control.Monad.Aff.Console (log)
 import Control.Monad.Eff (Eff())
+import Control.Monad.Eff.Console (CONSOLE())
 import Control.Monad.Eff.Exception (throwException)
+
+import Data.Array (snoc, filter, reverse)
+import Data.Maybe (Maybe(..))
+import Data.Functor.Coproduct (Coproduct())
+import Data.Functor.Aff (liftAff)
 
 import Halogen
 import Halogen.Util (appendToBody, onLoad)
@@ -12,49 +19,79 @@ import qualified Halogen.HTML.Indexed as H
 import qualified Halogen.HTML.Properties.Indexed as P
 import qualified Halogen.HTML.Events.Indexed as E
 
--- | The state of the application
-type State = { events :: Array String, on :: Boolean }
+import qualified Example.Lifecycle.Child as Child
+
+type State =
+  { currentId :: Int
+  , slots :: Array Int
+  }
 
 initialState :: State
-initialState = { events: [], on: true }
+initialState =
+  { currentId: 0
+  , slots: []
+  }
 
--- | Queries to the state machine
-data Query a = ToggleState a
-             | AddEvent String a
+data Query a = Initialize a
+             | Finalize a
+             | Add a
+             | Reverse a
+             | Remove Int a
 
-ui :: forall g. (Functor g) => Component State Query g
-ui = component render eval
+
+type UIEff eff = Aff (console :: CONSOLE | eff)
+
+type StateP eff = InstalledState State (Child.StateP eff) Query Child.QueryP (UIEff eff) Int
+
+type QueryP = Coproduct Query (ChildF Int Child.QueryP)
+
+ui :: forall eff. Component (StateP eff) QueryP (UIEff eff)
+ui =
+  parentComponentSpec
+    { render: render
+    , eval: eval
+    , initializer: Just (action Initialize)
+    , finalizer: Just (action Finalize)
+    }
   where
 
-  render :: State -> ComponentHTML Query
+  render :: State -> ParentHTML (Child.StateP eff) Query Child.QueryP (UIEff eff) Int
   render state =
     H.div_
-      [ H.h1_
-          [ H.text "Toggle Button" ]
+      [ H.button
+          [ E.onClick (E.input_ Add) ]
+          [ H.text "Add" ]
       , H.button
-          [ E.onClick (E.input_ ToggleState) ]
-          [ H.text (if state.on then "Hide" else "Show") ]
-      , if state.on
-        then
-          H.span
-            [ P.initializer \_ -> action (AddEvent "Initialized")
-            , P.finalizer \_ -> action (AddEvent "Finalized")
+          [ E.onClick (E.input_ Reverse) ]
+          [ H.text "Reverse" ]
+      , H.ul_ $ flip map state.slots \id ->
+          H.li [ P.key (show id) ]
+            [ H.button
+                [ E.onClick (E.input_ $ Remove id) ]
+                [ H.text "Remove" ]
+            , H.slot id \_ -> { component: Child.child, initialState: installedState id }
             ]
-            [ H.text "Hello, World!" ]
-        else
-          H.text ""
-      , H.ul_ (map (\event -> H.li_ [ H.text event ]) state.events)
       ]
 
-  eval :: Natural Query (ComponentDSL State Query g)
-  eval (ToggleState next) = do
-    modify (\state -> state { on = not state.on })
+  eval :: Natural Query (ParentDSL State (Child.StateP eff) Query Child.QueryP (UIEff eff) Int)
+  eval (Initialize next) = do
+    liftAff $ log "Initialize Root"
     pure next
-  eval (AddEvent event next) = do
-    modify (\state -> state { events = state.events <> [event] })
+  eval (Finalize next) = do
+    pure next
+  eval (Add next) = do
+    modify \s ->
+      { currentId: s.currentId + 1
+      , slots: snoc s.slots s.currentId
+      }
+    pure next
+  eval (Remove id next) = do
+    modify \s -> s { slots = filter (not <<< eq id) s.slots }
+    pure next
+  eval (Reverse next) = do
+    modify \s -> s { slots = reverse s.slots }
     pure next
 
-main :: Eff (HalogenEffects ()) Unit
-main = runAff throwException (const (pure unit)) do
-  app <- runUI ui initialState
-  onLoad $ appendToBody app.node
+main :: Eff (HalogenEffects (console :: CONSOLE)) Unit
+main = onLoad $ runAff throwException (const (pure unit)) do
+  void $ runUI' "body" ui (installedState initialState)

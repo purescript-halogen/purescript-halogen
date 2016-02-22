@@ -33,6 +33,7 @@ module Halogen.HTML.Properties
   , autofocus
   , initializer
   , finalizer
+  , ref
   , LengthLiteral(..)
   ) where
 
@@ -154,3 +155,6 @@ initializer = Initializer
 
 finalizer :: forall i. (HTMLElement -> i) -> Prop i
 finalizer = Finalizer
+
+ref :: forall i. (HTMLElement -> i) -> Prop i
+ref = Initializer
