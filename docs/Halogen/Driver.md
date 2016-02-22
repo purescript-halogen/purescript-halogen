@@ -26,4 +26,14 @@ The returned driver function allows the "outside world" to communicate
 with the UI - a common use case it to use the driver to changes to the
 application state in combination with a routing library.
 
+#### `runUI'`
+
+``` purescript
+runUI' :: forall s f eff. String -> Component s f (Aff (HalogenEffects eff)) -> s -> Aff (HalogenEffects eff) (Driver f eff)
+```
+
+This function is similar to `runUI`, but will mount your UI in the
+DOM as specified by the provided selector. This guarantees that the node
+will be present in the parent when initializers are run.
+
 

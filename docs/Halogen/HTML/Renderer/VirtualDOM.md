@@ -10,4 +10,10 @@ Render a `HTML` document to a virtual DOM node
 
 The first argument is an event handler.
 
+#### `renderTree`
+
+``` purescript
+renderTree :: forall p f eff. (forall i. f i -> Aff (HalogenEffects eff) i) -> Tree f p -> VTree
+```
+
 
