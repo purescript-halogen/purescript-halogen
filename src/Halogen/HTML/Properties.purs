@@ -126,7 +126,7 @@ required :: forall i. Boolean -> Prop i
 required = prop (propName "required") (Just $ attrName "required")
 
 readonly :: forall i. Boolean -> Prop i
-readonly = prop (propName "readonly") (Just $ attrName "readonly")
+readonly = prop (propName "readOnly") (Just $ attrName "readonly")
 
 spellcheck :: forall i. Boolean -> Prop i
 spellcheck = prop (propName "spellcheck") (Just $ attrName "spellcheck")
