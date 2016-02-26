@@ -31,6 +31,7 @@ module Halogen.HTML.Properties
   , placeholder
   , autocomplete
   , autofocus
+  , multiple
   , initializer
   , finalizer
   , LengthLiteral(..)
@@ -148,6 +149,9 @@ autocomplete = prop (propName "autocomplete") (Just $ attrName "autocomplete") <
 
 autofocus :: forall i. Boolean -> Prop i
 autofocus = prop (propName "autofocus") (Just $ attrName "autofocus")
+
+multiple :: forall a. Boolean -> Prop a
+multiple = prop (propName "multiple") (Just $ attrName "multiple")
 
 initializer :: forall i. (HTMLElement -> i) -> Prop i
 initializer = Initializer
