@@ -419,7 +419,7 @@ mapStateFChild p =
     (\f (InstalledState st) -> InstalledState
       { parent: st.parent
       , children: M.update (Just <<< rmap f) p st.children
-      , memo: st.memo
+      , memo: M.delete p st.memo
       })
 
 renderParent
@@ -529,12 +529,7 @@ queryChild
   :: forall s s' f f' g p
    . (Functor g, Ord p)
   => Natural (ChildF p f') (ComponentDSL (InstalledState s s' f f' g p) (ParentQuery f f' p) g)
-queryChild (ChildF p q) = do
-  modify \(InstalledState st) -> InstalledState
-    { parent: st.parent
-    , children: st.children
-    , memo: M.delete p st.memo
-    }
+queryChild (ChildF p q) =
   mapF (transformHF id right id) (mkQuery p q)
     >>= maybe (liftF HaltHF) pure
 
