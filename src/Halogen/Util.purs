@@ -1,46 +1,64 @@
 module Halogen.Util
-  ( appendTo
-  , appendToBody
-  , onLoad
+  ( awaitLoad
+  , awaitBody
+  , selectElement
+  , runHalogenAff
   ) where
 
 import Prelude
 
 import Control.Bind ((<=<), (=<<))
+import Control.Monad.Aff (Aff(), makeAff, runAff)
 import Control.Monad.Eff (Eff())
-import Control.Monad.Eff.Class (MonadEff, liftEff)
+import Control.Monad.Eff.Class (liftEff)
+import Control.Monad.Eff.Exception (throwException, error)
+import Control.Monad.Error.Class (throwError)
 
-import Data.Maybe (Maybe(..))
+import Data.Maybe (Maybe(..), maybe)
+import Data.Either (either)
 import Data.Nullable (toMaybe)
+import Data.Foreign (toForeign)
 
 import DOM (DOM())
 import DOM.Event.EventTarget (eventListener, addEventListener)
 import DOM.Event.EventTypes (load)
 import DOM.HTML (window)
-import DOM.HTML.Types (HTMLElement(), htmlElementToNode, windowToEventTarget, htmlDocumentToParentNode)
+import DOM.HTML.Types (HTMLElement(), windowToEventTarget, htmlDocumentToParentNode, readHTMLElement)
 import DOM.HTML.Window (document)
-import DOM.Node.Node (appendChild)
 import DOM.Node.ParentNode (querySelector)
-import DOM.Node.Types (elementToNode)
 
--- | A utility for appending an `HTMLElement` to the element selected using querySelector
--- | element (synchronously).
-appendTo :: forall m eff. (MonadEff (dom :: DOM | eff) m)
-         => String -> HTMLElement -> m Unit
-appendTo query elem = liftEff $ do
-    b <- toMaybe <$> ((querySelector query <<< htmlDocumentToParentNode <=< document) =<< window)
-    case b of
-      Nothing -> pure unit
-      Just b' -> void $ appendChild (htmlElementToNode elem) (elementToNode b')
+import Halogen.Effects (HalogenEffects())
 
--- | A utility for appending an `HTMLElement` to the current document's `body`
--- | element once the document has loaded.
-appendToBody :: forall m eff. (MonadEff (dom :: DOM | eff) m)
-             => HTMLElement -> m Unit
-appendToBody = appendTo "body"
+-- | Waits for the document to load.
+awaitLoad :: forall eff. Aff (dom :: DOM | eff) Unit
+awaitLoad = makeAff \_ callback -> liftEff $
+  window
+    >>= windowToEventTarget
+    >>> addEventListener load (eventListener (\_ -> callback unit)) false
 
--- | On load, discard the onLoad event and call a synchronous action.
-onLoad :: forall m eff. (MonadEff (dom :: DOM | eff) m)
-       => Eff (dom :: DOM | eff) Unit -> m Unit
-onLoad callback = liftEff $ do
-  addEventListener load (eventListener (\_ -> callback)) false <<< windowToEventTarget =<< window
+-- | Waits for the document to load and then finds the `body` element.
+awaitBody :: forall eff. Aff (dom :: DOM | eff) HTMLElement
+awaitBody = do
+  awaitLoad
+  maybe (throwError (error "Could not find body")) pure =<< selectElement "body"
+
+-- | Tries to find an element in the document.
+selectElement
+  :: forall eff
+   . String
+  -> Aff (dom :: DOM | eff) (Maybe HTMLElement)
+selectElement query = do
+  mel <- liftEff $
+    toMaybe <$>
+      ((querySelector query <<< htmlDocumentToParentNode <=< document) =<< window)
+  pure case mel of
+    Nothing -> Nothing
+    Just el -> either (const Nothing) Just $ readHTMLElement (toForeign el)
+
+-- | Runs an `Aff` value of the type commonly used by Halogen components. Any
+-- | unhandled errors will be re-thrown as exceptions.
+runHalogenAff
+  :: forall eff x
+   . Aff (HalogenEffects eff) x
+  -> Eff (HalogenEffects eff) Unit
+runHalogenAff = runAff throwException (const (pure unit))

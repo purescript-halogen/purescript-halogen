@@ -2,18 +2,18 @@ module Main where
 
 import Prelude
 
-import Control.Monad.Aff (Aff(), runAff)
+import Control.Monad.Aff (Aff())
 import Control.Monad.Eff (Eff())
 import Control.Monad.Eff.Console (CONSOLE())
-import Control.Monad.Eff.Exception (throwException)
 
-import Data.Generic (Generic, gEq, gCompare)
 import Data.Functor.Coproduct (Coproduct())
+import Data.Generic (Generic, gEq, gCompare)
+import Data.Maybe (Maybe(..))
 
 import Halogen
-import Halogen.Util (appendToBody, onLoad)
-import qualified Halogen.HTML.Indexed as H
-import qualified Halogen.HTML.Events.Indexed as E
+import Halogen.Util (runHalogenAff, awaitBody)
+import Halogen.HTML.Indexed as H
+import Halogen.HTML.Events.Indexed as E
 
 import Ace.Types (ACE())
 import AceComponent (AceState(), AceQuery(..), AceEffects(), ace, initAceState)
@@ -36,12 +36,12 @@ instance eqAceSlot :: Eq AceSlot where eq = gEq
 instance ordAceSlot :: Ord AceSlot where compare = gCompare
 
 -- | Synonyms for the "installed" version of the state and query algebra.
-type StateP eff = InstalledState State AceState Query AceQuery (Aff (AceEffects eff)) AceSlot
+type StateP eff = ParentState State AceState Query AceQuery (Aff (AceEffects eff)) AceSlot
 type QueryP = Coproduct Query (ChildF AceSlot AceQuery)
 
 -- | The main UI component definition.
 ui :: forall eff. Component (StateP eff) QueryP (Aff (AceEffects eff))
-ui = parentComponent' render eval peek
+ui = parentComponent { render, eval, peek: Just peek }
   where
 
   render :: State -> ParentHTML AceState Query AceQuery (Aff (AceEffects eff)) AceSlot
@@ -76,6 +76,6 @@ ui = parentComponent' render eval peek
 
 -- | Run the app!
 main :: Eff (HalogenEffects (ace :: ACE, console :: CONSOLE)) Unit
-main = runAff throwException (const (pure unit)) $ do
-  app <- runUI ui (installedState initialState)
-  onLoad $ appendToBody app.node
+main = runHalogenAff do
+  body <- awaitBody
+  runUI ui (parentState initialState) body

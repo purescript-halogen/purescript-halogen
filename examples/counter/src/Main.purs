@@ -1,15 +1,14 @@
-module Example.Counter where
+module Main where
 
 import Prelude
 
-import Control.Monad.Aff (Aff(), runAff, later')
+import Control.Monad.Aff (Aff(), later')
 import Control.Monad.Eff (Eff())
-import Control.Monad.Eff.Exception (throwException)
 
 import Halogen
-import Halogen.Util (appendToBody, onLoad)
-import qualified Halogen.HTML.Indexed as H
-import qualified Halogen.HTML.Properties.Indexed as P
+import Halogen.Util (runHalogenAff, awaitBody)
+import Halogen.HTML.Indexed as H
+import Halogen.HTML.Properties.Indexed as P
 
 newtype State = State Int
 
@@ -18,8 +17,8 @@ initialState = State 0
 
 data Query a = Tick a
 
-ui :: forall g. (Functor g) => Component State Query g
-ui = component render eval
+ui :: forall g. Component State Query g
+ui = component { render, eval }
   where
 
   render :: State -> ComponentHTML Query
@@ -39,9 +38,9 @@ ui = component render eval
 
 -- | Run the app
 main :: Eff (HalogenEffects ()) Unit
-main = runAff throwException (const (pure unit)) $ do
-  { node: node, driver: driver } <- runUI ui initialState
-  onLoad $ appendToBody node
+main = runHalogenAff do
+  body <- awaitBody
+  driver <- runUI ui initialState body
   setInterval 1000 $ driver (action Tick)
 
 setInterval :: forall e a. Int -> Aff e a -> Aff e Unit

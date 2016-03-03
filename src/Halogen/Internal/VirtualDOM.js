@@ -47,39 +47,36 @@ exports.handlerProp = function (key, f) {
   return props;
 };
 
+exports.refPropImpl = function (nothing) {
+  return function (just) {
+
+    var ifHookFn = function (init) {
+      // jshint maxparams: 3
+      return function (node, prop, diff) {
+        // jshint validthis: true
+        if (typeof diff === "undefined") {
+          this.f(init ? just(node) : nothing)();
+        }
+      };
+    };
+
+    // jshint maxparams: 1
+    function RefHook (f) {
+      this.f = f;
+    }
+
+    RefHook.prototype = {
+      hook: ifHookFn(true),
+      unhook: ifHookFn(false)
+    };
+
+    return function (f) {
+      return { "halogen-ref": new RefHook(f) };
+    };
+  };
+};
+
 // jshint maxparams: 3
-function ifHookFn (node, prop, diff) {
-  // jshint validthis: true
-  if (typeof diff === "undefined") {
-    this.f(node)();
-  }
-}
-
-// jshint maxparams: 1
-function InitHook (f) {
-  this.f = f;
-}
-
-InitHook.prototype = {
-  hook: ifHookFn
-};
-
-exports.initProp = function (f) {
-  return { "halogen-init": new InitHook(f) };
-};
-
-function FinalHook (f) {
-  this.f = f;
-}
-
-FinalHook.prototype = {
-  unhook: ifHookFn
-};
-
-exports.finalizerProp = function (f) {
-  return { "halogen-final": new FinalHook(f) };
-};
-
 function HalogenWidget (tree, eq, render) {
   this.tree = tree;
   this.eq = eq;

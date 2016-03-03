@@ -12,8 +12,7 @@ module Halogen.Query
   , subscribe
   , subscribe'
   , liftH
-  , liftAff'
-  , liftEff'
+  , module Control.Monad.Aff.Free
   , module Halogen.Query.EventSource
   , module Halogen.Query.HalogenF
   , module Halogen.Query.StateF
@@ -22,13 +21,8 @@ module Halogen.Query
 import Prelude (Unit(), unit, id, const, Functor, (<<<))
 
 import Control.Alt (Alt)
-import Control.Monad.Aff (Aff())
-import Control.Monad.Aff.Class (MonadAff, liftAff)
-import Control.Monad.Eff (Eff())
-import Control.Monad.Eff.Class (MonadEff, liftEff)
+import Control.Monad.Aff.Free (fromAff, fromEff)
 import Control.Monad.Free (Free(), liftF)
-
-import Data.Inject (Inject)
 
 import Halogen.Query.EventSource (EventSource(), ParentEventSource(), eventSource, eventSource_, toParentEventSource)
 import Halogen.Query.HalogenF (HalogenF(), HalogenFP(..))
@@ -158,15 +152,3 @@ subscribe' es = liftF (SubscribeHF (toParentEventSource es) unit)
 -- | `Free HalogenF` without the need to use `liftF $ right $ right $ ...`.
 liftH :: forall a e s f g. g a -> Free (HalogenFP e s f g) a
 liftH = liftF <<< QueryHF
-
--- | A convenience function for lifting an `Aff` action directly into a
--- | `Free HalogenF` when there is a `MonadAff` instance for the current `g`,
--- | without the need to use `liftH $ liftAff $ ...`.
-liftAff' :: forall eff a e s f g. (MonadAff eff g) => Aff eff a -> Free (HalogenFP e s f g) a
-liftAff' = liftH <<< liftAff
-
--- | A convenience function for lifting an `Eff` action directly into a
--- | `Free HalogenF` when there is a `MonadEff` instance for the current `g`,
--- | without the need to use `liftH $ liftEff $ ...`.
-liftEff' :: forall eff a e s f g. (MonadEff eff g) => Eff eff a -> Free (HalogenFP e s f g) a
-liftEff' = liftH <<< liftEff

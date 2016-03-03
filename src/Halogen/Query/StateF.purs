@@ -8,7 +8,7 @@ module Halogen.Query.StateF
 
 import Prelude
 
-import qualified Control.Monad.State as CMS
+import Control.Monad.State as CMS
 
 import Data.Functor (($>))
 import Data.NaturalTransformation (Natural())

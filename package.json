@@ -8,29 +8,25 @@
     "Gary Burgess <gary.burgess@gmail.com>"
   ],
   "scripts": {
-    "postinstall": "bower install",
-    "build": "gulp",
-    "example-ace": "bower link && cd examples/ace && bower link purescript-halogen && bower install && gulp",
-    "example-ajax": "bower link && cd examples/ajax && bower link purescript-halogen && bower install && gulp",
-    "example-components": "bower link && cd examples/components && bower link purescript-halogen && bower install && gulp",
-    "example-counter": "bower link && cd examples/counter && bower link purescript-halogen && bower install && gulp",
-    "example-deep-peek": "bower link && cd examples/deep-peek && bower link purescript-halogen && bower install && gulp",
-    "example-interpret": "bower link && cd examples/interpret && bower link purescript-halogen && bower install && gulp",
-    "example-intro": "bower link && cd examples/intro && bower link purescript-halogen && bower install && gulp",
-    "example-lifecycle": "bower link && cd examples/lifecycle && bower link purescript-halogen && bower install && gulp",
-    "example-multi-component": "bower link && cd examples/multi-component && bower link purescript-halogen && bower install && gulp",
-    "example-todo": "bower link && cd examples/todo && bower link purescript-halogen && bower install && gulp",
-    "example-keyboard-shortcuts": "bower link && cd examples/keyboard-shortcuts && bower link purescript-halogen && bower install && gulp"
+    "clean": "rimraf output && rimraf .pulp-cache",
+    "test": "pulp test",
+    "build": "pulp build",
+    "example-ace": "bower link && cd examples/ace && bower link purescript-halogen && bower install && npm run build",
+    "example-ajax": "bower link && cd examples/ajax && bower link purescript-halogen && bower install && npm run build",
+    "example-components": "bower link && cd examples/components && bower link purescript-halogen && bower install && npm run build",
+    "example-counter": "bower link && cd examples/counter && bower link purescript-halogen && bower install && npm run build",
+    "example-deep-peek": "bower link && cd examples/deep-peek && bower link purescript-halogen && bower install && npm run build",
+    "example-interpret": "bower link && cd examples/interpret && bower link purescript-halogen && bower install && npm run build",
+    "example-intro": "bower link && cd examples/intro && bower link purescript-halogen && bower install && npm run build",
+    "example-keyboard-shortcuts": "bower link && cd examples/keyboard-shortcuts && bower link purescript-halogen && bower install && npm run build",
+    "example-lifecycle": "bower link && cd examples/lifecycle && bower link purescript-halogen && bower install && npm run build",
+    "example-multi-component": "bower link && cd examples/multi-component && bower link purescript-halogen && bower install && npm run build",
+    "example-todo": "bower link && cd examples/todo && bower link purescript-halogen && bower install && npm run build"
   },
   "devDependencies": {
-    "bower": "^1.4.1",
-    "gulp": "^3.8.11",
-    "gulp-jscs": "^1.6.0",
-    "gulp-jshint": "^1.11.2",
-    "gulp-purescript": "^0.7.0",
+    "pulp": "^8.1.0",
     "purescript": "^0.7.6",
-    "rimraf": "^2.4.1",
-    "webpack-stream": "^2.0.0"
+    "rimraf": "^2.4.1"
   },
   "dependencies": {
     "virtual-dom": "^2.0.1"

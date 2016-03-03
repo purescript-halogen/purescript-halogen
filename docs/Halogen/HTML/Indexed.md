@@ -1,3 +1,0 @@
-## Module Halogen.HTML.Indexed
-
-

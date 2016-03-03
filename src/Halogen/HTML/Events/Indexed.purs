@@ -55,9 +55,9 @@ import Unsafe.Coerce (unsafeCoerce)
 import Halogen.HTML.Events.Handler (EventHandler())
 import Halogen.HTML.Events.Types (Event(), MouseEvent(), DragEvent(), FocusEvent(), KeyboardEvent())
 import Halogen.HTML.Properties.Indexed (IProp(), I())
-import qualified Halogen.HTML.Events (input, input_) as ExportedEvents
-import qualified Halogen.HTML.Events as E
-import qualified Halogen.HTML.Events.Forms as E
+import Halogen.HTML.Events (input, input_) as ExportedEvents
+import Halogen.HTML.Events as E
+import Halogen.HTML.Events.Forms as E
 
 type IEventProp r e i = (Event e -> EventHandler i) -> IProp r i
 

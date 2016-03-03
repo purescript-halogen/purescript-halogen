@@ -1,25 +1,23 @@
-module Example.MultiComponent where
+module MultiComponent where
 
 import Prelude
 
-import Control.Monad.Aff (runAff)
 import Control.Monad.Eff (Eff())
-import Control.Monad.Eff.Exception (throwException)
 import Control.Plus (Plus)
 
-import Data.Either (Either(..))
+import Data.Either (Either())
 import Data.Functor.Coproduct (Coproduct())
 import Data.Maybe (Maybe(..))
 
 import Halogen
 import Halogen.Component.ChildPath (ChildPath(), cpL, cpR, (:>))
-import Halogen.Util (appendToBody, onLoad)
-import qualified Halogen.HTML.Indexed as H
-import qualified Halogen.HTML.Events.Indexed as E
+import Halogen.HTML.Events.Indexed as E
+import Halogen.HTML.Indexed as H
+import Halogen.Util (runHalogenAff, awaitBody)
 
-import Example.ComponentA
-import Example.ComponentB
-import Example.ComponentC
+import ComponentA
+import ComponentB
+import ComponentC
 
 newtype State = State { a :: Maybe Boolean, b :: Maybe Boolean, c :: Maybe Boolean }
 
@@ -41,11 +39,11 @@ cpB = cpR :> cpL
 cpC :: ChildPath StateC ChildState QueryC ChildQuery SlotC ChildSlot
 cpC = cpR :> cpR
 
-type StateP g = InstalledState State ChildState Query ChildQuery g ChildSlot
+type StateP g = ParentState State ChildState Query ChildQuery g ChildSlot
 type QueryP = Coproduct Query (ChildF ChildSlot ChildQuery)
 
 ui :: forall g. (Functor g) => Component (StateP g) QueryP g
-ui = parentComponent render eval
+ui = parentComponent { render, eval, peek: Nothing }
   where
 
   render :: State -> ParentHTML ChildState Query ChildQuery g ChildSlot
@@ -66,6 +64,6 @@ ui = parentComponent render eval
     pure next
 
 main :: Eff (HalogenEffects ()) Unit
-main = runAff throwException (const (pure unit)) $ do
-  app <- runUI ui (installedState initialState)
-  onLoad $ appendToBody app.node
+main = runHalogenAff do
+  body <- awaitBody
+  runUI ui (parentState initialState) body

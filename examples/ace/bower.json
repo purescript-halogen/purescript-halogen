@@ -2,7 +2,7 @@
   "name": "ace",
   "private": true,
   "dependencies": {
-    "purescript-ace": "^0.8.0",
+    "purescript-ace": "^0.11.0",
     "purescript-generics": "^0.7.0",
     "purescript-halogen": "*"
   }

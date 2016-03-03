@@ -1,10 +1,8 @@
-module Example.Components.Main where
+module Main where
 
 import Prelude
 
-import Control.Monad.Aff (runAff)
 import Control.Monad.Eff (Eff())
-import Control.Monad.Eff.Exception (throwException)
 import Control.Plus (Plus)
 
 import Data.Functor.Coproduct (Coproduct())
@@ -12,11 +10,11 @@ import Data.Generic (Generic, gEq, gCompare)
 import Data.Maybe (Maybe(..), maybe)
 
 import Halogen
-import Halogen.Util (appendToBody, onLoad)
-import qualified Halogen.HTML.Indexed as H
-import qualified Halogen.HTML.Events.Indexed as E
+import Halogen.Util (runHalogenAff, awaitBody)
+import Halogen.HTML.Indexed as H
+import Halogen.HTML.Events.Indexed as E
 
-import Example.Components.Ticker (TickState(..), TickQuery(..), ticker)
+import Ticker (TickState(), TickQuery(..), ticker)
 
 data Query a = ReadTicks a
 
@@ -31,18 +29,18 @@ derive instance genericTickSlot :: Generic TickSlot
 instance eqTickSlot :: Eq TickSlot where eq = gEq
 instance ordTickSlot :: Ord TickSlot where compare = gCompare
 
-type StateP g = InstalledState State TickState Query TickQuery g TickSlot
+type StateP g = ParentState State TickState Query TickQuery g TickSlot
 type QueryP = Coproduct Query (ChildF TickSlot TickQuery)
 
 ui :: forall g. (Functor g) => Component (StateP g) QueryP g
-ui = parentComponent' render eval (const (pure unit))
+ui = parentComponent { render, eval, peek: Nothing }
   where
 
   render :: State -> ParentHTML TickState Query TickQuery g TickSlot
   render st =
     H.div_
-      [ H.slot (TickSlot "A") \_ -> { component: ticker, initialState: TickState 100 }
-      , H.slot (TickSlot "B") \_ -> { component: ticker, initialState: TickState 0 }
+      [ H.slot (TickSlot "A") \_ -> { component: ticker, initialState: 100 }
+      , H.slot (TickSlot "B") \_ -> { component: ticker, initialState: 0 }
       , H.p_
           [ H.p_
               [ H.text $ "Last tick readings - A: " ++ (maybe "No reading" show st.tickA)
@@ -62,6 +60,6 @@ ui = parentComponent' render eval (const (pure unit))
     pure next
 
 main :: Eff (HalogenEffects ()) Unit
-main = runAff throwException (const (pure unit)) $ do
-  app <- runUI ui (installedState initialState)
-  onLoad $ appendToBody app.node
+main = runHalogenAff do
+  body <- awaitBody
+  runUI ui (parentState initialState) body

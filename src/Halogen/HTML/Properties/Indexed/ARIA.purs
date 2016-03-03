@@ -41,7 +41,7 @@ import Prelude
 import Unsafe.Coerce (unsafeCoerce)
 
 import Halogen.HTML.Properties.Indexed (IProp())
-import qualified Halogen.HTML.Properties.ARIA as P
+import Halogen.HTML.Properties.ARIA as P
 
 activeDescendant :: forall r i. String -> IProp r i
 activeDescendant = unsafeCoerce P.activeDescendant
