@@ -211,4 +211,10 @@ initializer :: forall i. (HTMLElement -> i) -> Prop i
 finalizer :: forall i. (HTMLElement -> i) -> Prop i
 ```
 
+#### `ref`
+
+``` purescript
+ref :: forall i. (HTMLElement -> i) -> Prop i
+```
+
 

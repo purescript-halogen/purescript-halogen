@@ -10,6 +10,7 @@ module Halogen.Internal.VirtualDOM
   , handlerProp
   , initProp
   , finalizerProp
+  , widget
   , createElement
   , diff
   , patch
@@ -27,6 +28,9 @@ import Data.Function (Fn2(), runFn2)
 
 import DOM (DOM())
 import DOM.HTML.Types (HTMLElement())
+
+import Halogen.Component.Tree (TreeF(), Tree())
+import Halogen.HTML.Core (HTML())
 
 -- | Virtual DOM nodes
 data VTree
@@ -50,6 +54,8 @@ foreign import initProp :: forall eff. (HTMLElement -> Eff eff Unit) -> Props
 
 -- | Create a property from an finalizer.
 foreign import finalizerProp :: forall eff. (HTMLElement -> Eff eff Unit) -> Props
+
+foreign import widget :: forall f p. Tree f p -> (p -> p -> Boolean) -> (Tree f p -> VTree) -> VTree
 
 foreign import concatProps :: Fn2 Props Props Props
 

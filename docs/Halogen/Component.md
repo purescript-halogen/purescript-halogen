@@ -58,6 +58,23 @@ component :: forall s f g. Render s f -> Eval f s f g -> Component s f g
 
 Builds a self-contained component with no possible children.
 
+#### `ComponentSpec`
+
+``` purescript
+type ComponentSpec s f g = { render :: Render s f, eval :: Eval f s f g, initializer :: Maybe (f Unit), finalizer :: Maybe (f Unit) }
+```
+
+A full spec for a component, including lifecycle inputs.
+
+#### `componentSpec`
+
+``` purescript
+componentSpec :: forall s f g. ComponentSpec s f g -> Component s f g
+```
+
+Builds a self-contained component with no possible children that may have
+lifecycle hooks.
+
 #### `ParentHTML`
 
 ``` purescript
@@ -65,6 +82,14 @@ type ParentHTML s' f f' g p = HTML (SlotConstructor s' f' g p) (f Unit)
 ```
 
 The type for `HTML` rendered by a parent component.
+
+#### `ParentQuery`
+
+``` purescript
+type ParentQuery f f' p = Coproduct f (ChildF p f')
+```
+
+The type for nested queries.
 
 #### `RenderParent`
 
@@ -113,20 +138,37 @@ components.
 #### `parentComponent`
 
 ``` purescript
-parentComponent :: forall s s' f f' g p. (Functor g, Ord p) => RenderParent s s' f f' g p -> EvalParent f s s' f f' g p -> Component (InstalledState s s' f f' g p) (Coproduct f (ChildF p f')) g
+parentComponent :: forall s s' f f' g p. (Functor g, Ord p) => RenderParent s s' f f' g p -> EvalParent f s s' f f' g p -> Component (InstalledState s s' f f' g p) (ParentQuery f f' p) g
 ```
 
 Builds a component that may contain child components.
 
+#### `parentComponentSpec`
+
+``` purescript
+parentComponentSpec :: forall s s' f f' g p. (Functor g, Ord p) => ParentComponentSpec s s' f f' g p -> Component (InstalledState s s' f f' g p) (ParentQuery f f' p) g
+```
+
+Builds a component that may contain child components and have lifcycle hooks.
+
 #### `parentComponent'`
 
 ``` purescript
-parentComponent' :: forall s s' f f' g p. (Functor g, Ord p) => RenderParent s s' f f' g p -> EvalParent f s s' f f' g p -> Peek (ChildF p f') s s' f f' g p -> Component (InstalledState s s' f f' g p) (Coproduct f (ChildF p f')) g
+parentComponent' :: forall s s' f f' g p. (Functor g, Ord p) => RenderParent s s' f f' g p -> EvalParent f s s' f f' g p -> Peek (ChildF p f') s s' f f' g p -> Component (InstalledState s s' f f' g p) (ParentQuery f f' p) g
 ```
 
 Builds a component that may contain child components and additionally
 supports the `peek` operation to allow the parent to observe queries that
 descendant components have processed.
+
+#### `parentComponentSpec'`
+
+``` purescript
+parentComponentSpec' :: forall s s' f f' g p. (Functor g, Ord p) => ParentComponentSpecP s s' f f' g p -> Component (InstalledState s s' f f' g p) (ParentQuery f f' p) g
+```
+
+Builds a component that may contain child components, peek, and
+lifecycle hooks.
 
 #### `InstalledState`
 
@@ -266,7 +308,7 @@ multiple types of child component.
 #### `liftQuery`
 
 ``` purescript
-liftQuery :: forall s s' f f' g p. (Functor g) => EvalParent (QueryF s s' f f' g p) s s' f f' g p
+liftQuery :: forall s s' f f' g p. (Functor g) => Natural (QueryF s s' f f' g p) (ParentDSL s s' f f' g p)
 ```
 
 Lifts a value in the `QueryF` algebra into the monad used by a component's
@@ -310,7 +352,7 @@ some `Free` monad as `Aff` so the component can be used with `runUI`.
 #### `renderComponent`
 
 ``` purescript
-renderComponent :: forall s f g. Component s f g -> s -> Tuple (HTML Void (f Unit)) s
+renderComponent :: forall s f g. Component s f g -> s -> { tree :: Tree f Unit, hooks :: Array (Hook f g), state :: s }
 ```
 
 Runs a component's `render` function with the specified state, returning
@@ -324,5 +366,17 @@ queryComponent :: forall s f g. Component s f g -> Eval f s f g
 
 Runs a compnent's `query` function with the specified query input and
 returns the pending computation as a `Free` monad.
+
+#### `initializeComponent`
+
+``` purescript
+initializeComponent :: forall s f g. Component s f g -> Maybe (f Unit)
+```
+
+#### `finalizeComponent`
+
+``` purescript
+finalizeComponent :: forall s f g. Component s f g -> s -> Array (Finalized g)
+```
 
 

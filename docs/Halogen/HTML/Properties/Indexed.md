@@ -336,10 +336,16 @@ initializer :: forall r i. (HTMLElement -> i) -> IProp (initializer :: I | r) i
 finalizer :: forall r i. (HTMLElement -> i) -> IProp (finalizer :: I | r) i
 ```
 
+#### `ref`
+
+``` purescript
+ref :: forall r i. (HTMLElement -> i) -> IProp (ref :: I | r) i
+```
+
 #### `GlobalAttributes`
 
 ``` purescript
-type GlobalAttributes r = (id :: I, name :: I, title :: I, class :: I, style :: I, spellcheck :: I, key :: I, initializer :: I, finalizer :: I | r)
+type GlobalAttributes r = (id :: I, name :: I, title :: I, class :: I, style :: I, spellcheck :: I, key :: I, initializer :: I, finalizer :: I, ref :: I | r)
 ```
 
 #### `GlobalEvents`
