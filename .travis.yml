@@ -1,7 +1,8 @@
 language: node_js
-sudo: false
+dist: trusty
+sudo: required
 node_js:
-  - 4
+  - 5
 install:
   - npm install
 script:
