@@ -10,7 +10,7 @@ import Prelude
 
 import Halogen.Query (Action(), action)
 import Halogen.HTML.Events.Handler (EventHandler(), preventDefault, stopPropagation, stopImmediatePropagation)
-import Halogen.HTML.Events.Types (Event(), MouseEvent(), FocusEvent(), KeyboardEvent())
+import Halogen.HTML.Events.Types (Event(), MouseEvent(), DragEvent(), FocusEvent(), KeyboardEvent())
 import Halogen.HTML.Core (Prop(), handler, eventName)
 
 type EventProp e i = (Event e -> EventHandler i) -> Prop i
@@ -122,3 +122,27 @@ onFocusIn = handler (eventName "focusin")
 
 onFocusOut :: forall i. EventProp FocusEvent i
 onFocusOut = handler (eventName "focusout")
+
+onDrag :: forall i. EventProp DragEvent i
+onDrag = handler (eventName "drag")
+
+onDragEnd :: forall i. EventProp DragEvent i
+onDragEnd = handler (eventName "dragend")
+
+onDragExit :: forall i. EventProp DragEvent i
+onDragExit = handler (eventName "dragexit")
+
+onDragEnter :: forall i. EventProp DragEvent i
+onDragEnter = handler (eventName "dragenter")
+
+onDragLeave :: forall i. EventProp DragEvent i
+onDragLeave = handler (eventName "dragleave")
+
+onDragOver :: forall i. EventProp DragEvent i
+onDragOver = handler (eventName "dragover")
+
+onDragStart :: forall i. EventProp DragEvent i
+onDragStart = handler (eventName "dragstart")
+
+onDrop :: forall i. EventProp DragEvent i
+onDrop = handler (eventName "drop")

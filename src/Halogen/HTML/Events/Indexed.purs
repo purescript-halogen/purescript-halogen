@@ -34,6 +34,14 @@ module Halogen.HTML.Events.Indexed
   , onFocus
   , onFocusIn
   , onFocusOut
+  , onDrag
+  , onDragEnd
+  , onDragExit
+  , onDragEnter
+  , onDragLeave
+  , onDragOver
+  , onDragStart
+  , onDrop
   , onValueChange
   , onValueInput
   , onChecked
@@ -45,7 +53,7 @@ import Prelude
 import Unsafe.Coerce (unsafeCoerce)
 
 import Halogen.HTML.Events.Handler (EventHandler())
-import Halogen.HTML.Events.Types (Event(), MouseEvent(), FocusEvent(), KeyboardEvent())
+import Halogen.HTML.Events.Types (Event(), MouseEvent(), DragEvent(), FocusEvent(), KeyboardEvent())
 import Halogen.HTML.Properties.Indexed (IProp(), I())
 import qualified Halogen.HTML.Events (input, input_) as ExportedEvents
 import qualified Halogen.HTML.Events as E
@@ -154,6 +162,30 @@ onFocusIn = unsafeCoerce E.onFocusIn
 
 onFocusOut :: forall r i. IEventProp (onFocusOut :: I | r) FocusEvent i
 onFocusOut = unsafeCoerce E.onFocusOut
+
+onDrag :: forall r i. IEventProp r DragEvent i
+onDrag = unsafeCoerce E.onDrag
+
+onDragEnd :: forall r i. IEventProp r DragEvent i
+onDragEnd = unsafeCoerce E.onDragEnd
+
+onDragExit :: forall r i. IEventProp r DragEvent i
+onDragExit = unsafeCoerce E.onDragExit
+
+onDragEnter :: forall r i. IEventProp r DragEvent i
+onDragEnter = unsafeCoerce E.onDragEnter
+
+onDragLeave :: forall r i. IEventProp r DragEvent i
+onDragLeave = unsafeCoerce E.onDragLeave
+
+onDragOver :: forall r i. IEventProp r DragEvent i
+onDragOver = unsafeCoerce E.onDragOver
+
+onDragStart :: forall r i. IEventProp r DragEvent i
+onDragStart = unsafeCoerce E.onDragStart
+
+onDrop :: forall r i. IEventProp r DragEvent i
+onDrop = unsafeCoerce E.onDrop
 
 onValueChange :: forall r i. (String -> EventHandler i) -> IProp (value :: I, onChange :: I | r) i
 onValueChange = unsafeCoerce E.onValueChange

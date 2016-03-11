@@ -1,7 +1,10 @@
 -- | Common DOM event types.
 module Halogen.HTML.Events.Types where
 
+import Data.Nullable (Nullable())
+
 import DOM.HTML.Types (HTMLElement())
+import DOM.Event.DragEvent.DataTransfer (DataTransfer())
 
 -- | This record synonym captures the properties which appear on every DOM event.
 -- |
@@ -31,6 +34,23 @@ type MouseEvent =
   , altKey :: Boolean
   , metaKey	:: Boolean
   , which :: Number
+  )
+
+-- | Identifies the additional fields which are available on drag events.
+type DragEvent =
+  ( button :: Number
+  , detail :: Number
+  , relatedTarget :: HTMLElement
+  , clientX :: Number
+  , clientY :: Number
+  , screenX	:: Number
+  , screenY	:: Number
+  , ctrlKey	:: Boolean
+  , shiftKey :: Boolean
+  , altKey :: Boolean
+  , metaKey	:: Boolean
+  , which :: Number
+  , dataTransfer :: Nullable DataTransfer
   )
 
 -- | Identifies the additional fields which are available on keyboard events.
