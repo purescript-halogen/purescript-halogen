@@ -13,6 +13,7 @@ import Data.Exists (runExists)
 import Data.ExistsR (runExistsR)
 import Data.Foldable (foldl, foldMap)
 import Data.Function (runFn2)
+import Data.Lazy (force)
 import Data.Maybe (Maybe(..), maybe)
 import Data.Monoid (mempty)
 import Data.Nullable (toNullable)
@@ -52,7 +53,7 @@ renderTree f =
               tag = runTagName name
               key = toNullable $ foldl findKey Nothing props
           in V.vnode ns' tag key (foldMap (renderProp f) props) (map go els)
-    in go tree.html
+    in go (force tree.html)
 
 renderProp :: forall f eff. (forall i. f i -> Aff (HalogenEffects eff) i) -> Prop (f Unit) -> V.Props
 renderProp _ (Prop e) = runExists (\(PropF key value _) ->
