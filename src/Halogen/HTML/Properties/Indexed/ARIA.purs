@@ -40,114 +40,118 @@ import Prelude
 
 import Unsafe.Coerce (unsafeCoerce)
 
+import Halogen.HTML.Core (Prop())
 import Halogen.HTML.Properties.Indexed (IProp())
 import Halogen.HTML.Properties.ARIA as P
 
+refine :: forall a r i. (a -> Prop i) -> a -> IProp r i
+refine = unsafeCoerce
+
 activeDescendant :: forall r i. String -> IProp r i
-activeDescendant = unsafeCoerce P.activeDescendant
+activeDescendant = refine P.activeDescendant
 
 atomic :: forall r i. String -> IProp r i
-atomic = unsafeCoerce P.atomic
+atomic = refine P.atomic
 
 autoComplete :: forall r i. String -> IProp r i
-autoComplete = unsafeCoerce P.autoComplete
+autoComplete = refine P.autoComplete
 
 busy :: forall r i. String -> IProp r i
-busy = unsafeCoerce P.busy
+busy = refine P.busy
 
 checked :: forall r i. String -> IProp r i
-checked = unsafeCoerce P.checked
+checked = refine P.checked
 
 controls :: forall r i. String -> IProp r i
-controls = unsafeCoerce P.controls
+controls = refine P.controls
 
 describedBy :: forall r i. String -> IProp r i
-describedBy = unsafeCoerce P.describedBy
+describedBy = refine P.describedBy
 
 disabled :: forall r i. String -> IProp r i
-disabled = unsafeCoerce P.disabled
+disabled = refine P.disabled
 
 dropEffect :: forall r i. String -> IProp r i
-dropEffect = unsafeCoerce P.dropEffect
+dropEffect = refine P.dropEffect
 
 expanded :: forall r i. String -> IProp r i
-expanded = unsafeCoerce P.expanded
+expanded = refine P.expanded
 
 flowTo :: forall r i. String -> IProp r i
-flowTo = unsafeCoerce P.flowTo
+flowTo = refine P.flowTo
 
 grabbed :: forall r i. String -> IProp r i
-grabbed = unsafeCoerce P.grabbed
+grabbed = refine P.grabbed
 
 hasPopup :: forall r i. String -> IProp r i
-hasPopup = unsafeCoerce P.hasPopup
+hasPopup = refine P.hasPopup
 
 hidden :: forall r i. String -> IProp r i
-hidden = unsafeCoerce P.hidden
+hidden = refine P.hidden
 
 invalid :: forall r i. String -> IProp r i
-invalid = unsafeCoerce P.invalid
+invalid = refine P.invalid
 
 label :: forall r i. String -> IProp r i
-label = unsafeCoerce P.label
+label = refine P.label
 
 labelledBy :: forall r i. String -> IProp r i
-labelledBy = unsafeCoerce P.labelledBy
+labelledBy = refine P.labelledBy
 
 level :: forall r i. String -> IProp r i
-level = unsafeCoerce P.level
+level = refine P.level
 
 live :: forall r i. String -> IProp r i
-live = unsafeCoerce P.live
+live = refine P.live
 
 multiLine :: forall r i. String -> IProp r i
-multiLine = unsafeCoerce P.multiLine
+multiLine = refine P.multiLine
 
 multiSelectable :: forall r i. String -> IProp r i
-multiSelectable = unsafeCoerce P.multiSelectable
+multiSelectable = refine P.multiSelectable
 
 orientation :: forall r i. String -> IProp r i
-orientation = unsafeCoerce P.orientation
+orientation = refine P.orientation
 
 owns :: forall r i. String -> IProp r i
-owns = unsafeCoerce P.owns
+owns = refine P.owns
 
 posInSet :: forall r i. String -> IProp r i
-posInSet = unsafeCoerce P.posInSet
+posInSet = refine P.posInSet
 
 pressed :: forall r i. String -> IProp r i
-pressed = unsafeCoerce P.pressed
+pressed = refine P.pressed
 
 readOnly :: forall r i. String -> IProp r i
-readOnly = unsafeCoerce P.readOnly
+readOnly = refine P.readOnly
 
 relevant :: forall r i. String -> IProp r i
-relevant = unsafeCoerce P.relevant
+relevant = refine P.relevant
 
 required :: forall r i. String -> IProp r i
-required = unsafeCoerce P.required
+required = refine P.required
 
 selected :: forall r i. String -> IProp r i
-selected = unsafeCoerce P.selected
+selected = refine P.selected
 
 setSize :: forall r i. String -> IProp r i
-setSize = unsafeCoerce P.setSize
+setSize = refine P.setSize
 
 sort :: forall r i. String -> IProp r i
-sort = unsafeCoerce P.sort
+sort = refine P.sort
 
 valueMax :: forall r i. String -> IProp r i
-valueMax = unsafeCoerce P.valueMax
+valueMax = refine P.valueMax
 
 valueMin :: forall r i. String -> IProp r i
-valueMin = unsafeCoerce P.valueMin
+valueMin = refine P.valueMin
 
 valueNow :: forall r i. String -> IProp r i
-valueNow = unsafeCoerce P.valueNow
+valueNow = refine P.valueNow
 
 valueText :: forall r i. String -> IProp r i
-valueText = unsafeCoerce P.valueText
+valueText = refine P.valueText
 
 role :: forall r i. String -> IProp r i
-role = unsafeCoerce P.role
+role = refine P.role
 
