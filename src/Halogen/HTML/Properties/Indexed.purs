@@ -70,9 +70,10 @@ module Halogen.HTML.Properties.Indexed
 
 import Prelude
 
-import Data.Foldable
-import Data.Tuple
 import Data.Array as A
+import Data.Foldable (intercalate)
+import Data.Maybe (Maybe())
+import Data.Tuple (Tuple(..))
 
 import Unsafe.Coerce (unsafeCoerce)
 
@@ -89,62 +90,65 @@ newtype IProp (r :: # *) i = IProp (Prop i)
 -- | A dummy type to use in the phantom row.
 data I
 
+refine :: forall a r i. (a -> Prop i) -> a -> IProp r i
+refine = unsafeCoerce
+
 key :: forall r i. String -> IProp (key :: I | r) i
-key = unsafeCoerce P.key
+key = refine P.key
 
 alt :: forall r i. String -> IProp (alt :: I | r) i
-alt = unsafeCoerce P.alt
+alt = refine P.alt
 
 charset :: forall r i. String -> IProp (charset :: I | r) i
-charset = unsafeCoerce P.charset
+charset = refine P.charset
 
 class_ :: forall r i. ClassName -> IProp (class :: I | r) i
-class_ = unsafeCoerce P.class_
+class_ = refine P.class_
 
 classes :: forall r i. Array ClassName -> IProp (class :: I | r) i
-classes = unsafeCoerce P.classes
+classes = refine P.classes
 
 cols :: forall r i. Int -> IProp (cols :: I | r) i
-cols = unsafeCoerce P.cols
+cols = refine P.cols
 
 rows :: forall r i. Int -> IProp (rows :: I | r) i
-rows = unsafeCoerce P.rows
+rows = refine P.rows
 
 colSpan :: forall r i. Int -> IProp (colSpan :: I | r) i
-colSpan = unsafeCoerce P.colSpan
+colSpan = refine P.colSpan
 
 rowSpan :: forall r i. Int -> IProp (rowSpan :: I | r) i
-rowSpan = unsafeCoerce P.rowSpan
+rowSpan = refine P.rowSpan
 
 for :: forall r i. String -> IProp (for :: I | r) i
-for = unsafeCoerce P.for
+for = refine P.for
 
 height :: forall r i. P.LengthLiteral -> IProp (height :: I | r) i
-height = unsafeCoerce P.height
+height = refine P.height
 
 width :: forall r i. P.LengthLiteral -> IProp (width :: I | r) i
-width = unsafeCoerce P.width
+width = refine P.width
 
 href :: forall r i. String -> IProp (href :: I | r) i
-href = unsafeCoerce P.href
+href = refine P.href
 
 id_ :: forall r i. String -> IProp (id :: I | r) i
-id_ = unsafeCoerce P.id_
+id_ = refine P.id_
 
 name :: forall r i. String -> IProp (name :: I | r) i
-name = unsafeCoerce P.name
+name = refine P.name
 
 rel :: forall r i. String -> IProp (rel :: I | r) i
-rel = unsafeCoerce P.rel
+rel = refine P.rel
 
 src :: forall r i. String -> IProp (src :: I | r) i
-src = unsafeCoerce P.src
+src = refine P.src
 
 target :: forall r i. String -> IProp (target :: I | r) i
-target = unsafeCoerce P.target
+target = refine P.target
 
 title :: forall r i. String -> IProp (title :: I | r) i
-title = unsafeCoerce P.title
+title = refine P.title
 
 data InputType
   = InputButton
@@ -199,7 +203,7 @@ renderInputType ty =
     InputWeek -> "week"
 
 inputType :: forall r i. InputType -> IProp (inputType :: I | r) i
-inputType = unsafeCoerce P.type_ <<< renderInputType
+inputType = refine P.type_ <<< renderInputType
 
 data MenuType
   = MenuList
@@ -214,7 +218,7 @@ renderMenuType ty =
     MenuToolbar -> "toolbar"
 
 menuType :: forall r i. MenuType -> IProp (menuType :: I | r) i
-menuType = unsafeCoerce P.type_ <<< renderMenuType
+menuType = refine P.type_ <<< renderMenuType
 
 data MenuitemType
   = MenuitemCommand
@@ -229,7 +233,7 @@ renderMenuitemType ty =
     MenuitemRadio -> "radio"
 
 menuitemType :: forall r i. MenuitemType -> IProp (menuitemType :: I | r) i
-menuitemType= unsafeCoerce P.type_ <<< renderMenuitemType
+menuitemType= refine P.type_ <<< renderMenuitemType
 
 type MediaType =
   { type :: String
@@ -249,7 +253,7 @@ renderMediaType ty = ty.type ++ "/" ++ ty.subtype ++ renderParameters ty.paramet
     renderParameter (Tuple k v) = k ++ "=" ++ v
 
 mediaType :: forall r i. MediaType -> IProp (mediaType :: I | r) i
-mediaType = unsafeCoerce P.type_ <<< renderMediaType
+mediaType = refine P.type_ <<< renderMediaType
 
 data ButtonType
   = ButtonButton
@@ -264,7 +268,7 @@ renderButtonType ty =
     ButtonReset -> "reset"
 
 buttonType :: forall r i. ButtonType -> IProp (buttonType :: I | r) i
-buttonType = unsafeCoerce P.type_ <<< renderButtonType
+buttonType = refine P.type_ <<< renderButtonType
 
 data CaseType
   = Uppercase
@@ -294,46 +298,46 @@ renderOrderedListType ty =
         Uppercase -> "A"
 
 olType :: forall r i. OrderedListType -> IProp (olType :: I | r) i
-olType = unsafeCoerce P.type_ <<< renderOrderedListType
+olType = refine P.type_ <<< renderOrderedListType
 
 value :: forall r i. String -> IProp (value :: I | r) i
-value = unsafeCoerce P.value
+value = refine P.value
 
 disabled :: forall r i. Boolean -> IProp (disabled :: I | r) i
-disabled = unsafeCoerce P.disabled
+disabled = refine P.disabled
 
 required :: forall r i. Boolean -> IProp (required :: I | r) i
-required = unsafeCoerce P.required
+required = refine P.required
 
 readonly :: forall r i. Boolean -> IProp (readonly :: I | r) i
-readonly = unsafeCoerce P.readonly
+readonly = refine P.readonly
 
 spellcheck :: forall r i. Boolean -> IProp (spellcheck :: I | r) i
-spellcheck = unsafeCoerce P.spellcheck
+spellcheck = refine P.spellcheck
 
 enabled :: forall r i. Boolean -> IProp (disabled :: I | r) i
 enabled = disabled <<< not
 
 checked :: forall r i. Boolean -> IProp (checked :: I | r) i
-checked = unsafeCoerce P.checked
+checked = refine P.checked
 
 selected :: forall r i. Boolean -> IProp (selected :: I | r) i
-selected = unsafeCoerce P.selected
+selected = refine P.selected
 
 placeholder :: forall r i. String -> IProp (placeholder :: I | r) i
-placeholder = unsafeCoerce P.placeholder
+placeholder = refine P.placeholder
 
 autocomplete :: forall r i. Boolean -> IProp (autocomplete :: I | r) i
-autocomplete = unsafeCoerce P.autocomplete
+autocomplete = refine P.autocomplete
 
 autofocus :: forall r i. Boolean -> IProp (autofocus :: I | r) i
-autofocus = unsafeCoerce P.autofocus
+autofocus = refine P.autofocus
 
 multiple :: forall r i. Boolean -> IProp (multiple :: I | r) i
-multiple = unsafeCoerce P.multiple
+multiple = refine P.multiple
 
-ref :: forall r i. (HTMLElement -> i) -> IProp (ref :: I | r) i
-ref = unsafeCoerce P.ref
+ref :: forall r i. (Maybe HTMLElement -> i) -> IProp (ref :: I | r) i
+ref = refine P.ref
 
 type GlobalAttributes r =
   ( id :: I

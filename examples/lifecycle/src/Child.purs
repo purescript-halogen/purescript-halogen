@@ -17,7 +17,7 @@ import DOM.HTML.Types (HTMLElement())
 
 data Query a = Initialize a
              | Finalize a
-             | Ref HTMLElement a
+             | Ref (Maybe HTMLElement) a
 
 type Slot = Unit
 
@@ -57,7 +57,7 @@ child = lifecycleParentComponent
     id <- get
     fromAff $ log ("Finalize Child " <> show id)
     pure next
-  eval (Ref el next) = do
+  eval (Ref _ next) = do
     id <- get
     fromAff $ log ("Ref Child " <> show id)
     pure next
@@ -80,7 +80,7 @@ cell = lifecycleComponent
     id <- get
     fromAff $ log ("Initialize Cell " <> show id)
     pure next
-  eval (Ref el next) = do
+  eval (Ref _ next) = do
     id <- get
     fromAff $ log ("Ref Cell " <> show id)
     pure next
