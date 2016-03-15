@@ -1,25 +1,23 @@
-module Example.Lifecycle where
+module Main where
 
 import Prelude
 
-import Control.Monad.Aff (runAff, Aff())
+import Control.Monad.Aff (Aff())
 import Control.Monad.Aff.Console (log)
 import Control.Monad.Eff (Eff())
 import Control.Monad.Eff.Console (CONSOLE())
-import Control.Monad.Eff.Exception (throwException)
 
 import Data.Array (snoc, filter, reverse)
 import Data.Maybe (Maybe(..))
-import Data.Functor.Coproduct (Coproduct())
-import Data.Functor.Aff (liftAff)
+import Data.Functor.Coproduct (Coproduct(), coproduct)
 
 import Halogen
-import Halogen.Util (appendToBody, onLoad)
-import qualified Halogen.HTML.Indexed as H
-import qualified Halogen.HTML.Properties.Indexed as P
-import qualified Halogen.HTML.Events.Indexed as E
+import Halogen.Util (runHalogenAff, awaitBody)
+import Halogen.HTML.Indexed as H
+import Halogen.HTML.Properties.Indexed as P
+import Halogen.HTML.Events.Indexed as E
 
-import qualified Example.Lifecycle.Child as Child
+import Child as Child
 
 type State =
   { currentId :: Int
@@ -41,18 +39,18 @@ data Query a = Initialize a
 
 type UIEff eff = Aff (console :: CONSOLE | eff)
 
-type StateP eff = InstalledState State (Child.StateP eff) Query Child.QueryP (UIEff eff) Int
+type StateP eff = ParentState State (Child.StateP eff) Query Child.QueryP (UIEff eff) Int
 
 type QueryP = Coproduct Query (ChildF Int Child.QueryP)
 
 ui :: forall eff. Component (StateP eff) QueryP (UIEff eff)
-ui =
-  parentComponentSpec
-    { render: render
-    , eval: eval
-    , initializer: Just (action Initialize)
-    , finalizer: Just (action Finalize)
-    }
+ui = lifecycleParentComponent
+  { render: render
+  , eval: eval
+  , peek: Just (peek <<< runChildF)
+  , initializer: Just (action Initialize)
+  , finalizer: Just (action Finalize)
+  }
   where
 
   render :: State -> ParentHTML (Child.StateP eff) Query Child.QueryP (UIEff eff) Int
@@ -69,13 +67,13 @@ ui =
             [ H.button
                 [ E.onClick (E.input_ $ Remove id) ]
                 [ H.text "Remove" ]
-            , H.slot id \_ -> { component: Child.child, initialState: installedState id }
+            , H.slot id \_ -> { component: Child.child, initialState: parentState id }
             ]
       ]
 
   eval :: Natural Query (ParentDSL State (Child.StateP eff) Query Child.QueryP (UIEff eff) Int)
   eval (Initialize next) = do
-    liftAff $ log "Initialize Root"
+    fromAff $ log "Initialize Root"
     pure next
   eval (Finalize next) = do
     pure next
@@ -92,6 +90,19 @@ ui =
     modify \s -> s { slots = reverse s.slots }
     pure next
 
+  peek :: forall x. Child.QueryP x -> ParentDSL State (Child.StateP eff) Query Child.QueryP (UIEff eff) Int Unit
+  peek = coproduct peek' (const (pure unit))
+    where
+    peek' (Child.Initialize _) = do
+      fromAff $ log "Peeked child init"
+      pure unit
+    peek' (Child.Finalize _) = do
+      -- This will never happen, finalizers are not peek-able
+      fromAff $ log "Peeked child finalize"
+      pure unit
+    peek' _ = pure unit
+
 main :: Eff (HalogenEffects (console :: CONSOLE)) Unit
-main = onLoad $ runAff throwException (const (pure unit)) do
-  void $ runUI' "body" ui (installedState initialState)
+main = runHalogenAff do
+  body <- awaitBody
+  runUI ui (parentState initialState) body

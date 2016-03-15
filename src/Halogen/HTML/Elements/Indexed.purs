@@ -126,8 +126,8 @@ module Halogen.HTML.Elements.Indexed
 
 import Halogen.HTML.Core (HTML())
 import Halogen.HTML.Properties.Indexed hiding (title)
-import qualified Halogen.HTML.Elements as E
-import qualified Halogen.HTML.Elements
+import Halogen.HTML.Elements as E
+import Halogen.HTML.Elements
   ( a_
   , abbr_
   , acronym_

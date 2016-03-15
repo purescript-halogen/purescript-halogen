@@ -1,15 +1,13 @@
-module Example.Intro where
+module Main where
 
 import Prelude
 
-import Control.Monad.Aff (runAff)
 import Control.Monad.Eff (Eff())
-import Control.Monad.Eff.Exception (throwException)
 
 import Halogen
-import Halogen.Util (appendToBody, onLoad)
-import qualified Halogen.HTML.Indexed as H
-import qualified Halogen.HTML.Events.Indexed as E
+import Halogen.Util (runHalogenAff, awaitBody)
+import Halogen.HTML.Indexed as H
+import Halogen.HTML.Events.Indexed as E
 
 type State = { on :: Boolean }
 
@@ -19,7 +17,7 @@ initialState = { on: false }
 data Query a = ToggleState a
 
 ui :: forall g. (Functor g) => Component State Query g
-ui = component render eval
+ui = component { render, eval }
   where
 
   render :: State -> ComponentHTML Query
@@ -38,6 +36,6 @@ ui = component render eval
     pure next
 
 main :: Eff (HalogenEffects ()) Unit
-main = runAff throwException (const (pure unit)) $ do
-  app <- runUI ui initialState
-  onLoad $ appendToBody app.node
+main = runHalogenAff do
+  body <- awaitBody
+  runUI ui initialState body

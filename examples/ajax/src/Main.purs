@@ -1,11 +1,10 @@
-module Example.Ajax where
+module Main where
 
 import Prelude
 
 import Control.Alt ((<|>))
-import Control.Monad.Aff (Aff(), runAff)
+import Control.Monad.Aff (Aff())
 import Control.Monad.Eff (Eff())
-import Control.Monad.Eff.Exception (throwException)
 
 import Data.Either (Either(..))
 import Data.Foldable (foldMap)
@@ -14,10 +13,10 @@ import Data.Functor (($>))
 import Data.Maybe (Maybe(..))
 
 import Halogen
-import Halogen.Util (appendToBody, onLoad)
-import qualified Halogen.HTML.Indexed as H
-import qualified Halogen.HTML.Events.Indexed as E
-import qualified Halogen.HTML.Properties.Indexed as P
+import Halogen.Util (runHalogenAff, awaitBody)
+import Halogen.HTML.Indexed as H
+import Halogen.HTML.Events.Indexed as E
+import Halogen.HTML.Properties.Indexed as P
 
 import Network.HTTP.Affjax (AJAX(), post)
 
@@ -50,7 +49,7 @@ type AppEffects eff = HalogenEffects (ajax :: AJAX | eff)
 
 -- | The definition for the app's main UI component.
 ui :: forall eff. Component State Query (Aff (AppEffects eff))
-ui = component render eval
+ui = component { render, eval }
   where
 
   render :: State -> ComponentHTML Query
@@ -89,7 +88,7 @@ ui = component render eval
   eval (SetCode code next) = modify (_ { code = code, result = Nothing :: Maybe String }) $> next
   eval (MakeRequest code next) = do
     modify (_ { busy = true })
-    result <- liftAff' (fetchJS code)
+    result <- fromAff (fetchJS code)
     modify (_ { busy = false, result = Just result })
     pure next
 
@@ -104,6 +103,6 @@ fetchJS code = do
 
 -- | Run the app.
 main :: Eff (AppEffects ()) Unit
-main = runAff throwException (const (pure unit)) $ do
-  app <- runUI ui initialState
-  onLoad $ appendToBody app.node
+main = runHalogenAff do
+  body <- awaitBody
+  runUI ui initialState body

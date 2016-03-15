@@ -20,7 +20,7 @@ import Data.Maybe (Maybe(..), maybe)
 import Data.Maybe.First (First(..), runFirst)
 import Data.Profunctor (Profunctor, dimap)
 import Data.Profunctor.Choice (Choice)
-import qualified Data.Profunctor.Choice as PF
+import Data.Profunctor.Choice as PF
 
 -- | Compatible with `Prism` from `purescript-lens`.
 type Prism s t a b = forall p f. (Choice p, Applicative f) => p a (f b) -> p s (f t)

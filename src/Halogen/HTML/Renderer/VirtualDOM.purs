@@ -8,10 +8,7 @@ import Prelude
 import Control.Monad.Aff (Aff(), runAff)
 import Control.Monad.Eff (Eff())
 import Control.Monad.Eff.Exception (throwException)
-import Control.Monad.State (State(), runState)
-import Control.Monad.State.Class (modify)
 
-import Data.Array (snoc)
 import Data.Exists (runExists)
 import Data.ExistsR (runExistsR)
 import Data.Foldable (foldl, foldMap)
@@ -19,14 +16,12 @@ import Data.Function (runFn2)
 import Data.Maybe (Maybe(..), maybe)
 import Data.Monoid (mempty)
 import Data.Nullable (toNullable)
-import Data.Traversable (traverse)
-import Data.Tuple (Tuple(..))
 
 import Halogen.Effects (HalogenEffects())
 import Halogen.Component.Tree (Tree(), runTree)
 import Halogen.HTML.Core (HTML(..), Prop(..), PropF(..), HandlerF(..), runNamespace, runTagName, runPropName, runAttrName, runEventName)
 import Halogen.HTML.Events.Handler (runEventHandler)
-import qualified Halogen.Internal.VirtualDOM as V
+import Halogen.Internal.VirtualDOM as V
 
 -- | Render a `HTML` document to a virtual DOM node
 -- |
@@ -67,8 +62,7 @@ renderProp _ (Attr ns name value) =
   in runFn2 V.attr attrName value
 renderProp dr (Handler e) = runExistsR (\(HandlerF name k) ->
   runFn2 V.handlerProp (runEventName name) \ev -> handleAff $ runEventHandler ev (k ev) >>= maybe (pure unit) dr) e
-renderProp dr (Initializer f) = V.initProp (handleAff <<< dr <<< f)
-renderProp dr (Finalizer f) = V.finalizerProp (handleAff <<< dr <<< f)
+renderProp dr (Ref f) = V.refProp (handleAff <<< dr <<< f)
 renderProp _ _ = mempty
 
 handleAff :: forall eff a. Aff (HalogenEffects eff) a -> Eff (HalogenEffects eff) Unit

@@ -44,7 +44,6 @@ import Prelude
 import Data.Bifunctor (Bifunctor, rmap)
 import Data.Exists (Exists(), mkExists)
 import Data.ExistsR (ExistsR(), mkExistsR, runExistsR)
-import Data.Foldable (foldl)
 import Data.Maybe (Maybe(..))
 import Data.Traversable (traverse)
 import Data.Tuple (Tuple(..))
@@ -87,25 +86,21 @@ fillSlot f _ (Slot p) = f p
 -- |   the rendered element)
 -- | - A key value used for hinting when diffing HTML.
 -- | - An event handler.
--- | - A initializer that is triggered once the element for the property has
--- |   been added to the DOM.
--- | - A finalizer that is triggered when the element for the property is
--- |   removed from the DOM.
+-- | - A function that is triggered once the element for the property has
+-- |   been added to or removed from the DOM.
 data Prop i
   = Prop (Exists PropF)
   | Attr (Maybe Namespace) AttrName String
   | Key String
   | Handler (ExistsR (HandlerF i))
-  | Initializer (HTMLElement -> i)
-  | Finalizer (HTMLElement -> i)
+  | Ref (Maybe HTMLElement -> i)
 
 instance functorProp :: Functor Prop where
   map _ (Prop e) = Prop e
   map _ (Key k) = Key k
   map _ (Attr ns k v) = Attr ns k v
   map f (Handler e) = runExistsR (\(HandlerF name k) -> Handler (mkExistsR (HandlerF name (map (map f) <<< k)))) e
-  map f (Initializer g) = Initializer (f <<< g)
-  map f (Finalizer g) = Finalizer (f <<< g)
+  map f (Ref g) = Ref (f <<< g)
 
 -- | The data which represents a typed property, hidden inside an existential
 -- | package in the `Prop` type.

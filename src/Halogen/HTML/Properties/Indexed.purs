@@ -55,8 +55,6 @@ module Halogen.HTML.Properties.Indexed
   , autofocus
   , multiple
 
-  , initializer
-  , finalizer
   , ref
 
   , module PExport
@@ -74,15 +72,15 @@ import Prelude
 
 import Data.Foldable
 import Data.Tuple
-import qualified Data.Array as A
+import Data.Array as A
 
 import Unsafe.Coerce (unsafeCoerce)
 
 import DOM.HTML.Types (HTMLElement())
 
 import Halogen.HTML.Core (Prop(), ClassName())
-import qualified Halogen.HTML.Properties (LengthLiteral(..)) as PExport
-import qualified Halogen.HTML.Properties as P
+import Halogen.HTML.Properties (LengthLiteral(..)) as PExport
+import Halogen.HTML.Properties as P
 
 -- | The phantom row `r` can be thought of as a context which is synthesized in the
 -- | course of constructing a refined HTML expression.
@@ -334,12 +332,6 @@ autofocus = unsafeCoerce P.autofocus
 multiple :: forall r i. Boolean -> IProp (multiple :: I | r) i
 multiple = unsafeCoerce P.multiple
 
-initializer :: forall r i. (HTMLElement -> i) -> IProp (initializer :: I | r) i
-initializer = unsafeCoerce P.initializer
-
-finalizer :: forall r i. (HTMLElement -> i) -> IProp (finalizer :: I | r) i
-finalizer = unsafeCoerce P.finalizer
-
 ref :: forall r i. (HTMLElement -> i) -> IProp (ref :: I | r) i
 ref = unsafeCoerce P.ref
 
@@ -351,8 +343,6 @@ type GlobalAttributes r =
   , style :: I
   , spellcheck :: I
   , key :: I
-  , initializer :: I
-  , finalizer :: I
   , ref :: I
   | r
   )

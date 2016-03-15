@@ -8,19 +8,20 @@ import Control.Monad (when)
 import Data.Array (snoc, filter, length)
 import Data.Functor.Coproduct (Coproduct())
 import Data.Generic (Generic, gEq, gCompare)
-import Data.Maybe (fromMaybe)
+import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Map (size) as M
 
 import Halogen
-import qualified Halogen.HTML.Indexed as H
-import qualified Halogen.HTML.Events.Indexed as E
+import Halogen.HTML.Indexed as H
+import Halogen.HTML.Events.Indexed as E
 
 import Model
 import Component.Task
 
 -- | The list component query algebra.
-data ListQuery a = NewTask a
-                 | AllDone a
+data ListQuery a
+  = NewTask a
+  | AllDone a
 
 -- | The slot value that is filled by tasks during the install process.
 newtype TaskSlot = TaskSlot TaskId
@@ -29,12 +30,12 @@ derive instance genericTaskSlot :: Generic TaskSlot
 instance eqTaskSlot :: Eq TaskSlot where eq = gEq
 instance ordTaskSlot :: Ord TaskSlot where compare = gCompare
 
-type State g = InstalledState List Task ListQuery TaskQuery g TaskSlot
+type State g = ParentState List Task ListQuery TaskQuery g TaskSlot
 type Query = Coproduct ListQuery (ChildF TaskSlot TaskQuery)
 
 -- | The list component definition.
 list :: forall g. (Functor g) => Component (State g) Query g
-list = parentComponent' render eval peek
+list = parentComponent { render, eval, peek: Just peek }
   where
 
   render :: List -> ParentHTML Task ListQuery TaskQuery g TaskSlot

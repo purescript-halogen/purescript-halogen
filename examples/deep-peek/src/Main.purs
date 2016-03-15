@@ -1,23 +1,22 @@
-module Example.Components.Main where
+module Main where
 
 import Prelude
 
-import Control.Monad.Aff (runAff)
 import Control.Monad.Eff (Eff())
-import Control.Monad.Eff.Exception (throwException)
 import Control.Plus (Plus)
 
 import Data.Const (Const(), getConst)
 import Data.Functor.Coproduct (Coproduct(), coproduct)
 import Data.Generic (Generic, gEq, gCompare)
+import Data.Maybe (Maybe(..))
 import Data.Void (Void(), absurd)
 
 import Halogen
-import Halogen.Util (appendToBody, onLoad)
-import qualified Halogen.HTML.Indexed as H
+import Halogen.Util (runHalogenAff, awaitBody)
+import Halogen.HTML.Indexed as H
 
-import Example.Components.List
-import Example.Components.Ticker
+import List
+import Ticker
 
 type Query = Const Void
 
@@ -33,10 +32,10 @@ instance eqListSlot :: Eq ListSlot where eq = gEq
 instance ordListSlot :: Ord ListSlot where compare = gCompare
 
 type QueryP = Coproduct Query (ChildF ListSlot ListQueryP)
-type StateP g = InstalledState State (ListStateP g) Query ListQueryP g ListSlot
+type StateP g = ParentState State (ListStateP g) Query ListQueryP g ListSlot
 
 ui :: forall g. (Functor g) => Component (StateP g) QueryP g
-ui = parentComponent' render eval peek
+ui = parentComponent { render, eval, peek: Just peek }
   where
 
   render :: State -> ParentHTML (ListStateP g) Query ListQueryP g ListSlot
@@ -45,12 +44,12 @@ ui = parentComponent' render eval peek
       [ H.h1_
           [ H.text "List A" ]
       , H.slot (ListSlot "A") \_ ->
-          { component: listComponent, initialState: installedState initialList }
+          { component: listComponent, initialState: parentState initialList }
       , H.hr []
       , H.h1_
           [ H.text "List B" ]
       , H.slot (ListSlot "B") \_ ->
-          { component: listComponent, initialState: installedState initialList }
+          { component: listComponent, initialState: parentState initialList }
       , H.hr []
       , H.p_
           [ H.text $ "Total incremented count: " ++ show st.count ]
@@ -74,6 +73,6 @@ ui = parentComponent' render eval peek
   peekTicker _ = pure unit
 
 main :: Eff (HalogenEffects ()) Unit
-main = runAff throwException (const (pure unit)) $ do
-  app <- runUI ui (installedState initialState)
-  onLoad $ appendToBody app.node
+main = runHalogenAff do
+  body <- awaitBody
+  runUI ui (parentState initialState) body

@@ -5,6 +5,6 @@ module Halogen.HTML.Indexed
   , module HTMLPublic
   ) where
 
-import qualified Halogen.HTML (text, slot, slot') as HTMLPublic
+import Halogen.HTML (text, slot, slot') as HTMLPublic
 import Halogen.HTML.Core
 import Halogen.HTML.Elements.Indexed

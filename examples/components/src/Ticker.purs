@@ -1,30 +1,30 @@
-module Example.Components.Ticker where
+module Ticker where
 
 import Prelude
 
 import Halogen
-import qualified Halogen.HTML.Indexed as H
-import qualified Halogen.HTML.Properties.Indexed as P
-import qualified Halogen.HTML.Events.Indexed as E
+import Halogen.HTML.Indexed as H
+import Halogen.HTML.Properties.Indexed as P
+import Halogen.HTML.Events.Indexed as E
 
-data TickState = TickState Int
+type TickState = Int
 
 data TickQuery a
   = Tick a
   | GetTick (Int -> a)
 
-ticker :: forall g. (Functor g) => Component TickState TickQuery g
-ticker = component render eval
+ticker :: forall g. Component TickState TickQuery g
+ticker = component { render, eval }
   where
 
   render :: TickState -> ComponentHTML TickQuery
-  render (TickState n) =
+  render state =
     H.div_
       [ H.h1
           [ P.id_ "header" ]
           [ H.text "counter" ]
       , H.p_
-          [ H.text (show n) ]
+          [ H.text (show state) ]
       , H.button
           [ E.onClick (E.input_ Tick) ]
           [ H.text "Tick" ]
@@ -32,8 +32,8 @@ ticker = component render eval
 
   eval :: Natural TickQuery (ComponentDSL TickState TickQuery g)
   eval (Tick next) = do
-    modify (\(TickState n) -> TickState (n + 1))
+    modify (+ 1)
     pure next
   eval (GetTick continue) = do
-    TickState n <- get
+    n <- get
     pure (continue n)

@@ -8,8 +8,7 @@ module Halogen.Internal.VirtualDOM
   , prop
   , attr
   , handlerProp
-  , initProp
-  , finalizerProp
+  , refProp
   , widget
   , createElement
   , diff
@@ -23,14 +22,14 @@ import Prelude
 import Control.Monad.Eff (Eff())
 
 import Data.Monoid (Monoid)
+import Data.Maybe (Maybe(..))
 import Data.Nullable (Nullable())
 import Data.Function (Fn2(), runFn2)
 
 import DOM (DOM())
 import DOM.HTML.Types (HTMLElement())
 
-import Halogen.Component.Tree (TreeF(), Tree())
-import Halogen.HTML.Core (HTML())
+import Halogen.Component.Tree (Tree())
 
 -- | Virtual DOM nodes
 data VTree
@@ -49,11 +48,16 @@ foreign import attr :: Fn2 String String Props
 -- | Create a property from an event handler.
 foreign import handlerProp :: forall eff event. Fn2 String (event -> Eff eff Unit) Props
 
--- | Create a property from an initializer.
-foreign import initProp :: forall eff. (HTMLElement -> Eff eff Unit) -> Props
+-- | Create a property from an ref.
+refProp :: forall eff. (Maybe HTMLElement -> Eff eff Unit) -> Props
+refProp = refPropImpl Nothing Just
 
--- | Create a property from an finalizer.
-foreign import finalizerProp :: forall eff. (HTMLElement -> Eff eff Unit) -> Props
+foreign import refPropImpl
+  :: forall eff
+   . (forall a. Maybe a)
+  -> (forall a. a -> Maybe a)
+  -> (Maybe HTMLElement -> Eff eff Unit)
+  -> Props
 
 foreign import widget :: forall f p. Tree f p -> (p -> p -> Boolean) -> (Tree f p -> VTree) -> VTree
 

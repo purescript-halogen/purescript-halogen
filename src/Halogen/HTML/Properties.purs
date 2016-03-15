@@ -32,8 +32,7 @@ module Halogen.HTML.Properties
   , autocomplete
   , autofocus
   , multiple
-  , initializer
-  , finalizer
+  , draggable
   , ref
   , LengthLiteral(..)
   ) where
@@ -154,11 +153,8 @@ autofocus = prop (propName "autofocus") (Just $ attrName "autofocus")
 multiple :: forall a. Boolean -> Prop a
 multiple = prop (propName "multiple") (Just $ attrName "multiple")
 
-initializer :: forall i. (HTMLElement -> i) -> Prop i
-initializer = Initializer
+draggable :: forall a. Boolean -> Prop a
+draggable = prop (propName "draggable") (Just $ attrName "draggable")
 
-finalizer :: forall i. (HTMLElement -> i) -> Prop i
-finalizer = Finalizer
-
-ref :: forall i. (HTMLElement -> i) -> Prop i
-ref = Initializer
+ref :: forall i. (Maybe HTMLElement -> i) -> Prop i
+ref = Ref

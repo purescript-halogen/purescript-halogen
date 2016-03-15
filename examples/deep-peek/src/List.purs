@@ -1,4 +1,4 @@
-module Example.Components.List where
+module List where
 
 import Prelude
 
@@ -8,10 +8,10 @@ import Data.Generic (Generic, gEq, gCompare)
 import Data.Maybe (Maybe(..))
 
 import Halogen
-import qualified Halogen.HTML.Indexed as H
-import qualified Halogen.HTML.Events.Indexed as E
+import Halogen.HTML.Indexed as H
+import Halogen.HTML.Events.Indexed as E
 
-import Example.Components.Ticker
+import Ticker
 
 data ListQuery a
   = AddTicker a
@@ -28,10 +28,10 @@ instance eqTickSlot :: Eq TickSlot where eq = gEq
 instance ordTickSlot :: Ord TickSlot where compare = gCompare
 
 type ListQueryP = Coproduct ListQuery (ChildF TickSlot TickQuery)
-type ListStateP g = InstalledState ListState TickState ListQuery TickQuery g TickSlot
+type ListStateP g = ParentState ListState TickState ListQuery TickQuery g TickSlot
 
 listComponent :: forall g. (Functor g) => Component (ListStateP g) ListQueryP g
-listComponent = parentComponent render eval
+listComponent = parentComponent { render, eval, peek: Nothing }
   where
 
   render :: ListState -> ParentHTML TickState ListQuery TickQuery g TickSlot

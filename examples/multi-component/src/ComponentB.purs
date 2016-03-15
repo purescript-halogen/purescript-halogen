@@ -1,12 +1,12 @@
-module Example.ComponentB where
+module ComponentB where
 
 import Prelude
 
 import Data.Generic (Generic, gEq, gCompare)
 
 import Halogen
-import qualified Halogen.HTML.Indexed as H
-import qualified Halogen.HTML.Events.Indexed as E
+import Halogen.HTML.Indexed as H
+import Halogen.HTML.Events.Indexed as E
 
 newtype StateB = StateB { on :: Boolean }
 
@@ -24,7 +24,7 @@ instance eqSlotB :: Eq SlotB where eq = gEq
 instance ordSlotB :: Ord SlotB where compare = gCompare
 
 componentB :: forall g. (Functor g) => Component StateB QueryB g
-componentB = component render eval
+componentB = component { render, eval }
   where
 
   render :: StateB -> ComponentHTML QueryB

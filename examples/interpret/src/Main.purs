@@ -1,18 +1,17 @@
-module Example.Interpret where
+module Main where
 
 import Prelude
 
-import Control.Monad.Aff (Aff(), runAff)
+import Control.Monad.Aff (Aff())
 import Control.Monad.Aff.Console (log)
 import Control.Monad.Eff (Eff())
 import Control.Monad.Eff.Console (CONSOLE())
-import Control.Monad.Eff.Exception (throwException)
 import Control.Monad.Free (Free(), liftF, foldFree)
 
 import Halogen
-import Halogen.Util (appendToBody, onLoad)
-import qualified Halogen.HTML.Indexed as H
-import qualified Halogen.HTML.Events.Indexed as E
+import Halogen.Util (runHalogenAff, awaitBody)
+import Halogen.HTML.Indexed as H
+import Halogen.HTML.Events.Indexed as E
 
 type State = { on :: Boolean }
 
@@ -28,7 +27,7 @@ output :: String -> Output Unit
 output msg = liftF (Log msg unit)
 
 ui :: Component State Query Output
-ui = component render eval
+ui = component { render, eval }
   where
 
   render :: State -> ComponentHTML Query
@@ -56,6 +55,6 @@ ui' = interpret (foldFree evalOutput) ui
     pure next
 
 main :: Eff (HalogenEffects (console :: CONSOLE)) Unit
-main = runAff throwException (const (pure unit)) $ do
-  app <- runUI ui' initialState
-  onLoad $ appendToBody app.node
+main = runHalogenAff do
+  body <- awaitBody
+  runUI ui' initialState body

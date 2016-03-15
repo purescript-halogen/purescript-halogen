@@ -8,18 +8,15 @@ module Halogen.Query.HalogenF
 import Prelude
 
 import Control.Alt (Alt)
-import Control.Plus (Plus)
+import Control.Monad.Aff.Free (Affable, fromAff)
 import Control.Monad.Free.Trans (hoistFreeT, bimapFreeT)
+import Control.Plus (Plus)
 
 import Data.Bifunctor (lmap)
-import Data.Functor.Aff (FunctorAff, liftAff)
-import Data.Functor.Eff (FunctorEff, liftEff)
-import Data.Inject (Inject)
-import Data.Maybe (Maybe(..))
 import Data.NaturalTransformation (Natural())
 
-import Halogen.Query.StateF (StateF())
 import Halogen.Query.EventSource (EventSource(..), runEventSource)
+import Halogen.Query.StateF (StateF())
 
 -- | The Halogen component algebra
 data HalogenFP (e :: (* -> *) -> (* -> *) -> *) s f g a
@@ -38,21 +35,8 @@ instance functorHalogenF :: (Functor g) => Functor (HalogenFP e s f g) where
       QueryHF q -> QueryHF (map f q)
       HaltHF -> HaltHF
 
-instance functorEffHalogenF :: (FunctorEff eff g) => FunctorEff eff (HalogenFP e s f g) where
-  liftEff = QueryHF <<< liftEff
-
-instance functorAffHalogenF :: (FunctorAff eff g) => FunctorAff eff (HalogenFP e s f g) where
-  liftAff = QueryHF <<< liftAff
-
-instance injectStateHF :: Inject (StateF s) (HalogenFP e s f g) where
-  inj = StateHF
-  prj (StateHF q) = Just q
-  prj _ = Nothing
-
-instance injectQueryHF :: Inject g (HalogenFP e s f g) where
-  inj = QueryHF
-  prj (QueryHF q) = Just q
-  prj _ = Nothing
+instance affableHalogenF :: (Affable eff g) => Affable eff (HalogenFP e s f g) where
+  fromAff = QueryHF <<< fromAff
 
 instance altHalogenF :: (Functor g) => Alt (HalogenFP e s f g) where
   alt HaltHF h = h
@@ -64,7 +48,7 @@ instance plusHalogenF :: (Functor g) => Plus (HalogenFP e s f g) where
 -- | Change all the parameters of `HalogenF`.
 transformHF
   :: forall s s' f f' g g'
-   . (Functor g, Functor g')
+   . (Functor g')
   => Natural (StateF s) (StateF s')
   -> Natural f f'
   -> Natural g g'

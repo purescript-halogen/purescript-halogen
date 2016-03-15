@@ -1,21 +1,24 @@
 language: node_js
 dist: trusty
 sudo: required
-node_js:
-  - 5
+node_js: 5
 install:
   - npm install
+  - npm install -g bower
+  - bower install
 script:
-  - npm run build
+  - npm test
   - npm run example-ace
   - npm run example-ajax
   - npm run example-components
   - npm run example-counter
+  - npm run example-deep-peek
   - npm run example-interpret
   - npm run example-intro
+  - npm run example-keyboard-shortcuts
+  - npm run example-lifecycle
   - npm run example-multi-component
   - npm run example-todo
-  - npm run example-keyboard-shortcuts
 after_success:
 - >-
   test $TRAVIS_TAG &&

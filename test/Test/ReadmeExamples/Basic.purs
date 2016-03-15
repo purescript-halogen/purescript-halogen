@@ -2,8 +2,8 @@ module Test.ReadmeExamples.Basic where
 
 import Prelude
 import Halogen
-import qualified Halogen.HTML.Indexed as H
-import qualified Halogen.HTML.Events.Indexed as E
+import Halogen.HTML.Indexed as H
+import Halogen.HTML.Events.Indexed as E
 
 -- | The state of the component
 type State = { on :: Boolean }
@@ -15,16 +15,20 @@ data Query a
 
 -- | The component definition
 myComponent :: forall g. Component State Query g
-myComponent = component render eval
+myComponent = component { render, eval }
   where
 
-  render :: Render State Query
+  render :: State -> ComponentHTML Query
   render state =
-    H.div_ [ H.button [ E.onClick (E.input_ ToggleState) ]
-                      [ H.text (if state.on then "On" else "Off") ]
-           ]
+    H.div_
+      [ H.h1_
+          [ H.text "Toggle Button" ]
+      , H.button
+          [ E.onClick (E.input_ ToggleState) ]
+          [ H.text (if state.on then "On" else "Off") ]
+      ]
 
-  eval :: Eval Query State Query g
+  eval :: Natural Query (ComponentDSL State Query g)
   eval (ToggleState next) = do
     modify (\state -> { on: not state.on })
     pure next

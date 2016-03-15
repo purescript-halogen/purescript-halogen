@@ -1,11 +1,11 @@
-module Example.Components.Ticker where
+module Ticker where
 
 import Prelude
 
 import Halogen
-import qualified Halogen.HTML.Indexed as H
-import qualified Halogen.HTML.Properties.Indexed as P
-import qualified Halogen.HTML.Events.Indexed as E
+import Halogen.HTML.Indexed as H
+import Halogen.HTML.Properties.Indexed as P
+import Halogen.HTML.Events.Indexed as E
 
 data TickState = TickState Int
 
@@ -14,7 +14,7 @@ data TickQuery a
   | GetTick (Int -> a)
 
 tickerComponent :: forall g. (Functor g) => Component TickState TickQuery g
-tickerComponent = component render eval
+tickerComponent = component { render, eval }
   where
 
   render :: TickState -> ComponentHTML TickQuery

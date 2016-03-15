@@ -20,7 +20,7 @@ import Halogen.Component
 import Halogen.Driver
 import Halogen.Effects
 import Halogen.Query
-import qualified Halogen.HTML.Core as C
+import Halogen.HTML.Core as C
 
 -- | A specialised version of the `Halogen.HTML.Core.HTML` type where `i` is
 -- | `* -> *` kinded to match the kind of a component query algebra.
