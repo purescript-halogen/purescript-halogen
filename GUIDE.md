@@ -85,7 +85,7 @@ component :: forall s f g. ComponentSpec s f g -> Component s f g
 
 ## Rendering
 
-A `render` function takes the component’s current state value and returns a value constructed using Halogen’s type safe `HTML` DSL, with the ability for elements in the rendered HTML to send actions back to the component, using the query algebra `f`. `ComponentHTML` is a type alias that specialises the the `HTML` type for use in components:
+A `render` function takes the component’s current state value and returns a value constructed using Halogen’s type safe `HTML` DSL, with the ability for elements in the rendered HTML to send actions back to the component, using the query algebra `f`. `ComponentHTML` is a type alias that specialises the `HTML` type for use in components:
 
 ``` purescript
 type ComponentHTML f = HTML Void (f Unit)
