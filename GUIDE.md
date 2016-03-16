@@ -235,7 +235,7 @@ type Driver f eff = Natural f (Aff (HalogenEffects eff))
 
 The purpose of the driver function is to allow us to extract information from the application state, or more commonly, to do things like change the application state in response to changes in the URL using a routing library.
 
-The [`Halogen.Util`](https://pursuit.purescript.org/packages/purescript-halogen/0.6.0/docs/Halogen.Util) module provides a collection of convenience functions for running Halogen components such as [`awaitBody`](https://pursuit.purescript.org/packages/purescript-halogen/0.6.0/docs/Halogen.Util#v:awaitBody) and [`runHalogenAff`](https://pursuit.purescript.org/packages/purescript-halogen/0.6.0/docs/Halogen.Util#v:runHalogenAff). A basic `main` for a component using these functions might looks omething like this:
+The [`Halogen.Util`](https://pursuit.purescript.org/packages/purescript-halogen/0.6.0/docs/Halogen.Util) module provides a collection of convenience functions for running Halogen components such as [`awaitBody`](https://pursuit.purescript.org/packages/purescript-halogen/0.6.0/docs/Halogen.Util#v:awaitBody) and [`runHalogenAff`](https://pursuit.purescript.org/packages/purescript-halogen/0.6.0/docs/Halogen.Util#v:runHalogenAff). A basic `main` for a component using these functions might look something like this:
 
 ``` purescript
 main :: Eff (HalogenEffects ()) Unit
