@@ -536,7 +536,7 @@ script = unsafeCoerce E.script
 section :: forall p i. Node () p i
 section = unsafeCoerce E.section
 
-select :: forall p i. Node (autofocus :: I, disabled :: I, form :: I, multiple :: I, onChange :: I, onScroll :: I, required :: I, size :: I, value :: I) p i
+select :: forall p i. Node (autofocus :: I, disabled :: I, form :: I, multiple :: I, onChange :: I, onScroll :: I, required :: I, size :: I, value :: I, selectedIndex :: I) p i
 select = unsafeCoerce E.select
 
 small :: forall p i. Node () p i

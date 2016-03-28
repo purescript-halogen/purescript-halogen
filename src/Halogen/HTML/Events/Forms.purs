@@ -1,6 +1,7 @@
 -- | Convenience functions for working with form events.
 module Halogen.HTML.Events.Forms
   ( onValueChange
+  , onSelectedIndexChange
   , onValueInput
   , onChecked
   ) where
@@ -24,6 +25,11 @@ addForeignPropHandler key prop f = handler' (eventName key) (either (const $ pur
 -- | input field changes.
 onValueChange :: forall i. (String -> EventHandler i) -> Prop i
 onValueChange = addForeignPropHandler "change" "value"
+
+-- | Attaches an event handler which will produce an input when the seleced index of a
+-- | `select` element changes.
+onSelectedIndexChange :: forall i. (Int -> EventHandler i) -> Prop i
+onSelectedIndexChange = addForeignPropHandler "change" "selectedIndex"
 
 -- | Attaches an event handler which will fire on input.
 onValueInput :: forall i. (String -> EventHandler i) -> Prop i

@@ -44,6 +44,7 @@ module Halogen.HTML.Events.Indexed
   , onDrop
   , onValueChange
   , onValueInput
+  , onSelectedIndexChange
   , onChecked
   , module ExportedEvents
   ) where
@@ -196,6 +197,9 @@ onDrop = refine E.onDrop
 
 onValueChange :: forall r i. (String -> EventHandler i) -> IProp (value :: I, onChange :: I | r) i
 onValueChange = refine' F.onValueChange
+
+onSelectedIndexChange :: forall r i. (Int -> EventHandler i) -> IProp (selectedIndex :: I, onChange :: I | r) i
+onSelectedIndexChange = refine' F.onSelectedIndexChange
 
 onValueInput :: forall r i. (String -> EventHandler i) -> IProp (value :: I, onInput :: I | r) i
 onValueInput = refine' F.onValueInput
