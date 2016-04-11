@@ -393,7 +393,7 @@ The function is much like `eval`, but instead of using a natural transformation 
 
 Going back to [the TODO example](examples/todo), here’s the `peek` function for our task list:
 
-```
+``` purescript
 peek :: forall x. ChildF TaskSlot TaskQuery x -> ParentDSL List Task ListQuery TaskQuery g TaskSlot Unit
 peek (ChildF p q) = case q of
   Remove _ -> do
