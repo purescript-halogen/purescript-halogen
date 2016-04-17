@@ -64,6 +64,7 @@ module Halogen.HTML.Properties.Indexed
   , MouseEvents()
   , KeyEvents()
   , FocusEvents()
+  , TransitionEvents()
   , InteractiveEvents()
   , GlobalProperties()
   ) where
@@ -376,6 +377,11 @@ type KeyEvents r =
   | r
   )
 
+type TransitionEvents r =
+  ( onTransitionEnd :: I
+  | r
+  )
+
 type FocusEvents r =
   ( onBlur :: I
   , onFocus :: I
@@ -384,5 +390,5 @@ type FocusEvents r =
   | r
   )
 
-type InteractiveEvents r = FocusEvents (KeyEvents (MouseEvents r))
+type InteractiveEvents r = FocusEvents (TransitionEvents (KeyEvents (MouseEvents r)))
 type GlobalProperties r = GlobalAttributes (GlobalEvents r)
