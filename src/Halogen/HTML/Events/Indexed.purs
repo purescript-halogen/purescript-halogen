@@ -17,6 +17,7 @@ module Halogen.HTML.Events.Indexed
   , onSearch
   , onSelect
   , onSubmit
+  , onTransitionEnd
   , onClick
   , onContextMenu
   , onDoubleClick
@@ -119,6 +120,9 @@ onSelect = refine E.onSelect
 
 onSubmit :: forall r i. IEventProp (onSubmit :: I | r) () i
 onSubmit = refine E.onSubmit
+
+onTransitionEnd :: forall r i. IEventProp (onTransitionEnd :: I | r) () i
+onTransitionEnd = refine E.onTransitionEnd
 
 onClick :: forall r i. IEventProp (onClick :: I | r) MouseEvent i
 onClick = refine E.onClick

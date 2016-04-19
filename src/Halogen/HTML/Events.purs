@@ -72,6 +72,9 @@ onSelect = handler (eventName "select")
 onSubmit :: forall i. EventProp () i
 onSubmit = handler (eventName "submit")
 
+onTransitionEnd :: forall i. EventProp () i
+onTransitionEnd = handler (eventName "transitionend")
+
 onClick :: forall i. EventProp MouseEvent i
 onClick = handler (eventName "click")
 
