@@ -11,20 +11,21 @@ module Halogen.Component.Tree
 
 import Prelude
 import Data.Bifunctor (bimap)
+import Data.Lazy (Lazy(), defer)
 import Data.NaturalTransformation (Natural())
 import Halogen.HTML.Core (HTML(..))
 import Unsafe.Coerce (unsafeCoerce)
 
 type TreeF f p p' =
   { slot :: p
-  , html :: HTML (Tree f p') (f Unit)
+  , html :: Lazy (HTML (Tree f p') (f Unit))
   , eq :: p' -> p' -> Boolean
   , thunk :: Boolean
   }
 
 foreign import data Tree :: (* -> *) -> * -> *
 
-mkTree :: forall f p'. (Eq p') => HTML (Tree f p') (f Unit) -> Tree f Unit
+mkTree :: forall f p'. (Eq p') => Lazy (HTML (Tree f p') (f Unit)) -> Tree f Unit
 mkTree html =
   mkTree'
     { slot: unit
@@ -43,7 +44,7 @@ graftTree :: forall f f' p p'. Natural f f' -> (p -> p') -> Tree f p -> Tree f' 
 graftTree l r = runTree \t ->
   mkTree'
     { slot: r t.slot
-    , html: bimap (graftTree l id) l t.html
+    , html: bimap (graftTree l id) l <$> t.html
     , eq: t.eq
     , thunk: t.thunk
     }
@@ -55,7 +56,7 @@ emptyTree :: forall f. Tree f Unit
 emptyTree =
   mkTree'
     { slot: unit
-    , html: Text ""
+    , html: defer \_ -> Text ""
     , eq: \_ _ -> false
     , thunk: false
     }
