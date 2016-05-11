@@ -9,6 +9,7 @@ import Control.Bind ((=<<))
 import Control.Coroutine (await)
 import Control.Coroutine.Stalling (($$?))
 import Control.Coroutine.Stalling as SCR
+import Control.Monad (when)
 import Control.Monad.Aff (Aff(), forkAff, forkAll)
 import Control.Monad.Aff.AVar (AVar(), makeVar, makeVar', putVar, takeVar, modifyVar)
 import Control.Monad.Eff.Class (liftEff)
@@ -16,12 +17,12 @@ import Control.Monad.Free (runFreeM)
 import Control.Monad.Rec.Class (forever, tailRecM)
 import Control.Monad.State (runState)
 import Control.Monad.Trans (lift)
-import Control.Plus (Plus, empty)
+import Control.Plus (empty)
 
 import Data.Either (Either(..))
 import Data.Foldable (Foldable, foldr)
 import Data.List (List(Nil), (:))
-import Data.Maybe (maybe)
+import Data.Maybe (Maybe(..), maybe, isJust, isNothing)
 import Data.NaturalTransformation (Natural())
 import Data.Tuple (Tuple(..))
 
@@ -34,6 +35,7 @@ import Halogen.Effects (HalogenEffects())
 import Halogen.HTML.Renderer.VirtualDOM (renderTree)
 import Halogen.Internal.VirtualDOM (VTree(), createElement, diff, patch)
 import Halogen.Query (HalogenF(), HalogenFP(..))
+import Halogen.Query.HalogenF (RenderPending(..))
 import Halogen.Query.EventSource (runEventSource)
 import Halogen.Query.StateF (StateF(..), stateN)
 
@@ -50,6 +52,7 @@ type DriverState s =
   , renderPending :: Boolean
   , renderPaused :: Boolean
   }
+
 
 -- | This function is the main entry point for a Halogen based UI, taking a root
 -- | component, initial state, and HTML element to attach the rendered component
@@ -88,14 +91,17 @@ runUI c s element = _.driver <$> do
 
   driver :: AVar (DriverState s) -> Driver f eff
   driver ref q = do
-    x <- runFreeM (eval ref) (queryComponent c q)
-    render ref
+    rpRef <- makeVar' Nothing
+    x <- runFreeM (eval ref rpRef) (queryComponent c q)
+    rp <- takeVar rpRef
+    when (isJust rp) $ render ref
     pure x
 
   eval
     :: AVar (DriverState s)
+    -> AVar (Maybe RenderPending)
     -> Natural (HalogenF s f (Aff (HalogenEffects eff))) (Aff (HalogenEffects eff))
-  eval ref h =
+  eval ref rpRef h =
     case h of
       StateHF i -> do
         ds <- takeVar ref
@@ -104,15 +110,27 @@ runUI c s element = _.driver <$> do
             putVar ref ds
             pure (k ds.state)
           Modify f next -> do
-            putVar ref $ ds { state = f ds.state, renderPending = true }
+            rp <- takeVar rpRef
+            putVar ref $ ds { state = f ds.state }
+            putVar rpRef $ Just Pending
             pure next
       SubscribeHF es next -> do
         let producer = runEventSource es
             consumer = forever (lift <<< driver ref =<< await)
         forkAff $ SCR.runStallingProcess (producer $$? consumer)
         pure next
+      RenderHF p next -> do
+        modifyVar (const p) rpRef
+        when (isNothing p) $ render ref
+        pure next
+      RenderPendingHF k -> do
+        rp <- takeVar rpRef
+        putVar rpRef rp
+        pure $ k rp
       QueryHF q -> do
-        render ref
+        rp <- takeVar rpRef
+        when (isJust rp) $ render ref
+        putVar rpRef Nothing
         q
       HaltHF -> empty
 
@@ -133,14 +151,16 @@ runUI c s element = _.driver <$> do
               putVar ref s'
               pure i'
         SubscribeHF _ next -> pure next
+        RenderHF p next -> pure next
+        RenderPendingHF k -> pure $ k Nothing
         QueryHF q -> q
         HaltHF -> empty
 
   render :: AVar (DriverState s) -> Aff (HalogenEffects eff) Unit
   render ref = do
     ds <- takeVar ref
-    if ds.renderPaused || not ds.renderPending
-      then putVar ref ds
+    if ds.renderPaused
+      then putVar ref $ ds { renderPending = true }
       else do
         let rc = renderComponent c ds.state
             vtree' = renderTree (driver ref) rc.tree
