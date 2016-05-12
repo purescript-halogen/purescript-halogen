@@ -55,6 +55,9 @@ module Halogen.HTML.Properties.Indexed
   , autofocus
   , multiple
 
+  , draggable
+  , tabIndex
+
   , ref
 
   , module PExport
@@ -337,6 +340,12 @@ autofocus = refine P.autofocus
 multiple :: forall r i. Boolean -> IProp (multiple :: I | r) i
 multiple = refine P.multiple
 
+draggable :: forall r i. Boolean -> IProp (draggable :: I | r) i
+draggable = refine P.draggable
+
+tabIndex :: forall r i. Int -> IProp (tabIndex :: I | r) i
+tabIndex = refine P.tabIndex
+
 ref :: forall r i. (Maybe HTMLElement -> i) -> IProp (ref :: I | r) i
 ref = refine P.ref
 
@@ -348,6 +357,8 @@ type GlobalAttributes r =
   , style :: I
   , spellcheck :: I
   , key :: I
+  , draggable :: I
+  , tabIndex :: I
   , ref :: I
   | r
   )

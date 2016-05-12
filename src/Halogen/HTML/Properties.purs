@@ -2,15 +2,16 @@
 module Halogen.HTML.Properties
   ( key
   , alt
+
   , charset
-  , class_
-  , classes
+  , class_, classes
   , cols
   , rows
   , colSpan
   , rowSpan
   , for
   , height
+  , width
   , href
   , id_
   , name
@@ -18,22 +19,28 @@ module Halogen.HTML.Properties
   , src
   , target
   , title
+
   , type_
+
   , value
-  , width
   , disabled
+  , enabled
+
   , required
   , readonly
   , spellcheck
-  , enabled
   , checked
   , selected
   , placeholder
   , autocomplete
   , autofocus
   , multiple
+
   , draggable
+  , tabIndex
+
   , ref
+
   , LengthLiteral(..)
   ) where
 
@@ -155,6 +162,9 @@ multiple = prop (propName "multiple") (Just $ attrName "multiple")
 
 draggable :: forall a. Boolean -> Prop a
 draggable = prop (propName "draggable") (Just $ attrName "draggable")
+
+tabIndex :: forall a. Int -> Prop a
+tabIndex = prop (propName "tabIndex") (Just $ attrName "tabindex")
 
 ref :: forall i. (Maybe HTMLElement -> i) -> Prop i
 ref = Ref
