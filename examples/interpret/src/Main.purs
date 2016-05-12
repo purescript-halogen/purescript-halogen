@@ -2,11 +2,11 @@ module Main where
 
 import Prelude
 
-import Control.Monad.Aff (Aff())
+import Control.Monad.Aff (Aff)
 import Control.Monad.Aff.Console (log)
-import Control.Monad.Eff (Eff())
-import Control.Monad.Eff.Console (CONSOLE())
-import Control.Monad.Free (Free(), liftF, foldFree)
+import Control.Monad.Eff (Eff)
+import Control.Monad.Eff.Console (CONSOLE)
+import Control.Monad.Free (Free, liftF, foldFree)
 
 import Halogen
 import Halogen.Util (runHalogenAff, awaitBody)

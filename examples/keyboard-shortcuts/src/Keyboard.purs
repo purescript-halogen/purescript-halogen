@@ -1,7 +1,7 @@
 module Keyboard
-  ( KEYBOARD()
-  , KeyboardEvent()
-  , KeyboardEventR()
+  ( KEYBOARD
+  , KeyboardEvent
+  , KeyboardEventR
   , readKeyboardEvent
   , preventDefault
   , onKeyUp

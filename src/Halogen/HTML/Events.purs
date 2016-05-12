@@ -8,18 +8,20 @@ module Halogen.HTML.Events
 
 import Prelude
 
-import Halogen.Query (Action(), action)
-import Halogen.HTML.Events.Handler (EventHandler(), preventDefault, stopPropagation, stopImmediatePropagation)
-import Halogen.HTML.Events.Types (Event(), MouseEvent(), DragEvent(), FocusEvent(), KeyboardEvent())
-import Halogen.HTML.Core (Prop(), handler, eventName)
+import Data.Maybe (Maybe(..))
 
-type EventProp e i = (Event e -> EventHandler i) -> Prop i
+import Halogen.Query (Action, action)
+import Halogen.HTML.Events.Handler (EventHandler, preventDefault, stopPropagation, stopImmediatePropagation)
+import Halogen.HTML.Events.Types (Event, MouseEvent, DragEvent, FocusEvent, KeyboardEvent)
+import Halogen.HTML.Core (Prop, handler, eventName)
 
-input :: forall f a. (a -> Action f) -> a -> EventHandler (f Unit)
-input f x = pure $ action (f x)
+type EventProp e i = (Event e -> EventHandler (Maybe i)) -> Prop i
 
-input_ :: forall f a. Action f -> a -> EventHandler (f Unit)
-input_ f _ = pure $ action f
+input :: forall f a. (a -> Action f) -> a -> EventHandler (Maybe (f Unit))
+input f x = pure $ Just $ action (f x)
+
+input_ :: forall f a. Action f -> a -> EventHandler (Maybe (f Unit))
+input_ f _ = pure $ Just $ action f
 
 onAbort :: forall i. EventProp () i
 onAbort = handler (eventName "abort")

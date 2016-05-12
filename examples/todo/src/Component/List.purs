@@ -6,8 +6,7 @@ import Control.Plus (Plus)
 import Control.Monad (when)
 
 import Data.Array (snoc, filter, length)
-import Data.Functor.Coproduct (Coproduct())
-import Data.Generic (Generic, gEq, gCompare)
+import Data.Functor.Coproduct (Coproduct)
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Map (size) as M
 
@@ -25,10 +24,8 @@ data ListQuery a
 
 -- | The slot value that is filled by tasks during the install process.
 newtype TaskSlot = TaskSlot TaskId
-
-derive instance genericTaskSlot :: Generic TaskSlot
-instance eqTaskSlot :: Eq TaskSlot where eq = gEq
-instance ordTaskSlot :: Ord TaskSlot where compare = gCompare
+derive instance eqTaskSlot :: Eq TaskSlot
+derive instance ordTaskSlot :: Ord TaskSlot
 
 type State g = ParentState List Task ListQuery TaskQuery g TaskSlot
 type Query = Coproduct ListQuery (ChildF TaskSlot TaskQuery)

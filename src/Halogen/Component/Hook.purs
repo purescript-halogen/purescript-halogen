@@ -1,6 +1,6 @@
 module Halogen.Component.Hook
   ( Hook(..)
-  , Finalized()
+  , Finalized
   , finalized
   , runFinalized
   , mapFinalized
@@ -9,9 +9,9 @@ module Halogen.Component.Hook
   ) where
 
 import Prelude
-import Control.Monad.Free (Free(), mapF)
-import Data.NaturalTransformation (Natural())
-import Halogen.Query.HalogenF (HalogenF(), hoistHalogenF)
+import Control.Monad.Free (Free, mapF)
+import Data.NaturalTransformation (Natural)
+import Halogen.Query.HalogenF (HalogenF, hoistHalogenF)
 import Unsafe.Coerce (unsafeCoerce)
 
 data Hook f g

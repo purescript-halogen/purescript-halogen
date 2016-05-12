@@ -2,14 +2,13 @@ module Main where
 
 import Prelude
 
-import Control.Monad.Eff (Eff())
+import Control.Monad.Eff (Eff)
 import Control.Plus (Plus)
 
-import Data.Const (Const(), getConst)
-import Data.Functor.Coproduct (Coproduct(), coproduct)
-import Data.Generic (Generic, gEq, gCompare)
+import Data.Const (Const, getConst)
+import Data.Functor.Coproduct (Coproduct, coproduct)
 import Data.Maybe (Maybe(..))
-import Data.Void (Void(), absurd)
+import Data.Void (Void, absurd)
 
 import Halogen
 import Halogen.Util (runHalogenAff, awaitBody)
@@ -26,10 +25,8 @@ initialState :: State
 initialState = { count: 0 }
 
 newtype ListSlot = ListSlot String
-
-derive instance genericListSlot :: Generic ListSlot
-instance eqListSlot :: Eq ListSlot where eq = gEq
-instance ordListSlot :: Ord ListSlot where compare = gCompare
+derive instance eqListSlot :: Eq ListSlot
+derive instance ordListSlot :: Ord ListSlot
 
 type QueryP = Coproduct Query (ChildF ListSlot ListQueryP)
 type StateP g = ParentState State (ListStateP g) Query ListQueryP g ListSlot

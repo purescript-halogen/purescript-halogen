@@ -1,5 +1,5 @@
 module Halogen.Driver
-  ( Driver()
+  ( Driver
   , runUI
   ) where
 
@@ -10,8 +10,8 @@ import Control.Coroutine (await)
 import Control.Coroutine.Stalling (($$?))
 import Control.Coroutine.Stalling as SCR
 import Control.Monad (when)
-import Control.Monad.Aff (Aff(), forkAff, forkAll)
-import Control.Monad.Aff.AVar (AVar(), makeVar, makeVar', putVar, takeVar, modifyVar)
+import Control.Monad.Aff (Aff, forkAff, forkAll)
+import Control.Monad.Aff.AVar (AVar, makeVar, makeVar', putVar, takeVar, modifyVar)
 import Control.Monad.Eff.Class (liftEff)
 import Control.Monad.Free (runFreeM)
 import Control.Monad.Rec.Class (forever, tailRecM)
@@ -20,21 +20,21 @@ import Control.Monad.Trans (lift)
 import Control.Plus (empty)
 
 import Data.Either (Either(..))
-import Data.Foldable (Foldable, foldr)
+import Data.Foldable (class Foldable, foldr)
 import Data.List (List(Nil), (:))
 import Data.Maybe (Maybe(..), maybe, isJust, isNothing)
-import Data.NaturalTransformation (Natural())
+import Data.NaturalTransformation (Natural)
 import Data.Tuple (Tuple(..))
 
-import DOM.HTML.Types (HTMLElement(), htmlElementToNode)
+import DOM.HTML.Types (HTMLElement, htmlElementToNode)
 import DOM.Node.Node (appendChild)
 
-import Halogen.Component (Component(), ComponentDSL(), renderComponent, queryComponent, initializeComponent)
-import Halogen.Component.Hook (Hook(..), Finalized(), runFinalized)
-import Halogen.Effects (HalogenEffects())
+import Halogen.Component (Component, ComponentDSL, renderComponent, queryComponent, initializeComponent)
+import Halogen.Component.Hook (Hook(..), Finalized, runFinalized)
+import Halogen.Effects (HalogenEffects)
 import Halogen.HTML.Renderer.VirtualDOM (renderTree)
-import Halogen.Internal.VirtualDOM (VTree(), createElement, diff, patch)
-import Halogen.Query (HalogenF(), HalogenFP(..))
+import Halogen.Internal.VirtualDOM (VTree, createElement, diff, patch)
+import Halogen.Query (HalogenF, HalogenFP(..))
 import Halogen.Query.HalogenF (RenderPending(..))
 import Halogen.Query.EventSource (runEventSource)
 import Halogen.Query.StateF (StateF(..), stateN)

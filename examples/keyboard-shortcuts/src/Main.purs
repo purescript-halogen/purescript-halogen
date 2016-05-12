@@ -4,7 +4,7 @@ import Prelude
 
 import Control.Monad.Aff as A
 import Control.Monad.Aff.AVar as A
-import Control.Monad.Eff (Eff())
+import Control.Monad.Eff (Eff)
 
 import Data.Char as CH
 import Data.Const

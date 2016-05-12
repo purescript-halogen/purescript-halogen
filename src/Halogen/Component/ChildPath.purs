@@ -2,11 +2,11 @@ module Halogen.Component.ChildPath where
 
 import Prelude ((<<<))
 
-import Data.Either (Either())
-import Data.Functor.Coproduct (Coproduct())
-import Data.Injector (Injector(), prj, inj, injI, injLE, injLC, injRE, injRC)
-import Data.Maybe (Maybe())
-import Data.NaturalTransformation (Natural())
+import Data.Either (Either)
+import Data.Functor.Coproduct (Coproduct)
+import Data.Injector (Injector, prj, inj, injI, injLE, injLC, injRE, injRC)
+import Data.Maybe (Maybe)
+import Data.NaturalTransformation (Natural)
 
 -- | Represents a path through `Either` and `Coproduct` types for the state,
 -- | query algebra, and slots of a component. Used when installing children of
@@ -17,9 +17,7 @@ data ChildPath s s' f f' p p' = ChildPath (Injector s s') (forall a. Injector (f
 compose :: forall s t u f g h p q r. ChildPath t u g h q r -> ChildPath s t f g p q -> ChildPath s u f h p r
 compose (ChildPath f h j) (ChildPath g i k) = ChildPath (f <<< g) (h <<< i) (j <<< k)
 
--- | An infix alias for `compose`.
-(:>) :: forall s t u f g h p q r. ChildPath t u g h q r -> ChildPath s t f g p q -> ChildPath s u f h p r
-(:>) = compose
+infixl 4 compose as :>
 
 -- | A `ChildPath` that represents taking the left-hand choice for each of a
 -- | component's `Either` and `Coproduct`s choices.

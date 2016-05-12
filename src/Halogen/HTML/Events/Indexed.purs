@@ -52,17 +52,19 @@ module Halogen.HTML.Events.Indexed
 
 import Prelude
 
+import Data.Maybe (Maybe)
+
 import Unsafe.Coerce (unsafeCoerce)
 
-import Halogen.HTML.Core (Prop())
+import Halogen.HTML.Core (Prop)
 import Halogen.HTML.Events (input, input_) as ExportedEvents
 import Halogen.HTML.Events as E
 import Halogen.HTML.Events.Forms as F
-import Halogen.HTML.Events.Handler (EventHandler())
-import Halogen.HTML.Events.Types (Event(), MouseEvent(), DragEvent(), FocusEvent(), KeyboardEvent())
-import Halogen.HTML.Properties.Indexed (IProp(), I())
+import Halogen.HTML.Events.Handler (EventHandler)
+import Halogen.HTML.Events.Types (Event, MouseEvent, DragEvent, FocusEvent, KeyboardEvent)
+import Halogen.HTML.Properties.Indexed (IProp, I)
 
-type IEventProp r e i = (Event e -> EventHandler i) -> IProp r i
+type IEventProp r e i = (Event e -> EventHandler (Maybe i)) -> IProp r i
 
 refine :: forall e i r. E.EventProp e i -> IEventProp r e i
 refine = unsafeCoerce
@@ -199,14 +201,14 @@ onDragStart = refine E.onDragStart
 onDrop :: forall r i. IEventProp r DragEvent i
 onDrop = refine E.onDrop
 
-onValueChange :: forall r i. (String -> EventHandler i) -> IProp (value :: I, onChange :: I | r) i
+onValueChange :: forall r i. (String -> EventHandler (Maybe i)) -> IProp (value :: I, onChange :: I | r) i
 onValueChange = refine' F.onValueChange
 
-onSelectedIndexChange :: forall r i. (Int -> EventHandler i) -> IProp (selectedIndex :: I, onChange :: I | r) i
+onSelectedIndexChange :: forall r i. (Int -> EventHandler (Maybe i)) -> IProp (selectedIndex :: I, onChange :: I | r) i
 onSelectedIndexChange = refine' F.onSelectedIndexChange
 
-onValueInput :: forall r i. (String -> EventHandler i) -> IProp (value :: I, onInput :: I | r) i
+onValueInput :: forall r i. (String -> EventHandler (Maybe i)) -> IProp (value :: I, onInput :: I | r) i
 onValueInput = refine' F.onValueInput
 
-onChecked :: forall r i. (Boolean -> EventHandler i) -> IProp (checked :: I, onChange :: I | r) i
+onChecked :: forall r i. (Boolean -> EventHandler (Maybe i)) -> IProp (checked :: I, onChange :: I | r) i
 onChecked = refine' F.onChecked

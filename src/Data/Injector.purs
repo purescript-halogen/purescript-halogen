@@ -1,6 +1,6 @@
 module Data.Injector
-  ( Prism()
-  , Injector()
+  ( Prism
+  , Injector
   , inj
   , prj
   , injI
@@ -10,16 +10,16 @@ module Data.Injector
   , injRC
   ) where
 
-import Prelude (Applicative, (<<<), id, const, pure, map)
+import Prelude
 
 import Data.Const (Const(..), getConst)
 import Data.Either (Either(..), either)
-import Data.Functor.Coproduct (Coproduct(), coproduct, left, right)
+import Data.Functor.Coproduct (Coproduct, coproduct, left, right)
 import Data.Identity (Identity(..), runIdentity)
 import Data.Maybe (Maybe(..), maybe)
 import Data.Maybe.First (First(..), runFirst)
-import Data.Profunctor (Profunctor, dimap)
-import Data.Profunctor.Choice (Choice)
+import Data.Profunctor (class Profunctor, dimap)
+import Data.Profunctor.Choice (class Choice)
 import Data.Profunctor.Choice as PF
 
 -- | Compatible with `Prism` from `purescript-lens`.

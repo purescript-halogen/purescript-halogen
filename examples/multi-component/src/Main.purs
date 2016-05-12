@@ -2,15 +2,15 @@ module MultiComponent where
 
 import Prelude
 
-import Control.Monad.Eff (Eff())
+import Control.Monad.Eff (Eff)
 import Control.Plus (Plus)
 
-import Data.Either (Either())
-import Data.Functor.Coproduct (Coproduct())
+import Data.Either (Either)
+import Data.Functor.Coproduct (Coproduct)
 import Data.Maybe (Maybe(..))
 
 import Halogen
-import Halogen.Component.ChildPath (ChildPath(), cpL, cpR, (:>))
+import Halogen.Component.ChildPath (ChildPath, cpL, cpR, (:>))
 import Halogen.HTML.Events.Indexed as E
 import Halogen.HTML.Indexed as H
 import Halogen.Util (runHalogenAff, awaitBody)
