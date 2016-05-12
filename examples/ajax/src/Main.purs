@@ -3,8 +3,8 @@ module Main where
 import Prelude
 
 import Control.Alt ((<|>))
-import Control.Monad.Aff (Aff())
-import Control.Monad.Eff (Eff())
+import Control.Monad.Aff (Aff)
+import Control.Monad.Eff (Eff)
 
 import Data.Either (Either(..))
 import Data.Foldable (foldMap)
@@ -18,7 +18,7 @@ import Halogen.HTML.Indexed as H
 import Halogen.HTML.Events.Indexed as E
 import Halogen.HTML.Properties.Indexed as P
 
-import Network.HTTP.Affjax (AJAX(), post)
+import Network.HTTP.Affjax (AJAX, post)
 
 -- | The state of the component.
 type State = { busy :: Boolean, code :: String, result :: Maybe String }

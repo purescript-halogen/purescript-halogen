@@ -1,8 +1,8 @@
 module Test.DocExamples.Query.StateF.Modify where
 
 import Prelude
-import Data.NaturalTransformation (Natural())
-import Halogen.Component (ComponentDSL())
+import Data.NaturalTransformation (Natural)
+import Halogen.Component (ComponentDSL)
 import Halogen.Query (modify)
 
 data Query a = Increment a

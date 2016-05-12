@@ -7,6 +7,7 @@ install:
   - npm install -g bower
   - bower install
 script:
+  - npm run build
   - npm test
   - npm run example-ace
   - npm run example-ajax
@@ -22,8 +23,5 @@ script:
 after_success:
 - >-
   test $TRAVIS_TAG &&
-  node_modules/.bin/psc-publish > .pursuit.json &&
-  curl -X POST http://pursuit.purescript.org/packages \
-    -d @.pursuit.json \
-    -H 'Accept: application/json' \
-    -H "Authorization: token ${GITHUB_TOKEN}"
+  echo $GITHUB_TOKEN | pulp login &&
+  echo y | pulp publish --no-push

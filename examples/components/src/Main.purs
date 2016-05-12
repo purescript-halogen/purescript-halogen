@@ -2,11 +2,10 @@ module Main where
 
 import Prelude
 
-import Control.Monad.Eff (Eff())
+import Control.Monad.Eff (Eff)
 import Control.Plus (Plus)
 
-import Data.Functor.Coproduct (Coproduct())
-import Data.Generic (Generic, gEq, gCompare)
+import Data.Functor.Coproduct (Coproduct)
 import Data.Maybe (Maybe(..), maybe)
 
 import Halogen
@@ -14,7 +13,7 @@ import Halogen.Util (runHalogenAff, awaitBody)
 import Halogen.HTML.Indexed as H
 import Halogen.HTML.Events.Indexed as E
 
-import Ticker (TickState(), TickQuery(..), ticker)
+import Ticker (TickState, TickQuery(..), ticker)
 
 data Query a = ReadTicks a
 
@@ -25,9 +24,8 @@ initialState = { tickA: Nothing, tickB: Nothing }
 
 newtype TickSlot = TickSlot String
 
-derive instance genericTickSlot :: Generic TickSlot
-instance eqTickSlot :: Eq TickSlot where eq = gEq
-instance ordTickSlot :: Ord TickSlot where compare = gCompare
+derive instance eqTickSlot :: Eq TickSlot
+derive instance ordTickSlot :: Ord TickSlot
 
 type StateP g = ParentState State TickState Query TickQuery g TickSlot
 type QueryP = Coproduct Query (ChildF TickSlot TickQuery)

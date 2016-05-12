@@ -2,18 +2,18 @@ module Child where
 
 import Prelude
 
-import Control.Monad.Aff (Aff())
+import Control.Monad.Aff (Aff)
 import Control.Monad.Aff.Console (log)
-import Control.Monad.Eff.Console (CONSOLE())
+import Control.Monad.Eff.Console (CONSOLE)
 
 import Data.Maybe (Maybe(..))
-import Data.Functor.Coproduct (Coproduct())
+import Data.Functor.Coproduct (Coproduct)
 
 import Halogen
 import Halogen.HTML.Indexed as H
 import Halogen.HTML.Properties.Indexed as P
 
-import DOM.HTML.Types (HTMLElement())
+import DOM.HTML.Types (HTMLElement)
 
 data Query a = Initialize a
              | Finalize a
@@ -88,4 +88,3 @@ cell = lifecycleComponent
     id <- get
     fromAff $ log ("Finalize Cell " <> show id)
     pure next
-

@@ -1,9 +1,9 @@
 -- | Functions and types used to describe the `HalogenF` algebra used in a
 -- | component's `eval` and `peek` functions.
 module Halogen.Query
-  ( Action()
+  ( Action
   , action
-  , Request()
+  , Request
   , request
   , get
   , gets
@@ -18,14 +18,13 @@ module Halogen.Query
   , module Halogen.Query.StateF
   ) where
 
-import Prelude (Unit(), unit, id, const, Functor, (<<<))
+import Prelude
 
-import Control.Alt (Alt)
 import Control.Monad.Aff.Free (fromAff, fromEff)
-import Control.Monad.Free (Free(), liftF)
+import Control.Monad.Free (Free, liftF)
 
-import Halogen.Query.EventSource (EventSource(), ParentEventSource(), eventSource, eventSource_, toParentEventSource)
-import Halogen.Query.HalogenF (HalogenF(), HalogenFP(..))
+import Halogen.Query.EventSource (EventSource, ParentEventSource, eventSource, eventSource_, toParentEventSource)
+import Halogen.Query.HalogenF (HalogenF, HalogenFP(..))
 import Halogen.Query.StateF (StateF(..))
 
 -- | Type synonym for an "action" - An action only causes effects and has no

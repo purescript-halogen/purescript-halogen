@@ -14,15 +14,15 @@ import Prelude
 import Control.Bind ((<=<), (=<<))
 import Control.Coroutine.Aff (produce')
 import Control.Coroutine.Stalling as SCR
-import Control.Monad.Aff.AVar (AVAR())
-import Control.Monad.Aff.Class (MonadAff)
-import Control.Monad.Eff (Eff())
-import Control.Monad.Rec.Class (MonadRec)
-import Control.Monad.Free (Free())
+import Control.Monad.Aff.AVar (AVAR)
+import Control.Monad.Aff.Class (class MonadAff)
+import Control.Monad.Eff (Eff)
+import Control.Monad.Rec.Class (class MonadRec)
+import Control.Monad.Free (Free)
 
-import Data.Const (Const())
+import Data.Const (Const)
 import Data.Either (Either(..))
-import Data.Functor.Coproduct (Coproduct(), coproduct)
+import Data.Functor.Coproduct (Coproduct, coproduct)
 import Data.Maybe (Maybe(..))
 
 import Unsafe.Coerce as U

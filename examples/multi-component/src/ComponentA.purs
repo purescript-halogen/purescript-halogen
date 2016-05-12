@@ -2,8 +2,6 @@ module ComponentA where
 
 import Prelude
 
-import Data.Generic (Generic, gEq, gCompare)
-
 import Halogen
 import Halogen.HTML.Indexed as H
 import Halogen.HTML.Events.Indexed as E
@@ -18,10 +16,8 @@ data QueryA a
   | GetStateA (Boolean -> a)
 
 data SlotA = SlotA
-
-derive instance genericSlotA :: Generic SlotA
-instance eqSlotA :: Eq SlotA where eq = gEq
-instance ordSlotA :: Ord SlotA where compare = gCompare
+derive instance eqSlotA :: Eq SlotA
+derive instance ordSlotA :: Ord SlotA
 
 componentA :: forall g. (Functor g) => Component StateA QueryA g
 componentA = component { render, eval }

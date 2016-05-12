@@ -2,8 +2,8 @@ module Main where
 
 import Prelude
 
-import Control.Monad.Aff (Aff(), later')
-import Control.Monad.Eff (Eff())
+import Control.Monad.Aff (Aff, later')
+import Control.Monad.Eff (Eff)
 
 import Halogen
 import Halogen.Util (runHalogenAff, awaitBody)

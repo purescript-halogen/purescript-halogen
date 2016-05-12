@@ -8,17 +8,17 @@ module Halogen.Query.HalogenF
 
 import Prelude
 
-import Control.Alt (Alt)
-import Control.Monad.Aff.Free (Affable, fromAff)
+import Control.Alt (class Alt)
+import Control.Monad.Aff.Free (class Affable, fromAff)
 import Control.Monad.Free.Trans (hoistFreeT, bimapFreeT)
-import Control.Plus (Plus)
+import Control.Plus (class Plus)
 
 import Data.Bifunctor (lmap)
-import Data.Maybe (Maybe())
-import Data.NaturalTransformation (Natural())
+import Data.Maybe (Maybe)
+import Data.NaturalTransformation (Natural)
 
 import Halogen.Query.EventSource (EventSource(..), runEventSource)
-import Halogen.Query.StateF (StateF())
+import Halogen.Query.StateF (StateF)
 
 data RenderPending = Pending | Deferred
 

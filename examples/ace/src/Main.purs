@@ -2,12 +2,11 @@ module Main where
 
 import Prelude
 
-import Control.Monad.Aff (Aff())
-import Control.Monad.Eff (Eff())
-import Control.Monad.Eff.Console (CONSOLE())
+import Control.Monad.Aff (Aff)
+import Control.Monad.Eff (Eff)
+import Control.Monad.Eff.Console (CONSOLE)
 
-import Data.Functor.Coproduct (Coproduct())
-import Data.Generic (Generic, gEq, gCompare)
+import Data.Functor.Coproduct (Coproduct)
 import Data.Maybe (Maybe(..))
 
 import Halogen
@@ -15,8 +14,8 @@ import Halogen.Util (runHalogenAff, awaitBody)
 import Halogen.HTML.Indexed as H
 import Halogen.HTML.Events.Indexed as E
 
-import Ace.Types (ACE())
-import AceComponent (AceState(), AceQuery(..), AceEffects(), ace, initAceState)
+import Ace.Types (ACE)
+import AceComponent (AceState, AceQuery(..), AceEffects, ace, initAceState)
 
 -- | The application state, which in this case just stores the current text in
 -- | the editor.
@@ -31,9 +30,8 @@ data Query a = ClearText a
 -- | The slot address type for the Ace component.
 data AceSlot = AceSlot
 
-derive instance genericAceSlot :: Generic AceSlot
-instance eqAceSlot :: Eq AceSlot where eq = gEq
-instance ordAceSlot :: Ord AceSlot where compare = gCompare
+derive instance eqAceSlot :: Eq AceSlot
+derive instance ordAceSlot :: Ord AceSlot
 
 -- | Synonyms for the "installed" version of the state and query algebra.
 type StateP eff = ParentState State AceState Query AceQuery (Aff (AceEffects eff)) AceSlot

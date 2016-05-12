@@ -8,8 +8,8 @@ module Halogen.Util
 import Prelude
 
 import Control.Bind ((<=<), (=<<))
-import Control.Monad.Aff (Aff(), makeAff, runAff)
-import Control.Monad.Eff (Eff())
+import Control.Monad.Aff (Aff, makeAff, runAff)
+import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Class (liftEff)
 import Control.Monad.Eff.Exception (throwException, error)
 import Control.Monad.Error.Class (throwError)
@@ -19,15 +19,15 @@ import Data.Either (either)
 import Data.Nullable (toMaybe)
 import Data.Foreign (toForeign)
 
-import DOM (DOM())
+import DOM (DOM)
 import DOM.Event.EventTarget (eventListener, addEventListener)
 import DOM.Event.EventTypes (load)
 import DOM.HTML (window)
-import DOM.HTML.Types (HTMLElement(), windowToEventTarget, htmlDocumentToParentNode, readHTMLElement)
+import DOM.HTML.Types (HTMLElement, windowToEventTarget, htmlDocumentToParentNode, readHTMLElement)
 import DOM.HTML.Window (document)
 import DOM.Node.ParentNode (querySelector)
 
-import Halogen.Effects (HalogenEffects())
+import Halogen.Effects (HalogenEffects)
 
 -- | Waits for the document to load.
 awaitLoad :: forall eff. Aff (dom :: DOM | eff) Unit

@@ -3,18 +3,18 @@ module AceComponent where
 import Prelude
 
 import Control.Monad (when)
-import Control.Monad.Aff (Aff())
-import Control.Monad.Aff.AVar (AVAR())
+import Control.Monad.Aff (Aff)
+import Control.Monad.Aff.AVar (AVAR)
 
 import Data.Maybe (Maybe(..))
 
-import DOM.HTML.Types (HTMLElement())
+import DOM.HTML.Types (HTMLElement)
 
 import Halogen
 import Halogen.HTML as H
 import Halogen.HTML.Properties as P
 
-import Ace.Types (ACE(), Editor())
+import Ace.Types (ACE, Editor)
 import Ace.Editor as Editor
 import Ace.EditSession as Session
 

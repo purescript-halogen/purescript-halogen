@@ -3,8 +3,7 @@ module List where
 import Prelude
 
 import Data.Array (snoc, init)
-import Data.Functor.Coproduct (Coproduct())
-import Data.Generic (Generic, gEq, gCompare)
+import Data.Functor.Coproduct (Coproduct)
 import Data.Maybe (Maybe(..))
 
 import Halogen
@@ -23,9 +22,8 @@ initialList :: ListState
 initialList = { nextId: 1, tickerIds: [0] }
 
 newtype TickSlot = TickSlot Int
-derive instance genericTickSlot :: Generic TickSlot
-instance eqTickSlot :: Eq TickSlot where eq = gEq
-instance ordTickSlot :: Ord TickSlot where compare = gCompare
+derive instance eqTickSlot :: Eq TickSlot
+derive instance ordTickSlot :: Ord TickSlot
 
 type ListQueryP = Coproduct ListQuery (ChildF TickSlot TickQuery)
 type ListStateP g = ParentState ListState TickState ListQuery TickQuery g TickSlot

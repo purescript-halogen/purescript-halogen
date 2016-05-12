@@ -1,8 +1,8 @@
 module Halogen.HTML.Elements.Indexed
-  ( Node()
-  , Leaf()
-  , NoninteractiveNode()
-  , NoninteractiveLeaf()
+  ( Node
+  , Leaf
+  , NoninteractiveNode
+  , NoninteractiveLeaf
   , a
   , abbr
   , acronym
@@ -124,7 +124,7 @@ module Halogen.HTML.Elements.Indexed
   , module Unrefined
   ) where
 
-import Halogen.HTML.Core (HTML())
+import Halogen.HTML.Core (HTML)
 import Halogen.HTML.Properties.Indexed hiding (title)
 import Halogen.HTML.Elements as E
 import Halogen.HTML.Elements
@@ -236,7 +236,7 @@ import Halogen.HTML.Elements
   , video_
   ) as Unrefined
 
-import Unsafe.Coerce
+import Unsafe.Coerce (unsafeCoerce)
 
 -- | An HTML element that admits children.
 type Node r p i
@@ -613,4 +613,3 @@ video = unsafeCoerce E.video
 
 wbr :: forall p i. Leaf () p i
 wbr = unsafeCoerce E.wbr
-

@@ -9,49 +9,48 @@ module Halogen.HTML.Core
   , HandlerF(..)
   , prop
   , handler
-  , handler'
 
-  , IsProp
+  , class IsProp
   , toPropString
 
-  , Namespace()
+  , Namespace
   , namespace
   , runNamespace
 
-  , TagName()
+  , TagName
   , tagName
   , runTagName
 
-  , PropName()
+  , PropName
   , propName
   , runPropName
 
-  , AttrName()
+  , AttrName
   , attrName
   , runAttrName
 
-  , EventName()
+  , EventName
   , eventName
   , runEventName
 
-  , ClassName()
+  , ClassName
   , className
   , runClassName
   ) where
 
 import Prelude
 
-import Data.Bifunctor (Bifunctor, rmap)
-import Data.Exists (Exists(), mkExists)
-import Data.ExistsR (ExistsR(), mkExistsR, runExistsR)
+import Data.Bifunctor (class Bifunctor, rmap)
+import Data.Exists (Exists, mkExists)
+import Data.ExistsR (ExistsR, mkExistsR, runExistsR)
 import Data.Maybe (Maybe(..))
 import Data.Traversable (traverse)
 import Data.Tuple (Tuple(..))
 
-import DOM.HTML.Types (HTMLElement())
+import DOM.HTML.Types (HTMLElement)
 
-import Halogen.HTML.Events.Handler (EventHandler())
-import Halogen.HTML.Events.Types (Event())
+import Halogen.HTML.Events.Handler (EventHandler)
+import Halogen.HTML.Events.Types (Event)
 
 -- | An initial encoding of HTML nodes.
 data HTML p i
@@ -63,7 +62,7 @@ instance bifunctorHTML :: Bifunctor HTML where
   bimap f g = go
     where
     go (Text s) = Text s
-    go (Element ns name props els) = Element ns name ((g <$>) <$> props) (go <$> els)
+    go (Element ns name props els) = Element ns name (map g <$> props) (go <$> els)
     go (Slot p) = Slot (f p)
 
 instance functorHTML :: Functor (HTML p) where
@@ -76,7 +75,7 @@ element = Element Nothing
 -- | Populates the slot placeholder values in a `HTML` value.
 fillSlot :: forall p p' i i' m. (Applicative m) => (p -> m (HTML p' i')) -> (i -> i') -> HTML p i -> m (HTML p' i')
 fillSlot _ _ (Text s) = pure $ Text s
-fillSlot f g (Element ns name props els) = Element ns name ((g <$>) <$> props) <$> traverse (fillSlot f g) els
+fillSlot f g (Element ns name props els) = Element ns name (map g <$> props) <$> traverse (fillSlot f g) els
 fillSlot f _ (Slot p) = f p
 
 -- | A property can be:
@@ -115,12 +114,8 @@ prop :: forall value i. (IsProp value) => PropName value -> Maybe AttrName -> va
 prop name attr v = Prop (mkExists (PropF name v (flip Tuple toPropString <$> attr)))
 
 -- | Create an event handler
-handler :: forall fields i. EventName fields -> (Event fields -> EventHandler i) -> Prop i
-handler name k = Handler (mkExistsR (HandlerF name (map Just <<< k)))
-
--- | Create an event handler that may do nothing
-handler' :: forall fields i. EventName fields -> (Event fields -> EventHandler (Maybe i)) -> Prop i
-handler' name k = Handler (mkExistsR (HandlerF name k))
+handler :: forall fields i. EventName fields -> (Event fields -> EventHandler (Maybe i)) -> Prop i
+handler name k = Handler (mkExistsR (HandlerF name k))
 
 -- | This type class captures those property types which can be used as
 -- | attribute values.

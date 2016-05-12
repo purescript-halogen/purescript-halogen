@@ -10,7 +10,7 @@
   "scripts": {
     "clean": "rimraf output && rimraf .pulp-cache",
     "test": "pulp test",
-    "build": "pulp build",
+    "build": "pulp build --censor-lib --strict",
     "example-ace": "bower link && cd examples/ace && bower link purescript-halogen && bower install && npm run build",
     "example-ajax": "bower link && cd examples/ajax && bower link purescript-halogen && bower install && npm run build",
     "example-components": "bower link && cd examples/components && bower link purescript-halogen && bower install && npm run build",
@@ -24,8 +24,9 @@
     "example-todo": "bower link && cd examples/todo && bower link purescript-halogen && bower install && npm run build"
   },
   "devDependencies": {
-    "pulp": "^8.1.0",
-    "purescript": "^0.7.6",
+    "pulp": "^8.2.0",
+    "purescript": "^0.8.5",
+    "purescript-psa": "^0.3.8",
     "rimraf": "^2.4.1"
   },
   "dependencies": {

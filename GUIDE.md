@@ -128,7 +128,7 @@ It is also possible to declare an event listener that makes use of the `preventD
 import Data.Functor (($>))
 import Halogen.HTML.Events.Handler as EH
 
-E.onClick (\_ -> EH.preventDefault $> action ToggleState)
+E.onClick (\_ -> EH.preventDefault $> Just (action ToggleState))
 ```
 
 These functions from [`Halogen.HTML.Events.Handler`](https://pursuit.purescript.org/packages/purescript-halogen/0.6.0/docs/Halogen.HTML.Events.Handler) can also be chained together, either as “statements” in a `do`, or with the `Apply` operator:
@@ -136,10 +136,10 @@ These functions from [`Halogen.HTML.Events.Handler`](https://pursuit.purescript.
 ``` purescript
 import Control.Apply ((*>))
 
-E.onClick (\_ -> EH.preventDefault *> EH.stopPropagation $> action ToggleState)
+E.onClick (\_ -> EH.preventDefault *> EH.stopPropagation $> Just (action ToggleState))
 ```
 
-Note that in the above cases we’re not using the `input` or `input_` helpers but instead are constructing the query using [`action`](https://pursuit.purescript.org/packages/purescript-halogen/0.6.0/docs/Halogen.Query#v:action).
+Note that in the above cases we’re not using the `input` or `input_` helpers but instead are constructing the query using [`action`](https://pursuit.purescript.org/packages/purescript-halogen/0.6.0/docs/Halogen.Query#v:action), and returning it in a `Just`. The `Maybe` here is so that we have the option to return `Nothing` sometimes, so we do not have to always raise a query in response to an event.
 
 ## Evaluating queries
 
@@ -308,16 +308,15 @@ Defining synonyms like these becomes especially important if the component is go
 
 Slot address values will usually be a `newtype` wrapper around some kind of value that can be used as an identifier, such as an `Int` index or `String` name.
 
-Slot address types requires an `Ord` instance to be defined for them to be usable within a component. An easy way of doing this is taking advantage of PureScript’s generic deriving and the [`purescript-generics`](https://github.com/purescript/purescript-generics) library to generate a default instance, for example, from [the “components” example](examples/components):
+Slot address types requires an `Ord` instance to be defined for them to be usable within a component. These instances can be derived by the PureScript compiler, for example, from [the “components” example](examples/components):
 
 ``` purescript
 import Data.Generic (Generic, gEq, gCompare)
 
 newtype TickSlot = TickSlot String
 
-derive instance genericTickSlot :: Generic TickSlot
-instance eqTickSlot :: Eq TickSlot where eq = gEq
-instance ordTickSlot :: Ord TickSlot where compare = gCompare
+derive instance eqTickSlot :: Eq TickSlot
+derive instance ordTickSlot :: Ord TickSlot
 ```
 
 Slot values can then be inserted into the `HTML` for the parent component using the [`slot`](https://pursuit.purescript.org/packages/purescript-halogen/0.6.0/docs/Halogen.HTML#v:slot) smart constructor:

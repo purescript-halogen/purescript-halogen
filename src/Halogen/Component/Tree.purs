@@ -1,6 +1,6 @@
 module Halogen.Component.Tree
-  ( Tree()
-  , TreeF()
+  ( Tree
+  , TreeF
   , mkTree
   , mkTree'
   , runTree
@@ -11,8 +11,8 @@ module Halogen.Component.Tree
 
 import Prelude
 import Data.Bifunctor (bimap)
-import Data.Lazy (Lazy(), defer)
-import Data.NaturalTransformation (Natural())
+import Data.Lazy (Lazy, defer)
+import Data.NaturalTransformation (Natural)
 import Halogen.HTML.Core (HTML(..))
 import Unsafe.Coerce (unsafeCoerce)
 

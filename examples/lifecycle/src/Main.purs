@@ -2,14 +2,14 @@ module Main where
 
 import Prelude
 
-import Control.Monad.Aff (Aff())
+import Control.Monad.Aff (Aff)
 import Control.Monad.Aff.Console (log)
-import Control.Monad.Eff (Eff())
-import Control.Monad.Eff.Console (CONSOLE())
+import Control.Monad.Eff (Eff)
+import Control.Monad.Eff.Console (CONSOLE)
 
 import Data.Array (snoc, filter, reverse)
 import Data.Maybe (Maybe(..))
-import Data.Functor.Coproduct (Coproduct(), coproduct)
+import Data.Functor.Coproduct (Coproduct, coproduct)
 
 import Halogen
 import Halogen.Util (runHalogenAff, awaitBody)

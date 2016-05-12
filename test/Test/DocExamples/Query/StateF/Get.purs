@@ -1,8 +1,8 @@
 module Test.DocExamples.Query.StateF.Get where
 
 import Prelude
-import Data.NaturalTransformation (Natural())
-import Halogen.Component (ComponentDSL())
+import Data.NaturalTransformation (Natural)
+import Halogen.Component (ComponentDSL)
 import Halogen.Query (get)
 
 data Query a = GetState (State -> a)

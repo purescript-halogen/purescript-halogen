@@ -1,7 +1,7 @@
 -- | The `EventHandler` monad, used to perform standard operations on HTML
 -- | events.
 module Halogen.HTML.Events.Handler
-  ( EventHandler()
+  ( EventHandler
   , preventDefault
   , stopPropagation
   , stopImmediatePropagation
@@ -11,17 +11,17 @@ module Halogen.HTML.Events.Handler
 import Prelude
 
 import Control.Apply ((*>))
-import Control.Monad.Eff (Eff())
-import Control.Monad.Eff.Class (MonadEff, liftEff)
-import Control.Monad.Writer (Writer(), runWriter)
+import Control.Monad.Eff (Eff)
+import Control.Monad.Eff.Class (class MonadEff, liftEff)
+import Control.Monad.Writer (Writer, runWriter)
 import Control.Monad.Writer.Class (tell)
 
 import Data.Foldable (for_)
 import Data.Tuple (Tuple(..))
 
-import DOM (DOM())
+import DOM (DOM)
 
-import Halogen.HTML.Events.Types (Event())
+import Halogen.HTML.Events.Types (Event)
 
 -- | This monad supports the following operations on events:
 -- |

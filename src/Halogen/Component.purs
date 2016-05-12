@@ -1,24 +1,24 @@
 module Halogen.Component
-  ( Component()
-  , ComponentHTML()
-  , ComponentDSL()
-  , ComponentSpec()
+  ( Component
+  , ComponentHTML
+  , ComponentDSL
+  , ComponentSpec
   , component
-  , LifecycleComponentSpec()
+  , LifecycleComponentSpec
   , lifecycleComponent
-  , ParentHTML()
+  , ParentHTML
   , SlotConstructor(..)
-  , ParentQuery()
-  , ParentDSL()
-  , ParentComponentSpec()
+  , ParentQuery
+  , ParentDSL
+  , ParentComponentSpec
   , parentComponent
-  , LifecycleParentComponentSpec()
+  , LifecycleParentComponentSpec
   , lifecycleParentComponent
-  , ParentState()
+  , ParentState
   , parentState
   , ChildF(..)
   , runChildF
-  , QueryF()
+  , QueryF
   , mkQuery
   , mkQuery'
   , mkQueries
@@ -43,32 +43,32 @@ import Prelude
 import Control.Apply ((<*))
 import Control.Bind ((=<<))
 import Control.Monad.Eff (runPure, foreachE)
-import Control.Monad.Free (Free(), foldFree, liftF, mapF)
+import Control.Monad.Free (Free, foldFree, liftF, mapF)
 import Control.Monad.Free.Trans as FT
 import Control.Monad.ST (runST, newSTRef, readSTRef, writeSTRef)
 
 import Data.Array (cons) as A
-import Data.Array.ST (emptySTArray, pushSTArray, STArray()) as A
+import Data.Array.ST (emptySTArray, pushSTArray, STArray) as A
 import Data.Bifunctor (lmap)
 import Data.Foldable (foldMap, for_)
-import Data.Functor.Coproduct (Coproduct(), coproduct, left, right)
+import Data.Functor.Coproduct (Coproduct, coproduct, left, right)
 import Data.Lazy (defer)
 import Data.List as L
 import Data.Map as M
 import Data.Maybe (Maybe(..), maybe)
 import Data.Maybe.Unsafe as U
-import Data.NaturalTransformation (Natural())
+import Data.NaturalTransformation (Natural)
 import Data.Traversable (for, traverse)
 import Data.Tuple (Tuple(..))
-import Data.Void (Void())
+import Data.Void (Void)
 
 import Halogen.Component.ChildPath (ChildPath(..), injState, injQuery, injSlot, prjState, prjQuery, prjSlot)
-import Halogen.Component.Hook (Hook(..), Finalized(), finalized, mapFinalized, lmapHook, rmapHook)
-import Halogen.Component.Tree (Tree(), mkTree, mkTree', graftTree, thunkTree, emptyTree)
+import Halogen.Component.Hook (Hook(..), Finalized, finalized, mapFinalized, lmapHook, rmapHook)
+import Halogen.Component.Tree (Tree, mkTree, mkTree', graftTree, thunkTree, emptyTree)
 import Halogen.HTML.Core (HTML(..))
 import Halogen.Query (get, liftH)
-import Halogen.Query.EventSource (EventSource(..), ParentEventSource(), runEventSource, fromParentEventSource)
-import Halogen.Query.HalogenF (HalogenF(), HalogenFP(..), RenderPending(..), hoistHalogenF, transformHF)
+import Halogen.Query.EventSource (EventSource(..), ParentEventSource, runEventSource, fromParentEventSource)
+import Halogen.Query.HalogenF (HalogenF, HalogenFP(..), RenderPending(..), hoistHalogenF, transformHF)
 import Halogen.Query.StateF (StateF(..), mapState)
 
 import Unsafe.Coerce (unsafeCoerce)

@@ -11,7 +11,7 @@ import Prelude
 import Control.Monad.State as CMS
 
 import Data.Functor (($>))
-import Data.NaturalTransformation (Natural())
+import Data.NaturalTransformation (Natural)
 
 -- | The state algebra.
 data StateF s a
