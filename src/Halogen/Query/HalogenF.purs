@@ -1,6 +1,7 @@
 module Halogen.Query.HalogenF
   ( HalogenFP(..)
   , HalogenF()
+  , RenderPending(..)
   , transformHF
   , hoistHalogenF
   ) where
@@ -13,16 +14,21 @@ import Control.Monad.Free.Trans (hoistFreeT, bimapFreeT)
 import Control.Plus (Plus)
 
 import Data.Bifunctor (lmap)
+import Data.Maybe (Maybe())
 import Data.NaturalTransformation (Natural())
 
 import Halogen.Query.EventSource (EventSource(..), runEventSource)
 import Halogen.Query.StateF (StateF())
+
+data RenderPending = Pending | Deferred
 
 -- | The Halogen component algebra
 data HalogenFP (e :: (* -> *) -> (* -> *) -> *) s f g a
   = StateHF (StateF s a)
   | SubscribeHF (e f g) a
   | QueryHF (g a)
+  | RenderHF (Maybe RenderPending) a
+  | RenderPendingHF (Maybe RenderPending -> a)
   | HaltHF
 
 type HalogenF = HalogenFP EventSource
@@ -33,6 +39,8 @@ instance functorHalogenF :: (Functor g) => Functor (HalogenFP e s f g) where
       StateHF q -> StateHF (map f q)
       SubscribeHF es a -> SubscribeHF es (f a)
       QueryHF q -> QueryHF (map f q)
+      RenderHF r a -> RenderHF r (f a)
+      RenderPendingHF k -> RenderPendingHF (f <$> k)
       HaltHF -> HaltHF
 
 instance affableHalogenF :: (Affable eff g) => Affable eff (HalogenFP e s f g) where
@@ -58,6 +66,8 @@ transformHF sigma phi gamma h =
     StateHF q -> StateHF (sigma q)
     SubscribeHF es next -> SubscribeHF (EventSource (bimapFreeT (lmap phi) gamma (runEventSource es))) next
     QueryHF q -> QueryHF (gamma q)
+    RenderHF r a -> RenderHF r a
+    RenderPendingHF k -> RenderPendingHF k
     HaltHF -> HaltHF
 
 -- | Changes the `g` for a `HalogenF`. Used internally by Halogen.
@@ -71,4 +81,6 @@ hoistHalogenF eta h =
     StateHF q -> StateHF q
     SubscribeHF es next -> SubscribeHF (EventSource (hoistFreeT eta (runEventSource es))) next
     QueryHF q -> QueryHF (eta q)
+    RenderHF r a -> RenderHF r a
+    RenderPendingHF k -> RenderPendingHF k
     HaltHF -> HaltHF

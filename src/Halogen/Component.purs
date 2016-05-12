@@ -50,7 +50,7 @@ import Control.Monad.ST (runST, newSTRef, readSTRef, writeSTRef)
 import Data.Array (cons) as A
 import Data.Array.ST (emptySTArray, pushSTArray, STArray()) as A
 import Data.Bifunctor (lmap)
-import Data.Foldable (foldMap)
+import Data.Foldable (foldMap, for_)
 import Data.Functor.Coproduct (Coproduct(), coproduct, left, right)
 import Data.Lazy (defer)
 import Data.List as L
@@ -68,7 +68,7 @@ import Halogen.Component.Tree (Tree(), mkTree, mkTree', graftTree, thunkTree, em
 import Halogen.HTML.Core (HTML(..))
 import Halogen.Query (get, liftH)
 import Halogen.Query.EventSource (EventSource(..), ParentEventSource(), runEventSource, fromParentEventSource)
-import Halogen.Query.HalogenF (HalogenF(), HalogenFP(..), hoistHalogenF, transformHF)
+import Halogen.Query.HalogenF (HalogenF(), HalogenFP(..), RenderPending(..), hoistHalogenF, transformHF)
 import Halogen.Query.StateF (StateF(..), mapState)
 
 import Unsafe.Coerce (unsafeCoerce)
@@ -97,10 +97,6 @@ newtype Component s f g = Component
   , initializer :: Maybe (f Unit)
   , finalizers :: s -> Array (Finalized g)
   }
-
--- | The type for the internal render monad. Rendering returns HTML, a new
--- | state, and input hooks to run post-render.
--- type RenderM s f g = WriterT (Array (Hook f g)) (State s)
 
 -- | The type for `HTML` rendered by a self-contained component.
 type ComponentHTML f = HTML Void (f Unit)
@@ -313,6 +309,17 @@ queryAll'
   -> Free (HalogenFP ParentEventSource s'' f'' (QueryF s'' s' f'' f' g p')) (M.Map p i)
 queryAll' i q = liftQuery (mkQueries' i q)
 
+bracketQuery :: forall s f g a. ComponentDSL s f g a -> ComponentDSL s f g a
+bracketQuery f = do
+  rp <- liftF (RenderPendingHF id)
+  case rp of
+    Just Pending -> liftF (RenderHF Nothing unit)
+    _ -> pure unit
+  res <- f
+  rp' <- liftF (RenderPendingHF id)
+  for_ rp \_ -> liftF (RenderHF (Just Deferred) unit)
+  pure res
+
 -- | Creates a query for a child component where `p` is the slot the component
 -- | was installed into and `f' i` in the input query.
 -- |
@@ -324,7 +331,7 @@ mkQuery
   => p
   -> f' i
   -> QueryF s s' f f' g p (Maybe i)
-mkQuery p q = do
+mkQuery p q = bracketQuery do
   ParentState st <- get
   for (M.lookup p st.children) \child ->
     mapF (transformHF (mapStateFChild p) (ChildF p) id) (queryComponent child.component q)
@@ -356,7 +363,7 @@ mkQueries'
   => ChildPath s s' f f' p p'
   -> f i
   -> QueryF s'' s' f'' f' g p' (M.Map p i)
-mkQueries' i q = do
+mkQueries' i q = bracketQuery do
   ParentState st <- get
   M.fromList <<< L.catMaybes <$> traverse mkChildQuery (M.toList st.children)
   where
@@ -484,6 +491,8 @@ queryParent f =
       SubscribeHF es next ->
         liftF $ SubscribeHF (EventSource (FT.interpret (lmap left) (runEventSource (fromParentEventSource es)))) next
       QueryHF q -> liftChildF q
+      RenderHF p a -> liftF $ RenderHF p a
+      RenderPendingHF k -> liftF $ RenderPendingHF k
       HaltHF -> liftF HaltHF
 
 mergeParentStateF :: forall s s' f f' g p. Natural (StateF s) (ComponentDSL (ParentState s s' f f' g p) (ParentQuery f f' p) g)
@@ -547,6 +556,8 @@ transform reviewS previewS reviewQ previewQ (Component c) =
   go (StateHF (Modify f next)) = liftF $ StateHF (Modify (modifyState f) next)
   go (SubscribeHF es next) = liftF $ SubscribeHF (EventSource (FT.interpret (lmap reviewQ) (runEventSource es))) next
   go (QueryHF q) = liftF $ QueryHF q
+  go (RenderHF p a) = liftF $ RenderHF p a
+  go (RenderPendingHF k) = liftF $ RenderPendingHF k
   go HaltHF = liftF HaltHF
 
   modifyState :: (s -> s) -> s' -> s'
