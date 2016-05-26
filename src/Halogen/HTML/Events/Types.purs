@@ -27,6 +27,8 @@ type MouseEvent =
   , relatedTarget :: HTMLElement
   , clientX :: Number
   , clientY :: Number
+  , pageX :: Number
+  , pageY :: Number
   , screenX	:: Number
   , screenY	:: Number
   , ctrlKey	:: Boolean
@@ -43,6 +45,8 @@ type DragEvent =
   , relatedTarget :: HTMLElement
   , clientX :: Number
   , clientY :: Number
+  , pageX :: Number
+  , pageY :: Number
   , screenX	:: Number
   , screenY	:: Number
   , ctrlKey	:: Boolean
