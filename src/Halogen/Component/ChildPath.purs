@@ -1,12 +1,11 @@
 module Halogen.Component.ChildPath where
 
-import Prelude ((<<<))
+import Prelude
 
 import Data.Either (Either)
 import Data.Functor.Coproduct (Coproduct)
 import Data.Injector (Injector, prj, inj, injI, injLE, injLC, injRE, injRC)
 import Data.Maybe (Maybe)
-import Data.NaturalTransformation (Natural)
 
 -- | Represents a path through `Either` and `Coproduct` types for the state,
 -- | query algebra, and slots of a component. Used when installing children of
@@ -45,7 +44,7 @@ prjState (ChildPath injS _ _) = prj injS
 
 -- | Uses a `ChildPath` definition to get a query algebra value of type `f'`
 -- | from a value of type `f`. Used internally by Halogen.
-injQuery :: forall s s' f f' p p'. ChildPath s s' f f' p p' -> Natural f f'
+injQuery :: forall s s' f f' p p'. ChildPath s s' f f' p p' -> f ~> f'
 injQuery (ChildPath _ injQ _) = inj injQ
 
 -- | Uses a `ChildPath` to attempt to get a query algebra value of type `f`

@@ -1,7 +1,7 @@
 module Test.ReadmeExamples.Basic where
 
-import Prelude
-import Halogen
+import Prelude (type (~>), pure, bind, not)
+import Halogen (ComponentDSL, ComponentHTML, Component, component, gets, modify)
 import Halogen.HTML.Indexed as H
 import Halogen.HTML.Events.Indexed as E
 
@@ -28,7 +28,7 @@ myComponent = component { render, eval }
           [ H.text (if state.on then "On" else "Off") ]
       ]
 
-  eval :: Natural Query (ComponentDSL State Query g)
+  eval :: Query ~> (ComponentDSL State Query g)
   eval (ToggleState next) = do
     modify (\state -> { on: not state.on })
     pure next

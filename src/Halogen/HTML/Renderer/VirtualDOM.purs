@@ -12,7 +12,7 @@ import Control.Monad.Eff.Exception (throwException)
 import Data.Exists (runExists)
 import Data.ExistsR (runExistsR)
 import Data.Foldable (foldl, foldMap)
-import Data.Function (runFn2)
+import Data.Function.Uncurried (runFn2)
 import Data.Lazy (force)
 import Data.Maybe (Maybe(..), maybe)
 import Data.Monoid (mempty)
@@ -67,7 +67,7 @@ renderProp dr (Ref f) = V.refProp (handleAff <<< dr <<< f)
 renderProp _ _ = mempty
 
 handleAff :: forall eff a. Aff (HalogenEffects eff) a -> Eff (HalogenEffects eff) Unit
-handleAff = runAff throwException (const (pure unit))
+handleAff = void <<< runAff throwException (const (pure unit)) -- "void <<<" was a quick solution, don't know if it's correct
 
 findKey :: forall i. Maybe String -> Prop i -> Maybe String
 findKey _ (Key k) = Just k

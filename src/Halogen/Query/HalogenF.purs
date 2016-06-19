@@ -15,7 +15,6 @@ import Control.Plus (class Plus)
 
 import Data.Bifunctor (lmap)
 import Data.Maybe (Maybe)
-import Data.NaturalTransformation (Natural)
 
 import Halogen.Query.EventSource (EventSource(..), runEventSource)
 import Halogen.Query.StateF (StateF)
@@ -57,10 +56,10 @@ instance plusHalogenF :: (Functor g) => Plus (HalogenFP e s f g) where
 transformHF
   :: forall s s' f f' g g'
    . (Functor g')
-  => Natural (StateF s) (StateF s')
-  -> Natural f f'
-  -> Natural g g'
-  -> Natural (HalogenF s f g) (HalogenF s' f' g')
+  => (StateF s) ~> (StateF s')
+  -> f ~> f'
+  -> g ~> g'
+  -> (HalogenF s f g) ~> (HalogenF s' f' g')
 transformHF sigma phi gamma h =
   case h of
     StateHF q -> StateHF (sigma q)
@@ -74,8 +73,8 @@ transformHF sigma phi gamma h =
 hoistHalogenF
   :: forall s f g h
    . (Functor h)
-  => Natural g h
-  -> Natural (HalogenF s f g) (HalogenF s f h)
+  => g ~> h
+  -> (HalogenF s f g) ~> (HalogenF s f h)
 hoistHalogenF eta h =
   case h of
     StateHF q -> StateHF q

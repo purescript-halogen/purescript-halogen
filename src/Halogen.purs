@@ -9,12 +9,9 @@ module Halogen
   , module Halogen.Driver
   , module Halogen.Effects
   , module Halogen.Query
-  , module Data.NaturalTransformation
   ) where
 
 import Prelude
-
-import Data.NaturalTransformation (Natural)
 
 import Halogen.Component (Component, ComponentDSL, ComponentHTML, ComponentSpec, LifecycleComponentSpec, LifecycleParentComponentSpec, ParentComponentSpec, ParentDSL, ParentHTML, ParentQuery, ParentState, QueryF, ChildF(..), SlotConstructor(..), childSlots, component, finalizeComponent, initializeComponent, interpret, lifecycleComponent, lifecycleParentComponent, liftQuery, mkQueries, mkQueries', mkQuery, mkQuery', parentComponent, parentState, query, query', queryAll, queryAll', queryComponent, renderComponent, runChildF, transform, transformChild)
 import Halogen.Driver (Driver, runUI)

@@ -25,7 +25,7 @@
   },
   "devDependencies": {
     "pulp": "^8.2.0",
-    "purescript": "^0.8.5",
+    "purescript": "^0.9.1",
     "purescript-psa": "^0.3.8",
     "rimraf": "^2.4.1"
   },
