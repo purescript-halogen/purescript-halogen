@@ -38,5 +38,32 @@
     "purescript-stalling-coroutines": "^0.1.1",
     "purescript-unsafe-coerce": "^1.0.0",
     "purescript-void": "^0.3.0"
+  },
+  "resolutions": {
+    "purescript-profunctor": "^1.0.0",
+    "purescript-contravariant": "^1.0.0",
+    "purescript-foldable-traversable": "^1.0.0",
+    "purescript-coroutines": "^1.0.0",
+    "purescript-functions": "^1.0.0",
+    "purescript-console": "^1.0.0",
+    "purescript-transformers": "^1.0.0",
+    "purescript-either": "^1.0.0",
+    "purescript-arrays": "^1.0.0",
+    "purescript-prelude": "^1.0.0",
+    "purescript-exists": "^1.0.0",
+    "purescript-distributive": "^1.0.0",
+    "purescript-tuples": "^1.0.0",
+    "purescript-st": "^1.0.0",
+    "purescript-freet": "^1.0.0",
+    "purescript-maybe": "^1.0.0",
+    "purescript-tailrec": "^1.0.0",
+    "purescript-monoid": "^1.0.0",
+    "purescript-bifunctors": "^1.0.0",
+    "purescript-eff": "^1.0.0",
+    "purescript-unfoldable": "^1.0.0",
+    "purescript-lazy": "^1.0.0",
+    "purescript-identity": "^1.0.0",
+    "purescript-control": "^1.0.0",
+    "purescript-invariant": "^1.0.0"
   }
 }
