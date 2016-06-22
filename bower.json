@@ -29,7 +29,7 @@
     "purescript-aff-coroutines": "^2.0.0",
     "purescript-aff-free": "^1.0.0",
     "purescript-const": "^1.0.0",
-    "purescript-dom": "^1.0.0",
+    "purescript-dom": "^1.1.0",
     "purescript-foreign": "^1.0.0",
     "purescript-free": "^1.0.0",
     "purescript-maps": "^1.0.0",

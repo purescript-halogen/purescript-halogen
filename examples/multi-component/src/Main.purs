@@ -1,4 +1,4 @@
-module MultiComponent where
+module Main where
 
 import Prelude
 
