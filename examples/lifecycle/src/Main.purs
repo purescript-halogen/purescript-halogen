@@ -71,7 +71,7 @@ ui = lifecycleParentComponent
             ]
       ]
 
-  eval :: Natural Query (ParentDSL State (Child.StateP eff) Query Child.QueryP (UIEff eff) Int)
+  eval :: Query ~> (ParentDSL State (Child.StateP eff) Query Child.QueryP (UIEff eff) Int)
   eval (Initialize next) = do
     fromAff $ log "Initialize Root"
     pure next

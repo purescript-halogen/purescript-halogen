@@ -3,7 +3,6 @@ module Main where
 import Prelude
 
 import Control.Monad.Eff (Eff)
-import Control.Plus (Plus)
 
 import Data.Const (Const, getConst)
 import Data.Functor.Coproduct (Coproduct, coproduct)
@@ -49,10 +48,10 @@ ui = parentComponent { render, eval, peek: Just peek }
           { component: listComponent, initialState: parentState initialList }
       , H.hr []
       , H.p_
-          [ H.text $ "Total incremented count: " ++ show st.count ]
+          [ H.text $ "Total incremented count: " <> show st.count ]
       ]
 
-  eval :: Natural Query (ParentDSL State (ListStateP g) Query ListQueryP g ListSlot)
+  eval :: Query ~> (ParentDSL State (ListStateP g) Query ListQueryP g ListSlot)
   eval = absurd <<< getConst
 
   peek :: forall a. ChildF ListSlot ListQueryP a -> ParentDSL State (ListStateP g) Query ListQueryP g ListSlot Unit

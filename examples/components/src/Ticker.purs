@@ -30,9 +30,9 @@ ticker = component { render, eval }
           [ H.text "Tick" ]
       ]
 
-  eval :: Natural TickQuery (ComponentDSL TickState TickQuery g)
+  eval :: TickQuery ~> (ComponentDSL TickState TickQuery g)
   eval (Tick next) = do
-    modify (+ 1)
+    modify (_ + 1)
     pure next
   eval (GetTick continue) = do
     n <- get

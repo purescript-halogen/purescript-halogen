@@ -7,6 +7,7 @@ import Control.Monad.Aff.AVar as A
 import Control.Monad.Eff (Eff)
 
 import Data.Char as CH
+import Data.String as ST
 import Data.Const
 import Data.Functor.Coproduct
 import Data.Maybe (Maybe(..))
@@ -52,7 +53,7 @@ ui = lifecycleComponent { render, eval, initializer, finalizer: Nothing }
       , H.p_ [ H.text state.chars ]
       ]
 
-  eval :: Natural Query (ComponentDSL State Query (A.Aff (E eff)))
+  eval :: Query ~> (ComponentDSL State Query (A.Aff (E eff)))
   eval q =
     case q of
       Init next -> do
@@ -76,7 +77,7 @@ ui = lifecycleComponent { render, eval, initializer, finalizer: Nothing }
         subscribe $ H.catEventSource querySource
         pure next
       AppendChar c next -> do
-        modify (\st -> st { chars = st.chars <> CH.toString c })
+        modify (\st -> st { chars = st.chars <> ST.singleton c })
         pure next
       Clear next -> do
         modify (_ { chars = "" })

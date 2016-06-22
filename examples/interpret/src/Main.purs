@@ -40,7 +40,7 @@ ui = component { render, eval }
           [ H.text (if state.on then "On" else "Off") ]
       ]
 
-  eval :: Natural Query (ComponentDSL State Query Output)
+  eval :: Query ~> (ComponentDSL State Query Output)
   eval (ToggleState next) = do
     modify (\state -> { on: not state.on })
     liftH $ output "State was toggled"
@@ -49,7 +49,7 @@ ui = component { render, eval }
 ui' :: forall eff. Component State Query (Aff (HalogenEffects (console :: CONSOLE | eff)))
 ui' = interpret (foldFree evalOutput) ui
   where
-  evalOutput :: Natural OutputF (Aff (HalogenEffects (console :: CONSOLE | eff)))
+  evalOutput :: OutputF ~> (Aff (HalogenEffects (console :: CONSOLE | eff)))
   evalOutput (Log msg next) = do
     log msg
     pure next

@@ -52,7 +52,7 @@ listComponent = parentComponent { render, eval, peek: Nothing }
           { component: tickerComponent, initialState: TickState 0 }
       ]
 
-  eval :: Natural ListQuery (ParentDSL ListState TickState ListQuery TickQuery g TickSlot)
+  eval :: ListQuery ~> (ParentDSL ListState TickState ListQuery TickQuery g TickSlot)
   eval (AddTicker next) = do
     modify addTicker
     pure next

@@ -75,7 +75,7 @@ ui = component { render, eval }
       , H.p_
           [ H.text (if st.busy then "Working..." else "") ]
       ]
-      ++ flip foldMap st.result \js ->
+      <> flip foldMap st.result \js ->
           [ H.div_
               [ H.h2_
                   [ H.text "javascript output:" ]
@@ -84,7 +84,7 @@ ui = component { render, eval }
               ]
           ]
 
-  eval :: Natural Query (ComponentDSL State Query (Aff (AppEffects eff)))
+  eval :: Query ~> (ComponentDSL State Query (Aff (AppEffects eff)))
   eval (SetCode code next) = modify (_ { code = code, result = Nothing :: Maybe String }) $> next
   eval (MakeRequest code next) = do
     modify (_ { busy = true })
@@ -97,7 +97,7 @@ fetchJS :: forall eff. String -> Aff (ajax :: AJAX | eff) String
 fetchJS code = do
   result <- post "http://try.purescript.org/compile/text" code
   let response = result.response
-  return case readProp "js" response <|> readProp "error" response of
+  pure case readProp "js" response <|> readProp "error" response of
     Right js -> js
     Left _ -> "Invalid response"
 

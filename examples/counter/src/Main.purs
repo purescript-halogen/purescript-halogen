@@ -31,7 +31,7 @@ ui = component { render, eval }
           [ H.text (show n) ]
       ]
 
-  eval :: Natural Query (ComponentDSL State Query g)
+  eval :: Query ~> (ComponentDSL State Query g)
   eval (Tick next) = do
     modify (\(State n) -> State (n + 1))
     pure next

@@ -9,7 +9,7 @@ module Keyboard
 
 import Prelude
 import Control.Monad.Eff
-import Data.Function as F
+import Data.Function.Uncurried as F
 
 import DOM.Node.Types as DOM
 

@@ -48,7 +48,7 @@ child = lifecycleParentComponent
         ]
       ]
 
-  eval :: Natural Query (ParentDSL Int Int Query Query (ChildEff eff) Int)
+  eval :: Query ~> (ParentDSL Int Int Query Query (ChildEff eff) Int)
   eval (Initialize next) = do
     id <- get
     fromAff $ log ("Initialize Child " <> show id)
@@ -75,7 +75,7 @@ cell = lifecycleComponent
   render id =
     H.li_ [ H.text ("Cell " <> show id) ]
 
-  eval :: Natural Query (ComponentDSL Int Query (ChildEff eff))
+  eval :: Query ~> (ComponentDSL Int Query (ChildEff eff))
   eval (Initialize next) = do
     id <- get
     fromAff $ log ("Initialize Cell " <> show id)
