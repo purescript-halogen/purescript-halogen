@@ -33,7 +33,7 @@ myComponent = component { render, eval }
           [ H.text (if state.on then "On" else "Off") ]
       ]
 
-  eval :: Natural Query (ComponentDSL State Query g)
+  eval :: Query ~> ComponentDSL State Query g
   eval (ToggleState next) = do
     modify (\state -> { on: not state.on })
     pure next
@@ -73,7 +73,7 @@ Components are constructed from a “spec“ record with the `component` functio
 ``` purescript
 type ComponentSpec s f g =
   { render :: s -> ComponentHTML f
-  , eval :: Natural f (ComponentDSL s f g)
+  , eval :: f ~> ComponentDSL s f g
   }
 
 component :: forall s f g. ComponentSpec s f g -> Component s f g
@@ -146,11 +146,11 @@ Note that in the above cases we’re not using the `input` or `input_` helpers b
 The types involved in a component’s `eval` function:
 
 ``` purescript
-eval :: Natural f (ComponentDSL s f g)
+eval :: f ~> ComponentDSL s f g
 type ComponentDSL s f g = Free (HalogenF s f g)
 ```
 
-`Natural` is a type synonym for a natural transformation (`forall a. f a -> g a`). The use of a natural transformation here is what give us the ability to have typed queries, as if we apply a value `f Boolean` to a `Natural f g`, the result has to be a `g Boolean`.
+`(~>)` is a type synonym for a natural transformation (`forall a. f a -> g a`). The use of a natural transformation here is what give us the ability to have typed queries, as if we apply a value `f Boolean` to a `f ~> g`, the result has to be a `g Boolean`.
 
 Evaluating an action query will look something like this:
 
@@ -194,7 +194,7 @@ One of the most common non-state effect for a component is to [make requests via
 Here’s the `eval` function from the AJAX example:
 
 ``` purescript
-eval :: Natural Query (ComponentDSL State Query (Aff (AppEffects eff)))
+eval :: Query ~> ComponentDSL State Query (Aff (AppEffects eff))
 eval (SetCode code next) = --- ... snip ...
 eval (MakeRequest code next) = do
   modify (_ { busy = true })
@@ -230,7 +230,7 @@ runUI
 This takes our component, its initial state, and a HTML element to attach the rendered component to, and then returns a driver function via `Aff`. The driver function is a mechanism for querying the component “from the outside” – that is to say, send queries that don’t originate within the Halogen component structure.
 
 ``` purescript
-type Driver f eff = Natural f (Aff (HalogenEffects eff))
+type Driver f eff = f ~> Aff (HalogenEffects eff)
 ```
 
 The purpose of the driver function is to allow us to extract information from the application state, or more commonly, to do things like change the application state in response to changes in the URL using a routing library.
@@ -270,7 +270,7 @@ A component that can contain other components is constructed with the `parentCom
 ``` purescript
 type ParentComponentSpec s s' f f' g p =
   { render :: s -> ParentHTML s' f f' g p
-  , eval :: Natural f (ParentDSL s s' f f' g p)
+  , eval :: f ~> ParentDSL s s' f f' g p
   , peek :: forall x. Maybe (ChildF p f' x -> ParentDSL s s' f f' g p Unit)
   }
 
@@ -344,7 +344,7 @@ The thunk is only evaluated when the slot first appears in the `HTML`, so modify
 The `eval` function of a parent component has access to an additional combinator: `query`. This allows a parent component to query its children, using a slot address value of the child:
 
 ``` purescript
-eval :: Natural Query (ParentDSL State TickState Query TickQuery g TickSlot)
+eval :: Query ~> ParentDSL State TickState Query TickQuery g TickSlot
 eval (ReadTicks next) = do
   a <- query (TickSlot "A") (request GetTick)
   b <- query (TickSlot "B") (request GetTick)
@@ -517,7 +517,7 @@ ace = lifecycleComponent
   render :: AceState -> ComponentHTML AceQuery
   render = const $ H.div [ P.ref \el -> action (SetElement el) ] []
 
-  eval :: Natural AceQuery (ComponentDSL AceState AceQuery (Aff (AceEffects eff)))
+  eval :: AceQuery ~> ComponentDSL AceState AceQuery (Aff (AceEffects eff))
   eval = -- ... snip ...
 ```
 
