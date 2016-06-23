@@ -1,6 +1,5 @@
 module Test.DocExamples.Request where
 
-import Prelude
 import Halogen
 import Control.Monad.Aff (Aff)
 
