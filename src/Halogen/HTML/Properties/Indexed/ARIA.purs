@@ -36,8 +36,6 @@ module Halogen.HTML.Properties.Indexed.ARIA
   , role
   ) where
 
-import Prelude
-
 import Unsafe.Coerce (unsafeCoerce)
 
 import Halogen.HTML.Core (Prop())
