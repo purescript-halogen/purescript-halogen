@@ -2,7 +2,7 @@
   "private": true,
   "scripts": {
     "clean": "rimraf output && rimraf .pulp-cache",
-    "test": "pulp test",
+    "test": "pulp build -I test --censor-lib --strict",
     "build": "pulp build --censor-lib --strict",
     "example-ace": "bower link && cd examples/ace && bower link purescript-halogen && bower install && npm run build",
     "example-ajax": "bower link && cd examples/ajax && bower link purescript-halogen && bower install && npm run build",

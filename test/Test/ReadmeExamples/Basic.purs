@@ -1,6 +1,6 @@
 module Test.ReadmeExamples.Basic where
 
-import Prelude (type (~>), pure, bind, not)
+import Prelude
 import Halogen (ComponentDSL, ComponentHTML, Component, component, gets, modify)
 import Halogen.HTML.Indexed as H
 import Halogen.HTML.Events.Indexed as E
