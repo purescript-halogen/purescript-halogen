@@ -4,10 +4,10 @@ import Prelude
 
 import Control.Monad.Eff (Eff)
 
-import Halogen
+import Halogen as H
+import Halogen.HTML.Events.Indexed as HE
+import Halogen.HTML.Indexed as HH
 import Halogen.Util (runHalogenAff, awaitBody)
-import Halogen.HTML.Indexed as H
-import Halogen.HTML.Events.Indexed as E
 
 type State = { on :: Boolean }
 
@@ -16,26 +16,26 @@ initialState = { on: false }
 
 data Query a = ToggleState a
 
-ui :: forall g. (Functor g) => Component State Query g
-ui = component { render, eval }
+ui :: forall g. H.Component State Query g
+ui = H.component { render, eval }
   where
 
-  render :: State -> ComponentHTML Query
+  render :: State -> H.ComponentHTML Query
   render state =
-    H.div_
-      [ H.h1_
-          [ H.text "Toggle Button" ]
-      , H.button
-          [ E.onClick (E.input_ ToggleState) ]
-          [ H.text (if state.on then "On" else "Off") ]
+    HH.div_
+      [ HH.h1_
+          [ HH.text "Toggle Button" ]
+      , HH.button
+          [ HE.onClick (HE.input_ ToggleState) ]
+          [ HH.text (if state.on then "On" else "Off") ]
       ]
 
-  eval :: Query ~> (ComponentDSL State Query g)
+  eval :: Query ~> H.ComponentDSL State Query g
   eval (ToggleState next) = do
-    modify (\state -> { on: not state.on })
+    H.modify (\state -> { on: not state.on })
     pure next
 
-main :: Eff (HalogenEffects ()) Unit
+main :: Eff (H.HalogenEffects ()) Unit
 main = runHalogenAff do
   body <- awaitBody
-  runUI ui initialState body
+  H.runUI ui initialState body

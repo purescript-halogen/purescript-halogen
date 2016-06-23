@@ -2,9 +2,9 @@ module ComponentA where
 
 import Prelude
 
-import Halogen
-import Halogen.HTML.Indexed as H
-import Halogen.HTML.Events.Indexed as E
+import Halogen as H
+import Halogen.HTML.Indexed as HH
+import Halogen.HTML.Events.Indexed as HE
 
 newtype StateA = StateA { on :: Boolean }
 
@@ -19,21 +19,22 @@ data SlotA = SlotA
 derive instance eqSlotA :: Eq SlotA
 derive instance ordSlotA :: Ord SlotA
 
-componentA :: forall g. (Functor g) => Component StateA QueryA g
-componentA = component { render, eval }
+componentA :: forall g. H.Component StateA QueryA g
+componentA = H.component { render, eval }
   where
 
-  render :: StateA -> ComponentHTML QueryA
-  render (StateA state) = H.div_
-    [ H.h1_ [ H.text "Toggle Button A" ]
-    , H.button [ E.onClick (E.input_ ToggleStateA) ]
-               [ H.text (if state.on then "On" else "Off") ]
+  render :: StateA -> H.ComponentHTML QueryA
+  render (StateA state) = HH.div_
+    [ HH.h1_ [ HH.text "Toggle Button A" ]
+    , HH.button
+        [ HE.onClick (HE.input_ ToggleStateA) ]
+        [ HH.text (if state.on then "On" else "Off") ]
     ]
 
-  eval :: QueryA ~> (ComponentDSL StateA QueryA g)
+  eval :: QueryA ~> H.ComponentDSL StateA QueryA g
   eval (ToggleStateA next) = do
-    modify (\(StateA state) -> StateA { on: not state.on })
+    H.modify (\(StateA state) -> StateA { on: not state.on })
     pure next
   eval (GetStateA continue) = do
-    b <- gets (\(StateA state) -> state.on)
+    b <- H.gets (\(StateA state) -> state.on)
     pure (continue b)

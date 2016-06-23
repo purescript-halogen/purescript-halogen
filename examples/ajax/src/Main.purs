@@ -12,11 +12,11 @@ import Data.Foreign.Class (readProp)
 import Data.Functor (($>))
 import Data.Maybe (Maybe(..))
 
-import Halogen
+import Halogen as H
+import Halogen.HTML.Events.Indexed as HE
+import Halogen.HTML.Indexed as HH
+import Halogen.HTML.Properties.Indexed as HP
 import Halogen.Util (runHalogenAff, awaitBody)
-import Halogen.HTML.Indexed as H
-import Halogen.HTML.Events.Indexed as E
-import Halogen.HTML.Properties.Indexed as P
 
 import Network.HTTP.Affjax (AJAX, post)
 
@@ -45,51 +45,51 @@ data Query a
   | MakeRequest String a
 
 -- | The effects used in the app.
-type AppEffects eff = HalogenEffects (ajax :: AJAX | eff)
+type AppEffects eff = H.HalogenEffects (ajax :: AJAX | eff)
 
 -- | The definition for the app's main UI component.
-ui :: forall eff. Component State Query (Aff (AppEffects eff))
-ui = component { render, eval }
+ui :: forall eff. H.Component State Query (Aff (AppEffects eff))
+ui = H.component { render, eval }
   where
 
-  render :: State -> ComponentHTML Query
+  render :: State -> H.ComponentHTML Query
   render st =
-    H.div_ $
-      [ H.h1_
-          [ H.text "ajax example / trypurescript" ]
-      , H.h2_
-          [ H.text "purescript input:" ]
-      , H.p_
-          [ H.textarea
-              [ P.value st.code
-              , E.onValueInput (E.input SetCode)
+    HH.div_ $
+      [ HH.h1_
+          [ HH.text "ajax example / trypurescript" ]
+      , HH.h2_
+          [ HH.text "purescript input:" ]
+      , HH.p_
+          [ HH.textarea
+              [ HP.value st.code
+              , HE.onValueInput (HE.input SetCode)
               ]
           ]
-      , H.p_
-          [ H.button
-              [ P.disabled st.busy
-              , E.onClick (E.input_ (MakeRequest st.code))
+      , HH.p_
+          [ HH.button
+              [ HP.disabled st.busy
+              , HE.onClick (HE.input_ (MakeRequest st.code))
               ]
-              [ H.text "Compile" ]
+              [ HH.text "Compile" ]
           ]
-      , H.p_
-          [ H.text (if st.busy then "Working..." else "") ]
+      , HH.p_
+          [ HH.text (if st.busy then "Working..." else "") ]
       ]
       <> flip foldMap st.result \js ->
-          [ H.div_
-              [ H.h2_
-                  [ H.text "javascript output:" ]
-              , H.pre_
-                  [ H.code_ [ H.text js ] ]
+          [ HH.div_
+              [ HH.h2_
+                  [ HH.text "javascript output:" ]
+              , HH.pre_
+                  [ HH.code_ [ HH.text js ] ]
               ]
           ]
 
-  eval :: Query ~> (ComponentDSL State Query (Aff (AppEffects eff)))
-  eval (SetCode code next) = modify (_ { code = code, result = Nothing :: Maybe String }) $> next
+  eval :: Query ~> H.ComponentDSL State Query (Aff (AppEffects eff))
+  eval (SetCode code next) = H.modify (_ { code = code, result = Nothing :: Maybe String }) $> next
   eval (MakeRequest code next) = do
-    modify (_ { busy = true })
-    result <- fromAff (fetchJS code)
-    modify (_ { busy = false, result = Just result })
+    H.modify (_ { busy = true })
+    result <- H.fromAff (fetchJS code)
+    H.modify (_ { busy = false, result = Just result })
     pure next
 
 -- | Post some PureScript code to the trypurescript API and fetch the JS result.
@@ -105,4 +105,4 @@ fetchJS code = do
 main :: Eff (AppEffects ()) Unit
 main = runHalogenAff do
   body <- awaitBody
-  runUI ui initialState body
+  H.runUI ui initialState body

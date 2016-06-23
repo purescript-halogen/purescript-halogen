@@ -1,6 +1,6 @@
 module Halogen.Component.ChildPath where
 
-import Prelude
+import Prelude hiding (compose)
 
 import Data.Either (Either)
 import Data.Functor.Coproduct (Coproduct)

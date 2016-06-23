@@ -6,11 +6,11 @@ import Data.Array (snoc, init)
 import Data.Functor.Coproduct (Coproduct)
 import Data.Maybe (Maybe(..))
 
-import Halogen
-import Halogen.HTML.Indexed as H
-import Halogen.HTML.Events.Indexed as E
+import Halogen as H
+import Halogen.HTML.Events.Indexed as HE
+import Halogen.HTML.Indexed as HH
 
-import Ticker
+import Ticker (TickQuery, TickState, tickerComponent)
 
 data ListQuery a
   = AddTicker a
@@ -25,39 +25,39 @@ newtype TickSlot = TickSlot Int
 derive instance eqTickSlot :: Eq TickSlot
 derive instance ordTickSlot :: Ord TickSlot
 
-type ListQueryP = Coproduct ListQuery (ChildF TickSlot TickQuery)
-type ListStateP g = ParentState ListState TickState ListQuery TickQuery g TickSlot
+type ListQueryP = Coproduct ListQuery (H.ChildF TickSlot TickQuery)
+type ListStateP g = H.ParentState ListState TickState ListQuery TickQuery g TickSlot
 
-listComponent :: forall g. (Functor g) => Component (ListStateP g) ListQueryP g
-listComponent = parentComponent { render, eval, peek: Nothing }
+listComponent :: forall g. Functor g => H.Component (ListStateP g) ListQueryP g
+listComponent = H.parentComponent { render, eval, peek: Nothing }
   where
 
-  render :: ListState -> ParentHTML TickState ListQuery TickQuery g TickSlot
+  render :: ListState -> H.ParentHTML TickState ListQuery TickQuery g TickSlot
   render state =
-    H.div_
-      [ H.button
-          [ E.onClick (E.input_ AddTicker) ]
-          [ H.text "Add ticker "]
-      , H.button
-          [ E.onClick (E.input_ RemoveTicker) ]
-          [ H.text "Remove ticker "]
-      , H.ul_
+    HH.div_
+      [ HH.button
+          [ HE.onClick (HE.input_ AddTicker) ]
+          [ HH.text "Add ticker "]
+      , HH.button
+          [ HE.onClick (HE.input_ RemoveTicker) ]
+          [ HH.text "Remove ticker "]
+      , HH.ul_
           (map renderTicker state.tickerIds)
       ]
 
-  renderTicker :: Int -> ParentHTML TickState ListQuery TickQuery g TickSlot
+  renderTicker :: Int -> H.ParentHTML TickState ListQuery TickQuery g TickSlot
   renderTicker tickId =
-    H.li_
-      [ H.slot (TickSlot tickId) \_ ->
-          { component: tickerComponent, initialState: TickState 0 }
+    HH.li_
+      [ HH.slot (TickSlot tickId) \_ ->
+          { component: tickerComponent, initialState: 0 }
       ]
 
-  eval :: ListQuery ~> (ParentDSL ListState TickState ListQuery TickQuery g TickSlot)
+  eval :: ListQuery ~> H.ParentDSL ListState TickState ListQuery TickQuery g TickSlot
   eval (AddTicker next) = do
-    modify addTicker
+    H.modify addTicker
     pure next
   eval (RemoveTicker next) = do
-    modify removeTicker
+    H.modify removeTicker
     pure next
 
 addTicker :: ListState -> ListState

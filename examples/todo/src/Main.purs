@@ -3,15 +3,14 @@ module Main where
 import Prelude
 
 import Control.Monad.Eff (Eff)
--- import Control.Plus (Plus)
 
-import Halogen
+import Halogen as H
 import Halogen.Util (runHalogenAff, awaitBody)
 
-import Model
-import Component.List
+import Component.List (list)
+import Model (initialList)
 
-main :: Eff (HalogenEffects ()) Unit
+main :: Eff (H.HalogenEffects ()) Unit
 main = runHalogenAff do
   body <- awaitBody
-  runUI list (parentState initialList) body
+  H.runUI list (H.parentState initialList) body

@@ -32,7 +32,7 @@ data HalogenFP (e :: (* -> *) -> (* -> *) -> *) s f g a
 
 type HalogenF = HalogenFP EventSource
 
-instance functorHalogenF :: (Functor g) => Functor (HalogenFP e s f g) where
+instance functorHalogenF :: Functor g => Functor (HalogenFP e s f g) where
   map f h =
     case h of
       StateHF q -> StateHF (map f q)
@@ -42,24 +42,25 @@ instance functorHalogenF :: (Functor g) => Functor (HalogenFP e s f g) where
       RenderPendingHF k -> RenderPendingHF (f <$> k)
       HaltHF -> HaltHF
 
-instance affableHalogenF :: (Affable eff g) => Affable eff (HalogenFP e s f g) where
+instance affableHalogenF :: Affable eff g => Affable eff (HalogenFP e s f g) where
   fromAff = QueryHF <<< fromAff
 
-instance altHalogenF :: (Functor g) => Alt (HalogenFP e s f g) where
+instance altHalogenF :: Functor g => Alt (HalogenFP e s f g) where
   alt HaltHF h = h
   alt h _ = h
 
-instance plusHalogenF :: (Functor g) => Plus (HalogenFP e s f g) where
+instance plusHalogenF :: Functor g => Plus (HalogenFP e s f g) where
   empty = HaltHF
 
 -- | Change all the parameters of `HalogenF`.
 transformHF
   :: forall s s' f f' g g'
    . (Functor g')
-  => (StateF s) ~> (StateF s')
+  => (StateF s ~> StateF s')
   -> f ~> f'
   -> g ~> g'
-  -> (HalogenF s f g) ~> (HalogenF s' f' g')
+  -> HalogenF s f g
+  ~> HalogenF s' f' g'
 transformHF sigma phi gamma h =
   case h of
     StateHF q -> StateHF (sigma q)
@@ -74,7 +75,8 @@ hoistHalogenF
   :: forall s f g h
    . (Functor h)
   => g ~> h
-  -> (HalogenF s f g) ~> (HalogenF s f h)
+  -> HalogenF s f g
+  ~> HalogenF s f h
 hoistHalogenF eta h =
   case h of
     StateHF q -> StateHF q

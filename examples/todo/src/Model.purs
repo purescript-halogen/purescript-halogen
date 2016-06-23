@@ -1,7 +1,5 @@
 module Model where
 
-import Prelude
-
 type TaskId = Int
 
 type Task =

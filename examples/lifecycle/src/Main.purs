@@ -11,11 +11,11 @@ import Data.Array (snoc, filter, reverse)
 import Data.Maybe (Maybe(..))
 import Data.Functor.Coproduct (Coproduct, coproduct)
 
-import Halogen
+import Halogen as H
+import Halogen.HTML.Events.Indexed as HE
+import Halogen.HTML.Indexed as HH
+import Halogen.HTML.Properties.Indexed as HP
 import Halogen.Util (runHalogenAff, awaitBody)
-import Halogen.HTML.Indexed as H
-import Halogen.HTML.Properties.Indexed as P
-import Halogen.HTML.Events.Indexed as E
 
 import Child as Child
 
@@ -30,79 +30,80 @@ initialState =
   , slots: []
   }
 
-data Query a = Initialize a
-             | Finalize a
-             | Add a
-             | Reverse a
-             | Remove Int a
-
+data Query a
+  = Initialize a
+  | Finalize a
+  | Add a
+  | Reverse a
+  | Remove Int a
 
 type UIEff eff = Aff (console :: CONSOLE | eff)
 
-type StateP eff = ParentState State (Child.StateP eff) Query Child.QueryP (UIEff eff) Int
+type State' eff = H.ParentState State (Child.State' eff) Query Child.Query' (UIEff eff) Int
 
-type QueryP = Coproduct Query (ChildF Int Child.QueryP)
+type Query' = Coproduct Query (H.ChildF Int Child.Query')
 
-ui :: forall eff. Component (StateP eff) QueryP (UIEff eff)
-ui = lifecycleParentComponent
+ui :: forall eff. H.Component (State' eff) Query' (UIEff eff)
+ui = H.lifecycleParentComponent
   { render: render
   , eval: eval
-  , peek: Just (peek <<< runChildF)
-  , initializer: Just (action Initialize)
-  , finalizer: Just (action Finalize)
+  , peek: Just (peek <<< H.runChildF)
+  , initializer: Just (H.action Initialize)
+  , finalizer: Just (H.action Finalize)
   }
   where
 
-  render :: State -> ParentHTML (Child.StateP eff) Query Child.QueryP (UIEff eff) Int
+  render :: State -> H.ParentHTML (Child.State' eff) Query Child.Query' (UIEff eff) Int
   render state =
-    H.div_
-      [ H.button
-          [ E.onClick (E.input_ Add) ]
-          [ H.text "Add" ]
-      , H.button
-          [ E.onClick (E.input_ Reverse) ]
-          [ H.text "Reverse" ]
-      , H.ul_ $ flip map state.slots \id ->
-          H.li [ P.key (show id) ]
-            [ H.button
-                [ E.onClick (E.input_ $ Remove id) ]
-                [ H.text "Remove" ]
-            , H.slot id \_ -> { component: Child.child, initialState: parentState id }
+    HH.div_
+      [ HH.button
+          [ HE.onClick (HE.input_ Add) ]
+          [ HH.text "Add" ]
+      , HH.button
+          [ HE.onClick (HE.input_ Reverse) ]
+          [ HH.text "Reverse" ]
+      , HH.ul_ $ flip map state.slots \id ->
+          HH.li
+            [ HP.key (show id) ]
+            [ HH.button
+                [ HE.onClick (HE.input_ $ Remove id) ]
+                [ HH.text "Remove" ]
+            , HH.slot id \_ -> { component: Child.child, initialState: H.parentState id }
             ]
       ]
 
-  eval :: Query ~> (ParentDSL State (Child.StateP eff) Query Child.QueryP (UIEff eff) Int)
+  eval :: Query ~> H.ParentDSL State (Child.State' eff) Query Child.Query' (UIEff eff) Int
   eval (Initialize next) = do
-    fromAff $ log "Initialize Root"
+    H.fromAff $ log "Initialize Root"
     pure next
   eval (Finalize next) = do
     pure next
   eval (Add next) = do
-    modify \s ->
+    H.modify \s ->
       { currentId: s.currentId + 1
       , slots: snoc s.slots s.currentId
       }
     pure next
   eval (Remove id next) = do
-    modify \s -> s { slots = filter (not <<< eq id) s.slots }
+    H.modify \s -> s { slots = filter (not <<< eq id) s.slots }
     pure next
   eval (Reverse next) = do
-    modify \s -> s { slots = reverse s.slots }
+    H.modify \s -> s { slots = reverse s.slots }
     pure next
 
-  peek :: forall x. Child.QueryP x -> ParentDSL State (Child.StateP eff) Query Child.QueryP (UIEff eff) Int Unit
+  peek :: forall x. Child.Query' x -> H.ParentDSL State (Child.State' eff) Query Child.Query' (UIEff eff) Int Unit
   peek = coproduct peek' (const (pure unit))
     where
     peek' (Child.Initialize _) = do
-      fromAff $ log "Peeked child init"
+      H.fromAff $ log "Peeked child init"
       pure unit
     peek' (Child.Finalize _) = do
       -- This will never happen, finalizers are not peek-able
-      fromAff $ log "Peeked child finalize"
+      H.fromAff $ log "Peeked child finalize"
       pure unit
     peek' _ = pure unit
 
-main :: Eff (HalogenEffects (console :: CONSOLE)) Unit
+main :: Eff (H.HalogenEffects (console :: CONSOLE)) Unit
 main = runHalogenAff do
   body <- awaitBody
-  runUI ui (parentState initialState) body
+  H.runUI ui (H.parentState initialState) body

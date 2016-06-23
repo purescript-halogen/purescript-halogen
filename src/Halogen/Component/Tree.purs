@@ -24,7 +24,7 @@ type TreeF f p p' =
 
 foreign import data Tree :: (* -> *) -> * -> *
 
-mkTree :: forall f p'. (Eq p') => Lazy (HTML (Tree f p') (f Unit)) -> Tree f Unit
+mkTree :: forall f p'. Eq p' => Lazy (HTML (Tree f p') (f Unit)) -> Tree f Unit
 mkTree html =
   mkTree'
     { slot: unit

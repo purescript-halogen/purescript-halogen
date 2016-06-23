@@ -73,7 +73,7 @@ element :: forall p i. TagName -> Array (Prop i) -> Array (HTML p i) -> HTML p i
 element = Element Nothing
 
 -- | Populates the slot placeholder values in a `HTML` value.
-fillSlot :: forall p p' i i' m. (Applicative m) => (p -> m (HTML p' i')) -> (i -> i') -> HTML p i -> m (HTML p' i')
+fillSlot :: forall p p' i i' m. Applicative m => (p -> m (HTML p' i')) -> (i -> i') -> HTML p i -> m (HTML p' i')
 fillSlot _ _ (Text s) = pure $ Text s
 fillSlot f g (Element ns name props els) = Element ns name (map g <$> props) <$> traverse (fillSlot f g) els
 fillSlot f _ (Slot p) = f p
@@ -110,7 +110,7 @@ data PropF value = PropF (PropName value) value (Maybe (Tuple AttrName (AttrName
 data HandlerF i fields = HandlerF (EventName fields) (Event fields -> EventHandler (Maybe i))
 
 -- | Create an attribute
-prop :: forall value i. (IsProp value) => PropName value -> Maybe AttrName -> value -> Prop i
+prop :: forall value i. IsProp value => PropName value -> Maybe AttrName -> value -> Prop i
 prop name attr v = Prop (mkExists (PropF name v (flip Tuple toPropString <$> attr)))
 
 -- | Create an event handler

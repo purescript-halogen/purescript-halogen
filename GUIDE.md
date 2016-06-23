@@ -33,7 +33,7 @@ myComponent = component { render, eval }
           [ H.text (if state.on then "On" else "Off") ]
       ]
 
-  eval :: Natural Query (ComponentDSL State Query g)
+  eval :: Query ~> ComponentDSL State Query g
   eval (ToggleState next) = do
     modify (\state -> { on: not state.on })
     pure next
@@ -60,7 +60,7 @@ data Query a
 
 Here `ToggleState` is an action and `GetState` is a request – the difference being the location of the query algebra’s type parameter. For actions the parameter is used as a value, for requests it appears in the return type of a function. This is how the previously mentioned typed queries work: when a request is formed using the `GetState` constructor, we know the result type must be a `Boolean` due to the way the query processor handles constructors of this shape.
 
-The functions [`action`](https://pursuit.purescript.org/packages/purescript-halogen/0.6.0/docs/Halogen.Query#v:action) and [`request`](https://pursuit.purescript.org/packages/purescript-halogen/0.6.0/docs/Halogen.Query#v:request) in the [`Halogen.Query`](https://pursuit.purescript.org/packages/purescript-halogen/0.6.0/docs/Halogen.Query) module can be used to make queries when used with constructors of the appropriate type (for example, `action ToggleState` or `request GetState`).
+The functions [`action`](https://pursuit.purescript.org/packages/purescript-halogen/0.9.0/docs/Halogen.Query#v:action) and [`request`](https://pursuit.purescript.org/packages/purescript-halogen/0.9.0/docs/Halogen.Query#v:request) in the [`Halogen.Query`](https://pursuit.purescript.org/packages/purescript-halogen/0.9.0/docs/Halogen.Query) module can be used to make queries when used with constructors of the appropriate type (for example, `action ToggleState` or `request GetState`).
 
 ## State
 
@@ -73,7 +73,7 @@ Components are constructed from a “spec“ record with the `component` functio
 ``` purescript
 type ComponentSpec s f g =
   { render :: s -> ComponentHTML f
-  , eval :: Natural f (ComponentDSL s f g)
+  , eval :: f ~> ComponentDSL s f g
   }
 
 component :: forall s f g. ComponentSpec s f g -> Component s f g
@@ -91,7 +91,7 @@ A `render` function takes the component’s current state value and returns a va
 type ComponentHTML f = HTML Void (f Unit)
 ```
 
-When building `HTML` values there are two options for modules that provide the standard HTML tags: [`Halogen.HTML`](https://pursuit.purescript.org/packages/purescript-halogen/0.6.0/docs/Halogen.HTML) and [`Halogen.HTML.Indexed`](https://pursuit.purescript.org/packages/purescript-halogen/0.6.0/docs/Halogen.HTML.Indexed). Use of the `Indexed` variety is recommended as this has a greater level of type safety and can aid type-directed programming.
+When building `HTML` values there are two options for modules that provide the standard HTML tags: [`Halogen.HTML`](https://pursuit.purescript.org/packages/purescript-halogen/0.9.0/docs/Halogen.HTML) and [`Halogen.HTML.Indexed`](https://pursuit.purescript.org/packages/purescript-halogen/0.9.0/docs/Halogen.HTML.Indexed). Use of the `Indexed` variety is recommended as this has a greater level of type safety and can aid type-directed programming.
 
 ### Event listeners
 
@@ -101,14 +101,14 @@ The `HTML` DSL allows event listeners to be set up in a declarative way, as demo
 E.onClick (E.input_ ToggleState)
 ```
 
-Functions for all standard HTML event types are provided by [`Halogen.HTML.Events`](https://pursuit.purescript.org/packages/purescript-halogen/0.6.0/docs/Halogen.HTML.Events), and as with the elements there is a [`Halogen.HTML.Events.Indexed`](https://pursuit.purescript.org/packages/purescript-halogen/0.6.0/docs/Halogen.HTML.Events.Indexed) variety that is recommended as the standard choice.
+Functions for all standard HTML event types are provided by [`Halogen.HTML.Events`](https://pursuit.purescript.org/packages/purescript-halogen/0.9.0/docs/Halogen.HTML.Events), and as with the elements there is a [`Halogen.HTML.Events.Indexed`](https://pursuit.purescript.org/packages/purescript-halogen/0.9.0/docs/Halogen.HTML.Events.Indexed) variety that is recommended as the standard choice.
 
-These modules also provides two functions, [`input`](https://pursuit.purescript.org/packages/purescript-halogen/0.6.0/docs/Halogen.HTML.Events#v:input) and [`input_`](https://pursuit.purescript.org/packages/purescript-halogen/0.6.0/docs/Halogen.HTML.Events#v:input_), which are used to turn query algebra constructors into actions for `eval`:
+These modules also provides two functions, [`input`](https://pursuit.purescript.org/packages/purescript-halogen/0.9.0/docs/Halogen.HTML.Events#v:input) and [`input_`](https://pursuit.purescript.org/packages/purescript-halogen/0.9.0/docs/Halogen.HTML.Events#v:input_), which are used to turn query algebra constructors into actions for `eval`:
 
 - `input` is for constructors where an additional value is expected, provided by reading some value from the event.
 - `input_` is for constructors that require no additional values.
 
-`input` is often useful when combined with the form-specific event helpers like [`onChecked`](https://pursuit.purescript.org/packages/purescript-halogen/0.6.0/docs/Halogen.HTML.Events.Forms#v:onChecked) and [`onValueInput`](https://pursuit.purescript.org/packages/purescript-halogen/0.6.0/docs/Halogen.HTML.Events.Forms#v:onValueInput):
+`input` is often useful when combined with the form-specific event helpers like [`onChecked`](https://pursuit.purescript.org/packages/purescript-halogen/0.9.0/docs/Halogen.HTML.Events.Forms#v:onChecked) and [`onValueInput`](https://pursuit.purescript.org/packages/purescript-halogen/0.9.0/docs/Halogen.HTML.Events.Forms#v:onValueInput):
 
 ``` purescript
 import Halogen.HTML.Events.Indexed as E
@@ -131,7 +131,7 @@ import Halogen.HTML.Events.Handler as EH
 E.onClick (\_ -> EH.preventDefault $> Just (action ToggleState))
 ```
 
-These functions from [`Halogen.HTML.Events.Handler`](https://pursuit.purescript.org/packages/purescript-halogen/0.6.0/docs/Halogen.HTML.Events.Handler) can also be chained together, either as “statements” in a `do`, or with the `Apply` operator:
+These functions from [`Halogen.HTML.Events.Handler`](https://pursuit.purescript.org/packages/purescript-halogen/0.9.0/docs/Halogen.HTML.Events.Handler) can also be chained together, either as “statements” in a `do`, or with the `Apply` operator:
 
 ``` purescript
 import Control.Apply ((*>))
@@ -139,18 +139,18 @@ import Control.Apply ((*>))
 E.onClick (\_ -> EH.preventDefault *> EH.stopPropagation $> Just (action ToggleState))
 ```
 
-Note that in the above cases we’re not using the `input` or `input_` helpers but instead are constructing the query using [`action`](https://pursuit.purescript.org/packages/purescript-halogen/0.6.0/docs/Halogen.Query#v:action), and returning it in a `Just`. The `Maybe` here is so that we have the option to return `Nothing` sometimes, so we do not have to always raise a query in response to an event.
+Note that in the above cases we’re not using the `input` or `input_` helpers but instead are constructing the query using [`action`](https://pursuit.purescript.org/packages/purescript-halogen/0.9.0/docs/Halogen.Query#v:action), and returning it in a `Just`. The `Maybe` here is so that we have the option to return `Nothing` sometimes, so we do not have to always raise a query in response to an event.
 
 ## Evaluating queries
 
 The types involved in a component’s `eval` function:
 
 ``` purescript
-eval :: Natural f (ComponentDSL s f g)
+eval :: f ~> ComponentDSL s f g
 type ComponentDSL s f g = Free (HalogenF s f g)
 ```
 
-`Natural` is a type synonym for a natural transformation (`forall a. f a -> g a`). The use of a natural transformation here is what give us the ability to have typed queries, as if we apply a value `f Boolean` to a `Natural f g`, the result has to be a `g Boolean`.
+`(~>)` is a type synonym for a natural transformation (`forall a. f a -> g a`). The use of a natural transformation here is what give us the ability to have typed queries, as if we apply a value `f Boolean` to a `f ~> g`, the result has to be a `g Boolean`.
 
 Evaluating an action query will look something like this:
 
@@ -176,16 +176,16 @@ Here `continue` is the `Boolean -> a` function we defined, so the result value f
 
 The `Free (HalogenF s f g) _` that `eval` functions operate in allow us to perform various actions using the `HalogenF` algebra, such as manipulating the state of the current component:
 
-- [`get`](https://pursuit.purescript.org/packages/purescript-halogen/0.6.0/docs/Halogen.Query#v:get) retrieves the entire current state value
-- [`gets f`](https://pursuit.purescript.org/packages/purescript-halogen/0.6.0/docs/Halogen.Query#v:gets) uses `f` to map the state value, generally used to extract a part of the state
-- [`modify f`](https://pursuit.purescript.org/packages/purescript-halogen/0.6.0/docs/Halogen.Query#v:modify) uses `f` to update the stored state value
-- [`set`](https://pursuit.purescript.org/packages/purescript-halogen/0.6.0/docs/Halogen.Query#v:set) overwrites the entire current state value.
+- [`get`](https://pursuit.purescript.org/packages/purescript-halogen/0.9.0/docs/Halogen.Query#v:get) retrieves the entire current state value
+- [`gets f`](https://pursuit.purescript.org/packages/purescript-halogen/0.9.0/docs/Halogen.Query#v:gets) uses `f` to map the state value, generally used to extract a part of the state
+- [`modify f`](https://pursuit.purescript.org/packages/purescript-halogen/0.9.0/docs/Halogen.Query#v:modify) uses `f` to update the stored state value
+- [`set`](https://pursuit.purescript.org/packages/purescript-halogen/0.9.0/docs/Halogen.Query#v:set) overwrites the entire current state value.
 
-There is also the ability to [`subscribe`](https://pursuit.purescript.org/packages/purescript-halogen/0.6.0/docs/Halogen.Query#v:subscribe) to “event sources”. This was introduced to allow subscriptions to event handlers and callbacks for 3rd party components (see the section [“Subscriptions and event sources”](#subscriptions-and-event-sources) for more details), but it is also possible to construct event sources to allow for some tricks where components need to send queries to themselves, however this latter use case is beyond the scope of this guide for now.
+There is also the ability to [`subscribe`](https://pursuit.purescript.org/packages/purescript-halogen/0.9.0/docs/Halogen.Query#v:subscribe) to “event sources”. This was introduced to allow subscriptions to event handlers and callbacks for 3rd party components (see the section [“Subscriptions and event sources”](#subscriptions-and-event-sources) for more details), but it is also possible to construct event sources to allow for some tricks where components need to send queries to themselves, however this latter use case is beyond the scope of this guide for now.
 
 Finally, values of type `g` can be lifted into `HalogenF` to allow us to perform operations that lie outside of the component itself – generally `g` is `Aff`, allowing us to perform effectful and asynchronous operations such as AJAX requests.
 
-Another option for `g` is to use a `Free` monad here with an algebra that encapsulate all of the effectful actions the component needs to perform, and then this can later be interpreted as `Aff`. There is a function provided for this, called [`interpret`](https://pursuit.purescript.org/packages/purescript-halogen/0.6.0/docs/Halogen.Component#v:interpret), that allows a component’s `g` value to be transformed.
+Another option for `g` is to use a `Free` monad here with an algebra that encapsulate all of the effectful actions the component needs to perform, and then this can later be interpreted as `Aff`. There is a function provided for this, called [`interpret`](https://pursuit.purescript.org/packages/purescript-halogen/0.9.0/docs/Halogen.Component#v:interpret), that allows a component’s `g` value to be transformed.
 
 ### Non-state effects
 
@@ -194,7 +194,7 @@ One of the most common non-state effect for a component is to [make requests via
 Here’s the `eval` function from the AJAX example:
 
 ``` purescript
-eval :: Natural Query (ComponentDSL State Query (Aff (AppEffects eff)))
+eval :: Query ~> ComponentDSL State Query (Aff (AppEffects eff))
 eval (SetCode code next) = --- ... snip ...
 eval (MakeRequest code next) = do
   modify (_ { busy = true })
@@ -212,11 +212,11 @@ Using `Aff` for a component’s `g` means it also inherits the convenience of `A
 
 If we want to use an `Eff` based function there is also a [`fromEff`](https://pursuit.purescript.org/packages/purescript-aff-free/0.1.1/docs/Control.Monad.Aff.Free#v:fromEff) helper.
 
-If `g` is not `Aff` then lifting values into it is performed with the [`liftH`](https://pursuit.purescript.org/packages/purescript-halogen/0.6.0/docs/Halogen.Query#v:liftH) function provided by Halogen. There is an example of this in the [the “interpret” example](examples/interpret) where `g` is another `Free` monad that is later interpreted as `Aff`.
+If `g` is not `Aff` then lifting values into it is performed with the [`liftH`](https://pursuit.purescript.org/packages/purescript-halogen/0.9.0/docs/Halogen.Query#v:liftH) function provided by Halogen. There is an example of this in the [the “interpret” example](examples/interpret) where `g` is another `Free` monad that is later interpreted as `Aff`.
 
 ## The driver
 
-To render our component (or tree of components) on the page we need to pass it to the [`runUI`](https://pursuit.purescript.org/packages/purescript-halogen/0.6.0/docs/Halogen.Driver#v:runUI) function:
+To render our component (or tree of components) on the page we need to pass it to the [`runUI`](https://pursuit.purescript.org/packages/purescript-halogen/0.9.0/docs/Halogen.Driver#v:runUI) function:
 
 ``` purescript
 runUI
@@ -230,12 +230,12 @@ runUI
 This takes our component, its initial state, and a HTML element to attach the rendered component to, and then returns a driver function via `Aff`. The driver function is a mechanism for querying the component “from the outside” – that is to say, send queries that don’t originate within the Halogen component structure.
 
 ``` purescript
-type Driver f eff = Natural f (Aff (HalogenEffects eff))
+type Driver f eff = f ~> Aff (HalogenEffects eff)
 ```
 
 The purpose of the driver function is to allow us to extract information from the application state, or more commonly, to do things like change the application state in response to changes in the URL using a routing library.
 
-The [`Halogen.Util`](https://pursuit.purescript.org/packages/purescript-halogen/0.6.0/docs/Halogen.Util) module provides a collection of convenience functions for running Halogen components such as [`awaitBody`](https://pursuit.purescript.org/packages/purescript-halogen/0.6.0/docs/Halogen.Util#v:awaitBody) and [`runHalogenAff`](https://pursuit.purescript.org/packages/purescript-halogen/0.6.0/docs/Halogen.Util#v:runHalogenAff). A basic `main` for a component using these functions might look something like this:
+The [`Halogen.Util`](https://pursuit.purescript.org/packages/purescript-halogen/0.9.0/docs/Halogen.Util) module provides a collection of convenience functions for running Halogen components such as [`awaitBody`](https://pursuit.purescript.org/packages/purescript-halogen/0.9.0/docs/Halogen.Util#v:awaitBody) and [`runHalogenAff`](https://pursuit.purescript.org/packages/purescript-halogen/0.9.0/docs/Halogen.Util#v:runHalogenAff). A basic `main` for a component using these functions might look something like this:
 
 ``` purescript
 main :: Eff (HalogenEffects ()) Unit
@@ -270,7 +270,7 @@ A component that can contain other components is constructed with the `parentCom
 ``` purescript
 type ParentComponentSpec s s' f f' g p =
   { render :: s -> ParentHTML s' f f' g p
-  , eval :: Natural f (ParentDSL s s' f f' g p)
+  , eval :: f ~> ParentDSL s s' f f' g p
   , peek :: forall x. Maybe (ChildF p f' x -> ParentDSL s s' f f' g p Unit)
   }
 
@@ -291,16 +291,14 @@ The types here may appear a little intimidating but aren’t really any more com
 
 `ParentHTML` and `ParentDSL` are variations on the previously described `ComponentHTML` and `ComponentDSL` synonyms but do not alter the way the `render` or `eval` functions are defined. These differ from the non-`Parent` synonyms by swapping out the `Void` in `HTML` for `SlotConstructor ...` and the `g` of `ComponentDSL` becomes `QueryF ...`. These changes allow us to perfom the necessary plumbing when installing child components into a parent.
 
-Defining synonyms for the combination state and query algebra types is recommended when setting up parent components. Taking [the “components” example](examples/components) for instance, we define `StateP` and `QueryP` synonyms for the component we’re constructing:
+Defining synonyms for the combination state and query algebra types is recommended when setting up parent components. Taking [the “components” example](examples/components) for instance, we define `State'` and `Query'` synonyms for the component we’re constructing:
 
 ``` purescript
-type StateP g = ParentState State TickState Query TickQuery g TickSlot
-type QueryP = Coproduct Query (ChildF TickSlot TickQuery)
+type State' g = ParentState State TickState Query TickQuery g TickSlot
+type Query' = Coproduct Query (ChildF TickSlot TickQuery)
 
-ui :: forall g. (Functor g) => Component (StateP g) QueryP g
+ui :: forall g. Functor g => Component (State' g) Query' g
 ```
-
-The `P` here stands for “prime”. Currently PureScript does not allow types to use the prime symbol, so we use `StateP` instead of `State'`. It could also stand for “parent”, so thinking of it either way works here!
 
 Defining synonyms like these becomes especially important if the component is going to be installed inside yet another component – the types only ever have to refer “one level down” and unreadable deeply nested types are avoided.
 
@@ -319,7 +317,7 @@ derive instance eqTickSlot :: Eq TickSlot
 derive instance ordTickSlot :: Ord TickSlot
 ```
 
-Slot values can then be inserted into the `HTML` for the parent component using the [`slot`](https://pursuit.purescript.org/packages/purescript-halogen/0.6.0/docs/Halogen.HTML#v:slot) smart constructor:
+Slot values can then be inserted into the `HTML` for the parent component using the [`slot`](https://pursuit.purescript.org/packages/purescript-halogen/0.9.0/docs/Halogen.HTML#v:slot) smart constructor:
 
 ``` purescript
 render :: State -> ParentHTML TickState Query TickQuery g TickSlot
@@ -344,7 +342,7 @@ The thunk is only evaluated when the slot first appears in the `HTML`, so modify
 The `eval` function of a parent component has access to an additional combinator: `query`. This allows a parent component to query its children, using a slot address value of the child:
 
 ``` purescript
-eval :: Natural Query (ParentDSL State TickState Query TickQuery g TickSlot)
+eval :: Query ~> ParentDSL State TickState Query TickQuery g TickSlot
 eval (ReadTicks next) = do
   a <- query (TickSlot "A") (request GetTick)
   b <- query (TickSlot "B") (request GetTick)
@@ -517,7 +515,7 @@ ace = lifecycleComponent
   render :: AceState -> ComponentHTML AceQuery
   render = const $ H.div [ P.ref \el -> action (SetElement el) ] []
 
-  eval :: Natural AceQuery (ComponentDSL AceState AceQuery (Aff (AceEffects eff)))
+  eval :: AceQuery ~> ComponentDSL AceState AceQuery (Aff (AceEffects eff))
   eval = -- ... snip ...
 ```
 
