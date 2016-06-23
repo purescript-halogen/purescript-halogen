@@ -9,7 +9,6 @@ import Control.Bind ((=<<))
 import Control.Coroutine (await)
 import Control.Coroutine.Stalling (($$?))
 import Control.Coroutine.Stalling as SCR
-import Control.Monad (when)
 import Control.Monad.Aff (Aff, forkAff, forkAll)
 import Control.Monad.Aff.AVar (AVar, makeVar, makeVar', putVar, takeVar, modifyVar)
 import Control.Monad.Eff.Class (liftEff)

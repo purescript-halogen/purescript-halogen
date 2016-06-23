@@ -38,7 +38,7 @@ module Halogen.Component
   , finalizeComponent
   ) where
 
-import Prelude
+import Prelude (class Functor, class Ord, type (~>), Unit, Void, map, const, id, pure, unit, flip, bind, void, (<$>), (<<<), ($), (=<<), (>>=), (>>>), (<>), (<*))
 
 import Control.Apply ((<*))
 import Control.Bind ((=<<))
@@ -58,7 +58,6 @@ import Data.Map as M
 import Data.Maybe (Maybe(..), maybe, fromJust)
 import Data.Traversable (for, traverse)
 import Data.Tuple (Tuple(..))
-import Data.Void (Void)
 
 import Halogen.Component.ChildPath (ChildPath(..), injState, injQuery, injSlot, prjState, prjQuery, prjSlot)
 import Halogen.Component.Hook (Hook(..), Finalized, finalized, mapFinalized, lmapHook, rmapHook)
@@ -70,7 +69,7 @@ import Halogen.Query.HalogenF (HalogenF, HalogenFP(..), RenderPending(..), hoist
 import Halogen.Query.StateF (StateF(..), mapState)
 
 import Unsafe.Coerce (unsafeCoerce)
-import Partial.Unsafe
+import Partial.Unsafe (unsafePartial)
 
 type RenderResult s f g =
   { state :: s
