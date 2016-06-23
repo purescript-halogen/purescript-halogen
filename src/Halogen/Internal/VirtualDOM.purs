@@ -24,7 +24,7 @@ import Control.Monad.Eff (Eff)
 import Data.Monoid (class Monoid)
 import Data.Maybe (Maybe(..))
 import Data.Nullable (Nullable)
-import Data.Function (Fn2, runFn2)
+import Data.Function.Uncurried (Fn2, runFn2)
 
 import DOM (DOM)
 import DOM.HTML.Types (HTMLElement)

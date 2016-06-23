@@ -59,7 +59,7 @@ data LengthLiteral
 
 printLengthLiteral :: LengthLiteral -> String
 printLengthLiteral (Pixels n) = show n
-printLengthLiteral (Percent n) = show n ++ "%"
+printLengthLiteral (Percent n) = show n <> "%"
 
 -- | The `key` property associates a unique key with a node, which can be used
 -- | to implement a more efficient diff/patch.

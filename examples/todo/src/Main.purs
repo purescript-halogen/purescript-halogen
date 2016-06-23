@@ -3,7 +3,7 @@ module Main where
 import Prelude
 
 import Control.Monad.Eff (Eff)
-import Control.Plus (Plus)
+-- import Control.Plus (Plus)
 
 import Halogen
 import Halogen.Util (runHalogenAff, awaitBody)

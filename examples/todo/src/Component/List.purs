@@ -2,7 +2,7 @@ module Component.List where
 
 import Prelude
 
-import Control.Plus (Plus)
+-- import Control.Plus (Plus)
 import Control.Monad (when)
 
 import Data.Array (snoc, filter, length)
@@ -42,7 +42,7 @@ list = parentComponent { render, eval, peek: Just peek }
                              [ H.text "New Task" ]
                   ]
            , H.ul_ (map renderTask st.tasks)
-           , H.p_ [ H.text $ show st.numCompleted ++ " / " ++ show (length st.tasks) ++ " complete" ]
+           , H.p_ [ H.text $ show st.numCompleted <> " / " <> show (length st.tasks) <> " complete" ]
            , H.button [ E.onClick (E.input_ AllDone) ]
                       [ H.text "All Done" ]
            ]
@@ -50,7 +50,7 @@ list = parentComponent { render, eval, peek: Just peek }
   renderTask :: TaskId -> ParentHTML Task ListQuery TaskQuery g TaskSlot
   renderTask taskId = H.slot (TaskSlot taskId) \_ -> { component: task, initialState: initialTask }
 
-  eval :: Natural ListQuery (ParentDSL List Task ListQuery TaskQuery g TaskSlot)
+  eval :: ListQuery ~> (ParentDSL List Task ListQuery TaskQuery g TaskSlot)
   eval (NewTask next) = do
     modify addTask
     pure next
@@ -63,9 +63,9 @@ list = parentComponent { render, eval, peek: Just peek }
   peek (ChildF p q) = case q of
     Remove _ -> do
       wasComplete <- query p (request IsCompleted)
-      when (fromMaybe false wasComplete) $ modify $ updateNumCompleted (`sub` 1)
+      when (fromMaybe false wasComplete) $ modify $ updateNumCompleted (_ `sub` 1)
       modify (removeTask p)
-    ToggleCompleted b _ -> modify $ updateNumCompleted (if b then (+ 1) else (`sub` 1))
+    ToggleCompleted b _ -> modify $ updateNumCompleted (if b then (_ + 1) else (_ `sub` 1))
     _ -> pure unit
 
 -- | Adds a task to the current state.
@@ -74,7 +74,7 @@ addTask st = st { nextId = st.nextId + 1, tasks = st.tasks `snoc` st.nextId }
 
 -- | Removes a task from the current state.
 removeTask :: TaskSlot -> List -> List
-removeTask (TaskSlot id) st = st { tasks = filter (/= id) st.tasks }
+removeTask (TaskSlot id) st = st { tasks = filter (_ /= id) st.tasks }
 
 -- | Updates the number of completed tasks.
 updateNumCompleted :: (Int -> Int) -> List -> List

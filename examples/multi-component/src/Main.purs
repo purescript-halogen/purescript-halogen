@@ -1,9 +1,8 @@
-module MultiComponent where
+module Main where
 
 import Prelude
 
 import Control.Monad.Eff (Eff)
-import Control.Plus (Plus)
 
 import Data.Either (Either)
 import Data.Functor.Coproduct (Coproduct)
@@ -51,11 +50,11 @@ ui = parentComponent { render, eval, peek: Nothing }
     [ H.div_ [ H.slot' cpA SlotA \_ -> { component: componentA, initialState: initStateA } ]
     , H.div_ [ H.slot' cpB SlotB \_ -> { component: componentB, initialState: initStateB } ]
     , H.div_ [ H.slot' cpC SlotC \_ -> { component: componentC, initialState: initStateC } ]
-    , H.div_ [ H.text $ "Current states: " ++ show state.a ++ " / " ++ show state.b ++ " / " ++ show state.c ]
+    , H.div_ [ H.text $ "Current states: " <> show state.a <> " / " <> show state.b <> " / " <> show state.c ]
     , H.button [ E.onClick (E.input_ ReadStates) ] [ H.text "Read states" ]
     ]
 
-  eval :: Natural Query (ParentDSL State ChildState Query ChildQuery g ChildSlot)
+  eval :: Query ~> (ParentDSL State ChildState Query ChildQuery g ChildSlot)
   eval (ReadStates next) = do
     a <- query' cpA SlotA (request GetStateA)
     b <- query' cpB SlotB (request GetStateB)

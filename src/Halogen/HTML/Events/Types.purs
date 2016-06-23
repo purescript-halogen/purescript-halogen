@@ -4,7 +4,7 @@ module Halogen.HTML.Events.Types where
 import Data.Nullable (Nullable())
 
 import DOM.HTML.Types (HTMLElement())
-import DOM.Event.DragEvent.DataTransfer (DataTransfer())
+import DOM.HTML.Event.DragEvent.DataTransfer (DataTransfer())
 
 -- | This record synonym captures the properties which appear on every DOM event.
 -- |

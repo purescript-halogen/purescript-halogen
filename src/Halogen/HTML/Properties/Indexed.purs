@@ -246,15 +246,15 @@ type MediaType =
   }
 
 renderMediaType :: MediaType -> String
-renderMediaType ty = ty.type ++ "/" ++ ty.subtype ++ renderParameters ty.parameters
+renderMediaType ty = ty.type <> "/" <> ty.subtype <> renderParameters ty.parameters
   where
     renderParameters :: Array (Tuple String String) -> String
     renderParameters ps
       | A.length ps == 0 = ""
-      | otherwise = ";" ++ intercalate ";" (renderParameter <$> ps)
+      | otherwise = ";" <> intercalate ";" (renderParameter <$> ps)
 
     renderParameter :: Tuple String String -> String
-    renderParameter (Tuple k v) = k ++ "=" ++ v
+    renderParameter (Tuple k v) = k <> "=" <> v
 
 mediaType :: forall r i. MediaType -> IProp (mediaType :: I | r) i
 mediaType = refine P.type_ <<< renderMediaType

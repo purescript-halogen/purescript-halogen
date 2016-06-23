@@ -40,7 +40,7 @@ task = component { render, eval }
                      [ H.text "✖" ]
           ]
 
-  eval :: Natural TaskQuery (ComponentDSL Task TaskQuery g)
+  eval :: TaskQuery ~> (ComponentDSL Task TaskQuery g)
   eval (UpdateDescription desc next) = do
     modify (_ { description = desc })
     pure next

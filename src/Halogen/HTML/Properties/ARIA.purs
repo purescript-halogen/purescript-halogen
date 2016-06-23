@@ -38,8 +38,6 @@ module Halogen.HTML.Properties.ARIA
   , role
   ) where
 
-import Prelude
-
 import Data.Maybe (Maybe(..))
 
 import Halogen.HTML.Core (Prop(..), attrName)

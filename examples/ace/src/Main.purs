@@ -57,10 +57,10 @@ ui = parentComponent { render, eval, peek: Just peek }
       , H.div_
           [ H.slot AceSlot \_ -> { component: ace, initialState: initAceState } ]
       , H.p_
-          [ H.text ("Current text: " ++ text) ]
+          [ H.text ("Current text: " <> text) ]
       ]
 
-  eval :: Natural Query (ParentDSL State AceState Query AceQuery (Aff (AceEffects eff)) AceSlot)
+  eval :: Query ~> (ParentDSL State AceState Query AceQuery (Aff (AceEffects eff)) AceSlot)
   eval (ClearText next) = do
     query AceSlot $ action (ChangeText "")
     pure next

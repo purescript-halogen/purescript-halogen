@@ -12,7 +12,6 @@ module Halogen.Component.Tree
 import Prelude
 import Data.Bifunctor (bimap)
 import Data.Lazy (Lazy, defer)
-import Data.NaturalTransformation (Natural)
 import Halogen.HTML.Core (HTML(..))
 import Unsafe.Coerce (unsafeCoerce)
 
@@ -40,7 +39,7 @@ mkTree' = unsafeCoerce
 runTree :: forall f p r. (forall p'. TreeF f p p' -> r) -> Tree f p -> r
 runTree k t = case unsafeCoerce t of tree -> k tree
 
-graftTree :: forall f f' p p'. Natural f f' -> (p -> p') -> Tree f p -> Tree f' p'
+graftTree :: forall f f' p p'. f ~> f' -> (p -> p') -> Tree f p -> Tree f' p'
 graftTree l r = runTree \t ->
   mkTree'
     { slot: r t.slot

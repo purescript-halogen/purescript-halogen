@@ -21,7 +21,7 @@ import Data.Foreign (toForeign)
 
 import DOM (DOM)
 import DOM.Event.EventTarget (eventListener, addEventListener)
-import DOM.Event.EventTypes (load)
+import DOM.HTML.Event.EventTypes (load)
 import DOM.HTML (window)
 import DOM.HTML.Types (HTMLElement, windowToEventTarget, htmlDocumentToParentNode, readHTMLElement)
 import DOM.HTML.Window (document)
@@ -61,4 +61,4 @@ runHalogenAff
   :: forall eff x
    . Aff (HalogenEffects eff) x
   -> Eff (HalogenEffects eff) Unit
-runHalogenAff = runAff throwException (const (pure unit))
+runHalogenAff = void <<< runAff throwException (const (pure unit))

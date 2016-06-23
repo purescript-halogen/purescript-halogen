@@ -50,8 +50,6 @@ module Halogen.HTML.Events.Indexed
   , module ExportedEvents
   ) where
 
-import Prelude
-
 import Data.Maybe (Maybe)
 
 import Unsafe.Coerce (unsafeCoerce)

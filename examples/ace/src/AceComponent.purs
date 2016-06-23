@@ -14,6 +14,7 @@ import Halogen
 import Halogen.HTML as H
 import Halogen.HTML.Properties as P
 
+import Ace as Ace
 import Ace.Types (ACE, Editor)
 import Ace.Editor as Editor
 import Ace.EditSession as Session
@@ -61,7 +62,7 @@ ace = lifecycleComponent
   -- The query algebra for the component handles the initialization of the Ace
   -- editor as well as responding to the `ChangeText` action that allows us to
   -- alter the editor's state.
-  eval :: Natural AceQuery (ComponentDSL AceState AceQuery (Aff (AceEffects eff)))
+  eval :: AceQuery ~> (ComponentDSL AceState AceQuery (Aff (AceEffects eff)))
   eval (SetElement el next) = do
     modify (_ { element = el })
     pure next

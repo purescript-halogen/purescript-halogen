@@ -83,7 +83,7 @@ foreign import stopImmediatePropagationImpl :: forall eff fields. Event fields -
 runEventHandler :: forall a fields m eff. (Monad m, MonadEff (dom :: DOM | eff) m) => Event fields -> EventHandler a -> m a
 runEventHandler e (EventHandler mw) =
   case runWriter mw of
-    Tuple a eus -> liftEff $ for_ eus (applyUpdate) *> return a
+    Tuple a eus -> liftEff $ for_ eus (applyUpdate) *> pure a
   where
   applyUpdate :: EventUpdate -> Eff (dom :: DOM | eff) Unit
   applyUpdate PreventDefault            = preventDefaultImpl e

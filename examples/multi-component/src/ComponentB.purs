@@ -30,7 +30,7 @@ componentB = component { render, eval }
                [ H.text (if state.on then "On" else "Off") ]
     ]
 
-  eval :: Natural QueryB (ComponentDSL StateB QueryB g)
+  eval :: QueryB ~> (ComponentDSL StateB QueryB g)
   eval (ToggleStateB next) = do
     modify (\(StateB state) -> StateB { on: not state.on })
     pure next
