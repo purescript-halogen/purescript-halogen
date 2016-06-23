@@ -291,16 +291,14 @@ The types here may appear a little intimidating but aren’t really any more com
 
 `ParentHTML` and `ParentDSL` are variations on the previously described `ComponentHTML` and `ComponentDSL` synonyms but do not alter the way the `render` or `eval` functions are defined. These differ from the non-`Parent` synonyms by swapping out the `Void` in `HTML` for `SlotConstructor ...` and the `g` of `ComponentDSL` becomes `QueryF ...`. These changes allow us to perfom the necessary plumbing when installing child components into a parent.
 
-Defining synonyms for the combination state and query algebra types is recommended when setting up parent components. Taking [the “components” example](examples/components) for instance, we define `StateP` and `QueryP` synonyms for the component we’re constructing:
+Defining synonyms for the combination state and query algebra types is recommended when setting up parent components. Taking [the “components” example](examples/components) for instance, we define `State'` and `Query'` synonyms for the component we’re constructing:
 
 ``` purescript
-type StateP g = ParentState State TickState Query TickQuery g TickSlot
-type QueryP = Coproduct Query (ChildF TickSlot TickQuery)
+type State' g = ParentState State TickState Query TickQuery g TickSlot
+type Query' = Coproduct Query (ChildF TickSlot TickQuery)
 
-ui :: forall g. Functor g => Component (StateP g) QueryP g
+ui :: forall g. Functor g => Component (State' g) Query' g
 ```
-
-The `P` here stands for “prime”. Currently PureScript does not allow types to use the prime symbol, so we use `StateP` instead of `State'`. It could also stand for “parent”, so thinking of it either way works here!
 
 Defining synonyms like these becomes especially important if the component is going to be installed inside yet another component – the types only ever have to refer “one level down” and unreadable deeply nested types are avoided.
 

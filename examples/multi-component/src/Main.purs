@@ -38,10 +38,10 @@ cpB = cpR :> cpL
 cpC :: ChildPath StateC ChildState QueryC ChildQuery SlotC ChildSlot
 cpC = cpR :> cpR
 
-type StateP g = H.ParentState State ChildState Query ChildQuery g ChildSlot
-type QueryP = Coproduct Query (H.ChildF ChildSlot ChildQuery)
+type State' g = H.ParentState State ChildState Query ChildQuery g ChildSlot
+type Query' = Coproduct Query (H.ChildF ChildSlot ChildQuery)
 
-ui :: forall g. Functor g => H.Component (StateP g) QueryP g
+ui :: forall g. Functor g => H.Component (State' g) Query' g
 ui = H.parentComponent { render, eval, peek: Nothing }
   where
 

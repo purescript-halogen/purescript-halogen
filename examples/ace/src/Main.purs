@@ -34,11 +34,11 @@ derive instance eqAceSlot :: Eq AceSlot
 derive instance ordAceSlot :: Ord AceSlot
 
 -- | Synonyms for the "installed" version of the state and query algebra.
-type StateP eff = H.ParentState State AceState Query AceQuery (Aff (AceEffects eff)) AceSlot
-type QueryP = Coproduct Query (H.ChildF AceSlot AceQuery)
+type State' eff = H.ParentState State AceState Query AceQuery (Aff (AceEffects eff)) AceSlot
+type Query' = Coproduct Query (H.ChildF AceSlot AceQuery)
 
 -- | The main UI component definition.
-ui :: forall eff. H.Component (StateP eff) QueryP (Aff (AceEffects eff))
+ui :: forall eff. H.Component (State' eff) Query' (Aff (AceEffects eff))
 ui = H.parentComponent { render, eval, peek: Just peek }
   where
 

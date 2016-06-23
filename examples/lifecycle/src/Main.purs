@@ -39,11 +39,11 @@ data Query a
 
 type UIEff eff = Aff (console :: CONSOLE | eff)
 
-type StateP eff = H.ParentState State (Child.StateP eff) Query Child.QueryP (UIEff eff) Int
+type State' eff = H.ParentState State (Child.State' eff) Query Child.Query' (UIEff eff) Int
 
-type QueryP = Coproduct Query (H.ChildF Int Child.QueryP)
+type Query' = Coproduct Query (H.ChildF Int Child.Query')
 
-ui :: forall eff. H.Component (StateP eff) QueryP (UIEff eff)
+ui :: forall eff. H.Component (State' eff) Query' (UIEff eff)
 ui = H.lifecycleParentComponent
   { render: render
   , eval: eval
@@ -53,7 +53,7 @@ ui = H.lifecycleParentComponent
   }
   where
 
-  render :: State -> H.ParentHTML (Child.StateP eff) Query Child.QueryP (UIEff eff) Int
+  render :: State -> H.ParentHTML (Child.State' eff) Query Child.Query' (UIEff eff) Int
   render state =
     HH.div_
       [ HH.button
@@ -72,7 +72,7 @@ ui = H.lifecycleParentComponent
             ]
       ]
 
-  eval :: Query ~> H.ParentDSL State (Child.StateP eff) Query Child.QueryP (UIEff eff) Int
+  eval :: Query ~> H.ParentDSL State (Child.State' eff) Query Child.Query' (UIEff eff) Int
   eval (Initialize next) = do
     H.fromAff $ log "Initialize Root"
     pure next
@@ -91,7 +91,7 @@ ui = H.lifecycleParentComponent
     H.modify \s -> s { slots = reverse s.slots }
     pure next
 
-  peek :: forall x. Child.QueryP x -> H.ParentDSL State (Child.StateP eff) Query Child.QueryP (UIEff eff) Int Unit
+  peek :: forall x. Child.Query' x -> H.ParentDSL State (Child.State' eff) Query Child.Query' (UIEff eff) Int Unit
   peek = coproduct peek' (const (pure unit))
     where
     peek' (Child.Initialize _) = do

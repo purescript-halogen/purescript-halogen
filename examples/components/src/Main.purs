@@ -26,10 +26,10 @@ newtype TickSlot = TickSlot String
 derive instance eqTickSlot :: Eq TickSlot
 derive instance ordTickSlot :: Ord TickSlot
 
-type StateP g = H.ParentState State TickState Query TickQuery g TickSlot
-type QueryP = Coproduct Query (H.ChildF TickSlot TickQuery)
+type State' g = H.ParentState State TickState Query TickQuery g TickSlot
+type Query' = Coproduct Query (H.ChildF TickSlot TickQuery)
 
-ui :: forall g. Functor g => H.Component (StateP g) QueryP g
+ui :: forall g. Functor g => H.Component (State' g) Query' g
 ui = H.parentComponent { render, eval, peek: Nothing }
   where
 

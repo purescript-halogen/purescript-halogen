@@ -27,10 +27,10 @@ newtype ListSlot = ListSlot String
 derive instance eqListSlot :: Eq ListSlot
 derive instance ordListSlot :: Ord ListSlot
 
-type QueryP = Coproduct Query (H.ChildF ListSlot ListQueryP)
-type StateP g = H.ParentState State (ListStateP g) Query ListQueryP g ListSlot
+type Query' = Coproduct Query (H.ChildF ListSlot ListQueryP)
+type State' g = H.ParentState State (ListStateP g) Query ListQueryP g ListSlot
 
-ui :: forall g. Functor g => H.Component (StateP g) QueryP g
+ui :: forall g. Functor g => H.Component (State' g) Query' g
 ui = H.parentComponent { render, eval, peek: Just peek }
   where
 

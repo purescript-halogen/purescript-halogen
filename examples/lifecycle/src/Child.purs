@@ -24,11 +24,11 @@ type Slot = Unit
 
 type ChildEff eff = Aff (console :: CONSOLE | eff)
 
-type StateP eff = H.ParentState Int Int Query Query (ChildEff eff) Int
+type State' eff = H.ParentState Int Int Query Query (ChildEff eff) Int
 
-type QueryP = Coproduct Query (H.ChildF Int Query)
+type Query' = Coproduct Query (H.ChildF Int Query)
 
-child :: forall eff. H.Component (StateP eff) QueryP (ChildEff eff)
+child :: forall eff. H.Component (State' eff) Query' (ChildEff eff)
 child = H.lifecycleParentComponent
   { render: render
   , eval: eval
