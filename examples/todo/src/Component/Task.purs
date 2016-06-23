@@ -2,12 +2,12 @@ module Component.Task where
 
 import Prelude
 
-import Halogen
-import Halogen.HTML.Indexed as H
-import Halogen.HTML.Properties.Indexed as P
-import Halogen.HTML.Events.Indexed as E
+import Halogen as H
+import Halogen.HTML.Indexed as HH
+import Halogen.HTML.Properties.Indexed as HP
+import Halogen.HTML.Events.Indexed as HE
 
-import Model
+import Model (Task)
 
 -- | The task component query algebra.
 data TaskQuery a
@@ -17,37 +17,41 @@ data TaskQuery a
   | IsCompleted (Boolean -> a)
 
 -- | The task component definition.
-task :: forall g. (Functor g) => Component Task TaskQuery g
-task = component { render, eval }
+task :: forall g. H.Component Task TaskQuery g
+task = H.component { render, eval }
   where
 
-  render :: Task -> ComponentHTML TaskQuery
+  render :: Task -> H.ComponentHTML TaskQuery
   render t =
-    H.li_ [ H.input [ P.inputType P.InputCheckbox
-                    , P.title "Mark as completed"
-                    , P.checked t.completed
-                    , E.onChecked (E.input ToggleCompleted)
-                    ]
-          , H.input [ P.inputType P.InputText
-                    , P.placeholder "Task description"
-                    , P.autofocus true
-                    , P.value t.description
-                    , E.onValueChange (E.input UpdateDescription)
-                    ]
-          , H.button [ P.title "Remove task"
-                     , E.onClick (E.input_ Remove)
-                     ]
-                     [ H.text "✖" ]
+    HH.li_
+      [ HH.input
+          [ HP.inputType HP.InputCheckbox
+          , HP.title "Mark as completed"
+          , HP.checked t.completed
+          , HE.onChecked (HE.input ToggleCompleted)
           ]
+      , HH.input
+          [ HP.inputType HP.InputText
+          , HP.placeholder "Task description"
+          , HP.autofocus true
+          , HP.value t.description
+          , HE.onValueChange (HE.input UpdateDescription)
+          ]
+      , HH.button
+          [ HP.title "Remove task"
+          , HE.onClick (HE.input_ Remove)
+          ]
+          [ HH.text "✖" ]
+      ]
 
-  eval :: TaskQuery ~> (ComponentDSL Task TaskQuery g)
+  eval :: TaskQuery ~> H.ComponentDSL Task TaskQuery g
   eval (UpdateDescription desc next) = do
-    modify (_ { description = desc })
+    H.modify (_ { description = desc })
     pure next
   eval (ToggleCompleted b next) = do
-    modify (_ { completed = b })
+    H.modify (_ { completed = b })
     pure next
   eval (Remove next) = pure next
   eval (IsCompleted continue) = do
-    b <- gets (_.completed)
+    b <- H.gets (_.completed)
     pure (continue b)

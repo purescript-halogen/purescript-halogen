@@ -297,7 +297,7 @@ Defining synonyms for the combination state and query algebra types is recommend
 type StateP g = ParentState State TickState Query TickQuery g TickSlot
 type QueryP = Coproduct Query (ChildF TickSlot TickQuery)
 
-ui :: forall g. (Functor g) => Component (StateP g) QueryP g
+ui :: forall g. Functor g => Component (StateP g) QueryP g
 ```
 
 The `P` here stands for “prime”. Currently PureScript does not allow types to use the prime symbol, so we use `StateP` instead of `State'`. It could also stand for “parent”, so thinking of it either way works here!

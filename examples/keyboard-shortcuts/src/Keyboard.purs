@@ -8,9 +8,8 @@ module Keyboard
   ) where
 
 import Prelude
-import Control.Monad.Eff
+import Control.Monad.Eff (Eff)
 import Data.Function.Uncurried as F
-
 import DOM.Node.Types as DOM
 
 foreign import data KEYBOARD :: !

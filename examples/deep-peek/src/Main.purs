@@ -7,14 +7,13 @@ import Control.Monad.Eff (Eff)
 import Data.Const (Const, getConst)
 import Data.Functor.Coproduct (Coproduct, coproduct)
 import Data.Maybe (Maybe(..))
-import Data.Void (Void, absurd)
 
-import Halogen
+import Halogen as H
+import Halogen.HTML.Indexed as HH
 import Halogen.Util (runHalogenAff, awaitBody)
-import Halogen.HTML.Indexed as H
 
-import List
-import Ticker
+import List (ListQueryP, ListStateP, TickSlot, ListQuery, initialList, listComponent)
+import Ticker (TickQuery(..))
 
 type Query = Const Void
 
@@ -24,51 +23,52 @@ initialState :: State
 initialState = { count: 0 }
 
 newtype ListSlot = ListSlot String
+
 derive instance eqListSlot :: Eq ListSlot
 derive instance ordListSlot :: Ord ListSlot
 
-type QueryP = Coproduct Query (ChildF ListSlot ListQueryP)
-type StateP g = ParentState State (ListStateP g) Query ListQueryP g ListSlot
+type QueryP = Coproduct Query (H.ChildF ListSlot ListQueryP)
+type StateP g = H.ParentState State (ListStateP g) Query ListQueryP g ListSlot
 
-ui :: forall g. (Functor g) => Component (StateP g) QueryP g
-ui = parentComponent { render, eval, peek: Just peek }
+ui :: forall g. Functor g => H.Component (StateP g) QueryP g
+ui = H.parentComponent { render, eval, peek: Just peek }
   where
 
-  render :: State -> ParentHTML (ListStateP g) Query ListQueryP g ListSlot
+  render :: State -> H.ParentHTML (ListStateP g) Query ListQueryP g ListSlot
   render st =
-    H.div_
-      [ H.h1_
-          [ H.text "List A" ]
-      , H.slot (ListSlot "A") \_ ->
-          { component: listComponent, initialState: parentState initialList }
-      , H.hr []
-      , H.h1_
-          [ H.text "List B" ]
-      , H.slot (ListSlot "B") \_ ->
-          { component: listComponent, initialState: parentState initialList }
-      , H.hr []
-      , H.p_
-          [ H.text $ "Total incremented count: " <> show st.count ]
+    HH.div_
+      [ HH.h1_
+          [ HH.text "List A" ]
+      , HH.slot (ListSlot "A") \_ ->
+          { component: listComponent, initialState: H.parentState initialList }
+      , HH.hr []
+      , HH.h1_
+          [ HH.text "List B" ]
+      , HH.slot (ListSlot "B") \_ ->
+          { component: listComponent, initialState: H.parentState initialList }
+      , HH.hr []
+      , HH.p_
+          [ HH.text $ "Total incremented count: " <> show st.count ]
       ]
 
-  eval :: Query ~> (ParentDSL State (ListStateP g) Query ListQueryP g ListSlot)
+  eval :: Query ~> H.ParentDSL State (ListStateP g) Query ListQueryP g ListSlot
   eval = absurd <<< getConst
 
-  peek :: forall a. ChildF ListSlot ListQueryP a -> ParentDSL State (ListStateP g) Query ListQueryP g ListSlot Unit
-  peek (ChildF _ q) = coproduct peekList peekTicker q
+  peek :: forall a. H.ChildF ListSlot ListQueryP a -> H.ParentDSL State (ListStateP g) Query ListQueryP g ListSlot Unit
+  peek = coproduct peekList peekTicker <<< H.runChildF
 
-  peekList :: forall a. ListQuery a -> ParentDSL State (ListStateP g) Query ListQueryP g ListSlot Unit
+  peekList :: forall a. ListQuery a -> H.ParentDSL State (ListStateP g) Query ListQueryP g ListSlot Unit
   peekList _ =
     -- we're not actually interested in peeking on the list.
     -- instead of defining a function like this, an alternative would be to use
     -- `(const (pure unit))` in place of `peekList` in the `coproduct` function
     pure unit
 
-  peekTicker :: forall a. ChildF TickSlot TickQuery a -> ParentDSL State (ListStateP g) Query ListQueryP g ListSlot Unit
-  peekTicker (ChildF _ (Tick _)) = modify (\st -> { count: st.count + 1 })
+  peekTicker :: forall a. H.ChildF TickSlot TickQuery a -> H.ParentDSL State (ListStateP g) Query ListQueryP g ListSlot Unit
+  peekTicker (H.ChildF _ (Tick _)) = H.modify (\st -> { count: st.count + 1 })
   peekTicker _ = pure unit
 
-main :: Eff (HalogenEffects ()) Unit
+main :: Eff (H.HalogenEffects ()) Unit
 main = runHalogenAff do
   body <- awaitBody
-  runUI ui (parentState initialState) body
+  H.runUI ui (H.parentState initialState) body

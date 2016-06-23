@@ -83,7 +83,7 @@ eventSource_ attach handle =
 -- | This is useful for simultaneously filtering and handling events.
 catEventSource
   :: forall f g
-   . (MonadRec g)
+   . MonadRec g
   => EventSource (Coproduct (Const Unit) f) g
   -> EventSource f g
 catEventSource (EventSource es) =

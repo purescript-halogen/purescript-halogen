@@ -29,6 +29,6 @@ mapState _ f (Modify g next) = Modify (f g) next
 
 -- | A natural transformation for interpreting the state algebra as some
 -- | `MonadState`-supporting monad. Used internally by Halogen.
-stateN :: forall s m. (Monad m, CMS.MonadState s m) => (StateF s) ~> m
+stateN :: forall s m. (Monad m, CMS.MonadState s m) => StateF s ~> m
 stateN (Get k) = CMS.get >>= pure <<< k
 stateN (Modify f next) = CMS.modify f $> next

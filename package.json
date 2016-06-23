@@ -1,12 +1,5 @@
 {
-  "name": "purescript-halogen",
-  "license": "Apache-2.0",
-  "repository": "git@github.com:slamdata/purescript-halogen.git",
-  "contributors": [
-    "Phil Freeman <paf31@cantab.net>",
-    "John A. De Goes <john@degoes.net>",
-    "Gary Burgess <gary.burgess@gmail.com>"
-  ],
+  "private": true,
   "scripts": {
     "clean": "rimraf output && rimraf .pulp-cache",
     "test": "pulp test",

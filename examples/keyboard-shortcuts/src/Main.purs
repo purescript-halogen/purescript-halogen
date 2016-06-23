@@ -2,25 +2,25 @@ module Main where
 
 import Prelude
 
-import Control.Monad.Aff as A
-import Control.Monad.Aff.AVar as A
+import Control.Monad.Aff (Aff)
+import Control.Monad.Aff.AVar (AVAR)
 import Control.Monad.Eff (Eff)
 
 import Data.Char as CH
-import Data.String as ST
-import Data.Const
-import Data.Functor.Coproduct
+import Data.Const (Const(..))
+import Data.Functor.Coproduct (Coproduct, left, right)
 import Data.Maybe (Maybe(..))
+import Data.String as ST
 
-import DOM as DOM
-import DOM.HTML as DOM
-import DOM.HTML.Window as DOM
-import DOM.HTML.Types as DOM
+import DOM (DOM)
+import DOM.HTML (window) as DOM
+import DOM.HTML.Types (htmlDocumentToDocument) as DOM
+import DOM.HTML.Window (document) as DOM
 
-import Halogen
+import Halogen as H
+import Halogen.HTML.Indexed as HH
+import Halogen.Query.EventSource as ES
 import Halogen.Util (runHalogenAff, awaitBody)
-import Halogen.Query.EventSource as H
-import Halogen.HTML.Indexed as H
 
 import Keyboard as K
 
@@ -37,53 +37,53 @@ data Query a
   | Clear a
 
 -- | Effects embedding the Ace editor requires.
-type E eff = (dom :: DOM.DOM, avar :: A.AVAR, keyboard :: K.KEYBOARD | eff)
+type E eff = (dom :: DOM, avar :: AVAR, keyboard :: K.KEYBOARD | eff)
 
-ui :: forall eff. Component State Query (A.Aff (E eff))
-ui = lifecycleComponent { render, eval, initializer, finalizer: Nothing }
+ui :: forall eff. H.Component State Query (Aff (E eff))
+ui = H.lifecycleComponent { render, eval, initializer, finalizer: Nothing }
   where
 
   initializer :: Maybe (Query Unit)
-  initializer = Just (action Init)
+  initializer = Just (H.action Init)
 
-  render :: State -> ComponentHTML Query
+  render :: State -> H.ComponentHTML Query
   render state =
-    H.div_
-      [ H.p_ [ H.text "Hold down the shift key and type some characters!" ]
-      , H.p_ [ H.text state.chars ]
+    HH.div_
+      [ HH.p_ [ HH.text "Hold down the shift key and type some characters!" ]
+      , HH.p_ [ HH.text state.chars ]
       ]
 
-  eval :: Query ~> (ComponentDSL State Query (A.Aff (E eff)))
+  eval :: Query ~> H.ComponentDSL State Query (Aff (E eff))
   eval q =
     case q of
       Init next -> do
-        document <- fromEff $ DOM.window >>= DOM.document <#> DOM.htmlDocumentToDocument
+        document <- H.fromEff $ DOM.window >>= DOM.document <#> DOM.htmlDocumentToDocument
         let
-          querySource :: EventSource (Coproduct (Const Unit) Query) (A.Aff (E eff))
+          querySource :: H.EventSource (Coproduct (Const Unit) Query) (Aff (E eff))
           querySource =
-            eventSource (K.onKeyUp document) \e -> do
+            H.eventSource (K.onKeyUp document) \e -> do
               let info = K.readKeyboardEvent e
               if info.shiftKey
                  then do
                    K.preventDefault e
                    let c = CH.fromCharCode info.keyCode
-                   pure $ action (right <<< AppendChar c)
+                   pure $ H.action (right <<< AppendChar c)
                  else if info.keyCode == 13 then do
                    K.preventDefault e
-                   pure $ action (right <<< Clear)
+                   pure $ H.action (right <<< Clear)
                  else do
                    pure $ left (Const unit)
 
-        subscribe $ H.catEventSource querySource
+        H.subscribe $ ES.catEventSource querySource
         pure next
       AppendChar c next -> do
-        modify (\st -> st { chars = st.chars <> ST.singleton c })
+        H.modify (\st -> st { chars = st.chars <> ST.singleton c })
         pure next
       Clear next -> do
-        modify (_ { chars = "" })
+        H.modify (_ { chars = "" })
         pure next
 
-main :: Eff (HalogenEffects (keyboard :: K.KEYBOARD)) Unit
+main :: Eff (H.HalogenEffects (keyboard :: K.KEYBOARD)) Unit
 main = runHalogenAff do
   body <- awaitBody
-  runUI ui initialState body
+  H.runUI ui initialState body

@@ -38,10 +38,8 @@ module Halogen.Component
   , finalizeComponent
   ) where
 
-import Prelude (class Functor, class Ord, type (~>), Unit, Void, map, const, id, pure, unit, flip, bind, void, (<$>), (<<<), ($), (=<<), (>>=), (>>>), (<>), (<*))
+import Prelude
 
-import Control.Apply ((<*))
-import Control.Bind ((=<<))
 import Control.Monad.Eff (runPure, foreachE)
 import Control.Monad.Free (Free, foldFree, liftF, hoistFree)
 import Control.Monad.Free.Trans as FT
@@ -68,8 +66,9 @@ import Halogen.Query.EventSource (EventSource(..), ParentEventSource, runEventSo
 import Halogen.Query.HalogenF (HalogenF, HalogenFP(..), RenderPending(..), hoistHalogenF, transformHF)
 import Halogen.Query.StateF (StateF(..), mapState)
 
-import Unsafe.Coerce (unsafeCoerce)
 import Partial.Unsafe (unsafePartial)
+
+import Unsafe.Coerce (unsafeCoerce)
 
 type RenderResult s f g =
   { state :: s
@@ -105,7 +104,7 @@ type ComponentDSL s f g = Free (HalogenF s f g)
 -- | A spec for a component.
 type ComponentSpec s f g =
   { render :: s -> ComponentHTML f
-  , eval :: f ~> (ComponentDSL s f g)
+  , eval :: f ~> ComponentDSL s f g
   }
 
 -- | Builds a self-contained component with no possible children.
@@ -121,7 +120,7 @@ component spec =
 -- | A spec for a component, including lifecycle inputs.
 type LifecycleComponentSpec s f g =
   { render :: s -> ComponentHTML f
-  , eval :: f ~> (ComponentDSL s f g)
+  , eval :: f ~> ComponentDSL s f g
   , initializer :: Maybe (f Unit)
   , finalizer :: Maybe (f Unit)
   }
@@ -160,7 +159,7 @@ type ParentDSL s s' f f' g p = Free (HalogenFP ParentEventSource s f (QueryF s s
 -- | A full spec for a parent component.
 type ParentComponentSpec s s' f f' g p =
   { render :: s -> ParentHTML s' f f' g p
-  , eval :: f ~> (ParentDSL s s' f f' g p)
+  , eval :: f ~> ParentDSL s s' f f' g p
   , peek :: forall x. Maybe (ChildF p f' x -> ParentDSL s s' f f' g p Unit)
   }
 
@@ -182,7 +181,7 @@ parentComponent spec =
 -- | A full spec for a parent component, including lifecycle inputs.
 type LifecycleParentComponentSpec s s' f f' g p =
   { render :: s -> ParentHTML s' f f' g p
-  , eval :: f ~> (ParentDSL s s' f f' g p)
+  , eval :: f ~> ParentDSL s s' f f' g p
   , peek :: forall x. Maybe (ChildF p f' x -> ParentDSL s s' f f' g p Unit)
   , initializer :: Maybe (f Unit)
   , finalizer :: Maybe (f Unit)
@@ -202,14 +201,14 @@ lifecycleParentComponent spec =
     , finalizers: parentFinalizers eval spec.finalizer
     }
   where
-  eval :: (ParentQuery f f' p) ~> (ComponentDSL (ParentState s s' f f' g p) (ParentQuery f f' p) g)
+  eval :: ParentQuery f f' p ~> ComponentDSL (ParentState s s' f f' g p) (ParentQuery f f' p) g
   eval = coproduct (queryParent spec.eval) case spec.peek of
     Nothing -> queryChild
     Just peek -> \q -> queryChild q <* queryParent peek q
 
 parentFinalizers
   :: forall s s' f f' g p
-   . (ParentQuery f f' p) ~> (ComponentDSL (ParentState s s' f f' g p) (ParentQuery f f' p) g)
+   . (ParentQuery f f' p ~> ComponentDSL (ParentState s s' f f' g p) (ParentQuery f f' p) g)
   -> Maybe (f Unit)
   -> ParentState s s' f f' g p
   -> Array (Finalized g)
@@ -255,7 +254,7 @@ data ChildF p f i = ChildF p (f i)
 runChildF :: forall p f i. ChildF p f i -> f i
 runChildF (ChildF _ q) = q
 
-instance functorChildF :: (Functor f) => Functor (ChildF p f) where
+instance functorChildF :: Functor f => Functor (ChildF p f) where
   map f (ChildF p fi) = ChildF p (f <$> fi)
 
 -- | Queries a child component, for use within a parent component's `eval` or
@@ -374,10 +373,11 @@ mkQueries' i q = bracketQuery do
 -- | `eval` function.
 liftQuery
   :: forall s s' f f' g p
-   . (QueryF s s' f f' g p) ~> (ParentDSL s s' f f' g p)
+   . QueryF s s' f f' g p
+  ~> ParentDSL s s' f f' g p
 liftQuery = liftH
 
-mapStateFParent :: forall s s' f f' g p. (StateF s) ~> (StateF (ParentState s s' f f' g p))
+mapStateFParent :: forall s s' f f' g p. StateF s ~> StateF (ParentState s s' f f' g p)
 mapStateFParent =
   mapState
     (\(ParentState st) -> st.parent)
@@ -386,7 +386,7 @@ mapStateFParent =
       , children: st.children
       })
 
-mapStateFChild :: forall s s' f f' g p. (Ord p) => p -> (StateF s') ~> (StateF (ParentState s s' f f' g p))
+mapStateFChild :: forall s s' f f' g p. Ord p => p -> StateF s' ~> StateF (ParentState s s' f f' g p)
 mapStateFChild p =
   mapState
     (\(ParentState st) -> unsafePartial fromJust $ _.state <$> M.lookup p st.children)
@@ -467,7 +467,7 @@ renderParent render (ParentState curr) =
           tree = graftTree adapt (const p) r.tree
           hooks' = lmapHook adapt <$> maybe r.hooks (flip A.cons r.hooks) hook
 
-          adapt :: f' ~> (Coproduct f (ChildF p f'))
+          adapt :: f' ~> Coproduct f (ChildF p f')
           adapt a = right (ChildF p a)
       in
           Tuple (Slot tree) $ update hooks'
@@ -493,19 +493,21 @@ queryParent f =
       RenderPendingHF k -> liftF $ RenderPendingHF k
       HaltHF -> liftF HaltHF
 
-mergeParentStateF :: forall s s' f f' g p. (StateF s) ~> (ComponentDSL (ParentState s s' f f' g p) (ParentQuery f f' p) g)
+mergeParentStateF :: forall s s' f f' g p. StateF s ~> ComponentDSL (ParentState s s' f f' g p) (ParentQuery f f' p) g
 mergeParentStateF = liftF <<< StateHF <<< mapStateFParent
 
 liftChildF
   :: forall s s' f f' g p
    . (Functor g)
-  => (Free (HalogenF (ParentState s s' f f' g p) (ChildF p f') g)) ~> (ComponentDSL (ParentState s s' f f' g p) (ParentQuery f f' p) g)
+  => Free (HalogenF (ParentState s s' f f' g p) (ChildF p f') g)
+  ~> ComponentDSL (ParentState s s' f f' g p) (ParentQuery f f' p) g
 liftChildF = hoistFree (transformHF id right id)
 
 queryChild
   :: forall s s' f f' g p
    . (Functor g, Ord p)
-  => (ChildF p f') ~> (ComponentDSL (ParentState s s' f f' g p) (ParentQuery f f' p) g)
+  => ChildF p f'
+  ~> ComponentDSL (ParentState s s' f f' g p) (ParentQuery f f' p) g
 queryChild (ChildF p q) =
   hoistFree (transformHF id right id) (mkQuery p q)
     >>= maybe (liftF HaltHF) pure
@@ -526,7 +528,7 @@ transform
    . (Functor g)
   => (s -> s')
   -> (s' -> Maybe s)
-  -> (forall a. f a -> f' a)
+  -> (f ~> f')
   -> (forall a. f' a -> Maybe (f a))
   -> Component s f g
   -> Component s' f' g
@@ -548,7 +550,7 @@ transform reviewS previewS reviewQ previewQ (Component c) =
         , tree: graftTree reviewQ id tree
         }
 
-  go :: (HalogenF s f g) ~> (Free (HalogenF s' f' g))
+  go :: HalogenF s f g ~> Free (HalogenF s' f' g)
   go (StateHF (Get k)) =
     liftF <<< maybe HaltHF (\st' -> StateHF (Get (k <<< const st'))) <<< previewS =<< get
   go (StateHF (Modify f next)) = liftF $ StateHF (Modify (modifyState f) next)
@@ -564,7 +566,7 @@ transform reviewS previewS reviewQ previewQ (Component c) =
 -- | Transforms a `Component`'s types using a `ChildPath` definition.
 transformChild
   :: forall s s' f f' g p p'
-   . (Functor g)
+   . Functor g
   => ChildPath s s' f f' p p'
   -> Component s f g
   -> Component s' f' g
@@ -574,7 +576,7 @@ transformChild i = transform (injState i) (prjState i) (injQuery i) (prjQuery i)
 -- | some `Free` monad as `Aff` so the component can be used with `runUI`.
 interpret
   :: forall s f g g'
-   . (Functor g')
+   . Functor g'
   => g ~> g'
   -> Component s f g
   -> Component s f g'
@@ -609,7 +611,7 @@ renderComponent (Component c) = c.render
 
 -- | Runs a compnent's `query` function with the specified query input and
 -- | returns the pending computation as a `Free` monad.
-queryComponent :: forall s f g. Component s f g -> f ~> (ComponentDSL s f g)
+queryComponent :: forall s f g. Component s f g -> f ~> ComponentDSL s f g
 queryComponent (Component c) = c.eval
 
 initializeComponent :: forall s f g. Component s f g -> Maybe (f Unit)

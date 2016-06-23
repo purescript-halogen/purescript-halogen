@@ -8,20 +8,20 @@ import Data.Either (Either)
 import Data.Functor.Coproduct (Coproduct)
 import Data.Maybe (Maybe(..))
 
-import Halogen
+import Halogen as H
 import Halogen.Component.ChildPath (ChildPath, cpL, cpR, (:>))
-import Halogen.HTML.Events.Indexed as E
-import Halogen.HTML.Indexed as H
+import Halogen.HTML.Events.Indexed as HE
+import Halogen.HTML.Indexed as HH
 import Halogen.Util (runHalogenAff, awaitBody)
 
-import ComponentA
-import ComponentB
-import ComponentC
+import ComponentA (StateA, QueryA(..), SlotA(..), initStateA, componentA)
+import ComponentB (StateB, QueryB(..), SlotB(..), initStateB, componentB)
+import ComponentC (StateC, QueryC(..), SlotC(..), initStateC, componentC)
 
-newtype State = State { a :: Maybe Boolean, b :: Maybe Boolean, c :: Maybe Boolean }
+type State = { a :: Maybe Boolean, b :: Maybe Boolean, c :: Maybe Boolean }
 
 initialState :: State
-initialState = State { a: Nothing, b: Nothing, c: Nothing }
+initialState = { a: Nothing, b: Nothing, c: Nothing }
 
 data Query a = ReadStates a
 
@@ -38,31 +38,31 @@ cpB = cpR :> cpL
 cpC :: ChildPath StateC ChildState QueryC ChildQuery SlotC ChildSlot
 cpC = cpR :> cpR
 
-type StateP g = ParentState State ChildState Query ChildQuery g ChildSlot
-type QueryP = Coproduct Query (ChildF ChildSlot ChildQuery)
+type StateP g = H.ParentState State ChildState Query ChildQuery g ChildSlot
+type QueryP = Coproduct Query (H.ChildF ChildSlot ChildQuery)
 
-ui :: forall g. (Functor g) => Component (StateP g) QueryP g
-ui = parentComponent { render, eval, peek: Nothing }
+ui :: forall g. Functor g => H.Component (StateP g) QueryP g
+ui = H.parentComponent { render, eval, peek: Nothing }
   where
 
-  render :: State -> ParentHTML ChildState Query ChildQuery g ChildSlot
-  render (State state) = H.div_
-    [ H.div_ [ H.slot' cpA SlotA \_ -> { component: componentA, initialState: initStateA } ]
-    , H.div_ [ H.slot' cpB SlotB \_ -> { component: componentB, initialState: initStateB } ]
-    , H.div_ [ H.slot' cpC SlotC \_ -> { component: componentC, initialState: initStateC } ]
-    , H.div_ [ H.text $ "Current states: " <> show state.a <> " / " <> show state.b <> " / " <> show state.c ]
-    , H.button [ E.onClick (E.input_ ReadStates) ] [ H.text "Read states" ]
+  render :: State -> H.ParentHTML ChildState Query ChildQuery g ChildSlot
+  render state = HH.div_
+    [ HH.div_ [ HH.slot' cpA SlotA \_ -> { component: componentA, initialState: initStateA } ]
+    , HH.div_ [ HH.slot' cpB SlotB \_ -> { component: componentB, initialState: initStateB } ]
+    , HH.div_ [ HH.slot' cpC SlotC \_ -> { component: componentC, initialState: initStateC } ]
+    , HH.div_ [ HH.text $ "Current states: " <> show state.a <> " / " <> show state.b <> " / " <> show state.c ]
+    , HH.button [ HE.onClick (HE.input_ ReadStates) ] [ HH.text "Read states" ]
     ]
 
-  eval :: Query ~> (ParentDSL State ChildState Query ChildQuery g ChildSlot)
+  eval :: Query ~> H.ParentDSL State ChildState Query ChildQuery g ChildSlot
   eval (ReadStates next) = do
-    a <- query' cpA SlotA (request GetStateA)
-    b <- query' cpB SlotB (request GetStateB)
-    c <- query' cpC SlotC (request GetStateC)
-    modify (const $ State { a: a, b: b, c: c })
+    a <- H.query' cpA SlotA (H.request GetStateA)
+    b <- H.query' cpB SlotB (H.request GetStateB)
+    c <- H.query' cpC SlotC (H.request GetStateC)
+    H.set { a, b, c }
     pure next
 
-main :: Eff (HalogenEffects ()) Unit
+main :: Eff (H.HalogenEffects ()) Unit
 main = runHalogenAff do
   body <- awaitBody
-  runUI ui (parentState initialState) body
+  H.runUI ui (H.parentState initialState) body
