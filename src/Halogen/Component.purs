@@ -89,7 +89,8 @@ emptyResult state =
 -- | - `g` - a functor integrated into the component's query algebra that allows
 -- |         embedding of external DSLs or handling of effects.
 newtype Component s f g = Component
-  { render :: s -> RenderResult s f g
+  { initialState :: s
+  , render :: s -> RenderResult s f g
   , eval :: f ~> (ComponentDSL s f g)
   , initializer :: Maybe (f Unit)
   , finalizers :: s -> Array (Finalized g)
@@ -103,7 +104,8 @@ type ComponentDSL s f g = Free (HalogenF s f g)
 
 -- | A spec for a component.
 type ComponentSpec s f g =
-  { render :: s -> ComponentHTML f
+  { initialState :: s
+  , render :: s -> ComponentHTML f
   , eval :: f ~> ComponentDSL s f g
   }
 
@@ -111,7 +113,8 @@ type ComponentSpec s f g =
 component :: forall s f g. ComponentSpec s f g -> Component s f g
 component spec =
   lifecycleComponent
-    { render: spec.render
+    { initialState: spec.initialState
+    , render: spec.render
     , eval: spec.eval
     , initializer: Nothing
     , finalizer: Nothing
@@ -119,7 +122,8 @@ component spec =
 
 -- | A spec for a component, including lifecycle inputs.
 type LifecycleComponentSpec s f g =
-  { render :: s -> ComponentHTML f
+  { initialState :: s
+  , render :: s -> ComponentHTML f
   , eval :: f ~> ComponentDSL s f g
   , initializer :: Maybe (f Unit)
   , finalizer :: Maybe (f Unit)
@@ -130,7 +134,8 @@ type LifecycleComponentSpec s f g =
 lifecycleComponent :: forall s f g. LifecycleComponentSpec s f g -> Component s f g
 lifecycleComponent spec =
   Component
-    { render: \s -> { state: s, hooks: [], tree: renderTree (spec.render s) }
+    { initialState: spec.initialState
+    , render: \s -> { state: s, hooks: [], tree: renderTree (spec.render s) }
     , eval: spec.eval
     , initializer: spec.initializer
     , finalizers: \s -> maybe [] (\i -> [finalized spec.eval s i]) spec.finalizer
@@ -158,7 +163,8 @@ type ParentDSL s s' f f' g p = Free (HalogenFP ParentEventSource s f (QueryF s s
 
 -- | A full spec for a parent component.
 type ParentComponentSpec s s' f f' g p =
-  { render :: s -> ParentHTML s' f f' g p
+  { initialState :: ParentState s s' f f' g p
+  , render :: s -> ParentHTML s' f f' g p
   , eval :: f ~> ParentDSL s s' f f' g p
   , peek :: forall x. Maybe (ChildF p f' x -> ParentDSL s s' f f' g p Unit)
   }
@@ -171,7 +177,8 @@ parentComponent
   -> Component (ParentState s s' f f' g p) (ParentQuery f f' p) g
 parentComponent spec =
   lifecycleParentComponent
-    { render: spec.render
+    { initialState: spec.initialState
+    , render: spec.render
     , eval: spec.eval
     , peek: spec.peek
     , initializer: Nothing
@@ -180,7 +187,8 @@ parentComponent spec =
 
 -- | A full spec for a parent component, including lifecycle inputs.
 type LifecycleParentComponentSpec s s' f f' g p =
-  { render :: s -> ParentHTML s' f f' g p
+  { initialState :: ParentState s s' f f' g p
+  , render :: s -> ParentHTML s' f f' g p
   , eval :: f ~> ParentDSL s s' f f' g p
   , peek :: forall x. Maybe (ChildF p f' x -> ParentDSL s s' f f' g p Unit)
   , initializer :: Maybe (f Unit)
@@ -195,7 +203,8 @@ lifecycleParentComponent
   -> Component (ParentState s s' f f' g p) (ParentQuery f f' p) g
 lifecycleParentComponent spec =
   Component
-    { render: renderParent spec.render
+    { initialState: spec.initialState
+    , render: renderParent spec.render
     , eval: eval
     , initializer: left <$> spec.initializer
     , finalizers: parentFinalizers eval spec.finalizer
@@ -534,7 +543,8 @@ transform
   -> Component s' f' g
 transform reviewS previewS reviewQ previewQ (Component c) =
   Component
-    { render: \st -> maybe (emptyResult st) render' (previewS st)
+    { initialState: reviewS c.initialState
+    , render: \st -> maybe (emptyResult st) render' (previewS st)
     , eval: maybe (liftF HaltHF) (foldFree go <<< c.eval) <<< previewQ
     , initializer: reviewQ <$> c.initializer
     , finalizers: maybe [] c.finalizers <<< previewS
@@ -582,7 +592,8 @@ interpret
   -> Component s f g'
 interpret nat (Component c) =
   Component
-    { render: render'
+    { initialState: c.initialState
+    , render: render'
     , eval: hoistFree (hoistHalogenF nat) <<< c.eval
     , initializer: c.initializer
     , finalizers: map (mapFinalized nat) <$> c.finalizers
