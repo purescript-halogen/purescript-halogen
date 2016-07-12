@@ -9,10 +9,10 @@ module Halogen.HTML
   , module Halogen.HTML.Elements
   ) where
 
-import Prelude (Unit, class Functor, (<$>))
+import Prelude (class Functor)
 
-import Halogen.Component (Component, SlotConstructor(..), transformChild)
-import Halogen.Component.ChildPath (ChildPath, injSlot, injState)
+import Halogen.Component (Component, ComponentSlot(..), transformChild)
+import Halogen.Component.ChildPath (ChildPath, injSlot)
 import Halogen.HTML.Core (class IsProp, AttrName, ClassName, EventName, Namespace, PropName, TagName, HTML(..), HandlerF(..), Prop(..), PropF(..), attrName, className, element, eventName, fillSlot, handler, namespace, prop, propName, runAttrName, runClassName, runEventName, runNamespace, runPropName, runTagName, tagName, toPropString)
 import Halogen.HTML.Elements (a, a_, abbr, abbr_, acronym, acronym_, address, address_, applet, applet_, area, article, article_, aside, aside_, audio, audio_, b, b_, base, basefont, basefont_, bdi, bdi_, bdo, bdo_, big, big_, blockquote, blockquote_, body, body_, br, br_, button, button_, canvas, caption, caption_, center, center_, cite, cite_, code, code_, col, colgroup, colgroup_, command, datalist, datalist_, dd, dd_, del, del_, details, details_, dfn, dfn_, dialog, dialog_, dir, dir_, div, div_, dl, dl_, dt, dt_, em, em_, embed, embed_, fieldset, fieldset_, figcaption, figcaption_, figure, figure_, font, font_, footer, footer_, form, form_, frame, frame_, frameset, frameset_, h1, h1_, h2, h2_, h3, h3_, h4, h4_, h5, h5_, h6, h6_, head, head_, header, header_, hr, hr_, html, html_, i, i_, iframe, img, input, ins, ins_, kbd, kbd_, keygen, label, label_, legend, legend_, li, li_, link, main, main_, map, map_, mark, mark_, menu, menu_, menuitem, menuitem_, meta, meter, meter_, nav, nav_, noframes, noframes_, noscript, noscript_, object, object_, ol, ol_, optgroup, optgroup_, option, option_, output, output_, p, p_, param, pre, pre_, progress, progress_, q, q_, rp, rp_, rt, rt_, ruby, ruby_, s, s_, samp, samp_, script, script_, section, section_, select, select_, small, small_, source, span, span_, strike, strike_, strong, strong_, style, style_, sub, sub_, summary, summary_, sup, sup_, table, table_, tbody, tbody_, td, td_, textarea, tfoot, tfoot_, th, th_, thead, thead_, time, time_, title, title_, tr, tr_, track, tt, tt_, u, u_, ul, ul_, var, var_, video, video_, wbr)
 
@@ -25,9 +25,9 @@ text = Text
 slot
   :: forall s f g p i
    . p
-  -> (Unit -> { component :: Component s f g, initialState :: s })
-  -> HTML (SlotConstructor s f g p) i
-slot p l = Slot (SlotConstructor p l)
+  -> Component s f g
+  -> HTML (ComponentSlot s f g p) i
+slot p l = Slot (ComponentSlot p l)
 
 -- | Defines a slot for a child component when a parent has multiple types of
 -- | child component. Takes the `ChildPath` for the child component's type, a
@@ -37,11 +37,6 @@ slot'
    . Functor g
   => ChildPath s s' f f' p p'
   -> p
-  -> (Unit -> { component :: Component s f g, initialState :: s })
-  -> HTML (SlotConstructor s' f' g p') i
-slot' i p l = Slot (SlotConstructor (injSlot i p) (transform <$> l))
-  where
-  transform def =
-    { component: transformChild i def.component
-    , initialState: injState i def.initialState
-    }
+  -> Component s f g
+  -> HTML (ComponentSlot s' f' g p') i
+slot' i p l = Slot (ComponentSlot (injSlot i p) (transformChild i l))

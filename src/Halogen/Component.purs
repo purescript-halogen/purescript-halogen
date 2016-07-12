@@ -7,7 +7,7 @@ module Halogen.Component
   , LifecycleComponentSpec
   , lifecycleComponent
   , ParentHTML
-  , SlotConstructor(..)
+  , ComponentSlot(..)
   , ParentQuery
   , ParentDSL
   , ParentComponentSpec
@@ -150,10 +150,10 @@ lifecycleComponent spec =
     }
 
 -- | The type for `HTML` rendered by a parent component.
-type ParentHTML s' f f' g p = HTML (SlotConstructor s' f' g p) (f Unit)
+type ParentHTML s' f f' g p = HTML (ComponentSlot s' f' g p) (f Unit)
 
 -- | The type used for slots in the HTML rendered by parent components.
-data SlotConstructor s' f' g p = SlotConstructor p (Unit -> { component :: Component s' f' g, initialState :: s' })
+data ComponentSlot s' f' g p = ComponentSlot p (Component s' f' g)
 
 -- | The type for nested queries.
 type ParentQuery f f' p = Coproduct f (ChildF p f')
@@ -447,20 +447,16 @@ renderParent render (ParentState curr) =
   finalizeChild child =
     map Finalized $ finalizeComponent child.component child.state
 
-  installChild (SlotConstructor p def) { hooks, removed, children } =
+  installChild (ComponentSlot p def@(Component { initialState })) { hooks, removed, children } =
     case M.lookup p curr.children of
       Just child' ->
         renderChild Nothing child'
-
       Nothing ->
-        let def' = def unit
-            hook = PostRender <$> initializeComponent def'.component
-        in
-            renderChild hook
-              { component: def'.component
-              , state: def'.initialState
-              , memo: Nothing
-              }
+        renderChild (PostRender <$> initializeComponent def)
+          { component: def
+          , state: initialState
+          , memo: Nothing
+          }
     where
     update hs c =
       { children: M.insert p c children
