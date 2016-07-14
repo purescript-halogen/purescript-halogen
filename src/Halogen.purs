@@ -5,7 +5,8 @@
 module Halogen
   ( HTML
   , Prop
-  , module Halogen.Component
+  , module Halogen.Component.Slot
+  , module Halogen.Component.Types
   , module Halogen.Driver
   , module Halogen.Effects
   , module Halogen.Query
@@ -13,11 +14,12 @@ module Halogen
 
 import Prelude
 
-import Halogen.Component (Component, ComponentDSL, ComponentHTML, ComponentSpec, LifecycleComponentSpec, LifecycleParentComponentSpec, ParentComponentSpec, ParentDSL, ParentHTML, ParentQuery, ParentState, QueryF, ChildF(..), ComponentSlot(..), childSlots, component, finalizeComponent, initializeComponent, interpret, lifecycleComponent, lifecycleParentComponent, liftQuery, mkQueries, mkQueries', mkQuery, mkQuery', parentComponent, parentState, query, query', queryAll, queryAll', queryComponent, renderComponent, runChildF, transform, transformChild)
+import Halogen.Component.Slot (ComponentSlot(..))
+import Halogen.Component.Types (Component, Component', ComponentDSL, ComponentHTML, ComponentSpec, LifecycleComponentSpec, RenderResult, component, interpret, lifecycleComponent, mkComponent, transform, transformChild, unComponent)
 import Halogen.Driver (Driver, runUI)
 import Halogen.Effects (HalogenEffects)
-import Halogen.Query (Action, EventSource, HalogenF, ParentEventSource, Request, HalogenFP(..), StateF(..), action, eventSource, eventSource_, fromAff, fromEff, get, gets, liftH, modify, request, set, subscribe, subscribe', toParentEventSource)
 import Halogen.HTML.Core as C
+import Halogen.Query (Action, EventSource, ParentEventSource, Request, HalogenF(..), StateF(..), action, eventSource, eventSource_, fromAff, fromEff, get, gets, liftH, modify, request, set, subscribe, toParentEventSource)
 
 -- | A specialised version of the `Halogen.HTML.Core.HTML` type where `i` is
 -- | `* -> *` kinded to match the kind of a component query algebra.

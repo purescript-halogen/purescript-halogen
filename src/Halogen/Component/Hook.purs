@@ -30,8 +30,8 @@ finalized
 finalized e s i = unsafeCoerce (FinalizedF e s i)
 
 runFinalized
-  :: forall g r
-   . (forall s f. f ~> Free (HalogenF s f g) -> s -> f Unit -> r)
+  :: forall f g r
+   . (forall s. f ~> Free (HalogenF s f g) -> s -> f Unit -> r)
   -> Finalized g
   -> r
 runFinalized k f =

@@ -6,6 +6,7 @@ module Halogen.Component.Types
   , ComponentDSL
   , ComponentSpec
   , component
+  , mkComponent
   , unComponent
   , LifecycleComponentSpec
   , lifecycleComponent
@@ -40,7 +41,7 @@ import Unsafe.Coerce (unsafeCoerce)
 -- | - `g` - a functor integrated into the component's query algebra that allows
 -- |         embedding of external DSLs or handling of effects.
 type Component' s f g =
-  { initialState :: s
+  { state :: s
   , render :: s -> RenderResult s f g
   , eval :: f ~> ComponentDSL s f g
   , initializer :: Maybe (f Unit)
@@ -105,7 +106,7 @@ type LifecycleComponentSpec s f g p =
 -- | children.
 lifecycleComponent :: forall s f g p. LifecycleComponentSpec s f g p -> Component' s f g
 lifecycleComponent spec =
-  { initialState: spec.initialState
+  { state: spec.initialState
   , render: \s -> { state: s, hooks: [], tree: renderTree (spec.render s) }
   , eval: spec.eval
   , initializer: spec.initializer
@@ -141,7 +142,7 @@ transform
 transform reviewQ previewQ =
   unComponent \c ->
     mkComponent
-      { initialState: c.initialState
+      { state: c.state
       , render: remapRenderResult <<< c.render
       , eval: maybe (liftF HaltHF) (hoistFree remapF <<< c.eval) <<< previewQ
       , initializer: reviewQ <$> c.initializer
@@ -187,7 +188,7 @@ interpret
 interpret nat =
   unComponent \c ->
     mkComponent
-      { initialState: c.initialState
+      { state: c.state
       , render: remapRenderResult <<< c.render
       , eval: hoistFree (hoistHalogenF nat) <<< c.eval
       , initializer: c.initializer

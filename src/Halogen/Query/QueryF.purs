@@ -11,7 +11,7 @@ import Control.Monad.Free (Free, liftF)
 import Data.Map as Map
 import Data.Functor.Coproduct (Coproduct, left)
 import Data.Maybe (Maybe(..))
-import Halogen.Component (Component)
+import Halogen.Component.Types (Component)
 import Halogen.Query.HalogenF (HalogenF(..))
 
 -- -- | An intermediate algebra used to associate values from a child component's
