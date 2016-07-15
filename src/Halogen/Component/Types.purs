@@ -1,20 +1,4 @@
-module Halogen.Component.Types
-  ( Component
-  , Component'
-  , RenderResult
-  , ComponentHTML
-  , ComponentDSL
-  , ComponentSpec
-  , component
-  , mkComponent
-  , unComponent
-  , LifecycleComponentSpec
-  , lifecycleComponent
-  , transform
-  , transformChild
-  , interpret
-  )
-  where
+module Halogen.Component.Types where
 
 import Prelude
 
@@ -22,13 +6,11 @@ import Control.Monad.Free (Free, hoistFree, liftF)
 import Control.Monad.Free.Trans as FT
 
 import Data.Bifunctor (lmap)
-import Data.Lazy (defer)
-import Data.Maybe (Maybe(..), maybe)
+import Data.Maybe (Maybe, maybe)
 
 import Halogen.Component.ChildPath (ChildPath, prjQuery, injQuery)
-import Halogen.Component.Hook (Hook, Finalized, finalized, mapFinalized, lmapHook, rmapHook)
-import Halogen.Component.Tree (Tree, graftTree, mkTree', emptyTree)
-import Halogen.HTML.Core (HTML)
+import Halogen.Component.Hook (Hook, Finalized, mapFinalized, lmapHook, rmapHook)
+import Halogen.Component.Tree (Tree, graftTree, emptyTree)
 import Halogen.Query.EventSource (EventSource(..), runEventSource)
 import Halogen.Query.HalogenF (HalogenF(..), hoistHalogenF)
 import Halogen.Query.StateF (StateF(..))
@@ -43,7 +25,7 @@ import Unsafe.Coerce (unsafeCoerce)
 type Component' s f g =
   { state :: s
   , render :: s -> RenderResult s f g
-  , eval :: f ~> ComponentDSL s f g
+  , eval :: f ~> Free (HalogenF s f g)
   , initializer :: Maybe (f Unit)
   , finalizers :: s -> Array (Finalized g)
   }
@@ -68,58 +50,6 @@ mkComponent = unsafeCoerce
 
 unComponent :: forall f g r. (forall s. Component' s f g -> r) -> Component f g -> r
 unComponent f = f <<< unsafeCoerce
-
--- | The type for `HTML` rendered by a self-contained component.
-type ComponentHTML p f = HTML p (f Unit)
-
--- | The DSL used in the `eval` function for self-contained components.
-type ComponentDSL s f g = Free (HalogenF s f g)
-
--- | A spec for a component.
-type ComponentSpec s f g p =
-  { initialState :: s
-  , render :: s -> ComponentHTML p f
-  , eval :: f ~> ComponentDSL s f g
-  }
-
--- | Builds a self-contained component with no possible children.
-component :: forall s f g p. ComponentSpec s f g p -> Component' s f g
-component spec =
-  lifecycleComponent
-    { initialState: spec.initialState
-    , render: spec.render
-    , eval: spec.eval
-    , initializer: Nothing
-    , finalizer: Nothing
-    }
-
--- | A spec for a component, including lifecycle inputs.
-type LifecycleComponentSpec s f g p =
-  { initialState :: s
-  , render :: s -> ComponentHTML p f
-  , eval :: f ~> ComponentDSL s f g
-  , initializer :: Maybe (f Unit)
-  , finalizer :: Maybe (f Unit)
-  }
-
--- | Builds a self-contained component with lifecycle inputs and no possible
--- | children.
-lifecycleComponent :: forall s f g p. LifecycleComponentSpec s f g p -> Component' s f g
-lifecycleComponent spec =
-  { state: spec.initialState
-  , render: \s -> { state: s, hooks: [], tree: renderTree (spec.render s) }
-  , eval: spec.eval
-  , initializer: spec.initializer
-  , finalizers: \s -> maybe [] (\i -> [finalized spec.eval s i]) spec.finalizer
-  }
-  where
-  renderTree :: ComponentHTML p f -> Tree f Unit
-  renderTree html = mkTree'
-    { slot: unit
-    , html: defer \_ -> unsafeCoerce html -- Safe because p is Void
-    , eq: \_ _ -> false -- Absurd
-    , thunk: false
-    }
 
 -- | Transforms a `Component`'s types using partial mapping functions.
 -- |

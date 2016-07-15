@@ -12,7 +12,7 @@ import Control.Coroutine.Stalling as SCR
 import Control.Monad.Aff (Aff, forkAff, forkAll)
 import Control.Monad.Aff.AVar (AVar, makeVar, makeVar', putVar, takeVar, modifyVar)
 import Control.Monad.Eff.Class (liftEff)
-import Control.Monad.Free (runFreeM)
+import Control.Monad.Free (Free, runFreeM)
 import Control.Monad.Rec.Class (forever, tailRecM)
 import Control.Monad.State (runState)
 import Control.Monad.Trans (lift)
@@ -27,7 +27,7 @@ import Data.Tuple (Tuple(..))
 import DOM.HTML.Types (HTMLElement, htmlElementToNode)
 import DOM.Node.Node (appendChild)
 
-import Halogen.Component.Types (Component, ComponentDSL, unComponent, mkComponent)
+import Halogen.Component.Types (Component, unComponent, mkComponent)
 import Halogen.Component.Hook (Hook(..), Finalized, runFinalized)
 import Halogen.Component.Tree (Tree)
 import Halogen.Effects (HalogenEffects)
@@ -100,7 +100,7 @@ runUI component element = _.driver <$> do
 
   eval
     :: forall s
-     . (f ~> ComponentDSL s f (Aff (HalogenEffects eff)))
+     . (f ~> Free (HalogenF s f (Aff (HalogenEffects eff))))
     -> AVar (DriverState f eff)
     -> AVar s
     -> AVar (Maybe RenderPending)
@@ -145,7 +145,7 @@ runUI component element = _.driver <$> do
 
   driver'
     :: forall s
-     . (f ~> ComponentDSL s f (Aff (HalogenEffects eff)))
+     . (f ~> Free (HalogenF s f (Aff (HalogenEffects eff))))
     -> s
     -> f Unit
     -> Aff (HalogenEffects eff) Unit

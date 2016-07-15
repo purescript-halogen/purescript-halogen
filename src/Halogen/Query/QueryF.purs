@@ -1,6 +1,7 @@
 module Halogen.Query.QueryF
   ( QueryF(..)
-  , HHH
+  , ParentF
+  , ComponentF
   , query
   , interpret
   ) where
@@ -8,9 +9,12 @@ module Halogen.Query.QueryF
 import Prelude
 
 import Control.Monad.Free (Free, liftF)
-import Data.Map as Map
+
+import Data.Const (Const)
 import Data.Functor.Coproduct (Coproduct, left)
+import Data.Map as Map
 import Data.Maybe (Maybe(..))
+
 import Halogen.Component.Types (Component)
 import Halogen.Query.HalogenF (HalogenF(..))
 
@@ -25,24 +29,30 @@ import Halogen.Query.HalogenF (HalogenF(..))
 -- instance functorChildF :: Functor f => Functor (ChildF p f) where
 --   map f (ChildF p fi) = ChildF p (f <$> fi)
 
+type ParentF f f' g p = Coproduct (QueryF f' g p) (Coproduct f f')
+type ComponentF f g = ParentF f (Const Void) g Void
+
 data QueryF f g p a
   = GetChildren (Map.Map p (Component f g) -> a)
-  | RunQuery ((Component f g -> f a -> g a) -> g a)
+  | RunQuery ((Component f g -> f ~> g) -> g a)
 
-type HHH s f f' g p = Free (HalogenF s (Coproduct (QueryF f' g p) (Coproduct f f')) g)
+instance functorQueryF :: Functor g => Functor (QueryF f g p) where
+  map f = case _ of
+    GetChildren k -> GetChildren (map f k)
+    RunQuery k -> RunQuery (map f <<< k)
 
-getChildren :: forall s f f' g p. HHH s f f' g p (Map.Map p (Component f' g))
+getChildren :: forall s f f' g p. Free (HalogenF s (ParentF f f' g p) g) (Map.Map p (Component f' g))
 getChildren = liftF $ QueryFHF $ left $ GetChildren id
 
-getChild :: forall s f f' g p. Ord p => p -> HHH s f f' g p (Maybe (Component f' g))
+getChild :: forall s f f' g p. Ord p => p -> Free (HalogenF s (ParentF f f' g p) g) (Maybe (Component f' g))
 getChild p = Map.lookup p <$> getChildren
 
-runQuery :: forall s f f' g p a. Applicative g => f' a -> Component f' g -> HHH s f f' g p a
+runQuery :: forall s f f' g p a. Applicative g => f' a -> Component f' g -> Free (HalogenF s (ParentF f f' g p) g) a
 runQuery q c = do
   x <- liftF $ QueryFHF $ left $ RunQuery \k -> k c q
   liftF $ QueryGHF (pure x)
 
-query :: forall s f f' g p a. (Applicative g, Ord p) => p -> f' a -> HHH s f f' g p (Maybe a)
+query :: forall s f f' g p a. (Applicative g, Ord p) => p -> f' a -> Free (HalogenF s (ParentF f f' g p) g) (Maybe a)
 query p q =
   getChild p >>= case _ of
     Nothing -> pure Nothing
