@@ -14,12 +14,12 @@ module Halogen
 
 import Prelude
 
-import Halogen.Component.Slot (ComponentSlot(..))
-import Halogen.Component.Types (Component, Component', ComponentDSL, ComponentHTML, ComponentSpec, LifecycleComponentSpec, RenderResult, component, interpret, lifecycleComponent, mkComponent, transform, transformChild, unComponent)
+import Halogen.Component.Slot
+import Halogen.Component.Types
 import Halogen.Driver (Driver, runUI)
 import Halogen.Effects (HalogenEffects)
 import Halogen.HTML.Core as C
-import Halogen.Query (Action, EventSource, ParentEventSource, Request, HalogenF(..), StateF(..), action, eventSource, eventSource_, fromAff, fromEff, get, gets, liftH, modify, request, set, subscribe, toParentEventSource)
+import Halogen.Query
 
 -- | A specialised version of the `Halogen.HTML.Core.HTML` type where `i` is
 -- | `* -> *` kinded to match the kind of a component query algebra.

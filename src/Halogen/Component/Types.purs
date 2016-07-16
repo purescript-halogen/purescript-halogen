@@ -22,7 +22,7 @@ import Unsafe.Coerce (unsafeCoerce)
 -- | - `f` - the component's query algebra
 -- | - `g` - a functor integrated into the component's query algebra that allows
 -- |         embedding of external DSLs or handling of effects.
-type Component' s f g =
+type Component' s f g p =
   { state :: s
   , render :: s -> RenderResult s f g
   , eval :: f ~> Free (HalogenF s f g)

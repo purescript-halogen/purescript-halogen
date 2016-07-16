@@ -3,8 +3,7 @@ module Halogen.Query.HalogenF
   , RenderPending(..)
   , transformHF
   , hoistHalogenF
-  )
-  where
+  ) where
 
 import Prelude
 
