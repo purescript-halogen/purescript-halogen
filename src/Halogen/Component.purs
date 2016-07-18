@@ -2,25 +2,20 @@ module Halogen.Component where
 
 import Prelude
 
-import Control.Monad.Free (Free, hoistFree, liftF)
-import Control.Monad.Free.Trans as FT
+import Control.Monad.Free (Free, liftF)
 
-import Data.Bifunctor (lmap)
 import Data.Const (Const)
 import Data.Functor.Coproduct (Coproduct, left, right)
 import Data.Lazy (defer)
 import Data.List (List)
 import Data.Map as M
-import Data.Maybe (Maybe(..), maybe)
+import Data.Maybe (Maybe(..))
 import Data.Traversable (traverse)
 
-import Halogen.Component.ChildPath (ChildPath, prjQuery, injQuery)
-import Halogen.Component.Hook (Hook, Finalized, finalized, mapFinalized, lmapHook, rmapHook)
-import Halogen.Component.Tree (Tree, mkTree', graftTree, emptyTree)
+import Halogen.Component.Hook (Hook, Finalized)
+import Halogen.Component.Tree (Tree, mkTree', emptyTree)
 import Halogen.HTML.Core (HTML)
-import Halogen.Query.EventSource (EventSource(..), runEventSource)
-import Halogen.Query.HalogenF (HalogenF(..), hoistHalogenF)
-import Halogen.Query.StateF (StateF(..))
+import Halogen.Query.HalogenF (HalogenF(..))
 
 import Unsafe.Coerce (unsafeCoerce)
 
@@ -41,11 +36,11 @@ type ParentF f f' g p = Coproduct (QueryF f' g p) (Coproduct f f')
 type ComponentF f g = ParentF f (Const Void) g Void
 
 type ParentHTML f f' g p = HTML p (ParentF f f' g p Unit)
-type ParentDSL s f f' g p = Free (HalogenF s (ParentF f f' g p) g)
+type ParentDSL s f f' g p = HalogenF s (ParentF f f' g p) g
 type ParentState s f' g p = { state :: s, children :: M.Map p (Component f' g) }
 
-type ComponentHTML f g = HTML Void (ComponentF f g Unit)
-type ComponentDSL s f g = Free (HalogenF s (ComponentF f g) g)
+type ComponentHTML f g = HTML Void (ComponentF f g Void)
+type ComponentDSL s f g = HalogenF s (ComponentF f g) g
 type ComponentState s f' g p = { state :: s, children :: M.Map Void (Component (Const Void) g) }
 
 --------------------------------------------------------------------------------
@@ -57,19 +52,19 @@ type ComponentState s f' g p = { state :: s, children :: M.Map Void (Component (
 -- |         embedding of external DSLs or handling of effects.
 type Component' s f f' g p =
   { state :: ParentState s f' g p
-  , render :: s -> RenderResult s f g
-  , eval :: ParentF f f' g p ~> ParentDSL s f f' g p
+  , render :: s -> RenderResult s f f' g p
+  , eval :: f ~> Free (ParentDSL s f f' g p)
   , initializer :: Maybe (ParentF f f' g p Unit)
   , finalizers :: s -> Array (Finalized g)
   }
 
-type RenderResult s f g =
+type RenderResult s f f' g p =
   { state :: s
   , hooks :: Array (Hook f g)
-  , tree  :: Tree f Unit
+  , tree  :: Tree (ParentF f f' g p) Unit
   }
 
-emptyResult :: forall s f g. s -> RenderResult s f g
+emptyResult :: forall s f f' g p. s -> RenderResult s f f' g p
 emptyResult state =
   { state
   , hooks: []
@@ -92,7 +87,7 @@ unComponent
   -> Component f g
   -> r
 unComponent f = f <<< unsafeCoerce
---
+
 -- --------------------------------------------------------------------------------
 --
 -- -- | A spec for a component.
@@ -117,9 +112,9 @@ unComponent f = f <<< unsafeCoerce
 type LifecycleComponentSpec s f g =
   { initialState :: s
   , render :: s -> ComponentHTML f g
-  , eval :: ComponentF f g ~> ComponentDSL s f g
-  , initializer :: Maybe (ComponentF f g Unit)
-  , finalizer :: Maybe (ComponentF f g Unit)
+  , eval :: f ~> Free (ComponentDSL s f g)
+  , initializer :: Maybe (f Unit)
+  -- , finalizer :: Maybe (f Unit)
   }
 
 -- | Builds a self-contained component with lifecycle inputs and no possible
@@ -133,68 +128,68 @@ lifecycleComponent spec =
     { state: { state: spec.initialState, children: M.empty }
     , render: \s -> { state: s, hooks: [], tree: renderTree (spec.render s) }
     , eval: spec.eval
-    , initializer: spec.initializer
-    , finalizers: \s -> maybe [] (\i -> [finalized spec.eval s i]) spec.finalizer
+    , initializer:  right <<< left <$> spec.initializer
+    , finalizers: \s -> [] -- TODO: maybe [] (\i -> [finalized spec.eval s i]) spec.finalizer
     }
   where
   renderTree :: ComponentHTML f g -> Tree (ComponentF f g) Unit
   renderTree html = mkTree'
     { slot: unit
-    , html: defer \_ -> unsafeCoerce html -- Safe because p is Void
-    , eq: \_ _ -> false -- Absurd
+    , html: defer \_ -> unsafeCoerce html -- CHECK: Safe because p is Void
+    , eq: \_ _ -> false -- CHECK: Absurd
     , thunk: false
     }
 
--- --------------------------------------------------------------------------------
---
--- getChildren
---   :: forall s f f' g p
---    . Free (HalogenF s (ParentF f f' g p) g) (M.Map p (Component f' g))
--- getChildren = liftF $ QueryFHF $ left $ GetChildren id
---
--- getChild
---   :: forall s f f' g p
---    . Ord p
---   => p
---   -> Free (HalogenF s (ParentF f f' g p) g) (Maybe (Component f' g))
--- getChild p = M.lookup p <$> getChildren
---
--- runQuery
---   :: forall s f f' g p a
---    . Applicative g
---   => f' a
---   -> Component f' g
---   -> Free (HalogenF s (ParentF f f' g p) g) a
--- runQuery q c = do
---   x <- liftF $ QueryFHF $ left $ RunQuery \k -> k c q
---   liftF $ QueryGHF (pure x)
---
--- query
---   :: forall s f f' g p a
---    . (Applicative g, Ord p)
---   => p
---   -> f' a
---   -> Free (HalogenF s (ParentF f f' g p) g) (Maybe a)
--- query p q =
---   getChild p >>= case _ of
---     Nothing -> pure Nothing
---     Just comp -> Just <$> runQuery q comp
---
--- queryAll
---   :: forall s f f' g p a
---    . (Applicative g, Ord p)
---   => p
---   -> f' a
---   -> Free (HalogenF s (ParentF f f' g p) g) (M.Map p a)
--- queryAll p q = traverse (runQuery q) =<< getChildren
---
--- childSlots
---   :: forall s f f' g p a
---    . (Applicative g, Ord p)
---   => p
---   -> f' a
---   -> Free (HalogenF s (ParentF f f' g p) g) (List p)
--- childSlots p q = M.keys <$> getChildren
+--------------------------------------------------------------------------------
+
+getChildren
+  :: forall s f f' g p
+   . Free (HalogenF s (ParentF f f' g p) g) (M.Map p (Component f' g))
+getChildren = liftF $ QueryFHF $ left $ GetChildren id
+
+getChild
+  :: forall s f f' g p
+   . Ord p
+  => p
+  -> Free (HalogenF s (ParentF f f' g p) g) (Maybe (Component f' g))
+getChild p = M.lookup p <$> getChildren
+
+runQuery
+  :: forall s f f' g p a
+   . Applicative g
+  => f' a
+  -> Component f' g
+  -> Free (HalogenF s (ParentF f f' g p) g) a
+runQuery q c = do
+  x <- liftF $ QueryFHF $ left $ RunQuery \k -> k c q
+  liftF $ QueryGHF (pure x)
+
+query
+  :: forall s f f' g p a
+   . (Applicative g, Ord p)
+  => p
+  -> f' a
+  -> Free (HalogenF s (ParentF f f' g p) g) (Maybe a)
+query p q =
+  getChild p >>= case _ of
+    Nothing -> pure Nothing
+    Just comp -> Just <$> runQuery q comp
+
+queryAll
+  :: forall s f f' g p a
+   . (Applicative g, Ord p)
+  => p
+  -> f' a
+  -> Free (HalogenF s (ParentF f f' g p) g) (M.Map p a)
+queryAll p q = traverse (runQuery q) =<< getChildren
+
+childSlots
+  :: forall s f f' g p a
+   . (Applicative g, Ord p)
+  => p
+  -> f' a
+  -> Free (HalogenF s (ParentF f f' g p) g) (List p)
+childSlots p q = M.keys <$> getChildren
 
 --------------------------------------------------------------------------------
 

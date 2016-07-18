@@ -6,7 +6,7 @@ module Halogen.Driver
 import Prelude
 
 import Control.Bind ((=<<))
-import Control.Coroutine (await)
+import Control.Coroutine (Producer, Consumer, await)
 import Control.Coroutine.Stalling (($$?))
 import Control.Coroutine.Stalling as SCR
 import Control.Monad.Aff (Aff, forkAff, forkAll)
@@ -27,7 +27,7 @@ import Data.Tuple (Tuple(..))
 import DOM.HTML.Types (HTMLElement, htmlElementToNode)
 import DOM.Node.Node (appendChild)
 
-import Halogen.Component.Types (Component, unComponent, mkComponent)
+import Halogen.Component (Component, ComponentF, ParentF, ParentDSL, ParentState, unComponent, mkComponent)
 import Halogen.Component.Hook (Hook(..), Finalized, runFinalized)
 import Halogen.Component.Tree (Tree)
 import Halogen.Effects (HalogenEffects)
@@ -51,6 +51,9 @@ type DriverState f eff =
   , renderPending :: Boolean
   , renderPaused :: Boolean
   }
+
+type DSL s f f' eff p = ParentDSL s f f' (Aff (HalogenEffects eff)) p
+type PS  s f' eff p = ParentState s f' (Aff (HalogenEffects eff)) p
 
 -- | This function is the main entry point for a Halogen based UI, taking a root
 -- | component, initial state, and HTML element to attach the rendered component
@@ -80,7 +83,7 @@ runUI component element = _.driver <$> do
     }
   liftEff $ appendChild (htmlElementToNode node) (htmlElementToNode element)
   forkAll $ onInitializers dr rc.hooks
-  forkAff $ maybe (pure unit) dr (initializeComponent component)
+  -- forkAff $ maybe (pure unit) dr (initializeComponent component)
   modifyVar _ { renderPaused = false } ref
   flushRender ref
   pure { driver: dr }
@@ -92,6 +95,10 @@ runUI component element = _.driver <$> do
     rpRef <- makeVar' Nothing
     x <- unComponent (\c -> do
         stateRef <- makeVar' c.state
+        let hmm :: Free (DSL _ f _ eff _) _
+            hmm = c.eval q
+            ahh :: f ~> Free (DSL _ f _ eff _)
+            ahh = c.eval
         runFreeM (eval c.eval ref stateRef rpRef) (c.eval q)
       ) component
     rp <- takeVar rpRef
@@ -99,12 +106,12 @@ runUI component element = _.driver <$> do
     pure x
 
   eval
-    :: forall s
-     . (f ~> Free (HalogenF s f (Aff (HalogenEffects eff))))
+    :: forall s f' p
+     . (f ~> Free (DSL s f f' eff p))
     -> AVar (DriverState f eff)
-    -> AVar s
+    -> AVar (PS s f' eff p)
     -> AVar (Maybe RenderPending)
-    -> HalogenF s f (Aff (HalogenEffects eff))
+    -> DSL s f f' eff p
     ~> Aff (HalogenEffects eff)
   eval cEval ref stateRef rpRef h =
     case h of
@@ -115,14 +122,15 @@ runUI component element = _.driver <$> do
             putVar ref ds
             st <- takeVar stateRef
             putVar stateRef st
-            pure (k st)
+            pure (k st.state)
           Modify f next -> do
             rp <- takeVar rpRef
-            modifyVar f stateRef
+            modifyVar (\st -> st { state = f st.state }) stateRef
             putVar rpRef $ Just Pending
             pure next
       SubscribeHF es next -> do
-        let producer = runEventSource es
+        let producer :: SCR.StallingProducer (DSL s f f' eff p Unit) (Aff (HalogenEffects eff)) Unit
+            producer = runEventSource es
             consumer = forever (lift <<< driver ref =<< await)
         forkAff $ SCR.runStallingProcess (producer $$? consumer)
         pure next
@@ -144,8 +152,8 @@ runUI component element = _.driver <$> do
       HaltHF -> empty
 
   driver'
-    :: forall s
-     . (f ~> Free (HalogenF s f (Aff (HalogenEffects eff))))
+    :: forall s f' p
+     . (f ~> Free (DSL s f f' eff p))
     -> s
     -> f Unit
     -> Aff (HalogenEffects eff) Unit
@@ -170,9 +178,8 @@ runUI component element = _.driver <$> do
     ds <- takeVar ref
     if ds.renderPaused
       then putVar ref $ ds { renderPending = true }
-      else do
-        let rc = renderComponent component
-            vtree' = renderTree (driver ref) rc.tree
+      else renderComponent component \rc -> do
+        let vtree' = renderTree (driver ref) rc.tree
         node' <- liftEff $ patch (diff ds.vtree vtree') ds.node
         putVar ref
           { node: node'
@@ -218,20 +225,20 @@ onFinalizers f = foldr go Nil
   go (Finalized a) as = f a : as
   go _ as = as
 
-type RR f g =
+type RR s f f' g p =
   { component :: Component f g
   , hooks :: Array (Hook f g)
-  , tree  :: Tree f Unit
+  , tree  :: Tree (ParentF f f' g p) Unit
   }
 
-initializeComponent :: forall f g. Component f g -> Maybe (f Unit)
-initializeComponent = unComponent _.initializer
+-- initializeComponent :: forall f g. Component f g -> Maybe (f Unit)
+-- initializeComponent = unComponent _.initializer
 
-renderComponent :: forall f g. Component f g -> RR f g
-renderComponent =
-  unComponent \c ->
+renderComponent :: forall f g r. Component f g -> (forall s f' p. RR s f f' g p -> r) -> r
+renderComponent comp f =
+  unComponent (\c ->
     let
-      rr = c.render c.state
-      c' = mkComponent (c { state = rr.state })
+      rr = c.render c.state.state
+      c' = mkComponent (c { state = c.state { state = rr.state } })
     in
-      { hooks: rr.hooks, tree: rr.tree, component: c' }
+      f { hooks: rr.hooks, tree: rr.tree, component: c' }) comp
