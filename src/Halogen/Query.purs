@@ -21,7 +21,7 @@ module Halogen.Query
 import Prelude
 
 import Control.Monad.Aff.Free (fromAff, fromEff)
-import Control.Monad.Free (liftF)
+import Control.Monad.Free (Free, liftF)
 
 import Halogen.Query.EventSource (EventSource, ParentEventSource, eventSource, eventSource_, toParentEventSource)
 import Halogen.Query.HalogenF (HalogenF(..))
@@ -96,7 +96,7 @@ request req = req id
 -- |   currentState <- get
 -- |   pure (k currentState)
 -- | ```
-get :: forall s f f' g p. ParentDSL s f f' g p s
+get :: forall s f f' g p. Free (ParentDSL s f f' g p) s
 get = gets id
 
 -- | A version of [`get`](#get) that maps over the retrieved state before
@@ -112,7 +112,7 @@ get = gets id
 -- |   x <- gets _.x
 -- |   pure (k x)
 -- | ```
-gets :: forall s f f' g p a. (s -> a) -> ParentDSL s f f' g p a
+gets :: forall s f f' g p a. (s -> a) -> Free (ParentDSL s f f' g p) a
 gets = liftF <<< StateHF <<< Get
 
 -- | Provides a way of modifying the current component's state within an `Eval`
@@ -129,13 +129,13 @@ gets = liftF <<< StateHF <<< Get
 -- |   modify (+ 1)
 -- |   pure next
 -- | ```
-modify :: forall s f f' g p. (s -> s) -> ParentDSL s f f' g p Unit
+modify :: forall s f f' g p. (s -> s) -> Free (ParentDSL s f f' g p) Unit
 modify f = liftF (StateHF (Modify f unit))
 
 -- | Provides a way of replacing the current component's state within an `Eval`
 -- | or `Peek` function. This is much like `set` for the `State` monad, but
 -- | instead of operating in some `StateT`, uses the `HalogenF` algebra.
-set :: forall s f f' g p. s -> ParentDSL s f f' g p Unit
+set :: forall s f f' g p. s -> Free (ParentDSL s f f' g p) Unit
 set = modify <<< const
 
 -- | Provides a way of having a component subscribe to an `EventSource` from
@@ -143,10 +143,10 @@ set = modify <<< const
 subscribe
   :: forall s f f' g p
    . EventSource (ParentF f f' g p) g
-  -> ParentDSL s f f' g p Unit
+  -> Free (ParentDSL s f f' g p) Unit
 subscribe es = liftF (SubscribeHF es unit)
 
 -- | A convenience function for lifting a `g` value directly into
 -- | `Free HalogenF` without the need to use `liftF $ right $ right $ ...`.
-liftH :: forall s f f' g p. g ~> ParentDSL s f f' g p
+liftH :: forall s f f' g p. g ~> Free (ParentDSL s f f' g p)
 liftH = liftF <<< QueryGHF
