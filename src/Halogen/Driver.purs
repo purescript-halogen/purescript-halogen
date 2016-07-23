@@ -5,18 +5,18 @@ module Halogen.Driver
 
 import Prelude
 
-import Control.Bind ((=<<))
 import Control.Coroutine (await)
 import Control.Coroutine.Stalling (($$?))
 import Control.Coroutine.Stalling as SCR
 import Control.Monad.Aff (Aff, forkAff, forkAll)
 import Control.Monad.Aff.AVar (AVar, makeVar, makeVar', putVar, takeVar, modifyVar)
 import Control.Monad.Eff.Class (liftEff)
+import Control.Monad.Eff.Exception (error)
+import Control.Monad.Error.Class (throwError)
 import Control.Monad.Free (runFreeM)
 import Control.Monad.Rec.Class (forever, tailRecM)
 import Control.Monad.State (runState)
 import Control.Monad.Trans (lift)
-import Control.Plus (empty)
 
 import Data.Either (Either(..))
 import Data.Foldable (class Foldable, foldr)
@@ -131,7 +131,7 @@ runUI c s element = _.driver <$> do
         when (isJust rp) $ render ref
         putVar rpRef Nothing
         q
-      HaltHF -> empty
+      HaltHF msg -> throwError $ error msg
 
   driver'
     :: forall s' f'
@@ -153,7 +153,7 @@ runUI c s element = _.driver <$> do
         RenderHF p next -> pure next
         RenderPendingHF k -> pure $ k Nothing
         QueryHF q -> q
-        HaltHF -> empty
+        HaltHF msg -> throwError $ error msg
 
   render :: AVar (DriverState s) -> Aff (HalogenEffects eff) Unit
   render ref = do

@@ -491,7 +491,7 @@ queryParent f =
       QueryHF q -> liftChildF q
       RenderHF p a -> liftF $ RenderHF p a
       RenderPendingHF k -> liftF $ RenderPendingHF k
-      HaltHF -> liftF HaltHF
+      HaltHF msg -> liftF $ HaltHF msg
 
 mergeParentStateF :: forall s s' f f' g p. StateF s ~> ComponentDSL (ParentState s s' f f' g p) (ParentQuery f f' p) g
 mergeParentStateF = liftF <<< StateHF <<< mapStateFParent
@@ -509,8 +509,8 @@ queryChild
   => ChildF p f'
   ~> ComponentDSL (ParentState s s' f f' g p) (ParentQuery f f' p) g
 queryChild (ChildF p q) =
-  hoistFree (transformHF id right id) (mkQuery p q)
-    >>= maybe (liftF HaltHF) pure
+  maybe (liftF (HaltHF "`queryChild` failed")) pure
+    =<< hoistFree (transformHF id right id) (mkQuery p q)
 
 -- | Transforms a `Component`'s types using partial mapping functions.
 -- |
@@ -535,7 +535,11 @@ transform
 transform reviewS previewS reviewQ previewQ (Component c) =
   Component
     { render: \st -> maybe (emptyResult st) render' (previewS st)
-    , eval: maybe (liftF HaltHF) (foldFree go <<< c.eval) <<< previewQ
+    , eval:
+        maybe
+          (liftF (HaltHF "query prism failed in `transform`"))
+          (foldFree go <<< c.eval)
+            <<< previewQ
     , initializer: reviewQ <$> c.initializer
     , finalizers: maybe [] c.finalizers <<< previewS
     }
@@ -551,14 +555,19 @@ transform reviewS previewS reviewQ previewQ (Component c) =
         }
 
   go :: HalogenF s f g ~> Free (HalogenF s' f' g)
-  go (StateHF (Get k)) =
-    liftF <<< maybe HaltHF (\st' -> StateHF (Get (k <<< const st'))) <<< previewS =<< get
+  go (StateHF (Get k))
+    = liftF
+    <<< maybe
+          (HaltHF "state prism failed in `transform`")
+          (\st' -> StateHF (Get (k <<< const st')))
+    <<< previewS
+    =<< get
   go (StateHF (Modify f next)) = liftF $ StateHF (Modify (modifyState f) next)
   go (SubscribeHF es next) = liftF $ SubscribeHF (EventSource (FT.interpret (lmap reviewQ) (runEventSource es))) next
   go (QueryHF q) = liftF $ QueryHF q
   go (RenderHF p a) = liftF $ RenderHF p a
   go (RenderPendingHF k) = liftF $ RenderPendingHF k
-  go HaltHF = liftF HaltHF
+  go (HaltHF msg) = liftF $ HaltHF msg
 
   modifyState :: (s -> s) -> s' -> s'
   modifyState f s' = maybe s' (reviewS <<< f) (previewS s')
