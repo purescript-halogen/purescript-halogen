@@ -8,3 +8,7 @@
 /output/
 /tmp/
 .DS_Store
+.psc-ide-port
+psc.tix
+psc-ide-server.tix
+

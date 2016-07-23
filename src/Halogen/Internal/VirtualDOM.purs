@@ -18,18 +18,15 @@ module Halogen.Internal.VirtualDOM
   ) where
 
 import Prelude
-
 import Control.Monad.Eff (Eff)
-
-import Data.Monoid (class Monoid)
-import Data.Maybe (Maybe(..))
-import Data.Nullable (Nullable)
-import Data.Function.Uncurried (Fn2, runFn2)
-
 import DOM (DOM)
 import DOM.HTML.Types (HTMLElement)
-
+import Data.Function.Uncurried (Fn2, runFn2)
+import Data.Maybe (Maybe(..))
+import Data.Monoid (class Monoid)
+import Data.Nullable (Nullable)
 import Halogen.Component.Tree (Tree)
+import Halogen.HTML.Core (HTML)
 
 -- | Virtual DOM nodes
 data VTree
@@ -59,7 +56,7 @@ foreign import refPropImpl
   -> (Maybe HTMLElement -> Eff eff Unit)
   -> Props
 
-foreign import widget :: forall f p. Tree f p -> (p -> p -> Boolean) -> (Tree f p -> VTree) -> VTree
+foreign import widget :: forall f p. Tree HTML f p -> (p -> p -> Boolean) -> (Tree HTML f p -> VTree) -> VTree
 
 foreign import concatProps :: Fn2 Props Props Props
 

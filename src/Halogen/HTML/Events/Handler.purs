@@ -2,10 +2,12 @@
 -- | events.
 module Halogen.HTML.Events.Handler
   ( EventHandler
+  , EventUpdate
   , preventDefault
   , stopPropagation
   , stopImmediatePropagation
   , runEventHandler
+  , unEventHandler
   ) where
 
 import Prelude

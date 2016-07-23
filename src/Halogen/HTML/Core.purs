@@ -36,21 +36,26 @@ module Halogen.HTML.Core
   , ClassName
   , className
   , runClassName
+
   ) where
 
 import Prelude
-
+import Control.Monad.Eff (foreachE, runPure)
+import Control.Monad.ST (writeSTRef, readSTRef, newSTRef, runST)
+import DOM.HTML.Types (HTMLElement)
+import Data.Array.ST (emptySTArray, pushSTArray, STArray) as A
 import Data.Bifunctor (class Bifunctor, rmap)
 import Data.Exists (Exists, mkExists)
 import Data.ExistsR (ExistsR, mkExistsR, runExistsR)
+import Data.Lazy (defer)
 import Data.Maybe (Maybe(..))
 import Data.Traversable (traverse)
 import Data.Tuple (Tuple(..))
-
-import DOM.HTML.Types (HTMLElement)
-
+import Halogen.Component.Tree (mkTree', graftTree)
 import Halogen.HTML.Events.Handler (EventHandler)
 import Halogen.HTML.Events.Types (Event)
+import Halogen.RenderDSL (class RenderDSL)
+import Unsafe.Coerce (unsafeCoerce)
 
 -- | An initial encoding of HTML nodes.
 data HTML p i
@@ -207,3 +212,37 @@ className = ClassName
 -- | Unpack a class name
 runClassName :: ClassName -> String
 runClassName (ClassName s) = s
+
+instance htmlTree :: RenderDSL HTML where
+  emptyTree = mkTree'
+    { slot: unit
+    , html: defer \_ -> Text ""
+    , eq: \_ _ -> false
+    , thunk: false
+    }
+  initialTree r = mkTree'
+    { slot: unit
+    , html: defer \_ -> unsafeCoerce r
+    , eq: \_ _ -> false
+    , thunk: false
+    }
+  mapTree = graftTree
+  installChildren child c = go
+    where
+      go (Text s) st = Tuple (Text s) st
+      go (Slot p) st = child Slot p st
+      go (Element ns name props els) st = runPure $ runST do
+        arr <- A.emptySTArray
+        acc <- newSTRef st
+        foreachE els \el -> do
+          st' <- readSTRef acc
+          case go el st' of
+            Tuple el' st'' -> do
+              void $ A.pushSTArray arr el'
+              void $ writeSTRef acc st''
+        acc' <- readSTRef acc
+        pure $ Tuple (Element ns name (map c <$> props) $ unsafeFreeze arr) acc'
+
+-- Prevents an unnecessary array copy
+unsafeFreeze :: forall h a. A.STArray h a -> Array a
+unsafeFreeze = unsafeCoerce

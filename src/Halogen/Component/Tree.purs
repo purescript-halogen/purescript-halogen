@@ -6,25 +6,23 @@ module Halogen.Component.Tree
   , runTree
   , graftTree
   , thunkTree
-  , emptyTree
   ) where
 
 import Prelude
-import Data.Bifunctor (bimap)
-import Data.Lazy (Lazy, defer)
-import Halogen.HTML.Core (HTML(..))
+import Data.Bifunctor (class Bifunctor, bimap)
+import Data.Lazy (Lazy)
 import Unsafe.Coerce (unsafeCoerce)
 
-type TreeF f p p' =
+type TreeF h f p p' =
   { slot :: p
-  , html :: Lazy (HTML (Tree f p') (f Unit))
+  , html :: Lazy (h (Tree h f p') (f Unit))
   , eq :: p' -> p' -> Boolean
   , thunk :: Boolean
   }
 
-foreign import data Tree :: (* -> *) -> * -> *
+foreign import data Tree :: (* -> * -> *) -> (* -> *) -> * -> *
 
-mkTree :: forall f p'. Eq p' => Lazy (HTML (Tree f p') (f Unit)) -> Tree f Unit
+mkTree :: forall h f p'. Eq p' => Lazy (h (Tree h f p') (f Unit)) -> Tree h f Unit
 mkTree html =
   mkTree'
     { slot: unit
@@ -33,13 +31,13 @@ mkTree html =
     , thunk: false
     }
 
-mkTree' :: forall f p p'. TreeF f p p' -> Tree f p
+mkTree' :: forall h f p p'. TreeF h f p p' -> Tree h f p
 mkTree' = unsafeCoerce
 
-runTree :: forall f p r. (forall p'. TreeF f p p' -> r) -> Tree f p -> r
+runTree :: forall h f p r. (forall p'. TreeF h f p p' -> r) -> Tree h f p -> r
 runTree k t = case unsafeCoerce t of tree -> k tree
 
-graftTree :: forall f f' p p'. f ~> f' -> (p -> p') -> Tree f p -> Tree f' p'
+graftTree :: forall h f f' p p'. (Bifunctor h) => f ~> f' -> (p -> p') -> Tree h f p -> Tree h f' p'
 graftTree l r = runTree \t ->
   mkTree'
     { slot: r t.slot
@@ -48,14 +46,5 @@ graftTree l r = runTree \t ->
     , thunk: t.thunk
     }
 
-thunkTree :: forall f p. Tree f p -> Tree f p
+thunkTree :: forall h f p. Tree h f p -> Tree h f p
 thunkTree = runTree (mkTree' <<< _ { thunk = true })
-
-emptyTree :: forall f. Tree f Unit
-emptyTree =
-  mkTree'
-    { slot: unit
-    , html: defer \_ -> Text ""
-    , eq: \_ _ -> false
-    , thunk: false
-    }
