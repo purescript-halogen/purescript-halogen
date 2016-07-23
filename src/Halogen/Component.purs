@@ -9,10 +9,11 @@ import Data.Bifunctor (lmap)
 import Data.Const (Const)
 import Data.Functor.Coproduct (Coproduct, coproduct, left, right)
 import Data.Lazy (Lazy, defer)
-import Data.List (List)
+import Data.List as L
 import Data.Map as M
 import Data.Maybe (Maybe(..), maybe)
 import Data.Traversable (traverse)
+import Data.Tuple (Tuple(..))
 
 import Halogen.Component.Hook (Hook, Finalized, lmapHook)
 import Halogen.Component.Tree (Tree, mkTree', emptyTree, graftTree)
@@ -28,32 +29,29 @@ data ComponentSlot g m p = ComponentSlot p (Lazy (Component g m))
 --------------------------------------------------------------------------------
 
 data QueryF f m p a
-  -- = GetChildren (M.Map p (Component f m) -> a)
-  -- | RunQuery ((p -> f ~> m) -> m a)
-  = RunQuery ((p -> f ~> m) -> m (Maybe a))
+  = GetSlots (L.List p -> a)
+  | RunQuery p (Maybe (f ~> m) -> m a)
 
 instance functorQueryF :: Functor m => Functor (QueryF f m p) where
   map f = case _ of
-    -- GetChildren k -> GetChildren (map f k)
-    RunQuery k -> RunQuery (map (map f) <<< k)
+    GetSlots k -> GetSlots (map f k)
+    RunQuery p k -> RunQuery p (map f <<< k)
 
 --------------------------------------------------------------------------------
 
-type ParentF f g m p = Coproduct (QueryF g m p) (Coproduct f g)
+type ParentF f g m p = Coproduct (QueryF g m p) f
 type ComponentF f m = ParentF f (Const Void) m Void
 
 type ParentHTML f g m p = HTML p (ParentF f g m p Unit)
 type ParentDSL s f g m p = HalogenF s (ParentF f g m p) m
--- type ParentState s g m p = { state :: s, children :: M.Map p (Component g m) }
 
 type ComponentHTML f m = HTML Void (ComponentF f m Void)
 type ComponentDSL s f m = HalogenF s (ComponentF f m) m
--- type ComponentState s g m p = { state :: s, children :: M.Map Void (Component (Const Void) m) }
 
 --------------------------------------------------------------------------------
 
 type Component' s f g m p =
-  { state :: s
+  { initialState :: s
   , render :: s -> RenderResult s f g m p
   , eval :: f ~> Free (ParentDSL s f g m p)
   , initializer :: Maybe (ParentF f g m p Unit)
@@ -127,10 +125,10 @@ lifecycleComponent
   -> Component f m
 lifecycleComponent spec =
   mkComponent
-    { state: spec.initialState
+    { initialState: spec.initialState
     , render: \s -> { state: s, hooks: [], tree: renderTree (spec.render s) }
     , eval: spec.eval
-    , initializer:  right <<< left <$> spec.initializer
+    , initializer:  right <$> spec.initializer
     , finalizers: \s -> [] -- TODO: maybe [] (\i -> [finalized spec.eval s i]) spec.finalizer
     }
   where
@@ -144,56 +142,32 @@ lifecycleComponent spec =
 
 --------------------------------------------------------------------------------
 
--- getChildren
---   :: forall s f g m p
---    . Free (HalogenF s (ParentF f g m p) m) (M.Map p (Component g m))
--- getChildren = liftF $ QueryFHF $ left $ GetChildren id
---
--- getChild
---   :: forall s f g m p
---    . Ord p
---   => p
---   -> Free (HalogenF s (ParentF f g m p) m) (Maybe (Component g m))
--- getChild p = M.lookup p <$> getChildren
+getSlots
+  :: forall s f g m p
+   . Free (HalogenF s (ParentF f g m p) m) (L.List p)
+getSlots = liftF $ QueryFHF $ left $ GetSlots id
 
-runQuery
+query
   :: forall s f g m p a
    . Applicative m
   => g a
   -> p
   -> Free (HalogenF s (ParentF f g m p) m) (Maybe a)
-runQuery q p = do
-  x <- liftF $ QueryFHF $ left $ RunQuery \k -> k p q
-  case x of
-    Nothing -> pure Nothing
-  -- liftF $ QueryGHF (pure x)
+query q p = do
+  liftF $ QueryFHF $ left $ RunQuery p \k ->
+    case k of
+      Nothing -> pure Nothing
+      Just f -> Just <$> f q
 
--- query
---   :: forall s f g m p a
---    . (Applicative m, Ord p)
---   => p
---   -> g a
---   -> Free (HalogenF s (ParentF f g m p) m) (Maybe a)
--- query p q =
---   getChild p >>= case _ of
---     Nothing -> pure Nothing
---     Just comp -> Just <$> runQuery q comp
---
--- queryAll
---   :: forall s f g m p a
---    . (Applicative m, Ord p)
---   => p
---   -> g a
---   -> Free (HalogenF s (ParentF f g m p) m) (M.Map p a)
--- queryAll p q = traverse (runQuery q) =<< getChildren
---
--- childSlots
---   :: forall s f g m p a
---    . (Applicative m, Ord p)
---   => p
---   -> g a
---   -> Free (HalogenF s (ParentF f g m p) m) (List p)
--- childSlots p q = M.keys <$> getChildren
+queryAll
+  :: forall s f g m p a
+   . (Applicative m, Ord p)
+  => p
+  -> g a
+  -> Free (HalogenF s (ParentF f g m p) m) (M.Map p a)
+queryAll p q
+  = M.fromList <<< L.catMaybes
+  <$> (traverse (\p -> map (Tuple p) <$> query q p) =<< getSlots)
 
 --------------------------------------------------------------------------------
 
@@ -218,7 +192,7 @@ transform
 transform reviewQ previewQ =
   unComponent \c ->
     mkComponent
-      { state: c.state
+      { initialState: c.initialState
       , render: remapRenderResult <<< c.render
       , eval: maybe (liftF HaltHF) (hoistFree remapF <<< c.eval) <<< previewQ
       , initializer: remapQ <$> c.initializer
@@ -246,7 +220,7 @@ transform reviewQ previewQ =
     HaltHF -> HaltHF
 
   remapQ :: forall g p. ParentF f g m p ~> ParentF f' g m p
-  remapQ = coproduct left (right <<< coproduct (left <<< reviewQ) right)
+  remapQ = coproduct left (right <<< reviewQ)
 
 -- | Transforms a `Component`'s types using a `ChildPath` definition.
 transformChild

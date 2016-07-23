@@ -11,9 +11,9 @@ import Control.Coroutine (Producer, Consumer, await)
 import Control.Coroutine.Stalling (($$?))
 import Control.Coroutine.Stalling as SCR
 import Control.Monad.Aff (Aff, forkAff, forkAll)
-import Control.Monad.Aff.AVar (AVar, makeVar, makeVar', putVar, takeVar, modifyVar)
+import Control.Monad.Aff.AVar (AVAR, AVar, makeVar, makeVar', putVar, takeVar, modifyVar)
 import Control.Monad.Eff.Class (liftEff)
-import Control.Monad.Free (Free, runFreeM)
+import Control.Monad.Free (Free, runFreeM, foldFree)
 import Control.Monad.Rec.Class (forever, tailRecM)
 import Control.Monad.State (runState)
 import Control.Monad.Trans (lift)
@@ -22,7 +22,7 @@ import Control.Plus (empty)
 import Data.Either (Either(..))
 import Data.Foldable (class Foldable, foldr)
 import Data.Functor.Coproduct (Coproduct, coproduct)
-import Data.List (List(Nil), (:))
+import Data.List (List(Nil), (:), head)
 import Data.Map as M
 import Data.Maybe (Maybe(..), maybe, isJust, isNothing)
 import Data.Tuple (Tuple(..))
@@ -30,7 +30,7 @@ import Data.Tuple (Tuple(..))
 import DOM.HTML.Types (HTMLElement, htmlElementToNode)
 import DOM.Node.Node (appendChild)
 
-import Halogen.Component (Component, ComponentF, ParentF, ParentDSL, QueryF(..), unComponent, mkComponent)
+import Halogen.Component (Component, Component', ComponentF, ParentF, ParentDSL, QueryF(..), unComponent, mkComponent)
 import Halogen.Component.Hook (Hook(..), Finalized, runFinalized)
 import Halogen.Component.Tree (Tree)
 import Halogen.Effects (HalogenEffects)
@@ -40,6 +40,7 @@ import Halogen.Query (HalogenF(..))
 import Halogen.Query.HalogenF (RenderPending(..))
 import Halogen.Query.EventSource (runEventSource)
 import Halogen.Query.StateF (StateF(..), stateN)
+import Halogen.Data.OrdBox
 
 import Unsafe.Coerce (unsafeCoerce)
 
@@ -48,23 +49,62 @@ import Unsafe.Coerce (unsafeCoerce)
 -- | query has been fulfilled.
 type Driver f eff = f ~> Aff (HalogenEffects eff)
 
--- | Type alias used internally to track the driver's persistent state.
-type DriverState f eff =
+-- | Type alias used internally to track a driver's persistent state.
+newtype DriverState s f f' eff p = DriverState (DriverStateR s f f' eff p)
+
+type DriverStateR s f f' eff p =
   { node :: HTMLElement
   , vtree :: VTree
-  , component :: Component f (Aff (HalogenEffects eff))
   , renderPending :: Boolean
   , renderPaused :: Boolean
+  , component :: Component' s f f' (Aff (HalogenEffects eff)) p
+  , state :: s
+  , children :: M.Map (OrdBox p) (DSX f' eff)
+  , selfRef :: AVar (DriverState s f f' eff p)
   }
+
+unDriverState :: forall s f f' eff p. DriverState s f f' eff p -> DriverStateR s f f' eff p
+unDriverState (DriverState r) = r
 
 type DSL s f f' eff p = ParentDSL s f f' (Aff (HalogenEffects eff)) p
-type PS s f' eff p =
-  { state :: s
-  , children :: M.Map p (Component f' (Aff (HalogenEffects eff)))
-  }
 
-mkState :: forall s f' eff p. s -> PS s f' eff p
-mkState = { state: _, children: M.empty }
+data DSX (f :: * -> *) (eff :: # !)
+
+mkDSX
+  :: forall s f f' eff p
+   . DriverState s f f' eff p
+  -> DSX f eff
+mkDSX = unsafeCoerce
+
+unDSX
+  :: forall f eff r
+   . (forall s f' p. DriverState s f f' eff p -> r)
+  -> DSX f eff
+  -> r
+unDSX = unsafeCoerce unit
+
+mkState
+  :: forall f eff
+   . HTMLElement
+  -> VTree
+  -> Component f (Aff (HalogenEffects eff))
+  -> Aff (HalogenEffects eff) (DSX f eff)
+mkState node vtree = unComponent \component -> do
+  selfRef <- makeVar
+  let
+    ds =
+      DriverState
+        { node
+        , vtree
+        , renderPending: false
+        , renderPaused: false
+        , component
+        , state: component.initialState
+        , children: M.empty
+        , selfRef
+        }
+  putVar selfRef ds
+  pure $ mkDSX ds
 
 -- | This function is the main entry point for a Halogen based UI, taking a root
 -- | component, initial state, and HTML element to attach the rendered component
@@ -115,33 +155,31 @@ mkState = { state: _, children: M.empty }
 --   pure x) component
 
 eval
-  :: forall s f f' eff p
-   . (f ~> Free (DSL s f f' eff p))
-  -> AVar (DriverState f eff)
-  -> AVar (PS s f' eff p)
+  :: forall s f g eff p
+   . AVar (DriverState s f g eff p)
   -> AVar (Maybe RenderPending)
-  -> DSL s f f' eff p
+  -> DSL s f g eff p
   ~> Aff (HalogenEffects eff)
-eval cEval ref stateRef rpRef = case _ of
+eval ref rpRef = case _ of
   StateHF i -> do
     ds <- takeVar ref
     case i of
       Get k -> do
         putVar ref ds
-        st <- takeVar stateRef
-        putVar stateRef st
+        DriverState st <- peekVar ref
         pure (k st.state)
       Modify f next -> do
         rp <- takeVar rpRef
-        modifyVar (\st -> st { state = f st.state }) stateRef
+        modifyVar (\(DriverState st) -> DriverState (st { state = f st.state })) ref
         putVar rpRef $ Just Pending
         pure next
-  --   SubscribeHF es next -> do
-  --     let producer :: SCR.StallingProducer (DSL s f f' eff p Unit) (Aff (HalogenEffects eff)) Unit
-  --         producer = runEventSource es
-  --         consumer = forever (lift <<< driver ref =<< await)
-  --     forkAff $ SCR.runStallingProcess (producer $$? consumer)
-  --     pure next
+  SubscribeHF es next -> do
+    let producer :: SCR.StallingProducer (ParentF f g (Aff (HalogenEffects eff)) p Unit) (Aff (HalogenEffects eff)) Unit
+        producer = runEventSource es
+        consumer :: forall a. Consumer (ParentF f g (Aff (HalogenEffects eff)) p Unit) (Aff (HalogenEffects eff)) a
+        consumer = forever (lift <<< evalPF ref rpRef =<< await)
+    forkAff $ SCR.runStallingProcess (producer $$? consumer)
+    pure next
   RenderHF p next -> do
     modifyVar (const p) rpRef
     when (isNothing p) $ render ref
@@ -150,53 +188,69 @@ eval cEval ref stateRef rpRef = case _ of
     rp <- takeVar rpRef
     putVar rpRef rp
     pure $ k rp
-  QueryFHF q -> coproduct evalQ evalF q
-    -- runFreeM (eval cEval ref stateRef rpRef) (cEval q)
+  QueryFHF q ->
+    coproduct (evalQ ref rpRef) (evalF ref rpRef) q
   QueryGHF q -> do
     rp <- takeVar rpRef
     when (isJust rp) $ render ref
     putVar rpRef Nothing
     q
   HaltHF -> empty
-  _ -> unsafeCoerce unit
 
-  where
+evalPF
+  :: forall s f g eff p
+   . AVar (DriverState s f g eff p)
+  -> AVar (Maybe RenderPending)
+  -> ParentF f g (Aff (HalogenEffects eff)) p
+  ~> Aff (HalogenEffects eff)
+evalPF ref rpRef = coproduct (evalQ ref rpRef) (evalF ref rpRef)
 
-  evalQ :: QueryF f' (Aff (HalogenEffects eff)) p ~> Aff (HalogenEffects eff)
-  evalQ = case _ of
-    GetChildren k -> do
-      st <- takeVar stateRef
-      putVar stateRef st
-      pure $ k st.children
-    RunQuery k -> do
-      k \comp q -> unComponent (\c -> ?help) comp
+evalQ
+  :: forall s f g eff p
+   . AVar (DriverState s f g eff p)
+  -> AVar (Maybe RenderPending)
+  -> QueryF g (Aff (HalogenEffects eff)) p
+  ~> Aff (HalogenEffects eff)
+evalQ ref rpRef = case _ of
+  GetSlots k -> do
+    st <- unDriverState <$> peekVar ref
+    pure $ k $ map unOrdBox $ M.keys st.children
+  RunQuery p k -> do
+    st <- unDriverState <$> peekVar ref
+    -- TODO: something less ridiculous than this for `updateOrdBox` - we just
+    -- need to grab any existing OrdBox
+    let ob = head $ M.keys $ st.children
+    case flip M.lookup st.children <<< updateOrdBox p =<< ob of
+      Nothing -> k Nothing
+      Just dsx ->
+        let
+          -- All of these annotations are required to prevent skolem escape issues
+          nat :: g ~> Aff (HalogenEffects eff)
+          nat = unDSX (\(DriverState ds) -> evalF ds.selfRef rpRef) dsx
+          j :: forall h i. (h ~> i) -> Maybe (h ~> i)
+          j = Just
+        in
+          k (j nat)
 
-  evalF :: Coproduct f f' ~> Aff (HalogenEffects eff)
-  evalF = ?whaat
+evalF
+  :: forall s f g eff p
+   . AVar (DriverState s f g eff p)
+  -> AVar (Maybe RenderPending)
+  -> (f ~> Aff (HalogenEffects eff))
+evalF ref rpRef q = do
+  st <- unDriverState <$> peekVar ref
+  foldFree (eval ref rpRef) (st.component.eval q)
 
-  -- driver'
-  --   :: forall s f' p
-  --    . (f ~> Free (DSL s f f' eff p))
-  --   -> s
-  --   -> f Unit
-  --   -> Aff (HalogenEffects eff) Unit
-  -- driver' e s i = do
-  --   ref <- makeVar' s
-  --   flip runFreeM (e i) case _ of
-  --     StateHF i -> do
-  --       ds <- takeVar ref
-  --       case runState (stateN i) ds of
-  --         Tuple i' s' -> do
-  --           putVar ref s'
-  --           pure i'
-  --     SubscribeHF _ next -> pure next
-  --     RenderHF p next -> pure next
-  --     RenderPendingHF k -> pure $ k Nothing
-  --     QueryFHF q -> pure (pure unit) -- TODO
-  --     QueryGHF q -> q
-  --     HaltHF -> empty
+peekVar :: forall eff a. AVar a -> Aff (avar :: AVAR | eff) a
+peekVar v = do
+  a <- takeVar v
+  putVar v a
+  pure a
 
-render :: forall f eff. AVar (DriverState f eff) -> Aff (HalogenEffects eff) Unit
+render
+  :: forall s f g eff p
+   . AVar (DriverState s f g eff p)
+  -> Aff (HalogenEffects eff) Unit
 render ref = do
   unsafeCoerce unit
   -- ds <- takeVar ref
@@ -217,15 +271,15 @@ render ref = do
   --     modifyVar _ { renderPaused = false } ref
   --     flushRender ref
 
-flushRender :: forall f eff. AVar (DriverState f eff) -> Aff (HalogenEffects eff) Unit
-flushRender = tailRecM \ref -> do
-  ds <- takeVar ref
-  putVar ref ds
-  if not ds.renderPending
-    then pure (Right unit)
-    else do
-      render ref
-      pure (Left ref)
+-- flushRender :: forall f eff. AVar (DSX f eff) -> Aff (HalogenEffects eff) Unit
+-- flushRender = tailRecM \ref -> do
+--   ds <- takeVar ref
+--   putVar ref ds
+--   if not ds.renderPending
+--     then pure (Right unit)
+--     else do
+--       render ref
+--       pure (Left ref)
 
 onInitializers
   :: forall m f g r
@@ -258,11 +312,11 @@ type RR s f f' g p =
 -- initializeComponent :: forall f g. Component f g -> Maybe (f Unit)
 -- initializeComponent = unComponent _.initializer
 
-renderComponent :: forall f g r. Component f g -> (forall s f' p. RR s f f' g p -> r) -> r
-renderComponent comp f =
-  unComponent (\c ->
-    let
-      rr = c.render c.state
-      c' = mkComponent (c { state = rr.state })
-    in
-      f { hooks: rr.hooks, tree: rr.tree, component: c' }) comp
+-- renderComponent :: forall f g r. Component f g -> (forall s f' p. RR s f f' g p -> r) -> r
+-- renderComponent comp f =
+--   unComponent (\c ->
+--     let
+--       rr = c.render c.state
+--       c' = mkComponent (c { state = rr.state })
+--     in
+--       f { hooks: rr.hooks, tree: rr.tree, component: c' }) comp
