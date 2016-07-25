@@ -22,6 +22,7 @@ import Control.Plus (empty)
 import Data.Either (Either(..))
 import Data.Foldable (class Foldable, foldr)
 import Data.Functor.Coproduct (Coproduct, coproduct)
+import Data.Lazy (defer)
 import Data.List (List(Nil), (:), head)
 import Data.Map as M
 import Data.Maybe (Maybe(..), maybe, isJust, isNothing)
@@ -32,10 +33,11 @@ import DOM.Node.Node (appendChild)
 
 import Halogen.Component (Component, Component', ComponentF, ParentF, ParentDSL, QueryF(..), unComponent, mkComponent)
 import Halogen.Component.Hook (Hook(..), Finalized, runFinalized)
-import Halogen.Component.Tree (Tree)
+import Halogen.Component.Tree (Tree, mkTree)
 import Halogen.Effects (HalogenEffects)
+import Halogen.HTML.Core as HTML
 import Halogen.HTML.Renderer.VirtualDOM (renderTree)
-import Halogen.Internal.VirtualDOM (VTree, createElement, diff, patch)
+import Halogen.Internal.VirtualDOM (VTree, createElement, diff, patch, vtext)
 import Halogen.Query (HalogenF(..))
 import Halogen.Query.EventSource (runEventSource)
 import Halogen.Query.StateF (StateF(..), stateN)
@@ -69,36 +71,34 @@ data DSX (f :: * -> *) (eff :: # !)
 
 mkDSX
   :: forall s f f' eff p
-   . DriverState s f f' eff p
+   . DriverStateR s f f' eff p
   -> DSX f eff
 mkDSX = unsafeCoerce
 
 unDSX
   :: forall f eff r
-   . (forall s f' p. DriverState s f f' eff p -> r)
+   . (forall s f' p. DriverStateR s f f' eff p -> r)
   -> DSX f eff
   -> r
-unDSX = unsafeCoerce unit
+unDSX = unsafeCoerce
 
 mkState
-  :: forall f eff
+  :: forall s f f' eff p
    . HTMLElement
-  -> VTree
-  -> Component f (Aff (HalogenEffects eff))
+  -> Component' s f f' (Aff (HalogenEffects eff)) p
   -> Aff (HalogenEffects eff) (DSX f eff)
-mkState node vtree = unComponent \component -> do
+mkState node component = do
   selfRef <- makeVar
   let
     ds =
-      DriverState
-        { node
-        , vtree
-        , component
-        , state: component.initialState
-        , children: M.empty
-        , selfRef
-        }
-  putVar selfRef ds
+      { node
+      , vtree: vtext ""
+      , component
+      , state: component.initialState
+      , children: M.empty
+      , selfRef
+      }
+  putVar selfRef (DriverState ds)
   pure $ mkDSX ds
 
 -- | This function is the main entry point for a Halogen based UI, taking a root
@@ -108,46 +108,28 @@ mkState node vtree = unComponent \component -> do
 -- | The returned "driver" function can be used to send actions and requests
 -- | into the component hierarchy, allowing the outside world to communicate
 -- | with the UI.
--- runUI
---   :: forall f eff
---    . Functor f
---   => Component f (Aff (HalogenEffects eff))
---   -> HTMLElement
---   -> Aff (HalogenEffects eff) (Driver f eff)
--- runUI component element = _.driver <$> do
---   ref <- makeVar
---   let rc = renderComponent component
---       dr = driver ref :: Driver f eff
---   --     vtree = renderTree dr rc.tree
---   --     node = createElement vtree
---   -- putVar ref
---   --   { node: node
---   --   , vtree: vtree
---   --   , component: rc.component
---   --   , renderPending: false
---   --   , renderPaused: true
---   --   }
---   -- liftEff $ appendChild (htmlElementToNode node) (htmlElementToNode element)
---   -- forkAll $ onInitializers dr rc.hooks
---   -- -- forkAff $ maybe (pure unit) dr (initializeComponent component)
---   -- modifyVar _ { renderPaused = false } ref
---   -- flushRender ref
---   pure { driver: dr }
---
---   -- where
+runUI
+  :: forall f eff
+   . Functor f
+  => Component f (Aff (HalogenEffects eff))
+  -> HTMLElement
+  -> Aff (HalogenEffects eff) (Driver f eff)
+runUI component element = unComponent (runUI' element) component
 
--- driver
---   :: forall f eff
---    . Component f (Aff (HalogenEffects eff))
---   -> Driver f eff
--- driver component q = unComponent (\c -> do
---   ref <- makeVar
---   rpRef <- makeVar' Nothing
---   stateRef <- makeVar' (mkState c.state)
---   x <- runFreeM (eval c.eval ref stateRef rpRef) (c.eval q)
---   rp <- takeVar rpRef
---   when (isJust rp) $ render ref
---   pure x) component
+runUI'
+  :: forall s f g eff p
+   . Functor f
+  => HTMLElement
+  -> Component' s f g (Aff (HalogenEffects eff)) p
+  -> Aff (HalogenEffects eff) (Driver f eff)
+runUI' element component = _.driver <$> do
+  let node = createElement (vtext "")
+  liftEff $ appendChild (htmlElementToNode node) (htmlElementToNode element)
+  dsx <- mkState node component
+  unDSX (\st -> render st.selfRef) dsx
+  let driver :: Driver f eff
+      driver = unDSX (\st -> evalF st.selfRef) dsx
+  pure { driver }
 
 eval
   :: forall s f g eff p
@@ -206,7 +188,7 @@ evalQ ref = case _ of
         let
           -- All of these annotations are required to prevent skolem escape issues
           nat :: g ~> Aff (HalogenEffects eff)
-          nat = unDSX (\(DriverState ds) -> evalF ds.selfRef) dsx
+          nat = unDSX (\ds -> evalF ds.selfRef) dsx
           j :: forall h i. (h ~> i) -> Maybe (h ~> i)
           j = Just
         in
@@ -215,7 +197,8 @@ evalQ ref = case _ of
 evalF
   :: forall s f g eff p
    . AVar (DriverState s f g eff p)
-  -> (f ~> Aff (HalogenEffects eff))
+  -> f
+  ~> Aff (HalogenEffects eff)
 evalF ref q = do
   st <- unDriverState <$> peekVar ref
   foldFree (eval ref) (st.component.eval q)
@@ -231,24 +214,19 @@ render
    . AVar (DriverState s f g eff p)
   -> Aff (HalogenEffects eff) Unit
 render ref = do
-  unsafeCoerce unit
-  -- ds <- takeVar ref
-  -- if ds.renderPaused
-  --   then putVar ref $ ds { renderPending = true }
-  --   else renderComponent component \rc -> do
-  --     let vtree' = renderTree (driver ref) rc.tree
-  --     node' <- liftEff $ patch (diff ds.vtree vtree') ds.node
-  --     putVar ref
-  --       { node: node'
-  --       , vtree: vtree'
-  --       , component: rc.component
-  --       , renderPending: false
-  --       , renderPaused: true
-  --       }
-  --     -- forkAll $ onFinalizers (runFinalized driver') rc.hooks
-  --     forkAll $ onInitializers (driver ref) rc.hooks
-  --     modifyVar _ { renderPaused = false } ref
-  --     flushRender ref
+  DriverState ds <- takeVar ref
+  let rc = ds.component.render ds.state
+  let vtree' = renderTree (evalF ds.selfRef) rc.tree
+  node' <- liftEff $ patch (diff ds.vtree vtree') ds.node
+  putVar ref $
+    DriverState
+      { node: node'
+      , vtree: vtree'
+      , component: ds.component
+      , state: ds.state
+      , children: ds.children -- TODO
+      , selfRef: ds.selfRef
+      }
 
 -- flushRender :: forall f eff. AVar (DSX f eff) -> Aff (HalogenEffects eff) Unit
 -- flushRender = tailRecM \ref -> do
@@ -260,42 +238,24 @@ render ref = do
 --       render ref
 --       pure (Left ref)
 
-onInitializers
-  :: forall m f g r
-   . Foldable m
-  => (f Unit -> r)
-  -> m (Hook f g)
-  -> List r
-onInitializers f = foldr go Nil
-  where
-  go (PostRender a) as = f a : as
-  go _ as = as
-
-onFinalizers
-  :: forall m f g r
-   . Foldable m
-  => (Finalized g -> r)
-  -> m (Hook f g)
-  -> List r
-onFinalizers f = foldr go Nil
-  where
-  go (Finalized a) as = f a : as
-  go _ as = as
-
-type RR s f f' g p =
-  { component :: Component f g
-  , hooks :: Array (Hook f g)
-  , tree  :: Tree (ParentF f f' g p) Unit
-  }
-
--- initializeComponent :: forall f g. Component f g -> Maybe (f Unit)
--- initializeComponent = unComponent _.initializer
-
--- renderComponent :: forall f g r. Component f g -> (forall s f' p. RR s f f' g p -> r) -> r
--- renderComponent comp f =
---   unComponent (\c ->
---     let
---       rr = c.render c.state
---       c' = mkComponent (c { state = rr.state })
---     in
---       f { hooks: rr.hooks, tree: rr.tree, component: c' }) comp
+-- onInitializers
+--   :: forall m f g r
+--    . Foldable m
+--   => (f Unit -> r)
+--   -> m (Hook f g)
+--   -> List r
+-- onInitializers f = foldr go Nil
+--   where
+--   go (PostRender a) as = f a : as
+--   go _ as = as
+--
+-- onFinalizers
+--   :: forall m f g r
+--    . Foldable m
+--   => (Finalized g -> r)
+--   -> m (Hook f g)
+--   -> List r
+-- onFinalizers f = foldr go Nil
+--   where
+--   go (Finalized a) as = f a : as
+--   go _ as = as

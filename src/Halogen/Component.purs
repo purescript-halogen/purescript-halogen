@@ -42,32 +42,30 @@ instance functorQueryF :: Functor m => Functor (QueryF f m p) where
 type ParentF f g m p = Coproduct (QueryF g m p) f
 type ComponentF f m = ParentF f (Const Void) m Void
 
-type ParentHTML f g m p = HTML p (ParentF f g m p Unit)
+type ParentHTML f p = HTML p (f Unit)
 type ParentDSL s f g m p = HalogenF s (ParentF f g m p) m
 
-type ComponentHTML f m = HTML Void (ComponentF f m Void)
+type ComponentHTML f = HTML Void (f Unit)
 type ComponentDSL s f m = HalogenF s (ComponentF f m) m
 
 --------------------------------------------------------------------------------
 
 type Component' s f g m p =
   { initialState :: s
-  , render :: s -> RenderResult s f g m p
+  , render :: s -> RenderResult f m
   , eval :: f ~> Free (ParentDSL s f g m p)
   , initializer :: Maybe (ParentF f g m p Unit)
   , finalizers :: s -> Array (Finalized m)
   }
 
-type RenderResult s f g m p =
-  { state :: s
-  , hooks :: Array (Hook f m)
-  , tree  :: Tree (ParentF f g m p) Unit
+type RenderResult f m =
+  { hooks :: Array (Hook f m)
+  , tree  :: Tree f Unit
   }
 
-emptyResult :: forall s f g m p. s -> RenderResult s f g m p
-emptyResult state =
-  { state
-  , hooks: []
+emptyResult :: forall f m. RenderResult f m
+emptyResult =
+  { hooks: []
   , tree: emptyTree
   }
 
@@ -86,14 +84,14 @@ unComponent
    . (forall s g p. Component' s f g m p -> r)
   -> Component f m
   -> r
-unComponent f = f <<< unsafeCoerce
+unComponent = unsafeCoerce
 
 -- --------------------------------------------------------------------------------
 
 -- | A spec for a component.
 type ComponentSpec s f m =
   { initialState :: s
-  , render :: s -> ComponentHTML f m
+  , render :: s -> ComponentHTML f
   , eval :: f ~> Free (ComponentDSL s f m)
   }
 
@@ -111,7 +109,7 @@ component spec =
 -- | A spec for a component, including lifecycle inputs.
 type LifecycleComponentSpec s f m =
   { initialState :: s
-  , render :: s -> ComponentHTML f m
+  , render :: s -> ComponentHTML f
   , eval :: f ~> Free (ComponentDSL s f m)
   , initializer :: Maybe (f Unit)
   -- , finalizer :: Maybe (f Unit)
@@ -126,13 +124,13 @@ lifecycleComponent
 lifecycleComponent spec =
   mkComponent
     { initialState: spec.initialState
-    , render: \s -> { state: s, hooks: [], tree: renderTree (spec.render s) }
+    , render: \s -> { hooks: [], tree: renderTree (spec.render s) }
     , eval: spec.eval
     , initializer:  right <$> spec.initializer
     , finalizers: \s -> [] -- TODO: maybe [] (\i -> [finalized spec.eval s i]) spec.finalizer
     }
   where
-  renderTree :: ComponentHTML f m -> Tree (ComponentF f m) Unit
+  renderTree :: ComponentHTML f -> Tree f Unit
   renderTree html = mkTree'
     { slot: unit
     , html: defer \_ -> unsafeCoerce html -- CHECK: Safe because p is Void
@@ -200,11 +198,10 @@ transform reviewQ previewQ =
       }
   where
 
-  remapRenderResult :: forall s g p. RenderResult s f g m p -> RenderResult s f' g m p
-  remapRenderResult { state, hooks, tree } =
-    { state
-    , hooks: lmapHook reviewQ <$> hooks
-    , tree: graftTree remapQ id tree
+  remapRenderResult :: RenderResult f m -> RenderResult f' m
+  remapRenderResult { hooks, tree } =
+    { hooks: lmapHook reviewQ <$> hooks
+    , tree: graftTree reviewQ id tree
     }
 
   remapF :: forall s g p. HalogenF s (ParentF f g m p) m ~> HalogenF s (ParentF f' g m p) m
@@ -215,8 +212,6 @@ transform reviewQ previewQ =
       in SubscribeHF es' next
     QueryFHF q -> QueryFHF (remapQ q)
     QueryGHF q -> QueryGHF q
-    RenderHF p a -> RenderHF p a
-    RenderPendingHF k -> RenderPendingHF k
     HaltHF -> HaltHF
 
   remapQ :: forall g p. ParentF f g m p ~> ParentF f' g m p

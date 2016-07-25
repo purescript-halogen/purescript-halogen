@@ -5,8 +5,7 @@
 module Halogen
   ( HTML
   , Prop
-  , module Halogen.Component.Slot
-  , module Halogen.Component.Types
+  , module Halogen.Component
   , module Halogen.Driver
   , module Halogen.Effects
   , module Halogen.Query
@@ -14,8 +13,7 @@ module Halogen
 
 import Prelude
 
-import Halogen.Component.Slot
-import Halogen.Component.Types
+import Halogen.Component
 import Halogen.Driver (Driver, runUI)
 import Halogen.Effects (HalogenEffects)
 import Halogen.HTML.Core as C
