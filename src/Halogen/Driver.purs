@@ -37,10 +37,9 @@ import Halogen.Effects (HalogenEffects)
 import Halogen.HTML.Renderer.VirtualDOM (renderTree)
 import Halogen.Internal.VirtualDOM (VTree, createElement, diff, patch)
 import Halogen.Query (HalogenF(..))
-import Halogen.Query.HalogenF (RenderPending(..))
 import Halogen.Query.EventSource (runEventSource)
 import Halogen.Query.StateF (StateF(..), stateN)
-import Halogen.Data.OrdBox
+import Halogen.Data.OrdBox (OrdBox, updateOrdBox, unOrdBox)
 
 import Unsafe.Coerce (unsafeCoerce)
 
@@ -55,8 +54,6 @@ newtype DriverState s f f' eff p = DriverState (DriverStateR s f f' eff p)
 type DriverStateR s f f' eff p =
   { node :: HTMLElement
   , vtree :: VTree
-  , renderPending :: Boolean
-  , renderPaused :: Boolean
   , component :: Component' s f f' (Aff (HalogenEffects eff)) p
   , state :: s
   , children :: M.Map (OrdBox p) (DSX f' eff)
@@ -96,8 +93,6 @@ mkState node vtree = unComponent \component -> do
       DriverState
         { node
         , vtree
-        , renderPending: false
-        , renderPaused: false
         , component
         , state: component.initialState
         , children: M.empty
@@ -157,10 +152,9 @@ mkState node vtree = unComponent \component -> do
 eval
   :: forall s f g eff p
    . AVar (DriverState s f g eff p)
-  -> AVar (Maybe RenderPending)
   -> DSL s f g eff p
   ~> Aff (HalogenEffects eff)
-eval ref rpRef = case _ of
+eval ref = case _ of
   StateHF i -> do
     ds <- takeVar ref
     case i of
@@ -169,49 +163,35 @@ eval ref rpRef = case _ of
         DriverState st <- peekVar ref
         pure (k st.state)
       Modify f next -> do
-        rp <- takeVar rpRef
         modifyVar (\(DriverState st) -> DriverState (st { state = f st.state })) ref
-        putVar rpRef $ Just Pending
         pure next
   SubscribeHF es next -> do
     let producer :: SCR.StallingProducer (ParentF f g (Aff (HalogenEffects eff)) p Unit) (Aff (HalogenEffects eff)) Unit
         producer = runEventSource es
         consumer :: forall a. Consumer (ParentF f g (Aff (HalogenEffects eff)) p Unit) (Aff (HalogenEffects eff)) a
-        consumer = forever (lift <<< evalPF ref rpRef =<< await)
+        consumer = forever (lift <<< evalPF ref =<< await)
     forkAff $ SCR.runStallingProcess (producer $$? consumer)
     pure next
-  RenderHF p next -> do
-    modifyVar (const p) rpRef
-    when (isNothing p) $ render ref
-    pure next
-  RenderPendingHF k -> do
-    rp <- takeVar rpRef
-    putVar rpRef rp
-    pure $ k rp
   QueryFHF q ->
-    coproduct (evalQ ref rpRef) (evalF ref rpRef) q
+    coproduct (evalQ ref) (evalF ref) q
   QueryGHF q -> do
-    rp <- takeVar rpRef
-    when (isJust rp) $ render ref
-    putVar rpRef Nothing
+    render ref
     q
   HaltHF -> empty
 
 evalPF
   :: forall s f g eff p
    . AVar (DriverState s f g eff p)
-  -> AVar (Maybe RenderPending)
   -> ParentF f g (Aff (HalogenEffects eff)) p
   ~> Aff (HalogenEffects eff)
-evalPF ref rpRef = coproduct (evalQ ref rpRef) (evalF ref rpRef)
+evalPF ref = coproduct (evalQ ref) (evalF ref)
 
 evalQ
   :: forall s f g eff p
    . AVar (DriverState s f g eff p)
-  -> AVar (Maybe RenderPending)
   -> QueryF g (Aff (HalogenEffects eff)) p
   ~> Aff (HalogenEffects eff)
-evalQ ref rpRef = case _ of
+evalQ ref = case _ of
   GetSlots k -> do
     st <- unDriverState <$> peekVar ref
     pure $ k $ map unOrdBox $ M.keys st.children
@@ -226,7 +206,7 @@ evalQ ref rpRef = case _ of
         let
           -- All of these annotations are required to prevent skolem escape issues
           nat :: g ~> Aff (HalogenEffects eff)
-          nat = unDSX (\(DriverState ds) -> evalF ds.selfRef rpRef) dsx
+          nat = unDSX (\(DriverState ds) -> evalF ds.selfRef) dsx
           j :: forall h i. (h ~> i) -> Maybe (h ~> i)
           j = Just
         in
@@ -235,11 +215,10 @@ evalQ ref rpRef = case _ of
 evalF
   :: forall s f g eff p
    . AVar (DriverState s f g eff p)
-  -> AVar (Maybe RenderPending)
   -> (f ~> Aff (HalogenEffects eff))
-evalF ref rpRef q = do
+evalF ref q = do
   st <- unDriverState <$> peekVar ref
-  foldFree (eval ref rpRef) (st.component.eval q)
+  foldFree (eval ref) (st.component.eval q)
 
 peekVar :: forall eff a. AVar a -> Aff (avar :: AVAR | eff) a
 peekVar v = do
