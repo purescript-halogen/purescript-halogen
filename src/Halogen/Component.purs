@@ -86,7 +86,7 @@ unComponent
   -> r
 unComponent = unsafeCoerce
 
--- --------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 -- | A spec for a component.
 type ComponentSpec s f m =
@@ -151,9 +151,9 @@ query
   => g a
   -> p
   -> Free (HalogenF s (ParentF f g m p) m) (Maybe a)
-query q p = do
-  liftF $ QueryFHF $ left $ RunQuery p \k ->
-    case k of
+query q p =
+  liftF $ QueryFHF $ left $ RunQuery p
+    case _ of
       Nothing -> pure Nothing
       Just f -> Just <$> f q
 
@@ -204,7 +204,10 @@ transform reviewQ previewQ =
     , tree: graftTree reviewQ id tree
     }
 
-  remapF :: forall s g p. HalogenF s (ParentF f g m p) m ~> HalogenF s (ParentF f' g m p) m
+  remapF
+    :: forall s g p
+     . HalogenF s (ParentF f g m p) m
+    ~> HalogenF s (ParentF f' g m p) m
   remapF = case _ of
     StateHF shf -> StateHF shf
     SubscribeHF es next ->
@@ -226,8 +229,8 @@ transformChild
   -> Component f' g
 transformChild i = transform (injQuery i) (prjQuery i)
 
--- -- | Changes the component's `g` type. A use case for this would be to interpret
--- -- | some `Free` monad as `Aff` so the component can be used with `runUI`.
+-- | Changes the component's `g` type. A use case for this would be to interpret
+-- | some `Free` monad as `Aff` so the component can be used with `runUI`.
 -- interpret
 --   :: forall f g g'
 --    . Functor g'
@@ -237,16 +240,16 @@ transformChild i = transform (injQuery i) (prjQuery i)
 -- interpret nat =
 --   unComponent \c ->
 --     mkComponent
---       { state: c.state
+--       { initialState: c.initialState
 --       , render: remapRenderResult <<< c.render
---       , eval: hoistFree (hoistHalogenF nat) <<< c.eval
---       , initializer: c.initializer
---       , finalizers: map (mapFinalized nat) <$> c.finalizers
+--       , eval: hoistFree (?oof) <<< c.eval -- hoistHalogenF nat
+--       , initializer: ?k <$> c.initializer
+--       , finalizers: \_ -> []
+--       -- , finalizers: map (mapFinalized nat) <$> c.finalizers
 --       }
 --   where
---   remapRenderResult :: forall s. RenderResult s f g -> RenderResult s f g'
---   remapRenderResult { state, hooks, tree } =
---     { state
---     , hooks: rmapHook nat <$> hooks
+--   remapRenderResult :: RenderResult f g -> RenderResult f g'
+--   remapRenderResult { hooks, tree } =
+--     { hooks: rmapHook nat <$> hooks
 --     , tree
 --     }

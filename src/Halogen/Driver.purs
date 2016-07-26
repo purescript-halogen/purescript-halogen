@@ -6,41 +6,32 @@ module Halogen.Driver
 
 import Prelude
 
-import Control.Bind ((=<<))
-import Control.Coroutine (Producer, Consumer, await)
+import Control.Coroutine (Consumer, await)
 import Control.Coroutine.Stalling (($$?))
 import Control.Coroutine.Stalling as SCR
-import Control.Monad.Aff (Aff, forkAff, forkAll)
-import Control.Monad.Aff.AVar (AVAR, AVar, makeVar, makeVar', putVar, takeVar, modifyVar)
+import Control.Monad.Aff (Aff, forkAff)
+import Control.Monad.Aff.AVar (AVar, AVAR, putVar, takeVar, modifyVar, makeVar)
 import Control.Monad.Eff.Class (liftEff)
-import Control.Monad.Free (Free, runFreeM, foldFree)
-import Control.Monad.Rec.Class (forever, tailRecM)
-import Control.Monad.State (runState)
+import Control.Monad.Free (foldFree)
+import Control.Monad.Rec.Class (forever)
 import Control.Monad.Trans (lift)
 import Control.Plus (empty)
 
-import Data.Either (Either(..))
-import Data.Foldable (class Foldable, foldr)
-import Data.Functor.Coproduct (Coproduct, coproduct)
-import Data.Lazy (defer)
-import Data.List (List(Nil), (:), head)
+import Data.Functor.Coproduct (coproduct)
+import Data.List (head)
 import Data.Map as M
-import Data.Maybe (Maybe(..), maybe, isJust, isNothing)
-import Data.Tuple (Tuple(..))
+import Data.Maybe (Maybe(..))
 
 import DOM.HTML.Types (HTMLElement, htmlElementToNode)
 import DOM.Node.Node (appendChild)
 
-import Halogen.Component (Component, Component', ComponentF, ParentF, ParentDSL, QueryF(..), unComponent, mkComponent)
-import Halogen.Component.Hook (Hook(..), Finalized, runFinalized)
-import Halogen.Component.Tree (Tree, mkTree)
+import Halogen.Component (ParentF, Component', Component, ParentDSL, QueryF(..), unComponent)
 import Halogen.Effects (HalogenEffects)
-import Halogen.HTML.Core as HTML
 import Halogen.HTML.Renderer.VirtualDOM (renderTree)
 import Halogen.Internal.VirtualDOM (VTree, createElement, diff, patch, vtext)
 import Halogen.Query (HalogenF(..))
 import Halogen.Query.EventSource (runEventSource)
-import Halogen.Query.StateF (StateF(..), stateN)
+import Halogen.Query.StateF (StateF(..))
 import Halogen.Data.OrdBox (OrdBox, updateOrdBox, unOrdBox)
 
 import Unsafe.Coerce (unsafeCoerce)
@@ -62,7 +53,10 @@ type DriverStateR s f f' eff p =
   , selfRef :: AVar (DriverState s f f' eff p)
   }
 
-unDriverState :: forall s f f' eff p. DriverState s f f' eff p -> DriverStateR s f f' eff p
+unDriverState
+  :: forall s f f' eff p
+   . DriverState s f f' eff p
+  -> DriverStateR s f f' eff p
 unDriverState (DriverState r) = r
 
 type DSL s f f' eff p = ParentDSL s f f' (Aff (HalogenEffects eff)) p
@@ -110,16 +104,14 @@ mkState node component = do
 -- | with the UI.
 runUI
   :: forall f eff
-   . Functor f
-  => Component f (Aff (HalogenEffects eff))
+   . Component f (Aff (HalogenEffects eff))
   -> HTMLElement
   -> Aff (HalogenEffects eff) (Driver f eff)
 runUI component element = unComponent (runUI' element) component
 
 runUI'
   :: forall s f g eff p
-   . Functor f
-  => HTMLElement
+   . HTMLElement
   -> Component' s f g (Aff (HalogenEffects eff)) p
   -> Aff (HalogenEffects eff) (Driver f eff)
 runUI' element component = _.driver <$> do
@@ -138,14 +130,14 @@ eval
   ~> Aff (HalogenEffects eff)
 eval ref = case _ of
   StateHF i -> do
-    ds <- takeVar ref
     case i of
       Get k -> do
-        putVar ref ds
         DriverState st <- peekVar ref
         pure (k st.state)
       Modify f next -> do
         modifyVar (\(DriverState st) -> DriverState (st { state = f st.state })) ref
+        x <- peekVar ref
+        render ref
         pure next
   SubscribeHF es next -> do
     let producer :: SCR.StallingProducer (ParentF f g (Aff (HalogenEffects eff)) p Unit) (Aff (HalogenEffects eff)) Unit
@@ -227,35 +219,3 @@ render ref = do
       , children: ds.children -- TODO
       , selfRef: ds.selfRef
       }
-
--- flushRender :: forall f eff. AVar (DSX f eff) -> Aff (HalogenEffects eff) Unit
--- flushRender = tailRecM \ref -> do
---   ds <- takeVar ref
---   putVar ref ds
---   if not ds.renderPending
---     then pure (Right unit)
---     else do
---       render ref
---       pure (Left ref)
-
--- onInitializers
---   :: forall m f g r
---    . Foldable m
---   => (f Unit -> r)
---   -> m (Hook f g)
---   -> List r
--- onInitializers f = foldr go Nil
---   where
---   go (PostRender a) as = f a : as
---   go _ as = as
---
--- onFinalizers
---   :: forall m f g r
---    . Foldable m
---   => (Finalized g -> r)
---   -> m (Hook f g)
---   -> List r
--- onFinalizers f = foldr go Nil
---   where
---   go (Finalized a) as = f a : as
---   go _ as = as

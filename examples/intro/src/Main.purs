@@ -17,9 +17,6 @@ initialState = { on: false }
 
 data Query a = ToggleState a
 
-instance functorQuery :: Functor Query where
-  map f (ToggleState a) = ToggleState (f a)
-
 ui :: forall m. H.Component Query m
 ui = H.component { initialState, render, eval }
 
