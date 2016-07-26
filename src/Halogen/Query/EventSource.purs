@@ -11,14 +11,14 @@ module Halogen.Query.EventSource
 
 import Prelude
 
-import Control.Bind ((<=<), (=<<))
-import Control.Coroutine.Aff (produce')
+import Control.Coroutine.Aff as CCA
 import Control.Coroutine.Stalling as SCR
 import Control.Monad.Aff.AVar (AVAR)
-import Control.Monad.Aff.Class (class MonadAff)
+import Control.Monad.Aff.Free (class Affable, fromAff)
 import Control.Monad.Eff (Eff)
-import Control.Monad.Rec.Class (class MonadRec)
 import Control.Monad.Free (Free)
+import Control.Monad.Free.Trans (hoistFreeT)
+import Control.Monad.Rec.Class (class MonadRec)
 
 import Data.Const (Const)
 import Data.Either (Either(..))
@@ -46,14 +46,13 @@ runEventSource (EventSource es) = es
 -- | (Taken from the Ace component example)
 eventSource
   :: forall eff a f g
-   . (Monad g, MonadAff (avar :: AVAR | eff) g)
+   . (Monad g, Affable (avar :: AVAR | eff) g)
   => ((a -> Eff (avar :: AVAR | eff) Unit) -> Eff (avar :: AVAR | eff) Unit)
   -> (a -> Eff (avar :: AVAR | eff) (f Unit))
   -> EventSource f g
 eventSource attach handle =
-  EventSource $
-    SCR.producerToStallingProducer $ produce' \emit ->
-      attach (emit <<< Left <=< handle)
+  EventSource $ produce \emit ->
+    attach (emit <<< Left <=< handle)
 
 -- | Creates an `EventSource` for an event listener that accepts no arguments.
 -- |
@@ -70,14 +69,20 @@ eventSource attach handle =
 -- | (Taken from the Ace component example)
 eventSource_
   :: forall eff f g
-   . (Monad g, MonadAff (avar :: AVAR | eff) g)
+   . (Monad g, Affable (avar :: AVAR | eff) g)
   => (Eff (avar :: AVAR | eff) Unit -> Eff (avar :: AVAR | eff) Unit)
   -> Eff (avar :: AVAR | eff) (f Unit)
   -> EventSource f g
 eventSource_ attach handle =
-  EventSource $
-    SCR.producerToStallingProducer $ produce' \emit ->
-      attach (emit <<< Left =<< handle)
+  EventSource $ produce \emit ->
+    attach (emit <<< Left =<< handle)
+
+produce
+  :: forall a r m eff
+   . (Functor m, Affable (avar :: AVAR | eff) m)
+  => ((Either a r -> Eff (avar :: AVAR | eff) Unit) -> Eff (avar :: AVAR | eff) Unit)
+  -> SCR.StallingProducer a m r
+produce = SCR.producerToStallingProducer <<< hoistFreeT fromAff <<< CCA.produce
 
 -- | Take an `EventSource` with events in `1 + f` to one with events in `f`.
 -- | This is useful for simultaneously filtering and handling events.

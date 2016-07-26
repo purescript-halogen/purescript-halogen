@@ -28,7 +28,7 @@ data HalogenFP (e :: (* -> *) -> (* -> *) -> *) s f g a
   | QueryHF (g a)
   | RenderHF (Maybe RenderPending) a
   | RenderPendingHF (Maybe RenderPending -> a)
-  | HaltHF
+  | HaltHF String
 
 type HalogenF = HalogenFP EventSource
 
@@ -40,17 +40,17 @@ instance functorHalogenF :: Functor g => Functor (HalogenFP e s f g) where
       QueryHF q -> QueryHF (map f q)
       RenderHF r a -> RenderHF r (f a)
       RenderPendingHF k -> RenderPendingHF (f <$> k)
-      HaltHF -> HaltHF
+      HaltHF msg -> HaltHF msg
 
 instance affableHalogenF :: Affable eff g => Affable eff (HalogenFP e s f g) where
   fromAff = QueryHF <<< fromAff
 
 instance altHalogenF :: Functor g => Alt (HalogenFP e s f g) where
-  alt HaltHF h = h
+  alt (HaltHF _) h = h
   alt h _ = h
 
 instance plusHalogenF :: Functor g => Plus (HalogenFP e s f g) where
-  empty = HaltHF
+  empty = HaltHF "`empty` was used"
 
 -- | Change all the parameters of `HalogenF`.
 transformHF
@@ -68,7 +68,7 @@ transformHF sigma phi gamma h =
     QueryHF q -> QueryHF (gamma q)
     RenderHF r a -> RenderHF r a
     RenderPendingHF k -> RenderPendingHF k
-    HaltHF -> HaltHF
+    HaltHF msg -> HaltHF msg
 
 -- | Changes the `g` for a `HalogenF`. Used internally by Halogen.
 hoistHalogenF
@@ -84,4 +84,4 @@ hoistHalogenF eta h =
     QueryHF q -> QueryHF (eta q)
     RenderHF r a -> RenderHF r a
     RenderPendingHF k -> RenderPendingHF k
-    HaltHF -> HaltHF
+    HaltHF msg -> HaltHF msg
