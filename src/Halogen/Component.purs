@@ -3,11 +3,9 @@ module Halogen.Component where
 import Prelude
 
 import Control.Monad.Free (Free, liftF, hoistFree)
-import Control.Monad.Free.Trans as FT
 
-import Data.Bifunctor (lmap)
 import Data.Const (Const)
-import Data.Functor.Coproduct (Coproduct, coproduct, left, right)
+import Data.Coyoneda (liftCoyoneda)
 import Data.Lazy (Lazy, defer)
 import Data.List as L
 import Data.Map as M
@@ -15,38 +13,22 @@ import Data.Maybe (Maybe(..), maybe)
 import Data.Traversable (traverse)
 import Data.Tuple (Tuple(..))
 
-import Halogen.Component.Hook (Hook, Finalized, lmapHook)
+import Halogen.Component.ChildPath (ChildPath, prjQuery, injQuery)
+import Halogen.Component.Hook (Hook, Finalized, lmapHook, rmapHook, mapFinalized)
 import Halogen.Component.Tree (Tree, mkTree', emptyTree, graftTree)
 import Halogen.HTML.Core (HTML)
-import Halogen.Query.HalogenF (HalogenF(..))
-import Halogen.Query.EventSource (EventSource(..), runEventSource)
-import Halogen.Component.ChildPath (ChildPath, prjQuery, injQuery)
+import Halogen.Query.ChildQuery (ChildQueryF(..), mkChildQuery)
+import Halogen.Query.HalogenF (HalogenF(..), hoistHalogenF, hoistHalogenM)
 
 import Unsafe.Coerce (unsafeCoerce)
 
 data ComponentSlot g m p = ComponentSlot p (Lazy (Component g m))
 
---------------------------------------------------------------------------------
-
-data QueryF f m p a
-  = GetSlots (L.List p -> a)
-  | RunQuery p (Maybe (f ~> m) -> m a)
-
-instance functorQueryF :: Functor m => Functor (QueryF f m p) where
-  map f = case _ of
-    GetSlots k -> GetSlots (map f k)
-    RunQuery p k -> RunQuery p (map f <<< k)
-
---------------------------------------------------------------------------------
-
-type ParentF f g m p = Coproduct (QueryF g m p) f
-type ComponentF f m = ParentF f (Const Void) m Void
-
 type ParentHTML f p = HTML p (f Unit)
-type ParentDSL s f g m p = HalogenF s (ParentF f g m p) m
+type ParentDSL s f g m p = HalogenF s f g m p
 
 type ComponentHTML f = HTML Void (f Unit)
-type ComponentDSL s f m = HalogenF s (ComponentF f m) m
+type ComponentDSL s f m = HalogenF s f (Const Void) m Void
 
 --------------------------------------------------------------------------------
 
@@ -54,7 +36,7 @@ type Component' s f g m p =
   { initialState :: s
   , render :: s -> RenderResult f m
   , eval :: f ~> Free (ParentDSL s f g m p)
-  , initializer :: Maybe (ParentF f g m p Unit)
+  , initializer :: Maybe (f Unit)
   , finalizers :: s -> Array (Finalized m)
   }
 
@@ -126,7 +108,7 @@ lifecycleComponent spec =
     { initialState: spec.initialState
     , render: \s -> { hooks: [], tree: renderTree (spec.render s) }
     , eval: spec.eval
-    , initializer:  right <$> spec.initializer
+    , initializer: spec.initializer
     , finalizers: \s -> [] -- TODO: maybe [] (\i -> [finalized spec.eval s i]) spec.finalizer
     }
   where
@@ -142,27 +124,24 @@ lifecycleComponent spec =
 
 getSlots
   :: forall s f g m p
-   . Free (HalogenF s (ParentF f g m p) m) (L.List p)
-getSlots = liftF $ QueryFHF $ left $ GetSlots id
+   . Free (HalogenF s f g m p) (L.List p)
+getSlots = liftF $ GetSlots id
 
 query
   :: forall s f g m p a
    . Applicative m
   => g a
   -> p
-  -> Free (HalogenF s (ParentF f g m p) m) (Maybe a)
+  -> Free (HalogenF s f g m p) (Maybe a)
 query q p =
-  liftF $ QueryFHF $ left $ RunQuery p
-    case _ of
-      Nothing -> pure Nothing
-      Just f -> Just <$> f q
+  liftF $ RunQuery p $ mkChildQuery $ ChildQueryF $ liftCoyoneda q
 
 queryAll
   :: forall s f g m p a
    . (Applicative m, Ord p)
   => p
   -> g a
-  -> Free (HalogenF s (ParentF f g m p) m) (M.Map p a)
+  -> Free (HalogenF s f g m p) (M.Map p a)
 queryAll p q
   = M.fromList <<< L.catMaybes
   <$> (traverse (\p -> map (Tuple p) <$> query q p) =<< getSlots)
@@ -192,8 +171,12 @@ transform reviewQ previewQ =
     mkComponent
       { initialState: c.initialState
       , render: remapRenderResult <<< c.render
-      , eval: maybe (liftF HaltHF) (hoistFree remapF <<< c.eval) <<< previewQ
-      , initializer: remapQ <$> c.initializer
+      , eval:
+          maybe
+            (liftF Halt)
+            (hoistFree (hoistHalogenF reviewQ) <<< c.eval)
+              <<< previewQ
+      , initializer: reviewQ <$> c.initializer
       , finalizers: c.finalizers
       }
   where
@@ -204,52 +187,35 @@ transform reviewQ previewQ =
     , tree: graftTree reviewQ id tree
     }
 
-  remapF
-    :: forall s g p
-     . HalogenF s (ParentF f g m p) m
-    ~> HalogenF s (ParentF f' g m p) m
-  remapF = case _ of
-    StateHF shf -> StateHF shf
-    SubscribeHF es next ->
-      let es' = EventSource (FT.interpret (lmap remapQ) (runEventSource es))
-      in SubscribeHF es' next
-    QueryFHF q -> QueryFHF (remapQ q)
-    QueryGHF q -> QueryGHF q
-    HaltHF -> HaltHF
-
-  remapQ :: forall g p. ParentF f g m p ~> ParentF f' g m p
-  remapQ = coproduct left (right <<< reviewQ)
-
 -- | Transforms a `Component`'s types using a `ChildPath` definition.
 transformChild
-  :: forall f f' g p p'
-   . Functor g
+  :: forall f f' m p p'
+   . Functor m
   => ChildPath f f' p p'
-  -> Component f g
-  -> Component f' g
+  -> Component f m
+  -> Component f' m
 transformChild i = transform (injQuery i) (prjQuery i)
 
--- | Changes the component's `g` type. A use case for this would be to interpret
+-- | Changes the component's `m` type. A use case for this would be to interpret
 -- | some `Free` monad as `Aff` so the component can be used with `runUI`.
--- interpret
---   :: forall f g g'
---    . Functor g'
---   => g ~> g'
---   -> Component f g
---   -> Component f g'
--- interpret nat =
---   unComponent \c ->
---     mkComponent
---       { initialState: c.initialState
---       , render: remapRenderResult <<< c.render
---       , eval: hoistFree (?oof) <<< c.eval -- hoistHalogenF nat
---       , initializer: ?k <$> c.initializer
---       , finalizers: \_ -> []
---       -- , finalizers: map (mapFinalized nat) <$> c.finalizers
---       }
---   where
---   remapRenderResult :: RenderResult f g -> RenderResult f g'
---   remapRenderResult { hooks, tree } =
---     { hooks: rmapHook nat <$> hooks
---     , tree
---     }
+interpret
+  :: forall f m m'
+   . Functor m'
+  => m ~> m'
+  -> Component f m
+  -> Component f m'
+interpret nat =
+  unComponent \c ->
+    mkComponent
+      { initialState: c.initialState
+      , render: remapRenderResult <<< c.render
+      , eval: hoistFree (hoistHalogenM nat) <<< c.eval
+      , initializer: c.initializer
+      , finalizers: map (mapFinalized nat) <$> c.finalizers
+      }
+  where
+  remapRenderResult :: RenderResult f m -> RenderResult f m'
+  remapRenderResult { hooks, tree } =
+    { hooks: rmapHook nat <$> hooks
+    , tree
+    }

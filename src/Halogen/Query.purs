@@ -26,7 +26,7 @@ import Control.Monad.Free (Free, liftF)
 import Halogen.Query.EventSource (EventSource, ParentEventSource, eventSource, eventSource_, toParentEventSource)
 import Halogen.Query.HalogenF (HalogenF(..))
 import Halogen.Query.StateF (StateF(..))
-import Halogen.Component (ParentDSL, ParentF, query, queryAll)
+import Halogen.Component (ParentDSL, query, queryAll)
 
 -- | Type synonym for an "action" - An action only causes effects and has no
 -- | result value.
@@ -142,7 +142,7 @@ set = modify <<< const
 -- | within an `Eval` function.
 subscribe
   :: forall s f f' g p
-   . EventSource (ParentF f f' g p) g
+   . EventSource f g
   -> Free (ParentDSL s f f' g p) Unit
 subscribe es = liftF (SubscribeHF es unit)
 

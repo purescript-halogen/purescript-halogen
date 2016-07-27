@@ -13,26 +13,26 @@ import Control.Monad.Free (Free, hoistFree)
 import Halogen.Query.HalogenF (HalogenF, hoistHalogenF)
 import Unsafe.Coerce (unsafeCoerce)
 
-data Hook f g
+data Hook f m
   = PostRender (f Unit)
-  | Finalized (Finalized g)
+  | Finalized (Finalized m)
 
-data FinalizedF s f g = FinalizedF (f ~> Free (HalogenF s f g)) s (f Unit)
+data FinalizedF s f g m p = FinalizedF (f ~> Free (HalogenF s f g m p)) s (f Unit)
 
 foreign import data Finalized :: (* -> *) -> *
 
 finalized
-  :: forall s f g
-   . (f ~> Free (HalogenF s f g))
+  :: forall s f g m p
+   . (f ~> Free (HalogenF s f g m p))
   -> s
   -> f Unit
-  -> Finalized g
+  -> Finalized m
 finalized e s i = unsafeCoerce (FinalizedF e s i)
 
 runFinalized
-  :: forall f g r
-   . (forall s. f ~> Free (HalogenF s f g) -> s -> f Unit -> r)
-  -> Finalized g
+  :: forall m r
+   . (forall s f g p. f ~> Free (HalogenF s f g m p) -> s -> f Unit -> r)
+  -> Finalized m
   -> r
 runFinalized k f =
   case unsafeCoerce f of

@@ -12,20 +12,20 @@ import Control.Coroutine.Stalling as SCR
 import Control.Monad.Aff (Aff, forkAff)
 import Control.Monad.Aff.AVar (AVar, AVAR, putVar, takeVar, modifyVar, makeVar)
 import Control.Monad.Eff.Class (liftEff)
-import Control.Monad.Free (foldFree)
+import Control.Monad.Free (Free, liftF, foldFree)
 import Control.Monad.Rec.Class (forever)
 import Control.Monad.Trans (lift)
 import Control.Plus (empty)
 
-import Data.Functor.Coproduct (coproduct)
 import Data.List (head)
 import Data.Map as M
 import Data.Maybe (Maybe(..))
+import Data.Const (Const)
 
 import DOM.HTML.Types (HTMLElement, htmlElementToNode)
 import DOM.Node.Node (appendChild)
 
-import Halogen.Component (ParentF, Component', Component, ParentDSL, QueryF(..), unComponent)
+import Halogen.Component (Component', Component, ParentDSL, unComponent)
 import Halogen.Effects (HalogenEffects)
 import Halogen.HTML.Renderer.VirtualDOM (renderTree)
 import Halogen.Internal.VirtualDOM (VTree, createElement, diff, patch, vtext)
@@ -129,7 +129,7 @@ eval
   -> DSL s f g eff p
   ~> Aff (HalogenEffects eff)
 eval ref = case _ of
-  StateHF i -> do
+  State i -> do
     case i of
       Get k -> do
         DriverState st <- peekVar ref
@@ -139,52 +139,39 @@ eval ref = case _ of
         x <- peekVar ref
         render ref
         pure next
-  SubscribeHF es next -> do
-    let producer :: SCR.StallingProducer (ParentF f g (Aff (HalogenEffects eff)) p Unit) (Aff (HalogenEffects eff)) Unit
+  Subscribe es next -> do
+    let producer :: SCR.StallingProducer (f Unit) (Aff (HalogenEffects eff)) Unit
         producer = runEventSource es
-        consumer :: forall a. Consumer (ParentF f g (Aff (HalogenEffects eff)) p Unit) (Aff (HalogenEffects eff)) a
-        consumer = forever (lift <<< evalPF ref =<< await)
+        consumer :: forall a. Consumer (f Unit) (Aff (HalogenEffects eff)) a
+        consumer = forever (lift <<< evalF ref =<< await)
     forkAff $ SCR.runStallingProcess (producer $$? consumer)
     pure next
-  QueryFHF q ->
-    coproduct (evalQ ref) (evalF ref) q
-  QueryGHF q -> do
+  Lift q -> do
     render ref
     q
-  HaltHF -> empty
-
-evalPF
-  :: forall s f g eff p
-   . AVar (DriverState s f g eff p)
-  -> ParentF f g (Aff (HalogenEffects eff)) p
-  ~> Aff (HalogenEffects eff)
-evalPF ref = coproduct (evalQ ref) (evalF ref)
-
-evalQ
-  :: forall s f g eff p
-   . AVar (DriverState s f g eff p)
-  -> QueryF g (Aff (HalogenEffects eff)) p
-  ~> Aff (HalogenEffects eff)
-evalQ ref = case _ of
+  Halt -> empty
   GetSlots k -> do
     st <- unDriverState <$> peekVar ref
     pure $ k $ map unOrdBox $ M.keys st.children
-  RunQuery p k -> do
+  RunQuery p cq -> do
     st <- unDriverState <$> peekVar ref
-    -- TODO: something less ridiculous than this for `updateOrdBox` - we just
-    -- need to grab any existing OrdBox
+    -- TODO: something less ridiculous than this for `updateOrdBox`
     let ob = head $ M.keys $ st.children
     case flip M.lookup st.children <<< updateOrdBox p =<< ob of
-      Nothing -> k Nothing
-      Just dsx ->
-        let
-          -- All of these annotations are required to prevent skolem escape issues
-          nat :: g ~> Aff (HalogenEffects eff)
-          nat = unDSX (\ds -> evalF ds.selfRef) dsx
-          j :: forall h i. (h ~> i) -> Maybe (h ~> i)
-          j = Just
-        in
-          k (j nat)
+      _ -> ?hooo
+  --       Nothing -> k Nothing
+  --       Just dsx ->
+  --         let
+  --           -- All of these annotations are required to prevent skolem escape issues
+  --           nat :: g ~> Free (DSL s (Const Void) (Const Void) eff Void)
+  --           nat = unDSX (\ds q -> liftF (Lift (evalF ds.selfRef q))) dsx
+  --           j :: forall h i. (h ~> i) -> Maybe (h ~> i)
+  --           j = Just
+  --         in
+  --           k (j nat)
+  -- where
+  -- coe :: Free (DSL s (Const Void) (Const Void) eff Void) ~> Free (DSL s f g eff p)
+  -- coe = unsafeCoerce
 
 evalF
   :: forall s f g eff p
