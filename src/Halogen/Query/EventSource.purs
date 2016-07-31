@@ -3,8 +3,9 @@ module Halogen.Query.EventSource
   , runEventSource
   , eventSource
   , eventSource_
+  , produce
   , catEventSource
-  , ParentEventSource()
+  , ParentEventSource
   , toParentEventSource
   , fromParentEventSource
   ) where
