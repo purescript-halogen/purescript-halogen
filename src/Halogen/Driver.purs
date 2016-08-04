@@ -106,7 +106,9 @@ runDriver ir upd c s = do
   forkAff $ maybe (pure unit) dr (initializeComponent c)
   modifyVar _ { renderPaused = false } ref
   flushRender ref
-  pure { driver: dr, initialState, modifyState: \f -> modifyVar (\a -> a { backendState = f a.backendState }) ref }
+  ds <- takeVar ref
+  putVar ref ds
+  pure { driver: dr, initialState: ds.backendState, modifyState: \f -> modifyVar (\a -> a { backendState = f a.backendState }) ref }
 
   where
   driver :: AVar (DriverState s bs) -> Driver f eff
