@@ -28,7 +28,6 @@ module Halogen.Component
   , parentState
   , ChildF(..)
   , runChildF
-  , RawQueryF
   , QueryF
   , mkQuery
   , mkQuery'
@@ -162,7 +161,7 @@ data RawSlotConstructor h s' f' g p = RawSlotConstructor p (Unit -> { component 
 type ParentQuery f f' p = Coproduct f (ChildF p f')
 
 -- | The DSL used in the `eval` and `peek` functions for parent components.
-type RawParentDSL h s s' f f' g p = Free (HalogenFP ParentEventSource s f (RawQueryF h s s' f f' g p))
+type RawParentDSL h s s' f f' g p = Free (HalogenFP ParentEventSource s f (QueryF h s s' f f' g p))
 
 type RawParentComponentSpec h s s' f f' g p =
   { render :: s -> ParentRendered h s' f f' g p
@@ -253,11 +252,10 @@ type RawChildState h s' f f' g p =
 parentState :: forall h s s' f f' g p. s -> RawParentState h s s' f f' g p
 parentState st = ParentState { parent: st, children: M.empty }
 
-type RawQueryF h s s' f f' g p = Free (HalogenF (RawParentState h s s' f f' g p) (ChildF p f') g)
 -- | An intermediate algebra that parent components "produce" from their `eval`
 -- | and `peek` functions. This takes the place of `g` when compared to a leaf
 -- | (non-parent) component.
-type QueryF s s' f f' g p = RawQueryF HTML s s' f f' g p
+type QueryF h s s' f f' g p = Free (HalogenF (RawParentState h s s' f f' g p) (ChildF p f') g)
 
 -- | An intermediate algebra used to associate values from a child component's
 -- | algebra with the slot the component was installed into.
@@ -273,38 +271,38 @@ instance functorChildF :: Functor f => Functor (ChildF p f) where
 -- | Queries a child component, for use within a parent component's `eval` or
 -- | `peek` function.
 query
-  :: forall s s' f f' g p i
+  :: forall h s s' f f' g p i
    . (Functor g, Ord p)
   => p
   -> f' i
-  -> Free (HalogenFP ParentEventSource s f (QueryF s s' f f' g p)) (Maybe i)
+  -> Free (HalogenFP ParentEventSource s f (QueryF h s s' f f' g p)) (Maybe i)
 query p q = liftQuery (mkQuery p q)
 
 -- | A version of [`query`](#query) for use when a parent component has multiple
 -- | types of child component.
 query'
-  :: forall s s' s'' f f' f'' g p p' i
+  :: forall h s s' s'' f f' f'' g p p' i
    . (Functor g, Ord p')
   => ChildPath s s' f f' p p'
   -> p
   -> f i
-  -> Free (HalogenFP ParentEventSource s'' f'' (QueryF s'' s' f'' f' g p')) (Maybe i)
+  -> Free (HalogenFP ParentEventSource s'' f'' (QueryF h s'' s' f'' f' g p')) (Maybe i)
 query' i p q = liftQuery (mkQuery' i p q)
 
 -- | Queries every child component that is currently installed. For use within
 -- | a parent component's `eval` or `peek` function.
 queryAll
-  :: forall s s' f f' g p i
+  :: forall h s s' f f' g p i
    . (Functor g, Ord p)
   => f' i
-  -> Free (HalogenFP ParentEventSource s f (QueryF s s' f f' g p)) (M.Map p i)
+  -> Free (HalogenFP ParentEventSource s f (QueryF h s s' f f' g p)) (M.Map p i)
 queryAll q = liftQuery (mkQueries q)
 
 -- | Returns slots of all currently installed child components.
 childSlots
-  :: forall s s' f f' p g
+  :: forall h s s' f f' p g
   . (Functor g, Ord p)
-  => QueryF s s' f f' g p (L.List p)
+  => QueryF h s s' f f' g p (L.List p)
 childSlots = do
   ParentState st <- get
   pure (M.keys st.children)
@@ -312,11 +310,11 @@ childSlots = do
 -- | A version of [`queryAll](#queryAll) for use when a parent component has
 -- | multiple types of child component.
 queryAll'
-  :: forall s s' s'' f f' f'' g p p' i
+  :: forall h s s' s'' f f' f'' g p p' i
    . (Functor g, Ord p, Ord p')
   => ChildPath s s' f f' p p'
   -> f i
-  -> Free (HalogenFP ParentEventSource s'' f'' (QueryF s'' s' f'' f' g p')) (M.Map p i)
+  -> Free (HalogenFP ParentEventSource s'' f'' (QueryF h s'' s' f'' f' g p')) (M.Map p i)
 queryAll' i q = liftQuery (mkQueries' i q)
 
 bracketQuery :: forall s f g a. ComponentDSL s f g a -> ComponentDSL s f g a
@@ -340,7 +338,7 @@ mkQuery
    . (Functor g, Ord p)
   => p
   -> f' i
-  -> RawQueryF h s s' f f' g p (Maybe i)
+  -> QueryF h s s' f f' g p (Maybe i)
 mkQuery p q = bracketQuery do
   ParentState st <- get
   for (M.lookup p st.children) \child ->
@@ -349,30 +347,30 @@ mkQuery p q = bracketQuery do
 -- | A version of [`mkQuery`](#mkQuery) for use when a parent component has
 -- | multiple types of child component.
 mkQuery'
-  :: forall s s' s'' f f' f'' g p p' i
+  :: forall h s s' s'' f f' f'' g p p' i
    . (Functor g, Ord p')
   => ChildPath s s' f f' p p'
   -> p
   -> f i
-  -> QueryF s'' s' f'' f' g p' (Maybe i)
+  -> QueryF h s'' s' f'' f' g p' (Maybe i)
 mkQuery' i p q = mkQuery (injSlot i p) (injQuery i q)
 
 -- | Creates a query for every child component that is currently installed.
 mkQueries
-  :: forall s s' f f' p g i
+  :: forall h s s' f f' p g i
    . (Functor g, Ord p)
   => f' i
-  -> QueryF s s' f f' g p (M.Map p i)
+  -> QueryF h s s' f f' g p (M.Map p i)
 mkQueries = mkQueries' (ChildPath id id id)
 
 -- | A version of [`mkQueries](#mkQueries) for use when a parent component has
 -- | multiple types of child component.
 mkQueries'
-  :: forall s s' s'' f f' f'' g p p' i
+  :: forall h s s' s'' f f' f'' g p p' i
    . (Functor g, Ord p', Ord p)
   => ChildPath s s' f f' p p'
   -> f i
-  -> QueryF s'' s' f'' f' g p' (M.Map p i)
+  -> QueryF h s'' s' f'' f' g p' (M.Map p i)
 mkQueries' i q = bracketQuery do
   ParentState st <- get
   M.fromList <<< L.catMaybes <$> traverse mkChildQuery (M.toList st.children)
@@ -385,9 +383,9 @@ mkQueries' i q = bracketQuery do
 -- | Lifts a value in the `QueryF` algebra into the monad used by a component's
 -- | `eval` function.
 liftQuery
-  :: forall s s' f f' g p
-   . QueryF s s' f f' g p
-  ~> ParentDSL s s' f f' g p
+  :: forall h s s' f f' g p
+   . QueryF h s s' f f' g p
+  ~> RawParentDSL h s s' f f' g p
 liftQuery = liftH
 
 mapStateFParent :: forall h s s' f f' g p. StateF s ~> StateF (RawParentState h s s' f f' g p)
