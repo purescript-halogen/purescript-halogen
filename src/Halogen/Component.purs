@@ -10,8 +10,6 @@ module Halogen.Component
   , LifecycleComponentSpec
   , ParentDSL
   , ParentHTML
-  , RenderResult
-  , emptyResult
   , ComponentSlot(..)
   , lifecycleComponent
   , getSlots
@@ -28,7 +26,7 @@ import Control.Alt ((<|>))
 import Control.Monad.Free (Free, liftF, hoistFree)
 
 import Data.Const (Const)
-import Data.Lazy (Lazy, defer)
+import Data.Lazy (Lazy)
 import Data.List as L
 import Data.Map as M
 import Data.Maybe (Maybe(..), maybe)
@@ -36,8 +34,6 @@ import Data.Traversable (traverse)
 import Data.Tuple (Tuple(..))
 
 import Halogen.Component.ChildPath (ChildPath, prjQuery, injQuery)
-import Halogen.Component.Hook (Hook, Finalized, lmapHook, rmapHook, mapFinalized)
-import Halogen.Component.Tree (Tree, mkTree', emptyTree, graftTree)
 import Halogen.HTML.Core (HTML)
 import Halogen.Query.ChildQuery (childQuery)
 import Halogen.Query.HalogenF (HalogenF(..), hoistHalogenF, hoistHalogenM)
@@ -57,22 +53,11 @@ type ComponentDSL s f m = HalogenF s f (Const Void) m Void
 
 type Component' s f g m p =
   { initialState :: s
-  , render :: s -> RenderResult f m
+  , render :: s -> ParentHTML f p
   , eval :: f ~> Free (ParentDSL s f g m p)
   , initializer :: Maybe (f Unit)
-  , finalizers :: s -> Array (Finalized m)
+  , finalizer :: Maybe (f Unit)
   , mkOrdBox :: p -> OrdBox p
-  }
-
-type RenderResult f m =
-  { hooks :: Array (Hook f m)
-  , tree  :: Tree f Unit
-  }
-
-emptyResult :: forall f m. RenderResult f m
-emptyResult =
-  { hooks: []
-  , tree: emptyTree
   }
 
 --------------------------------------------------------------------------------
@@ -109,7 +94,7 @@ component spec =
     , render: spec.render
     , eval: spec.eval
     , initializer: Nothing
-    -- , finalizer: Nothing
+    , finalizer: Nothing
     }
 
 -- | A spec for a component, including lifecycle inputs.
@@ -118,7 +103,7 @@ type LifecycleComponentSpec s f m =
   , render :: s -> ComponentHTML f
   , eval :: f ~> Free (ComponentDSL s f m)
   , initializer :: Maybe (f Unit)
-  -- , finalizer :: Maybe (f Unit)
+  , finalizer :: Maybe (f Unit)
   }
 
 -- | Builds a self-contained component with lifecycle inputs and no possible
@@ -130,19 +115,11 @@ lifecycleComponent
 lifecycleComponent spec =
   mkComponent
     { initialState: spec.initialState
-    , render: \s -> { hooks: [], tree: renderTree (spec.render s) }
+    , render: spec.render
     , eval: spec.eval
     , initializer: spec.initializer
-    , finalizers: \s -> [] -- TODO: maybe [] (\i -> [finalized spec.eval s i]) spec.finalizer
+    , finalizer: spec.finalizer
     , mkOrdBox: absurd
-    }
-  where
-  renderTree :: ComponentHTML f -> Tree f Unit
-  renderTree html = mkTree'
-    { slot: unit
-    , html: defer \_ -> unsafeCoerce html -- Safe because p is Void
-    , eq: \_ _ -> false -- Absurd
-    , thunk: false
     }
 
 --------------------------------------------------------------------------------
@@ -203,22 +180,16 @@ transform reviewQ previewQ =
   unComponent \c ->
     mkComponent
       { initialState: c.initialState
-      , render: remapRenderResult <<< c.render
+      , render: map reviewQ <<< c.render
       , eval:
           maybe
             (liftF Halt)
             (hoistFree (hoistHalogenF reviewQ) <<< c.eval)
               <<< previewQ
       , initializer: reviewQ <$> c.initializer
-      , finalizers: c.finalizers
+      , finalizer: reviewQ <$> c.finalizer
       , mkOrdBox: c.mkOrdBox
       }
-  where
-  remapRenderResult :: RenderResult f m -> RenderResult f' m
-  remapRenderResult { hooks, tree } =
-    { hooks: lmapHook reviewQ <$> hooks
-    , tree: graftTree reviewQ id tree
-    }
 
 -- | Transforms a `Component`'s types using a `ChildPath` definition.
 transformChild
@@ -241,15 +212,9 @@ interpret nat =
   unComponent \c ->
     mkComponent
       { initialState: c.initialState
-      , render: hoistRenderResult <<< c.render
+      , render: c.render
       , eval: hoistFree (hoistHalogenM nat) <<< c.eval
       , initializer: c.initializer
-      , finalizers: map (mapFinalized nat) <$> c.finalizers
+      , finalizer: c.finalizer
       , mkOrdBox: c.mkOrdBox
       }
-  where
-  hoistRenderResult :: RenderResult f m -> RenderResult f m'
-  hoistRenderResult { hooks, tree } =
-    { hooks: rmapHook nat <$> hooks
-    , tree
-    }

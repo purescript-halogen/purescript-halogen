@@ -9,10 +9,11 @@ import Prelude
 import Control.Coroutine (await)
 import Control.Coroutine.Stalling (($$?))
 import Control.Coroutine.Stalling as SCR
-import Control.Monad.Aff (Aff, forkAff)
+import Control.Monad.Aff (Aff, runAff, forkAff)
 import Control.Monad.Aff.AVar (AVar, AVAR, putVar, takeVar, modifyVar, makeVar)
+import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Class (liftEff)
-import Control.Monad.Eff.Exception (error)
+import Control.Monad.Eff.Exception (error, throwException)
 import Control.Monad.Error.Class (throwError)
 import Control.Monad.Free (foldFree)
 import Control.Monad.Rec.Class (forever)
@@ -27,7 +28,7 @@ import DOM.Node.Node (appendChild)
 
 import Halogen.Component (Component', Component, ParentDSL, unComponent)
 import Halogen.Effects (HalogenEffects)
-import Halogen.HTML.Renderer.VirtualDOM (renderTree)
+import Halogen.HTML.Renderer.VirtualDOM (renderHTML)
 import Halogen.Internal.VirtualDOM (VTree, createElement, diff, patch, vtext)
 import Halogen.Query (HalogenF(..))
 import Halogen.Query.EventSource (runEventSource)
@@ -182,8 +183,7 @@ render
   -> Aff (HalogenEffects eff) Unit
 render ref = do
   DriverState ds <- takeVar ref
-  let rc = ds.component.render ds.state
-  let vtree' = renderTree (evalF ds.selfRef) rc.tree
+  let vtree' = renderHTML (handleAff <<< evalF ds.selfRef) (ds.component.render ds.state)
   node' <- liftEff $ patch (diff ds.vtree vtree') ds.node
   putVar ref $
     DriverState
@@ -195,3 +195,12 @@ render ref = do
       , mkOrdBox: ds.mkOrdBox
       , selfRef: ds.selfRef
       }
+
+-- | TODO: we could do something more intelligent now this isn't baked into the
+-- | virtual-dom rendering. Perhaps write to an avar when an error occurs...
+-- | something other than a runtime exception anyway.
+handleAff
+  :: forall eff a
+   . Aff (HalogenEffects eff) a
+  -> Eff (HalogenEffects eff) Unit
+handleAff = void <<< runAff throwException (const (pure unit))

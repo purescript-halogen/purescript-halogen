@@ -1,25 +1,18 @@
-module Halogen.HTML.Renderer.VirtualDOM
-  ( renderHTML
-  , renderTree
-  ) where
+module Halogen.HTML.Renderer.VirtualDOM (renderHTML) where
 
 import Prelude
 
-import Control.Monad.Aff (Aff(), runAff)
-import Control.Monad.Eff (Eff())
-import Control.Monad.Eff.Exception (throwException)
+import Control.Monad.Eff (Eff)
 
 import Data.Exists (runExists)
 import Data.ExistsR (runExistsR)
 import Data.Foldable (foldl, foldMap)
 import Data.Function.Uncurried (runFn2)
-import Data.Lazy (force)
 import Data.Maybe (Maybe(..), maybe)
 import Data.Monoid (mempty)
 import Data.Nullable (toNullable)
 
-import Halogen.Effects (HalogenEffects())
-import Halogen.Component.Tree (Tree(), runTree)
+import Halogen.Effects (HalogenEffects)
 import Halogen.HTML.Core (HTML(..), Prop(..), PropF(..), HandlerF(..), runNamespace, runTagName, runPropName, runAttrName, runEventName)
 import Halogen.HTML.Events.Handler (runEventHandler)
 import Halogen.Internal.VirtualDOM as V
@@ -27,47 +20,54 @@ import Halogen.Internal.VirtualDOM as V
 -- | Render a `HTML` document to a virtual DOM node
 -- |
 -- | The first argument is an event handler.
-renderHTML :: forall p f eff. (forall i. f i -> Aff (HalogenEffects eff) i) -> HTML p (f Unit) -> V.VTree
-renderHTML f = go
-  where
-  go :: HTML p (f Unit) -> V.VTree
-  go (Text s) = V.vtext s
-  go (Element ns name props els) =
-      let ns' = toNullable $ runNamespace <$> ns
-          tag = runTagName name
-          key = toNullable $ foldl findKey Nothing props
-      in V.vnode ns' tag key (foldMap (renderProp f) props) (map go els)
-  go (Slot _) = V.vtext ""
-
-renderTree
-  :: forall p f eff
-   . (forall i. f i -> Aff (HalogenEffects eff) i)
-  -> Tree f p
+renderHTML
+  :: forall p i eff
+   . (i -> Eff (HalogenEffects eff) Unit)
+  -> HTML p i
   -> V.VTree
-renderTree f =
-  runTree \tree ->
-    let go (Text s) = V.vtext s
-        go (Slot t) = V.widget t tree.eq (renderTree f)
-        go (Element ns name props els) =
-          let ns' = toNullable $ runNamespace <$> ns
-              tag = runTagName name
-              key = toNullable $ foldl findKey Nothing props
-          in V.vnode ns' tag key (foldMap (renderProp f) props) (map go els)
-    in go (force tree.html)
+renderHTML driver = go
+  where
+  go = case _ of
+    Text s ->
+      V.vtext s
+    Element ns name props els ->
+      V.vnode
+        (toNullable $ runNamespace <$> ns)
+        (runTagName name)
+        (toNullable $ foldl findKey Nothing props)
+        (foldMap (renderProp driver) props) (map go els)
+    Slot _ ->
+      V.vtext ""
 
-renderProp :: forall f eff. (forall i. f i -> Aff (HalogenEffects eff) i) -> Prop (f Unit) -> V.Props
-renderProp _ (Prop e) = runExists (\(PropF key value _) ->
-  runFn2 V.prop (runPropName key) value) e
-renderProp _ (Attr ns name value) =
-  let attrName = maybe "" (\ns' -> runNamespace ns' <> ":") ns <> runAttrName name
-  in runFn2 V.attr attrName value
-renderProp dr (Handler e) = runExistsR (\(HandlerF name k) ->
-  runFn2 V.handlerProp (runEventName name) \ev -> handleAff $ runEventHandler ev (k ev) >>= maybe (pure unit) dr) e
-renderProp dr (Ref f) = V.refProp (handleAff <<< dr <<< f)
-renderProp _ _ = mempty
+renderProp
+  :: forall i eff
+   . (i -> Eff (HalogenEffects eff) Unit)
+  -> Prop i
+  -> V.Props
+renderProp driver = case _ of
+  Prop e ->
+    runExists renderPropF e
+  Attr ns name value ->
+    let attrName = maybe "" (\ns' -> runNamespace ns' <> ":") ns <> runAttrName name
+    in runFn2 V.attr attrName value
+  Handler e ->
+    runExistsR (renderHandlerProp driver) e
+  Ref f ->
+    V.refProp (driver <<< f)
+  _ ->
+    mempty
 
-handleAff :: forall eff a. Aff (HalogenEffects eff) a -> Eff (HalogenEffects eff) Unit
-handleAff = void <<< runAff throwException (const (pure unit)) -- "void <<<" was a quick solution, don't know if it's correct
+renderPropF :: forall a. PropF a -> V.Props
+renderPropF (PropF key value _) = runFn2 V.prop (runPropName key) value
+
+renderHandlerProp
+  :: forall i eff a
+   . (i -> Eff (HalogenEffects eff) Unit)
+  -> HandlerF i a
+  -> V.Props
+renderHandlerProp driver (HandlerF name k) =
+  runFn2 V.handlerProp (runEventName name)
+    \ev -> runEventHandler ev (k ev) >>= maybe (pure unit) driver
 
 findKey :: forall i. Maybe String -> Prop i -> Maybe String
 findKey _ (Key k) = Just k

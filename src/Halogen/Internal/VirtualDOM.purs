@@ -2,14 +2,13 @@
 -- | using the `virtual-dom` library.
 
 module Halogen.Internal.VirtualDOM
-  ( VTree()
-  , Patch()
-  , Props()
+  ( VTree
+  , Patch
+  , Props
   , prop
   , attr
   , handlerProp
   , refProp
-  , widget
   , createElement
   , diff
   , patch
@@ -29,8 +28,6 @@ import Data.Function.Uncurried (Fn2, runFn2)
 import DOM (DOM)
 import DOM.HTML.Types (HTMLElement)
 
-import Halogen.Component.Tree (Tree)
-
 -- | Virtual DOM nodes
 data VTree
 
@@ -48,7 +45,7 @@ foreign import attr :: Fn2 String String Props
 -- | Create a property from an event handler.
 foreign import handlerProp :: forall eff event. Fn2 String (event -> Eff eff Unit) Props
 
--- | Create a property from an ref.
+-- | Create a property from a ref.
 refProp :: forall eff. (Maybe HTMLElement -> Eff eff Unit) -> Props
 refProp = refPropImpl Nothing Just
 
@@ -58,8 +55,6 @@ foreign import refPropImpl
   -> (forall a. a -> Maybe a)
   -> (Maybe HTMLElement -> Eff eff Unit)
   -> Props
-
-foreign import widget :: forall f p. Tree f p -> (p -> p -> Boolean) -> (Tree f p -> VTree) -> VTree
 
 foreign import concatProps :: Fn2 Props Props Props
 
