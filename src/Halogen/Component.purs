@@ -1,11 +1,33 @@
-module Halogen.Component where
+module Halogen.Component
+  ( Component
+  , component
+  , mkComponent
+  , unComponent
+  , Component'
+  , ComponentDSL
+  , ComponentHTML
+  , ComponentSpec
+  , LifecycleComponentSpec
+  , ParentDSL
+  , ParentHTML
+  , RenderResult
+  , emptyResult
+  , ComponentSlot(..)
+  , lifecycleComponent
+  , getSlots
+  , query
+  , queryAll
+  , transform
+  , transformChild
+  , interpret
+  ) where
 
 import Prelude
 
+import Control.Alt ((<|>))
 import Control.Monad.Free (Free, liftF, hoistFree)
 
 import Data.Const (Const)
-import Data.Coyoneda (liftCoyoneda)
 import Data.Lazy (Lazy, defer)
 import Data.List as L
 import Data.Map as M
@@ -17,7 +39,7 @@ import Halogen.Component.ChildPath (ChildPath, prjQuery, injQuery)
 import Halogen.Component.Hook (Hook, Finalized, lmapHook, rmapHook, mapFinalized)
 import Halogen.Component.Tree (Tree, mkTree', emptyTree, graftTree)
 import Halogen.HTML.Core (HTML)
-import Halogen.Query.ChildQuery (ChildQueryF(..), mkChildQuery)
+import Halogen.Query.ChildQuery (childQuery)
 import Halogen.Query.HalogenF (HalogenF(..), hoistHalogenF, hoistHalogenM)
 
 import Unsafe.Coerce (unsafeCoerce)
@@ -115,36 +137,44 @@ lifecycleComponent spec =
   renderTree :: ComponentHTML f -> Tree f Unit
   renderTree html = mkTree'
     { slot: unit
-    , html: defer \_ -> unsafeCoerce html -- CHECK: Safe because p is Void
-    , eq: \_ _ -> false -- CHECK: Absurd
+    , html: defer \_ -> unsafeCoerce html -- Safe because p is Void
+    , eq: \_ _ -> false -- Absurd
     , thunk: false
     }
 
 --------------------------------------------------------------------------------
 
-getSlots
-  :: forall s f g m p
-   . Free (HalogenF s f g m p) (L.List p)
+-- TODO: hide export
+mkQuery
+  :: forall s f g m p a
+   . (Applicative m, Eq p)
+  => p
+  -> g a
+  -> Free (HalogenF s f g m p) a
+mkQuery p q = liftF $ ChildQuery (childQuery p q)
+
+getSlots :: forall s f g m p. Free (HalogenF s f g m p) (L.List p)
 getSlots = liftF $ GetSlots id
 
 query
   :: forall s f g m p a
-   . Applicative m
-  => g a
-  -> p
+   . (Applicative m, Eq p)
+  => p
+  -> g a
   -> Free (HalogenF s f g m p) (Maybe a)
-query q p =
-  liftF $ RunQuery p $ mkChildQuery $ ChildQueryF $ liftCoyoneda q
+query p q = do
+  slots <- getSlots
+  case L.elemIndex p slots of
+    Nothing -> pure Nothing
+    Just _ -> Just <$> mkQuery p q
 
 queryAll
   :: forall s f g m p a
    . (Applicative m, Ord p)
-  => p
-  -> g a
+  => g a
   -> Free (HalogenF s f g m p) (M.Map p a)
-queryAll p q
-  = M.fromList <<< L.catMaybes
-  <$> (traverse (\p -> map (Tuple p) <$> query q p) =<< getSlots)
+queryAll q =
+  M.fromList <$> (traverse (\p -> map (Tuple p) (mkQuery p q)) =<< getSlots)
 
 --------------------------------------------------------------------------------
 
@@ -180,7 +210,6 @@ transform reviewQ previewQ =
       , finalizers: c.finalizers
       }
   where
-
   remapRenderResult :: RenderResult f m -> RenderResult f' m
   remapRenderResult { hooks, tree } =
     { hooks: lmapHook reviewQ <$> hooks
@@ -208,14 +237,14 @@ interpret nat =
   unComponent \c ->
     mkComponent
       { initialState: c.initialState
-      , render: remapRenderResult <<< c.render
+      , render: hoistRenderResult <<< c.render
       , eval: hoistFree (hoistHalogenM nat) <<< c.eval
       , initializer: c.initializer
       , finalizers: map (mapFinalized nat) <$> c.finalizers
       }
   where
-  remapRenderResult :: RenderResult f m -> RenderResult f m'
-  remapRenderResult { hooks, tree } =
+  hoistRenderResult :: RenderResult f m -> RenderResult f m'
+  hoistRenderResult { hooks, tree } =
     { hooks: rmapHook nat <$> hooks
     , tree
     }

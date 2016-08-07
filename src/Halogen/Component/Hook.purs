@@ -10,7 +10,7 @@ module Halogen.Component.Hook
 
 import Prelude
 import Control.Monad.Free (Free, hoistFree)
-import Halogen.Query.HalogenF (HalogenF, hoistHalogenF)
+import Halogen.Query.HalogenF (HalogenF, hoistHalogenM)
 import Unsafe.Coerce (unsafeCoerce)
 
 data Hook f m
@@ -39,13 +39,13 @@ runFinalized k f =
     FinalizedF e s i -> k e s i
 
 mapFinalized
-  :: forall g g'
-   . Functor g'
-  => g ~> g'
-  -> Finalized g
-  -> Finalized g'
-mapFinalized g =
-  runFinalized \e s i -> finalized (hoistFree (hoistHalogenF g) <<< e) s i
+  :: forall m m'
+   . Functor m'
+  => m ~> m'
+  -> Finalized m
+  -> Finalized m'
+mapFinalized nat =
+  runFinalized \e s i -> finalized (hoistFree (hoistHalogenM nat) <<< e) s i
 
 lmapHook
   :: forall f f' g

@@ -12,7 +12,9 @@ import Control.Coroutine.Stalling as SCR
 import Control.Monad.Aff (Aff, forkAff)
 import Control.Monad.Aff.AVar (AVar, AVAR, putVar, takeVar, modifyVar, makeVar)
 import Control.Monad.Eff.Class (liftEff)
-import Control.Monad.Free (Free, liftF, foldFree)
+import Control.Monad.Eff.Exception (error)
+import Control.Monad.Error.Class (throwError)
+import Control.Monad.Free (foldFree)
 import Control.Monad.Rec.Class (forever)
 import Control.Monad.Trans (lift)
 import Control.Plus (empty)
@@ -20,7 +22,6 @@ import Control.Plus (empty)
 import Data.List (head)
 import Data.Map as M
 import Data.Maybe (Maybe(..))
-import Data.Const (Const)
 
 import DOM.HTML.Types (HTMLElement, htmlElementToNode)
 import DOM.Node.Node (appendChild)
@@ -32,6 +33,7 @@ import Halogen.Internal.VirtualDOM (VTree, createElement, diff, patch, vtext)
 import Halogen.Query (HalogenF(..))
 import Halogen.Query.EventSource (runEventSource)
 import Halogen.Query.StateF (StateF(..))
+import Halogen.Query.ChildQuery (unChildQuery)
 import Halogen.Data.OrdBox (OrdBox, updateOrdBox, unOrdBox)
 
 import Unsafe.Coerce (unsafeCoerce)
@@ -153,25 +155,15 @@ eval ref = case _ of
   GetSlots k -> do
     st <- unDriverState <$> peekVar ref
     pure $ k $ map unOrdBox $ M.keys st.children
-  RunQuery p cq -> do
-    st <- unDriverState <$> peekVar ref
-    -- TODO: something less ridiculous than this for `updateOrdBox`
-    let ob = head $ M.keys $ st.children
-    case flip M.lookup st.children <<< updateOrdBox p =<< ob of
-      _ -> ?hooo
-  --       Nothing -> k Nothing
-  --       Just dsx ->
-  --         let
-  --           -- All of these annotations are required to prevent skolem escape issues
-  --           nat :: g ~> Free (DSL s (Const Void) (Const Void) eff Void)
-  --           nat = unDSX (\ds q -> liftF (Lift (evalF ds.selfRef q))) dsx
-  --           j :: forall h i. (h ~> i) -> Maybe (h ~> i)
-  --           j = Just
-  --         in
-  --           k (j nat)
-  -- where
-  -- coe :: Free (DSL s (Const Void) (Const Void) eff Void) ~> Free (DSL s f g eff p)
-  -- coe = unsafeCoerce
+  ChildQuery cq ->
+    unChildQuery (\p k -> do
+      st <- unDriverState <$> peekVar ref
+      -- TODO: something less ridiculous than this for `updateOrdBox`
+      let ob = head $ M.keys $ st.children
+      case flip M.lookup st.children <<< updateOrdBox p =<< ob of
+        Just dsx -> k (unDSX (\ds q -> evalF ds.selfRef q) dsx)
+        Nothing -> throwError (error "Slot lookup failed for child query"))
+      cq
 
 evalF
   :: forall s f g eff p

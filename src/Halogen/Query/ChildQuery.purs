@@ -1,45 +1,38 @@
 module Halogen.Query.ChildQuery
   ( ChildQuery
-  , ChildQueryF(..)
-  , mkChildQuery
+  , hoistChildQuery
+  , childQuery
   , unChildQuery
   ) where
 
 import Prelude
 
-import Control.Alt (class Alt)
-import Control.Monad.Aff.Free (class Affable, fromAff)
-import Control.Monad.Free (Free, liftF)
-import Control.Monad.Free.Trans (hoistFreeT)
-import Control.Plus (class Plus)
-
-import Data.Coyoneda
-import Data.Const (Const)
-import Data.List as L
-import Data.Leibniz
-import Data.Maybe (Maybe(..))
-import Data.Profunctor as PF
-
-import Halogen.Query.EventSource (EventSource(..), runEventSource)
-import Halogen.Query.StateF (StateF)
 import Unsafe.Coerce (unsafeCoerce)
 
-newtype ChildQueryF g o i = ChildQueryF (Coyoneda g i)
+data ChildQuery g m p a = ChildQuery p ((g ~> m) -> m a)
 
-mapChildQueryF
-  :: forall a b g
-   . (a -> b)
-  -> ChildQueryF g (Maybe a) a
-  -> ChildQueryF g (Maybe b) b
-mapChildQueryF f (ChildQueryF q) = ChildQueryF (map f q)
+instance functorChildQuery :: Functor m => Functor (ChildQuery g m p) where
+  map f (ChildQuery p k) = ChildQuery p (map f <$> k)
 
-data ChildQuery (g :: * -> *) a
+hoistChildQuery
+  :: forall g m m' p a
+   . (m ~> m')
+  -> ChildQuery g m p a
+  -> ChildQuery g m' p a
+hoistChildQuery _ =
+  -- This is safe because it is impossible to construct a `ChildQuery` that has
+  -- a continuation implemented as anything other than an application of the
+  -- input `(g ~> m)` to a `g a` - this guarantees the `m` type is determined
+  -- by the function that is passed in, and therefore we have no need
+  -- to `imap` the continuation.
+  unsafeCoerce
 
-instance functorChildQuery :: Functor (ChildQuery g) where
-  map f _ = unsafeCoerce unit
+unChildQuery
+  :: forall g m p a r
+   . (p -> ((g ~> m) -> m a) -> r)
+  -> ChildQuery g m p a
+  -> r
+unChildQuery f (ChildQuery p k) = f p k
 
-mkChildQuery :: forall g a. ChildQueryF g (Maybe a) a -> ChildQuery g (Maybe a)
-mkChildQuery = unsafeCoerce
-
-unChildQuery :: forall g a. ChildQuery g (Maybe a) -> ChildQueryF g (Maybe a) a
-unChildQuery = unsafeCoerce
+childQuery :: forall g m p a. Applicative m => p -> g a -> ChildQuery g m p a
+childQuery p q = ChildQuery p (_ $ q)

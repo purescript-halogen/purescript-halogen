@@ -9,14 +9,15 @@ module Halogen.Query
   , gets
   , modify
   , set
-  , subscribe
-  , liftH
+  -- , subscribe
+  -- , liftH
   , module Control.Monad.Aff.Free
   , module Halogen.Component
   , module Halogen.Query.EventSource
   , module Halogen.Query.HalogenF
   , module Halogen.Query.StateF
-  ) where
+  )
+  where
 
 import Prelude
 
@@ -26,7 +27,7 @@ import Control.Monad.Free (Free, liftF)
 import Halogen.Query.EventSource (EventSource, ParentEventSource, eventSource, eventSource_, toParentEventSource)
 import Halogen.Query.HalogenF (HalogenF(..))
 import Halogen.Query.StateF (StateF(..))
-import Halogen.Component (ParentDSL, query, queryAll)
+import Halogen.Component (ParentDSL, query) -- , queryAll)
 
 -- | Type synonym for an "action" - An action only causes effects and has no
 -- | result value.
@@ -113,7 +114,7 @@ get = gets id
 -- |   pure (k x)
 -- | ```
 gets :: forall s f f' g p a. (s -> a) -> Free (ParentDSL s f f' g p) a
-gets = liftF <<< StateHF <<< Get
+gets = liftF <<< State <<< Get
 
 -- | Provides a way of modifying the current component's state within an `Eval`
 -- | or `Peek` function. This is much like `modify` for the `State` monad, but
@@ -130,7 +131,7 @@ gets = liftF <<< StateHF <<< Get
 -- |   pure next
 -- | ```
 modify :: forall s f f' g p. (s -> s) -> Free (ParentDSL s f f' g p) Unit
-modify f = liftF (StateHF (Modify f unit))
+modify f = liftF (State (Modify f unit))
 
 -- | Provides a way of replacing the current component's state within an `Eval`
 -- | or `Peek` function. This is much like `set` for the `State` monad, but
@@ -140,13 +141,13 @@ set = modify <<< const
 
 -- | Provides a way of having a component subscribe to an `EventSource` from
 -- | within an `Eval` function.
-subscribe
-  :: forall s f f' g p
-   . EventSource f g
-  -> Free (ParentDSL s f f' g p) Unit
-subscribe es = liftF (SubscribeHF es unit)
+-- subscribe
+--   :: forall s f f' g p
+--    . EventSource f g
+--   -> Free (ParentDSL s f f' g p) Unit
+-- subscribe es = liftF (Subscribe es unit)
 
 -- | A convenience function for lifting a `g` value directly into
 -- | `Free HalogenF` without the need to use `liftF $ right $ right $ ...`.
-liftH :: forall s f f' g p. g ~> Free (ParentDSL s f f' g p)
-liftH = liftF <<< QueryGHF
+-- liftH :: forall s f f' g p. g ~> Free (ParentDSL s f f' g p)
+-- liftH = liftF <<< Lift
