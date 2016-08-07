@@ -6,7 +6,7 @@ module Halogen.Driver
 
 import Prelude
 
-import Control.Coroutine (Consumer, await)
+import Control.Coroutine (await)
 import Control.Coroutine.Stalling (($$?))
 import Control.Coroutine.Stalling as SCR
 import Control.Monad.Aff (Aff, forkAff)
@@ -19,7 +19,6 @@ import Control.Monad.Rec.Class (forever)
 import Control.Monad.Trans (lift)
 import Control.Plus (empty)
 
-import Data.List (head)
 import Data.Map as M
 import Data.Maybe (Maybe(..))
 
@@ -34,7 +33,7 @@ import Halogen.Query (HalogenF(..))
 import Halogen.Query.EventSource (runEventSource)
 import Halogen.Query.StateF (StateF(..))
 import Halogen.Query.ChildQuery (unChildQuery)
-import Halogen.Data.OrdBox (OrdBox, updateOrdBox, unOrdBox)
+import Halogen.Data.OrdBox (OrdBox, unOrdBox)
 
 import Unsafe.Coerce (unsafeCoerce)
 
@@ -52,6 +51,7 @@ type DriverStateR s f f' eff p =
   , component :: Component' s f f' (Aff (HalogenEffects eff)) p
   , state :: s
   , children :: M.Map (OrdBox p) (DSX f' eff)
+  , mkOrdBox :: p -> OrdBox p
   , selfRef :: AVar (DriverState s f f' eff p)
   }
 
@@ -92,6 +92,7 @@ mkState node component = do
       , component
       , state: component.initialState
       , children: M.empty
+      , mkOrdBox: component.mkOrdBox
       , selfRef
       }
   putVar selfRef (DriverState ds)
@@ -142,11 +143,8 @@ eval ref = case _ of
         render ref
         pure next
   Subscribe es next -> do
-    let producer :: SCR.StallingProducer (f Unit) (Aff (HalogenEffects eff)) Unit
-        producer = runEventSource es
-        consumer :: forall a. Consumer (f Unit) (Aff (HalogenEffects eff)) a
-        consumer = forever (lift <<< evalF ref =<< await)
-    forkAff $ SCR.runStallingProcess (producer $$? consumer)
+    let consumer = forever (lift <<< evalF ref =<< await)
+    forkAff $ SCR.runStallingProcess (runEventSource es $$? consumer)
     pure next
   Lift q -> do
     render ref
@@ -158,9 +156,7 @@ eval ref = case _ of
   ChildQuery cq ->
     unChildQuery (\p k -> do
       st <- unDriverState <$> peekVar ref
-      -- TODO: something less ridiculous than this for `updateOrdBox`
-      let ob = head $ M.keys $ st.children
-      case flip M.lookup st.children <<< updateOrdBox p =<< ob of
+      case M.lookup (st.mkOrdBox p) st.children of
         Just dsx -> k (unDSX (\ds q -> evalF ds.selfRef q) dsx)
         Nothing -> throwError (error "Slot lookup failed for child query"))
       cq
@@ -196,5 +192,6 @@ render ref = do
       , component: ds.component
       , state: ds.state
       , children: ds.children -- TODO
+      , mkOrdBox: ds.mkOrdBox
       , selfRef: ds.selfRef
       }

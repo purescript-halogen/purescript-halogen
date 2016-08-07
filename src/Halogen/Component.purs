@@ -41,6 +41,7 @@ import Halogen.Component.Tree (Tree, mkTree', emptyTree, graftTree)
 import Halogen.HTML.Core (HTML)
 import Halogen.Query.ChildQuery (childQuery)
 import Halogen.Query.HalogenF (HalogenF(..), hoistHalogenF, hoistHalogenM)
+import Halogen.Data.OrdBox (OrdBox)
 
 import Unsafe.Coerce (unsafeCoerce)
 
@@ -60,6 +61,7 @@ type Component' s f g m p =
   , eval :: f ~> Free (ParentDSL s f g m p)
   , initializer :: Maybe (f Unit)
   , finalizers :: s -> Array (Finalized m)
+  , mkOrdBox :: p -> OrdBox p
   }
 
 type RenderResult f m =
@@ -132,6 +134,7 @@ lifecycleComponent spec =
     , eval: spec.eval
     , initializer: spec.initializer
     , finalizers: \s -> [] -- TODO: maybe [] (\i -> [finalized spec.eval s i]) spec.finalizer
+    , mkOrdBox: absurd
     }
   where
   renderTree :: ComponentHTML f -> Tree f Unit
@@ -208,6 +211,7 @@ transform reviewQ previewQ =
               <<< previewQ
       , initializer: reviewQ <$> c.initializer
       , finalizers: c.finalizers
+      , mkOrdBox: c.mkOrdBox
       }
   where
   remapRenderResult :: RenderResult f m -> RenderResult f' m
@@ -241,6 +245,7 @@ interpret nat =
       , eval: hoistFree (hoistHalogenM nat) <<< c.eval
       , initializer: c.initializer
       , finalizers: map (mapFinalized nat) <$> c.finalizers
+      , mkOrdBox: c.mkOrdBox
       }
   where
   hoistRenderResult :: RenderResult f m -> RenderResult f m'
