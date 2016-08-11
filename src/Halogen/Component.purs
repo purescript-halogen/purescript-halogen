@@ -25,6 +25,7 @@ import Prelude
 import Control.Alt ((<|>))
 import Control.Monad.Free (Free, liftF, hoistFree)
 
+import Data.Bifunctor (lmap)
 import Data.Const (Const)
 import Data.Lazy (Lazy)
 import Data.List as L
@@ -43,17 +44,27 @@ import Unsafe.Coerce (unsafeCoerce)
 
 data ComponentSlot g m p = ComponentSlot p (Lazy (Component g m))
 
-type ParentHTML f p = HTML p (f Unit)
+hoistSlot
+  :: forall g m m' p
+   . Functor m'
+  => (m ~> m')
+  -> ComponentSlot g m p
+  -> ComponentSlot g m' p
+hoistSlot nat (ComponentSlot p lc) = ComponentSlot p (map (interpret nat) lc)
+
+--------------------------------------------------------------------------------
+
+type ParentHTML f g m p = HTML (ComponentSlot g m p) (f Unit)
 type ParentDSL s f g m p = HalogenF s f g m p
 
-type ComponentHTML f = HTML Void (f Unit)
+type ComponentHTML f m = HTML (ComponentSlot (Const Void) m Void) (f Unit)
 type ComponentDSL s f m = HalogenF s f (Const Void) m Void
 
 --------------------------------------------------------------------------------
 
 type Component' s f g m p =
   { initialState :: s
-  , render :: s -> ParentHTML f p
+  , render :: s -> ParentHTML f g m p
   , eval :: f ~> Free (ParentDSL s f g m p)
   , initializer :: Maybe (f Unit)
   , finalizer :: Maybe (f Unit)
@@ -82,7 +93,7 @@ unComponent = unsafeCoerce
 -- | A spec for a component.
 type ComponentSpec s f m =
   { initialState :: s
-  , render :: s -> ComponentHTML f
+  , render :: s -> ComponentHTML f m
   , eval :: f ~> Free (ComponentDSL s f m)
   }
 
@@ -100,7 +111,7 @@ component spec =
 -- | A spec for a component, including lifecycle inputs.
 type LifecycleComponentSpec s f m =
   { initialState :: s
-  , render :: s -> ComponentHTML f
+  , render :: s -> ComponentHTML f m
   , eval :: f ~> Free (ComponentDSL s f m)
   , initializer :: Maybe (f Unit)
   , finalizer :: Maybe (f Unit)
@@ -124,7 +135,6 @@ lifecycleComponent spec =
 
 --------------------------------------------------------------------------------
 
--- TODO: hide export
 mkQuery
   :: forall s f g m p a
    . (Applicative m, Eq p)
@@ -205,14 +215,14 @@ transformChild i = transform (injQuery i) (prjQuery i)
 interpret
   :: forall f m m'
    . Functor m'
-  => m ~> m'
+  => (m ~> m')
   -> Component f m
   -> Component f m'
 interpret nat =
   unComponent \c ->
     mkComponent
       { initialState: c.initialState
-      , render: c.render
+      , render: lmap (hoistSlot nat) <<< c.render
       , eval: hoistFree (hoistHalogenM nat) <<< c.eval
       , initializer: c.initializer
       , finalizer: c.finalizer

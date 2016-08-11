@@ -23,9 +23,10 @@ import Halogen.Internal.VirtualDOM as V
 renderHTML
   :: forall p i eff
    . (i -> Eff (HalogenEffects eff) Unit)
+  -> (p -> V.VTree)
   -> HTML p i
   -> V.VTree
-renderHTML driver = go
+renderHTML driver handleSlot = go
   where
   go = case _ of
     Text s ->
@@ -36,8 +37,8 @@ renderHTML driver = go
         (runTagName name)
         (toNullable $ foldl findKey Nothing props)
         (foldMap (renderProp driver) props) (map go els)
-    Slot _ ->
-      V.vtext ""
+    Slot p ->
+      handleSlot p
 
 renderProp
   :: forall i eff
