@@ -1,4 +1,4 @@
-module Halogen.HTML.Renderer.VirtualDOM (renderHTML) where
+module Halogen.HTML.Renderer.VirtualDOM (renderHTML, renderHTML') where
 
 import Prelude
 
@@ -7,6 +7,7 @@ import Control.Monad.Eff (Eff)
 import Data.Exists (runExists)
 import Data.ExistsR (runExistsR)
 import Data.Foldable (foldl, foldMap)
+import Data.Traversable (traverse)
 import Data.Function.Uncurried (runFn2)
 import Data.Maybe (Maybe(..), maybe)
 import Data.Monoid (mempty)
@@ -37,6 +38,28 @@ renderHTML driver handleSlot = go
         (runTagName name)
         (toNullable $ foldl findKey Nothing props)
         (foldMap (renderProp driver) props) (map go els)
+    Slot p ->
+      handleSlot p
+
+renderHTML'
+  :: forall p i m eff
+   . Monad m
+  => (i -> Eff (HalogenEffects eff) Unit)
+  -> (p -> m V.VTree)
+  -> HTML p i
+  -> m V.VTree
+renderHTML' driver handleSlot = go
+  where
+  go = case _ of
+    Text s ->
+      pure $ V.vtext s
+    Element ns name props els -> do
+      els' <- traverse go els
+      pure $ V.vnode
+        (toNullable $ runNamespace <$> ns)
+        (runTagName name)
+        (toNullable $ foldl findKey Nothing props)
+        (foldMap (renderProp driver) props) els'
     Slot p ->
       handleSlot p
 

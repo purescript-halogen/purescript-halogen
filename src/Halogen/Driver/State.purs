@@ -24,16 +24,16 @@ import Halogen.Internal.VirtualDOM (VTree, vtext)
 import Unsafe.Coerce (unsafeCoerce)
 
 -- | The type used to track a driver's persistent state.
-newtype DriverState s f f' eff p = DriverState (DriverStateRec s f f' eff p)
+newtype DriverState s f g eff p = DriverState (DriverStateRec s f g eff p)
 
-type DriverStateRec s f f' eff p =
+type DriverStateRec s f g eff p =
   { node :: HTMLElement
   , vtree :: VTree
-  , component :: Component' s f f' (Aff (HalogenEffects eff)) p
+  , component :: Component' s f g (Aff (HalogenEffects eff)) p
   , state :: s
-  , children :: M.Map (OrdBox p) (DriverStateX f' eff)
+  , children :: M.Map (OrdBox p) (DriverStateX g eff)
   , mkOrdBox :: p -> OrdBox p
-  , selfRef :: AVar (DriverState s f f' eff p)
+  , selfRef :: AVar (DriverState s f g eff p)
   }
 
 -- | A version of `DriverState` with the aspects relating to child components
@@ -41,22 +41,22 @@ type DriverStateRec s f f' eff p =
 data DriverStateX (f :: * -> *) (eff :: # !)
 
 mkDriverStateX
-  :: forall s f f' eff p
-   . DriverStateRec s f f' eff p
+  :: forall s f g eff p
+   . DriverStateRec s f g eff p
   -> DriverStateX f eff
 mkDriverStateX = unsafeCoerce
 
 unDriverStateX
   :: forall f eff r
-   . (forall s f' p. DriverStateRec s f f' eff p -> r)
+   . (forall s g p. DriverStateRec s f g eff p -> r)
   -> DriverStateX f eff
   -> r
 unDriverStateX = unsafeCoerce
 
 initDriverState
-  :: forall s f f' eff p
+  :: forall s f g eff p
    . HTMLElement
-  -> Component' s f f' (Aff (HalogenEffects eff)) p
+  -> Component' s f g (Aff (HalogenEffects eff)) p
   -> Aff (HalogenEffects eff) (DriverStateX f eff)
 initDriverState node component = do
   selfRef <- makeVar

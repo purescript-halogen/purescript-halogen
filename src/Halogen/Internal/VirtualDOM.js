@@ -24,7 +24,7 @@ exports.attr = function (key, value) {
   return props;
 };
 
-function HandlerHook (key, f) {
+function HandlerHook(key, f) {
   this.key = key;
   this.callback = function (e) {
     f(e)();
@@ -61,7 +61,7 @@ exports.refPropImpl = function (nothing) {
     };
 
     // jshint maxparams: 1
-    function RefHook (f) {
+    function RefHook(f) {
       this.f = f;
     }
 
@@ -76,8 +76,46 @@ exports.refPropImpl = function (nothing) {
   };
 };
 
+// jshint maxparams: 3
+function HalogenWidget(tree, eq, render) {
+  this.tree = tree;
+  this.eq = eq;
+  this.render = render;
+  this.vdom = null;
+  this.el = null;
+}
+
+HalogenWidget.prototype = {
+  type: "Widget",
+  init: function () {
+    this.vdom = this.render(this.tree);
+    this.el = vcreateElement(this.vdom);
+    return this.el;
+  },
+  update: function (prev, node) {
+    if (!prev.tree || !this.eq(prev.tree.slot)(this.tree.slot)) {
+      return this.init();
+    }
+    if (this.tree.thunk) {
+      this.vdom = prev.vdom;
+      this.el = prev.el;
+    } else {
+      this.vdom = this.render(this.tree);
+      this.el = vpatch(node, vdiff(prev.vdom, this.vdom));
+    }
+  }
+};
+
+exports.widget = function (tree) {
+  return function (eq) {
+    return function (render) {
+      return new HalogenWidget(tree, eq, render);
+    };
+  };
+};
+
+// jshint maxparams: 2
 exports.concatProps = function () {
-  // jshint maxparams: 2
   var hOP = Object.prototype.hasOwnProperty;
   var copy = function (props, result) {
     for (var key in props) {
@@ -101,6 +139,7 @@ exports.concatProps = function () {
     return copy(p2, copy(p1, {}));
   };
 }();
+// jshint maxparams: 1
 
 exports.emptyProps = {};
 

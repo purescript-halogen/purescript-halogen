@@ -9,7 +9,7 @@ import Control.Coroutine (await)
 import Control.Coroutine.Stalling (($$?))
 import Control.Coroutine.Stalling as SCR
 import Control.Monad.Aff (Aff, runAff, forkAff)
-import Control.Monad.Aff.AVar (AVar, AVAR, putVar, takeVar, modifyVar)
+import Control.Monad.Aff.AVar (AVar, AVAR, makeVar', putVar, takeVar, modifyVar)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Class (liftEff)
 import Control.Monad.Eff.Exception (error, throwException)
@@ -20,16 +20,17 @@ import Control.Monad.Trans (lift)
 import Control.Plus (empty)
 
 import Data.Map as M
-import Data.Maybe (Maybe(..))
+import Data.Maybe (Maybe(..), maybe)
+import Data.Lazy (force)
 
 import DOM.HTML.Types (HTMLElement, htmlElementToNode)
 import DOM.Node.Node (appendChild)
 
-import Halogen.Component (Component', Component, ComponentSlot, ParentDSL, unComponent)
-import Halogen.Data.OrdBox (unOrdBox)
-import Halogen.Driver.State (DriverState(..), unDriverStateX, initDriverState)
+import Halogen.Component (Component', Component, ComponentSlot(..), ParentDSL, unComponent)
+import Halogen.Data.OrdBox (OrdBox, unOrdBox)
+import Halogen.Driver.State (DriverState(..), DriverStateX, unDriverStateX, initDriverState)
 import Halogen.Effects (HalogenEffects)
-import Halogen.HTML.Renderer.VirtualDOM (renderHTML)
+import Halogen.HTML.Renderer.VirtualDOM (renderHTML')
 import Halogen.Internal.VirtualDOM as V
 import Halogen.Query (HalogenF(..))
 import Halogen.Query.ChildQuery (unChildQuery)
@@ -124,16 +125,16 @@ render
   :: forall s f g eff p
    . AVar (DriverState s f g eff p)
   -> Aff (HalogenEffects eff) Unit
-render ref = do
-  DriverState ds <- takeVar ref
-  let
-    vtree' =
-      renderHTML
-        (handleAff <<< evalF ds.selfRef)
-        (renderVTree ref)
-        (ds.component.render ds.state)
+render var = do
+  DriverState ds <- takeVar var
+  children <- makeVar' (M.empty :: M.Map (OrdBox p) (DriverStateX g eff))
+  vtree' <-
+    renderHTML'
+      (handleAff <<< evalF ds.selfRef)
+      (renderChild ds.mkOrdBox ds.children children)
+      (ds.component.render ds.state)
   node' <- liftEff $ V.patch (V.diff ds.vtree vtree') ds.node
-  putVar ref $
+  putVar var $
     DriverState
       { node: node'
       , vtree: vtree'
@@ -144,12 +145,23 @@ render ref = do
       , selfRef: ds.selfRef
       }
 
-renderVTree
-  :: forall s f g eff p
-   . AVar (DriverState s f g eff p)
+-- TODO: need to setup widgets here properly
+renderChild
+  :: forall g eff p
+   . (p -> OrdBox p)
+  -> M.Map (OrdBox p) (DriverStateX g eff)
+  -> AVar (M.Map (OrdBox p) (DriverStateX g eff))
   -> ComponentSlot g (Aff (HalogenEffects eff)) p
-  -> V.VTree
-renderVTree _ _ = V.vtext ""
+  -> Aff (HalogenEffects eff) V.VTree
+renderChild mkOrdBox children var (ComponentSlot p ctor) =
+  case M.lookup (mkOrdBox p) children of
+    Just dsx → do
+      -- TODO: return the widget for the child
+      unDriverStateX (\st -> render st.selfRef) dsx
+      pure $ V.vtext ""
+    Nothing → pure $ V.vtext ""
+  -- dsx <- maybe (initDriverState ?node (force ctor)) pure $ M.lookup (mkOrdBox p) children
+  -- pure $ V.vtext ""
 
 -- | TODO: we could do something more intelligent now this isn't baked into the
 -- | virtual-dom rendering. Perhaps write to an avar when an error occurs...

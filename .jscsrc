@@ -1,5 +1,10 @@
 {
   "preset": "grunt",
+  "disallowSpacesInFunctionExpression": null,
+  "requireSpacesInFunctionExpression": {
+    "beforeOpeningRoundBrace": true,
+    "beforeOpeningCurlyBrace": true
+  },
   "disallowSpacesInAnonymousFunctionExpression": null,
   "requireSpacesInAnonymousFunctionExpression": {
     "beforeOpeningRoundBrace": true,
