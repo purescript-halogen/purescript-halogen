@@ -76,44 +76,6 @@ exports.refPropImpl = function (nothing) {
   };
 };
 
-// jshint maxparams: 3
-function HalogenWidget(tree, eq, render) {
-  this.tree = tree;
-  this.eq = eq;
-  this.render = render;
-  this.vdom = null;
-  this.el = null;
-}
-
-HalogenWidget.prototype = {
-  type: "Widget",
-  init: function () {
-    this.vdom = this.render(this.tree);
-    this.el = vcreateElement(this.vdom);
-    return this.el;
-  },
-  update: function (prev, node) {
-    if (!prev.tree || !this.eq(prev.tree.slot)(this.tree.slot)) {
-      return this.init();
-    }
-    if (this.tree.thunk) {
-      this.vdom = prev.vdom;
-      this.el = prev.el;
-    } else {
-      this.vdom = this.render(this.tree);
-      this.el = vpatch(node, vdiff(prev.vdom, this.vdom));
-    }
-  }
-};
-
-exports.widget = function (tree) {
-  return function (eq) {
-    return function (render) {
-      return new HalogenWidget(tree, eq, render);
-    };
-  };
-};
-
 // jshint maxparams: 2
 exports.concatProps = function () {
   var hOP = Object.prototype.hasOwnProperty;
@@ -144,7 +106,9 @@ exports.concatProps = function () {
 exports.emptyProps = {};
 
 exports.createElement = function (vtree) {
-  return vcreateElement(vtree);
+  return function () {
+    return vcreateElement(vtree);
+  };
 };
 
 exports.diff = function (vtree1) {
@@ -178,4 +142,22 @@ exports.vnode = function (namespace) {
       };
     };
   };
+};
+
+function HalogenWidget(el) {
+  this.el = el;
+}
+
+HalogenWidget.prototype = {
+  type: "Widget",
+  init: function () {
+    return this.el;
+  },
+  update: function () {
+    return this.el;
+  }
+};
+
+exports.widget = function (el) {
+  return new HalogenWidget(el);
 };

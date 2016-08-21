@@ -14,6 +14,7 @@ module Halogen.Internal.VirtualDOM
   , patch
   , vtext
   , vnode
+  , widget
   ) where
 
 import Prelude
@@ -67,7 +68,7 @@ instance monoidProps :: Monoid Props where
   mempty = emptyProps
 
 -- | Create a DOM node from a virtual DOM tree
-foreign import createElement :: VTree -> HTMLElement
+foreign import createElement :: forall eff. VTree -> Eff (dom :: DOM | eff) HTMLElement
 
 -- | Calculate the differences between two virtual DOM trees
 foreign import diff :: VTree -> VTree -> Patch
@@ -81,3 +82,5 @@ foreign import vtext :: String -> VTree
 -- | Create a virtual DOM tree which represents an element with properties
 -- | (namespace, tag name, key, properties, children).
 foreign import vnode :: Nullable String -> String -> Nullable String -> Props -> Array VTree -> VTree
+
+foreign import widget :: HTMLElement -> VTree

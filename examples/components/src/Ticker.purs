@@ -2,6 +2,8 @@ module Ticker where
 
 import Prelude
 
+import Control.Monad.Free (Free)
+
 import Halogen as H
 import Halogen.HTML.Indexed as HH
 import Halogen.HTML.Properties.Indexed as HP
@@ -13,13 +15,13 @@ data TickQuery a
   = Tick a
   | GetTick (Int -> a)
 
-ticker :: forall g. H.Component TickState TickQuery g
-ticker = H.component { render, eval }
+ticker :: forall g. Int -> H.Component TickQuery g
+ticker n = H.component { render, eval, initialState: n }
   where
-
-  render :: TickState -> H.ComponentHTML TickQuery
+  render :: TickState -> H.ComponentHTML TickQuery g
   render state =
-    HH.div_
+    HH.div
+      [ HP.class_ (HH.className "ticker") ]
       [ HH.h1
           [ HP.id_ "header" ]
           [ HH.text "counter" ]
@@ -30,7 +32,7 @@ ticker = H.component { render, eval }
           [ HH.text "Tick" ]
       ]
 
-  eval :: TickQuery ~> H.ComponentDSL TickState TickQuery g
+  eval :: TickQuery ~> Free (H.ComponentDSL TickState TickQuery g)
   eval (Tick next) = do
     H.modify (_ + 1)
     pure next

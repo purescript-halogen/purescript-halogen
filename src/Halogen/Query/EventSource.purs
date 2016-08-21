@@ -4,9 +4,6 @@ module Halogen.Query.EventSource
   , eventSource
   , eventSource_
   , catEventSource
-  , ParentEventSource()
-  , toParentEventSource
-  , fromParentEventSource
   ) where
 
 import Prelude
@@ -18,14 +15,11 @@ import Control.Monad.Aff.AVar (AVAR)
 import Control.Monad.Aff.Class (class MonadAff)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Rec.Class (class MonadRec)
-import Control.Monad.Free (Free)
 
 import Data.Const (Const)
 import Data.Either (Either(..))
 import Data.Functor.Coproduct (Coproduct, coproduct)
 import Data.Maybe (Maybe(..))
-
-import Unsafe.Coerce as U
 
 newtype EventSource f g = EventSource (SCR.StallingProducer (f Unit) g Unit)
 
@@ -90,11 +84,3 @@ catEventSource (EventSource es) =
   EventSource $
     SCR.catMaybes $
       SCR.mapStallingProducer (coproduct (const Nothing) Just) es
-
-foreign import data ParentEventSource :: (* -> *) -> (* -> *) -> *
-
-toParentEventSource :: forall f g h. EventSource f h -> ParentEventSource f (Free (g h))
-toParentEventSource = U.unsafeCoerce
-
-fromParentEventSource :: forall f g h. ParentEventSource f (Free (g h)) -> EventSource f h
-fromParentEventSource = U.unsafeCoerce

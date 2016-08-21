@@ -20,7 +20,7 @@ data Query a = ToggleState a
 ui :: forall m. H.Component Query m
 ui = H.component { initialState, render, eval }
 
-render :: State -> H.ComponentHTML Query
+render :: forall m. State -> H.ComponentHTML Query m
 render state =
   HH.div_
     [ HH.h1_

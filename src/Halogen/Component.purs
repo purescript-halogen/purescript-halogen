@@ -1,17 +1,21 @@
 module Halogen.Component
   ( Component
-  , component
+  , Component'
   , mkComponent
   , unComponent
-  , Component'
   , ComponentDSL
-  , ComponentHTML
-  , ComponentSpec
-  , LifecycleComponentSpec
   , ParentDSL
+  , ComponentHTML
   , ParentHTML
   , ComponentSlot(..)
+  , ComponentSpec
+  , component
+  , LifecycleComponentSpec
   , lifecycleComponent
+  , ParentComponentSpec
+  , parentComponent
+  , ParentLifecycleComponentSpec
+  , lifecycleParentComponent
   , getSlots
   , query
   , queryAll
@@ -38,7 +42,7 @@ import Halogen.Component.ChildPath (ChildPath, prjQuery, injQuery)
 import Halogen.HTML.Core (HTML)
 import Halogen.Query.ChildQuery (childQuery)
 import Halogen.Query.HalogenF (HalogenF(..), hoistHalogenF, hoistHalogenM)
-import Halogen.Data.OrdBox (OrdBox)
+import Halogen.Data.OrdBox (OrdBox, mkOrdBox)
 
 import Unsafe.Coerce (unsafeCoerce)
 
@@ -133,6 +137,50 @@ lifecycleComponent spec =
     , mkOrdBox: absurd
     }
 
+type ParentComponentSpec s f g m p =
+  { initialState :: s
+  , render :: s -> ParentHTML f g m p
+  , eval :: f ~> Free (ParentDSL s f g m p)
+  }
+
+parentComponent
+  :: forall s f g m p
+   . Ord p
+  => ParentComponentSpec s f g m p
+  -> Component f m
+parentComponent spec =
+  mkComponent
+    { initialState: spec.initialState
+    , render: spec.render
+    , eval: spec.eval
+    , initializer: Nothing
+    , finalizer: Nothing
+    , mkOrdBox: mkOrdBox
+    }
+
+type ParentLifecycleComponentSpec s f g m p =
+  { initialState :: s
+  , render :: s -> ParentHTML f g m p
+  , eval :: f ~> Free (ParentDSL s f g m p)
+  , initializer :: Maybe (f Unit)
+  , finalizer :: Maybe (f Unit)
+  }
+
+lifecycleParentComponent
+  :: forall s f g m p
+   . Ord p
+  => ParentLifecycleComponentSpec s f g m p
+  -> Component f m
+lifecycleParentComponent spec =
+  mkComponent
+    { initialState: spec.initialState
+    , render: spec.render
+    , eval: spec.eval
+    , initializer: spec.initializer
+    , finalizer: spec.finalizer
+    , mkOrdBox: mkOrdBox
+    }
+
 --------------------------------------------------------------------------------
 
 mkQuery
@@ -193,7 +241,7 @@ transform reviewQ previewQ =
       , render: map reviewQ <<< c.render
       , eval:
           maybe
-            (liftF Halt)
+            (liftF (Halt "prism failed in transform"))
             (hoistFree (hoistHalogenF reviewQ) <<< c.eval)
               <<< previewQ
       , initializer: reviewQ <$> c.initializer

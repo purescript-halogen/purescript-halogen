@@ -11,6 +11,7 @@ import Prelude
 
 import Control.Monad.Aff (Aff)
 import Control.Monad.Aff.AVar (AVar, putVar, makeVar)
+import Control.Monad.Eff.Class (liftEff)
 
 import Data.Map as M
 
@@ -19,7 +20,7 @@ import DOM.HTML.Types (HTMLElement)
 import Halogen.Component (Component')
 import Halogen.Data.OrdBox (OrdBox)
 import Halogen.Effects (HalogenEffects)
-import Halogen.Internal.VirtualDOM (VTree, vtext)
+import Halogen.Internal.VirtualDOM as V
 
 import Unsafe.Coerce (unsafeCoerce)
 
@@ -28,10 +29,10 @@ newtype DriverState s f g eff p = DriverState (DriverStateRec s f g eff p)
 
 type DriverStateRec s f g eff p =
   { node :: HTMLElement
-  , vtree :: VTree
+  , vtree :: V.VTree
   , component :: Component' s f g (Aff (HalogenEffects eff)) p
   , state :: s
-  , children :: M.Map (OrdBox p) (DriverStateX g eff)
+  , children :: M.Map (OrdBox p) (AVar (DriverStateX g eff))
   , mkOrdBox :: p -> OrdBox p
   , selfRef :: AVar (DriverState s f g eff p)
   }
@@ -40,11 +41,11 @@ type DriverStateRec s f g eff p =
 -- | existentially hidden.
 data DriverStateX (f :: * -> *) (eff :: # !)
 
-mkDriverStateX
+mkDriverStateXVar
   :: forall s f g eff p
-   . DriverStateRec s f g eff p
-  -> DriverStateX f eff
-mkDriverStateX = unsafeCoerce
+   . AVar (DriverState s f g eff p)
+  -> AVar (DriverStateX f eff)
+mkDriverStateXVar = unsafeCoerce
 
 unDriverStateX
   :: forall f eff r
@@ -55,15 +56,16 @@ unDriverStateX = unsafeCoerce
 
 initDriverState
   :: forall s f g eff p
-   . HTMLElement
-  -> Component' s f g (Aff (HalogenEffects eff)) p
-  -> Aff (HalogenEffects eff) (DriverStateX f eff)
-initDriverState node component = do
+   . Component' s f g (Aff (HalogenEffects eff)) p
+  -> Aff (HalogenEffects eff) (AVar (DriverStateX f eff))
+initDriverState component = do
+  let vtree = V.vtext ""
+  node <- liftEff (V.createElement vtree)
   selfRef <- makeVar
   let
     ds =
       { node
-      , vtree: vtext ""
+      , vtree
       , component
       , state: component.initialState
       , children: M.empty
@@ -71,4 +73,4 @@ initDriverState node component = do
       , selfRef
       }
   putVar selfRef (DriverState ds)
-  pure $ mkDriverStateX ds
+  pure $ mkDriverStateXVar selfRef

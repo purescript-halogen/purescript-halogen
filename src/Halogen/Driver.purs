@@ -17,23 +17,22 @@ import Control.Monad.Error.Class (throwError)
 import Control.Monad.Free (foldFree)
 import Control.Monad.Rec.Class (forever)
 import Control.Monad.Trans (lift)
-import Control.Plus (empty)
 
 import Data.Map as M
-import Data.Maybe (Maybe(..), maybe)
+import Data.Maybe (Maybe(..))
 import Data.Lazy (force)
 
 import DOM.HTML.Types (HTMLElement, htmlElementToNode)
 import DOM.Node.Node (appendChild)
 
-import Halogen.Component (Component', Component, ComponentSlot(..), ParentDSL, unComponent)
+import Halogen.Component (Component, ParentDSL, ComponentSlot(..), unComponent)
 import Halogen.Data.OrdBox (OrdBox, unOrdBox)
-import Halogen.Driver.State (DriverState(..), DriverStateX, unDriverStateX, initDriverState)
+import Halogen.Driver.State (DriverStateX, DriverState(..), unDriverStateX, initDriverState)
 import Halogen.Effects (HalogenEffects)
 import Halogen.HTML.Renderer.VirtualDOM (renderHTML')
 import Halogen.Internal.VirtualDOM as V
 import Halogen.Query (HalogenF(..))
-import Halogen.Query.ChildQuery (unChildQuery)
+import Halogen.Query.ChildQuery (ChildQuery, unChildQuery)
 import Halogen.Query.EventSource (runEventSource)
 import Halogen.Query.StateF (StateF(..))
 
@@ -56,20 +55,25 @@ runUI
    . Component f (Aff (HalogenEffects eff))
   -> HTMLElement
   -> Aff (HalogenEffects eff) (Driver f eff)
-runUI component element = unComponent (runUI' element) component
+runUI component element = _.driver <$> do
+  var <- runComponent component
+  dsx <- peekVar var
+  unDriverStateX (\st -> do
+    -- TODO: run initializer(s) after element is added to DOM?
+    liftEff $ appendChild (htmlElementToNode st.node) (htmlElementToNode element)
+    -- The record here is a hack around a skolem escape issue. If the typing
+    -- rules for records change so this no longer works it may also be fixable
+    -- with copious type annotations.
+    pure { driver: evalF st.selfRef }) dsx
 
-runUI'
-  :: forall s f g eff p
-   . HTMLElement
-  -> Component' s f g (Aff (HalogenEffects eff)) p
-  -> Aff (HalogenEffects eff) (Driver f eff)
-runUI' element component = _.driver <$> do
-  let node = V.createElement (V.vtext "")
-  liftEff $ appendChild (htmlElementToNode node) (htmlElementToNode element)
-  initDriverState node component >>=
-    unDriverStateX \st -> do
-      render st.selfRef
-      pure { driver: evalF st.selfRef }
+runComponent
+  :: forall f eff
+   . Component f (Aff (HalogenEffects eff))
+  -> Aff (HalogenEffects eff) (AVar (DriverStateX f eff))
+runComponent = unComponent \component -> do
+  var <- initDriverState component
+  unDriverStateX (render <<< _.selfRef) =<< peekVar var
+  pure var
 
 eval
   :: forall s f g eff p
@@ -84,7 +88,6 @@ eval ref = case _ of
         pure (k st.state)
       Modify f next -> do
         modifyVar (\(DriverState st) -> DriverState (st { state = f st.state })) ref
-        x <- peekVar ref
         render ref
         pure next
   Subscribe es next -> do
@@ -92,19 +95,28 @@ eval ref = case _ of
     forkAff $ SCR.runStallingProcess (runEventSource es $$? consumer)
     pure next
   Lift q -> do
-    render ref
+    -- render ref -- TODO: is this necessary?
     q
-  Halt -> empty
+  Halt msg -> do
+    throwError (error msg)
   GetSlots k -> do
     DriverState st <- peekVar ref
     pure $ k $ map unOrdBox $ M.keys st.children
   ChildQuery cq ->
-    unChildQuery (\p k -> do
-      DriverState st <- peekVar ref
-      case M.lookup (st.mkOrdBox p) st.children of
-        Just dsx -> k (unDriverStateX (\ds q -> evalF ds.selfRef q) dsx)
-        Nothing -> throwError (error "Slot lookup failed for child query"))
-      cq
+    evalChildQuery ref cq
+
+evalChildQuery
+  :: forall s f g eff p
+   . AVar (DriverState s f g eff p)
+  -> ChildQuery g (Aff (HalogenEffects eff)) p
+  ~> Aff (HalogenEffects eff)
+evalChildQuery ref = unChildQuery \p k -> do
+  DriverState st <- peekVar ref
+  case M.lookup (st.mkOrdBox p) st.children of
+    Just var -> do
+      dsx <- peekVar var
+      k (unDriverStateX (\ds q -> evalF ds.selfRef q) dsx)
+    Nothing -> throwError (error "Slot lookup failed for child query")
 
 evalF
   :: forall s f g eff p
@@ -125,43 +137,40 @@ render
   :: forall s f g eff p
    . AVar (DriverState s f g eff p)
   -> Aff (HalogenEffects eff) Unit
-render var = do
-  DriverState ds <- takeVar var
-  children <- makeVar' (M.empty :: M.Map (OrdBox p) (DriverStateX g eff))
+render var = takeVar var >>= \(DriverState ds) -> do
+  children <- makeVar' (M.empty :: M.Map (OrdBox p) (AVar (DriverStateX g eff)))
   vtree' <-
     renderHTML'
       (handleAff <<< evalF ds.selfRef)
       (renderChild ds.mkOrdBox ds.children children)
       (ds.component.render ds.state)
   node' <- liftEff $ V.patch (V.diff ds.vtree vtree') ds.node
+  newChildren <- takeVar children
+  -- TODO: diff children, deal with initializers/finalizers
   putVar var $
     DriverState
       { node: node'
       , vtree: vtree'
       , component: ds.component
       , state: ds.state
-      , children: ds.children -- TODO
+      , children: newChildren
       , mkOrdBox: ds.mkOrdBox
       , selfRef: ds.selfRef
       }
 
--- TODO: need to setup widgets here properly
 renderChild
   :: forall g eff p
    . (p -> OrdBox p)
-  -> M.Map (OrdBox p) (DriverStateX g eff)
-  -> AVar (M.Map (OrdBox p) (DriverStateX g eff))
+  -> M.Map (OrdBox p) (AVar (DriverStateX g eff))
+  -> AVar (M.Map (OrdBox p) (AVar (DriverStateX g eff)))
   -> ComponentSlot g (Aff (HalogenEffects eff)) p
   -> Aff (HalogenEffects eff) V.VTree
-renderChild mkOrdBox children var (ComponentSlot p ctor) =
-  case M.lookup (mkOrdBox p) children of
-    Just dsx → do
-      -- TODO: return the widget for the child
-      unDriverStateX (\st -> render st.selfRef) dsx
-      pure $ V.vtext ""
-    Nothing → pure $ V.vtext ""
-  -- dsx <- maybe (initDriverState ?node (force ctor)) pure $ M.lookup (mkOrdBox p) children
-  -- pure $ V.vtext ""
+renderChild mkOrdBox childrenIn childrenOut (ComponentSlot p ctor) = do
+  var <- case M.lookup (mkOrdBox p) childrenIn of
+    Just existing -> pure existing
+    Nothing -> runComponent (force ctor)
+  modifyVar (M.insert (mkOrdBox p) var) childrenOut
+  unDriverStateX (\st -> pure $ V.widget st.node) =<< peekVar var
 
 -- | TODO: we could do something more intelligent now this isn't baked into the
 -- | virtual-dom rendering. Perhaps write to an avar when an error occurs...

@@ -9,8 +9,8 @@ module Halogen.Query
   , gets
   , modify
   , set
-  -- , subscribe
-  -- , liftH
+  , subscribe
+  , liftH
   , module Control.Monad.Aff.Free
   , module Halogen.Component
   , module Halogen.Query.EventSource
@@ -24,10 +24,10 @@ import Prelude
 import Control.Monad.Aff.Free (fromAff, fromEff)
 import Control.Monad.Free (Free, liftF)
 
-import Halogen.Query.EventSource (EventSource, ParentEventSource, eventSource, eventSource_, toParentEventSource)
+import Halogen.Component (ParentDSL, query, queryAll)
+import Halogen.Query.EventSource (EventSource, eventSource, eventSource_)
 import Halogen.Query.HalogenF (HalogenF(..))
 import Halogen.Query.StateF (StateF(..))
-import Halogen.Component (ParentDSL, query) -- , queryAll)
 
 -- | Type synonym for an "action" - An action only causes effects and has no
 -- | result value.
@@ -141,13 +141,13 @@ set = modify <<< const
 
 -- | Provides a way of having a component subscribe to an `EventSource` from
 -- | within an `Eval` function.
--- subscribe
---   :: forall s f f' g p
---    . EventSource f g
---   -> Free (ParentDSL s f f' g p) Unit
--- subscribe es = liftF (Subscribe es unit)
+subscribe
+  :: forall s f f' g p
+   . EventSource f g
+  -> Free (ParentDSL s f f' g p) Unit
+subscribe es = liftF (Subscribe es unit)
 
 -- | A convenience function for lifting a `g` value directly into
 -- | `Free HalogenF` without the need to use `liftF $ right $ right $ ...`.
--- liftH :: forall s f f' g p. g ~> Free (ParentDSL s f f' g p)
--- liftH = liftF <<< Lift
+liftH :: forall s f f' g p. g ~> Free (ParentDSL s f f' g p)
+liftH = liftF <<< Lift
