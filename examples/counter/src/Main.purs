@@ -17,7 +17,7 @@ initialState = 0
 
 data Query a = Tick a
 
-ui :: forall g. H.Component State Query g
+ui :: forall g. H.Component Query g
 ui = H.component { render, eval }
   where
 

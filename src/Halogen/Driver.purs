@@ -177,7 +177,7 @@ renderChild fresh mkOrdBox childrenIn childrenOut (ComponentSlot p ctor) = do
     Just existing -> pure existing
     Nothing -> runComponent fresh (force ctor)
   modifyVar (M.insert (mkOrdBox p) var) childrenOut
-  unDriverStateX (\st -> pure $ V.widget st.keyId st.node st.vtree) =<< peekVar var
+  unDriverStateX (\st -> pure $ V.widget st.keyId st.node) =<< peekVar var
 
 -- | TODO: we could do something more intelligent now this isn't baked into the
 -- | virtual-dom rendering. Perhaps write to an avar when an error occurs...

@@ -83,4 +83,4 @@ foreign import vtext :: String -> VTree
 -- | (namespace, tag name, key, properties, children).
 foreign import vnode :: Nullable String -> String -> Nullable String -> Props -> Array VTree -> VTree
 
-foreign import widget :: Int -> HTMLElement -> VTree -> VTree
+foreign import widget :: Int -> HTMLElement -> VTree
