@@ -144,9 +144,13 @@ exports.vnode = function (namespace) {
   };
 };
 
-function HalogenWidget(el) {
+// jshint maxparams: 3
+function HalogenWidget(key, el, vtree) {
+  this.key = key;
   this.el = el;
+  this.vtree = vtree;
 }
+// jshint maxparams: 1
 
 HalogenWidget.prototype = {
   type: "Widget",
@@ -158,6 +162,10 @@ HalogenWidget.prototype = {
   }
 };
 
-exports.widget = function (el) {
-  return new HalogenWidget(el);
+exports.widget = function (key) {
+  return function (el) {
+    return function (vtree) {
+      return new HalogenWidget(key, el, vtree);
+    };
+  };
 };

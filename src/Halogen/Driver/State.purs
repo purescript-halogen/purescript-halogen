@@ -35,6 +35,8 @@ type DriverStateRec s f g eff p =
   , children :: M.Map (OrdBox p) (AVar (DriverStateX g eff))
   , mkOrdBox :: p -> OrdBox p
   , selfRef :: AVar (DriverState s f g eff p)
+  , keyId :: Int
+  , fresh :: AVar Int
   }
 
 -- | A version of `DriverState` with the aspects relating to child components
@@ -57,8 +59,10 @@ unDriverStateX = unsafeCoerce
 initDriverState
   :: forall s f g eff p
    . Component' s f g (Aff (HalogenEffects eff)) p
+  -> Int
+  -> AVar Int
   -> Aff (HalogenEffects eff) (AVar (DriverStateX f eff))
-initDriverState component = do
+initDriverState component keyId fresh = do
   let vtree = V.vtext ""
   node <- liftEff (V.createElement vtree)
   selfRef <- makeVar
@@ -71,6 +75,8 @@ initDriverState component = do
       , children: M.empty
       , mkOrdBox: component.mkOrdBox
       , selfRef
+      , keyId
+      , fresh
       }
   putVar selfRef (DriverState ds)
   pure $ mkDriverStateXVar selfRef

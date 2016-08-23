@@ -56,7 +56,8 @@ runUI
   -> HTMLElement
   -> Aff (HalogenEffects eff) (Driver f eff)
 runUI component element = _.driver <$> do
-  var <- runComponent component
+  fresh <- makeVar' 0
+  var <- runComponent fresh component
   dsx <- peekVar var
   unDriverStateX (\st -> do
     -- TODO: run initializer(s) after element is added to DOM?
@@ -68,10 +69,13 @@ runUI component element = _.driver <$> do
 
 runComponent
   :: forall f eff
-   . Component f (Aff (HalogenEffects eff))
+   . AVar Int
+  -> Component f (Aff (HalogenEffects eff))
   -> Aff (HalogenEffects eff) (AVar (DriverStateX f eff))
-runComponent = unComponent \component -> do
-  var <- initDriverState component
+runComponent fresh = unComponent \component -> do
+  keyId <- peekVar fresh
+  modifyVar (_ + 1) fresh
+  var <- initDriverState component keyId fresh
   unDriverStateX (render <<< _.selfRef) =<< peekVar var
   pure var
 
@@ -142,7 +146,7 @@ render var = takeVar var >>= \(DriverState ds) -> do
   vtree' <-
     renderHTML'
       (handleAff <<< evalF ds.selfRef)
-      (renderChild ds.mkOrdBox ds.children children)
+      (renderChild ds.fresh ds.mkOrdBox ds.children children)
       (ds.component.render ds.state)
   node' <- liftEff $ V.patch (V.diff ds.vtree vtree') ds.node
   newChildren <- takeVar children
@@ -156,21 +160,24 @@ render var = takeVar var >>= \(DriverState ds) -> do
       , children: newChildren
       , mkOrdBox: ds.mkOrdBox
       , selfRef: ds.selfRef
+      , keyId: ds.keyId
+      , fresh: ds.fresh
       }
 
 renderChild
   :: forall g eff p
-   . (p -> OrdBox p)
+   . AVar Int
+  -> (p -> OrdBox p)
   -> M.Map (OrdBox p) (AVar (DriverStateX g eff))
   -> AVar (M.Map (OrdBox p) (AVar (DriverStateX g eff)))
   -> ComponentSlot g (Aff (HalogenEffects eff)) p
   -> Aff (HalogenEffects eff) V.VTree
-renderChild mkOrdBox childrenIn childrenOut (ComponentSlot p ctor) = do
+renderChild fresh mkOrdBox childrenIn childrenOut (ComponentSlot p ctor) = do
   var <- case M.lookup (mkOrdBox p) childrenIn of
     Just existing -> pure existing
-    Nothing -> runComponent (force ctor)
+    Nothing -> runComponent fresh (force ctor)
   modifyVar (M.insert (mkOrdBox p) var) childrenOut
-  unDriverStateX (\st -> pure $ V.widget st.node) =<< peekVar var
+  unDriverStateX (\st -> pure $ V.widget st.keyId st.node st.vtree) =<< peekVar var
 
 -- | TODO: we could do something more intelligent now this isn't baked into the
 -- | virtual-dom rendering. Perhaps write to an avar when an error occurs...
