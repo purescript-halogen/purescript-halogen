@@ -8,8 +8,8 @@ import Halogen.HTML.Events.Indexed as HE
 
 newtype StateB = StateB { on :: Boolean }
 
-initStateB :: StateB
-initStateB = StateB { on: false }
+initialState :: StateB
+initialState = StateB { on: false }
 
 data QueryB a
   = ToggleStateB a
@@ -19,11 +19,11 @@ data SlotB = SlotB
 derive instance eqSlotB :: Eq SlotB
 derive instance ordSlotB :: Ord SlotB
 
-componentB :: forall g. H.Component StateB QueryB g
-componentB = H.component { render, eval }
+componentB :: forall g. H.Component QueryB g
+componentB = H.component { render, eval, initialState }
   where
 
-  render :: StateB -> H.ComponentHTML QueryB
+  render :: StateB -> H.ComponentHTML QueryB g
   render (StateB state) = HH.div_
     [ HH.h1_ [ HH.text "Toggle Button B" ]
     , HH.button

@@ -16,12 +16,16 @@ data TaskQuery a
   | Remove a
   | IsCompleted (Boolean -> a)
 
+data TaskMessage
+  = NotifyRemove
+  | Toggled Boolean
+
 -- | The task component definition.
-task :: forall g. H.Component Task TaskQuery g
-task = H.component { render, eval }
+task :: forall g. Task -> H.Component TaskQuery g TaskMessage
+task initialState = H.component { render, eval, initialState }
   where
 
-  render :: Task -> H.ComponentHTML TaskQuery
+  render :: Task -> H.ComponentHTML TaskQuery g
   render t =
     HH.li_
       [ HH.input
@@ -44,14 +48,17 @@ task = H.component { render, eval }
           [ HH.text "✖" ]
       ]
 
-  eval :: TaskQuery ~> H.ComponentDSL Task TaskQuery g
+  eval :: TaskQuery ~> H.ComponentDSL Task TaskQuery g TaskMessage
   eval (UpdateDescription desc next) = do
     H.modify (_ { description = desc })
     pure next
   eval (ToggleCompleted b next) = do
     H.modify (_ { completed = b })
+    H.raise (Toggled b)
     pure next
-  eval (Remove next) = pure next
+  eval (Remove next) = do
+    H.raise NotifyRemove
+    pure next
   eval (IsCompleted continue) = do
     b <- H.gets (_.completed)
     pure (continue b)

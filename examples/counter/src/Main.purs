@@ -18,10 +18,10 @@ initialState = 0
 data Query a = Tick a
 
 ui :: forall g. H.Component Query g
-ui = H.component { render, eval }
+ui = H.component { render, eval, initialState }
   where
 
-  render :: State -> H.ComponentHTML Query
+  render :: State -> H.ComponentHTML Query g
   render n =
     HH.div_
       [ HH.h1
@@ -40,7 +40,7 @@ ui = H.component { render, eval }
 main :: Eff (H.HalogenEffects ()) Unit
 main = runHalogenAff do
   body <- awaitBody
-  driver <- H.runUI ui initialState body
+  driver <- H.runUI ui body
   setInterval 1000 $ driver (H.action Tick)
 
 setInterval :: forall e a. Int -> Aff e a -> Aff e Unit

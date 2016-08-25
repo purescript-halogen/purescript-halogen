@@ -3,7 +3,6 @@ module Main where
 import Prelude
 
 import Control.Monad.Eff (Eff)
-import Control.Monad.Free (Free)
 
 import Halogen as H
 import Halogen.HTML.Events.Indexed as HE
@@ -30,7 +29,7 @@ render state =
         [ HH.text (if state.on then "On" else "Off") ]
     ]
 
-eval :: forall m. Query ~> Free (H.ComponentDSL State Query m)
+eval :: forall m. Query ~> H.ComponentDSL State Query m
 eval (ToggleState next) = do
   H.modify (\state -> { on: not state.on })
   pure next

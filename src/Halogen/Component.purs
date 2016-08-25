@@ -7,7 +7,9 @@ module Halogen.Component
   , ParentDSL
   , ComponentHTML
   , ParentHTML
-  , ComponentSlot(..)
+  , ComponentSlot
+  , mkComponentSlot
+  , unComponentSlot
   , ComponentSpec
   , component
   , LifecycleComponentSpec
@@ -18,7 +20,9 @@ module Halogen.Component
   , lifecycleParentComponent
   , getSlots
   , query
+  , query'
   , queryAll
+  -- TODO: , queryAll'
   , transform
   , transformChild
   , interpret
@@ -27,9 +31,9 @@ module Halogen.Component
 import Prelude
 
 import Control.Alt ((<|>))
-import Control.Monad.Free (Free, liftF, hoistFree)
+import Control.Monad.Free (liftF)
 
-import Data.Bifunctor (lmap)
+import Data.Bifunctor (bimap, lmap)
 import Data.Const (Const)
 import Data.Lazy (Lazy)
 import Data.List as L
@@ -38,38 +42,63 @@ import Data.Maybe (Maybe(..), maybe)
 import Data.Traversable (traverse)
 import Data.Tuple (Tuple(..))
 
-import Halogen.Component.ChildPath (ChildPath, prjQuery, injQuery)
+import Halogen.Component.ChildPath (ChildPath, injSlot, prjQuery, injQuery)
+import Halogen.Data.OrdBox (OrdBox, mkOrdBox)
 import Halogen.HTML.Core (HTML)
 import Halogen.Query.ChildQuery (childQuery)
-import Halogen.Query.HalogenF (HalogenF(..), hoistHalogenF, hoistHalogenM)
-import Halogen.Data.OrdBox (OrdBox, mkOrdBox)
+import Halogen.Query.HalogenF (HalogenF(..))
+import Halogen.Query.HalogenM (HalogenM(..))
+import Halogen.Query.HalogenM as HM
 
 import Unsafe.Coerce (unsafeCoerce)
 
-data ComponentSlot g m p = ComponentSlot p (Lazy (Component g m))
+data ComponentSlot' g m p i o = ComponentSlot p (Lazy (Component g m o)) (o -> i)
 
-hoistSlot
-  :: forall g m m' p
+data ComponentSlot (g :: * -> *) (m :: * -> *) p i
+
+instance functorSlotF :: Functor (ComponentSlot g m p) where
+  map f = unComponentSlot \p ctor k -> mkComponentSlot p ctor (f <<< k)
+
+mkComponentSlot
+  :: forall g m p i o
+   . p
+  -> (Lazy (Component g m o))
+  -> (o -> i)
+  -> ComponentSlot g m p i
+mkComponentSlot = unsafeCoerce ComponentSlot
+
+unComponentSlot
+  :: forall g m p i r
+   . (forall o. p -> Lazy (Component g m o) -> (o -> i) -> r)
+  -> ComponentSlot g m p i
+  -> r
+unComponentSlot f cs =
+  case unsafeCoerce cs of
+    ComponentSlot p ctor k -> f p ctor k
+
+hoistSlotM
+  :: forall g m m' p i
    . Functor m'
   => (m ~> m')
-  -> ComponentSlot g m p
-  -> ComponentSlot g m' p
-hoistSlot nat (ComponentSlot p lc) = ComponentSlot p (map (interpret nat) lc)
+  -> ComponentSlot g m p i
+  -> ComponentSlot g m' p i
+hoistSlotM nat = unComponentSlot \p ctor k ->
+  mkComponentSlot p (map (interpret nat) ctor) k
 
 --------------------------------------------------------------------------------
 
-type ParentHTML f g m p = HTML (ComponentSlot g m p) (f Unit)
-type ParentDSL s f g m p = HalogenF s f g m p
+type ParentHTML f g m p = HTML (ComponentSlot g m p (f Unit)) (f Unit)
+type ParentDSL = HalogenM
 
-type ComponentHTML f m = HTML (ComponentSlot (Const Void) m Void) (f Unit)
-type ComponentDSL s f m = HalogenF s f (Const Void) m Void
+type ComponentHTML f m = ParentHTML f (Const Void) m Void
+type ComponentDSL s f m o = ParentDSL s f (Const Void) m Void o
 
 --------------------------------------------------------------------------------
 
-type Component' s f g m p =
+type Component' s f g m p o =
   { initialState :: s
   , render :: s -> ParentHTML f g m p
-  , eval :: f ~> Free (ParentDSL s f g m p)
+  , eval :: f ~> ParentDSL s f g m p o
   , initializer :: Maybe (f Unit)
   , finalizer :: Maybe (f Unit)
   , mkOrdBox :: p -> OrdBox p
@@ -77,32 +106,32 @@ type Component' s f g m p =
 
 --------------------------------------------------------------------------------
 
-data Component (f :: * -> *) (m :: * -> *)
+data Component (f :: * -> *) (m :: * -> *) o
 
 mkComponent
-  :: forall s f g m p
-   . Component' s f g m p
-  -> Component f m
+  :: forall s f g m p o
+   . Component' s f g m p o
+  -> Component f m o
 mkComponent = unsafeCoerce
 
 unComponent
-  :: forall f m r
-   . (forall s g p. Component' s f g m p -> r)
-  -> Component f m
+  :: forall f m o r
+   . (forall s g p. Component' s f g m p o -> r)
+  -> Component f m o
   -> r
 unComponent = unsafeCoerce
 
 --------------------------------------------------------------------------------
 
 -- | A spec for a component.
-type ComponentSpec s f m =
+type ComponentSpec s f m o =
   { initialState :: s
   , render :: s -> ComponentHTML f m
-  , eval :: f ~> Free (ComponentDSL s f m)
+  , eval :: f ~> ComponentDSL s f m o
   }
 
 -- | Builds a self-contained component with no possible children.
-component :: forall s f m. ComponentSpec s f m -> Component f m
+component :: forall s f m o. ComponentSpec s f m o -> Component f m o
 component spec =
   lifecycleComponent
     { initialState: spec.initialState
@@ -113,10 +142,10 @@ component spec =
     }
 
 -- | A spec for a component, including lifecycle inputs.
-type LifecycleComponentSpec s f m =
+type LifecycleComponentSpec s f m o i =
   { initialState :: s
   , render :: s -> ComponentHTML f m
-  , eval :: f ~> Free (ComponentDSL s f m)
+  , eval :: f ~> ComponentDSL s f m o
   , initializer :: Maybe (f Unit)
   , finalizer :: Maybe (f Unit)
   }
@@ -124,9 +153,9 @@ type LifecycleComponentSpec s f m =
 -- | Builds a self-contained component with lifecycle inputs and no possible
 -- | children.
 lifecycleComponent
-  :: forall s f m
-   . LifecycleComponentSpec s f m
-  -> Component f m
+  :: forall s f m o i
+   . LifecycleComponentSpec s f m o i
+  -> Component f m o
 lifecycleComponent spec =
   mkComponent
     { initialState: spec.initialState
@@ -137,17 +166,17 @@ lifecycleComponent spec =
     , mkOrdBox: absurd
     }
 
-type ParentComponentSpec s f g m p =
+type ParentComponentSpec s f g m p o i =
   { initialState :: s
   , render :: s -> ParentHTML f g m p
-  , eval :: f ~> Free (ParentDSL s f g m p)
+  , eval :: f ~> ParentDSL s f g m p o
   }
 
 parentComponent
-  :: forall s f g m p
+  :: forall s f g m p o i
    . Ord p
-  => ParentComponentSpec s f g m p
-  -> Component f m
+  => ParentComponentSpec s f g m p o i
+  -> Component f m o
 parentComponent spec =
   mkComponent
     { initialState: spec.initialState
@@ -158,19 +187,19 @@ parentComponent spec =
     , mkOrdBox: mkOrdBox
     }
 
-type ParentLifecycleComponentSpec s f g m p =
+type ParentLifecycleComponentSpec s f g m p o =
   { initialState :: s
   , render :: s -> ParentHTML f g m p
-  , eval :: f ~> Free (ParentDSL s f g m p)
+  , eval :: f ~> ParentDSL s f g m p o
   , initializer :: Maybe (f Unit)
   , finalizer :: Maybe (f Unit)
   }
 
 lifecycleParentComponent
-  :: forall s f g m p
+  :: forall s f g m p o
    . Ord p
-  => ParentLifecycleComponentSpec s f g m p
-  -> Component f m
+  => ParentLifecycleComponentSpec s f g m p o
+  -> Component f m o
 lifecycleParentComponent spec =
   mkComponent
     { initialState: spec.initialState
@@ -184,35 +213,46 @@ lifecycleParentComponent spec =
 --------------------------------------------------------------------------------
 
 mkQuery
-  :: forall s f g m p a
+  :: forall s f g m p o a
    . (Applicative m, Eq p)
   => p
   -> g a
-  -> Free (HalogenF s f g m p) a
-mkQuery p q = liftF $ ChildQuery (childQuery p q)
+  -> HalogenM s f g m p o a
+mkQuery p q = HalogenM $ liftF $ ChildQuery (childQuery p q)
 
-getSlots :: forall s f g m p. Free (HalogenF s f g m p) (L.List p)
-getSlots = liftF $ GetSlots id
+getSlots :: forall s f g m p o. HalogenM s f g m p o (L.List p)
+getSlots = HalogenM $ liftF $ GetSlots id
 
 query
-  :: forall s f g m p a
+  :: forall s f g m p o a
    . (Applicative m, Eq p)
   => p
   -> g a
-  -> Free (HalogenF s f g m p) (Maybe a)
+  -> HalogenM s f g m p o (Maybe a)
 query p q = do
   slots <- getSlots
   case L.elemIndex p slots of
     Nothing -> pure Nothing
     Just _ -> Just <$> mkQuery p q
 
+query'
+  :: forall s f g g' m p p' o a
+   . (Applicative m, Eq p')
+  => ChildPath g g' p p'
+  -> p
+  -> g a
+  -> HalogenM s f g' m p' o (Maybe a)
+query' i p q = query (injSlot i p) (injQuery i q)
+
 queryAll
-  :: forall s f g m p a
+  :: forall s f g m p o a
    . (Applicative m, Ord p)
   => g a
-  -> Free (HalogenF s f g m p) (M.Map p a)
+  -> HalogenM s f g m p o (M.Map p a)
 queryAll q =
   M.fromList <$> (traverse (\p -> map (Tuple p) (mkQuery p q)) =<< getSlots)
+
+-- TODO: queryAll'
 
 --------------------------------------------------------------------------------
 
@@ -228,21 +268,21 @@ queryAll q =
 -- | situation will only arise when the initial state is incorrect or a bad
 -- | externally constructed query is passed to the component.
 transform
-  :: forall f f' m
+  :: forall f f' m o
    . Functor m
   => (f ~> f')
   -> (forall a. f' a -> Maybe (f a))
-  -> Component f m
-  -> Component f' m
+  -> Component f m o
+  -> Component f' m o
 transform reviewQ previewQ =
   unComponent \c ->
     mkComponent
       { initialState: c.initialState
-      , render: map reviewQ <<< c.render
+      , render: bimap (map reviewQ) reviewQ <<< c.render
       , eval:
           maybe
-            (liftF (Halt "prism failed in transform"))
-            (hoistFree (hoistHalogenF reviewQ) <<< c.eval)
+            (HM.halt "prism failed in transform")
+            (HM.hoistF reviewQ <<< c.eval)
               <<< previewQ
       , initializer: reviewQ <$> c.initializer
       , finalizer: reviewQ <$> c.finalizer
@@ -251,27 +291,27 @@ transform reviewQ previewQ =
 
 -- | Transforms a `Component`'s types using a `ChildPath` definition.
 transformChild
-  :: forall f f' m p p'
+  :: forall f f' m p p' o
    . Functor m
   => ChildPath f f' p p'
-  -> Component f m
-  -> Component f' m
+  -> Component f m o
+  -> Component f' m o
 transformChild i = transform (injQuery i) (prjQuery i)
 
 -- | Changes the component's `m` type. A use case for this would be to interpret
 -- | some `Free` monad as `Aff` so the component can be used with `runUI`.
 interpret
-  :: forall f m m'
+  :: forall f m m' o
    . Functor m'
   => (m ~> m')
-  -> Component f m
-  -> Component f m'
+  -> Component f m o
+  -> Component f m' o
 interpret nat =
   unComponent \c ->
     mkComponent
       { initialState: c.initialState
-      , render: lmap (hoistSlot nat) <<< c.render
-      , eval: hoistFree (hoistHalogenM nat) <<< c.eval
+      , render: lmap (hoistSlotM nat) <<< c.render
+      , eval: HM.hoistM nat <<< c.eval
       , initializer: c.initializer
       , finalizer: c.finalizer
       , mkOrdBox: c.mkOrdBox

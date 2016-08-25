@@ -39,14 +39,14 @@ data Query a
 -- | Effects embedding the Ace editor requires.
 type E eff = (dom :: DOM, avar :: AVAR, keyboard :: K.KEYBOARD | eff)
 
-ui :: forall eff. H.Component State Query (Aff (E eff))
-ui = H.lifecycleComponent { render, eval, initializer, finalizer: Nothing }
+ui :: forall eff. H.Component Query (Aff (E eff))
+ui = H.lifecycleComponent { render, eval, initialState, initializer, finalizer: Nothing }
   where
 
   initializer :: Maybe (Query Unit)
   initializer = Just (H.action Init)
 
-  render :: State -> H.ComponentHTML Query
+  render :: State -> H.ComponentHTML Query (Aff (E eff))
   render state =
     HH.div_
       [ HH.p_ [ HH.text "Hold down the shift key and type some characters!" ]
@@ -57,7 +57,7 @@ ui = H.lifecycleComponent { render, eval, initializer, finalizer: Nothing }
   eval q =
     case q of
       Init next -> do
-        document <- H.fromEff $ DOM.window >>= DOM.document <#> DOM.htmlDocumentToDocument
+        document <- H.liftEff $ DOM.window >>= DOM.document <#> DOM.htmlDocumentToDocument
         let
           querySource :: H.EventSource (Coproduct (Const Unit) Query) (Aff (E eff))
           querySource =
@@ -86,4 +86,4 @@ ui = H.lifecycleComponent { render, eval, initializer, finalizer: Nothing }
 main :: Eff (H.HalogenEffects (keyboard :: K.KEYBOARD)) Unit
 main = runHalogenAff do
   body <- awaitBody
-  H.runUI ui initialState body
+  H.runUI ui body

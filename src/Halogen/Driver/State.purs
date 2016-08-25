@@ -4,8 +4,7 @@ module Halogen.Driver.State
   , DriverStateX
   , unDriverStateX
   , initDriverState
-  )
-  where
+  ) where
 
 import Prelude
 
@@ -25,16 +24,17 @@ import Halogen.Internal.VirtualDOM as V
 import Unsafe.Coerce (unsafeCoerce)
 
 -- | The type used to track a driver's persistent state.
-newtype DriverState s f g eff p = DriverState (DriverStateRec s f g eff p)
+newtype DriverState s f g eff p o = DriverState (DriverStateRec s f g eff p o)
 
-type DriverStateRec s f g eff p =
+type DriverStateRec s f g eff p o =
   { node :: HTMLElement
   , vtree :: V.VTree
-  , component :: Component' s f g (Aff (HalogenEffects eff)) p
+  , component :: Component' s f g (Aff (HalogenEffects eff)) p o
   , state :: s
   , children :: M.Map (OrdBox p) (AVar (DriverStateX g eff))
   , mkOrdBox :: p -> OrdBox p
-  , selfRef :: AVar (DriverState s f g eff p)
+  , selfRef :: AVar (DriverState s f g eff p o)
+  , handler :: o -> Aff (HalogenEffects eff) Unit
   , keyId :: Int
   , fresh :: AVar Int
   }
@@ -44,25 +44,26 @@ type DriverStateRec s f g eff p =
 data DriverStateX (f :: * -> *) (eff :: # !)
 
 mkDriverStateXVar
-  :: forall s f g eff p
-   . AVar (DriverState s f g eff p)
+  :: forall s f g eff p o
+   . AVar (DriverState s f g eff p o)
   -> AVar (DriverStateX f eff)
 mkDriverStateXVar = unsafeCoerce
 
 unDriverStateX
-  :: forall f eff r
-   . (forall s g p. DriverStateRec s f g eff p -> r)
+  :: forall f eff r o
+   . (forall s g p. DriverStateRec s f g eff p o -> r)
   -> DriverStateX f eff
   -> r
 unDriverStateX = unsafeCoerce
 
 initDriverState
-  :: forall s f g eff p
-   . Component' s f g (Aff (HalogenEffects eff)) p
+  :: forall s f g eff p o
+   . Component' s f g (Aff (HalogenEffects eff)) p o
+  -> (o -> Aff (HalogenEffects eff) Unit)
   -> Int
   -> AVar Int
   -> Aff (HalogenEffects eff) (AVar (DriverStateX f eff))
-initDriverState component keyId fresh = do
+initDriverState component handler keyId fresh = do
   let vtree = V.vtext ""
   node <- liftEff (V.createElement vtree)
   selfRef <- makeVar
@@ -77,6 +78,7 @@ initDriverState component keyId fresh = do
       , selfRef
       , keyId
       , fresh
+      , handler
       }
   putVar selfRef (DriverState ds)
   pure $ mkDriverStateXVar selfRef

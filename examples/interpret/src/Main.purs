@@ -26,11 +26,11 @@ type Output = Free OutputF
 output :: String -> Output Unit
 output msg = liftF (Log msg unit)
 
-ui :: H.Component State Query Output
-ui = H.component { render, eval }
+ui :: H.Component Query Output
+ui = H.component { render, eval, initialState }
   where
 
-  render :: State -> H.ComponentHTML Query
+  render :: State -> H.ComponentHTML Query Output
   render state =
     HH.div_
       [ HH.h1_
@@ -46,7 +46,7 @@ ui = H.component { render, eval }
     H.liftH $ output "State was toggled"
     pure next
 
-ui' :: forall eff. H.Component State Query (Aff (H.HalogenEffects (console :: CONSOLE | eff)))
+ui' :: forall eff. H.Component Query (Aff (H.HalogenEffects (console :: CONSOLE | eff)))
 ui' = H.interpret (foldFree evalOutput) ui
   where
   evalOutput :: OutputF ~> Aff (H.HalogenEffects (console :: CONSOLE | eff))
@@ -57,4 +57,4 @@ ui' = H.interpret (foldFree evalOutput) ui
 main :: Eff (H.HalogenEffects (console :: CONSOLE)) Unit
 main = runHalogenAff do
   body <- awaitBody
-  H.runUI ui' initialState body
+  H.runUI ui' body

@@ -39,14 +39,17 @@ data AceQuery a
   | Finalize a
   | ChangeText String a
 
+data AceOutput = TextChanged String
+
 -- | Effects embedding the Ace editor requires.
 type AceEffects eff = (ace :: ACE, avar :: AVAR | eff)
 
 -- | The Ace component definition.
-ace :: forall eff. H.Component AceState AceQuery (Aff (AceEffects eff))
+ace :: forall eff. H.Component AceQuery (Aff (AceEffects eff)) AceOutput
 ace = H.lifecycleComponent
     { render
     , eval
+    , initialState: initAceState
     , initializer: Just (H.action Initialize)
     , finalizer: Just (H.action Finalize)
     }
@@ -55,13 +58,13 @@ ace = H.lifecycleComponent
   -- As we're embedding a 3rd party component we only need to create a
   -- placeholder div here and attach the ref property which will raise a query
   -- when the element is created.
-  render :: AceState -> H.ComponentHTML AceQuery
+  render :: AceState -> H.ComponentHTML AceQuery (Aff (AceEffects eff))
   render = const $ HH.div [ HP.ref \el -> H.action (SetElement el) ] []
 
   -- The query algebra for the component handles the initialization of the Ace
   -- editor as well as responding to the `ChangeText` action that allows us to
   -- alter the editor's state.
-  eval :: AceQuery ~> H.ComponentDSL AceState AceQuery (Aff (AceEffects eff))
+  eval :: AceQuery ~> H.ComponentDSL AceState AceQuery (Aff (AceEffects eff)) AceOutput
   eval (SetElement el next) = do
     H.modify (_ { element = el })
     pure next
@@ -70,9 +73,9 @@ ace = H.lifecycleComponent
     case el of
       Nothing -> pure unit
       Just el' -> do
-        editor <- H.fromEff $ Ace.editNode el' Ace.ace
+        editor <- H.liftEff $ Ace.editNode el' Ace.ace
         H.modify (_ { editor = Just editor })
-        session <- H.fromEff $ Editor.getSession editor
+        session <- H.liftEff $ Editor.getSession editor
         H.subscribe $ H.eventSource_ (Session.onChange session) do
           text <- Editor.getValue editor
           pure $ H.action (ChangeText text)
@@ -87,6 +90,8 @@ ace = H.lifecycleComponent
     case state of
       Nothing -> pure unit
       Just editor -> do
-        current <- H.fromEff $ Editor.getValue editor
-        when (text /= current) $ void $ H.fromEff $ Editor.setValue text Nothing editor
+        current <- H.liftEff $ Editor.getValue editor
+        when (text /= current) do
+          void $ H.liftEff $ Editor.setValue text Nothing editor
+          H.raise $ TextChanged text
     pure next

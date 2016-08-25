@@ -3,7 +3,6 @@ module Main where
 import Prelude
 
 import Control.Monad.Eff (Eff)
-import Control.Monad.Free (Free)
 
 import Data.Maybe (Maybe(..), maybe)
 import Data.Lazy (defer)
@@ -52,7 +51,7 @@ ui = H.parentComponent { render, eval, initialState }
           [ HH.text "Swap tickers" ]
       ]
 
-  eval :: Query ~> Free (H.ParentDSL State Query TickQuery g TickSlot)
+  eval :: Query ~> H.ParentDSL State Query TickQuery g TickSlot
   eval (ReadTicks next) = do
     a <- H.query (TickSlot "A") (H.request GetTick)
     b <- H.query (TickSlot "B") (H.request GetTick)

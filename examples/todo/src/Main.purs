@@ -8,9 +8,8 @@ import Halogen as H
 import Halogen.Util (runHalogenAff, awaitBody)
 
 import Component.List (list)
-import Model (initialList)
 
 main :: Eff (H.HalogenEffects ()) Unit
 main = runHalogenAff do
   body <- awaitBody
-  H.runUI list (H.parentState initialList) body
+  H.runUI list body
