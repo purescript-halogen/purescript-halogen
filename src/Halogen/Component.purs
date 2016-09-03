@@ -87,18 +87,18 @@ hoistSlotM nat = unComponentSlot \p ctor k ->
 
 --------------------------------------------------------------------------------
 
-type ParentHTML f g m p = HTML (ComponentSlot g m p (f Unit)) (f Unit)
+type ParentHTML f g p m = HTML (ComponentSlot g m p (f Unit)) (f Unit)
 type ParentDSL = HalogenM
 
-type ComponentHTML f m = ParentHTML f (Const Void) m Void
-type ComponentDSL s f m o = ParentDSL s f (Const Void) m Void o
+type ComponentHTML f m = ParentHTML f (Const Void) Void m
+type ComponentDSL s f m o = ParentDSL s f (Const Void) Void o m
 
 --------------------------------------------------------------------------------
 
-type Component' s f g m p o =
+type Component' s f g p o m =
   { initialState :: s
-  , render :: s -> ParentHTML f g m p
-  , eval :: f ~> ParentDSL s f g m p o
+  , render :: s -> ParentHTML f g p m
+  , eval :: f ~> ParentDSL s f g p o m
   , initializer :: Maybe (f Unit)
   , finalizer :: Maybe (f Unit)
   , mkOrdBox :: p -> OrdBox p
@@ -109,14 +109,14 @@ type Component' s f g m p o =
 data Component (f :: * -> *) (m :: * -> *) o
 
 mkComponent
-  :: forall s f g m p o
-   . Component' s f g m p o
+  :: forall s f g p o m
+   . Component' s f g p o m
   -> Component f m o
 mkComponent = unsafeCoerce
 
 unComponent
   :: forall f m o r
-   . (forall s g p. Component' s f g m p o -> r)
+   . (forall s g p. Component' s f g p o m -> r)
   -> Component f m o
   -> r
 unComponent = unsafeCoerce
@@ -166,16 +166,16 @@ lifecycleComponent spec =
     , mkOrdBox: absurd
     }
 
-type ParentComponentSpec s f g m p o i =
+type ParentComponentSpec s f g p o m i =
   { initialState :: s
-  , render :: s -> ParentHTML f g m p
-  , eval :: f ~> ParentDSL s f g m p o
+  , render :: s -> ParentHTML f g p m
+  , eval :: f ~> ParentDSL s f g p o m
   }
 
 parentComponent
-  :: forall s f g m p o i
+  :: forall s f g p o m i
    . Ord p
-  => ParentComponentSpec s f g m p o i
+  => ParentComponentSpec s f g p o m i
   -> Component f m o
 parentComponent spec =
   mkComponent
@@ -187,18 +187,18 @@ parentComponent spec =
     , mkOrdBox: mkOrdBox
     }
 
-type ParentLifecycleComponentSpec s f g m p o =
+type ParentLifecycleComponentSpec s f g p o m =
   { initialState :: s
-  , render :: s -> ParentHTML f g m p
-  , eval :: f ~> ParentDSL s f g m p o
+  , render :: s -> ParentHTML f g p m
+  , eval :: f ~> ParentDSL s f g p o m
   , initializer :: Maybe (f Unit)
   , finalizer :: Maybe (f Unit)
   }
 
 lifecycleParentComponent
-  :: forall s f g m p o
+  :: forall s f g p o m
    . Ord p
-  => ParentLifecycleComponentSpec s f g m p o
+  => ParentLifecycleComponentSpec s f g p o m
   -> Component f m o
 lifecycleParentComponent spec =
   mkComponent
@@ -213,22 +213,22 @@ lifecycleParentComponent spec =
 --------------------------------------------------------------------------------
 
 mkQuery
-  :: forall s f g m p o a
+  :: forall s f g p o m a
    . (Applicative m, Eq p)
   => p
   -> g a
-  -> HalogenM s f g m p o a
+  -> HalogenM s f g p o m a
 mkQuery p q = HalogenM $ liftF $ ChildQuery (childQuery p q)
 
-getSlots :: forall s f g m p o. HalogenM s f g m p o (L.List p)
+getSlots :: forall s f g p o m. HalogenM s f g p o m (L.List p)
 getSlots = HalogenM $ liftF $ GetSlots id
 
 query
-  :: forall s f g m p o a
+  :: forall s f g p o m a
    . (Applicative m, Eq p)
   => p
   -> g a
-  -> HalogenM s f g m p o (Maybe a)
+  -> HalogenM s f g p o m (Maybe a)
 query p q = do
   slots <- getSlots
   case L.elemIndex p slots of
@@ -241,14 +241,14 @@ query'
   => ChildPath g g' p p'
   -> p
   -> g a
-  -> HalogenM s f g' m p' o (Maybe a)
+  -> HalogenM s f g' p' o m (Maybe a)
 query' i p q = query (injSlot i p) (injQuery i q)
 
 queryAll
-  :: forall s f g m p o a
+  :: forall s f g p o m a
    . (Applicative m, Ord p)
   => g a
-  -> HalogenM s f g m p o (M.Map p a)
+  -> HalogenM s f g p o m (M.Map p a)
 queryAll q =
   M.fromList <$> (traverse (\p -> map (Tuple p) (mkQuery p q)) =<< getSlots)
 

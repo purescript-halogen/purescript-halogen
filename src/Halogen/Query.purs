@@ -101,7 +101,7 @@ request req = req id
 -- |   currentState <- get
 -- |   pure (k currentState)
 -- | ```
-get :: forall s f g m p o. HalogenM s f g m p o s
+get :: forall s f g p o m. HalogenM s f g p o m s
 get = gets id
 
 -- | A version of [`get`](#get) that maps over the retrieved state before
@@ -117,7 +117,7 @@ get = gets id
 -- |   x <- gets _.x
 -- |   pure (k x)
 -- | ```
-gets :: forall s f g m p o a. (s -> a) -> HalogenM s f g m p o a
+gets :: forall s f g p o m a. (s -> a) -> HalogenM s f g p o m a
 gets = HalogenM <<< liftF <<< State <<< Get
 
 -- | Provides a way of modifying the current component's state within an `Eval`
@@ -134,24 +134,24 @@ gets = HalogenM <<< liftF <<< State <<< Get
 -- |   modify (+ 1)
 -- |   pure next
 -- | ```
-modify :: forall s f g m p o. (s -> s) -> HalogenM s f g m p o Unit
+modify :: forall s f g p o m. (s -> s) -> HalogenM s f g p o m Unit
 modify f = HalogenM (liftF (State (Modify f unit)))
 
 -- | Provides a way of replacing the current component's state within an `Eval`
 -- | or `Peek` function. This is much like `set` for the `State` monad, but
 -- | instead of operating in some `StateT`, uses the `HalogenF` algebra.
-set :: forall s f g m p o. s -> HalogenM s f g m p o Unit
+set :: forall s f g p o m. s -> HalogenM s f g p o m Unit
 set = modify <<< const
 
 -- | Provides a way of having a component subscribe to an `EventSource` from
 -- | within an `Eval` function.
-subscribe :: forall s f g m p o. EventSource f m -> HalogenM s f g m p o Unit
+subscribe :: forall s f g p o m. EventSource f m -> HalogenM s f g p o m Unit
 subscribe es = HalogenM (liftF (Subscribe es unit))
 
-raise :: forall s f g m p o. o -> HalogenM s f g m p o Unit
+raise :: forall s f g p o m. o -> HalogenM s f g p o m Unit
 raise o = HalogenM (liftF (Raise o unit))
 
 -- | A convenience function for lifting a `g` value directly into
 -- | `Free HalogenF` without the need to use `liftF $ right $ right $ ...`.
-liftH :: forall s f g m p o. m ~> HalogenM s f g m p o
+liftH :: forall s f g p o m. m ~> HalogenM s f g p o m
 liftH = HalogenM <<< liftF <<< Lift

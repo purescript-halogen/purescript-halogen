@@ -17,6 +17,7 @@ import Control.Monad.Error.Class (throwError)
 import Control.Monad.Free (foldFree)
 import Control.Monad.Rec.Class (forever)
 import Control.Monad.Trans (lift)
+import Control.Parallel.Class (par)
 
 import Data.Map as M
 import Data.Maybe (Maybe(..))
@@ -33,7 +34,7 @@ import Halogen.HTML.Renderer.VirtualDOM (renderHTML')
 import Halogen.Internal.VirtualDOM as V
 import Halogen.Query.ChildQuery (ChildQuery, unChildQuery)
 import Halogen.Query.EventSource (runEventSource)
-import Halogen.Query.HalogenF (HalogenF(..))
+import Halogen.Query.HalogenF (HalogenF(..), ParF(..), unPar)
 import Halogen.Query.HalogenM (HalogenM(..))
 import Halogen.Query.StateF (StateF(..))
 
@@ -42,7 +43,7 @@ import Halogen.Query.StateF (StateF(..))
 -- | query has been fulfilled.
 type Driver f eff = f ~> Aff (HalogenEffects eff)
 
-type DSL s f g eff = HalogenF s f g (Aff (HalogenEffects eff))
+type DSL s f g eff p o = HalogenF s f g p o (Aff (HalogenEffects eff)) (HalogenM s f g p o (Aff (HalogenEffects eff)))
 
 -- | This function is the main entry point for a Halogen based UI, taking a root
 -- | component, initial state, and HTML element to attach the rendered component
@@ -114,6 +115,8 @@ eval ref = case _ of
     DriverState { handler } <- peekVar ref
     handler o
     pure a
+  Par p -> do
+    unPar (\(ParF f x y) → par f (evalM ref x) (evalM ref y)) p
 
 evalChildQuery
   :: forall s f g eff p o
@@ -137,6 +140,13 @@ evalF ref q = do
   DriverState st <- peekVar ref
   case st.component.eval q of
     HalogenM fx -> foldFree (eval ref) fx
+
+evalM
+  :: forall s f g eff p o
+   . AVar (DriverState s f g eff p o)
+  -> HalogenM s f g p o (Aff (HalogenEffects eff))
+  ~> Aff (HalogenEffects eff)
+evalM ref (HalogenM q) = foldFree (eval ref) q
 
 peekVar :: forall eff a. AVar a -> Aff (avar :: AVAR | eff) a
 peekVar v = do

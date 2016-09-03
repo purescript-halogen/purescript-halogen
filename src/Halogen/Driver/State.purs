@@ -29,7 +29,7 @@ newtype DriverState s f g eff p o = DriverState (DriverStateRec s f g eff p o)
 type DriverStateRec s f g eff p o =
   { node :: HTMLElement
   , vtree :: V.VTree
-  , component :: Component' s f g (Aff (HalogenEffects eff)) p o
+  , component :: Component' s f g p o (Aff (HalogenEffects eff))
   , state :: s
   , children :: M.Map (OrdBox p) (AVar (DriverStateX g eff))
   , mkOrdBox :: p -> OrdBox p
@@ -58,7 +58,7 @@ unDriverStateX = unsafeCoerce
 
 initDriverState
   :: forall s f g eff p o
-   . Component' s f g (Aff (HalogenEffects eff)) p o
+   . Component' s f g p o (Aff (HalogenEffects eff))
   -> (o -> Aff (HalogenEffects eff) Unit)
   -> Int
   -> AVar Int
