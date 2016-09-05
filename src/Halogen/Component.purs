@@ -22,7 +22,7 @@ module Halogen.Component
   , query
   , query'
   , queryAll
-  -- TODO: , queryAll'
+  , queryAll'
   , transform
   , transformChild
   , interpret
@@ -42,7 +42,7 @@ import Data.Maybe (Maybe(..), maybe)
 import Data.Traversable (traverse)
 import Data.Tuple (Tuple(..))
 
-import Halogen.Component.ChildPath (ChildPath, injSlot, prjQuery, injQuery)
+import Halogen.Component.ChildPath (ChildPath, injSlot, prjQuery, injQuery, prjSlot, cpI)
 import Halogen.Data.OrdBox (OrdBox, mkOrdBox)
 import Halogen.HTML.Core (HTML)
 import Halogen.Query.ChildQuery (childQuery)
@@ -173,7 +173,7 @@ lifecycleComponent spec =
     :: (s -> h Void (f Unit))
     -> s
     -> h (ComponentSlot h (Const Void) m Void (f Unit)) (f Unit)
-  coeRender = unsafeCoerce -- ~= map (bimap absurd id)
+  coeRender = unsafeCoerce -- ≅ map (bimap absurd id)
 
 type ParentComponentSpec h s f g p o m i =
   { initialState :: s
@@ -251,17 +251,24 @@ query'
   -> p
   -> g a
   -> HalogenM s f g' p' o m (Maybe a)
-query' i p q = query (injSlot i p) (injQuery i q)
+query' path p q = query (injSlot path p) (injQuery path q)
 
 queryAll
   :: forall s f g p o m a
    . (Applicative m, Ord p)
   => g a
   -> HalogenM s f g p o m (M.Map p a)
-queryAll q =
-  M.fromList <$> (traverse (\p -> map (Tuple p) (mkQuery p q)) =<< getSlots)
+queryAll = queryAll' cpI
 
--- TODO: queryAll'
+queryAll'
+  :: forall s f g g' p p' o m a
+   . (Applicative m, Ord p, Eq p')
+  => ChildPath g g' p p'
+  -> g a
+  -> HalogenM s f g' p' o m (M.Map p a)
+queryAll' path q = do
+  slots <- L.mapMaybe (prjSlot path) <$> getSlots
+  M.fromList <$> (traverse (\p -> map (Tuple p) (mkQuery (injSlot path p) (injQuery path q))) slots)
 
 --------------------------------------------------------------------------------
 

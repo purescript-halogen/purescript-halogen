@@ -13,7 +13,7 @@ module Halogen
 
 import Prelude
 
-import Halogen.Component (Component, Component', ComponentDSL, ComponentHTML, ComponentSlot, ComponentSpec, LifecycleComponentSpec, ParentComponentSpec, ParentDSL, ParentHTML, ParentLifecycleComponentSpec, component, getSlots, interpret, lifecycleComponent, lifecycleParentComponent, mkComponent, mkComponentSlot, parentComponent, query, query', queryAll, transform, transformChild, unComponent, unComponentSlot)
+import Halogen.Component (Component, Component', ComponentDSL, ComponentHTML, ComponentSlot, ComponentSpec, LifecycleComponentSpec, ParentComponentSpec, ParentDSL, ParentHTML, ParentLifecycleComponentSpec, component, getSlots, interpret, lifecycleComponent, lifecycleParentComponent, mkComponent, mkComponentSlot, parentComponent, query, query', queryAll, queryAll', transform, transformChild, unComponent, unComponentSlot)
 import Halogen.Driver (Driver, runUI)
 import Halogen.Effects (HalogenEffects)
 import Halogen.HTML.Core as C
