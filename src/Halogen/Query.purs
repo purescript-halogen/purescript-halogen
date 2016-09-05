@@ -18,13 +18,13 @@ module Halogen.Query
   , module Halogen.Query.EventSource
   , module Halogen.Query.HalogenF
   , module Halogen.Query.StateF
-  )
-  where
+  ) where
 
 import Prelude
 
 import Control.Monad.Aff.Class (liftAff)
 import Control.Monad.Eff.Class (liftEff)
+import Control.Monad.State.Class as CMS
 import Control.Monad.Trans (lift)
 import Control.Monad.Free (liftF)
 
@@ -103,7 +103,7 @@ request req = req id
 -- |   pure (k currentState)
 -- | ```
 get :: forall s f g p o m. HalogenM s f g p o m s
-get = gets id
+get = CMS.get
 
 -- | A version of [`get`](#get) that maps over the retrieved state before
 -- | returning the result. Useful in cases where only a portion of the state is
@@ -119,7 +119,7 @@ get = gets id
 -- |   pure (k x)
 -- | ```
 gets :: forall s f g p o m a. (s -> a) -> HalogenM s f g p o m a
-gets = HalogenM <<< liftF <<< State <<< Get
+gets = CMS.gets
 
 -- | Provides a way of modifying the current component's state within an `Eval`
 -- | or `Peek` function. This is much like `modify` for the `State` monad, but
@@ -136,18 +136,19 @@ gets = HalogenM <<< liftF <<< State <<< Get
 -- |   pure next
 -- | ```
 modify :: forall s f g p o m. (s -> s) -> HalogenM s f g p o m Unit
-modify f = HalogenM (liftF (State (Modify f unit)))
+modify = CMS.modify
 
 -- | Provides a way of replacing the current component's state within an `Eval`
 -- | or `Peek` function. This is much like `put` for the `State` monad, but
 -- | instead of operating in some `StateT`, uses the `HalogenF` algebra.
 put :: forall s f g p o m. s -> HalogenM s f g p o m Unit
-put = modify <<< const
+put = CMS.put
 
 -- | Provides a way of having a component subscribe to an `EventSource` from
 -- | within an `Eval` function.
 subscribe :: forall s f g p o m. EventSource f m -> HalogenM s f g p o m Unit
 subscribe es = HalogenM (liftF (Subscribe es unit))
 
+-- | Raises an output message for the component.
 raise :: forall s f g p o m. o -> HalogenM s f g p o m Unit
 raise o = HalogenM (liftF (Raise o unit))
