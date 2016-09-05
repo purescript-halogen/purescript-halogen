@@ -48,11 +48,11 @@ data Query a
 type AppEffects eff = H.HalogenEffects (ajax :: AJAX | eff)
 
 -- | The definition for the app's main UI component.
-ui :: forall eff. H.Component Query (Aff (AppEffects eff))
+ui :: forall eff. H.Component HH.HTML Query Void (Aff (AppEffects eff))
 ui = H.component { render, eval, initialState }
   where
 
-  render :: State -> H.ComponentHTML Query (Aff (AppEffects eff))
+  render :: State -> H.ComponentHTML Query
   render st =
     HH.div_ $
       [ HH.h1_
@@ -84,7 +84,7 @@ ui = H.component { render, eval, initialState }
               ]
           ]
 
-  eval :: Query ~> H.ComponentDSL State Query (Aff (AppEffects eff))
+  eval :: Query ~> H.ComponentDSL State Query Void (Aff (AppEffects eff))
   eval (SetCode code next) = H.modify (_ { code = code, result = Nothing :: Maybe String }) $> next
   eval (MakeRequest code next) = do
     H.modify (_ { busy = true })

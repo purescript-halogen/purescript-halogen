@@ -8,12 +8,12 @@ module Halogen.Query
   , get
   , gets
   , modify
-  , set
+  , put
   , subscribe
   , raise
-  , liftH
   , module Control.Monad.Aff.Class
   , module Control.Monad.Eff.Class
+  , module Control.Monad.Trans
   , module Halogen.Component
   , module Halogen.Query.EventSource
   , module Halogen.Query.HalogenF
@@ -25,6 +25,7 @@ import Prelude
 
 import Control.Monad.Aff.Class (liftAff)
 import Control.Monad.Eff.Class (liftEff)
+import Control.Monad.Trans (lift)
 import Control.Monad.Free (liftF)
 
 import Halogen.Component (ParentDSL, query, queryAll)
@@ -138,10 +139,10 @@ modify :: forall s f g p o m. (s -> s) -> HalogenM s f g p o m Unit
 modify f = HalogenM (liftF (State (Modify f unit)))
 
 -- | Provides a way of replacing the current component's state within an `Eval`
--- | or `Peek` function. This is much like `set` for the `State` monad, but
+-- | or `Peek` function. This is much like `put` for the `State` monad, but
 -- | instead of operating in some `StateT`, uses the `HalogenF` algebra.
-set :: forall s f g p o m. s -> HalogenM s f g p o m Unit
-set = modify <<< const
+put :: forall s f g p o m. s -> HalogenM s f g p o m Unit
+put = modify <<< const
 
 -- | Provides a way of having a component subscribe to an `EventSource` from
 -- | within an `Eval` function.
@@ -150,8 +151,3 @@ subscribe es = HalogenM (liftF (Subscribe es unit))
 
 raise :: forall s f g p o m. o -> HalogenM s f g p o m Unit
 raise o = HalogenM (liftF (Raise o unit))
-
--- | A convenience function for lifting a `g` value directly into
--- | `Free HalogenF` without the need to use `liftF $ right $ right $ ...`.
-liftH :: forall s f g p o m. m ~> HalogenM s f g p o m
-liftH = HalogenM <<< liftF <<< Lift

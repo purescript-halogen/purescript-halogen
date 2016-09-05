@@ -1,4 +1,4 @@
-module Halogen.HTML.Renderer.VirtualDOM (renderHTML, renderHTML') where
+module Halogen.HTML.Renderer.VirtualDOM (renderHTML) where
 
 import Prelude
 
@@ -14,7 +14,7 @@ import Data.Monoid (mempty)
 import Data.Nullable (toNullable)
 
 import Halogen.Effects (HalogenEffects)
-import Halogen.HTML.Core (HTML(..), Prop(..), PropF(..), HandlerF(..), runNamespace, runTagName, runPropName, runAttrName, runEventName)
+import Halogen.HTML.Core (HTML(..), Prop(..), PropF(..), HandlerF(..), runNamespace, runTagName, runPropName, runAttrName, runEventName, lowerFuse)
 import Halogen.HTML.Events.Handler (runEventHandler)
 import Halogen.Internal.VirtualDOM as V
 
@@ -22,33 +22,13 @@ import Halogen.Internal.VirtualDOM as V
 -- |
 -- | The first argument is an event handler.
 renderHTML
-  :: forall p i eff
-   . (i -> Eff (HalogenEffects eff) Unit)
-  -> (p -> V.VTree)
-  -> HTML p i
-  -> V.VTree
-renderHTML driver handleSlot = go
-  where
-  go = case _ of
-    Text s ->
-      V.vtext s
-    Element ns name props els ->
-      V.vnode
-        (toNullable $ runNamespace <$> ns)
-        (runTagName name)
-        (toNullable $ foldl findKey Nothing props)
-        (foldMap (renderProp driver) props) (map go els)
-    Slot p ->
-      handleSlot p
-
-renderHTML'
   :: forall p i m eff
    . Monad m
   => (i -> Eff (HalogenEffects eff) Unit)
   -> (p -> m V.VTree)
   -> HTML p i
   -> m V.VTree
-renderHTML' driver handleSlot = go
+renderHTML driver handleSlot = go
   where
   go = case _ of
     Text s ->
@@ -62,6 +42,8 @@ renderHTML' driver handleSlot = go
         (foldMap (renderProp driver) props) els'
     Slot p ->
       handleSlot p
+    Fuse bc ->
+      go (lowerFuse bc)
 
 renderProp
   :: forall i eff

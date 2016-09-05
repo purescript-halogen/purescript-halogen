@@ -19,11 +19,11 @@ data SlotA = SlotA
 derive instance eqSlotA :: Eq SlotA
 derive instance ordSlotA :: Ord SlotA
 
-componentA :: forall g. H.Component QueryA g
+componentA :: forall m. H.Component HH.HTML QueryA Void m
 componentA = H.component { render, eval, initialState }
   where
 
-  render :: StateA -> H.ComponentHTML QueryA g
+  render :: StateA -> H.ComponentHTML QueryA
   render (StateA state) = HH.div_
     [ HH.h1_ [ HH.text "Toggle Button A" ]
     , HH.button
@@ -31,7 +31,7 @@ componentA = H.component { render, eval, initialState }
         [ HH.text (if state.on then "On" else "Off") ]
     ]
 
-  eval :: QueryA ~> H.ComponentDSL StateA QueryA g
+  eval :: QueryA ~> H.ComponentDSL StateA QueryA Void m
   eval (ToggleStateA next) = do
     H.modify (\(StateA state) -> StateA { on: not state.on })
     pure next

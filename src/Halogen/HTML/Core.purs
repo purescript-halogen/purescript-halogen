@@ -1,6 +1,9 @@
 --| The core types and smart constructors for the HTML DSL.
 module Halogen.HTML.Core
-  ( HTML(..)
+  ( Fuse
+  , lowerFuse
+
+  , HTML(..)
   , element
   , fillSlot
 
@@ -40,7 +43,7 @@ module Halogen.HTML.Core
 
 import Prelude
 
-import Data.Bifunctor (class Bifunctor, rmap)
+import Data.Bifunctor (class Bifunctor, bimap, rmap)
 import Data.Exists (Exists, mkExists)
 import Data.ExistsR (ExistsR, mkExistsR, runExistsR)
 import Data.Maybe (Maybe(..))
@@ -52,18 +55,44 @@ import DOM.HTML.Types (HTMLElement)
 import Halogen.HTML.Events.Handler (EventHandler)
 import Halogen.HTML.Events.Types (Event)
 
+import Unsafe.Coerce (unsafeCoerce)
+
+newtype FuseF p i x y = FuseF { k :: x -> p, l :: y -> i, html:: HTML x y }
+
+data Fuse p i
+
+instance bifunctorFuse :: Bifunctor Fuse where
+  bimap f g = unFuse (\(FuseF { k, l, html }) -> mkFuse (FuseF { k: f <<< k, l: g <<< l, html }))
+
+mkFuse :: forall p i x y. FuseF p i x y -> Fuse p i
+mkFuse = unsafeCoerce
+
+unFuse :: forall p i x y r. (FuseF p i x y -> r) -> Fuse p i -> r
+unFuse = unsafeCoerce
+
+fuse :: forall p i x y. (x -> p) -> (y -> i) -> HTML x y -> Fuse p i
+fuse k l html = mkFuse $ FuseF { k, l, html }
+
+lowerFuse :: forall p i. Fuse p i -> HTML p i
+lowerFuse = unFuse (\(FuseF { k, l, html }) -> go k l html)
+  where
+  go f g = case _ of
+    Text s -> Text s
+    Element ns name props els -> Element ns name (map g <$> props) (go f g <$> els)
+    Slot p -> Slot (f p)
+    Fuse h -> lowerFuse h
+
 -- | An initial encoding of HTML nodes.
 data HTML p i
   = Text String
   | Element (Maybe Namespace) TagName (Array (Prop i)) (Array (HTML p i))
   | Slot p
+  | Fuse (Fuse p i)
 
 instance bifunctorHTML :: Bifunctor HTML where
-  bimap f g = go
-    where
-    go (Text s) = Text s
-    go (Element ns name props els) = Element ns name (map g <$> props) (go <$> els)
-    go (Slot p) = Slot (f p)
+  bimap f g = case _ of
+    Fuse bc -> Fuse (bimap f g bc)
+    x -> Fuse (fuse f g x)
 
 instance functorHTML :: Functor (HTML p) where
   map = rmap
@@ -77,6 +106,7 @@ fillSlot :: forall p p' i i' m. Applicative m => (p -> m (HTML p' i')) -> (i -> 
 fillSlot _ _ (Text s) = pure $ Text s
 fillSlot f g (Element ns name props els) = Element ns name (map g <$> props) <$> traverse (fillSlot f g) els
 fillSlot f _ (Slot p) = f p
+fillSlot f g (Fuse h) = fillSlot f g (lowerFuse h)
 
 -- | A property can be:
 -- | - A JavaScript property for an element (typed, and may not have a

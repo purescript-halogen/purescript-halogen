@@ -14,27 +14,25 @@ import Halogen.Util (runHalogenAff, awaitBody)
 
 import Ticker (TickQuery(..), ticker)
 
-data Query a
-  = ReadTicks a
-  | Swap a
+data Query a = ReadTicks a
 
-type State = { tickA :: Maybe Int, tickB :: Maybe Int, swapped :: Boolean }
+type State = { tickA :: Maybe Int, tickB :: Maybe Int }
 
 initialState :: State
-initialState = { tickA: Nothing, tickB: Nothing, swapped: false }
+initialState = { tickA: Nothing, tickB: Nothing }
 
 newtype TickSlot = TickSlot String
 derive instance eqTickSlot :: Eq TickSlot
 derive instance ordTickSlot :: Ord TickSlot
 
-ui :: forall g. Applicative g => H.Component Query g
+ui :: forall m. Applicative m => H.Component HH.HTML Query Void m
 ui = H.parentComponent { render, eval, initialState }
   where
-  render :: State -> H.ParentHTML Query TickQuery g TickSlot
-  render { swapped, tickA, tickB } =
+  render :: State -> H.ParentHTML Query TickQuery TickSlot m
+  render { tickA, tickB } =
     HH.div_
-      [ if swapped then HH.slot (TickSlot "B") (defer \_ -> ticker 0) else HH.slot (TickSlot "A") (defer \_ -> ticker 100)
-      , if swapped then HH.slot (TickSlot "A") (defer \_ -> ticker 100) else HH.slot (TickSlot "B") (defer \_ -> ticker 0)
+      [ HH.slot (TickSlot "A") (defer \_ -> ticker 100) absurd
+      , HH.slot (TickSlot "B") (defer \_ -> ticker 0) absurd
       , HH.p_
           [ HH.p_
               [ HH.text
@@ -46,19 +44,13 @@ ui = H.parentComponent { render, eval, initialState }
               [ HE.onClick (HE.input_ ReadTicks) ]
               [ HH.text "Update reading" ]
           ]
-      , HH.button
-          [ HE.onClick (HE.input_ Swap) ]
-          [ HH.text "Swap tickers" ]
       ]
 
-  eval :: Query ~> H.ParentDSL State Query TickQuery g TickSlot
+  eval :: Query ~> H.ParentDSL State Query TickQuery TickSlot Void m
   eval (ReadTicks next) = do
     a <- H.query (TickSlot "A") (H.request GetTick)
     b <- H.query (TickSlot "B") (H.request GetTick)
-    H.modify (\st -> st { tickA = a, tickB = b })
-    pure next
-  eval (Swap next) = do
-    H.modify (\st -> st { swapped = not st.swapped })
+    H.put { tickA: a, tickB: b }
     pure next
 
 main :: Eff (H.HalogenEffects ()) Unit

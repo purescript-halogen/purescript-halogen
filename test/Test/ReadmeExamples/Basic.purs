@@ -14,8 +14,8 @@ data Query a
   | GetState (Boolean -> a)
 
 -- | The component definition
-myComponent :: forall g. Component State Query g
-myComponent = component { render, eval }
+myComponent :: forall m. Component H.HTML Query Void m
+myComponent = component { render, eval, initialState: { on: false } }
   where
 
   render :: State -> ComponentHTML Query
@@ -28,7 +28,7 @@ myComponent = component { render, eval }
           [ H.text (if state.on then "On" else "Off") ]
       ]
 
-  eval :: Query ~> (ComponentDSL State Query g)
+  eval :: Query ~> ComponentDSL State Query Void m
   eval (ToggleState next) = do
     modify (\state -> { on: not state.on })
     pure next

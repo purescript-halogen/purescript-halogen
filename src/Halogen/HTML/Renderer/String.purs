@@ -9,7 +9,7 @@ import Data.Maybe (Maybe(..), maybe)
 import Data.String (joinWith)
 import Data.Tuple (Tuple(..))
 
-import Halogen.HTML.Core (HTML(..), Prop(..), PropF(..), runTagName, runNamespace, runAttrName)
+import Halogen.HTML.Core (HTML(..), Prop(..), PropF(..), runTagName, runNamespace, runAttrName, lowerFuse)
 
 -- | Render a HTML document as a `String`, usually for testing purposes.
 renderHTML :: forall p i. HTML p i -> String
@@ -21,6 +21,8 @@ renderHTML (Element ns name attrs els) =
      ">" <> foldMap renderHTML els <>
      "</" <> tagName <> ">"
 renderHTML (Slot _) = ""
+renderHTML (Fuse bc) = renderHTML (lowerFuse bc)
+
 
 -- TODO: attr rendering
 renderAttr :: forall i. Prop i -> Maybe String

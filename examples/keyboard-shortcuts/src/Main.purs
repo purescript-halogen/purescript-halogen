@@ -24,42 +24,43 @@ import Halogen.Util (runHalogenAff, awaitBody)
 
 import Keyboard as K
 
--- | The state of the application
 type State = { chars :: String }
 
 initialState :: State
 initialState = { chars : "" }
 
--- | Queries to the state machine
 data Query a
   = Init a
   | AppendChar Char a
   | Clear a
 
--- | Effects embedding the Ace editor requires.
-type E eff = (dom :: DOM, avar :: AVAR, keyboard :: K.KEYBOARD | eff)
+type Effects eff = (dom :: DOM, avar :: AVAR, keyboard :: K.KEYBOARD | eff)
 
-ui :: forall eff. H.Component Query (Aff (E eff))
-ui = H.lifecycleComponent { render, eval, initialState, initializer, finalizer: Nothing }
+ui :: forall eff. H.Component HH.HTML Query Void (Aff (Effects eff))
+ui =
+  H.lifecycleComponent
+    { render
+    , eval
+    , initialState
+    , initializer: Just (H.action Init)
+    , finalizer: Nothing
+    }
   where
 
-  initializer :: Maybe (Query Unit)
-  initializer = Just (H.action Init)
-
-  render :: State -> H.ComponentHTML Query (Aff (E eff))
+  render :: State -> H.ComponentHTML Query
   render state =
     HH.div_
       [ HH.p_ [ HH.text "Hold down the shift key and type some characters!" ]
       , HH.p_ [ HH.text state.chars ]
       ]
 
-  eval :: Query ~> H.ComponentDSL State Query (Aff (E eff))
+  eval :: Query ~> H.ComponentDSL State Query Void (Aff (Effects eff))
   eval q =
     case q of
       Init next -> do
         document <- H.liftEff $ DOM.window >>= DOM.document <#> DOM.htmlDocumentToDocument
         let
-          querySource :: H.EventSource (Coproduct (Const Unit) Query) (Aff (E eff))
+          querySource :: H.EventSource (Coproduct (Const Unit) Query) (Aff (Effects eff))
           querySource =
             H.eventSource (K.onKeyUp document) \e -> do
               let info = K.readKeyboardEvent e

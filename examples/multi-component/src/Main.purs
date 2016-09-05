@@ -38,25 +38,25 @@ cpB = cpR :> cpL
 cpC :: ChildPath QueryC ChildQuery SlotC ChildSlot
 cpC = cpR :> cpR
 
-ui :: forall g. Applicative g => H.Component Query g
+ui :: forall m. Applicative m => H.Component HH.HTML Query Void m
 ui = H.parentComponent { render, eval, initialState }
   where
 
-  render :: State -> H.ParentHTML Query ChildQuery g ChildSlot
+  render :: State -> H.ParentHTML Query ChildQuery ChildSlot m
   render state = HH.div_
-    [ HH.div_ [ HH.slot' cpA SlotA (defer \_ -> componentA) ]
-    , HH.div_ [ HH.slot' cpB SlotB (defer \_ -> componentB) ]
-    , HH.div_ [ HH.slot' cpC SlotC (defer \_ -> componentC) ]
+    [ HH.div_ [ HH.slot' cpA SlotA (defer \_ -> componentA) absurd ]
+    , HH.div_ [ HH.slot' cpB SlotB (defer \_ -> componentB) absurd ]
+    , HH.div_ [ HH.slot' cpC SlotC (defer \_ -> componentC) absurd ]
     , HH.div_ [ HH.text $ "Current states: " <> show state.a <> " / " <> show state.b <> " / " <> show state.c ]
     , HH.button [ HE.onClick (HE.input_ ReadStates) ] [ HH.text "Read states" ]
     ]
 
-  eval :: Query ~> H.ParentDSL State Query ChildQuery g ChildSlot
+  eval :: Query ~> H.ParentDSL State Query ChildQuery ChildSlot Void m
   eval (ReadStates next) = do
     a <- H.query' cpA SlotA (H.request GetStateA)
     b <- H.query' cpB SlotB (H.request GetStateB)
     c <- H.query' cpC SlotC (H.request GetStateC)
-    H.set { a, b, c }
+    H.put { a, b, c }
     pure next
 
 main :: Eff (H.HalogenEffects ()) Unit

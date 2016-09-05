@@ -45,7 +45,7 @@ data AceOutput = TextChanged String
 type AceEffects eff = (ace :: ACE, avar :: AVAR | eff)
 
 -- | The Ace component definition.
-ace :: forall eff. H.Component AceQuery (Aff (AceEffects eff)) AceOutput
+ace :: forall eff. H.Component HH.HTML AceQuery AceOutput (Aff (AceEffects eff))
 ace = H.lifecycleComponent
     { render
     , eval
@@ -58,27 +58,26 @@ ace = H.lifecycleComponent
   -- As we're embedding a 3rd party component we only need to create a
   -- placeholder div here and attach the ref property which will raise a query
   -- when the element is created.
-  render :: AceState -> H.ComponentHTML AceQuery (Aff (AceEffects eff))
+  render :: AceState -> H.ComponentHTML AceQuery
   render = const $ HH.div [ HP.ref \el -> H.action (SetElement el) ] []
 
   -- The query algebra for the component handles the initialization of the Ace
   -- editor as well as responding to the `ChangeText` action that allows us to
   -- alter the editor's state.
-  eval :: AceQuery ~> H.ComponentDSL AceState AceQuery (Aff (AceEffects eff)) AceOutput
+  eval :: AceQuery ~> H.ComponentDSL AceState AceQuery AceOutput (Aff (AceEffects eff))
   eval (SetElement el next) = do
     H.modify (_ { element = el })
     pure next
   eval (Initialize next) = do
-    el <- H.gets _.element
-    case el of
+    H.gets _.element >>= case _ of
       Nothing -> pure unit
       Just el' -> do
         editor <- H.liftEff $ Ace.editNode el' Ace.ace
-        H.modify (_ { editor = Just editor })
         session <- H.liftEff $ Editor.getSession editor
-        H.subscribe $ H.eventSource_ (Session.onChange session) do
-          text <- Editor.getValue editor
-          pure $ H.action (ChangeText text)
+        H.modify (_ { editor = Just editor })
+        H.subscribe
+          $ H.eventSource_ (Session.onChange session)
+          $ H.action <<< ChangeText <$> Editor.getValue editor
     pure next
   eval (Finalize next) = do
     -- Release the reference to the editor and do any other cleanup that a real
@@ -93,5 +92,5 @@ ace = H.lifecycleComponent
         current <- H.liftEff $ Editor.getValue editor
         when (text /= current) do
           void $ H.liftEff $ Editor.setValue text Nothing editor
-          H.raise $ TextChanged text
+    H.raise $ TextChanged text
     pure next

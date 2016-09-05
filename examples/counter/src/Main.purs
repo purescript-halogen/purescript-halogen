@@ -17,11 +17,11 @@ initialState = 0
 
 data Query a = Tick a
 
-ui :: forall g. H.Component Query g
+ui :: forall m. H.Component HH.HTML Query Void m
 ui = H.component { render, eval, initialState }
   where
 
-  render :: State -> H.ComponentHTML Query g
+  render :: State -> H.ComponentHTML Query
   render n =
     HH.div_
       [ HH.h1
@@ -31,7 +31,7 @@ ui = H.component { render, eval, initialState }
           [ HH.text (show n) ]
       ]
 
-  eval :: Query ~> H.ComponentDSL State Query g
+  eval :: Query ~> H.ComponentDSL State Query Void m
   eval (Tick next) = do
     H.modify (_ + 1)
     pure next

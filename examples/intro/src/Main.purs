@@ -16,23 +16,24 @@ initialState = { on: false }
 
 data Query a = ToggleState a
 
-ui :: forall m. H.Component Query m
+ui :: forall m. H.Component HH.HTML Query Void m
 ui = H.component { initialState, render, eval }
+  where
 
-render :: forall m. State -> H.ComponentHTML Query m
-render state =
-  HH.div_
-    [ HH.h1_
-        [ HH.text "Toggle Button" ]
-    , HH.button
-        [ HE.onClick (HE.input_ ToggleState) ]
-        [ HH.text (if state.on then "On" else "Off") ]
-    ]
+  render :: State -> H.ComponentHTML Query
+  render state =
+    HH.div_
+      [ HH.h1_
+          [ HH.text "Toggle Button" ]
+      , HH.button
+          [ HE.onClick (HE.input_ ToggleState) ]
+          [ HH.text (if state.on then "On" else "Off") ]
+      ]
 
-eval :: forall m. Query ~> H.ComponentDSL State Query m
-eval (ToggleState next) = do
-  H.modify (\state -> { on: not state.on })
-  pure next
+  eval :: Query ~> H.ComponentDSL State Query Void m
+  eval (ToggleState next) = do
+    H.modify (\state -> { on: not state.on })
+    pure next
 
 main :: Eff (H.HalogenEffects ()) Unit
 main = runHalogenAff do

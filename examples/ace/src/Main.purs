@@ -7,6 +7,7 @@ import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Console (CONSOLE)
 
 import Data.Lazy (defer)
+import Data.Maybe (Maybe(..))
 
 import Halogen as H
 import Halogen.HTML.Events.Indexed as HE
@@ -35,11 +36,11 @@ derive instance eqAceSlot :: Eq AceSlot
 derive instance ordAceSlot :: Ord AceSlot
 
 -- | The main UI component definition.
-ui :: forall eff. H.Component Query (Aff (AceEffects eff)) Void
+ui :: forall eff. H.Component HH.HTML Query Void (Aff (AceEffects eff))
 ui = H.parentComponent { render, eval, initialState }
   where
 
-  render :: State -> H.ParentHTML Query AceQuery (Aff (AceEffects eff)) AceSlot
+  render :: State -> H.ParentHTML Query AceQuery AceSlot (Aff (AceEffects eff))
   render { text: text } =
     HH.div_
       [ HH.h1_
@@ -57,7 +58,7 @@ ui = H.parentComponent { render, eval, initialState }
           [ HH.text ("Current text: " <> text) ]
       ]
 
-  eval :: Query ~> H.ParentDSL State Query AceQuery (Aff (AceEffects eff)) AceSlot Void
+  eval :: Query ~> H.ParentDSL State Query AceQuery AceSlot Void (Aff (AceEffects eff))
   eval (ClearText next) = do
     H.query AceSlot $ H.action (ChangeText "")
     pure next
@@ -65,8 +66,8 @@ ui = H.parentComponent { render, eval, initialState }
     H.modify (_ { text = text })
     pure next
 
-  handleAceOuput :: AceOutput -> Query Unit
-  handleAceOuput (TextChanged text) = H.action $ HandleAceUpdate text
+  handleAceOuput :: AceOutput -> Maybe (Query Unit)
+  handleAceOuput (TextChanged text) = Just $ H.action $ HandleAceUpdate text
 
 -- | Run the app!
 main :: Eff (H.HalogenEffects (ace :: ACE, console :: CONSOLE)) Unit

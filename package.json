@@ -8,7 +8,6 @@
     "example-ajax": "bower link && cd examples/ajax && bower link purescript-halogen && bower install && npm run build",
     "example-components": "bower link && cd examples/components && bower link purescript-halogen && bower install && npm run build",
     "example-counter": "bower link && cd examples/counter && bower link purescript-halogen && bower install && npm run build",
-    "example-deep-peek": "bower link && cd examples/deep-peek && bower link purescript-halogen && bower install && npm run build",
     "example-interpret": "bower link && cd examples/interpret && bower link purescript-halogen && bower install && npm run build",
     "example-intro": "bower link && cd examples/intro && bower link purescript-halogen && bower install && npm run build",
     "example-keyboard-shortcuts": "bower link && cd examples/keyboard-shortcuts && bower link purescript-halogen && bower install && npm run build",

@@ -19,9 +19,12 @@ import Control.Monad.Rec.Class (forever)
 import Control.Monad.Trans (lift)
 import Control.Parallel.Class (par)
 
-import Data.Map as M
-import Data.Maybe (Maybe(..))
 import Data.Lazy (force)
+import Data.List (List, (:), (\\))
+import Data.List as L
+import Data.Map as M
+import Data.Traversable (for_, sequence)
+import Data.Maybe (Maybe(..), maybe)
 
 import DOM.HTML.Types (HTMLElement, htmlElementToNode)
 import DOM.Node.Node (appendChild)
@@ -30,7 +33,8 @@ import Halogen.Component (Component, ComponentSlot, unComponent, unComponentSlot
 import Halogen.Data.OrdBox (OrdBox, unOrdBox)
 import Halogen.Driver.State (DriverStateX, DriverState(..), unDriverStateX, initDriverState)
 import Halogen.Effects (HalogenEffects)
-import Halogen.HTML.Renderer.VirtualDOM (renderHTML')
+import Halogen.HTML.Core (HTML)
+import Halogen.HTML.Renderer.VirtualDOM (renderHTML)
 import Halogen.Internal.VirtualDOM as V
 import Halogen.Query.ChildQuery (ChildQuery, unChildQuery)
 import Halogen.Query.EventSource (runEventSource)
@@ -45,6 +49,40 @@ type Driver f eff = f ~> Aff (HalogenEffects eff)
 
 type DSL s f g eff p o = HalogenF s f g p o (Aff (HalogenEffects eff)) (HalogenM s f g p o (Aff (HalogenEffects eff)))
 
+type LifecycleHandlers eff =
+  { initializers :: List (Aff (HalogenEffects eff) Unit)
+  , finalizers :: List (Aff (HalogenEffects eff) Unit)
+  }
+
+addInitializer
+  :: forall eff
+   . Aff (HalogenEffects eff) Unit
+  -> AVar (LifecycleHandlers eff)
+  -> Aff (HalogenEffects eff) Unit
+addInitializer i var = do
+  modifyVar (\lchs -> { initializers: i : lchs.initializers, finalizers: lchs.finalizers }) var
+
+addFinalizer
+  :: forall eff
+   . Aff (HalogenEffects eff) Unit
+  -> AVar (LifecycleHandlers eff)
+  -> Aff (HalogenEffects eff) Unit
+addFinalizer f var = do
+  modifyVar (\lchs -> { initializers: lchs.initializers, finalizers: f : lchs.finalizers }) var
+
+handleLifecycle
+  :: forall eff r
+   . (AVar (LifecycleHandlers eff) -> Aff (HalogenEffects eff) r)
+  -> Aff (HalogenEffects eff) r
+handleLifecycle f = do
+  lchs <- makeVar' { initializers: L.Nil, finalizers: L.Nil }
+  result <- f lchs
+  { initializers, finalizers } <- peekVar lchs
+  sequence $ L.reverse initializers
+  sequence finalizers
+  pure result
+
+
 -- | This function is the main entry point for a Halogen based UI, taking a root
 -- | component, initial state, and HTML element to attach the rendered component
 -- | to.
@@ -54,37 +92,38 @@ type DSL s f g eff p o = HalogenF s f g p o (Aff (HalogenEffects eff)) (HalogenM
 -- | with the UI.
 runUI
   :: forall f eff o
-   . Component f (Aff (HalogenEffects eff)) o
+   . Component HTML f o (Aff (HalogenEffects eff))
   -> HTMLElement
   -> Aff (HalogenEffects eff) (Driver f eff)
 runUI component element = _.driver <$> do
   fresh <- makeVar' 0
-  var <- runComponent (const (pure unit)) fresh component
-  dsx <- peekVar var
-  unDriverStateX (\st -> do
-    -- TODO: run initializer(s) after element is added to DOM?
-    liftEff $ appendChild (htmlElementToNode st.node) (htmlElementToNode element)
-    -- The record here is a hack around a skolem escape issue. If the typing
-    -- rules for records change so this no longer works it may also be fixable
-    -- with copious type annotations.
-    pure { driver: evalF st.selfRef }) dsx
+  handleLifecycle \lchs -> do
+    var <- runComponent (const (pure unit)) fresh lchs component
+    dsx <- peekVar var
+    unDriverStateX (\st -> do
+      liftEff $ appendChild (htmlElementToNode st.node) (htmlElementToNode element)
+      -- The record here is a hack around a skolem escape issue. If the typing
+      -- rules for records change so this no longer works it may also be fixable
+      -- with copious type annotations.
+      pure { driver: evalF st.selfRef }) dsx
 
 runComponent
   :: forall f eff o
    . (o -> Aff (HalogenEffects eff) Unit)
   -> AVar Int
-  -> Component f (Aff (HalogenEffects eff)) o
-  -> Aff (HalogenEffects eff) (AVar (DriverStateX f eff))
-runComponent handler fresh = unComponent \component -> do
+  -> AVar (LifecycleHandlers eff)
+  -> Component HTML f o (Aff (HalogenEffects eff))
+  -> Aff (HalogenEffects eff) (AVar (DriverStateX HTML f eff))
+runComponent handler fresh lchs = unComponent \component -> do
   keyId <- peekVar fresh
   modifyVar (_ + 1) fresh
   var <- initDriverState component handler keyId fresh
-  unDriverStateX (render <<< _.selfRef) =<< peekVar var
+  unDriverStateX (render lchs <<< _.selfRef) =<< peekVar var
   pure var
 
 eval
   :: forall s f g eff p o
-   . AVar (DriverState s f g eff p o)
+   . AVar (DriverState HTML s f g eff p o)
   -> DSL s f g eff p o
   ~> Aff (HalogenEffects eff)
 eval ref = case _ of
@@ -95,15 +134,14 @@ eval ref = case _ of
         pure (k state)
       Modify f next -> do
         modifyVar (\(DriverState st) -> DriverState (st { state = f st.state })) ref
-        render ref
+        handleLifecycle \lchs -> render lchs ref
         pure next
   Subscribe es next -> do
     let consumer = forever (lift <<< evalF ref =<< await)
     forkAff $ SCR.runStallingProcess (runEventSource es $$? consumer)
     pure next
-  Lift q ->
-    -- TODO: do we need to render here?
-    q
+  Lift aff ->
+    aff
   Halt msg ->
     throwError (error msg)
   GetSlots k -> do
@@ -120,7 +158,7 @@ eval ref = case _ of
 
 evalChildQuery
   :: forall s f g eff p o
-   . AVar (DriverState s f g eff p o)
+   . AVar (DriverState HTML s f g eff p o)
   -> ChildQuery g (Aff (HalogenEffects eff)) p
   ~> Aff (HalogenEffects eff)
 evalChildQuery ref = unChildQuery \p k -> do
@@ -133,7 +171,7 @@ evalChildQuery ref = unChildQuery \p k -> do
 
 evalF
   :: forall s f g eff p o
-   . AVar (DriverState s f g eff p o)
+   . AVar (DriverState HTML s f g eff p o)
   -> f
   ~> Aff (HalogenEffects eff)
 evalF ref q = do
@@ -143,7 +181,7 @@ evalF ref q = do
 
 evalM
   :: forall s f g eff p o
-   . AVar (DriverState s f g eff p o)
+   . AVar (DriverState HTML s f g eff p o)
   -> HalogenM s f g p o (Aff (HalogenEffects eff))
   ~> Aff (HalogenEffects eff)
 evalM ref (HalogenM q) = foldFree (eval ref) q
@@ -156,26 +194,38 @@ peekVar v = do
 
 render
   :: forall s f g eff p o
-   . AVar (DriverState s f g eff p o)
+   . AVar (LifecycleHandlers eff)
+  -> AVar (DriverState HTML s f g eff p o)
   -> Aff (HalogenEffects eff) Unit
-render var = takeVar var >>= \(DriverState ds) -> do
-  children <- makeVar' (M.empty :: M.Map (OrdBox p) (AVar (DriverStateX g eff)))
+render lchs var = takeVar var >>= \(DriverState ds) -> do
+  childrenVar <- makeVar' (M.empty :: M.Map (OrdBox p) (AVar (DriverStateX HTML g eff)))
   let selfEval = evalF ds.selfRef
   vtree' <-
-    renderHTML'
+    renderHTML
       (handleAff <<< selfEval)
-      (renderChild selfEval ds.fresh ds.mkOrdBox ds.children children)
+      (renderChild selfEval ds.fresh ds.mkOrdBox ds.children childrenVar lchs)
       (ds.component.render ds.state)
   node' <- liftEff $ V.patch (V.diff ds.vtree vtree') ds.node
-  newChildren <- takeVar children
-  -- TODO: diff children, deal with initializers/finalizers
+  children <- takeVar childrenVar
+  let
+    newSlots = M.keys children
+    oldSlots = M.keys ds.children
+    removed = oldSlots \\ newSlots
+    added = newSlots \\ oldSlots
+  for_ added \p ->
+    for_ (M.lookup p children) \cvar -> do
+      dsx <- peekVar cvar
+      for_ (unDriverStateX (\st -> evalF st.selfRef <$> st.component.initializer) dsx) \init ->
+        addInitializer init lchs
+  for_ removed \p ->
+    for_ (M.lookup p ds.children) (finalizeRec lchs)
   putVar var $
     DriverState
       { node: node'
       , vtree: vtree'
       , component: ds.component
       , state: ds.state
-      , children: newChildren
+      , children
       , mkOrdBox: ds.mkOrdBox
       , selfRef: ds.selfRef
       , handler: ds.handler
@@ -183,20 +233,32 @@ render var = takeVar var >>= \(DriverState ds) -> do
       , fresh: ds.fresh
       }
 
+finalizeRec
+  :: forall f eff
+   . AVar (LifecycleHandlers eff)
+  -> AVar (DriverStateX HTML f eff)
+  -> Aff (HalogenEffects eff) Unit
+finalizeRec lchs var =
+  peekVar var >>= unDriverStateX \st -> do
+    for_ (evalF st.selfRef <$> st.component.finalizer) \final ->
+      addFinalizer final lchs
+    for_ st.children (finalizeRec lchs)
+
 renderChild
   :: forall f g eff p
    . (f ~> Aff (HalogenEffects eff))
   -> AVar Int
   -> (p -> OrdBox p)
-  -> M.Map (OrdBox p) (AVar (DriverStateX g eff))
-  -> AVar (M.Map (OrdBox p) (AVar (DriverStateX g eff)))
-  -> ComponentSlot g (Aff (HalogenEffects eff)) p (f Unit)
+  -> M.Map (OrdBox p) (AVar (DriverStateX HTML g eff))
+  -> AVar (M.Map (OrdBox p) (AVar (DriverStateX HTML g eff)))
+  -> AVar (LifecycleHandlers eff)
+  -> ComponentSlot HTML g (Aff (HalogenEffects eff)) p (f Unit)
   -> Aff (HalogenEffects eff) V.VTree
-renderChild handler fresh mkOrdBox childrenIn childrenOut =
+renderChild handler fresh mkOrdBox childrenIn childrenOut lchs =
   unComponentSlot \p ctor k -> do
     var <- case M.lookup (mkOrdBox p) childrenIn of
       Just existing -> pure existing
-      Nothing -> runComponent (handler <<< k) fresh (force ctor)
+      Nothing -> runComponent (maybe (pure unit) handler <<< k) fresh lchs (force ctor)
     modifyVar (M.insert (mkOrdBox p) var) childrenOut
     unDriverStateX (\st -> pure $ V.widget st.keyId st.node) =<< peekVar var
 

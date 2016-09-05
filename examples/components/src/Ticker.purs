@@ -13,10 +13,10 @@ data TickQuery a
   = Tick a
   | GetTick (Int -> a)
 
-ticker :: forall g. Int -> H.Component TickQuery g
+ticker :: forall m. Int -> H.Component HH.HTML TickQuery Void m
 ticker n = H.component { render, eval, initialState: n }
   where
-  render :: TickState -> H.ComponentHTML TickQuery g
+  render :: TickState -> H.ComponentHTML TickQuery
   render state =
     HH.div
       [ HP.class_ (HH.className "ticker") ]
@@ -30,7 +30,7 @@ ticker n = H.component { render, eval, initialState: n }
           [ HH.text "Tick" ]
       ]
 
-  eval :: TickQuery ~> H.ComponentDSL TickState TickQuery g
+  eval :: TickQuery ~> H.ComponentDSL TickState TickQuery Void m
   eval (Tick next) = do
     H.modify (_ + 1)
     pure next

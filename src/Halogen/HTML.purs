@@ -12,6 +12,7 @@ module Halogen.HTML
 import Prelude (class Functor, (<$>))
 
 import Data.Lazy (Lazy)
+import Data.Maybe (Maybe)
 
 import Halogen.Component (Component, transformChild, ComponentSlot, mkComponentSlot)
 import Halogen.Component.ChildPath (ChildPath, injSlot)
@@ -27,9 +28,9 @@ text = Text
 slot
   :: forall f m p o i
    . p
-  -> Lazy (Component f m o)
-  -> (o -> i)
-  -> HTML (ComponentSlot f m p i) i
+  -> Lazy (Component HTML f o m)
+  -> (o -> Maybe i)
+  -> HTML (ComponentSlot HTML f m p i) i
 slot p ctor k = Slot (mkComponentSlot p ctor k)
 
 -- | Defines a slot for a child component when a parent has multiple types of
@@ -40,8 +41,8 @@ slot'
    . Functor m
   => ChildPath f f' p p'
   -> p
-  -> Lazy (Component f m o)
-  -> (o -> i)
-  -> HTML (ComponentSlot f' m p' i) i
+  -> Lazy (Component HTML f o m)
+  -> (o -> Maybe i)
+  -> HTML (ComponentSlot HTML f' m p' i) i
 slot' i p ctor k =
   Slot (mkComponentSlot (injSlot i p) (transformChild i <$> ctor) k)

@@ -20,17 +20,17 @@ initialState = { on: false }
 
 data Query a = ToggleState a
 
-data OutputF a = Log String a
-type Output = Free OutputF
+data MyAlgebra a = Log String a
+type MyMonad = Free MyAlgebra
 
-output :: String -> Output Unit
+output :: String -> MyMonad Unit
 output msg = liftF (Log msg unit)
 
-ui :: H.Component Query Output
+ui :: H.Component HH.HTML Query Void MyMonad
 ui = H.component { render, eval, initialState }
   where
 
-  render :: State -> H.ComponentHTML Query Output
+  render :: State -> H.ComponentHTML Query
   render state =
     HH.div_
       [ HH.h1_
@@ -40,17 +40,17 @@ ui = H.component { render, eval, initialState }
           [ HH.text (if state.on then "On" else "Off") ]
       ]
 
-  eval :: Query ~> H.ComponentDSL State Query Output
+  eval :: Query ~> H.ComponentDSL State Query Void MyMonad
   eval (ToggleState next) = do
     H.modify (\state -> { on: not state.on })
-    H.liftH $ output "State was toggled"
+    H.lift $ output "State was toggled"
     pure next
 
-ui' :: forall eff. H.Component Query (Aff (H.HalogenEffects (console :: CONSOLE | eff)))
-ui' = H.interpret (foldFree evalOutput) ui
+ui' :: forall eff. H.Component HH.HTML Query Void (Aff (H.HalogenEffects (console :: CONSOLE | eff)))
+ui' = H.interpret (foldFree evalMyAlgebra) ui
   where
-  evalOutput :: OutputF ~> Aff (H.HalogenEffects (console :: CONSOLE | eff))
-  evalOutput (Log msg next) = do
+  evalMyAlgebra :: MyAlgebra ~> Aff (H.HalogenEffects (console :: CONSOLE | eff))
+  evalMyAlgebra (Log msg next) = do
     log msg
     pure next
 

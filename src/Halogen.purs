@@ -17,7 +17,7 @@ import Halogen.Component (Component, Component', ComponentDSL, ComponentHTML, Co
 import Halogen.Driver (Driver, runUI)
 import Halogen.Effects (HalogenEffects)
 import Halogen.HTML.Core as C
-import Halogen.Query (Action, EventSource, ParentDSL, Request, HalogenF(..), StateF(..), action, eventSource, eventSource_, get, gets, liftAff, liftEff, liftH, modify, raise, request, set, subscribe)
+import Halogen.Query (Action, EventSource, ParentDSL, Request, HalogenF(..), StateF(..), action, eventSource, eventSource_, get, gets, liftAff, liftEff, lift, modify, raise, request, put, subscribe)
 
 -- | A specialised version of the `Halogen.HTML.Core.HTML` type where `i` is
 -- | `* -> *` kinded to match the kind of a component query algebra.

@@ -33,7 +33,7 @@ import Prelude
 import Control.Alt ((<|>))
 import Control.Monad.Free (liftF)
 
-import Data.Bifunctor (bimap, lmap)
+import Data.Bifunctor (class Bifunctor, bimap, lmap, rmap)
 import Data.Const (Const)
 import Data.Lazy (Lazy)
 import Data.List as L
@@ -52,53 +52,56 @@ import Halogen.Query.HalogenM as HM
 
 import Unsafe.Coerce (unsafeCoerce)
 
-data ComponentSlot' g m p i o = ComponentSlot p (Lazy (Component g m o)) (o -> i)
+data ComponentSlot' h g m p i o = ComponentSlot p (Lazy (Component h g o m)) (o -> Maybe i)
 
-data ComponentSlot (g :: * -> *) (m :: * -> *) p i
+data ComponentSlot (h :: * -> * -> *) (g :: * -> *) (m :: * -> *) p i
 
-instance functorSlotF :: Functor (ComponentSlot g m p) where
-  map f = unComponentSlot \p ctor k -> mkComponentSlot p ctor (f <<< k)
+instance bifunctorSlotF :: Bifunctor (ComponentSlot h g m) where
+  bimap f g = unComponentSlot \p ctor k -> mkComponentSlot (f p) ctor (map g <<< k)
+
+instance functorSlotF :: Functor (ComponentSlot h g m p) where
+  map = rmap
 
 mkComponentSlot
-  :: forall g m p i o
+  :: forall h g m p i o
    . p
-  -> (Lazy (Component g m o))
-  -> (o -> i)
-  -> ComponentSlot g m p i
+  -> (Lazy (Component h g o m))
+  -> (o -> Maybe i)
+  -> ComponentSlot h g m p i
 mkComponentSlot = unsafeCoerce ComponentSlot
 
 unComponentSlot
-  :: forall g m p i r
-   . (forall o. p -> Lazy (Component g m o) -> (o -> i) -> r)
-  -> ComponentSlot g m p i
+  :: forall h g m p i r
+   . (forall o. p -> Lazy (Component h g o m) -> (o -> Maybe i) -> r)
+  -> ComponentSlot h g m p i
   -> r
 unComponentSlot f cs =
   case unsafeCoerce cs of
     ComponentSlot p ctor k -> f p ctor k
 
 hoistSlotM
-  :: forall g m m' p i
-   . Functor m'
+  :: forall h g m m' p i
+   . (Bifunctor h, Functor m')
   => (m ~> m')
-  -> ComponentSlot g m p i
-  -> ComponentSlot g m' p i
+  -> ComponentSlot h g m p i
+  -> ComponentSlot h g m' p i
 hoistSlotM nat = unComponentSlot \p ctor k ->
   mkComponentSlot p (map (interpret nat) ctor) k
 
 --------------------------------------------------------------------------------
 
-type ParentHTML f g p m = HTML (ComponentSlot g m p (f Unit)) (f Unit)
+type ParentHTML f g p m = HTML (ComponentSlot HTML g m p (f Unit)) (f Unit)
 type ParentDSL = HalogenM
 
-type ComponentHTML f m = ParentHTML f (Const Void) Void m
-type ComponentDSL s f m o = ParentDSL s f (Const Void) Void o m
+type ComponentHTML f = HTML Void (f Unit)
+type ComponentDSL s f = HalogenM s f (Const Void) Void
 
 --------------------------------------------------------------------------------
 
-type Component' s f g p o m =
+type Component' h s f g p o m =
   { initialState :: s
-  , render :: s -> ParentHTML f g p m
-  , eval :: f ~> ParentDSL s f g p o m
+  , render :: s -> h (ComponentSlot h g m p (f Unit)) (f Unit)
+  , eval :: f ~> HalogenM s f g p o m
   , initializer :: Maybe (f Unit)
   , finalizer :: Maybe (f Unit)
   , mkOrdBox :: p -> OrdBox p
@@ -106,32 +109,32 @@ type Component' s f g p o m =
 
 --------------------------------------------------------------------------------
 
-data Component (f :: * -> *) (m :: * -> *) o
+data Component (h :: * -> * -> *) (f :: * -> *) o (m :: * -> *)
 
 mkComponent
-  :: forall s f g p o m
-   . Component' s f g p o m
-  -> Component f m o
+  :: forall h s f g p o m
+   . Component' h s f g p o m
+  -> Component h f o m
 mkComponent = unsafeCoerce
 
 unComponent
-  :: forall f m o r
-   . (forall s g p. Component' s f g p o m -> r)
-  -> Component f m o
+  :: forall h f o m r
+   . (forall s g p. Component' h s f g p o m -> r)
+  -> Component h f o m
   -> r
 unComponent = unsafeCoerce
 
 --------------------------------------------------------------------------------
 
 -- | A spec for a component.
-type ComponentSpec s f m o =
+type ComponentSpec h s f o m =
   { initialState :: s
-  , render :: s -> ComponentHTML f m
-  , eval :: f ~> ComponentDSL s f m o
+  , render :: s -> h Void (f Unit)
+  , eval :: f ~> ComponentDSL s f o m
   }
 
 -- | Builds a self-contained component with no possible children.
-component :: forall s f m o. ComponentSpec s f m o -> Component f m o
+component :: forall h s f o m. ComponentSpec h s f o m -> Component h f o m
 component spec =
   lifecycleComponent
     { initialState: spec.initialState
@@ -142,10 +145,10 @@ component spec =
     }
 
 -- | A spec for a component, including lifecycle inputs.
-type LifecycleComponentSpec s f m o i =
+type LifecycleComponentSpec h s f o m i =
   { initialState :: s
-  , render :: s -> ComponentHTML f m
-  , eval :: f ~> ComponentDSL s f m o
+  , render :: s -> h Void (f Unit)
+  , eval :: f ~> ComponentDSL s f o m
   , initializer :: Maybe (f Unit)
   , finalizer :: Maybe (f Unit)
   }
@@ -153,30 +156,36 @@ type LifecycleComponentSpec s f m o i =
 -- | Builds a self-contained component with lifecycle inputs and no possible
 -- | children.
 lifecycleComponent
-  :: forall s f m o i
-   . LifecycleComponentSpec s f m o i
-  -> Component f m o
+  :: forall h s f o m i
+   . LifecycleComponentSpec h s f o m i
+  -> Component h f o m
 lifecycleComponent spec =
   mkComponent
     { initialState: spec.initialState
-    , render: spec.render
+    , render: coeRender spec.render
     , eval: spec.eval
     , initializer: spec.initializer
     , finalizer: spec.finalizer
     , mkOrdBox: absurd
     }
+  where
+  coeRender
+    :: (s -> h Void (f Unit))
+    -> s
+    -> h (ComponentSlot h (Const Void) m Void (f Unit)) (f Unit)
+  coeRender = unsafeCoerce -- ~= map (bimap absurd id)
 
-type ParentComponentSpec s f g p o m i =
+type ParentComponentSpec h s f g p o m i =
   { initialState :: s
-  , render :: s -> ParentHTML f g p m
-  , eval :: f ~> ParentDSL s f g p o m
+  , render :: s -> h (ComponentSlot h g m p (f Unit)) (f Unit)
+  , eval :: f ~> HalogenM s f g p o m
   }
 
 parentComponent
-  :: forall s f g p o m i
+  :: forall h s f g p o m i
    . Ord p
-  => ParentComponentSpec s f g p o m i
-  -> Component f m o
+  => ParentComponentSpec h s f g p o m i
+  -> Component h f o m
 parentComponent spec =
   mkComponent
     { initialState: spec.initialState
@@ -187,19 +196,19 @@ parentComponent spec =
     , mkOrdBox: mkOrdBox
     }
 
-type ParentLifecycleComponentSpec s f g p o m =
+type ParentLifecycleComponentSpec h s f g p o m =
   { initialState :: s
-  , render :: s -> ParentHTML f g p m
-  , eval :: f ~> ParentDSL s f g p o m
+  , render :: s -> h (ComponentSlot h g m p (f Unit)) (f Unit)
+  , eval :: f ~> HalogenM s f g p o m
   , initializer :: Maybe (f Unit)
   , finalizer :: Maybe (f Unit)
   }
 
 lifecycleParentComponent
-  :: forall s f g p o m
+  :: forall h s f g p o m
    . Ord p
-  => ParentLifecycleComponentSpec s f g p o m
-  -> Component f m o
+  => ParentLifecycleComponentSpec h s f g p o m
+  -> Component h f o m
 lifecycleParentComponent spec =
   mkComponent
     { initialState: spec.initialState
@@ -268,12 +277,12 @@ queryAll q =
 -- | situation will only arise when the initial state is incorrect or a bad
 -- | externally constructed query is passed to the component.
 transform
-  :: forall f f' m o
-   . Functor m
+  :: forall h f f' o m
+   . (Bifunctor h, Functor m)
   => (f ~> f')
   -> (forall a. f' a -> Maybe (f a))
-  -> Component f m o
-  -> Component f' m o
+  -> Component h f o m
+  -> Component h f' o m
 transform reviewQ previewQ =
   unComponent \c ->
     mkComponent
@@ -291,21 +300,21 @@ transform reviewQ previewQ =
 
 -- | Transforms a `Component`'s types using a `ChildPath` definition.
 transformChild
-  :: forall f f' m p p' o
-   . Functor m
+  :: forall h f f' p p' o m
+   . (Bifunctor h, Functor m)
   => ChildPath f f' p p'
-  -> Component f m o
-  -> Component f' m o
+  -> Component h f o m
+  -> Component h f' o m
 transformChild i = transform (injQuery i) (prjQuery i)
 
 -- | Changes the component's `m` type. A use case for this would be to interpret
 -- | some `Free` monad as `Aff` so the component can be used with `runUI`.
 interpret
-  :: forall f m m' o
-   . Functor m'
+  :: forall h f o m m'
+   . (Bifunctor h, Functor m')
   => (m ~> m')
-  -> Component f m o
-  -> Component f m' o
+  -> Component h f o m
+  -> Component h f o m'
 interpret nat =
   unComponent \c ->
     mkComponent

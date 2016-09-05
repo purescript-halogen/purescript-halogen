@@ -6,7 +6,7 @@ import Data.Array (snoc, filter, length)
 
 import Data.Lazy (defer)
 import Data.Map as M
-import Data.Maybe (fromMaybe)
+import Data.Maybe (Maybe(..), fromMaybe)
 
 import Halogen as H
 import Halogen.HTML.Events.Indexed as HE
@@ -27,11 +27,11 @@ derive instance eqTaskSlot :: Eq TaskSlot
 derive instance ordTaskSlot :: Ord TaskSlot
 
 -- | The list component definition.
-list :: forall g. Applicative g => H.Component ListQuery g Void
+list :: forall m. Applicative m => H.Component HH.HTML ListQuery Void m
 list = H.parentComponent { render, eval, initialState: initialList }
   where
 
-  render :: List -> H.ParentHTML ListQuery TaskQuery g TaskSlot
+  render :: List -> H.ParentHTML ListQuery TaskQuery TaskSlot m
   render st =
     HH.div_
       [ HH.h1_ [ HH.text "Todo list" ]
@@ -47,14 +47,14 @@ list = H.parentComponent { render, eval, initialState: initialList }
           [ HH.text "All Done" ]
       ]
 
-  renderTask :: TaskId -> H.ParentHTML ListQuery TaskQuery g TaskSlot
+  renderTask :: TaskId -> H.ParentHTML ListQuery TaskQuery TaskSlot m
   renderTask taskId =
     HH.slot
       (TaskSlot taskId)
       (defer \_ -> task initialTask)
-      (flip (HandleTaskMessage taskId) unit)
+      (Just <<< flip (HandleTaskMessage taskId) unit)
 
-  eval :: ListQuery ~> H.ParentDSL List ListQuery TaskQuery g TaskSlot Void
+  eval :: ListQuery ~> H.ParentDSL List ListQuery TaskQuery TaskSlot Void m
   eval (NewTask next) = do
     H.modify addTask
     pure next
