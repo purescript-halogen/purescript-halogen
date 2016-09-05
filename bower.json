@@ -25,17 +25,16 @@
     "test"
   ],
   "dependencies": {
-    "purescript-aff": "^1.0.0",
-    "purescript-aff-coroutines": "^2.0.0",
+    "purescript-aff-coroutines": "^3.0.0",
+    "purescript-aff": "^1.1.0",
     "purescript-const": "^1.0.0",
-    "purescript-dom": "^1.1.0",
-    "purescript-foreign": "^1.0.0",
-    "purescript-free": "^1.0.0",
-    "purescript-maps": "^1.0.0",
+    "purescript-dom": "^2.0.1",
+    "purescript-foreign": "^1.1.0",
+    "purescript-free": "^1.2.0",
+    "purescript-maps": "^1.1.0",
     "purescript-nullable": "^1.0.1",
     "purescript-profunctor": "^1.0.0",
-    "purescript-stalling-coroutines": "^1.0.0",
-    "purescript-unsafe-coerce": "^1.0.0",
-    "purescript-leibniz": "^1.0.0"
+    "purescript-stalling-coroutines": "^2.0.0",
+    "purescript-unsafe-coerce": "^1.0.0"
   }
 }

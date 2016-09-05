@@ -45,7 +45,6 @@ ui = H.lifecycleParentComponent
   { render: render
   , eval: eval
   , initialState: initialState
-  -- , peek: Just (peek <<< H.runChildF)
   , initializer: Just (H.action Initialize)
   , finalizer: Just (H.action Finalize)
   }
@@ -98,18 +97,6 @@ ui = H.lifecycleParentComponent
     Child.Finalized -> H.action $ ReportRoot ("Heard Finalized from child" <> show i)
     Child.Refd -> H.action $ ReportRoot ("Heard Refd from child" <> show i)
     Child.Reported msg -> H.action $ ReportRoot ("Re-reporting from child" <> show i <> ": " <> msg)
-
-  -- peek :: forall x. Child.Query' x -> H.ParentDSL State Query Child.Query' (UIEff eff) Int Unit
-  -- peek = coproduct peek' (const (pure unit))
-  --   where
-  --   peek' (Child.Initialize _) = do
-  --     H.liftAff $ log "Peeked child init"
-  --     pure unit
-  --   peek' (Child.Finalize _) = do
-  --     -- This will never happen, finalizers are not peek-able
-  --     H.liftAff $ log "Peeked child finalize"
-  --     pure unit
-  --   peek' _ = pure unit
 
 main :: Eff (H.HalogenEffects (console :: CONSOLE)) Unit
 main = runHalogenAff do

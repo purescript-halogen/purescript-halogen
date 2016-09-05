@@ -2,7 +2,6 @@ module Halogen.Data.OrdBox
   ( OrdBox
   , mkOrdBox
   , unOrdBox
-  , updateOrdBox
   ) where
 
 import Prelude
@@ -22,6 +21,3 @@ mkOrdBox = OrdBox eq compare
 
 unOrdBox :: forall a. OrdBox a -> a
 unOrdBox (OrdBox _ _ a) = a
-
-updateOrdBox :: forall a. a -> OrdBox a -> OrdBox a
-updateOrdBox a (OrdBox e c _) = OrdBox e c a
