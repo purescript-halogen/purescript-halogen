@@ -13,7 +13,6 @@ script:
   - npm run example-ajax
   - npm run example-components
   - npm run example-counter
-  - npm run example-deep-peek
   - npm run example-interpret
   - npm run example-intro
   - npm run example-keyboard-shortcuts
