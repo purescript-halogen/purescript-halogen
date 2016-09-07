@@ -41,7 +41,12 @@ module Halogen.HTML.Properties
 
   , ref
 
-  , LengthLiteral(..)
+  , LengthLiteral()
+  , objectPixels
+  , objectPercent
+  , elementPixels
+  , Object()
+  , Element()
   ) where
 
 import Prelude
@@ -53,11 +58,22 @@ import DOM.HTML.Types (HTMLElement)
 
 import Halogen.HTML.Core (Prop(..), ClassName, prop, propName, attrName, runClassName)
 
-data LengthLiteral
+
+data Object -- object, iframe, and embed elements
+data Element -- any other element
+
+data LengthLiteral et
   = Pixels Int
   | Percent Number
 
-printLengthLiteral :: LengthLiteral -> String
+objectPixels :: Int -> LengthLiteral Object
+objectPixels = Pixels
+objectPercent :: Number -> LengthLiteral Object
+objectPercent = Percent
+elementPixels :: Int -> LengthLiteral Element
+elementPixels = Pixels
+
+printLengthLiteral :: forall et. LengthLiteral et -> String
 printLengthLiteral (Pixels n) = show n
 printLengthLiteral (Percent n) = show n <> "%"
 
@@ -93,7 +109,7 @@ rowSpan = prop (propName "rowSpan") (Just $ attrName "rowspan")
 for :: forall i. String -> Prop i
 for = prop (propName "htmlFor") (Just $ attrName "for")
 
-height :: forall i. LengthLiteral -> Prop i
+height :: forall i et. LengthLiteral et -> Prop i
 height = prop (propName "height") (Just $ attrName "height") <<< printLengthLiteral
 
 href :: forall i. String -> Prop i
@@ -124,7 +140,7 @@ type_ = prop (propName "type") (Just $ attrName "type")
 value :: forall i. String -> Prop i
 value = prop (propName "value") (Just $ attrName "value")
 
-width :: forall i. LengthLiteral -> Prop i
+width :: forall i et. LengthLiteral et -> Prop i
 width = prop (propName "width") (Just $ attrName "width") <<< printLengthLiteral
 
 disabled :: forall i. Boolean -> Prop i

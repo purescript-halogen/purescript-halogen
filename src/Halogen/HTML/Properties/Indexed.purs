@@ -4,6 +4,7 @@
 module Halogen.HTML.Properties.Indexed
   ( IProp(..)
   , I()
+  , Size()
 
   , ButtonType(..)
   , InputType(..)
@@ -94,6 +95,8 @@ newtype IProp (r :: # *) i = IProp (Prop i)
 -- | A dummy type to use in the phantom row.
 data I
 
+data Size u
+
 refine :: forall a r i. (a -> Prop i) -> a -> IProp r i
 refine = unsafeCoerce
 
@@ -127,10 +130,10 @@ rowSpan = refine P.rowSpan
 for :: forall r i. String -> IProp (for :: I | r) i
 for = refine P.for
 
-height :: forall r i. P.LengthLiteral -> IProp (height :: I | r) i
+height :: forall r i et. P.LengthLiteral et -> IProp (height :: Size et | r) i
 height = refine P.height
 
-width :: forall r i. P.LengthLiteral -> IProp (width :: I | r) i
+width :: forall r i et. P.LengthLiteral et -> IProp (width :: Size et | r) i
 width = refine P.width
 
 href :: forall r i. String -> IProp (href :: I | r) i
