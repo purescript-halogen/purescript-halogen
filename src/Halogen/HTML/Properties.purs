@@ -42,9 +42,8 @@ module Halogen.HTML.Properties
   , ref
 
   , LengthLiteral()
-  , objectPixels
-  , objectPercent
-  , elementPixels
+  , pixels
+  , percent
   , Object()
   , Element()
   ) where
@@ -66,12 +65,10 @@ data LengthLiteral et
   = Pixels Int
   | Percent Number
 
-objectPixels :: Int -> LengthLiteral Object
-objectPixels = Pixels
-objectPercent :: Number -> LengthLiteral Object
-objectPercent = Percent
-elementPixels :: Int -> LengthLiteral Element
-elementPixels = Pixels
+pixels :: forall a. Int -> LengthLiteral a
+pixels = Pixels
+percent :: Number -> LengthLiteral Object
+percent = Percent
 
 printLengthLiteral :: forall et. LengthLiteral et -> String
 printLengthLiteral (Pixels n) = show n
