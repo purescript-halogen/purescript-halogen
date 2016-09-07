@@ -61,8 +61,6 @@ module Halogen.HTML.Properties.Indexed
 
   , ref
 
-  , module PExport
-
   , GlobalAttributes()
   , GlobalEvents()
   , MouseEvents()
@@ -85,7 +83,6 @@ import Unsafe.Coerce (unsafeCoerce)
 import DOM.HTML.Types (HTMLElement())
 
 import Halogen.HTML.Core (Prop(), ClassName())
-import Halogen.HTML.Properties (LengthLiteral(..)) as PExport
 import Halogen.HTML.Properties as P
 
 -- | The phantom row `r` can be thought of as a context which is synthesized in the
