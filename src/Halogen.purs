@@ -5,17 +5,20 @@
 module Halogen
   ( HTML
   , Prop
+  , module Data.Lazy
   , module Halogen.Component
-  , module Halogen.Driver
   , module Halogen.Effects
+  , module Halogen.HTML.Core
   , module Halogen.Query
   ) where
 
 import Prelude
 
+import Data.Lazy (defer)
+
 import Halogen.Component (Component, Component', ComponentDSL, ComponentHTML, ComponentSlot, ComponentSpec, LifecycleComponentSpec, ParentComponentSpec, ParentDSL, ParentHTML, ParentLifecycleComponentSpec, component, getSlots, interpret, lifecycleComponent, lifecycleParentComponent, mkComponent, mkComponentSlot, parentComponent, query, query', queryAll, queryAll', transform, transformChild, unComponent, unComponentSlot)
-import Halogen.Driver (Driver, runUI)
 import Halogen.Effects (HalogenEffects)
+import Halogen.HTML.Core (AttrName, ClassName, EventName, Namespace, PropName, TagName, attrName, className, eventName, namespace, unAttrName, unClassName, unEventName, unNamespace, unPropName, unTagName, tagName)
 import Halogen.HTML.Core as C
 import Halogen.Query (Action, EventSource, ParentDSL, Request, HalogenF(..), StateF(..), action, eventSource, eventSource_, get, gets, liftAff, liftEff, lift, modify, raise, request, put, subscribe)
 

@@ -6,13 +6,13 @@ import Control.Monad.Aff (Aff)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Console (CONSOLE)
 
-import Data.Lazy (defer)
 import Data.Maybe (Maybe(..))
 
 import Halogen as H
 import Halogen.HTML.Events.Indexed as HE
 import Halogen.HTML.Indexed as HH
 import Halogen.Util (runHalogenAff, awaitBody)
+import Halogen.VirtualDOM.Driver (runUI)
 
 import Ace.Types (ACE)
 import AceComponent (AceEffects, AceOutput(..), AceQuery(..), ace)
@@ -53,7 +53,7 @@ ui = H.parentComponent { render, eval, initialState }
               ]
           ]
       , HH.div_
-          [ HH.slot AceSlot (defer \_ -> ace) handleAceOuput ]
+          [ HH.slot AceSlot (H.defer \_ -> ace) handleAceOuput ]
       , HH.p_
           [ HH.text ("Current text: " <> text) ]
       ]
@@ -73,4 +73,4 @@ ui = H.parentComponent { render, eval, initialState }
 main :: Eff (H.HalogenEffects (ace :: ACE, console :: CONSOLE)) Unit
 main = runHalogenAff do
   body <- awaitBody
-  H.runUI ui body
+  runUI ui body

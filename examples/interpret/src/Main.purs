@@ -12,6 +12,7 @@ import Halogen as H
 import Halogen.HTML.Events.Indexed as HE
 import Halogen.HTML.Indexed as HH
 import Halogen.Util (runHalogenAff, awaitBody)
+import Halogen.VirtualDOM.Driver (runUI)
 
 type State = { on :: Boolean }
 
@@ -57,4 +58,4 @@ ui' = H.interpret (foldFree evalMyAlgebra) ui
 main :: Eff (H.HalogenEffects (console :: CONSOLE)) Unit
 main = runHalogenAff do
   body <- awaitBody
-  H.runUI ui' body
+  runUI ui' body

@@ -16,6 +16,7 @@ import Halogen.HTML.Events.Indexed as HE
 import Halogen.HTML.Indexed as HH
 import Halogen.HTML.Properties.Indexed as HP
 import Halogen.Util (runHalogenAff, awaitBody)
+import Halogen.VirtualDOM.Driver (runUI)
 
 import Child as Child
 
@@ -101,4 +102,4 @@ ui = H.lifecycleParentComponent
 main :: Eff (H.HalogenEffects (console :: CONSOLE)) Unit
 main = runHalogenAff do
   body <- awaitBody
-  H.runUI ui body
+  runUI ui body

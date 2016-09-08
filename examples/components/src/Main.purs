@@ -11,6 +11,7 @@ import Halogen as H
 import Halogen.HTML.Events.Indexed as HE
 import Halogen.HTML.Indexed as HH
 import Halogen.Util (runHalogenAff, awaitBody)
+import Halogen.VirtualDOM.Driver (runUI)
 
 import Ticker (TickQuery(..), ticker)
 
@@ -56,4 +57,4 @@ ui = H.parentComponent { render, eval, initialState }
 main :: Eff (H.HalogenEffects ()) Unit
 main = runHalogenAff do
   body <- awaitBody
-  H.runUI ui body
+  runUI ui body

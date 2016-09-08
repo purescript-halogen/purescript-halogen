@@ -1,4 +1,4 @@
-module Halogen.HTML.Renderer.VirtualDOM (renderHTML) where
+module Halogen.VirtualDOM.Renderer (renderHTML) where
 
 import Prelude
 
@@ -14,9 +14,9 @@ import Data.Monoid (mempty)
 import Data.Nullable (toNullable)
 
 import Halogen.Effects (HalogenEffects)
-import Halogen.HTML.Core (HTML(..), Prop(..), PropF(..), HandlerF(..), runNamespace, runTagName, runPropName, runAttrName, runEventName, lowerFuse)
-import Halogen.HTML.Events.Handler (runEventHandler)
-import Halogen.Internal.VirtualDOM as V
+import Halogen.HTML.Core (HTML(..), Prop(..), PropF(..), HandlerF(..), unNamespace, unTagName, unPropName, unAttrName, unEventName, lowerFuse)
+import Halogen.HTML.Events.Handler (unEventHandler)
+import Halogen.VirtualDOM.Internal as V
 
 -- | Render a `HTML` document to a virtual DOM node
 -- |
@@ -36,8 +36,8 @@ renderHTML driver handleSlot = go
     Element ns name props els -> do
       els' <- traverse go els
       pure $ V.vnode
-        (toNullable $ runNamespace <$> ns)
-        (runTagName name)
+        (toNullable $ unNamespace <$> ns)
+        (unTagName name)
         (toNullable $ foldl findKey Nothing props)
         (foldMap (renderProp driver) props) els'
     Slot p ->
@@ -54,7 +54,7 @@ renderProp driver = case _ of
   Prop e ->
     runExists renderPropF e
   Attr ns name value ->
-    let attrName = maybe "" (\ns' -> runNamespace ns' <> ":") ns <> runAttrName name
+    let attrName = maybe "" (\ns' -> unNamespace ns' <> ":") ns <> unAttrName name
     in runFn2 V.attr attrName value
   Handler e ->
     runExistsR (renderHandlerProp driver) e
@@ -64,7 +64,7 @@ renderProp driver = case _ of
     mempty
 
 renderPropF :: forall a. PropF a -> V.Props
-renderPropF (PropF key value _) = runFn2 V.prop (runPropName key) value
+renderPropF (PropF key value _) = runFn2 V.prop (unPropName key) value
 
 renderHandlerProp
   :: forall i eff a
@@ -72,8 +72,8 @@ renderHandlerProp
   -> HandlerF i a
   -> V.Props
 renderHandlerProp driver (HandlerF name k) =
-  runFn2 V.handlerProp (runEventName name)
-    \ev -> runEventHandler ev (k ev) >>= maybe (pure unit) driver
+  runFn2 V.handlerProp (unEventName name)
+    \ev -> unEventHandler ev (k ev) >>= maybe (pure unit) driver
 
 findKey :: forall i. Maybe String -> Prop i -> Maybe String
 findKey _ (Key k) = Just k

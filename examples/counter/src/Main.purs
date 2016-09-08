@@ -9,6 +9,7 @@ import Halogen as H
 import Halogen.HTML.Indexed as HH
 import Halogen.HTML.Properties.Indexed as HP
 import Halogen.Util (runHalogenAff, awaitBody)
+import Halogen.VirtualDOM.Driver (runUI)
 
 type State = Int
 
@@ -40,7 +41,7 @@ ui = H.component { render, eval, initialState }
 main :: Eff (H.HalogenEffects ()) Unit
 main = runHalogenAff do
   body <- awaitBody
-  driver <- H.runUI ui body
+  driver <- runUI ui body
   setInterval 1000 $ driver (H.action Tick)
 
 setInterval :: forall e a. Int -> Aff e a -> Aff e Unit

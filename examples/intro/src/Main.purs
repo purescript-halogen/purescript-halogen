@@ -8,6 +8,7 @@ import Halogen as H
 import Halogen.HTML.Events.Indexed as HE
 import Halogen.HTML.Indexed as HH
 import Halogen.Util (runHalogenAff, awaitBody)
+import Halogen.VirtualDOM.Driver (runUI)
 
 type State = { on :: Boolean }
 
@@ -38,4 +39,4 @@ ui = H.component { initialState, render, eval }
 main :: Eff (H.HalogenEffects ()) Unit
 main = runHalogenAff do
   body <- awaitBody
-  H.runUI ui body
+  runUI ui body

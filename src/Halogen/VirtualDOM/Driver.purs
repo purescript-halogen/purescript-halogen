@@ -1,4 +1,4 @@
-module Halogen.Driver
+module Halogen.VirtualDOM.Driver
   ( Driver
   , runUI
   ) where
@@ -31,11 +31,11 @@ import DOM.Node.Node (appendChild)
 
 import Halogen.Component (Component, ComponentSlot, unComponent, unComponentSlot)
 import Halogen.Data.OrdBox (OrdBox, unOrdBox)
-import Halogen.Driver.State (DriverStateX, DriverState(..), unDriverStateX, initDriverState)
+import Halogen.VirtualDOM.Driver.State (DriverStateX, DriverState(..), unDriverStateX, initDriverState)
 import Halogen.Effects (HalogenEffects)
 import Halogen.HTML.Core (HTML)
-import Halogen.HTML.Renderer.VirtualDOM (renderHTML)
-import Halogen.Internal.VirtualDOM as V
+import Halogen.VirtualDOM.Renderer (renderHTML)
+import Halogen.VirtualDOM.Internal as V
 import Halogen.Query.ChildQuery (ChildQuery, unChildQuery)
 import Halogen.Query.EventSource (runEventSource)
 import Halogen.Query.HalogenF (HalogenF(..), ParF(..), unPar)
@@ -82,7 +82,6 @@ handleLifecycle f = do
   sequence finalizers
   pure result
 
-
 -- | This function is the main entry point for a Halogen based UI, taking a root
 -- | component, initial state, and HTML element to attach the rendered component
 -- | to.
@@ -113,7 +112,7 @@ runComponent
   -> AVar Int
   -> AVar (LifecycleHandlers eff)
   -> Component HTML f o (Aff (HalogenEffects eff))
-  -> Aff (HalogenEffects eff) (AVar (DriverStateX HTML f eff))
+  -> Aff (HalogenEffects eff) (AVar (DriverStateX f eff))
 runComponent handler fresh lchs = unComponent \component -> do
   keyId <- peekVar fresh
   modifyVar (_ + 1) fresh
@@ -123,7 +122,7 @@ runComponent handler fresh lchs = unComponent \component -> do
 
 eval
   :: forall s f g eff p o
-   . AVar (DriverState HTML s f g eff p o)
+   . AVar (DriverState s f g eff p o)
   -> DSL s f g eff p o
   ~> Aff (HalogenEffects eff)
 eval ref = case _ of
@@ -158,7 +157,7 @@ eval ref = case _ of
 
 evalChildQuery
   :: forall s f g eff p o
-   . AVar (DriverState HTML s f g eff p o)
+   . AVar (DriverState s f g eff p o)
   -> ChildQuery g (Aff (HalogenEffects eff)) p
   ~> Aff (HalogenEffects eff)
 evalChildQuery ref = unChildQuery \p k -> do
@@ -171,7 +170,7 @@ evalChildQuery ref = unChildQuery \p k -> do
 
 evalF
   :: forall s f g eff p o
-   . AVar (DriverState HTML s f g eff p o)
+   . AVar (DriverState s f g eff p o)
   -> f
   ~> Aff (HalogenEffects eff)
 evalF ref q = do
@@ -181,7 +180,7 @@ evalF ref q = do
 
 evalM
   :: forall s f g eff p o
-   . AVar (DriverState HTML s f g eff p o)
+   . AVar (DriverState s f g eff p o)
   -> HalogenM s f g p o (Aff (HalogenEffects eff))
   ~> Aff (HalogenEffects eff)
 evalM ref (HalogenM q) = foldFree (eval ref) q
@@ -195,10 +194,10 @@ peekVar v = do
 render
   :: forall s f g eff p o
    . AVar (LifecycleHandlers eff)
-  -> AVar (DriverState HTML s f g eff p o)
+  -> AVar (DriverState s f g eff p o)
   -> Aff (HalogenEffects eff) Unit
 render lchs var = takeVar var >>= \(DriverState ds) -> do
-  childrenVar <- makeVar' (M.empty :: M.Map (OrdBox p) (AVar (DriverStateX HTML g eff)))
+  childrenVar <- makeVar' (M.empty :: M.Map (OrdBox p) (AVar (DriverStateX g eff)))
   let selfEval = evalF ds.selfRef
   vtree' <-
     renderHTML
@@ -236,7 +235,7 @@ render lchs var = takeVar var >>= \(DriverState ds) -> do
 finalizeRec
   :: forall f eff
    . AVar (LifecycleHandlers eff)
-  -> AVar (DriverStateX HTML f eff)
+  -> AVar (DriverStateX f eff)
   -> Aff (HalogenEffects eff) Unit
 finalizeRec lchs var =
   peekVar var >>= unDriverStateX \st -> do
@@ -249,8 +248,8 @@ renderChild
    . (f ~> Aff (HalogenEffects eff))
   -> AVar Int
   -> (p -> OrdBox p)
-  -> M.Map (OrdBox p) (AVar (DriverStateX HTML g eff))
-  -> AVar (M.Map (OrdBox p) (AVar (DriverStateX HTML g eff)))
+  -> M.Map (OrdBox p) (AVar (DriverStateX g eff))
+  -> AVar (M.Map (OrdBox p) (AVar (DriverStateX g eff)))
   -> AVar (LifecycleHandlers eff)
   -> ComponentSlot HTML g (Aff (HalogenEffects eff)) p (f Unit)
   -> Aff (HalogenEffects eff) V.VTree

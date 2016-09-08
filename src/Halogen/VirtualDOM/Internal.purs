@@ -1,7 +1,7 @@
 -- | This module provides the FFI definitions required to render HTML documents
 -- | using the `virtual-dom` library.
 
-module Halogen.Internal.VirtualDOM
+module Halogen.VirtualDOM.Internal
   ( VTree
   , Patch
   , Props

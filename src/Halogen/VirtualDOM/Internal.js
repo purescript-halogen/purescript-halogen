@@ -1,8 +1,6 @@
 /* global exports, require */
 "use strict";
 
-// module Halogen.Internal.VirtualDOM
-
 var vcreateElement = require("virtual-dom/create-element");
 var vdiff = require("virtual-dom/diff");
 var vpatch = require("virtual-dom/patch");

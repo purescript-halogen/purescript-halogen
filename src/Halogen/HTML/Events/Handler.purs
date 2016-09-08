@@ -5,7 +5,7 @@ module Halogen.HTML.Events.Handler
   , preventDefault
   , stopPropagation
   , stopImmediatePropagation
-  , runEventHandler
+  , unEventHandler
   ) where
 
 import Prelude
@@ -44,9 +44,6 @@ data EventUpdate
   | StopPropagation
   | StopImmediatePropagation
 
-unEventHandler :: forall a. EventHandler a -> Writer (Array EventUpdate) a
-unEventHandler (EventHandler mw) = mw
-
 -- | Call the `preventDefault` method on the current event.
 preventDefault :: EventHandler Unit
 preventDefault = EventHandler (tell [PreventDefault])
@@ -69,7 +66,7 @@ instance applicativeEventHandler :: Applicative EventHandler where
   pure = EventHandler <<< pure
 
 instance bindEventHandler :: Bind EventHandler where
-  bind (EventHandler mw) f = EventHandler (mw >>= unEventHandler <<< f)
+  bind (EventHandler mw) f = EventHandler (mw >>= (\(EventHandler eh) -> eh) <<< f)
 
 instance monadEventHandler :: Monad EventHandler
 
@@ -80,8 +77,8 @@ foreign import stopPropagationImpl :: forall eff fields. Event fields -> Eff (do
 foreign import stopImmediatePropagationImpl :: forall eff fields. Event fields -> Eff (dom :: DOM | eff) Unit
 
 -- | This function can be used to update an event and return the wrapped value
-runEventHandler :: forall a fields m eff. (Monad m, MonadEff (dom :: DOM | eff) m) => Event fields -> EventHandler a -> m a
-runEventHandler e (EventHandler mw) =
+unEventHandler :: forall a fields m eff. (Monad m, MonadEff (dom :: DOM | eff) m) => Event fields -> EventHandler a -> m a
+unEventHandler e (EventHandler mw) =
   case runWriter mw of
     Tuple a eus -> liftEff $ for_ eus (applyUpdate) *> pure a
   where

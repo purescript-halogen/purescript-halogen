@@ -9,16 +9,7 @@ install:
 script:
   - npm run build
   - npm test
-  - npm run example-ace
-  - npm run example-ajax
-  - npm run example-components
-  - npm run example-counter
-  - npm run example-interpret
-  - npm run example-intro
-  - npm run example-keyboard-shortcuts
-  - npm run example-lifecycle
-  - npm run example-multi-component
-  - npm run example-todo
+  - ./run-examples.sh
 after_success:
 - >-
   test $TRAVIS_TAG &&

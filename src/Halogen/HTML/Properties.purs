@@ -51,7 +51,7 @@ import Data.String (joinWith)
 
 import DOM.HTML.Types (HTMLElement)
 
-import Halogen.HTML.Core (Prop(..), ClassName, prop, propName, attrName, runClassName)
+import Halogen.HTML.Core (Prop(..), ClassName, prop, propName, attrName, unClassName)
 
 data LengthLiteral
   = Pixels Int
@@ -73,10 +73,10 @@ charset :: forall i. String -> Prop i
 charset = prop (propName "charset") (Just $ attrName "charset")
 
 class_ :: forall i. ClassName -> Prop i
-class_ = prop (propName "className") (Just $ attrName "class") <<< runClassName
+class_ = prop (propName "className") (Just $ attrName "class") <<< unClassName
 
 classes :: forall i. Array ClassName -> Prop i
-classes = prop (propName "className") (Just $ attrName "class") <<< joinWith " " <<< map runClassName
+classes = prop (propName "className") (Just $ attrName "class") <<< joinWith " " <<< map unClassName
 
 cols :: forall i. Int -> Prop i
 cols = prop (propName "cols") (Just $ attrName "cols")

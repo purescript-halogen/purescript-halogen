@@ -18,27 +18,27 @@ module Halogen.HTML.Core
 
   , Namespace
   , namespace
-  , runNamespace
+  , unNamespace
 
   , TagName
   , tagName
-  , runTagName
+  , unTagName
 
   , PropName
   , propName
-  , runPropName
+  , unPropName
 
   , AttrName
   , attrName
-  , runAttrName
+  , unAttrName
 
   , EventName
   , eventName
-  , runEventName
+  , unEventName
 
   , ClassName
   , className
-  , runClassName
+  , unClassName
   ) where
 
 import Prelude
@@ -165,7 +165,7 @@ instance numberIsProp :: IsProp Number where
   toPropString _ _ n = show n
 
 instance booleanIsProp :: IsProp Boolean where
-  toPropString name _ true = runAttrName name
+  toPropString name _ true = unAttrName name
   toPropString _ _ false = ""
 
 -- | A type-safe wrapper for a attribute or tag namespace.
@@ -176,8 +176,8 @@ namespace :: String -> Namespace
 namespace = Namespace
 
 -- | Unwrap a `Namespace` to get the value as a `String`.
-runNamespace :: Namespace -> String
-runNamespace (Namespace ns) = ns
+unNamespace :: Namespace -> String
+unNamespace (Namespace ns) = ns
 
 -- | A type-safe wrapper for a HTML tag name
 newtype TagName = TagName String
@@ -187,8 +187,8 @@ tagName :: String -> TagName
 tagName = TagName
 
 -- | Unwrap a `TagName` to get the tag name as a `String`.
-runTagName :: TagName -> String
-runTagName (TagName s) = s
+unTagName :: TagName -> String
+unTagName (TagName s) = s
 
 -- | A type-safe wrapper for property names.
 -- |
@@ -201,8 +201,8 @@ propName :: forall value. String -> PropName value
 propName = PropName
 
 -- | Unpack an attribute name
-runPropName :: forall value. PropName value -> String
-runPropName (PropName s) = s
+unPropName :: forall value. PropName value -> String
+unPropName (PropName s) = s
 
 -- | A type-safe wrapper for attribute names.
 newtype AttrName = AttrName String
@@ -210,8 +210,8 @@ newtype AttrName = AttrName String
 attrName :: String -> AttrName
 attrName = AttrName
 
-runAttrName :: AttrName -> String
-runAttrName (AttrName ns) = ns
+unAttrName :: AttrName -> String
+unAttrName (AttrName ns) = ns
 
 -- | A type-safe wrapper for event names.
 -- |
@@ -224,8 +224,8 @@ eventName :: forall fields. String -> EventName fields
 eventName = EventName
 
 -- | Unpack an event name
-runEventName :: forall fields. EventName fields -> String
-runEventName (EventName s) = s
+unEventName :: forall fields. EventName fields -> String
+unEventName (EventName s) = s
 
 -- | A wrapper for strings which are used as CSS classes.
 newtype ClassName = ClassName String
@@ -235,5 +235,5 @@ className :: String -> ClassName
 className = ClassName
 
 -- | Unpack a class name
-runClassName :: ClassName -> String
-runClassName (ClassName s) = s
+unClassName :: ClassName -> String
+unClassName (ClassName s) = s

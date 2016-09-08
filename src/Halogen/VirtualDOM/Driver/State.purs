@@ -1,4 +1,4 @@
-module Halogen.Driver.State
+module Halogen.VirtualDOM.Driver.State
   ( DriverState(..)
   , DriverStateRec
   , DriverStateX
@@ -17,23 +17,24 @@ import Data.Map as M
 import DOM.HTML.Types (HTMLElement)
 
 import Halogen.Component (Component')
+import Halogen.HTML.Core (HTML)
 import Halogen.Data.OrdBox (OrdBox)
 import Halogen.Effects (HalogenEffects)
-import Halogen.Internal.VirtualDOM as V
+import Halogen.VirtualDOM.Internal as V
 
 import Unsafe.Coerce (unsafeCoerce)
 
 -- | The type used to track a driver's persistent state.
-newtype DriverState h s f g eff p o = DriverState (DriverStateRec h s f g eff p o)
+newtype DriverState s f g eff p o = DriverState (DriverStateRec s f g eff p o)
 
-type DriverStateRec h s f g eff p o =
+type DriverStateRec s f g eff p o =
   { node :: HTMLElement
   , vtree :: V.VTree
-  , component :: Component' h s f g p o (Aff (HalogenEffects eff))
+  , component :: Component' HTML s f g p o (Aff (HalogenEffects eff))
   , state :: s
-  , children :: M.Map (OrdBox p) (AVar (DriverStateX h g eff))
+  , children :: M.Map (OrdBox p) (AVar (DriverStateX g eff))
   , mkOrdBox :: p -> OrdBox p
-  , selfRef :: AVar (DriverState h s f g eff p o)
+  , selfRef :: AVar (DriverState s f g eff p o)
   , handler :: o -> Aff (HalogenEffects eff) Unit
   , keyId :: Int
   , fresh :: AVar Int
@@ -41,28 +42,28 @@ type DriverStateRec h s f g eff p o =
 
 -- | A version of `DriverState` with the aspects relating to child components
 -- | existentially hidden.
-data DriverStateX (h :: * -> * -> *) (f :: * -> *) (eff :: # !)
+data DriverStateX (f :: * -> *) (eff :: # !)
 
 mkDriverStateXVar
-  :: forall h s f g eff p o
-   . AVar (DriverState h s f g eff p o)
-  -> AVar (DriverStateX h f eff)
+  :: forall s f g eff p o
+   . AVar (DriverState s f g eff p o)
+  -> AVar (DriverStateX f eff)
 mkDriverStateXVar = unsafeCoerce
 
 unDriverStateX
-  :: forall h f eff r o
-   . (forall s g p. DriverStateRec h s f g eff p o -> r)
-  -> DriverStateX h f eff
+  :: forall f eff r o
+   . (forall s g p. DriverStateRec s f g eff p o -> r)
+  -> DriverStateX f eff
   -> r
 unDriverStateX = unsafeCoerce
 
 initDriverState
-  :: forall h s f g eff p o
-   . Component' h s f g p o (Aff (HalogenEffects eff))
+  :: forall s f g eff p o
+   . Component' HTML s f g p o (Aff (HalogenEffects eff))
   -> (o -> Aff (HalogenEffects eff) Unit)
   -> Int
   -> AVar Int
-  -> Aff (HalogenEffects eff) (AVar (DriverStateX h f eff))
+  -> Aff (HalogenEffects eff) (AVar (DriverStateX f eff))
 initDriverState component handler keyId fresh = do
   let vtree = V.vtext ""
   node <- liftEff (V.createElement vtree)
