@@ -38,7 +38,8 @@ import Halogen.VirtualDOM.Renderer (renderHTML)
 import Halogen.VirtualDOM.Internal as V
 import Halogen.Query.ChildQuery (ChildQuery, unChildQuery)
 import Halogen.Query.EventSource (runEventSource)
-import Halogen.Query.HalogenF (HalogenF(..), ParF(..), unPar)
+import Halogen.Query.HalogenF (HalogenF(..))
+import Halogen.Query.ParF (ParF(..), unPar)
 import Halogen.Query.HalogenM (HalogenM(..))
 import Halogen.Query.StateF (StateF(..))
 
@@ -47,7 +48,7 @@ import Halogen.Query.StateF (StateF(..))
 -- | query has been fulfilled.
 type Driver f eff = f ~> Aff (HalogenEffects eff)
 
-type DSL s f g eff p o = HalogenF s f g p o (Aff (HalogenEffects eff)) (HalogenM s f g p o (Aff (HalogenEffects eff)))
+type DSL s f g eff p o = HalogenF s f g p o (Aff (HalogenEffects eff))
 
 type LifecycleHandlers eff =
   { initializers :: List (Aff (HalogenEffects eff) Unit)

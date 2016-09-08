@@ -2,48 +2,124 @@ module Halogen.Query.HalogenF where
 
 import Prelude
 
+import Control.Monad.Aff.Class (class MonadAff, liftAff)
+import Control.Monad.Eff.Class (class MonadEff, liftEff)
+import Control.Monad.Free (Free, hoistFree, liftF)
 import Control.Monad.Free.Trans (hoistFreeT, interpret)
+import Control.Monad.Rec.Class (class MonadRec, tailRecM)
+import Control.Monad.State.Class (class MonadState)
+import Control.Monad.Trans (class MonadTrans)
+import Control.Parallel.Class (class MonadPar)
 
-import Data.List as L
 import Data.Bifunctor (lmap)
+import Data.Either (either)
+import Data.List as L
+import Data.Tuple (Tuple(..))
 
-import Halogen.Query.ChildQuery (ChildQuery, hoistChildQuery)
-import Halogen.Query.EventSource (EventSource(..), runEventSource)
-import Halogen.Query.StateF (StateF)
+import Halogen.Query.ChildQuery as CQ
+import Halogen.Query.EventSource as ES
+import Halogen.Query.StateF as SF
+import Halogen.Query.ParF as PF
 
-import Unsafe.Coerce (unsafeCoerce)
+newtype HalogenM s f g p o m a = HalogenM (Free (HalogenF s f g p o m) a)
 
---------------------------------------------------------------------------------
+instance functorHalogenM :: Functor (HalogenM s f g p o m) where
+  map f (HalogenM fa) = HalogenM (map f fa)
 
-data ParF f x y a = ParF (x -> y -> a) (f x) (f y)
-data Par (f :: * -> *) a
+instance applyHalogenM :: Apply (HalogenM s f g p o m) where
+  apply (HalogenM fa) (HalogenM fb) = HalogenM (apply fa fb)
 
-mkPar :: forall f x y a. ParF f x y a → Par f a
-mkPar = unsafeCoerce
+instance applicativeHalogenM :: Applicative (HalogenM s f g p o m) where
+  pure a = HalogenM (pure a)
 
-unPar :: forall f x y a r. (ParF f x y a → r) → Par f a → r
-unPar = unsafeCoerce
+instance bindHalogenM :: Bind (HalogenM s f g p o m) where
+  bind (HalogenM fa) f = HalogenM (fa >>= \x -> case f x of HalogenM fb -> fb)
 
-instance functorPar :: Functor (Par f) where
-  map f = unPar \(ParF g fx fy) -> mkPar (ParF (\x y -> f (g x y)) fx fy)
+instance monadHalogenM :: Monad (HalogenM s f g p o m)
 
-hoistPar :: forall f f' a. (f ~> f') -> Par f a -> Par f' a
-hoistPar nat = unPar \(ParF f fx fy) -> mkPar (ParF f (nat fx) (nat fy))
+instance monadEffHalogenM :: MonadEff eff m ⇒ MonadEff eff (HalogenM s f g p o m) where
+  liftEff eff = HalogenM $ liftF $ Lift $ liftEff eff
+
+instance monadAffHalogenM :: MonadAff eff m ⇒ MonadAff eff (HalogenM s f g p o m) where
+  liftAff aff = HalogenM $ liftF $ Lift $ liftAff aff
+
+instance monadParSlamM ∷ MonadPar (HalogenM s f g p o m) where
+  par f a b = HalogenM $ liftF $ Par $ PF.mkPar $ PF.ParF f a b
+
+instance monadTransHalogenM :: MonadTrans (HalogenM s f g p o) where
+  lift m = HalogenM $ liftF $ Lift m
+
+instance monadRecHalogenM :: MonadRec (HalogenM s f g p o m) where
+  tailRecM k a = k a >>= either (tailRecM k) pure
+
+instance monadStateHalogenM :: MonadState s (HalogenM s f g p o m) where
+  state f = do
+    st <- HalogenM $ liftF $ State $ SF.Get id
+    case f st of
+      Tuple a st' -> do
+        HalogenM $ liftF $ State $ SF.Modify (const st') unit
+        pure a
+
+-- TODO: MonadFork
+
+halt :: forall s f g p o m a. String -> HalogenM s f g p o m a
+halt msg = HalogenM $ liftF $ Halt msg
+
+hoistF
+  :: forall s f f' g m p o
+   . Functor m
+  => (f ~> f')
+  -> HalogenM s f g p o m
+  ~> HalogenM s f' g p o m
+hoistF nat (HalogenM fa) = HalogenM (hoistFree go fa)
+  where
+  go :: HalogenF s f g p o m ~> HalogenF s f' g p o m
+  go = case _ of
+    State q -> State q
+    Subscribe es next ->
+      Subscribe (ES.EventSource (interpret (lmap nat) (ES.runEventSource es))) next
+    Lift q -> Lift q
+    Halt msg -> Halt msg
+    GetSlots k -> GetSlots k
+    ChildQuery cq -> ChildQuery cq
+    Raise o a -> Raise o a
+    Par p -> Par (PF.hoistPar (hoistF nat) p)
+
+hoistM
+  :: forall s f g m m' p o
+   . Functor m'
+  => (m ~> m')
+  -> HalogenM s f g p o m
+  ~> HalogenM s f g p o m'
+hoistM nat (HalogenM fa) = HalogenM (hoistFree go fa)
+  where
+  go :: HalogenF s f g p o m ~> HalogenF s f g p o m'
+  go = case _ of
+      State q -> State q
+      Subscribe es next ->
+        Subscribe (ES.EventSource (hoistFreeT nat (ES.runEventSource es))) next
+      Lift q -> Lift (nat q)
+      Halt msg -> Halt msg
+      GetSlots k -> GetSlots k
+      ChildQuery cq -> ChildQuery (CQ.hoistChildQuery nat cq)
+      Raise o a -> Raise o a
+      Par p -> Par (PF.hoistPar (hoistM nat) p)
+
 
 --------------------------------------------------------------------------------
 
 -- | The Halogen component algebra
-data HalogenF s f g p o m pf a
-  = State (StateF s a)
-  | Subscribe (EventSource f m) a
+data HalogenF s f g p o m a
+  = State (SF.StateF s a)
+  | Subscribe (ES.EventSource f m) a
   | Lift (m a)
   | Halt String
   | GetSlots (L.List p -> a)
-  | ChildQuery (ChildQuery g m p a)
+  | ChildQuery (CQ.ChildQuery g m p a)
   | Raise o a
-  | Par (Par pf a)
+  | Par (PF.Par (HalogenM s f g p o m) a)
 
-instance functorHalogenF :: Functor m => Functor (HalogenF s f g p o m pf) where
+instance functorHalogenF :: Functor m => Functor (HalogenF s f g p o m) where
   map f = case _ of
     State q -> State (map f q)
     Subscribe es a -> Subscribe es (f a)
@@ -53,55 +129,3 @@ instance functorHalogenF :: Functor m => Functor (HalogenF s f g p o m pf) where
     ChildQuery cq -> ChildQuery (map f cq)
     Raise o a -> Raise o (f a)
     Par p -> Par (f <$> p)
-
-hoistF
-  :: forall s f f' g p o m pf
-   . Functor m
-  => f ~> f'
-  -> HalogenF s f g p o m pf
-  ~> HalogenF s f' g p o m pf
-hoistF nat =
-  case _ of
-    State q -> State q
-    Subscribe es next ->
-      Subscribe (EventSource (interpret (lmap nat) (runEventSource es))) next
-    Lift q -> Lift q
-    Halt msg -> Halt msg
-    GetSlots k -> GetSlots k
-    ChildQuery cq -> ChildQuery cq
-    Raise o a -> Raise o a
-    Par p -> Par p
-
-hoistM
-  :: forall s f g p o m m' pf
-   . Functor m'
-  => m ~> m'
-  -> HalogenF s f g p o m pf
-  ~> HalogenF s f g p o m' pf
-hoistM nat =
-  case _ of
-    State q -> State q
-    Subscribe es next ->
-      Subscribe (EventSource (hoistFreeT nat (runEventSource es))) next
-    Lift q -> Lift (nat q)
-    Halt msg -> Halt msg
-    GetSlots k -> GetSlots k
-    ChildQuery cq -> ChildQuery (hoistChildQuery nat cq)
-    Raise o a -> Raise o a
-    Par p -> Par p
-
-hoistPF
-  :: forall s f g p o m pf pf'
-   . pf ~> pf'
-  -> HalogenF s f g p o m pf
-  ~> HalogenF s f g p o m pf'
-hoistPF nat =
-  case _ of
-    State q -> State q
-    Subscribe es next -> Subscribe es next
-    Lift q -> Lift q
-    Halt msg -> Halt msg
-    GetSlots k -> GetSlots k
-    ChildQuery cq -> ChildQuery cq
-    Raise o a -> Raise o a
-    Par p -> Par (hoistPar nat p)
