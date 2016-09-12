@@ -146,7 +146,10 @@ put = CMS.put
 
 -- | Provides a way of having a component subscribe to an `EventSource` from
 -- | within an `Eval` function.
-subscribe :: forall s f g p o m. EventSource f m -> HalogenM s f g p o m Unit
+subscribe
+  :: forall s f g p o m
+   . EventSource (HalogenM s f g p o m) m
+  -> HalogenM s f g p o m Unit
 subscribe es = HalogenM (liftF (Subscribe es unit))
 
 -- | Raises an output message for the component.

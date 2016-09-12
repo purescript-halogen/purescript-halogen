@@ -137,7 +137,7 @@ eval ref = case _ of
         handleLifecycle \lchs -> render lchs ref
         pure next
   Subscribe es next -> do
-    let consumer = forever (lift <<< evalF ref =<< await)
+    let consumer = forever (lift <<< evalM ref =<< await)
     forkAff $ SCR.runStallingProcess (runEventSource es $$? consumer)
     pure next
   Lift aff ->

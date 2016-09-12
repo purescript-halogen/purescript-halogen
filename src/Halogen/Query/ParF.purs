@@ -10,7 +10,7 @@ data Par (f :: * -> *) a
 mkPar :: forall f x y a. ParF f x y a -> Par f a
 mkPar = unsafeCoerce
 
-unPar :: forall f x y a r. (ParF f x y a -> r) -> Par f a -> r
+unPar :: forall f a r. (forall x y. ParF f x y a -> r) -> Par f a -> r
 unPar = unsafeCoerce
 
 instance functorPar :: Functor (Par f) where

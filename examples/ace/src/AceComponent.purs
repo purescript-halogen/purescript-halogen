@@ -75,9 +75,7 @@ ace = H.lifecycleComponent
         editor <- H.liftEff $ Ace.editNode el' Ace.ace
         session <- H.liftEff $ Editor.getSession editor
         H.modify (_ { editor = Just editor })
-        H.subscribe
-          $ H.eventSource_ (Session.onChange session)
-          $ H.action <<< ChangeText <$> Editor.getValue editor
+        H.subscribe $ H.eventSource_ (Session.onChange session) (?foo)
     pure next
   eval (Finalize next) = do
     -- Release the reference to the editor and do any other cleanup that a real
