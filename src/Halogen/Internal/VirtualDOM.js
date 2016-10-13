@@ -101,7 +101,10 @@ HalogenWidget.prototype = {
       this.el = prev.el;
     } else {
       this.vdom = this.render(this.tree);
-      this.el = vpatch(node, vdiff(prev.vdom, this.vdom));
+      try {
+        this.el = vpatch(node, vdiff(prev.vdom, this.vdom));
+      } catch (e) {
+      }
     }
   }
 };
@@ -148,6 +151,7 @@ exports.createElement = function (vtree) {
 
 exports.diff = function (vtree1) {
   return function (vtree2) {
+    vtree1 = vtree1 || {};
     return vdiff(vtree1, vtree2);
   };
 };
@@ -155,7 +159,12 @@ exports.diff = function (vtree1) {
 exports.patch = function (p) {
   return function (node) {
     return function () {
-      return vpatch(node, p);
+      var res = node;
+      try {
+        res = vpatch(node, p);
+      } catch (e) {
+      }
+      return res;
     };
   };
 };
