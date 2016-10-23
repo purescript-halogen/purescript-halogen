@@ -4,7 +4,7 @@ import Prelude
 import Control.Monad.Aff as Aff
 import Control.Monad.Eff.Exception (Error)
 import Control.Monad.Reader.Trans (ReaderT(..))
-import Control.Monad.Trans (lift)
+import Control.Monad.Trans.Class (lift)
 
 class Monad m ⇐ MonadFork e m where
   fork ∷ ∀ a. m a → m (e -> m Boolean)

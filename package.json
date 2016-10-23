@@ -17,13 +17,13 @@
   },
   "devDependencies": {
     "jscs": "^3.0.7",
-    "jshint": "^2.9.3",
+    "jshint": "^2.9.4",
     "pulp": "^9.0.1",
-    "purescript": "^0.9.1",
-    "purescript-psa": "^0.3.8",
-    "rimraf": "^2.4.1"
+    "purescript": "^0.10.1",
+    "purescript-psa": "^0.3.9",
+    "rimraf": "^2.5.4"
   },
   "dependencies": {
-    "virtual-dom": "^2.0.1"
+    "virtual-dom": "^2.1.1"
   }
 }

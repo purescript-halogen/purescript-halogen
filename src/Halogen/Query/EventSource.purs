@@ -16,7 +16,7 @@ import Control.Monad.Aff.AVar (AVAR, makeVar, putVar, takeVar)
 import Control.Monad.Aff.Class (class MonadAff)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Rec.Class (class MonadRec)
-import Control.Monad.Trans (lift)
+import Control.Monad.Trans.Class (lift)
 
 import Data.Const (Const)
 import Data.Either (Either(..))

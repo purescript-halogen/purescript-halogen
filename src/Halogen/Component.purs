@@ -30,7 +30,6 @@ module Halogen.Component
 
 import Prelude
 
-import Control.Alt ((<|>))
 import Control.Monad.Free (liftF)
 
 import Data.Bifunctor (class Bifunctor, bimap, lmap, rmap)
@@ -268,7 +267,7 @@ queryAll'
   -> HalogenM s f g' p' o m (M.Map p a)
 queryAll' path q = do
   slots <- L.mapMaybe (prjSlot path) <$> getSlots
-  M.fromList <$> (traverse (\p -> map (Tuple p) (mkQuery (injSlot path p) (injQuery path q))) slots)
+  M.fromFoldable <$> (traverse (\p -> map (Tuple p) (mkQuery (injSlot path p) (injQuery path q))) slots)
 
 --------------------------------------------------------------------------------
 

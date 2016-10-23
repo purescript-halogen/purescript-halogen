@@ -13,7 +13,7 @@ module Halogen.Query
   , raise
   , module Control.Monad.Aff.Class
   , module Control.Monad.Eff.Class
-  , module Control.Monad.Trans
+  , module Control.Monad.Trans.Class
   , module Halogen.Component
   , module Halogen.Query.EventSource
   , module Halogen.Query.HalogenF
@@ -25,7 +25,7 @@ import Prelude
 import Control.Monad.Aff.Class (liftAff)
 import Control.Monad.Eff.Class (liftEff)
 import Control.Monad.State.Class as CMS
-import Control.Monad.Trans (lift)
+import Control.Monad.Trans.Class (lift)
 import Control.Monad.Free (liftF)
 
 import Halogen.Component (ParentDSL, query, queryAll)
