@@ -80,7 +80,7 @@ instance monadAffHalogenM :: MonadAff eff m ⇒ MonadAff eff (HalogenM s f g p o
 
 instance parallelHalogenM ∷ Parallel (HalogenAp s f g p o m) (HalogenM s f g p o m) where
   parallel = HalogenAp <<< liftAp
-  sequential (HalogenAp ap) = lowerAp ap
+  sequential = HalogenM <<< liftF <<< Par
 
 instance monadForkHalogenM ∷ MonadAff eff m ⇒ MonadFork Error (HalogenM s f g p o m) where
   fork a =

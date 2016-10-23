@@ -156,8 +156,8 @@ eval ref = case _ of
     DriverState { handler } <- peekVar ref
     handler o
     pure a
-  Par (HalogenAp p) -> do
-    sequential $ parallel $ lowerAp (hoistAp (evalM ref) p)
+  Par (HalogenAp p) ->
+    sequential $ lowerAp $ hoistAp (parallel <<< evalM ref) p
   Fork f ->
     FF.unFork (\(FF.ForkF fx k) →
       k <<< map unsafeCoerceAff <$> fork (evalM ref fx)) f
