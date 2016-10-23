@@ -45,8 +45,7 @@ import Halogen.Component.ChildPath (ChildPath, injSlot, prjQuery, injQuery, prjS
 import Halogen.Data.OrdBox (OrdBox, mkOrdBox)
 import Halogen.HTML.Core (HTML)
 import Halogen.Query.ChildQuery (childQuery)
-import Halogen.Query.HalogenF (HalogenF(..))
-import Halogen.Query.HalogenM (HalogenM(..))
+import Halogen.Query.HalogenM (HalogenM(..), HalogenF(..))
 import Halogen.Query.HalogenM as HM
 
 import Unsafe.Coerce (unsafeCoerce)
