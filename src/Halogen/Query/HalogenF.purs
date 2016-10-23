@@ -2,14 +2,16 @@ module Halogen.Query.HalogenF where
 
 import Prelude
 
+import Control.Monad.Aff (Aff)
 import Control.Monad.Aff.Class (class MonadAff, liftAff)
 import Control.Monad.Eff.Class (class MonadEff, liftEff)
+import Control.Monad.Eff.Exception (Error)
+import Control.Monad.Fork (class MonadFork, fork)
 import Control.Monad.Free (Free, hoistFree, liftF)
 import Control.Monad.Free.Trans (bimapFreeT, interpret)
 import Control.Monad.Rec.Class (class MonadRec, tailRecM)
 import Control.Monad.State.Class (class MonadState)
 import Control.Monad.Trans (class MonadTrans)
-import Control.Monad.Fork (class MonadFork, Canceler, hoistCanceler)
 import Control.Parallel.Class (class MonadPar)
 
 import Data.Bifunctor (lmap)
@@ -22,6 +24,8 @@ import Halogen.Query.EventSource as ES
 import Halogen.Query.StateF as SF
 import Halogen.Query.ParF as PF
 import Halogen.Query.ForkF as FF
+
+import Unsafe.Coerce (unsafeCoerce)
 
 newtype HalogenM s (f :: * -> *) g p o m a = HalogenM (Free (HalogenF s f g p o m) a)
 
@@ -48,9 +52,10 @@ instance monadAffHalogenM :: MonadAff eff m ⇒ MonadAff eff (HalogenM s f g p o
 instance monadParSlamM ∷ MonadPar (HalogenM s f g p o m) where
   par f a b = HalogenM $ liftF $ Par $ PF.mkPar $ PF.ParF f a b
 
-instance monadForkHalogenM ∷ MonadFork (HalogenM s f g p o m) where
-  fork a = HalogenM $ liftF $ Fork $ FF.mkFork $ FF.ForkF a id
-  cancelWith a c = HalogenM $ liftF $ Cancel a c
+instance monadForkHalogenM ∷ MonadAff eff m ⇒ MonadFork Error (HalogenM s f g p o m) where
+  fork a =
+    map (liftAff :: Aff eff ~> HalogenM s f g p o m)
+      <$> HalogenM (liftF $ Fork $ FF.fork a)
 
 instance monadTransHalogenM :: MonadTrans (HalogenM s f g p o) where
   lift m = HalogenM $ liftF $ Lift m
@@ -89,7 +94,6 @@ hoistF nat (HalogenM fa) = HalogenM (hoistFree go fa)
     Raise o a -> Raise o a
     Par p -> Par (PF.hoistPar (hoistF nat) p)
     Fork f -> Fork (FF.hoistFork (hoistF nat) f)
-    Cancel m c -> Cancel (hoistF nat m) (hoistCanceler (hoistF nat) c)
 
 hoistM
   :: forall s f g p o m m'
@@ -111,7 +115,6 @@ hoistM nat (HalogenM fa) = HalogenM (hoistFree go fa)
     Raise o a -> Raise o a
     Par p -> Par (PF.hoistPar (hoistM nat) p)
     Fork f -> Fork (FF.hoistFork (hoistM nat) f)
-    Cancel m c -> Cancel (hoistM nat m) (hoistCanceler (hoistM nat) c)
 
 
 -- | The Halogen component algebra
@@ -125,7 +128,6 @@ data HalogenF s (f :: * -> *) g p o m a
   | Raise o a
   | Par (PF.Par (HalogenM s f g p o m) a)
   | Fork (FF.Fork (HalogenM s f g p o m) a)
-  | Cancel (HalogenM s f g p o m a) (Canceler (HalogenM s f g p o m))
 
 instance functorHalogenF :: Functor m => Functor (HalogenF s f g p o m) where
   map f = case _ of
@@ -138,4 +140,3 @@ instance functorHalogenF :: Functor m => Functor (HalogenF s f g p o m) where
     Raise o a -> Raise o (f a)
     Par pa -> Par (map f pa)
     Fork fa -> Fork (map f fa)
-    Cancel ma c -> Cancel (map f ma) c

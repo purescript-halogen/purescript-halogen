@@ -9,12 +9,14 @@ import Control.Coroutine (await)
 import Control.Coroutine.Stalling (($$?))
 import Control.Coroutine.Stalling as SCR
 import Control.Monad.Aff (Aff, runAff, forkAff)
-import Control.Monad.Aff.AVar (AVar, AVAR, makeVar', putVar, takeVar, modifyVar)
+import Control.Monad.Aff.AVar (AVar, AVAR, modifyVar, putVar, takeVar, makeVar')
+import Control.Monad.Aff.Unsafe (unsafeInterleaveAff)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Class (liftEff)
 import Control.Monad.Eff.Exception (error, throwException)
 import Control.Monad.Error.Class (throwError)
 import Control.Monad.Free (foldFree)
+import Control.Monad.Fork (fork)
 import Control.Monad.Rec.Class (forever)
 import Control.Monad.Trans (lift)
 import Control.Parallel.Class (par)
@@ -40,6 +42,7 @@ import Halogen.Query.ChildQuery (ChildQuery, unChildQuery)
 import Halogen.Query.EventSource (runEventSource)
 import Halogen.Query.HalogenF (HalogenF(..))
 import Halogen.Query.ParF (ParF(..), unPar)
+import Halogen.Query.ForkF as FF
 import Halogen.Query.HalogenM (HalogenM(..))
 import Halogen.Query.StateF (StateF(..))
 
@@ -153,8 +156,11 @@ eval ref = case _ of
     DriverState { handler } <- peekVar ref
     handler o
     pure a
-  Par p -> do
+  Par p ->
     unPar (\(ParF f x y) → par f (evalM ref x) (evalM ref y)) p
+  Fork f ->
+    FF.unFork (\(FF.ForkF fx k) →
+      k <<< map unsafeInterleaveAff <$> fork (evalM ref fx)) f
 
 evalChildQuery
   :: forall s f g eff p o
@@ -260,7 +266,7 @@ renderChild handler fresh mkOrdBox childrenIn childrenOut lchs =
       Just existing -> pure existing
       Nothing -> runComponent (maybe (pure unit) handler <<< k) fresh lchs (force ctor)
     modifyVar (M.insert (mkOrdBox p) var) childrenOut
-    unDriverStateX (\st -> pure $ V.widget st.keyId st.node) =<< peekVar var
+    pure <<< unDriverStateX (\st -> V.widget st.keyId st.node) =<< peekVar var
 
 -- | TODO: we could do something more intelligent now this isn't baked into the
 -- | virtual-dom rendering. Perhaps write to an avar when an error occurs...
