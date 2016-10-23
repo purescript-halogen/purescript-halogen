@@ -10,7 +10,7 @@ import Control.Coroutine (await)
 import Control.Coroutine.Stalling (($$?))
 import Control.Coroutine.Stalling as SCR
 import Control.Monad.Aff (Aff, runAff, forkAff)
-import Control.Monad.Aff.AVar (AVar, modifyVar, putVar, takeVar, makeVar', peekVar)
+import Control.Monad.Aff.AVar (AVar, AVAR, modifyVar, putVar, takeVar, makeVar')
 import Control.Monad.Aff.Unsafe (unsafeCoerceAff)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Class (liftEff)
@@ -64,7 +64,10 @@ addInitializer
   -> Aff (HalogenEffects eff) Unit
 addInitializer var dsx =
   for_ (unDriverStateX (\st -> evalF st.selfRef <$> st.component.initializer) dsx) \i ->
-    modifyVar (\lchs -> { initializers: i : lchs.initializers, finalizers: lchs.finalizers }) var
+    modifyVar (\lchs ->
+      { initializers: i : lchs.initializers
+      , finalizers: lchs.finalizers
+      }) var
 
 addFinalizer
   :: forall f eff
@@ -74,7 +77,10 @@ addFinalizer
 addFinalizer var =
   unDriverStateX \st -> do
     for_ (evalF st.selfRef <$> st.component.finalizer) \f ->
-      modifyVar (\lchs -> { initializers: lchs.initializers, finalizers: f : lchs.finalizers }) var
+      modifyVar (\lchs ->
+        { initializers: lchs.initializers
+        , finalizers: f : lchs.finalizers
+        }) var
     for_ st.children (addFinalizer var <=< peekVar)
 
 handleLifecycle
@@ -105,14 +111,12 @@ runUI component element = _.driver <$> do
   fresh <- makeVar' 0
   handleLifecycle \lchs -> do
     var <- runComponent (const (pure unit)) fresh lchs component
-    dsx <- peekVar var
-    addInitializer lchs dsx
-    unDriverStateX (\st -> do
+    peekVar var >>= unDriverStateX \st -> do
       liftEff $ appendChild (htmlElementToNode st.node) (htmlElementToNode element)
       -- The record here is a hack around a skolem escape issue. If the typing
       -- rules for records change so this no longer works it may also be fixable
       -- with copious type annotations.
-      pure { driver: evalF st.selfRef }) dsx
+      pure { driver: evalF st.selfRef }
 
 runComponent
   :: forall f eff o
@@ -126,6 +130,7 @@ runComponent handler fresh lchs = unComponent \component -> do
   modifyVar (_ + 1) fresh
   var <- initDriverState component handler keyId fresh
   unDriverStateX (render lchs <<< _.selfRef) =<< peekVar var
+  addInitializer lchs =<< peekVar var
   pure var
 
 eval
@@ -214,14 +219,7 @@ render lchs var = takeVar var >>= \(DriverState ds) -> do
       (ds.component.render ds.state)
   node' <- liftEff $ V.patch (V.diff ds.vtree vtree') ds.node
   children <- takeVar childrenVar
-  let
-    newSlots = M.keys children
-    oldSlots = M.keys ds.children
-    removed = oldSlots \\ newSlots
-    added = newSlots \\ oldSlots
-  for_ added \p ->
-    for_ (M.lookup p children) (addInitializer lchs <=< peekVar)
-  for_ removed \p ->
+  for_ (M.keys ds.children \\ M.keys children) \p ->
     for_ (M.lookup p ds.children) (addFinalizer lchs <=< peekVar)
   putVar var $
     DriverState
@@ -263,3 +261,9 @@ handleAff
    . Aff (HalogenEffects eff) a
   -> Eff (HalogenEffects eff) Unit
 handleAff = void <<< runAff throwException (const (pure unit))
+
+peekVar :: forall eff a. AVar a -> Aff (avar :: AVAR | eff) a
+peekVar v = do
+  a <- takeVar v
+  putVar v a
+  pure a
