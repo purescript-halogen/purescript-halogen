@@ -30,7 +30,6 @@ module Halogen.Component
 
 import Prelude
 
-import Control.Alt ((<|>))
 import Control.Monad.Free (liftF)
 
 import Data.Bifunctor (class Bifunctor, bimap, lmap, rmap)
@@ -46,8 +45,7 @@ import Halogen.Component.ChildPath (ChildPath, injSlot, prjQuery, injQuery, prjS
 import Halogen.Data.OrdBox (OrdBox, mkOrdBox)
 import Halogen.HTML.Core (HTML)
 import Halogen.Query.ChildQuery (childQuery)
-import Halogen.Query.HalogenF (HalogenF(..))
-import Halogen.Query.HalogenM (HalogenM(..))
+import Halogen.Query.HalogenM (HalogenM(..), HalogenF(..))
 import Halogen.Query.HalogenM as HM
 
 import Unsafe.Coerce (unsafeCoerce)
@@ -268,7 +266,7 @@ queryAll'
   -> HalogenM s f g' p' o m (M.Map p a)
 queryAll' path q = do
   slots <- L.mapMaybe (prjSlot path) <$> getSlots
-  M.fromList <$> (traverse (\p -> map (Tuple p) (mkQuery (injSlot path p) (injQuery path q))) slots)
+  M.fromFoldable <$> (traverse (\p -> map (Tuple p) (mkQuery (injSlot path p) (injQuery path q))) slots)
 
 --------------------------------------------------------------------------------
 

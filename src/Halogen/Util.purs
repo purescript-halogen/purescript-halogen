@@ -7,12 +7,12 @@ module Halogen.Util
 
 import Prelude
 
-import Control.Bind ((<=<), (=<<))
 import Control.Monad.Aff (Aff, makeAff, runAff)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Class (liftEff)
 import Control.Monad.Eff.Exception (throwException, error)
 import Control.Monad.Error.Class (throwError)
+import Control.Monad.Except (runExcept)
 
 import Data.Maybe (Maybe(..), maybe)
 import Data.Either (either)
@@ -53,7 +53,7 @@ selectElement query = do
       ((querySelector query <<< htmlDocumentToParentNode <=< document) =<< window)
   pure case mel of
     Nothing -> Nothing
-    Just el -> either (const Nothing) Just $ readHTMLElement (toForeign el)
+    Just el -> either (const Nothing) Just $ runExcept $ readHTMLElement (toForeign el)
 
 -- | Runs an `Aff` value of the type commonly used by Halogen components. Any
 -- | unhandled errors will be re-thrown as exceptions.
