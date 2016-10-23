@@ -154,6 +154,9 @@ eval ref = case _ of
   GetSlots k -> do
     DriverState { children } <- peekVar ref
     pure $ k $ map unOrdBox $ M.keys children
+  CheckSlot p k -> do
+    DriverState { mkOrdBox, children } <- peekVar ref
+    pure $ k $ M.member (mkOrdBox p) children
   ChildQuery cq ->
     evalChildQuery ref cq
   Raise o a -> do

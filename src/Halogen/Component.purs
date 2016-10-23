@@ -230,17 +230,16 @@ mkQuery p q = HalogenM $ liftF $ ChildQuery (childQuery p q)
 getSlots :: forall s f g p o m. HalogenM s f g p o m (L.List p)
 getSlots = HalogenM $ liftF $ GetSlots id
 
+checkSlot :: forall s f g p o m. p -> HalogenM s f g p o m Boolean
+checkSlot p = HalogenM $ liftF $ CheckSlot p id
+
 query
   :: forall s f g p o m a
    . (Applicative m, Eq p)
   => p
   -> g a
   -> HalogenM s f g p o m (Maybe a)
-query p q = do
-  slots <- getSlots
-  case L.elemIndex p slots of
-    Nothing -> pure Nothing
-    Just _ -> Just <$> mkQuery p q
+query p q = checkSlot p >>= if _ then Just <$> mkQuery p q else pure Nothing
 
 query'
   :: forall s f g g' m p p' o a

@@ -32,6 +32,7 @@ data HalogenF s (f :: * -> *) g p o m a
   | Lift (m a)
   | Halt String
   | GetSlots (L.List p -> a)
+  | CheckSlot p (Boolean -> a)
   | ChildQuery (CQ.ChildQuery g m p a)
   | Raise o a
   | Par (HalogenAp s f g p o m a)
@@ -43,6 +44,7 @@ instance functorHalogenF :: Functor m => Functor (HalogenF s f g p o m) where
     Subscribe es a -> Subscribe es (f a)
     Lift q -> Lift (map f q)
     Halt msg -> Halt msg
+    CheckSlot p k -> CheckSlot p (map f k)
     GetSlots k -> GetSlots (map f k)
     ChildQuery cq -> ChildQuery (map f cq)
     Raise o a -> Raise o (f a)
@@ -123,6 +125,7 @@ hoistF nat (HalogenM fa) = HalogenM (hoistFree go fa)
     Lift q -> Lift q
     Halt msg -> Halt msg
     GetSlots k -> GetSlots k
+    CheckSlot p k -> CheckSlot p k
     ChildQuery cq -> ChildQuery cq
     Raise o a -> Raise o a
     Par p -> Par (over HalogenAp (hoistAp (hoistF nat)) p)
@@ -144,6 +147,7 @@ hoistM nat (HalogenM fa) = HalogenM (hoistFree go fa)
     Lift q -> Lift (nat q)
     Halt msg -> Halt msg
     GetSlots k -> GetSlots k
+    CheckSlot p k -> CheckSlot p k
     ChildQuery cq -> ChildQuery (CQ.hoistChildQuery nat cq)
     Raise o a -> Raise o a
     Par p -> Par (over HalogenAp (hoistAp (hoistM nat)) p)
