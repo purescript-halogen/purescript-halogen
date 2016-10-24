@@ -15,7 +15,7 @@ import Halogen.Util (runHalogenAff, awaitBody)
 import Halogen.VirtualDOM.Driver (runUI)
 
 import Ace.Types (ACE)
-import AceComponent (AceEffects, AceOutput(..), AceQuery(..), ace)
+import AceComponent (AceEffects, AceOutput(..), AceQuery(..), aceComponent)
 
 -- | The application state, which in this case just stores the current text in
 -- | the editor.
@@ -31,7 +31,6 @@ data Query a
 
 -- | The slot address type for the Ace component.
 data AceSlot = AceSlot
-
 derive instance eqAceSlot :: Eq AceSlot
 derive instance ordAceSlot :: Ord AceSlot
 
@@ -53,7 +52,7 @@ ui = H.parentComponent { render, eval, initialState }
               ]
           ]
       , HH.div_
-          [ HH.slot AceSlot (H.defer \_ -> ace) handleAceOuput ]
+          [ HH.slot AceSlot (H.defer \_ -> aceComponent) handleAceOuput ]
       , HH.p_
           [ HH.text ("Current text: " <> text) ]
       ]

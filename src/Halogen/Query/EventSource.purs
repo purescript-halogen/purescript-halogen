@@ -9,14 +9,11 @@ module Halogen.Query.EventSource
 import Prelude
 
 import Control.Coroutine.Aff (produce')
-import Control.Coroutine as CR
 import Control.Coroutine.Stalling as SCR
-import Control.Monad.Aff (Aff, forkAff)
-import Control.Monad.Aff.AVar (AVAR, makeVar, putVar, takeVar)
+import Control.Monad.Aff.AVar (AVAR)
 import Control.Monad.Aff.Class (class MonadAff)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Rec.Class (class MonadRec)
-import Control.Monad.Trans.Class (lift)
 
 import Data.Const (Const)
 import Data.Either (Either(..))
@@ -27,15 +24,6 @@ newtype EventSource f g = EventSource (SCR.StallingProducer (f Unit) g Unit)
 
 runEventSource :: forall f g. EventSource f g -> SCR.StallingProducer (f Unit) g Unit
 runEventSource (EventSource es) = es
-
-produceX
-  :: forall a r eff
-   . ((Either a r -> Aff (avar :: AVAR | eff) Unit) -> Aff (avar :: AVAR | eff) Unit)
-  -> CR.Producer a (Aff (avar :: AVAR | eff)) r
-produceX recv = do
-  v <- lift makeVar
-  lift (forkAff (recv (putVar v)))
-  CR.producer (takeVar v)
 
 -- | Creates an `EventSource` for an event listener that accepts one argument.
 -- |
@@ -53,12 +41,12 @@ eventSource
   :: forall eff a f g
    . (Monad g, MonadAff (avar :: AVAR | eff) g)
   => ((a -> Eff (avar :: AVAR | eff) Unit) -> Eff (avar :: AVAR | eff) Unit)
-  -> (a -> Eff (avar :: AVAR | eff) (f Unit))
+  -> (a -> f Unit)
   -> EventSource f g
 eventSource attach handle =
   EventSource $
     SCR.producerToStallingProducer $ produce' \emit ->
-      attach (emit <<< Left <=< handle)
+      attach (emit <<< Left <=< map pure handle)
 
 -- | Creates an `EventSource` for an event listener that accepts no arguments.
 -- |
@@ -77,12 +65,12 @@ eventSource_
   :: forall eff f g
    . (Monad g, MonadAff (avar :: AVAR | eff) g)
   => (Eff (avar :: AVAR | eff) Unit -> Eff (avar :: AVAR | eff) Unit)
-  -> Eff (avar :: AVAR | eff) (f Unit)
+  -> f Unit
   -> EventSource f g
 eventSource_ attach handle =
   EventSource $
     SCR.producerToStallingProducer $ produce' \emit ->
-      attach (emit <<< Left =<< handle)
+      attach (emit <<< Left =<< pure handle)
 
 -- | Take an `EventSource` with events in `1 + f` to one with events in `f`.
 -- | This is useful for simultaneously filtering and handling events.

@@ -1,4 +1,4 @@
-module AceComponent where
+module AceComponent (AceEffects, AceQuery(..), AceOutput(..), aceComponent) where
 
 import Prelude
 
@@ -45,8 +45,9 @@ data AceOutput = TextChanged String
 type AceEffects eff = (ace :: ACE, avar :: AVAR | eff)
 
 -- | The Ace component definition.
-ace :: forall eff. H.Component HH.HTML AceQuery AceOutput (Aff (AceEffects eff))
-ace = H.lifecycleComponent
+aceComponent :: forall eff. H.Component HH.HTML AceQuery AceOutput (Aff (AceEffects eff))
+aceComponent =
+  H.lifecycleComponent
     { render
     , eval
     , initialState: initAceState
@@ -75,7 +76,9 @@ ace = H.lifecycleComponent
         editor <- H.liftEff $ Ace.editNode el' Ace.ace
         session <- H.liftEff $ Editor.getSession editor
         H.modify (_ { editor = Just editor })
-        H.subscribe $ H.eventSource_ (Session.onChange session) (?foo)
+        H.subscribe $ H.eventSource_ (Session.onChange session) do
+          text <- H.liftEff (Editor.getValue editor)
+          changeText text
     pure next
   eval (Finalize next) = do
     -- Release the reference to the editor and do any other cleanup that a real
@@ -83,6 +86,11 @@ ace = H.lifecycleComponent
     H.modify (_ { editor = Nothing })
     pure next
   eval (ChangeText text next) = do
+    changeText text
+    pure next
+
+  changeText :: String -> H.ComponentDSL AceState AceQuery AceOutput (Aff (AceEffects eff)) Unit
+  changeText text = do
     state <- H.gets _.editor
     case state of
       Nothing -> pure unit
@@ -91,4 +99,3 @@ ace = H.lifecycleComponent
         when (text /= current) do
           void $ H.liftEff $ Editor.setValue text Nothing editor
     H.raise $ TextChanged text
-    pure next
