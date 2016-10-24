@@ -1,4 +1,4 @@
-## Keyboard Shortcuts example
+## Keyboard input example
 
 This example illustrates how to selectively capture keyboard events.
 
@@ -7,9 +7,9 @@ This example illustrates how to selectively capture keyboard events.
 From the root of the Halogen project:
 
 ```
-$ npm run example-keyboard-shortcuts
+$ npm run example-keyboard-input
 ```
 
 The code will be built as `example.js` in the
-`examples/keyboard-shortcuts/dist` directory within the example, runnable by
+`examples/keyboard-input/dist` directory within the example, runnable by
 opening the corresponding `index.html`.
