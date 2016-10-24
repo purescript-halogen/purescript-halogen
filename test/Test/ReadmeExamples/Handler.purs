@@ -2,9 +2,6 @@ module Test.ReadmeExamples.Handler where
 
 import Prelude
 
-import Control.Apply ((*>))
-
-import Data.Functor (($>))
 import Data.Maybe (Maybe(..))
 
 import Halogen (action)
