@@ -2,7 +2,7 @@ module Halogen.Query.HalogenM where
 
 import Prelude
 
-import Control.Applicative.Free (FreeAp, liftAp, hoistAp)
+import Control.Applicative.Free (FreeAp, liftFreeAp, hoistFreeAp)
 import Control.Monad.Aff.Class (class MonadAff, liftAff)
 import Control.Monad.Eff.Class (class MonadEff, liftEff)
 import Control.Monad.Eff.Exception (Error)
@@ -80,7 +80,7 @@ instance monadAffHalogenM :: MonadAff eff m => MonadAff eff (HalogenM s f g p o 
   liftAff aff = HalogenM $ liftF $ Lift $ liftAff aff
 
 instance parallelHalogenM :: Parallel (HalogenAp s f g p o m) (HalogenM s f g p o m) where
-  parallel = HalogenAp <<< liftAp
+  parallel = HalogenAp <<< liftFreeAp
   sequential = HalogenM <<< liftF <<< Par
 
 instance monadForkHalogenM :: MonadAff eff m => MonadFork Error (HalogenM s f g p o m) where
@@ -125,7 +125,7 @@ hoistF nat (HalogenM fa) = HalogenM (hoistFree go fa)
     CheckSlot p k -> CheckSlot p k
     ChildQuery cq -> ChildQuery cq
     Raise o a -> Raise o a
-    Par p -> Par (over HalogenAp (hoistAp (hoistF nat)) p)
+    Par p -> Par (over HalogenAp (hoistFreeAp (hoistF nat)) p)
     Fork f -> Fork (FF.hoistFork (hoistF nat) f)
 
 hoistM
@@ -147,5 +147,5 @@ hoistM nat (HalogenM fa) = HalogenM (hoistFree go fa)
     CheckSlot p k -> CheckSlot p k
     ChildQuery cq -> ChildQuery (CQ.hoistChildQuery nat cq)
     Raise o a -> Raise o a
-    Par p -> Par (over HalogenAp (hoistAp (hoistM nat)) p)
+    Par p -> Par (over HalogenAp (hoistFreeAp (hoistM nat)) p)
     Fork f -> Fork (FF.hoistFork (hoistM nat) f)

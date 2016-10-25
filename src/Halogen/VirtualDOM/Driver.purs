@@ -5,7 +5,7 @@ module Halogen.VirtualDOM.Driver
 
 import Prelude
 
-import Control.Applicative.Free (hoistAp, lowerAp)
+import Control.Applicative.Free (hoistFreeAp, retractFreeAp)
 import Control.Coroutine (($$))
 import Control.Coroutine as CR
 import Control.Monad.Aff (Aff, runAff, forkAff)
@@ -168,7 +168,7 @@ eval ref = case _ of
     handler o
     pure a
   Par (HalogenAp p) ->
-    sequential $ lowerAp $ hoistAp (parallel <<< evalM ref) p
+    sequential $ retractFreeAp $ hoistFreeAp (parallel <<< evalM ref) p
   Fork f ->
     FF.unFork (\(FF.ForkF fx k) →
       k <<< map unsafeCoerceAff <$> fork (evalM ref fx)) f
