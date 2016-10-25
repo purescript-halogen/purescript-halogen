@@ -6,9 +6,8 @@ module Halogen.VirtualDOM.Driver
 import Prelude
 
 import Control.Applicative.Free (hoistAp, lowerAp)
-import Control.Coroutine (await)
-import Control.Coroutine.Stalling (($$?))
-import Control.Coroutine.Stalling as SCR
+import Control.Coroutine (($$))
+import Control.Coroutine as CR
 import Control.Monad.Aff (Aff, runAff, forkAff)
 import Control.Monad.Aff.AVar (AVar, AVAR, modifyVar, putVar, takeVar, makeVar')
 import Control.Monad.Aff.Unsafe (unsafeCoerceAff)
@@ -149,8 +148,8 @@ eval ref = case _ of
         handleLifecycle \lchs -> render lchs ref
         pure next
   Subscribe es next -> do
-    let consumer = forever (lift <<< evalF ref =<< await)
-    forkAff $ SCR.runStallingProcess (runEventSource es $$? consumer)
+    let consumer = forever (lift <<< evalF ref =<< CR.await)
+    forkAff $ CR.runProcess (runEventSource es $$ consumer)
     pure next
   Lift aff ->
     aff

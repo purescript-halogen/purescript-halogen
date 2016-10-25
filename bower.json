@@ -34,7 +34,6 @@
     "purescript-maps": "^2.0.0",
     "purescript-nullable": "^2.0.0",
     "purescript-profunctor": "^2.0.0",
-    "purescript-stalling-coroutines": "^3.0.0",
     "purescript-unsafe-coerce": "^2.0.0"
   }
 }

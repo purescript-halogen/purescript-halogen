@@ -78,7 +78,7 @@ aceComponent =
         H.modify (_ { editor = Just editor })
         H.subscribe $ H.eventSource_ (Session.onChange session) do
           text <- H.liftEff (Editor.getValue editor)
-          pure $ H.action (ChangeText text)
+          pure $ Just $ H.action (ChangeText text)
     pure next
   eval (Finalize next) = do
     -- Release the reference to the editor and do any other cleanup that a real

@@ -7,8 +7,6 @@ import Control.Monad.Aff.AVar (AVAR)
 import Control.Monad.Eff (Eff)
 
 import Data.Char as CH
-import Data.Functor.Coproduct (Coproduct, right, left)
-import Data.Const (Const(..))
 import Data.Maybe (Maybe(..))
 import Data.String as ST
 
@@ -19,7 +17,6 @@ import DOM.HTML.Window (document) as DOM
 
 import Halogen as H
 import Halogen.HTML.Indexed as HH
-import Halogen.Query.EventSource as ES
 import Halogen.Util (runHalogenAff, awaitBody)
 import Halogen.VirtualDOM.Driver (runUI)
 
@@ -59,22 +56,18 @@ ui =
   eval :: Query ~> H.ComponentDSL State Query Void (Aff (Effects eff))
   eval (Init next) = do
     document <- H.liftEff $ DOM.window >>= DOM.document <#> DOM.htmlDocumentToDocument
-    let
-      source :: H.EventSource (Coproduct (Const Unit) Query) (Aff (Effects eff))
-      source =
-        H.eventSource (K.onKeyUp document) \e ->
-          case K.readKeyboardEvent e of
-            info
-              | info.shiftKey -> do
-                  K.preventDefault e
-                  let char = CH.fromCharCode info.keyCode
-                  pure $ right $ H.action $ Append char
-              | info.keyCode == 13 -> do
-                  K.preventDefault e
-                  pure $ right $ H.action Clear
-              | otherwise ->
-                  pure $ left (Const unit)
-    H.subscribe $ ES.catEventSource source
+    H.subscribe $ H.eventSource (K.onKeyUp document) \e ->
+      case K.readKeyboardEvent e of
+        info
+          | info.shiftKey -> do
+              K.preventDefault e
+              let char = CH.fromCharCode info.keyCode
+              pure $ Just $ H.action $ Append char
+          | info.keyCode == 13 -> do
+              K.preventDefault e
+              pure $ Just $ H.action Clear
+          | otherwise ->
+              pure Nothing
     pure next
   eval (Append c next) = do
     H.modify (\st -> st { chars = st.chars <> ST.singleton c })

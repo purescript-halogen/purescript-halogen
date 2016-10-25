@@ -3,26 +3,26 @@ module Halogen.Query.EventSource
   , runEventSource
   , eventSource
   , eventSource_
-  , catEventSource
   ) where
 
 import Prelude
 
-import Control.Coroutine.Aff (produce')
-import Control.Coroutine.Stalling as SCR
+import Control.Coroutine.Aff (produce)
+import Control.Coroutine as CR
+import Control.Monad.Free.Trans as FT
 import Control.Monad.Aff.AVar (AVAR)
-import Control.Monad.Aff.Class (class MonadAff)
+import Control.Monad.Aff.Class (class MonadAff, liftAff)
 import Control.Monad.Eff (Eff)
-import Control.Monad.Rec.Class (class MonadRec)
+import Control.Monad.Rec.Class (class MonadRec, tailRecM, Step(..))
+import Control.Monad.Trans.Class (lift)
 
-import Data.Const (Const)
 import Data.Either (Either(..))
-import Data.Functor.Coproduct (Coproduct, coproduct)
-import Data.Maybe (Maybe(..))
+import Data.Maybe (Maybe)
+import Data.Foldable (for_)
 
-newtype EventSource f g = EventSource (SCR.StallingProducer (f Unit) g Unit)
+newtype EventSource f g = EventSource (CR.Producer (f Unit) g Unit)
 
-runEventSource :: forall f g. EventSource f g -> SCR.StallingProducer (f Unit) g Unit
+runEventSource :: forall f g. EventSource f g -> CR.Producer (f Unit) g Unit
 runEventSource (EventSource es) = es
 
 -- | Creates an `EventSource` for an event listener that accepts one argument.
@@ -38,15 +38,14 @@ runEventSource (EventSource es) = es
 -- | ```
 -- | (Taken from the Ace component example)
 eventSource
-  :: forall eff a f g
-   . (Monad g, MonadAff (avar :: AVAR | eff) g)
+  :: forall eff a f m
+   . (MonadAff (avar :: AVAR | eff) m)
   => ((a -> Eff (avar :: AVAR | eff) Unit) -> Eff (avar :: AVAR | eff) Unit)
-  -> (a -> Eff (avar :: AVAR | eff) (f Unit))
-  -> EventSource f g
+  -> (a -> Eff (avar :: AVAR | eff) (Maybe (f Unit)))
+  -> EventSource f m
 eventSource attach handle =
-  EventSource $
-    SCR.producerToStallingProducer $ produce' \emit ->
-      attach (emit <<< Left <=< handle)
+  EventSource $ FT.hoistFreeT liftAff $ catMaybes $ produce \emit ->
+    attach (emit <<< Left <=< handle)
 
 -- | Creates an `EventSource` for an event listener that accepts no arguments.
 -- |
@@ -62,24 +61,23 @@ eventSource attach handle =
 -- | ```
 -- | (Taken from the Ace component example)
 eventSource_
-  :: forall eff f g
-   . (Monad g, MonadAff (avar :: AVAR | eff) g)
+  :: forall eff f m
+   . (MonadAff (avar :: AVAR | eff) m)
   => (Eff (avar :: AVAR | eff) Unit -> Eff (avar :: AVAR | eff) Unit)
-  -> Eff (avar :: AVAR | eff) (f Unit)
-  -> EventSource f g
+  -> Eff (avar :: AVAR | eff) (Maybe (f Unit))
+  -> EventSource f m
 eventSource_ attach handle =
-  EventSource $
-    SCR.producerToStallingProducer $ produce' \emit ->
-      attach (emit <<< Left =<< handle)
+  EventSource $ FT.hoistFreeT liftAff $ catMaybes $ produce \emit ->
+    attach (emit <<< Left =<< handle)
 
--- | Take an `EventSource` with events in `1 + f` to one with events in `f`.
--- | This is useful for simultaneously filtering and handling events.
-catEventSource
-  :: forall f g
-   . MonadRec g
-  => EventSource (Coproduct (Const Unit) f) g
-  -> EventSource f g
-catEventSource (EventSource es) =
-  EventSource $
-    SCR.catMaybes $
-      SCR.mapStallingProducer (coproduct (const Nothing) Just) es
+catMaybes
+  :: forall m a r
+   . MonadRec m
+  => CR.Producer (Maybe a) m r
+  -> CR.Producer a m r
+catMaybes =
+  tailRecM $
+    FT.resume >>> lift >=> case _ of
+      Left r -> pure $ Done r
+      Right (CR.Emit o next) ->
+        for_ o CR.emit $> Loop next
