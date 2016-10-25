@@ -41,12 +41,12 @@ eventSource
   :: forall eff a f g
    . (Monad g, MonadAff (avar :: AVAR | eff) g)
   => ((a -> Eff (avar :: AVAR | eff) Unit) -> Eff (avar :: AVAR | eff) Unit)
-  -> (a -> f Unit)
+  -> (a -> Eff (avar :: AVAR | eff) (f Unit))
   -> EventSource f g
 eventSource attach handle =
   EventSource $
     SCR.producerToStallingProducer $ produce' \emit ->
-      attach (emit <<< Left <=< map pure handle)
+      attach (emit <<< Left <=< handle)
 
 -- | Creates an `EventSource` for an event listener that accepts no arguments.
 -- |
@@ -65,12 +65,12 @@ eventSource_
   :: forall eff f g
    . (Monad g, MonadAff (avar :: AVAR | eff) g)
   => (Eff (avar :: AVAR | eff) Unit -> Eff (avar :: AVAR | eff) Unit)
-  -> f Unit
+  -> Eff (avar :: AVAR | eff) (f Unit)
   -> EventSource f g
 eventSource_ attach handle =
   EventSource $
     SCR.producerToStallingProducer $ produce' \emit ->
-      attach (emit <<< Left =<< pure handle)
+      attach (emit <<< Left =<< handle)
 
 -- | Take an `EventSource` with events in `1 + f` to one with events in `f`.
 -- | This is useful for simultaneously filtering and handling events.

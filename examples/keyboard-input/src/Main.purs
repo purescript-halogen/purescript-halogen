@@ -7,6 +7,8 @@ import Control.Monad.Aff.AVar (AVAR)
 import Control.Monad.Eff (Eff)
 
 import Data.Char as CH
+import Data.Functor.Coproduct (Coproduct, right, left)
+import Data.Const (Const(..))
 import Data.Maybe (Maybe(..))
 import Data.String as ST
 
@@ -17,6 +19,7 @@ import DOM.HTML.Window (document) as DOM
 
 import Halogen as H
 import Halogen.HTML.Indexed as HH
+import Halogen.Query.EventSource as ES
 import Halogen.Util (runHalogenAff, awaitBody)
 import Halogen.VirtualDOM.Driver (runUI)
 
@@ -27,7 +30,10 @@ type State = { chars :: String }
 initialState :: State
 initialState = { chars : "" }
 
-data Query a = Init a
+data Query a
+  = Init a
+  | Append Char a
+  | Clear a
 
 type Effects eff = (dom :: DOM, avar :: AVAR, keyboard :: K.KEYBOARD | eff)
 
@@ -53,24 +59,29 @@ ui =
   eval :: Query ~> H.ComponentDSL State Query Void (Aff (Effects eff))
   eval (Init next) = do
     document <- H.liftEff $ DOM.window >>= DOM.document <#> DOM.htmlDocumentToDocument
-    H.subscribe $ H.eventSource (K.onKeyUp document) \e -> do
-      case K.readKeyboardEvent e of
-        info
-          | info.shiftKey -> do
-              H.liftEff $ K.preventDefault e
-              appendChar $ CH.fromCharCode info.keyCode
-          | info.keyCode == 13 -> do
-              H.liftEff $ K.preventDefault e
-              clear
-          | otherwise ->
-              pure unit
+    let
+      source :: H.EventSource (Coproduct (Const Unit) Query) (Aff (Effects eff))
+      source =
+        H.eventSource (K.onKeyUp document) \e ->
+          case K.readKeyboardEvent e of
+            info
+              | info.shiftKey -> do
+                  K.preventDefault e
+                  let char = CH.fromCharCode info.keyCode
+                  pure $ right $ H.action $ Append char
+              | info.keyCode == 13 -> do
+                  K.preventDefault e
+                  pure $ right $ H.action Clear
+              | otherwise ->
+                  pure $ left (Const unit)
+    H.subscribe $ ES.catEventSource source
     pure next
-
-  appendChar :: Char -> H.ComponentDSL State Query Void (Aff (Effects eff)) Unit
-  appendChar c = H.modify (\st -> st { chars = st.chars <> ST.singleton c })
-
-  clear :: H.ComponentDSL State Query Void (Aff (Effects eff)) Unit
-  clear = H.modify (_ { chars = "" })
+  eval (Append c next) = do
+    H.modify (\st -> st { chars = st.chars <> ST.singleton c })
+    pure next
+  eval (Clear next) = do
+    H.modify (_ { chars = "" })
+    pure next
 
 main :: Eff (H.HalogenEffects (keyboard :: K.KEYBOARD)) Unit
 main = runHalogenAff do

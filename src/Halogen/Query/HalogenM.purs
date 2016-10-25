@@ -9,7 +9,7 @@ import Control.Monad.Eff.Class (class MonadEff, liftEff)
 import Control.Monad.Eff.Exception (Error)
 import Control.Monad.Fork (class MonadFork)
 import Control.Monad.Free (Free, hoistFree, liftF)
-import Control.Monad.Free.Trans (bimapFreeT, interpret)
+import Control.Monad.Free.Trans (hoistFreeT, interpret)
 import Control.Monad.Rec.Class (class MonadRec, tailRecM, Step(..))
 import Control.Monad.State.Class (class MonadState)
 import Control.Monad.Trans.Class (class MonadTrans)
@@ -28,7 +28,7 @@ import Halogen.Query.ForkF as FF
 -- | The Halogen component algebra
 data HalogenF s (f :: * -> *) g p o m a
   = State (SF.StateF s a)
-  | Subscribe (ES.EventSource (HalogenM s f g p o m) m) a
+  | Subscribe (ES.EventSource f m) a
   | Lift (m a)
   | Halt String
   | GetSlots (L.List p -> a)
@@ -121,7 +121,7 @@ hoistF nat (HalogenM fa) = HalogenM (hoistFree go fa)
   go = case _ of
     State q -> State q
     Subscribe es next ->
-      Subscribe (ES.EventSource (interpret (lmap (hoistF nat)) (ES.runEventSource es))) next
+      Subscribe (ES.EventSource (interpret (lmap nat) (ES.runEventSource es))) next
     Lift q -> Lift q
     Halt msg -> Halt msg
     GetSlots k -> GetSlots k
@@ -143,7 +143,7 @@ hoistM nat (HalogenM fa) = HalogenM (hoistFree go fa)
   go = case _ of
     State q -> State q
     Subscribe es next ->
-      Subscribe (ES.EventSource (bimapFreeT (lmap (hoistM nat)) nat (ES.runEventSource es))) next
+      Subscribe (ES.EventSource (hoistFreeT nat (ES.runEventSource es))) next
     Lift q -> Lift (nat q)
     Halt msg -> Halt msg
     GetSlots k -> GetSlots k

@@ -78,7 +78,7 @@ aceComponent =
         H.modify (_ { editor = Just editor })
         H.subscribe $ H.eventSource_ (Session.onChange session) do
           text <- H.liftEff (Editor.getValue editor)
-          changeText text
+          pure $ H.action (ChangeText text)
     pure next
   eval (Finalize next) = do
     -- Release the reference to the editor and do any other cleanup that a real
@@ -86,11 +86,6 @@ aceComponent =
     H.modify (_ { editor = Nothing })
     pure next
   eval (ChangeText text next) = do
-    changeText text
-    pure next
-
-  changeText :: String -> H.ComponentDSL AceState AceQuery AceOutput (Aff (AceEffects eff)) Unit
-  changeText text = do
     state <- H.gets _.editor
     case state of
       Nothing -> pure unit
@@ -99,3 +94,4 @@ aceComponent =
         when (text /= current) do
           void $ H.liftEff $ Editor.setValue text Nothing editor
     H.raise $ TextChanged text
+    pure next

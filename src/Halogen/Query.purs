@@ -89,7 +89,7 @@ request req = req id
 -- | within an `Eval` function.
 subscribe
   :: forall s f g p o m
-   . EventSource (HalogenM s f g p o m) m
+   . EventSource f m
   -> HalogenM s f g p o m Unit
 subscribe es = HalogenM (liftF (Subscribe es unit))
 
