@@ -164,7 +164,7 @@ lifecycleComponent spec =
     , eval: spec.eval
     , initializer: spec.initializer
     , finalizer: spec.finalizer
-    , mkOrdBox: absurd
+    , mkOrdBox
     }
   where
   coeRender
@@ -191,7 +191,7 @@ parentComponent spec =
     , eval: spec.eval
     , initializer: Nothing
     , finalizer: Nothing
-    , mkOrdBox: mkOrdBox
+    , mkOrdBox
     }
 
 type ParentLifecycleComponentSpec h s f g p o m =
@@ -214,7 +214,7 @@ lifecycleParentComponent spec =
     , eval: spec.eval
     , initializer: spec.initializer
     , finalizer: spec.finalizer
-    , mkOrdBox: mkOrdBox
+    , mkOrdBox
     }
 
 --------------------------------------------------------------------------------

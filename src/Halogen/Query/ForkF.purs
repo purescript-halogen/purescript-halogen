@@ -11,19 +11,19 @@ type Canceler eff = Error -> Aff eff Boolean
 
 data ForkF eff f x a = ForkF (f x) (Canceler eff -> a)
 
-fork ∷ forall eff f x. f x → Fork f (Canceler eff)
+fork :: forall eff f x. f x -> Fork f (Canceler eff)
 fork fx = mkFork $ ForkF fx id
 
 data Fork (f :: * -> *) a
 
-mkFork :: forall eff f x a. ForkF eff f x a → Fork f a
+mkFork :: forall eff f x a. ForkF eff f x a -> Fork f a
 mkFork = unsafeCoerce
 
-unFork :: forall f a r. (forall eff x. ForkF eff f x a → r) → Fork f a → r
+unFork :: forall f a r. (forall eff x. ForkF eff f x a -> r) -> Fork f a -> r
 unFork = unsafeCoerce
 
 instance functorFork :: Functor (Fork f) where
   map f = unFork \(ForkF fx c) -> mkFork $ ForkF fx (map f c)
 
-hoistFork ∷ forall f g a. (f ~> g) → Fork f a → Fork g a
+hoistFork :: forall f g a. (f ~> g) -> Fork f a -> Fork g a
 hoistFork nat = unFork \(ForkF fx c) -> mkFork $ ForkF (nat fx) c

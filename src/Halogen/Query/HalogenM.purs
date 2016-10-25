@@ -3,7 +3,6 @@ module Halogen.Query.HalogenM where
 import Prelude
 
 import Control.Applicative.Free (FreeAp, liftAp, hoistAp)
-import Control.Monad.Aff (Aff)
 import Control.Monad.Aff.Class (class MonadAff, liftAff)
 import Control.Monad.Eff.Class (class MonadEff, liftEff)
 import Control.Monad.Eff.Exception (Error)
@@ -74,20 +73,18 @@ instance bindHalogenM :: Bind (HalogenM s f g p o m) where
 
 instance monadHalogenM :: Monad (HalogenM s f g p o m)
 
-instance monadEffHalogenM :: MonadEff eff m ⇒ MonadEff eff (HalogenM s f g p o m) where
+instance monadEffHalogenM :: MonadEff eff m => MonadEff eff (HalogenM s f g p o m) where
   liftEff eff = HalogenM $ liftF $ Lift $ liftEff eff
 
-instance monadAffHalogenM :: MonadAff eff m ⇒ MonadAff eff (HalogenM s f g p o m) where
+instance monadAffHalogenM :: MonadAff eff m => MonadAff eff (HalogenM s f g p o m) where
   liftAff aff = HalogenM $ liftF $ Lift $ liftAff aff
 
-instance parallelHalogenM ∷ Parallel (HalogenAp s f g p o m) (HalogenM s f g p o m) where
+instance parallelHalogenM :: Parallel (HalogenAp s f g p o m) (HalogenM s f g p o m) where
   parallel = HalogenAp <<< liftAp
   sequential = HalogenM <<< liftF <<< Par
 
-instance monadForkHalogenM ∷ MonadAff eff m ⇒ MonadFork Error (HalogenM s f g p o m) where
-  fork a =
-    map (liftAff :: Aff eff ~> HalogenM s f g p o m)
-      <$> HalogenM (liftF $ Fork $ FF.fork a)
+instance monadForkHalogenM :: MonadAff eff m => MonadFork Error (HalogenM s f g p o m) where
+  fork a = map liftAff <$> HalogenM (liftF $ Fork $ FF.fork a)
 
 instance monadTransHalogenM :: MonadTrans (HalogenM s f g p o) where
   lift m = HalogenM $ liftF $ Lift m
