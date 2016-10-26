@@ -7,14 +7,15 @@ import Control.Monad.Eff (Eff)
 import Data.Exists (runExists)
 import Data.ExistsR (runExistsR)
 import Data.Foldable (foldl, foldMap)
-import Data.Traversable (traverse)
 import Data.Function.Uncurried (runFn2)
 import Data.Maybe (Maybe(..), maybe)
 import Data.Monoid (mempty)
+import Data.Newtype (unwrap)
 import Data.Nullable (toNullable)
+import Data.Traversable (traverse)
 
 import Halogen.Effects (HalogenEffects)
-import Halogen.HTML.Core (HTML(..), Prop(..), PropF(..), HandlerF(..), unNamespace, unTagName, unPropName, unAttrName, unEventName, lowerFuse)
+import Halogen.HTML.Core (HTML(..), Prop(..), PropF(..), HandlerF(..), lowerFuse)
 import Halogen.HTML.Events.Handler (unEventHandler)
 import Halogen.VirtualDOM.Internal as V
 
@@ -36,8 +37,8 @@ renderHTML driver handleSlot = go
     Element ns name props els -> do
       els' <- traverse go els
       pure $ V.vnode
-        (toNullable $ unNamespace <$> ns)
-        (unTagName name)
+        (toNullable $ unwrap <$> ns)
+        (unwrap name)
         (toNullable $ foldl findKey Nothing props)
         (foldMap (renderProp driver) props) els'
     Slot p ->
@@ -54,7 +55,7 @@ renderProp driver = case _ of
   Prop e ->
     runExists renderPropF e
   Attr ns name value ->
-    let attrName = maybe "" (\ns' -> unNamespace ns' <> ":") ns <> unAttrName name
+    let attrName = maybe "" (\ns' -> unwrap ns' <> ":") ns <> unwrap name
     in runFn2 V.attr attrName value
   Handler e ->
     runExistsR (renderHandlerProp driver) e
@@ -64,7 +65,7 @@ renderProp driver = case _ of
     mempty
 
 renderPropF :: forall a. PropF a -> V.Props
-renderPropF (PropF key value _) = runFn2 V.prop (unPropName key) value
+renderPropF (PropF key value _) = runFn2 V.prop (unwrap key) value
 
 renderHandlerProp
   :: forall i eff a
@@ -72,7 +73,7 @@ renderHandlerProp
   -> HandlerF i a
   -> V.Props
 renderHandlerProp driver (HandlerF name k) =
-  runFn2 V.handlerProp (unEventName name)
+  runFn2 V.handlerProp (unwrap name)
     \ev -> unEventHandler ev (k ev) >>= maybe (pure unit) driver
 
 findKey :: forall i. Maybe String -> Prop i -> Maybe String

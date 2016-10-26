@@ -16,29 +16,23 @@ module Halogen.HTML.Core
   , class IsProp
   , toPropString
 
-  , Namespace
+  , Namespace(..)
   , namespace
-  , unNamespace
 
-  , TagName
+  , TagName(..)
   , tagName
-  , unTagName
 
-  , PropName
+  , PropName(..)
   , propName
-  , unPropName
 
-  , AttrName
+  , AttrName(..)
   , attrName
-  , unAttrName
 
-  , EventName
+  , EventName(..)
   , eventName
-  , unEventName
 
-  , ClassName
+  , ClassName(..)
   , className
-  , unClassName
   ) where
 
 import Prelude
@@ -46,7 +40,9 @@ import Prelude
 import Data.Bifunctor (class Bifunctor, bimap, rmap)
 import Data.Exists (Exists, mkExists)
 import Data.ExistsR (ExistsR, mkExistsR, runExistsR)
+import Data.Generic (class Generic)
 import Data.Maybe (Maybe(..))
+import Data.Newtype (class Newtype)
 import Data.Traversable (traverse)
 import Data.Tuple (Tuple(..))
 
@@ -56,31 +52,6 @@ import Halogen.HTML.Events.Handler (EventHandler)
 import Halogen.HTML.Events.Types (Event)
 
 import Unsafe.Coerce (unsafeCoerce)
-
-newtype FuseF p i x y = FuseF { k :: x -> p, l :: y -> i, html:: HTML x y }
-
-data Fuse p i
-
-instance bifunctorFuse :: Bifunctor Fuse where
-  bimap f g = unFuse (\(FuseF { k, l, html }) -> mkFuse (FuseF { k: f <<< k, l: g <<< l, html }))
-
-mkFuse :: forall p i x y. FuseF p i x y -> Fuse p i
-mkFuse = unsafeCoerce
-
-unFuse :: forall p i x y r. (FuseF p i x y -> r) -> Fuse p i -> r
-unFuse = unsafeCoerce
-
-fuse :: forall p i x y. (x -> p) -> (y -> i) -> HTML x y -> Fuse p i
-fuse k l html = mkFuse $ FuseF { k, l, html }
-
-lowerFuse :: forall p i. Fuse p i -> HTML p i
-lowerFuse = unFuse (\(FuseF { k, l, html }) -> go k l html)
-  where
-  go f g = case _ of
-    Text s -> Text s
-    Element ns name props els -> Element ns name (map g <$> props) (go f g <$> els)
-    Slot p -> Slot (f p)
-    Fuse h -> lowerFuse h
 
 -- | An initial encoding of HTML nodes.
 data HTML p i
@@ -147,6 +118,40 @@ prop name attr v = Prop (mkExists (PropF name v (flip Tuple toPropString <$> att
 handler :: forall fields i. EventName fields -> (Event fields -> EventHandler (Maybe i)) -> Prop i
 handler name k = Handler (mkExistsR (HandlerF name k))
 
+data FuseF p i x y = FuseF (x -> p) (y -> i) (HTML x y)
+
+data Fuse p i
+
+instance bifunctorFuse :: Bifunctor Fuse where
+  bimap f g = unFuse \(FuseF k l html) ->
+    mkFuse $ FuseF (f <<< k) (g <<< l) html
+
+instance functorFuse :: Functor (Fuse p) where
+  map = rmap
+
+mkFuse :: forall p i x y. FuseF p i x y -> Fuse p i
+mkFuse = unsafeCoerce
+
+unFuse :: forall p i r. (forall x y. FuseF p i x y -> r) -> Fuse p i -> r
+unFuse = unsafeCoerce
+
+fuse :: forall p i x y. (x -> p) -> (y -> i) -> HTML x y -> Fuse p i
+fuse k l html = mkFuse $ FuseF k l html
+
+lowerFuse :: forall p i. Fuse p i -> HTML p i
+lowerFuse = unFuse \(FuseF k l html) -> go k l html
+  where
+  go :: forall x y. (x -> p) -> (y -> i) -> HTML x y -> HTML p i
+  go f g = case _ of
+    Text s ->
+      Text s
+    Element ns name props els ->
+      Element ns name (map g <$> props) (go f g <$> els)
+    Slot p ->
+      Slot (f p)
+    Fuse h ->
+      lowerFuse (bimap f g h)
+
 -- | This type class captures those property types which can be used as
 -- | attribute values.
 -- |
@@ -165,30 +170,32 @@ instance numberIsProp :: IsProp Number where
   toPropString _ _ n = show n
 
 instance booleanIsProp :: IsProp Boolean where
-  toPropString name _ true = unAttrName name
+  toPropString (AttrName name) _ true = name
   toPropString _ _ false = ""
 
 -- | A type-safe wrapper for a attribute or tag namespace.
 newtype Namespace = Namespace String
 
+derive instance newtypeNamespace :: Newtype Namespace _
+derive newtype instance eqNamespace :: Eq Namespace
+derive newtype instance ordNamespace :: Ord Namespace
+derive instance genericNamespace :: Generic Namespace
+
 -- | Create a namespace
 namespace :: String -> Namespace
 namespace = Namespace
 
--- | Unwrap a `Namespace` to get the value as a `String`.
-unNamespace :: Namespace -> String
-unNamespace (Namespace ns) = ns
-
 -- | A type-safe wrapper for a HTML tag name
 newtype TagName = TagName String
+
+derive instance newtypeTagName :: Newtype TagName _
+derive newtype instance eqTagName :: Eq TagName
+derive newtype instance ordTagName :: Ord TagName
+derive instance genericTagName :: Generic TagName
 
 -- | Create a tag name
 tagName :: String -> TagName
 tagName = TagName
-
--- | Unwrap a `TagName` to get the tag name as a `String`.
-unTagName :: TagName -> String
-unTagName (TagName s) = s
 
 -- | A type-safe wrapper for property names.
 -- |
@@ -196,22 +203,25 @@ unTagName (TagName s) = s
 -- | requires.
 newtype PropName value = PropName String
 
+derive instance newtypePropName :: Newtype (PropName value) _
+derive newtype instance eqPropName :: Eq (PropName value)
+derive newtype instance ordPropName :: Ord (PropName value)
+derive instance genericPropName :: Generic (PropName value)
+
 -- | Create an attribute name
 propName :: forall value. String -> PropName value
 propName = PropName
 
--- | Unpack an attribute name
-unPropName :: forall value. PropName value -> String
-unPropName (PropName s) = s
-
 -- | A type-safe wrapper for attribute names.
 newtype AttrName = AttrName String
 
+derive instance newtypeAttrName :: Newtype AttrName _
+derive newtype instance eqAttrName :: Eq AttrName
+derive newtype instance ordAttrName :: Ord AttrName
+derive instance genericAttrName :: Generic AttrName
+
 attrName :: String -> AttrName
 attrName = AttrName
-
-unAttrName :: AttrName -> String
-unAttrName (AttrName ns) = ns
 
 -- | A type-safe wrapper for event names.
 -- |
@@ -219,16 +229,22 @@ unAttrName (AttrName ns) = ns
 -- | exist on events corresponding to this name.
 newtype EventName (fields :: # *) = EventName String
 
+derive instance newtypeEventName :: Newtype (EventName fields) _
+derive newtype instance eqEventName :: Eq (EventName fields)
+derive newtype instance ordEventName :: Ord (EventName fields)
+derive instance genericEventName :: Generic (EventName fields)
+
 -- Create an event name
 eventName :: forall fields. String -> EventName fields
 eventName = EventName
 
--- | Unpack an event name
-unEventName :: forall fields. EventName fields -> String
-unEventName (EventName s) = s
-
 -- | A wrapper for strings which are used as CSS classes.
 newtype ClassName = ClassName String
+
+derive instance newtypeClassName :: Newtype ClassName _
+derive newtype instance eqClassName :: Eq ClassName
+derive newtype instance ordClassName :: Ord ClassName
+derive instance genericClassName :: Generic ClassName
 
 -- Create a class name
 className :: String -> ClassName

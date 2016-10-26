@@ -48,10 +48,11 @@ import Prelude
 
 import Data.Maybe (Maybe(..))
 import Data.String (joinWith)
+import Data.Newtype (unwrap)
 
 import DOM.HTML.Types (HTMLElement)
 
-import Halogen.HTML.Core (Prop(..), ClassName, prop, propName, attrName, unClassName)
+import Halogen.HTML.Core (Prop(..), ClassName, prop, propName, attrName)
 
 data LengthLiteral
   = Pixels Int
@@ -73,10 +74,10 @@ charset :: forall i. String -> Prop i
 charset = prop (propName "charset") (Just $ attrName "charset")
 
 class_ :: forall i. ClassName -> Prop i
-class_ = prop (propName "className") (Just $ attrName "class") <<< unClassName
+class_ = prop (propName "className") (Just $ attrName "class") <<< unwrap
 
 classes :: forall i. Array ClassName -> Prop i
-classes = prop (propName "className") (Just $ attrName "class") <<< joinWith " " <<< map unClassName
+classes = prop (propName "className") (Just $ attrName "class") <<< joinWith " " <<< map unwrap
 
 cols :: forall i. Int -> Prop i
 cols = prop (propName "cols") (Just $ attrName "cols")
