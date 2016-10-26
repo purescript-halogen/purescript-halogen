@@ -21,12 +21,12 @@ import Data.Tuple (Tuple(..))
 
 import Halogen.Query.ChildQuery as CQ
 import Halogen.Query.EventSource as ES
-import Halogen.Query.StateF as SF
 import Halogen.Query.ForkF as FF
 
 -- | The Halogen component algebra
 data HalogenF s (f :: * -> *) g p o m a
-  = State (SF.StateF s a)
+  = GetState (s -> a)
+  | ModifyState (s -> s) a
   | Subscribe (ES.EventSource f m) a
   | Lift (m a)
   | Halt String
@@ -39,7 +39,8 @@ data HalogenF s (f :: * -> *) g p o m a
 
 instance functorHalogenF :: Functor m => Functor (HalogenF s f g p o m) where
   map f = case _ of
-    State q -> State (map f q)
+    GetState k -> GetState (f <<< k)
+    ModifyState g a -> ModifyState g (f a)
     Subscribe es a -> Subscribe es (f a)
     Lift q -> Lift (map f q)
     Halt msg -> Halt msg
@@ -97,14 +98,37 @@ instance monadRecHalogenM :: MonadRec (HalogenM s f g p o m) where
 
 instance monadStateHalogenM :: MonadState s (HalogenM s f g p o m) where
   state f = do
-    st <- HalogenM $ liftF $ State $ SF.Get id
+    st <- HalogenM $ liftF $ GetState id
     case f st of
       Tuple a st' -> do
-        HalogenM $ liftF $ State $ SF.Modify (const st') unit
+        HalogenM $ liftF $ ModifyState (const st') unit
         pure a
 
 halt :: forall s f g p o m a. String -> HalogenM s f g p o m a
 halt msg = HalogenM $ liftF $ Halt msg
+
+mkQuery
+  :: forall s f g p o m a
+   . (Applicative m, Eq p)
+  => p
+  -> g a
+  -> HalogenM s f g p o m a
+mkQuery p q = HalogenM $ liftF $ ChildQuery (CQ.childQuery p q)
+
+getSlots :: forall s f g p o m. HalogenM s f g p o m (L.List p)
+getSlots = HalogenM $ liftF $ GetSlots id
+
+checkSlot :: forall s f g p o m. p -> HalogenM s f g p o m Boolean
+checkSlot p = HalogenM $ liftF $ CheckSlot p id
+
+-- | Provides a way of having a component subscribe to an `EventSource` from
+-- | within an `Eval` function.
+subscribe :: forall s f g p o m. ES.EventSource f m -> HalogenM s f g p o m Unit
+subscribe es = HalogenM $ liftF $ Subscribe es unit
+
+-- | Raises an output message for the component.
+raise :: forall s f g p o m. o -> HalogenM s f g p o m Unit
+raise o = HalogenM $ liftF $ Raise o unit
 
 hoistF
   :: forall s f f' g p o m
@@ -116,9 +140,10 @@ hoistF nat (HalogenM fa) = HalogenM (hoistFree go fa)
   where
   go :: HalogenF s f g p o m ~> HalogenF s f' g p o m
   go = case _ of
-    State q -> State q
-    Subscribe es next ->
-      Subscribe (ES.EventSource (interpret (lmap nat) (ES.runEventSource es))) next
+    GetState k -> GetState k
+    ModifyState f a -> ModifyState f a
+    Subscribe (ES.EventSource es) next ->
+      Subscribe (ES.EventSource (interpret (lmap nat) es)) next
     Lift q -> Lift q
     Halt msg -> Halt msg
     GetSlots k -> GetSlots k
@@ -138,9 +163,10 @@ hoistM nat (HalogenM fa) = HalogenM (hoistFree go fa)
   where
   go :: HalogenF s f g p o m ~> HalogenF s f g p o m'
   go = case _ of
-    State q -> State q
-    Subscribe es next ->
-      Subscribe (ES.EventSource (hoistFreeT nat (ES.runEventSource es))) next
+    GetState k -> GetState k
+    ModifyState f a -> ModifyState f a
+    Subscribe (ES.EventSource es) next ->
+      Subscribe (ES.EventSource (hoistFreeT nat es)) next
     Lift q -> Lift (nat q)
     Halt msg -> Halt msg
     GetSlots k -> GetSlots k

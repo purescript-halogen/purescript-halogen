@@ -18,11 +18,6 @@ module Halogen.Component
   , parentComponent
   , ParentLifecycleComponentSpec
   , lifecycleParentComponent
-  , getSlots
-  , query
-  , query'
-  , queryAll
-  , queryAll'
   , transform
   , transformChild
   , interpret
@@ -30,23 +25,15 @@ module Halogen.Component
 
 import Prelude
 
-import Control.Monad.Free (liftF)
-
 import Data.Bifunctor (class Bifunctor, bimap, lmap, rmap)
 import Data.Const (Const)
 import Data.Lazy (Lazy)
-import Data.List as L
-import Data.Map as M
 import Data.Maybe (Maybe(..), maybe)
-import Data.Traversable (traverse)
-import Data.Tuple (Tuple(..))
 
-import Halogen.Component.ChildPath (ChildPath, injSlot, prjQuery, injQuery, prjSlot, cpI)
+import Halogen.Component.ChildPath (ChildPath, prjQuery, injQuery)
 import Halogen.Data.OrdBox (OrdBox, mkOrdBox)
 import Halogen.HTML.Core (HTML)
-import Halogen.Query.ChildQuery (childQuery)
-import Halogen.Query.HalogenM (HalogenM(..), HalogenF(..))
-import Halogen.Query.HalogenM as HM
+import Halogen.Query.HalogenM (HalogenM, halt, hoistF, hoistM)
 
 import Unsafe.Coerce (unsafeCoerce)
 
@@ -217,58 +204,6 @@ lifecycleParentComponent spec =
     , mkOrdBox
     }
 
---------------------------------------------------------------------------------
-
-mkQuery
-  :: forall s f g p o m a
-   . (Applicative m, Eq p)
-  => p
-  -> g a
-  -> HalogenM s f g p o m a
-mkQuery p q = HalogenM $ liftF $ ChildQuery (childQuery p q)
-
-getSlots :: forall s f g p o m. HalogenM s f g p o m (L.List p)
-getSlots = HalogenM $ liftF $ GetSlots id
-
-checkSlot :: forall s f g p o m. p -> HalogenM s f g p o m Boolean
-checkSlot p = HalogenM $ liftF $ CheckSlot p id
-
-query
-  :: forall s f g p o m a
-   . (Applicative m, Eq p)
-  => p
-  -> g a
-  -> HalogenM s f g p o m (Maybe a)
-query p q = checkSlot p >>= if _ then Just <$> mkQuery p q else pure Nothing
-
-query'
-  :: forall s f g g' m p p' o a
-   . (Applicative m, Eq p')
-  => ChildPath g g' p p'
-  -> p
-  -> g a
-  -> HalogenM s f g' p' o m (Maybe a)
-query' path p q = query (injSlot path p) (injQuery path q)
-
-queryAll
-  :: forall s f g p o m a
-   . (Applicative m, Ord p)
-  => g a
-  -> HalogenM s f g p o m (M.Map p a)
-queryAll = queryAll' cpI
-
-queryAll'
-  :: forall s f g g' p p' o m a
-   . (Applicative m, Ord p, Eq p')
-  => ChildPath g g' p p'
-  -> g a
-  -> HalogenM s f g' p' o m (M.Map p a)
-queryAll' path q = do
-  slots <- L.mapMaybe (prjSlot path) <$> getSlots
-  M.fromFoldable <$> (traverse (\p -> map (Tuple p) (mkQuery (injSlot path p) (injQuery path q))) slots)
-
---------------------------------------------------------------------------------
-
 -- | Transforms a `Component`'s types using partial mapping functions.
 -- |
 -- | If the initial state provided to the component fails the transformation an
@@ -294,8 +229,8 @@ transform reviewQ previewQ =
       , render: bimap (map reviewQ) reviewQ <<< c.render
       , eval:
           maybe
-            (HM.halt "prism failed in transform")
-            (HM.hoistF reviewQ <<< c.eval)
+            (halt "prism failed in transform")
+            (hoistF reviewQ <<< c.eval)
               <<< previewQ
       , initializer: reviewQ <$> c.initializer
       , finalizer: reviewQ <$> c.finalizer
@@ -324,7 +259,7 @@ interpret nat =
     mkComponent
       { initialState: c.initialState
       , render: lmap (hoistSlotM nat) <<< c.render
-      , eval: HM.hoistM nat <<< c.eval
+      , eval: hoistM nat <<< c.eval
       , initializer: c.initializer
       , finalizer: c.finalizer
       , mkOrdBox: c.mkOrdBox

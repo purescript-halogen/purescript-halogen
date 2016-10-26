@@ -23,10 +23,16 @@ import Data.Profunctor (class Profunctor, dimap)
 import Data.Profunctor.Choice (class Choice)
 import Data.Profunctor.Choice as PF
 
--- | Compatible with `Prism` from `purescript-lens`.
+-- | Compatible with `Prism` from `purescript-profunctor-lenses`.
 type Prism s t a b = forall p f. (Choice p, Applicative f) => p a (f b) -> p s (f t)
 
--- | Compatible with `PrismP` from `purescript-lens`.
+prism :: forall s t a b. (b -> t) -> (s -> Either t a) -> Prism s t a b
+prism f g = dimap g (either pure (map f)) <<< PF.right
+
+prism' :: forall s a b. (b -> s) -> (s -> Maybe a) -> Prism s s a b
+prism' f g = prism f (\s -> maybe (Left s) Right (g s))
+
+-- | Compatible with `Prism'` from `purescript-profunctor-lenses`.
 type Injector s a = Prism a a s s
 
 newtype Tagged s b = Tagged b
@@ -46,12 +52,6 @@ inj p = unwrap <<< unTagged <<< p <<< Tagged <<< Identity
 
 prj :: forall a b. Injector a b -> b -> Maybe a
 prj p = unwrap <<< unwrap <<< p (Const <<< First <<< Just)
-
-prism :: forall s t a b. (b -> t) -> (s -> Either t a) -> Prism s t a b
-prism f g = dimap g (either pure (map f)) <<< PF.right
-
-prism' :: forall s a b. (b -> s) -> (s -> Maybe a) -> Prism s s a b
-prism' f g = prism f (\s -> maybe (Left s) Right (g s))
 
 injI :: forall a. Injector a a
 injI = prism' id Just

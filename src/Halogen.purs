@@ -16,11 +16,11 @@ import Prelude
 
 import Data.Lazy (defer)
 
-import Halogen.Component (Component, Component', ComponentDSL, ComponentHTML, ComponentSlot, ComponentSpec, LifecycleComponentSpec, ParentComponentSpec, ParentDSL, ParentHTML, ParentLifecycleComponentSpec, component, getSlots, interpret, lifecycleComponent, lifecycleParentComponent, mkComponent, mkComponentSlot, parentComponent, query, query', queryAll, queryAll', transform, transformChild, unComponent, unComponentSlot)
+import Halogen.Component (Component, Component', ComponentDSL, ComponentHTML, ComponentSlot, ComponentSpec, LifecycleComponentSpec, ParentComponentSpec, ParentDSL, ParentHTML, ParentLifecycleComponentSpec, component, interpret, lifecycleComponent, lifecycleParentComponent, mkComponent, mkComponentSlot, parentComponent, transform, transformChild, unComponent, unComponentSlot)
 import Halogen.Effects (HalogenEffects)
 import Halogen.HTML.Core (AttrName(..), ClassName(..), EventName(..), Namespace(..), PropName(..), TagName(..), attrName, className, eventName, namespace, tagName)
 import Halogen.HTML.Core as C
-import Halogen.Query (Action, EventSource, ParentDSL, Request, HalogenF(..), StateF(..), action, eventSource, eventSource_, get, gets, liftAff, liftEff, lift, modify, raise, request, put, subscribe)
+import Halogen.Query (Action, EventSource, Request, HalogenF(..), HalogenM(..), action, checkSlot, eventSource, eventSource_, get, getSlots, gets, lift, liftAff, liftEff, mkQuery, modify, put, query, query', queryAll, queryAll', raise, request, subscribe)
 
 -- | A specialised version of the `Halogen.HTML.Core.HTML` type where `i` is
 -- | `* -> *` kinded to match the kind of a component query algebra.
