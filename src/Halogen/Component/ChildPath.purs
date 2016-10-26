@@ -5,7 +5,6 @@ module Halogen.Component.ChildPath
 
 import Prelude hiding (compose)
 
-import Data.Const (Const)
 import Data.Either (Either)
 import Data.Functor.Coproduct (Coproduct)
 import Data.Injector (type (\/), type (<\/>), Injector, prj, inj, injE10, injC10, injE9, injC9, injE8, injC8, injE7, injC7, injE6, injC6, injE5, injC5, injE4, injC4, injE3, injC3, injE2, injC2, injE1, injC1, injI, injRE, injRC, injLE, injLC)
