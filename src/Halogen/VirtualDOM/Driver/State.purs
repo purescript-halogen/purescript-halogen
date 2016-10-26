@@ -11,6 +11,7 @@ import Prelude
 import Control.Monad.Aff (Aff)
 import Control.Monad.Aff.AVar (AVar, putVar, makeVar)
 import Control.Monad.Eff.Class (liftEff)
+import Control.Monad.Eff.Ref (Ref)
 
 import Data.Map as M
 
@@ -37,7 +38,7 @@ type DriverStateRec s f g eff p o =
   , selfRef :: AVar (DriverState s f g eff p o)
   , handler :: o -> Aff (HalogenEffects eff) Unit
   , keyId :: Int
-  , fresh :: AVar Int
+  , fresh :: Ref Int
   }
 
 -- | A version of `DriverState` with the aspects relating to child components
@@ -62,7 +63,7 @@ initDriverState
    . Component' HTML s f g p o (Aff (HalogenEffects eff))
   -> (o -> Aff (HalogenEffects eff) Unit)
   -> Int
-  -> AVar Int
+  -> Ref Int
   -> Aff (HalogenEffects eff) (AVar (DriverStateX f eff))
 initDriverState component handler keyId fresh = do
   let vtree = V.vtext ""
