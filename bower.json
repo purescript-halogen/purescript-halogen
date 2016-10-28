@@ -25,9 +25,9 @@
     "test"
   ],
   "dependencies": {
-    "purescript-aff-coroutines": "^4.0.0",
     "purescript-aff": "^2.0.1",
     "purescript-const": "^2.0.0",
+    "purescript-coroutines": "^3.0.0",
     "purescript-dom": "^3.0.0",
     "purescript-foreign": "^3.0.0",
     "purescript-free": "^3.0.0",

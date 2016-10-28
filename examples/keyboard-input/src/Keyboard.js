@@ -1,12 +1,15 @@
 /* global exports */
 "use strict";
 
-// module Keyboard
 exports.addEventListenerImpl = function(eventName, fn, element) {
     return function() {
-        element.addEventListener(eventName, function(e) {
+        var handler = function(e) {
             fn(e)();
-        });
+        };
+        element.addEventListener(eventName, handler);
+        return function () {
+          element.removeEventListener(eventName, handler);
+        }
     };
 };
 
