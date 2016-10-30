@@ -2,8 +2,8 @@ module Test.ReadmeExamples.Basic where
 
 import Prelude
 import Halogen (ComponentDSL, ComponentHTML, Component, component, gets, modify)
-import Halogen.HTML.Indexed as H
-import Halogen.HTML.Events.Indexed as E
+import Halogen.HTML as H
+import Halogen.HTML.Events as E
 
 -- | The state of the component
 type State = { on :: Boolean }

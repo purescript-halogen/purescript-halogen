@@ -9,8 +9,8 @@ import Data.Map as M
 import Data.Maybe (Maybe(..), fromMaybe)
 
 import Halogen as H
-import Halogen.HTML.Events.Indexed as HE
-import Halogen.HTML.Indexed as HH
+import Halogen.HTML as HH
+import Halogen.HTML.Events as HE
 
 import Model (List, TaskId, initialList, initialTask)
 import Component.Task (TaskQuery(..), TaskMessage(..), task)

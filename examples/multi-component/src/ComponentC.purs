@@ -3,8 +3,8 @@ module ComponentC where
 import Prelude
 
 import Halogen as H
-import Halogen.HTML.Indexed as HH
-import Halogen.HTML.Events.Indexed as HE
+import Halogen.HTML as HH
+import Halogen.HTML.Events as HE
 
 newtype StateC = StateC { on :: Boolean }
 

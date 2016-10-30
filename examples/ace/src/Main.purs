@@ -9,8 +9,8 @@ import Control.Monad.Eff.Console (CONSOLE)
 import Data.Maybe (Maybe(..))
 
 import Halogen as H
-import Halogen.HTML.Events.Indexed as HE
-import Halogen.HTML.Indexed as HH
+import Halogen.HTML as HH
+import Halogen.HTML.Events as HE
 import Halogen.Util (runHalogenAff, awaitBody)
 import Halogen.VirtualDOM.Driver (runUI)
 

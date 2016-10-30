@@ -3,9 +3,9 @@ module Ticker where
 import Prelude
 
 import Halogen as H
-import Halogen.HTML.Indexed as HH
-import Halogen.HTML.Properties.Indexed as HP
-import Halogen.HTML.Events.Indexed as HE
+import Halogen.HTML as HH
+import Halogen.HTML.Events as HE
+import Halogen.HTML.Properties as HP
 
 type TickState = Int
 
@@ -19,7 +19,7 @@ ticker n = H.component { render, eval, initialState: n }
   render :: TickState -> H.ComponentHTML TickQuery
   render state =
     HH.div
-      [ HP.class_ (HH.className "ticker") ]
+      [ HP.class_ (HH.ClassName "ticker") ]
       [ HH.h1
           [ HP.id_ "header" ]
           [ HH.text "counter" ]

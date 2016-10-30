@@ -17,8 +17,8 @@ import DOM.HTML.Types (htmlDocumentToDocument) as DOM
 import DOM.HTML.Window (document) as DOM
 
 import Halogen as H
+import Halogen.HTML as HH
 import Halogen.Query.EventSource as ES
-import Halogen.HTML.Indexed as HH
 import Halogen.Util (runHalogenAff, awaitBody)
 import Halogen.VirtualDOM.Driver (runUI)
 

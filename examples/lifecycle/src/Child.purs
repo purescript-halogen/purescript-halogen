@@ -10,8 +10,8 @@ import Data.Lazy (defer)
 import Data.Maybe (Maybe(..))
 
 import Halogen as H
-import Halogen.HTML.Indexed as HH
-import Halogen.HTML.Properties.Indexed as HP
+import Halogen.HTML as HH
+import Halogen.HTML.Properties as HP
 
 import DOM.HTML.Types (HTMLElement)
 

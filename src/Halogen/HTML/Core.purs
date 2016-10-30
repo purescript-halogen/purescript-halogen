@@ -11,28 +11,18 @@ module Halogen.HTML.Core
   , PropF(..)
   , HandlerF(..)
   , prop
+  , attr
   , handler
 
   , class IsProp
   , toPropString
 
   , Namespace(..)
-  , namespace
-
   , TagName(..)
-  , tagName
-
   , PropName(..)
-  , propName
-
   , AttrName(..)
-  , attrName
-
   , EventName(..)
-  , eventName
-
   , ClassName(..)
-  , className
   ) where
 
 import Prelude
@@ -110,11 +100,15 @@ data PropF value = PropF (PropName value) value (Maybe (Tuple AttrName (AttrName
 -- | existential package in the `Prop` type.
 data HandlerF i fields = HandlerF (EventName fields) (Event fields -> EventHandler (Maybe i))
 
--- | Create an attribute
+-- | Create a HTML property.
 prop :: forall value i. IsProp value => PropName value -> Maybe AttrName -> value -> Prop i
-prop name attr v = Prop (mkExists (PropF name v (flip Tuple toPropString <$> attr)))
+prop pn an v = Prop (mkExists (PropF pn v (flip Tuple toPropString <$> an)))
 
--- | Create an event handler
+-- | Create a HTML attribute.
+attr :: forall i. AttrName -> String -> Prop i
+attr = Attr Nothing
+
+-- | Create an event handler.
 handler :: forall fields i. EventName fields -> (Event fields -> EventHandler (Maybe i)) -> Prop i
 handler name k = Handler (mkExistsR (HandlerF name k))
 
@@ -181,10 +175,6 @@ derive newtype instance eqNamespace :: Eq Namespace
 derive newtype instance ordNamespace :: Ord Namespace
 derive instance genericNamespace :: Generic Namespace
 
--- | Create a namespace
-namespace :: String -> Namespace
-namespace = Namespace
-
 -- | A type-safe wrapper for a HTML tag name
 newtype TagName = TagName String
 
@@ -192,10 +182,6 @@ derive instance newtypeTagName :: Newtype TagName _
 derive newtype instance eqTagName :: Eq TagName
 derive newtype instance ordTagName :: Ord TagName
 derive instance genericTagName :: Generic TagName
-
--- | Create a tag name
-tagName :: String -> TagName
-tagName = TagName
 
 -- | A type-safe wrapper for property names.
 -- |
@@ -208,10 +194,6 @@ derive newtype instance eqPropName :: Eq (PropName value)
 derive newtype instance ordPropName :: Ord (PropName value)
 derive instance genericPropName :: Generic (PropName value)
 
--- | Create an attribute name
-propName :: forall value. String -> PropName value
-propName = PropName
-
 -- | A type-safe wrapper for attribute names.
 newtype AttrName = AttrName String
 
@@ -219,9 +201,6 @@ derive instance newtypeAttrName :: Newtype AttrName _
 derive newtype instance eqAttrName :: Eq AttrName
 derive newtype instance ordAttrName :: Ord AttrName
 derive instance genericAttrName :: Generic AttrName
-
-attrName :: String -> AttrName
-attrName = AttrName
 
 -- | A type-safe wrapper for event names.
 -- |
@@ -234,10 +213,6 @@ derive newtype instance eqEventName :: Eq (EventName fields)
 derive newtype instance ordEventName :: Ord (EventName fields)
 derive instance genericEventName :: Generic (EventName fields)
 
--- Create an event name
-eventName :: forall fields. String -> EventName fields
-eventName = EventName
-
 -- | A wrapper for strings which are used as CSS classes.
 newtype ClassName = ClassName String
 
@@ -245,11 +220,3 @@ derive instance newtypeClassName :: Newtype ClassName _
 derive newtype instance eqClassName :: Eq ClassName
 derive newtype instance ordClassName :: Ord ClassName
 derive instance genericClassName :: Generic ClassName
-
--- Create a class name
-className :: String -> ClassName
-className = ClassName
-
--- | Unpack a class name
-unClassName :: ClassName -> String
-unClassName (ClassName s) = s

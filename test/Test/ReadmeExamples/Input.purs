@@ -1,8 +1,8 @@
 module Test.ReadmeExamples.Input where
 
 import Prelude
-import Halogen.HTML.Events.Indexed as E
-import Halogen.HTML.Properties.Indexed as P
+import Halogen.HTML.Events as E
+import Halogen.HTML.Properties as P
 
 data ExampleQuery a
   = SetOption Boolean a

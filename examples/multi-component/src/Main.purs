@@ -9,10 +9,10 @@ import Data.Maybe (Maybe(..))
 import Data.Lazy (defer)
 
 import Halogen as H
-import Halogen.Component.ChildPath as CP
 import Halogen.Component.ChildPath (type (\/), type (<\/>))
-import Halogen.HTML.Events.Indexed as HE
-import Halogen.HTML.Indexed as HH
+import Halogen.Component.ChildPath as CP
+import Halogen.HTML as HH
+import Halogen.HTML.Events as HE
 import Halogen.Util (runHalogenAff, awaitBody)
 import Halogen.VirtualDOM.Driver (runUI)
 
