@@ -99,7 +99,7 @@ runUI renderSpec component = _.driver <$> do
   handleLifecycle \lchs ->
     runComponent (const (pure unit)) fresh lchs Root component
       >>= peekVar
-      >>= unDriverStateX \st -> do
+      >>= unDriverStateX \st ->
         -- The record here is a hack around a skolem escape issue. If the typing
         -- rules for records change so this no longer works it may also be
         -- fixable with copious type annotations.
@@ -153,8 +153,13 @@ runUI renderSpec component = _.driver <$> do
     ChildQuery cq ->
       evalChildQuery ref cq
     Raise o a -> do
-      DriverState { handler } <- peekVar ref
-      handler o
+      DriverState (ds@{ handler, pendingOut }) <- takeVar ref
+      case pendingOut of
+        Nothing -> do
+          putVar ref (DriverState ds)
+          handler o
+        Just p ->
+          putVar ref (DriverState ds { pendingOut = Just (o : p) })
       pure a
     Par (HalogenAp p) ->
       sequential $ retractFreeAp $ hoistFreeAp (parallel <<< evalM ref) p
@@ -200,11 +205,16 @@ runUI renderSpec component = _.driver <$> do
   render lchs var = takeVar var >>= \(DriverState ds) -> do
     childrenVar <- liftEff $ newRef M.empty
     oldChildren <- liftEff $ newRef ds.children
-    let selfEval = evalF ds.selfRef
+    let
+      selfEval = evalF ds.selfRef
+      handler :: forall x. f' x -> Aff (HalogenEffects eff) Unit
+      handler = void <<< selfEval
+      handler' :: forall x. f' x -> Aff (HalogenEffects eff) Unit
+      handler' = maybe handler (\_ -> queuingHandler ds.selfRef handler) ds.pendingIn
     rendering <-
       renderSpec.render
         (handleAff <<< selfEval)
-        (renderChild selfEval ds.fresh ds.mkOrdBox oldChildren childrenVar lchs)
+        (renderChild handler' ds.fresh ds.mkOrdBox oldChildren childrenVar lchs)
         (ds.component.render ds.state)
         ds.componentType
         ds.rendering
@@ -220,13 +230,30 @@ runUI renderSpec component = _.driver <$> do
         , mkOrdBox: ds.mkOrdBox
         , selfRef: ds.selfRef
         , handler: ds.handler
+        , pendingIn: ds.pendingIn
+        , pendingOut: ds.pendingOut
         , keyId: ds.keyId
         , fresh: ds.fresh
         }
 
+  queuingHandler
+    :: forall s f' g p o' x
+     . AVar (DriverState h r s f' g p o' eff)
+    -> (f' x -> Aff (HalogenEffects eff) Unit)
+    -> f' x
+    -> Aff (HalogenEffects eff) Unit
+  queuingHandler var handler message = do
+    DriverState (ds@{ pendingIn }) <- takeVar var
+    case pendingIn of
+      Nothing -> do
+        putVar var (DriverState ds)
+        handler message
+      Just p ->
+        putVar var (DriverState ds { pendingIn = Just (handler message : p) })
+
   renderChild
     :: forall f' g p
-     . (f' ~> Aff (HalogenEffects eff))
+     . (forall x. f' x -> Aff (HalogenEffects eff) Unit)
     -> Ref Int
     -> (p -> OrdBox p)
     -> Ref (M.Map (OrdBox p) (AVar (DriverStateX h r g eff)))
@@ -251,12 +278,29 @@ runUI renderSpec component = _.driver <$> do
      . Ref (LifecycleHandlers eff)
     -> DriverStateX h r f' eff
     -> Aff (HalogenEffects eff) Unit
-  addInitializer ref dsx =
-    for_ (unDriverStateX (\st -> evalF st.selfRef <$> st.component.initializer) dsx) \i ->
-      liftEff $ modifyRef ref (\lchs ->
-        { initializers: i : lchs.initializers
-        , finalizers: lchs.finalizers
-        })
+  addInitializer ref =
+    unDriverStateX \st -> do
+      case evalF st.selfRef <$> st.component.initializer of
+        Just i -> do
+          liftEff $ modifyRef ref \lchs ->
+            { initializers: handlePending st.selfRef : i : lchs.initializers
+            , finalizers: lchs.finalizers
+            }
+        _ ->
+          pure unit
+
+  handlePending
+    :: forall s f' g p o'
+     . AVar (DriverState h r s f' g p o' eff)
+    -> Aff (HalogenEffects eff) Unit
+  handlePending ref = do
+    DriverState (dsi@{ pendingIn }) <- takeVar ref
+    putVar ref (DriverState dsi { pendingIn = Nothing })
+    for_ pendingIn (sequence <<< L.reverse)
+    DriverState (dso@{ pendingOut, handler }) <- takeVar ref
+    putVar ref (DriverState dso { pendingOut = Nothing })
+    for_ pendingOut (traverse_ handler <<< L.reverse)
+
 
   addFinalizer
     :: forall f'

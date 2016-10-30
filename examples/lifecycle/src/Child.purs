@@ -33,8 +33,8 @@ type ChildEff eff = Aff (console :: CONSOLE | eff)
 
 child :: forall eff. Int -> H.Component HH.HTML Query Message (ChildEff eff)
 child initialState = H.lifecycleParentComponent
-  { render: render
-  , eval: eval
+  { render
+  , eval
   , initialState
   , initializer: Just (H.action Initialize)
   , finalizer: Just (H.action Finalize)
@@ -69,7 +69,8 @@ child initialState = H.lifecycleParentComponent
     H.raise Refd
     pure next
   eval (Report msg next) = do
-    H.liftAff $ log $ "Child >>> " <> msg
+    id <- H.get
+    H.liftAff $ log $ "Child " <> show id <> " >>> " <> msg
     H.raise (Reported msg)
     pure next
 
@@ -92,7 +93,9 @@ cell initialState = H.lifecycleComponent
 
   render :: Int -> H.ComponentHTML Query
   render id =
-    HH.li_ [ HH.text ("Cell " <> show id) ]
+    HH.li
+      [ HP.ref (H.action <<< Ref) ]
+      [ HH.text ("Cell " <> show id) ]
 
   eval :: Query ~> H.ComponentDSL Int Query Message (ChildEff eff)
   eval (Initialize next) = do
@@ -110,7 +113,6 @@ cell initialState = H.lifecycleComponent
     H.liftAff $ log ("Finalize Cell " <> show id)
     H.raise Finalized
     pure next
-  eval (Report msg next) = do
-    H.liftAff $ log $ "Cell >>> " <> msg
-    H.raise (Reported msg)
+  eval (Report msg next) =
+    -- A `cell` doesn't have children, so cannot listen and `Report`.
     pure next
