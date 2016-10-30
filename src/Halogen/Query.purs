@@ -19,13 +19,13 @@ import Prelude
 import Data.List as L
 import Data.Map as M
 import Data.Maybe (Maybe(..))
-import Data.Traversable (traverse)
 import Data.Tuple (Tuple(..))
 
 import Halogen.Component.ChildPath (ChildPath, injSlot, prjSlot, injQuery, cpI)
 import Halogen.Query.EventSource (EventSource, eventSource, eventSource_)
 import Halogen.Query.HalogenM (HalogenM(..), HalogenF(..), getSlots, checkSlot, mkQuery)
 
+import Control.Parallel (parTraverse)
 import Control.Monad.Aff.Class (liftAff) as Exports
 import Control.Monad.Eff.Class (liftEff) as Exports
 import Control.Monad.State.Class (get, gets, modify, put) as Exports
@@ -126,6 +126,6 @@ queryAll'
 queryAll' path q = do
   slots <- L.mapMaybe (prjSlot path) <$> getSlots
   M.fromFoldable <$>
-    traverse
+    parTraverse
       (\p -> map (Tuple p) (mkQuery (injSlot path p) (injQuery path q)))
       slots
