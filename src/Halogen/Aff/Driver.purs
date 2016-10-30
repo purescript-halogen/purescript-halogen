@@ -11,7 +11,7 @@ import Control.Applicative.Free (hoistFreeAp, retractFreeAp)
 import Control.Coroutine (($$))
 import Control.Coroutine as CR
 import Control.Monad.Aff (Aff, runAff, forkAff, forkAll)
-import Control.Monad.Aff.AVar (AVAR, AVar, putVar, takeVar, modifyVar)
+import Control.Monad.Aff.AVar (AVAR, AVar, putVar, takeVar)
 import Control.Monad.Aff.Unsafe (unsafeCoerceAff)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Class (liftEff)
@@ -132,10 +132,13 @@ runUI renderSpec component = _.driver <$> do
     GetState k -> do
       DriverState { state } <- peekVar ref
       pure (k state)
-    ModifyState f next -> do
-      modifyVar (\(DriverState st) -> DriverState (st { state = f st.state })) ref
-      handleLifecycle \lchs -> render lchs ref
-      pure next
+    ModifyState f -> do
+      DriverState (st@{ state }) <- takeVar ref
+      case f state of
+        Tuple a state' -> do
+          putVar ref (DriverState (st { state = state' }))
+          handleLifecycle \lchs -> render lchs ref
+          pure a
     Subscribe es next -> do
       let consumer = forever (lift <<< evalF ref =<< CR.await)
       forkAff $ CR.runProcess (unwrap es $$ consumer)

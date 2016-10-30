@@ -9,15 +9,17 @@ import Control.Monad.Eff.Exception (Error)
 import Control.Monad.Fork (class MonadFork)
 import Control.Monad.Free (Free, hoistFree, liftF)
 import Control.Monad.Free.Trans (hoistFreeT, interpret)
+import Control.Monad.Reader.Class (class MonadAsk, ask)
 import Control.Monad.Rec.Class (class MonadRec, tailRecM, Step(..))
 import Control.Monad.State.Class (class MonadState)
 import Control.Monad.Trans.Class (class MonadTrans)
+import Control.Monad.Writer.Class (class MonadTell, tell)
 import Control.Parallel.Class (class Parallel)
 
 import Data.Bifunctor (lmap)
 import Data.List as L
 import Data.Newtype (class Newtype, over)
-import Data.Tuple (Tuple(..))
+import Data.Tuple (Tuple)
 
 import Halogen.Query.ChildQuery as CQ
 import Halogen.Query.EventSource as ES
@@ -26,7 +28,7 @@ import Halogen.Query.ForkF as FF
 -- | The Halogen component algebra
 data HalogenF s (f :: * -> *) g p o m a
   = GetState (s -> a)
-  | ModifyState (s -> s) a
+  | ModifyState (s -> Tuple a s)
   | Subscribe (ES.EventSource f m) a
   | Lift (m a)
   | Halt String
@@ -40,7 +42,7 @@ data HalogenF s (f :: * -> *) g p o m a
 instance functorHalogenF :: Functor m => Functor (HalogenF s f g p o m) where
   map f = case _ of
     GetState k -> GetState (f <<< k)
-    ModifyState g a -> ModifyState g (f a)
+    ModifyState k -> ModifyState (lmap f <<< k)
     Subscribe es a -> Subscribe es (f a)
     Lift q -> Lift (map f q)
     Halt msg -> Halt msg
@@ -97,12 +99,13 @@ instance monadRecHalogenM :: MonadRec (HalogenM s f g p o m) where
     go (Done b) = pure b
 
 instance monadStateHalogenM :: MonadState s (HalogenM s f g p o m) where
-  state f = do
-    st <- HalogenM $ liftF $ GetState id
-    case f st of
-      Tuple a st' -> do
-        HalogenM $ liftF $ ModifyState (const st') unit
-        pure a
+  state = HalogenM <<< liftF <<< ModifyState
+
+instance monadAskHalogenM :: MonadAsk r m => MonadAsk r (HalogenM s f g p o m) where
+  ask = HalogenM $ liftF $ Lift $ ask
+
+instance monadTellHalogenM :: MonadTell w m => MonadTell w (HalogenM s f g p o m) where
+  tell = HalogenM <<< liftF <<< Lift <<< tell
 
 halt :: forall s f g p o m a. String -> HalogenM s f g p o m a
 halt msg = HalogenM $ liftF $ Halt msg
@@ -141,7 +144,7 @@ hoistF nat (HalogenM fa) = HalogenM (hoistFree go fa)
   go :: HalogenF s f g p o m ~> HalogenF s f' g p o m
   go = case _ of
     GetState k -> GetState k
-    ModifyState f a -> ModifyState f a
+    ModifyState f -> ModifyState f
     Subscribe (ES.EventSource es) next ->
       Subscribe (ES.EventSource (interpret (lmap nat) es)) next
     Lift q -> Lift q
@@ -164,7 +167,7 @@ hoistM nat (HalogenM fa) = HalogenM (hoistFree go fa)
   go :: HalogenF s f g p o m ~> HalogenF s f g p o m'
   go = case _ of
     GetState k -> GetState k
-    ModifyState f a -> ModifyState f a
+    ModifyState f -> ModifyState f
     Subscribe (ES.EventSource es) next ->
       Subscribe (ES.EventSource (hoistFreeT nat es)) next
     Lift q -> Lift (nat q)
