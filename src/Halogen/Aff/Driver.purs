@@ -296,11 +296,10 @@ runUI renderSpec component = _.driver <$> do
   handlePending ref = do
     DriverState (dsi@{ pendingIn }) <- takeVar ref
     putVar ref (DriverState dsi { pendingIn = Nothing })
-    for_ pendingIn (sequence <<< L.reverse)
+    for_ pendingIn (forkAll <<< L.reverse)
     DriverState (dso@{ pendingOut, handler }) <- takeVar ref
     putVar ref (DriverState dso { pendingOut = Nothing })
-    for_ pendingOut (traverse_ handler <<< L.reverse)
-
+    for_ pendingOut (forkAll <<< map handler <<< L.reverse)
 
   addFinalizer
     :: forall f'
