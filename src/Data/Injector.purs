@@ -12,12 +12,13 @@ module Data.Injector
 
 import Prelude
 
-import Data.Const (Const(..), getConst)
+import Data.Const (Const(..))
 import Data.Either (Either(..), either)
 import Data.Functor.Coproduct (Coproduct, coproduct, left, right)
-import Data.Identity (Identity(..), runIdentity)
+import Data.Identity (Identity(..))
 import Data.Maybe (Maybe(..), maybe)
-import Data.Maybe.First (First(..), runFirst)
+import Data.Maybe.First (First(..))
+import Data.Newtype (unwrap)
 import Data.Profunctor (class Profunctor, dimap)
 import Data.Profunctor.Choice (class Choice)
 import Data.Profunctor.Choice as PF
@@ -41,10 +42,10 @@ unTagged :: forall s b. Tagged s b -> b
 unTagged (Tagged b) = b
 
 inj :: forall a b. Injector a b -> a -> b
-inj p = runIdentity <<< unTagged <<< p <<< Tagged <<< Identity
+inj p = unwrap <<< unTagged <<< p <<< Tagged <<< Identity
 
 prj :: forall a b. Injector a b -> b -> Maybe a
-prj p = runFirst <<< getConst <<< p (Const <<< First <<< Just)
+prj p = unwrap <<< unwrap <<< p (Const <<< First <<< Just)
 
 prism :: forall s t a b. (b -> t) -> (s -> Either t a) -> Prism s t a b
 prism f g = dimap g (either pure (map f)) <<< PF.right

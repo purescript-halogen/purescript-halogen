@@ -10,8 +10,6 @@ import Prelude
 
 import Control.Monad.State as CMS
 
-import Data.Functor (($>))
-
 -- | The state algebra.
 data StateF s a
   = Get (s -> a)

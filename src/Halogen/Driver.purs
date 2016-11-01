@@ -14,11 +14,10 @@ import Control.Monad.Eff.Class (liftEff)
 import Control.Monad.Eff.Exception (error)
 import Control.Monad.Error.Class (throwError)
 import Control.Monad.Free (runFreeM)
-import Control.Monad.Rec.Class (forever, tailRecM)
+import Control.Monad.Rec.Class (Step(..), forever, tailRecM)
 import Control.Monad.State (runState)
-import Control.Monad.Trans (lift)
+import Control.Monad.Trans.Class (lift)
 
-import Data.Either (Either(..))
 import Data.Foldable (class Foldable, foldr)
 import Data.List (List(Nil), (:))
 import Data.Maybe (Maybe(..), maybe, isJust, isNothing)
@@ -181,10 +180,10 @@ runUI c s element = _.driver <$> do
     ds <- takeVar ref
     putVar ref ds
     if not ds.renderPending
-      then pure (Right unit)
+      then pure (Done unit)
       else do
         render ref
-        pure (Left ref)
+        pure (Loop ref)
 
 onInitializers
   :: forall m f g r

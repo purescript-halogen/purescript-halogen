@@ -5,11 +5,11 @@ import Prelude
 import Control.Alt ((<|>))
 import Control.Monad.Aff (Aff)
 import Control.Monad.Eff (Eff)
+import Control.Monad.Except (runExcept)
 
 import Data.Either (Either(..))
 import Data.Foldable (foldMap)
 import Data.Foreign.Class (readProp)
-import Data.Functor (($>))
 import Data.Maybe (Maybe(..))
 
 import Halogen as H
@@ -97,7 +97,7 @@ fetchJS :: forall eff. String -> Aff (ajax :: AJAX | eff) String
 fetchJS code = do
   result <- post "http://try.purescript.org/compile/text" code
   let response = result.response
-  pure case readProp "js" response <|> readProp "error" response of
+  pure case runExcept $ readProp "js" response <|> readProp "error" response of
     Right js -> js
     Left _ -> "Invalid response"
 
