@@ -22,7 +22,7 @@ import Control.Monad.Free (foldFree)
 import Control.Monad.Fork (fork)
 import Control.Monad.Rec.Class (forever)
 import Control.Monad.Trans.Class (lift)
-import Control.Parallel (sequential, parallel)
+import Control.Parallel (parSequence_, sequential, parallel)
 
 import Data.Lazy (force)
 import Data.List (List, (:))
@@ -30,7 +30,7 @@ import Data.List as L
 import Data.Map as M
 import Data.Maybe (Maybe(..), maybe)
 import Data.Newtype (unwrap)
-import Data.Traversable (traverse_, for_, sequence)
+import Data.Traversable (for_, traverse_, sequence_)
 import Data.Tuple (Tuple(..))
 
 import Halogen.Aff.Driver.State (ComponentType(..), DriverStateX, DriverState(..), unDriverStateX, initDriverState)
@@ -63,8 +63,10 @@ handleLifecycle f = do
   lchs <- liftEff $ newRef { initializers: L.Nil, finalizers: L.Nil }
   result <- f lchs
   { initializers, finalizers } <- liftEff $ readRef lchs
-  sequence $ L.reverse initializers
   forkAll finalizers
+  -- No need to par/fork initializers here as there's only ever zero or one at
+  -- this point, due to the squashing at each level of the component hierarchy.
+  sequence_ initializers
   pure result
 
 type RenderSpec h r eff =
@@ -82,13 +84,6 @@ type RenderSpec h r eff =
       -> Aff (HalogenEffects eff) r
   }
 
--- | This function is the main entry point for a Halogen based UI, taking a root
--- | component, initial state, and HTML element to attach the rendered component
--- | to.
--- |
--- | The returned "driver" function can be used to send actions and requests
--- | into the component hierarchy, allowing the outside world to communicate
--- | with the UI.
 runUI
   :: forall h r f o eff
    . RenderSpec h r eff
@@ -120,7 +115,7 @@ runUI renderSpec component = _.driver <$> do
     liftEff $ modifyRef fresh (_ + 1)
     var <- initDriverState component componentType handler keyId fresh
     unDriverStateX (render lchs <<< _.selfRef) =<< peekVar var
-    addInitializer lchs =<< peekVar var
+    squashChildInitializers lchs =<< peekVar var
     pure var
 
   eval
@@ -288,6 +283,22 @@ runUI renderSpec component = _.driver <$> do
             }
         _ ->
           pure unit
+
+  squashChildInitializers
+    :: forall f'
+     . Ref (LifecycleHandlers eff)
+    -> DriverStateX h r f' eff
+    -> Aff (HalogenEffects eff) Unit
+  squashChildInitializers ref =
+    unDriverStateX \st -> do
+      let parentInitializer = evalF st.selfRef <$> st.component.initializer
+      liftEff $ modifyRef ref \lchs ->
+        { initializers: pure $ do
+            parSequence_ (L.reverse lchs.initializers)
+            sequence_ parentInitializer
+            handlePending st.selfRef
+        , finalizers: lchs.finalizers
+        }
 
   handlePending
     :: forall s f' g p o'

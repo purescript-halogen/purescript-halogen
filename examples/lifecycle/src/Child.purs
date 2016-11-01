@@ -2,7 +2,7 @@ module Child where
 
 import Prelude
 
-import Control.Monad.Aff (Aff)
+import Control.Monad.Aff (Aff, later')
 import Control.Monad.Aff.Console (log)
 import Control.Monad.Eff.Console (CONSOLE)
 
@@ -55,7 +55,9 @@ child initialState = H.lifecycleParentComponent
   eval :: Query ~> H.ParentDSL Int Query Query Int Message (ChildEff eff)
   eval (Initialize next) = do
     id <- H.get
-    H.liftAff $ log ("Initialize Child " <> show id)
+    H.lift $ do
+      later' 100 $ pure unit
+      log ("Initialize Child " <> show id)
     H.raise Initialized
     pure next
   eval (Finalize next) = do
@@ -100,7 +102,9 @@ cell initialState = H.lifecycleComponent
   eval :: Query ~> H.ComponentDSL Int Query Message (ChildEff eff)
   eval (Initialize next) = do
     id <- H.get
-    H.liftAff $ log ("Initialize Cell " <> show id)
+    H.lift $ do
+      later' 150 $ pure unit
+      log ("Initialize Cell " <> show id)
     H.raise Initialized
     pure next
   eval (Ref _ next) = do
