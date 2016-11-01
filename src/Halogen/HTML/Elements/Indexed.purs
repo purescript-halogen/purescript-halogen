@@ -125,6 +125,7 @@ module Halogen.HTML.Elements.Indexed
   ) where
 
 import Halogen.HTML.Core (HTML)
+import Halogen.HTML.Properties (Object, Element)
 import Halogen.HTML.Properties.Indexed hiding (title)
 import Halogen.HTML.Elements as E
 import Halogen.HTML.Elements
@@ -317,7 +318,7 @@ br = unsafeCoerce E.br
 button :: forall p i. Node (autofocus :: I, disabled :: I, form :: I, formaction :: I, formenctyp :: I, formmethod :: I, formnovalidate :: I, formtaget :: I, buttonType :: I, value :: I) p i
 button = unsafeCoerce E.button
 
-canvas :: forall p i. Leaf (width :: I, height :: I) p i
+canvas :: forall p i. Leaf (width :: Size Element, height :: Size Element) p i
 canvas = unsafeCoerce E.canvas
 
 caption :: forall p i. Node (align :: I, onScroll :: I) p i
@@ -374,7 +375,7 @@ dt = unsafeCoerce E.dt
 em :: forall p i. Node () p i
 em = unsafeCoerce E.em
 
-embed :: forall p i. Node (height :: I, src :: I, mediaType :: I, width :: I) p i
+embed :: forall p i. Node (height :: Size Object, src :: I, mediaType :: I, width :: Size Object) p i
 embed = unsafeCoerce E.embed
 
 fieldset :: forall p i. Node (disabled :: I, form :: I, onScroll :: I) p i
@@ -425,13 +426,13 @@ html = unsafeCoerce E.html
 i :: forall p i. Node () p i
 i = unsafeCoerce E.i
 
-iframe :: forall p i. NoninteractiveLeaf (onLoad :: I, sandbox :: I, scrolling :: I, src :: I, srcdoc :: I, width :: I, height :: I) p i
+iframe :: forall p i. NoninteractiveLeaf (onLoad :: I, sandbox :: I, scrolling :: I, src :: I, srcdoc :: I, width :: Size Object, height :: Size Object) p i
 iframe = unsafeCoerce E.iframe
 
-img :: forall p i. Leaf (alt :: I, crossorigin :: I, height :: I, ismap :: I, longdesc :: I, onAbort :: I, onError :: I, onLoad :: I, src :: I, usemap :: I, width :: I) p i
+img :: forall p i. Leaf (alt :: I, crossorigin :: I, height :: Size Element, ismap :: I, longdesc :: I, onAbort :: I, onError :: I, onLoad :: I, src :: I, usemap :: I, width :: Size Element) p i
 img = unsafeCoerce E.img
 
-input :: forall p i. Leaf (accept :: I, autocomplete :: I, autofocus :: I, checked :: I, disabled :: I, form :: I, formaction :: I, formenctype :: I, formmethod :: I, formnovalidate :: I, formtarget :: I, height :: I, list :: I, max :: I, min :: I, multiple :: I, onAbort :: I, onChange :: I, onError :: I, onInput :: I, onInvalid :: I, onLoad :: I, onSearch :: I, onSelect :: I, pattern :: I, placeholder :: I, readonly :: I, required :: I, size :: I, src :: I, step :: I, inputType :: I, value :: I, width :: I) p i
+input :: forall p i. Leaf (accept :: I, autocomplete :: I, autofocus :: I, checked :: I, disabled :: I, form :: I, formaction :: I, formenctype :: I, formmethod :: I, formnovalidate :: I, formtarget :: I, height :: Size Element, list :: I, max :: I, min :: I, multiple :: I, onAbort :: I, onChange :: I, onError :: I, onInput :: I, onInvalid :: I, onLoad :: I, onSearch :: I, onSelect :: I, pattern :: I, placeholder :: I, readonly :: I, required :: I, size :: I, src :: I, step :: I, inputType :: I, value :: I, width :: Size Element) p i
 input = unsafeCoerce E.input
 
 ins :: forall p i. Node (cite :: I, datetime :: I) p i
@@ -485,7 +486,7 @@ noframes = unsafeCoerce E.noframes
 noscript :: forall p i. Node () p i
 noscript = unsafeCoerce E.noscript
 
-object :: forall p i. Node (data :: I, form :: I, height :: I, onError :: I, onScroll :: I, mediaType :: I, usemap :: I, width :: I) p i
+object :: forall p i. Node (data :: I, form :: I, height :: Size Object, onError :: I, onScroll :: I, mediaType :: I, usemap :: I, width :: Size Object) p i
 object = unsafeCoerce E.object
 
 ol :: forall p i. Node (onScroll :: I, reversed :: I, start :: I, olType :: I) p i
@@ -608,7 +609,7 @@ ul = unsafeCoerce E.ul
 var :: forall p i. Node () p i
 var = unsafeCoerce E.var
 
-video :: forall p i. Node (autoplay :: I, controls :: I, height :: I, loop :: I, muted :: I, poster :: I, preload :: I, src :: I, width :: I) p i
+video :: forall p i. Node (autoplay :: I, controls :: I, height :: Size Element, loop :: I, muted :: I, poster :: I, preload :: I, src :: I, width :: Size Element) p i
 video = unsafeCoerce E.video
 
 wbr :: forall p i. Leaf () p i
