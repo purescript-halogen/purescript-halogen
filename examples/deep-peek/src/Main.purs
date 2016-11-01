@@ -4,9 +4,10 @@ import Prelude
 
 import Control.Monad.Eff (Eff)
 
-import Data.Const (Const, getConst)
+import Data.Const (Const)
 import Data.Functor.Coproduct (Coproduct, coproduct)
 import Data.Maybe (Maybe(..))
+import Data.Newtype (unwrap)
 
 import Halogen as H
 import Halogen.HTML.Indexed as HH
@@ -52,7 +53,7 @@ ui = H.parentComponent { render, eval, peek: Just peek }
       ]
 
   eval :: Query ~> H.ParentDSL State (ListStateP g) Query ListQueryP g ListSlot
-  eval = absurd <<< getConst
+  eval = absurd <<< unwrap
 
   peek :: forall a. H.ChildF ListSlot ListQueryP a -> H.ParentDSL State (ListStateP g) Query ListQueryP g ListSlot Unit
   peek = coproduct peekList peekTicker <<< H.runChildF

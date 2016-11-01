@@ -10,7 +10,6 @@ module Halogen.HTML.Events.Handler
 
 import Prelude
 
-import Control.Apply ((*>))
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Class (class MonadEff, liftEff)
 import Control.Monad.Writer (Writer, runWriter)

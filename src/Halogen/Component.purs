@@ -362,7 +362,7 @@ mkQueries'
   -> QueryF s'' s' f'' f' g p' (M.Map p i)
 mkQueries' i q = bracketQuery do
   ParentState st <- get
-  M.fromList <<< L.catMaybes <$> traverse mkChildQuery (M.toList st.children)
+  M.fromFoldable <<< L.catMaybes <$> traverse mkChildQuery (M.toList st.children)
   where
   mkChildQuery (Tuple p' child) =
     for (prjSlot i p')

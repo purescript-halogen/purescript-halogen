@@ -8,6 +8,8 @@ module Halogen.HTML.Events.Forms
 
 import Prelude
 
+import Control.Monad.Except (runExcept)
+
 import Data.Either (either)
 import Data.Foreign (toForeign)
 import Data.Foreign.Class (class IsForeign, readProp)
@@ -19,7 +21,10 @@ import Halogen.HTML.Events.Handler (EventHandler())
 -- | Attaches event handler to event `key` with getting `prop` field as an
 -- | argument of `handler`.
 addForeignPropHandler :: forall i value. IsForeign value => String -> String -> (value -> EventHandler (Maybe i)) -> Prop i
-addForeignPropHandler key prop f = handler (eventName key) (either (const $ pure Nothing) f <<< readProp prop <<< toForeign <<< _.target)
+addForeignPropHandler key prop f =
+  handler
+    (eventName key)
+    (either (const $ pure Nothing) f <<< runExcept <<< readProp prop <<< toForeign <<< _.target)
 
 -- | Attaches an event handler which will produce an input when the value of an
 -- | input field changes.
