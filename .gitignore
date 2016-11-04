@@ -3,11 +3,8 @@
 !/.jscsrc
 !/.jshintrc
 !/.travis.yml
-**/bower_components/
-**/node_modules/
+/bower_components/
+/node_modules/
 /output/
 /tmp/
 .DS_Store
-*.swo
-*.swp
-*.un~
