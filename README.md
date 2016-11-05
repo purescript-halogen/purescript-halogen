@@ -1,8 +1,7 @@
 # purescript-halogen
 
-[![Latest release](http://img.shields.io/bower/v/purescript-halogen.svg)](https://github.com/slamdata/purescript-halogen/releases)
-[![Build Status](https://travis-ci.org/slamdata/purescript-halogen.svg?branch=master)](https://travis-ci.org/slamdata/purescript-halogen)
-[![Dependency Status](https://www.versioneye.com/user/projects/5620cabf36d0ab00210009a3/badge.svg?style=flat)](https://www.versioneye.com/user/projects/5620cabf36d0ab00210009a3)
+[![Latest release](http://img.shields.io/github/release/slamdata/purescript-halogen.svg)](https://github.com/slamdata/purescript-halogen/releases)
+[![Build status](https://travis-ci.org/slamdata/purescript-halogen.svg?branch=master)](https://travis-ci.org/slamdata/purescript-halogen)
 
 A declarative, type-safe UI library for PureScript.
 
