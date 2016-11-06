@@ -6,35 +6,35 @@ import Halogen as H
 import Halogen.HTML.Indexed as HH
 import Halogen.HTML.Events.Indexed as HE
 
-newtype StateA = StateA { on :: Boolean }
+newtype State = State { on :: Boolean }
 
-initStateA :: StateA
-initStateA = StateA { on: false }
+initState :: State
+initState = State { on: false }
 
-data QueryA a
-  = ToggleStateA a
-  | GetStateA (Boolean -> a)
+data Query a
+  = ToggleState a
+  | GetState (Boolean -> a)
 
-data SlotA = SlotA
-derive instance eqSlotA :: Eq SlotA
-derive instance ordSlotA :: Ord SlotA
+data Slot = Slot
+derive instance eqSlot :: Eq Slot
+derive instance ordSlot :: Ord Slot
 
-componentA :: forall g. H.Component StateA QueryA g
-componentA = H.component { render, eval }
+component :: forall g. H.Component State Query g
+component = H.component { render, eval }
   where
 
-  render :: StateA -> H.ComponentHTML QueryA
-  render (StateA state) = HH.div_
+  render :: State -> H.ComponentHTML Query
+  render (State state) = HH.div_
     [ HH.h1_ [ HH.text "Toggle Button A" ]
     , HH.button
-        [ HE.onClick (HE.input_ ToggleStateA) ]
+        [ HE.onClick (HE.input_ ToggleState) ]
         [ HH.text (if state.on then "On" else "Off") ]
     ]
 
-  eval :: QueryA ~> H.ComponentDSL StateA QueryA g
-  eval (ToggleStateA next) = do
-    H.modify (\(StateA state) -> StateA { on: not state.on })
+  eval :: Query ~> H.ComponentDSL State Query g
+  eval (ToggleState next) = do
+    H.modify (\(State state) -> State { on: not state.on })
     pure next
-  eval (GetStateA continue) = do
-    b <- H.gets (\(StateA state) -> state.on)
+  eval (GetState continue) = do
+    b <- H.gets (\(State state) -> state.on)
     pure (continue b)
