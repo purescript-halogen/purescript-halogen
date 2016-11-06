@@ -13,6 +13,7 @@ import Control.Monad.Aff (Aff)
 import Control.Monad.Aff.AVar (AVar, putVar, makeVar)
 import Control.Monad.Eff.Ref (Ref)
 
+import Data.List (List(..))
 import Data.Map as M
 import Data.Maybe (Maybe(..))
 
@@ -51,6 +52,8 @@ type DriverStateRec h r s f g p o eff =
   , mkOrdBox :: p -> OrdBox p
   , selfRef :: AVar (DriverState h r s f g p o eff)
   , handler :: o -> Aff (HalogenEffects eff) Unit
+  , pendingIn :: Maybe (List (Aff (HalogenEffects eff) Unit))
+  , pendingOut :: Maybe (List o)
   , keyId :: Int
   , fresh :: Ref Int
   , rendering :: Maybe r
@@ -94,6 +97,8 @@ initDriverState component componentType handler keyId fresh = do
       , keyId
       , fresh
       , handler
+      , pendingIn: component.initializer $> Nil
+      , pendingOut: component.initializer $> Nil
       , rendering: Nothing
       }
   putVar selfRef (DriverState ds)
