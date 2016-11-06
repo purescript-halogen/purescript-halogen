@@ -2,7 +2,7 @@
   "name": "ajax",
   "private": true,
   "dependencies": {
-    "purescript-affjax": "^2.0.0",
+    "purescript-affjax": "^3.0.0",
     "purescript-halogen": "*"
   }
 }

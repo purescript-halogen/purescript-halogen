@@ -1,3 +1,4 @@
 /dist/example.js
-/output
-/bower_components
+/output/
+/bower_components/
+/node_modules/
