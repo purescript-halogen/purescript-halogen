@@ -95,8 +95,8 @@ instance monadTransHalogenM :: MonadTrans (HalogenM s f g p o) where
 instance monadRecHalogenM :: MonadRec (HalogenM s f g p o m) where
   tailRecM k a = k a >>= go
     where
-    go (Loop a) = tailRecM k a
-    go (Done b) = pure b
+    go (Loop x) = tailRecM k x
+    go (Done y) = pure y
 
 instance monadStateHalogenM :: MonadState s (HalogenM s f g p o m) where
   state = HalogenM <<< liftF <<< ModifyState

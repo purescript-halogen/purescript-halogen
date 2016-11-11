@@ -110,10 +110,10 @@ runUI renderSpec component = _.driver <$> do
     -> ComponentType
     -> Component h f' o' (Aff (HalogenEffects eff))
     -> Aff (HalogenEffects eff) (AVar (DriverStateX h r f' eff))
-  runComponent handler fresh lchs componentType = unComponent \component -> do
+  runComponent handler fresh lchs componentType = unComponent \c -> do
     keyId <- liftEff $ readRef fresh
     liftEff $ modifyRef fresh (_ + 1)
-    var <- initDriverState component componentType handler keyId fresh
+    var <- initDriverState c componentType handler keyId fresh
     unDriverStateX (render lchs <<< _.selfRef) =<< peekVar var
     squashChildInitializers lchs =<< peekVar var
     pure var
