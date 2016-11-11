@@ -1,4 +1,4 @@
-module AceComponent where
+module AceComponent (AceEffects, AceQuery(..), AceOutput(..), aceComponent) where
 
 import Prelude
 
@@ -39,14 +39,18 @@ data AceQuery a
   | Finalize a
   | ChangeText String a
 
+data AceOutput = TextChanged String
+
 -- | Effects embedding the Ace editor requires.
 type AceEffects eff = (ace :: ACE, avar :: AVAR | eff)
 
 -- | The Ace component definition.
-ace :: forall eff. H.Component AceState AceQuery (Aff (AceEffects eff))
-ace = H.lifecycleComponent
+aceComponent :: forall eff. H.Component HH.HTML AceQuery AceOutput (Aff (AceEffects eff))
+aceComponent =
+  H.lifecycleComponent
     { render
     , eval
+    , initialState: initAceState
     , initializer: Just (H.action Initialize)
     , finalizer: Just (H.action Finalize)
     }
@@ -61,21 +65,20 @@ ace = H.lifecycleComponent
   -- The query algebra for the component handles the initialization of the Ace
   -- editor as well as responding to the `ChangeText` action that allows us to
   -- alter the editor's state.
-  eval :: AceQuery ~> H.ComponentDSL AceState AceQuery (Aff (AceEffects eff))
+  eval :: AceQuery ~> H.ComponentDSL AceState AceQuery AceOutput (Aff (AceEffects eff))
   eval (SetElement el next) = do
     H.modify (_ { element = el })
     pure next
   eval (Initialize next) = do
-    el <- H.gets _.element
-    case el of
+    H.gets _.element >>= case _ of
       Nothing -> pure unit
       Just el' -> do
-        editor <- H.fromEff $ Ace.editNode el' Ace.ace
+        editor <- H.liftEff $ Ace.editNode el' Ace.ace
+        session <- H.liftEff $ Editor.getSession editor
         H.modify (_ { editor = Just editor })
-        session <- H.fromEff $ Editor.getSession editor
         H.subscribe $ H.eventSource_ (Session.onChange session) do
-          text <- Editor.getValue editor
-          pure $ H.action (ChangeText text)
+          text <- H.liftEff (Editor.getValue editor)
+          pure $ Just $ H.action (ChangeText text)
     pure next
   eval (Finalize next) = do
     -- Release the reference to the editor and do any other cleanup that a real
@@ -87,6 +90,8 @@ ace = H.lifecycleComponent
     case state of
       Nothing -> pure unit
       Just editor -> do
-        current <- H.fromEff $ Editor.getValue editor
-        when (text /= current) $ void $ H.fromEff $ Editor.setValue text Nothing editor
+        current <- H.liftEff $ Editor.getValue editor
+        when (text /= current) do
+          void $ H.liftEff $ Editor.setValue text Nothing editor
+    H.raise $ TextChanged text
     pure next

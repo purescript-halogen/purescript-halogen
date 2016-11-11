@@ -6,8 +6,8 @@ import Data.Maybe (Maybe(..))
 
 import Halogen (action)
 import Halogen.HTML.Events.Handler as EH
-import Halogen.HTML.Events.Indexed as E
-import Halogen.HTML.Properties.Indexed as P
+import Halogen.HTML.Events as E
+import Halogen.HTML.Properties as P
 
 data Query a = ToggleState a
 

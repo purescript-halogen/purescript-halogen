@@ -2,27 +2,27 @@
   "private": true,
   "scripts": {
     "clean": "rimraf output && rimraf .pulp-cache",
+    "build": "eslint src && pulp build --censor-lib --strict",
     "test": "pulp build -I test --censor-lib --strict",
-    "build": "pulp build --censor-lib --strict",
     "example-ace": "bower link && cd examples/ace && bower link purescript-halogen && bower install && npm run build",
     "example-ajax": "bower link && cd examples/ajax && bower link purescript-halogen && bower install && npm run build",
     "example-components": "bower link && cd examples/components && bower link purescript-halogen && bower install && npm run build",
     "example-counter": "bower link && cd examples/counter && bower link purescript-halogen && bower install && npm run build",
-    "example-deep-peek": "bower link && cd examples/deep-peek && bower link purescript-halogen && bower install && npm run build",
     "example-interpret": "bower link && cd examples/interpret && bower link purescript-halogen && bower install && npm run build",
     "example-intro": "bower link && cd examples/intro && bower link purescript-halogen && bower install && npm run build",
-    "example-keyboard-shortcuts": "bower link && cd examples/keyboard-shortcuts && bower link purescript-halogen && bower install && npm run build",
+    "example-keyboard-input": "bower link && cd examples/keyboard-input && bower link purescript-halogen && bower install && npm run build",
     "example-lifecycle": "bower link && cd examples/lifecycle && bower link purescript-halogen && bower install && npm run build",
     "example-multi-component": "bower link && cd examples/multi-component && bower link purescript-halogen && bower install && npm run build",
     "example-todo": "bower link && cd examples/todo && bower link purescript-halogen && bower install && npm run build"
   },
+  "dependencies": {
+    "virtual-dom": "^2.1.1"
+  },
   "devDependencies": {
+    "eslint": "^3.8.1",
     "pulp": "^9.0.1",
     "purescript": "^0.10.1",
     "purescript-psa": "^0.3.9",
     "rimraf": "^2.5.4"
-  },
-  "dependencies": {
-    "virtual-dom": "^2.1.1"
   }
 }

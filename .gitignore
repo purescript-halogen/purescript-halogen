@@ -1,10 +1,8 @@
 /.*
 !/.gitignore
-!/.jscsrc
-!/.jshintrc
+!/.eslintrc.json
 !/.travis.yml
 /bower_components/
 /node_modules/
 /output/
-/tmp/
-.DS_Store
+/example/example.js

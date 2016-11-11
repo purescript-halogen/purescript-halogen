@@ -3,13 +3,13 @@ module ComponentA where
 import Prelude
 
 import Halogen as H
-import Halogen.HTML.Indexed as HH
-import Halogen.HTML.Events.Indexed as HE
+import Halogen.HTML as HH
+import Halogen.HTML.Events as HE
 
 newtype StateA = StateA { on :: Boolean }
 
-initStateA :: StateA
-initStateA = StateA { on: false }
+initialState :: StateA
+initialState = StateA { on: false }
 
 data QueryA a
   = ToggleStateA a
@@ -19,8 +19,8 @@ data SlotA = SlotA
 derive instance eqSlotA :: Eq SlotA
 derive instance ordSlotA :: Ord SlotA
 
-componentA :: forall g. H.Component StateA QueryA g
-componentA = H.component { render, eval }
+componentA :: forall m. H.Component HH.HTML QueryA Void m
+componentA = H.component { render, eval, initialState }
   where
 
   render :: StateA -> H.ComponentHTML QueryA
@@ -31,7 +31,7 @@ componentA = H.component { render, eval }
         [ HH.text (if state.on then "On" else "Off") ]
     ]
 
-  eval :: QueryA ~> H.ComponentDSL StateA QueryA g
+  eval :: QueryA ~> H.ComponentDSL StateA QueryA Void m
   eval (ToggleStateA next) = do
     H.modify (\(StateA state) -> StateA { on: not state.on })
     pure next

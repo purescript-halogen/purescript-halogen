@@ -13,10 +13,11 @@ import Data.Foreign.Class (readProp)
 import Data.Maybe (Maybe(..))
 
 import Halogen as H
-import Halogen.HTML.Events.Indexed as HE
-import Halogen.HTML.Indexed as HH
-import Halogen.HTML.Properties.Indexed as HP
+import Halogen.HTML as HH
+import Halogen.HTML.Events as HE
+import Halogen.HTML.Properties as HP
 import Halogen.Util (runHalogenAff, awaitBody)
+import Halogen.VirtualDOM.Driver (runUI)
 
 import Network.HTTP.Affjax (AJAX, post)
 
@@ -48,8 +49,8 @@ data Query a
 type AppEffects eff = H.HalogenEffects (ajax :: AJAX | eff)
 
 -- | The definition for the app's main UI component.
-ui :: forall eff. H.Component State Query (Aff (AppEffects eff))
-ui = H.component { render, eval }
+ui :: forall eff. H.Component HH.HTML Query Void (Aff (AppEffects eff))
+ui = H.component { render, eval, initialState }
   where
 
   render :: State -> H.ComponentHTML Query
@@ -84,11 +85,11 @@ ui = H.component { render, eval }
               ]
           ]
 
-  eval :: Query ~> H.ComponentDSL State Query (Aff (AppEffects eff))
+  eval :: Query ~> H.ComponentDSL State Query Void (Aff (AppEffects eff))
   eval (SetCode code next) = H.modify (_ { code = code, result = Nothing :: Maybe String }) $> next
   eval (MakeRequest code next) = do
     H.modify (_ { busy = true })
-    result <- H.fromAff (fetchJS code)
+    result <- H.liftAff (fetchJS code)
     H.modify (_ { busy = false, result = Just result })
     pure next
 
@@ -105,4 +106,4 @@ fetchJS code = do
 main :: Eff (AppEffects ()) Unit
 main = runHalogenAff do
   body <- awaitBody
-  H.runUI ui initialState body
+  runUI ui body

@@ -2,6 +2,7 @@ module Halogen.Effects where
 
 import Control.Monad.Aff.AVar (AVAR)
 import Control.Monad.Eff.Exception (EXCEPTION)
+import Control.Monad.Eff.Ref (REF)
 import DOM (DOM)
 
 -- | A type alias for the basic row of effects that Halogen uses. This can be
@@ -19,4 +20,4 @@ import DOM (DOM)
 -- |   app <- runUI ui state
 -- |   ...
 -- | ```
-type HalogenEffects eff = (avar :: AVAR, err :: EXCEPTION, dom :: DOM | eff)
+type HalogenEffects eff = (avar :: AVAR, ref :: REF, err :: EXCEPTION, dom :: DOM | eff)

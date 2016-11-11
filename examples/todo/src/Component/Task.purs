@@ -2,10 +2,14 @@ module Component.Task where
 
 import Prelude
 
+import Data.Bifunctor (bimap)
+
+import Control.Monad.State as CMS
+
 import Halogen as H
-import Halogen.HTML.Indexed as HH
-import Halogen.HTML.Properties.Indexed as HP
-import Halogen.HTML.Events.Indexed as HE
+import Halogen.HTML as HH
+import Halogen.HTML.Events as HE
+import Halogen.HTML.Properties as HP
 
 import Model (Task)
 
@@ -16,14 +20,18 @@ data TaskQuery a
   | Remove a
   | IsCompleted (Boolean -> a)
 
+data TaskMessage
+  = NotifyRemove
+  | Toggled Boolean
+
 -- | The task component definition.
-task :: forall g. H.Component Task TaskQuery g
-task = H.component { render, eval }
+task :: forall m. Task -> H.Component HH.HTML TaskQuery TaskMessage m
+task initialState = H.component { render, eval, initialState }
   where
 
   render :: Task -> H.ComponentHTML TaskQuery
   render t =
-    HH.li_
+    bimap id id $ HH.li_
       [ HH.input
           [ HP.inputType HP.InputCheckbox
           , HP.title "Mark as completed"
@@ -44,14 +52,17 @@ task = H.component { render, eval }
           [ HH.text "✖" ]
       ]
 
-  eval :: TaskQuery ~> H.ComponentDSL Task TaskQuery g
+  eval :: TaskQuery ~> H.ComponentDSL Task TaskQuery TaskMessage m
   eval (UpdateDescription desc next) = do
-    H.modify (_ { description = desc })
+    CMS.modify (_ { description = desc })
     pure next
   eval (ToggleCompleted b next) = do
-    H.modify (_ { completed = b })
+    CMS.modify (_ { completed = b })
+    H.raise (Toggled b)
     pure next
-  eval (Remove next) = pure next
+  eval (Remove next) = do
+    H.raise NotifyRemove
+    pure next
   eval (IsCompleted continue) = do
-    b <- H.gets (_.completed)
+    b <- CMS.gets (_.completed)
     pure (continue b)

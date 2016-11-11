@@ -1,152 +1,113 @@
--- | This module provides `Prop` values for WAI-ARIA attributes.
-module Halogen.HTML.Properties.ARIA
-  ( activeDescendant
-  , atomic
-  , autoComplete
-  , busy
-  , checked
-  , controls
-  , describedBy
-  , disabled
-  , dropEffect
-  , expanded
-  , flowTo
-  , grabbed
-  , hasPopup
-  , hidden
-  , invalid
-  , label
-  , labelledBy
-  , level
-  , live
-  , multiLine
-  , multiSelectable
-  , orientation
-  , owns
-  , posInSet
-  , pressed
-  , readOnly
-  , relevant
-  , required
-  , selected
-  , setSize
-  , sort
-  , valueMax
-  , valueMin
-  , valueNow
-  , valueText
-  , role
-  ) where
+-- | This module provides properties for WAI-ARIA attributes.
+module Halogen.HTML.Properties.ARIA where
 
-import Data.Maybe (Maybe(..))
+import Halogen.HTML.Core (AttrName(..))
+import Halogen.HTML.Properties (IProp, attr)
 
-import Halogen.HTML.Core (Prop(..), attrName)
+activeDescendant :: forall r i. String -> IProp r i
+activeDescendant = attr (AttrName "aria-activedescendant")
 
-activeDescendant :: forall i. String -> Prop i
-activeDescendant = Attr Nothing (attrName "aria-activedescendant")
+atomic :: forall r i. String -> IProp r i
+atomic = attr (AttrName "aria-atomic")
 
-atomic :: forall i. String -> Prop i
-atomic = Attr Nothing (attrName "aria-atomic")
+autoComplete :: forall r i. String -> IProp r i
+autoComplete = attr (AttrName "aria-autocomplete")
 
-autoComplete :: forall i. String -> Prop i
-autoComplete = Attr Nothing (attrName "aria-autocomplete")
+busy :: forall r i. String -> IProp r i
+busy = attr (AttrName "aria-busy")
 
-busy :: forall i. String -> Prop i
-busy = Attr Nothing (attrName "aria-busy")
+checked :: forall r i. String -> IProp r i
+checked = attr (AttrName "aria-checked")
 
-checked :: forall i. String -> Prop i
-checked = Attr Nothing (attrName "aria-checked")
+controls :: forall r i. String -> IProp r i
+controls = attr (AttrName "aria-controls")
 
-controls :: forall i. String -> Prop i
-controls = Attr Nothing (attrName "aria-controls")
+describedBy :: forall r i. String -> IProp r i
+describedBy = attr (AttrName "aria-describedby")
 
-describedBy :: forall i. String -> Prop i
-describedBy = Attr Nothing (attrName "aria-describedby")
+disabled :: forall r i. String -> IProp r i
+disabled = attr (AttrName "aria-disabled")
 
-disabled :: forall i. String -> Prop i
-disabled = Attr Nothing (attrName "aria-disabled")
+dropEffect :: forall r i. String -> IProp r i
+dropEffect = attr (AttrName "aria-dropeffect")
 
-dropEffect :: forall i. String -> Prop i
-dropEffect = Attr Nothing (attrName "aria-dropeffect")
+expanded :: forall r i. String -> IProp r i
+expanded = attr (AttrName "aria-expanded")
 
-expanded :: forall i. String -> Prop i
-expanded = Attr Nothing (attrName "aria-expanded")
+flowTo :: forall r i. String -> IProp r i
+flowTo = attr (AttrName "aria-flowto")
 
-flowTo :: forall i. String -> Prop i
-flowTo = Attr Nothing (attrName "aria-flowto")
+grabbed :: forall r i. String -> IProp r i
+grabbed = attr (AttrName "aria-grabbed")
 
-grabbed :: forall i. String -> Prop i
-grabbed = Attr Nothing (attrName "aria-grabbed")
+hasPopup :: forall r i. String -> IProp r i
+hasPopup = attr (AttrName "aria-haspopup")
 
-hasPopup :: forall i. String -> Prop i
-hasPopup = Attr Nothing (attrName "aria-haspopup")
+hidden :: forall r i. String -> IProp r i
+hidden = attr (AttrName "aria-hidden")
 
-hidden :: forall i. String -> Prop i
-hidden = Attr Nothing (attrName "aria-hidden")
+invalid :: forall r i. String -> IProp r i
+invalid = attr (AttrName "aria-invalid")
 
-invalid :: forall i. String -> Prop i
-invalid = Attr Nothing (attrName "aria-invalid")
+label :: forall r i. String -> IProp r i
+label = attr (AttrName "aria-label")
 
-label :: forall i. String -> Prop i
-label = Attr Nothing (attrName "aria-label")
+labelledBy :: forall r i. String -> IProp r i
+labelledBy = attr (AttrName "aria-labelledby")
 
-labelledBy :: forall i. String -> Prop i
-labelledBy = Attr Nothing (attrName "aria-labelledby")
+level :: forall r i. String -> IProp r i
+level = attr (AttrName "aria-level")
 
-level :: forall i. String -> Prop i
-level = Attr Nothing (attrName "aria-level")
+live :: forall r i. String -> IProp r i
+live = attr (AttrName "aria-live")
 
-live :: forall i. String -> Prop i
-live = Attr Nothing (attrName "aria-live")
+multiLine :: forall r i. String -> IProp r i
+multiLine = attr (AttrName "aria-multiline")
 
-multiLine :: forall i. String -> Prop i
-multiLine = Attr Nothing (attrName "aria-multiline")
+multiSelectable :: forall r i. String -> IProp r i
+multiSelectable = attr (AttrName "aria-multiselectable")
 
-multiSelectable :: forall i. String -> Prop i
-multiSelectable = Attr Nothing (attrName "aria-multiselectable")
+orientation :: forall r i. String -> IProp r i
+orientation = attr (AttrName "aria-orientation")
 
-orientation :: forall i. String -> Prop i
-orientation = Attr Nothing (attrName "aria-orientation")
+owns :: forall r i. String -> IProp r i
+owns = attr (AttrName "aria-owns")
 
-owns :: forall i. String -> Prop i
-owns = Attr Nothing (attrName "aria-owns")
+posInSet :: forall r i. String -> IProp r i
+posInSet = attr (AttrName "aria-posinset")
 
-posInSet :: forall i. String -> Prop i
-posInSet = Attr Nothing (attrName "aria-posinset")
+pressed :: forall r i. String -> IProp r i
+pressed = attr (AttrName "aria-pressed")
 
-pressed :: forall i. String -> Prop i
-pressed = Attr Nothing (attrName "aria-pressed")
+readOnly :: forall r i. String -> IProp r i
+readOnly = attr (AttrName "aria-readonly")
 
-readOnly :: forall i. String -> Prop i
-readOnly = Attr Nothing (attrName "aria-readonly")
+relevant :: forall r i. String -> IProp r i
+relevant = attr (AttrName "aria-relevant")
 
-relevant :: forall i. String -> Prop i
-relevant = Attr Nothing (attrName "aria-relevant")
+required :: forall r i. String -> IProp r i
+required = attr (AttrName "aria-required")
 
-required :: forall i. String -> Prop i
-required = Attr Nothing (attrName "aria-required")
+selected :: forall r i. String -> IProp r i
+selected = attr (AttrName "aria-selected")
 
-selected :: forall i. String -> Prop i
-selected = Attr Nothing (attrName "aria-selected")
+setSize :: forall r i. String -> IProp r i
+setSize = attr (AttrName "aria-setsize")
 
-setSize :: forall i. String -> Prop i
-setSize = Attr Nothing (attrName "aria-setsize")
+sort :: forall r i. String -> IProp r i
+sort = attr (AttrName "aria-sort")
 
-sort :: forall i. String -> Prop i
-sort = Attr Nothing (attrName "aria-sort")
+valueMax :: forall r i. String -> IProp r i
+valueMax = attr (AttrName "aria-valuemax")
 
-valueMax :: forall i. String -> Prop i
-valueMax = Attr Nothing (attrName "aria-valuemax")
+valueMin :: forall r i. String -> IProp r i
+valueMin = attr (AttrName "aria-valuemin")
 
-valueMin :: forall i. String -> Prop i
-valueMin = Attr Nothing (attrName "aria-valuemin")
+valueNow :: forall r i. String -> IProp r i
+valueNow = attr (AttrName "aria-valuenow")
 
-valueNow :: forall i. String -> Prop i
-valueNow = Attr Nothing (attrName "aria-valuenow")
+valueText :: forall r i. String -> IProp r i
+valueText = attr (AttrName "aria-valuetext")
 
-valueText :: forall i. String -> Prop i
-valueText = Attr Nothing (attrName "aria-valuetext")
-
-role :: forall i. String -> Prop i
-role = Attr Nothing (attrName "role")
-
+role :: forall r i. String -> IProp r i
+role = attr (AttrName "role")

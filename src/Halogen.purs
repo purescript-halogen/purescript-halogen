@@ -5,19 +5,22 @@
 module Halogen
   ( HTML
   , Prop
+  , module Data.Lazy
   , module Halogen.Component
-  , module Halogen.Driver
   , module Halogen.Effects
+  , module Halogen.HTML.Core
   , module Halogen.Query
   ) where
 
 import Prelude
 
-import Halogen.Component (Component, ComponentDSL, ComponentHTML, ComponentSpec, LifecycleComponentSpec, LifecycleParentComponentSpec, ParentComponentSpec, ParentDSL, ParentHTML, ParentQuery, ParentState, QueryF, ChildF(..), SlotConstructor(..), childSlots, component, finalizeComponent, initializeComponent, interpret, lifecycleComponent, lifecycleParentComponent, liftQuery, mkQueries, mkQueries', mkQuery, mkQuery', parentComponent, parentState, query, query', queryAll, queryAll', queryComponent, renderComponent, runChildF, transform, transformChild)
-import Halogen.Driver (Driver, runUI)
+import Data.Lazy (defer)
+
+import Halogen.Component (Component, Component', ComponentDSL, ComponentHTML, ComponentSlot, ComponentSpec, LifecycleComponentSpec, ParentComponentSpec, ParentDSL, ParentHTML, ParentLifecycleComponentSpec, component, interpret, lifecycleComponent, lifecycleParentComponent, mkComponent, mkComponentSlot, parentComponent, transform, transformChild, unComponent, unComponentSlot)
 import Halogen.Effects (HalogenEffects)
-import Halogen.Query (Action, EventSource, HalogenF, ParentEventSource, Request, HalogenFP(..), StateF(..), action, eventSource, eventSource_, fromAff, fromEff, get, gets, liftH, modify, request, set, subscribe, subscribe', toParentEventSource)
+import Halogen.HTML.Core (AttrName(..), ClassName(..), EventName(..), Namespace(..), PropName(..), TagName(..))
 import Halogen.HTML.Core as C
+import Halogen.Query (Action, EventSource, Request, HalogenF(..), HalogenM(..), action, checkSlot, eventSource, eventSource_, get, getSlots, gets, lift, liftAff, liftEff, mkQuery, modify, put, query, query', queryAll, queryAll', raise, request, subscribe)
 
 -- | A specialised version of the `Halogen.HTML.Core.HTML` type where `i` is
 -- | `* -> *` kinded to match the kind of a component query algebra.

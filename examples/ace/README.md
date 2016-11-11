@@ -1,6 +1,6 @@
 ## Ace editor example
 
-This example illustrates a basic 3rd party component integration and use of the `peek` function to observe changes within the Ace editor.
+This example illustrates a basic 3rd party component integration and use of a component output message to observe changes within the Ace editor.
 
 ### Building
 

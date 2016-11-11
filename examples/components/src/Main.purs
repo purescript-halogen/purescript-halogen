@@ -4,15 +4,16 @@ import Prelude
 
 import Control.Monad.Eff (Eff)
 
-import Data.Functor.Coproduct (Coproduct)
 import Data.Maybe (Maybe(..), maybe)
+import Data.Lazy (defer)
 
 import Halogen as H
-import Halogen.HTML.Events.Indexed as HE
-import Halogen.HTML.Indexed as HH
+import Halogen.HTML as HH
+import Halogen.HTML.Events as HE
 import Halogen.Util (runHalogenAff, awaitBody)
+import Halogen.VirtualDOM.Driver (runUI)
 
-import Ticker (TickState, TickQuery(..), ticker)
+import Ticker (TickQuery(..), ticker)
 
 data Query a = ReadTicks a
 
@@ -22,26 +23,23 @@ initialState :: State
 initialState = { tickA: Nothing, tickB: Nothing }
 
 newtype TickSlot = TickSlot String
-
 derive instance eqTickSlot :: Eq TickSlot
 derive instance ordTickSlot :: Ord TickSlot
 
-type State' g = H.ParentState State TickState Query TickQuery g TickSlot
-type Query' = Coproduct Query (H.ChildF TickSlot TickQuery)
-
-ui :: forall g. Functor g => H.Component (State' g) Query' g
-ui = H.parentComponent { render, eval, peek: Nothing }
+ui :: forall m. Applicative m => H.Component HH.HTML Query Void m
+ui = H.parentComponent { render, eval, initialState }
   where
-
-  render :: State -> H.ParentHTML TickState Query TickQuery g TickSlot
-  render st =
+  render :: State -> H.ParentHTML Query TickQuery TickSlot m
+  render { tickA, tickB } =
     HH.div_
-      [ HH.slot (TickSlot "A") \_ -> { component: ticker, initialState: 100 }
-      , HH.slot (TickSlot "B") \_ -> { component: ticker, initialState: 0 }
+      [ HH.slot (TickSlot "A") (defer \_ -> ticker 100) absurd
+      , HH.slot (TickSlot "B") (defer \_ -> ticker 0) absurd
       , HH.p_
           [ HH.p_
-              [ HH.text $ "Last tick readings - A: " <> (maybe "No reading" show st.tickA)
-                                         <> ", B: " <> (maybe "No reading" show st.tickB)
+              [ HH.text
+                  $ "Last tick readings - "
+                  <> "A: " <> (maybe "No reading" show tickA) <> ", "
+                  <> "B: " <> (maybe "No reading" show tickB)
               ]
           , HH.button
               [ HE.onClick (HE.input_ ReadTicks) ]
@@ -49,14 +47,14 @@ ui = H.parentComponent { render, eval, peek: Nothing }
           ]
       ]
 
-  eval :: Query ~> H.ParentDSL State TickState Query TickQuery g TickSlot
+  eval :: Query ~> H.ParentDSL State Query TickQuery TickSlot Void m
   eval (ReadTicks next) = do
     a <- H.query (TickSlot "A") (H.request GetTick)
     b <- H.query (TickSlot "B") (H.request GetTick)
-    H.modify (\_ -> { tickA: a, tickB: b })
+    H.put { tickA: a, tickB: b }
     pure next
 
 main :: Eff (H.HalogenEffects ()) Unit
 main = runHalogenAff do
   body <- awaitBody
-  H.runUI ui (H.parentState initialState) body
+  runUI ui body

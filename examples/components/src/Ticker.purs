@@ -3,9 +3,9 @@ module Ticker where
 import Prelude
 
 import Halogen as H
-import Halogen.HTML.Indexed as HH
-import Halogen.HTML.Properties.Indexed as HP
-import Halogen.HTML.Events.Indexed as HE
+import Halogen.HTML as HH
+import Halogen.HTML.Events as HE
+import Halogen.HTML.Properties as HP
 
 type TickState = Int
 
@@ -13,13 +13,13 @@ data TickQuery a
   = Tick a
   | GetTick (Int -> a)
 
-ticker :: forall g. H.Component TickState TickQuery g
-ticker = H.component { render, eval }
+ticker :: forall m. Int -> H.Component HH.HTML TickQuery Void m
+ticker n = H.component { render, eval, initialState: n }
   where
-
   render :: TickState -> H.ComponentHTML TickQuery
   render state =
-    HH.div_
+    HH.div
+      [ HP.class_ (HH.ClassName "ticker") ]
       [ HH.h1
           [ HP.id_ "header" ]
           [ HH.text "counter" ]
@@ -30,7 +30,7 @@ ticker = H.component { render, eval }
           [ HH.text "Tick" ]
       ]
 
-  eval :: TickQuery ~> H.ComponentDSL TickState TickQuery g
+  eval :: TickQuery ~> H.ComponentDSL TickState TickQuery Void m
   eval (Tick next) = do
     H.modify (_ + 1)
     pure next

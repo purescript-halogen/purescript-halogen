@@ -6,9 +6,10 @@ import Control.Monad.Aff (Aff, later')
 import Control.Monad.Eff (Eff)
 
 import Halogen as H
-import Halogen.HTML.Indexed as HH
-import Halogen.HTML.Properties.Indexed as HP
+import Halogen.HTML as HH
+import Halogen.HTML.Properties as HP
 import Halogen.Util (runHalogenAff, awaitBody)
+import Halogen.VirtualDOM.Driver (runUI)
 
 type State = Int
 
@@ -17,8 +18,8 @@ initialState = 0
 
 data Query a = Tick a
 
-ui :: forall g. H.Component State Query g
-ui = H.component { render, eval }
+ui :: forall m. H.Component HH.HTML Query Void m
+ui = H.component { render, eval, initialState }
   where
 
   render :: State -> H.ComponentHTML Query
@@ -31,7 +32,7 @@ ui = H.component { render, eval }
           [ HH.text (show n) ]
       ]
 
-  eval :: Query ~> H.ComponentDSL State Query g
+  eval :: Query ~> H.ComponentDSL State Query Void m
   eval (Tick next) = do
     H.modify (_ + 1)
     pure next
@@ -40,7 +41,7 @@ ui = H.component { render, eval }
 main :: Eff (H.HalogenEffects ()) Unit
 main = runHalogenAff do
   body <- awaitBody
-  driver <- H.runUI ui initialState body
+  driver <- runUI ui body
   setInterval 1000 $ driver (H.action Tick)
 
 setInterval :: forall e a. Int -> Aff e a -> Aff e Unit

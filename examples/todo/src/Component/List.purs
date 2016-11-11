@@ -3,36 +3,35 @@ module Component.List where
 import Prelude
 
 import Data.Array (snoc, filter, length)
-import Data.Functor.Coproduct (Coproduct)
+
+import Data.Lazy (defer)
 import Data.Map as M
 import Data.Maybe (Maybe(..), fromMaybe)
 
 import Halogen as H
-import Halogen.HTML.Events.Indexed as HE
-import Halogen.HTML.Indexed as HH
+import Halogen.HTML as HH
+import Halogen.HTML.Events as HE
 
-import Model (List, Task, TaskId, initialTask)
-import Component.Task (TaskQuery(..), task)
+import Model (List, TaskId, initialList, initialTask)
+import Component.Task (TaskQuery(..), TaskMessage(..), task)
 
 -- | The list component query algebra.
 data ListQuery a
   = NewTask a
   | AllDone a
+  | HandleTaskMessage TaskId TaskMessage a
 
 -- | The slot value that is filled by tasks during the install process.
 newtype TaskSlot = TaskSlot TaskId
 derive instance eqTaskSlot :: Eq TaskSlot
 derive instance ordTaskSlot :: Ord TaskSlot
 
-type State g = H.ParentState List Task ListQuery TaskQuery g TaskSlot
-type Query = Coproduct ListQuery (H.ChildF TaskSlot TaskQuery)
-
 -- | The list component definition.
-list :: forall g. Functor g => H.Component (State g) Query g
-list = H.parentComponent { render, eval, peek: Just peek }
+list :: forall m. Applicative m => H.Component HH.HTML ListQuery Void m
+list = H.parentComponent { render, eval, initialState: initialList }
   where
 
-  render :: List -> H.ParentHTML Task ListQuery TaskQuery g TaskSlot
+  render :: List -> H.ParentHTML ListQuery TaskQuery TaskSlot m
   render st =
     HH.div_
       [ HH.h1_ [ HH.text "Todo list" ]
@@ -48,10 +47,14 @@ list = H.parentComponent { render, eval, peek: Just peek }
           [ HH.text "All Done" ]
       ]
 
-  renderTask :: TaskId -> H.ParentHTML Task ListQuery TaskQuery g TaskSlot
-  renderTask taskId = HH.slot (TaskSlot taskId) \_ -> { component: task, initialState: initialTask }
+  renderTask :: TaskId -> H.ParentHTML ListQuery TaskQuery TaskSlot m
+  renderTask taskId =
+    HH.slot
+      (TaskSlot taskId)
+      (defer \_ -> task initialTask)
+      (Just <<< flip (HandleTaskMessage taskId) unit)
 
-  eval :: ListQuery ~> H.ParentDSL List Task ListQuery TaskQuery g TaskSlot
+  eval :: ListQuery ~> H.ParentDSL List ListQuery TaskQuery TaskSlot Void m
   eval (NewTask next) = do
     H.modify addTask
     pure next
@@ -59,24 +62,23 @@ list = H.parentComponent { render, eval, peek: Just peek }
     toggled <- H.queryAll (H.action (ToggleCompleted true))
     H.modify $ updateNumCompleted (const (M.size toggled))
     pure next
-
-  peek :: forall a. H.ChildF TaskSlot TaskQuery a -> H.ParentDSL List Task ListQuery TaskQuery g TaskSlot Unit
-  peek (H.ChildF p q) = case q of
-    Remove _ -> do
-      wasComplete <- H.query p (H.request IsCompleted)
-      when (fromMaybe false wasComplete) $ H.modify $ updateNumCompleted (_ `sub` 1)
-      H.modify (removeTask p)
-    ToggleCompleted b _ ->
-      H.modify $ updateNumCompleted (if b then (_ + 1) else (_ `sub` 1))
-    _ -> pure unit
+  eval (HandleTaskMessage p msg next) = do
+    case msg of
+      NotifyRemove -> do
+        wasComplete <- H.query (TaskSlot p) (H.request IsCompleted)
+        when (fromMaybe false wasComplete) $ H.modify $ updateNumCompleted (_ `sub` 1)
+        H.modify (removeTask p)
+      Toggled b ->
+        H.modify $ updateNumCompleted (if b then (_ + 1) else (_ `sub` 1))
+    pure next
 
 -- | Adds a task to the current state.
 addTask :: List -> List
 addTask st = st { nextId = st.nextId + 1, tasks = st.tasks `snoc` st.nextId }
 
 -- | Removes a task from the current state.
-removeTask :: TaskSlot -> List -> List
-removeTask (TaskSlot id) st = st { tasks = filter (_ /= id) st.tasks }
+removeTask :: TaskId -> List -> List
+removeTask taskId st = st { tasks = filter (_ /= taskId) st.tasks }
 
 -- | Updates the number of completed tasks.
 updateNumCompleted :: (Int -> Int) -> List -> List

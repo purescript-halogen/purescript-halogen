@@ -1,6 +1,9 @@
 --| The core types and smart constructors for the HTML DSL.
 module Halogen.HTML.Core
-  ( HTML(..)
+  ( Fuse
+  , lowerFuse
+
+  , HTML(..)
   , element
   , fillSlot
 
@@ -8,42 +11,28 @@ module Halogen.HTML.Core
   , PropF(..)
   , HandlerF(..)
   , prop
+  , attr
   , handler
 
   , class IsProp
   , toPropString
 
-  , Namespace
-  , namespace
-  , runNamespace
-
-  , TagName
-  , tagName
-  , runTagName
-
-  , PropName
-  , propName
-  , runPropName
-
-  , AttrName
-  , attrName
-  , runAttrName
-
-  , EventName
-  , eventName
-  , runEventName
-
-  , ClassName
-  , className
-  , runClassName
+  , Namespace(..)
+  , TagName(..)
+  , PropName(..)
+  , AttrName(..)
+  , EventName(..)
+  , ClassName(..)
   ) where
 
 import Prelude
 
-import Data.Bifunctor (class Bifunctor, rmap)
+import Data.Bifunctor (class Bifunctor, bimap, rmap)
 import Data.Exists (Exists, mkExists)
 import Data.ExistsR (ExistsR, mkExistsR, runExistsR)
+import Data.Generic (class Generic)
 import Data.Maybe (Maybe(..))
+import Data.Newtype (class Newtype)
 import Data.Traversable (traverse)
 import Data.Tuple (Tuple(..))
 
@@ -52,18 +41,19 @@ import DOM.HTML.Types (HTMLElement)
 import Halogen.HTML.Events.Handler (EventHandler)
 import Halogen.HTML.Events.Types (Event)
 
+import Unsafe.Coerce (unsafeCoerce)
+
 -- | An initial encoding of HTML nodes.
 data HTML p i
   = Text String
   | Element (Maybe Namespace) TagName (Array (Prop i)) (Array (HTML p i))
   | Slot p
+  | Fuse (Fuse p i)
 
 instance bifunctorHTML :: Bifunctor HTML where
-  bimap f g = go
-    where
-    go (Text s) = Text s
-    go (Element ns name props els) = Element ns name (map g <$> props) (go <$> els)
-    go (Slot p) = Slot (f p)
+  bimap f g = case _ of
+    Fuse bc -> Fuse (bimap f g bc)
+    x -> Fuse (fuse f g x)
 
 instance functorHTML :: Functor (HTML p) where
   map = rmap
@@ -77,6 +67,7 @@ fillSlot :: forall p p' i i' m. Applicative m => (p -> m (HTML p' i')) -> (i -> 
 fillSlot _ _ (Text s) = pure $ Text s
 fillSlot f g (Element ns name props els) = Element ns name (map g <$> props) <$> traverse (fillSlot f g) els
 fillSlot f _ (Slot p) = f p
+fillSlot f g (Fuse h) = fillSlot f g (lowerFuse h)
 
 -- | A property can be:
 -- | - A JavaScript property for an element (typed, and may not have a
@@ -109,13 +100,51 @@ data PropF value = PropF (PropName value) value (Maybe (Tuple AttrName (AttrName
 -- | existential package in the `Prop` type.
 data HandlerF i fields = HandlerF (EventName fields) (Event fields -> EventHandler (Maybe i))
 
--- | Create an attribute
+-- | Create a HTML property.
 prop :: forall value i. IsProp value => PropName value -> Maybe AttrName -> value -> Prop i
-prop name attr v = Prop (mkExists (PropF name v (flip Tuple toPropString <$> attr)))
+prop pn an v = Prop (mkExists (PropF pn v (flip Tuple toPropString <$> an)))
 
--- | Create an event handler
+-- | Create a HTML attribute.
+attr :: forall i. AttrName -> String -> Prop i
+attr = Attr Nothing
+
+-- | Create an event handler.
 handler :: forall fields i. EventName fields -> (Event fields -> EventHandler (Maybe i)) -> Prop i
 handler name k = Handler (mkExistsR (HandlerF name k))
+
+data FuseF p i x y = FuseF (x -> p) (y -> i) (HTML x y)
+
+data Fuse p i
+
+instance bifunctorFuse :: Bifunctor Fuse where
+  bimap f g = unFuse \(FuseF k l html) ->
+    mkFuse $ FuseF (f <<< k) (g <<< l) html
+
+instance functorFuse :: Functor (Fuse p) where
+  map = rmap
+
+mkFuse :: forall p i x y. FuseF p i x y -> Fuse p i
+mkFuse = unsafeCoerce
+
+unFuse :: forall p i r. (forall x y. FuseF p i x y -> r) -> Fuse p i -> r
+unFuse = unsafeCoerce
+
+fuse :: forall p i x y. (x -> p) -> (y -> i) -> HTML x y -> Fuse p i
+fuse k l html = mkFuse $ FuseF k l html
+
+lowerFuse :: forall p i. Fuse p i -> HTML p i
+lowerFuse = unFuse \(FuseF k l html) -> go k l html
+  where
+  go :: forall x y. (x -> p) -> (y -> i) -> HTML x y -> HTML p i
+  go f g = case _ of
+    Text s ->
+      Text s
+    Element ns name props els ->
+      Element ns name (map g <$> props) (go f g <$> els)
+    Slot p ->
+      Slot (f p)
+    Fuse h ->
+      lowerFuse (bimap f g h)
 
 -- | This type class captures those property types which can be used as
 -- | attribute values.
@@ -135,30 +164,24 @@ instance numberIsProp :: IsProp Number where
   toPropString _ _ n = show n
 
 instance booleanIsProp :: IsProp Boolean where
-  toPropString name _ true = runAttrName name
+  toPropString (AttrName name) _ true = name
   toPropString _ _ false = ""
 
 -- | A type-safe wrapper for a attribute or tag namespace.
 newtype Namespace = Namespace String
 
--- | Create a namespace
-namespace :: String -> Namespace
-namespace = Namespace
-
--- | Unwrap a `Namespace` to get the value as a `String`.
-runNamespace :: Namespace -> String
-runNamespace (Namespace ns) = ns
+derive instance newtypeNamespace :: Newtype Namespace _
+derive newtype instance eqNamespace :: Eq Namespace
+derive newtype instance ordNamespace :: Ord Namespace
+derive instance genericNamespace :: Generic Namespace
 
 -- | A type-safe wrapper for a HTML tag name
 newtype TagName = TagName String
 
--- | Create a tag name
-tagName :: String -> TagName
-tagName = TagName
-
--- | Unwrap a `TagName` to get the tag name as a `String`.
-runTagName :: TagName -> String
-runTagName (TagName s) = s
+derive instance newtypeTagName :: Newtype TagName _
+derive newtype instance eqTagName :: Eq TagName
+derive newtype instance ordTagName :: Ord TagName
+derive instance genericTagName :: Generic TagName
 
 -- | A type-safe wrapper for property names.
 -- |
@@ -166,22 +189,18 @@ runTagName (TagName s) = s
 -- | requires.
 newtype PropName value = PropName String
 
--- | Create an attribute name
-propName :: forall value. String -> PropName value
-propName = PropName
-
--- | Unpack an attribute name
-runPropName :: forall value. PropName value -> String
-runPropName (PropName s) = s
+derive instance newtypePropName :: Newtype (PropName value) _
+derive newtype instance eqPropName :: Eq (PropName value)
+derive newtype instance ordPropName :: Ord (PropName value)
+derive instance genericPropName :: Generic (PropName value)
 
 -- | A type-safe wrapper for attribute names.
 newtype AttrName = AttrName String
 
-attrName :: String -> AttrName
-attrName = AttrName
-
-runAttrName :: AttrName -> String
-runAttrName (AttrName ns) = ns
+derive instance newtypeAttrName :: Newtype AttrName _
+derive newtype instance eqAttrName :: Eq AttrName
+derive newtype instance ordAttrName :: Ord AttrName
+derive instance genericAttrName :: Generic AttrName
 
 -- | A type-safe wrapper for event names.
 -- |
@@ -189,21 +208,15 @@ runAttrName (AttrName ns) = ns
 -- | exist on events corresponding to this name.
 newtype EventName (fields :: # *) = EventName String
 
--- Create an event name
-eventName :: forall fields. String -> EventName fields
-eventName = EventName
-
--- | Unpack an event name
-runEventName :: forall fields. EventName fields -> String
-runEventName (EventName s) = s
+derive instance newtypeEventName :: Newtype (EventName fields) _
+derive newtype instance eqEventName :: Eq (EventName fields)
+derive newtype instance ordEventName :: Ord (EventName fields)
+derive instance genericEventName :: Generic (EventName fields)
 
 -- | A wrapper for strings which are used as CSS classes.
 newtype ClassName = ClassName String
 
--- Create a class name
-className :: String -> ClassName
-className = ClassName
-
--- | Unpack a class name
-runClassName :: ClassName -> String
-runClassName (ClassName s) = s
+derive instance newtypeClassName :: Newtype ClassName _
+derive newtype instance eqClassName :: Eq ClassName
+derive newtype instance ordClassName :: Ord ClassName
+derive instance genericClassName :: Generic ClassName

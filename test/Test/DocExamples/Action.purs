@@ -1,7 +1,8 @@
 module Test.DocExamples.Action where
 
 import Prelude
-import Halogen (HalogenEffects, Driver, action)
+import Halogen (HalogenEffects, action)
+import Halogen.VirtualDOM.Driver (Driver)
 import Control.Monad.Aff (Aff)
 
 data Query a = Tick a

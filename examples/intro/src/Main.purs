@@ -5,9 +5,10 @@ import Prelude
 import Control.Monad.Eff (Eff)
 
 import Halogen as H
-import Halogen.HTML.Events.Indexed as HE
-import Halogen.HTML.Indexed as HH
+import Halogen.HTML as HH
+import Halogen.HTML.Events as HE
 import Halogen.Util (runHalogenAff, awaitBody)
+import Halogen.VirtualDOM.Driver (runUI)
 
 type State = { on :: Boolean }
 
@@ -16,8 +17,8 @@ initialState = { on: false }
 
 data Query a = ToggleState a
 
-ui :: forall g. H.Component State Query g
-ui = H.component { render, eval }
+ui :: forall m. H.Component HH.HTML Query Void m
+ui = H.component { initialState, render, eval }
   where
 
   render :: State -> H.ComponentHTML Query
@@ -30,7 +31,7 @@ ui = H.component { render, eval }
           [ HH.text (if state.on then "On" else "Off") ]
       ]
 
-  eval :: Query ~> H.ComponentDSL State Query g
+  eval :: Query ~> H.ComponentDSL State Query Void m
   eval (ToggleState next) = do
     H.modify (\state -> { on: not state.on })
     pure next
@@ -38,4 +39,4 @@ ui = H.component { render, eval }
 main :: Eff (H.HalogenEffects ()) Unit
 main = runHalogenAff do
   body <- awaitBody
-  H.runUI ui initialState body
+  runUI ui body
