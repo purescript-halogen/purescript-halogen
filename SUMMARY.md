@@ -1,4 +1,5 @@
 # Summary
 
-* [Guide](docs/guide.md)
+* Guide
+  * [Components](docs/guide/components.md)
 
