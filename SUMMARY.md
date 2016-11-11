@@ -1,4 +1,4 @@
 # Summary
 
-* Guide
+* [Guide](docs/guide.md)
 
