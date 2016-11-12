@@ -9,7 +9,6 @@ module Halogen.HTML.Properties
 
   , ButtonType(..)
   , InputType(..)
-  , MediaType(..)
   , MenuType(..)
   , MenuitemType(..)
   , OrderedListType(..)
@@ -35,6 +34,12 @@ module Halogen.HTML.Properties
   , src
   , target
   , title
+
+  , FormMethod(..)
+  , method
+  , action
+  , enctype
+  , novalidate
 
   , buttonType
   , inputType
@@ -76,12 +81,10 @@ module Halogen.HTML.Properties
 
 import Prelude
 
-import Data.Array as A
-import Data.Foldable (intercalate)
 import Data.Maybe (Maybe(..))
+import Data.MediaType (MediaType)
 import Data.Newtype (class Newtype, unwrap)
 import Data.String (joinWith)
-import Data.Tuple (Tuple(..))
 
 import DOM.HTML.Types (HTMLElement)
 
@@ -156,8 +159,9 @@ data LengthLiteral
   | Percent Number
 
 printLengthLiteral :: LengthLiteral -> String
-printLengthLiteral (Pixels n) = show n
-printLengthLiteral (Percent n) = show n <> "%"
+printLengthLiteral = case _ of
+  Pixels n -> show n
+  Percent n -> show n <> "%"
 
 height :: forall r i. LengthLiteral -> IProp (height :: I | r) i
 height = prop (PropName "height") (Just $ AttrName "height") <<< printLengthLiteral
@@ -186,6 +190,27 @@ target = prop (PropName "target") (Just $ AttrName "target")
 title :: forall r i. String -> IProp (title :: I | r) i
 title = prop (PropName "title") (Just $ AttrName "title")
 
+data FormMethod
+  = POST
+  | GET
+
+renderFormMethod :: FormMethod -> String
+renderFormMethod = case _ of
+  POST -> "post"
+  GET -> "get"
+
+method :: forall r i. FormMethod -> IProp (method :: I | r) i
+method = prop (PropName "method") (Just $ AttrName "method") <<< renderFormMethod
+
+action :: forall r i. String -> IProp (action :: I | r) i
+action = prop (PropName "action") (Just $ AttrName "action")
+
+enctype :: forall r i. MediaType -> IProp (action :: I | r) i
+enctype = prop (PropName "enctype") (Just $ AttrName "enctype") <<< unwrap
+
+novalidate :: forall r i. Boolean -> IProp (action :: I | r) i
+novalidate = prop (PropName "noValidate") (Just $ AttrName "novalidate")
+
 data InputType
   = InputButton
   | InputCheckbox
@@ -212,31 +237,30 @@ data InputType
   | InputWeek
 
 renderInputType :: InputType -> String
-renderInputType ty =
-  case ty of
-    InputButton -> "button"
-    InputCheckbox -> "checkbox"
-    InputColor -> "color"
-    InputDate -> "date"
-    InputDatetime -> "datetime"
-    InputDatetimeLocal -> "datetime-local"
-    InputEmail -> "email"
-    InputFile -> "file"
-    InputHidden -> "hidden"
-    InputImage -> "image"
-    InputMonth -> "month"
-    InputNumber -> "number"
-    InputPassword -> "password"
-    InputRadio -> "radio"
-    InputRange -> "range"
-    InputReset -> "reset"
-    InputSearch -> "search"
-    InputSubmit -> "submit"
-    InputTel -> "tel"
-    InputText -> "text"
-    InputTime -> "time"
-    InputUrl -> "url"
-    InputWeek -> "week"
+renderInputType = case _ of
+  InputButton -> "button"
+  InputCheckbox -> "checkbox"
+  InputColor -> "color"
+  InputDate -> "date"
+  InputDatetime -> "datetime"
+  InputDatetimeLocal -> "datetime-local"
+  InputEmail -> "email"
+  InputFile -> "file"
+  InputHidden -> "hidden"
+  InputImage -> "image"
+  InputMonth -> "month"
+  InputNumber -> "number"
+  InputPassword -> "password"
+  InputRadio -> "radio"
+  InputRange -> "range"
+  InputReset -> "reset"
+  InputSearch -> "search"
+  InputSubmit -> "submit"
+  InputTel -> "tel"
+  InputText -> "text"
+  InputTime -> "time"
+  InputUrl -> "url"
+  InputWeek -> "week"
 
 _type :: forall i r value. IsProp value => value -> IProp (r :: # *) i
 _type = prop (PropName "type") (Just $ AttrName "type")
@@ -250,11 +274,10 @@ data MenuType
   | MenuToolbar
 
 renderMenuType :: MenuType -> String
-renderMenuType ty =
-  case ty of
-    MenuList -> "list"
-    MenuContext -> "context"
-    MenuToolbar -> "toolbar"
+renderMenuType = case _ of
+  MenuList -> "list"
+  MenuContext -> "context"
+  MenuToolbar -> "toolbar"
 
 menuType :: forall r i. MenuType -> IProp (menuType :: I | r) i
 menuType = _type <<< renderMenuType
@@ -265,34 +288,16 @@ data MenuitemType
   | MenuitemRadio
 
 renderMenuitemType :: MenuitemType -> String
-renderMenuitemType ty =
-  case ty of
-    MenuitemCommand -> "command"
-    MenuitemCheckbox -> "checkbox"
-    MenuitemRadio -> "radio"
+renderMenuitemType = case _ of
+  MenuitemCommand -> "command"
+  MenuitemCheckbox -> "checkbox"
+  MenuitemRadio -> "radio"
 
 menuitemType :: forall r i. MenuitemType -> IProp (menuitemType :: I | r) i
 menuitemType= _type <<< renderMenuitemType
 
-type MediaType =
-  { type :: String
-  , subtype :: String
-  , parameters :: Array (Tuple String String)
-  }
-
-renderMediaType :: MediaType -> String
-renderMediaType ty = ty.type <> "/" <> ty.subtype <> renderParameters ty.parameters
-  where
-    renderParameters :: Array (Tuple String String) -> String
-    renderParameters ps
-      | A.length ps == 0 = ""
-      | otherwise = ";" <> intercalate ";" (renderParameter <$> ps)
-
-    renderParameter :: Tuple String String -> String
-    renderParameter (Tuple k v) = k <> "=" <> v
-
 mediaType :: forall r i. MediaType -> IProp (mediaType :: I | r) i
-mediaType = _type <<< renderMediaType
+mediaType = _type <<< unwrap
 
 data ButtonType
   = ButtonButton
@@ -300,11 +305,10 @@ data ButtonType
   | ButtonReset
 
 renderButtonType :: ButtonType -> String
-renderButtonType ty =
-  case ty of
-    ButtonButton -> "button"
-    ButtonSubmit -> "submit"
-    ButtonReset -> "reset"
+renderButtonType = case _ of
+  ButtonButton -> "button"
+  ButtonSubmit -> "submit"
+  ButtonReset -> "reset"
 
 buttonType :: forall r i. ButtonType -> IProp (buttonType :: I | r) i
 buttonType = _type <<< renderButtonType
@@ -322,19 +326,12 @@ data OrderedListType
   | OrderedListAlphabetic CaseType
 
 renderOrderedListType :: OrderedListType -> String
-renderOrderedListType ty =
-  case ty of
-    OrderedListNumeric nty ->
-      case nty of
-        NumeralDecimal -> "1"
-        NumeralRoman cty ->
-          case cty of
-            Lowercase -> "i"
-            Uppercase -> "I"
-    OrderedListAlphabetic cty ->
-      case cty of
-        Lowercase -> "a"
-        Uppercase -> "A"
+renderOrderedListType = case _ of
+  OrderedListNumeric NumeralDecimal -> "1"
+  OrderedListNumeric (NumeralRoman Lowercase) -> "i"
+  OrderedListNumeric (NumeralRoman Uppercase) -> "I"
+  OrderedListAlphabetic Lowercase -> "a"
+  OrderedListAlphabetic Uppercase -> "A"
 
 olType :: forall r i. OrderedListType -> IProp (olType :: I | r) i
 olType = _type <<< renderOrderedListType
