@@ -33,6 +33,7 @@
     "purescript-free": "^3.0.0",
     "purescript-freeap": "^2.0.0",
     "purescript-maps": "^2.0.0",
+    "purescript-media-types": "^2.0.0",
     "purescript-nullable": "^2.0.0",
     "purescript-parallel": "^2.1.0",
     "purescript-profunctor": "^2.0.0",
