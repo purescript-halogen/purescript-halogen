@@ -3,24 +3,24 @@ module Halogen.Component
   , Component'
   , mkComponent
   , unComponent
-  , ComponentDSL
-  , ParentDSL
-  , ComponentHTML
-  , ParentHTML
-  , ComponentSlot
-  , mkComponentSlot
-  , unComponentSlot
   , ComponentSpec
+  , ComponentHTML
+  , ComponentDSL
   , component
   , LifecycleComponentSpec
   , lifecycleComponent
   , ParentComponentSpec
   , parentComponent
+  , ParentHTML
+  , ParentDSL
   , ParentLifecycleComponentSpec
   , lifecycleParentComponent
   , transform
   , transformChild
   , interpret
+  , ComponentSlot
+  , mkComponentSlot
+  , unComponentSlot
   ) where
 
 import Prelude
