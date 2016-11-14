@@ -16,7 +16,6 @@ import Data.Traversable (traverse)
 
 import Halogen.Effects (HalogenEffects)
 import Halogen.HTML.Core (HTML(..), Prop(..), PropF(..), HandlerF(..), lowerFuse)
-import Halogen.HTML.Events.Handler (unEventHandler)
 import Halogen.VirtualDOM.Internal as V
 
 -- | Render a `HTML` document to a virtual DOM node
@@ -73,8 +72,7 @@ renderHandlerProp
   -> HandlerF i a
   -> V.Props
 renderHandlerProp driver (HandlerF name k) =
-  runFn2 V.handlerProp (unwrap name)
-    \ev -> unEventHandler ev (k ev) >>= maybe (pure unit) driver
+  runFn2 V.handlerProp (unwrap name) (maybe (pure unit) driver <<< k)
 
 findKey :: forall i. Maybe String -> Prop i -> Maybe String
 findKey _ (Key k) = Just k

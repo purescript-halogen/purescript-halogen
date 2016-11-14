@@ -38,7 +38,6 @@ import Data.Tuple (Tuple(..))
 
 import DOM.HTML.Types (HTMLElement)
 
-import Halogen.HTML.Events.Handler (EventHandler)
 import Halogen.HTML.Events.Types (Event)
 
 import Unsafe.Coerce (unsafeCoerce)
@@ -89,7 +88,7 @@ instance functorProp :: Functor Prop where
   map _ (Prop e) = Prop e
   map _ (Key k) = Key k
   map _ (Attr ns k v) = Attr ns k v
-  map f (Handler e) = runExistsR (\(HandlerF name k) -> Handler (mkExistsR (HandlerF name (map (map f) <<< k)))) e
+  map f (Handler e) = runExistsR (\(HandlerF name k) -> Handler (mkExistsR (HandlerF name (map f <<< k)))) e
   map f (Ref g) = Ref (f <<< g)
 
 -- | The data which represents a typed property, hidden inside an existential
@@ -98,7 +97,7 @@ data PropF value = PropF (PropName value) value (Maybe (Tuple AttrName (AttrName
 
 -- | The data which represents a typed event handler, hidden inside an
 -- | existential package in the `Prop` type.
-data HandlerF i fields = HandlerF (EventName fields) (Event fields -> EventHandler (Maybe i))
+data HandlerF i fields = HandlerF (EventName fields) (Event fields -> Maybe i)
 
 -- | Create a HTML property.
 prop :: forall value i. IsProp value => PropName value -> Maybe AttrName -> value -> Prop i
@@ -109,7 +108,7 @@ attr :: forall i. AttrName -> String -> Prop i
 attr = Attr Nothing
 
 -- | Create an event handler.
-handler :: forall fields i. EventName fields -> (Event fields -> EventHandler (Maybe i)) -> Prop i
+handler :: forall fields i. EventName fields -> (Event fields -> Maybe i) -> Prop i
 handler name k = Handler (mkExistsR (HandlerF name k))
 
 data FuseF p i x y = FuseF (x -> p) (y -> i) (HTML x y)

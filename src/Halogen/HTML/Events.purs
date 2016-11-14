@@ -64,22 +64,21 @@ import Data.Maybe (Maybe(..))
 import Halogen.Query (Action, action)
 import Halogen.HTML.Core (EventName(..), Prop)
 import Halogen.HTML.Core as Core
-import Halogen.HTML.Events.Handler (EventHandler)
 import Halogen.HTML.Events.Types (Event, MouseEvent, DragEvent, FocusEvent, KeyboardEvent)
 import Halogen.HTML.Properties (IProp, I)
 
 import Unsafe.Coerce (unsafeCoerce)
 
-input :: forall f a. (a -> Action f) -> a -> EventHandler (Maybe (f Unit))
-input f x = pure $ Just $ action (f x)
+input :: forall f a. (a -> Action f) -> a -> Maybe (f Unit)
+input f x = Just $ action (f x)
 
-input_ :: forall f a. Action f -> a -> EventHandler (Maybe (f Unit))
-input_ f _ = pure $ Just $ action f
+input_ :: forall f a. Action f -> a -> Maybe (f Unit)
+input_ f _ = Just $ action f
 
-type IEventProp r e i = (Event e -> EventHandler (Maybe i)) -> IProp r i
+type IEventProp r e i = (Event e -> Maybe i) -> IProp r i
 
 handler :: forall r e i. EventName e -> IEventProp r e i
-handler = (unsafeCoerce :: (EventName e -> (Event e -> EventHandler (Maybe i)) -> Prop i) -> EventName e -> IEventProp r e i) Core.handler
+handler = (unsafeCoerce :: (EventName e -> (Event e -> Maybe i) -> Prop i) -> EventName e -> IEventProp r e i) Core.handler
 
 onAbort :: forall r i. IEventProp (onAbort :: I | r) () i
 onAbort = handler (EventName "abort")
@@ -212,25 +211,25 @@ onDrop = handler (EventName "drop")
 
 -- | Attaches event handler to event `key` with getting `prop` field as an
 -- | argument of `handler`.
-addForeignPropHandler :: forall r i value. IsForeign value => String -> String -> (value -> EventHandler (Maybe i)) -> IProp r i
+addForeignPropHandler :: forall r i value. IsForeign value => String -> String -> (value -> Maybe i) -> IProp r i
 addForeignPropHandler key prop f =
-  handler (EventName key) (either (const $ pure Nothing) f <<< runExcept <<< readProp prop <<< toForeign <<< _.target)
+  handler (EventName key) (either (const Nothing) f <<< runExcept <<< readProp prop <<< toForeign <<< _.target)
 
 -- | Attaches an event handler which will produce an input when the value of an
 -- | input field changes.
-onValueChange :: forall r i. (String -> EventHandler (Maybe i)) -> IProp (value :: I, onChange :: I | r) i
+onValueChange :: forall r i. (String -> Maybe i) -> IProp (value :: I, onChange :: I | r) i
 onValueChange = addForeignPropHandler "change" "value"
 
 -- | Attaches an event handler which will produce an input when the seleced index of a
 -- | `select` element changes.
-onSelectedIndexChange :: forall r i. (Int -> EventHandler (Maybe i)) -> IProp (selectedIndex :: I, onChange :: I | r) i
+onSelectedIndexChange :: forall r i. (Int -> Maybe i) -> IProp (selectedIndex :: I, onChange :: I | r) i
 onSelectedIndexChange = addForeignPropHandler "change" "selectedIndex"
 
 -- | Attaches an event handler which will fire on input.
-onValueInput :: forall r i. (String -> EventHandler (Maybe i)) -> IProp (value :: I, onInput :: I | r) i
+onValueInput :: forall r i. (String -> Maybe i) -> IProp (value :: I, onInput :: I | r) i
 onValueInput = addForeignPropHandler "input" "value"
 
 -- | Attaches an event handler which will fire when a checkbox is checked or
 -- | unchecked.
-onChecked :: forall r i. (Boolean -> EventHandler (Maybe i)) -> IProp (checked :: I, onChange :: I | r) i
+onChecked :: forall r i. (Boolean -> Maybe i) -> IProp (checked :: I, onChange :: I | r) i
 onChecked = addForeignPropHandler "change" "checked"
