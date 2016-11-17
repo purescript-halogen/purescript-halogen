@@ -5,7 +5,6 @@ import Prelude
 import Control.Monad.Eff (Eff)
 
 import Data.Exists (runExists)
-import Data.ExistsR (runExistsR)
 import Data.Foldable (foldl, foldMap)
 import Data.Function.Uncurried (runFn2)
 import Data.Maybe (Maybe(..), maybe)
@@ -15,7 +14,7 @@ import Data.Nullable (toNullable)
 import Data.Traversable (traverse)
 
 import Halogen.Effects (HalogenEffects)
-import Halogen.HTML.Core (HTML(..), Prop(..), PropF(..), HandlerF(..), lowerFuse)
+import Halogen.HTML.Core (HTML(..), Prop(..), PropF(..), lowerFuse)
 import Halogen.VirtualDOM.Internal as V
 
 -- | Render a `HTML` document to a virtual DOM node
@@ -56,8 +55,8 @@ renderProp driver = case _ of
   Attr ns name value ->
     let attrName = maybe "" (\ns' -> unwrap ns' <> ":") ns <> unwrap name
     in runFn2 V.attr attrName value
-  Handler e ->
-    runExistsR (renderHandlerProp driver) e
+  Handler name k ->
+    runFn2 V.handlerProp (unwrap name) (maybe (pure unit) driver <<< k)
   Ref f ->
     V.refProp (driver <<< f)
   _ ->
@@ -65,14 +64,6 @@ renderProp driver = case _ of
 
 renderPropF :: forall a. PropF a -> V.Props
 renderPropF (PropF key value _) = runFn2 V.prop (unwrap key) value
-
-renderHandlerProp
-  :: forall i eff a
-   . (i -> Eff (HalogenEffects eff) Unit)
-  -> HandlerF i a
-  -> V.Props
-renderHandlerProp driver (HandlerF name k) =
-  runFn2 V.handlerProp (unwrap name) (maybe (pure unit) driver <<< k)
 
 findKey :: forall i. Maybe String -> Prop i -> Maybe String
 findKey _ (Key k) = Just k

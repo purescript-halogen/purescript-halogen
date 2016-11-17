@@ -9,7 +9,6 @@ module Halogen.HTML.Core
 
   , Prop(..)
   , PropF(..)
-  , HandlerF(..)
   , prop
   , attr
   , handler
@@ -21,7 +20,6 @@ module Halogen.HTML.Core
   , TagName(..)
   , PropName(..)
   , AttrName(..)
-  , EventName(..)
   , ClassName(..)
   ) where
 
@@ -29,16 +27,14 @@ import Prelude
 
 import Data.Bifunctor (class Bifunctor, bimap, rmap)
 import Data.Exists (Exists, mkExists)
-import Data.ExistsR (ExistsR, mkExistsR, runExistsR)
 import Data.Generic (class Generic)
 import Data.Maybe (Maybe(..))
 import Data.Newtype (class Newtype)
 import Data.Traversable (traverse)
 import Data.Tuple (Tuple(..))
 
+import DOM.Event.Types (Event, EventType)
 import DOM.HTML.Types (HTMLElement)
-
-import Halogen.HTML.Events.Types (Event)
 
 import Unsafe.Coerce (unsafeCoerce)
 
@@ -81,23 +77,19 @@ data Prop i
   = Prop (Exists PropF)
   | Attr (Maybe Namespace) AttrName String
   | Key String
-  | Handler (ExistsR (HandlerF i))
+  | Handler EventType (Event -> Maybe i)
   | Ref (Maybe HTMLElement -> i)
 
 instance functorProp :: Functor Prop where
   map _ (Prop e) = Prop e
   map _ (Key k) = Key k
   map _ (Attr ns k v) = Attr ns k v
-  map f (Handler e) = runExistsR (\(HandlerF name k) -> Handler (mkExistsR (HandlerF name (map f <<< k)))) e
+  map f (Handler name k) = Handler name (map f <<< k)
   map f (Ref g) = Ref (f <<< g)
 
 -- | The data which represents a typed property, hidden inside an existential
 -- | package in the `Prop` type.
 data PropF value = PropF (PropName value) value (Maybe (Tuple AttrName (AttrName -> PropName value -> value -> String)))
-
--- | The data which represents a typed event handler, hidden inside an
--- | existential package in the `Prop` type.
-data HandlerF i fields = HandlerF (EventName fields) (Event fields -> Maybe i)
 
 -- | Create a HTML property.
 prop :: forall value i. IsProp value => PropName value -> Maybe AttrName -> value -> Prop i
@@ -108,8 +100,8 @@ attr :: forall i. AttrName -> String -> Prop i
 attr = Attr Nothing
 
 -- | Create an event handler.
-handler :: forall fields i. EventName fields -> (Event fields -> Maybe i) -> Prop i
-handler name k = Handler (mkExistsR (HandlerF name k))
+handler :: forall i. EventType -> (Event -> Maybe i) -> Prop i
+handler = Handler
 
 data FuseF p i x y = FuseF (x -> p) (y -> i) (HTML x y)
 
@@ -200,17 +192,6 @@ derive instance newtypeAttrName :: Newtype AttrName _
 derive newtype instance eqAttrName :: Eq AttrName
 derive newtype instance ordAttrName :: Ord AttrName
 derive instance genericAttrName :: Generic AttrName
-
--- | A type-safe wrapper for event names.
--- |
--- | The phantom type `fields` describes the event type which we can expect to
--- | exist on events corresponding to this name.
-newtype EventName (fields :: # *) = EventName String
-
-derive instance newtypeEventName :: Newtype (EventName fields) _
-derive newtype instance eqEventName :: Eq (EventName fields)
-derive newtype instance ordEventName :: Ord (EventName fields)
-derive instance genericEventName :: Generic (EventName fields)
 
 -- | A wrapper for strings which are used as CSS classes.
 newtype ClassName = ClassName String
