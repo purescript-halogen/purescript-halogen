@@ -57,8 +57,8 @@ type Action f = Unit -> f Unit
 -- | ```purescript
 -- | data Query a = Tick a
 -- |
--- | sendTick :: forall eff. Driver Query eff -> Aff (HalogenEffects eff) Unit
--- | sendTick driver = driver (action Tick)
+-- | sendTick :: forall o eff. HalogenIO Query o (Aff (HalogenEffects eff)) -> Aff (HalogenEffects eff) Unit
+-- | sendTick app = app.query (action Tick)
 -- | ```
 action :: forall f. Action f -> f Unit
 action act = act unit
@@ -81,8 +81,8 @@ type Request f a = forall i. (a -> i) -> f i
 -- | ```purescript
 -- | data Query a = GetTickCount (Int -> a)
 -- |
--- | getTickCount :: forall eff. Driver Query eff -> Aff (HalogenEffects eff) Int
--- | getTickCount driver = driver (request GetTickCount)
+-- | getTickCount :: forall o eff. HalogenIO Query o (Aff (HalogenEffects eff)) -> Aff (HalogenEffects eff) Int
+-- | getTickCount app = app.query (request GetTickCount)
 -- | ```
 request :: forall f a. Request f a -> f a
 request req = req id
