@@ -10,7 +10,7 @@ import Prelude
 import Control.Applicative.Free (hoistFreeAp, retractFreeAp)
 import Control.Coroutine (($$))
 import Control.Coroutine as CR
-import Control.Monad.Aff (Aff, runAff, forkAff, forkAll, attempt)
+import Control.Monad.Aff (Aff, forkAff, forkAll, runAff)
 import Control.Monad.Aff.AVar as AV
 import Control.Monad.Aff.Unsafe (unsafeCoerceAff)
 import Control.Monad.Eff (Eff)
@@ -27,7 +27,7 @@ import Control.Parallel (parSequence_, sequential, parallel)
 import Data.Lazy (force)
 import Data.List (List, (:))
 import Data.List as L
-import Data.Either (Either(..), isLeft)
+import Data.Either (Either(..))
 import Data.Map as M
 import Data.Maybe (Maybe(..), maybe)
 import Data.Newtype (unwrap)
@@ -98,28 +98,28 @@ runUI renderSpec component = do
 
   where
 
-  rootHandler :: Ref (M.Map Int (AV.AVar (Either o Unit))) -> o -> Aff (HalogenEffects eff) Unit
+  rootHandler :: Ref (M.Map Int (AV.AVar o)) -> o -> Aff (HalogenEffects eff) Unit
   rootHandler ref message = do
     listeners <- liftEff $ readRef ref
-    void $ forkAll $ map (\var -> AV.putVar var (Left message)) listeners
+    void $ forkAll $ map (\var -> AV.putVar var message) listeners
 
   subscribe
     :: Ref Int
-    -> Ref (M.Map Int (AV.AVar (Either o Unit)))
-    -> ({ producer :: CR.Producer o (Aff (HalogenEffects eff)) Unit
-        , unsubscribe :: Aff (HalogenEffects eff) Boolean
-        } -> Aff (HalogenEffects eff) Unit)
+    -> Ref (M.Map Int (AV.AVar o))
+    -> CR.Consumer o (Aff (HalogenEffects eff)) Unit
     -> Aff (HalogenEffects eff) Unit
-  subscribe fresh ref k = do
-    listenerId <- liftEff $ readRef fresh
-    liftEff $ modifyRef fresh (_ + 1)
+  subscribe fresh ref consumer = do
     inputVar <- AV.makeVar
-    liftEff $ modifyRef ref (M.insert listenerId inputVar)
-    k { producer: CR.producer (AV.takeVar inputVar)
-      , unsubscribe: do
-          liftEff $ modifyRef ref (M.delete listenerId)
-          pure <<< isLeft =<< attempt (AV.putVar inputVar (Right unit))
-      }
+    listenerId <- liftEff do
+      listenerId <- readRef fresh
+      modifyRef fresh (_ + 1)
+      modifyRef ref (M.insert listenerId inputVar)
+      pure listenerId
+    let producer = CR.producer (Left <$> AV.takeVar inputVar)
+    void $ forkAff do
+      CR.runProcess (CR.connect producer consumer)
+      liftEff $ modifyRef ref (M.delete listenerId)
+      AV.killVar inputVar (error "ended")
 
   runComponent
     :: forall f' o'

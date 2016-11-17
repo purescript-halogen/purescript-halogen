@@ -30,11 +30,7 @@ import Halogen.Query (Action, EventSource, Request, HalogenF(..), HalogenM(..), 
 -- | allows external consumers to receive messages raised by the root component.
 type HalogenIO f o m =
   { query :: f ~> m
-  , subscribe
-      :: ({ producer :: CR.Producer o m Unit
-          , unsubscribe :: m Boolean
-          } -> m Unit)
-      -> m Unit
+  , subscribe :: CR.Consumer o m Unit -> m Unit
   }
 
 -- | A specialised version of the `Halogen.HTML.Core.HTML` type where `i` is
