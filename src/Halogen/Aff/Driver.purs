@@ -1,7 +1,7 @@
 module Halogen.Aff.Driver
-  ( HalogenIO
-  , RenderSpec
+  ( RenderSpec
   , runUI
+  , module Halogen
   , module Exports
   ) where
 
@@ -34,6 +34,7 @@ import Data.Newtype (unwrap)
 import Data.Traversable (for_, traverse_, sequence_)
 import Data.Tuple (Tuple(..))
 
+import Halogen (HalogenIO)
 import Halogen.Aff.Driver.State (ComponentType(..), DriverStateX, DriverState(..), unDriverStateX, initDriverState)
 import Halogen.Component (Component, ComponentSlot, unComponent, unComponentSlot)
 import Halogen.Data.OrdBox (OrdBox, unOrdBox)
@@ -43,18 +44,6 @@ import Halogen.Query.ForkF as FF
 import Halogen.Query.HalogenM (HalogenM(..), HalogenF(..), HalogenAp(..))
 
 import Halogen.Aff.Driver.State (ComponentType(..)) as Exports
-
--- | A record produced when the root component in a Halogen UI has been run.
--- | `query` allows external sources to query the root component and `subscribe`
--- | allows external consumers to receive messages raised by the root component.
-type HalogenIO f o m =
-  { query :: f ~> m
-  , subscribe
-      :: ({ producer :: CR.Producer o m Unit
-          , unsubscribe :: m Boolean
-          } -> m Unit)
-      -> m Unit
-  }
 
 type LifecycleHandlers eff =
   { initializers :: List (Aff (HalogenEffects eff) Unit)
