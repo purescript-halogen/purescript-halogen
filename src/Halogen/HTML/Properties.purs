@@ -72,6 +72,9 @@ module Halogen.HTML.Properties
   , GlobalAttributes
   , GlobalEvents
   , MouseEvents
+  , DragEvents
+  , TouchEvents
+  , PointerEvents
   , KeyEvents
   , FocusEvents
   , TransitionEvents
@@ -410,6 +413,42 @@ type MouseEvents r =
   | r
   )
 
+type DragEvents r =
+  ( onDrag :: I
+  , onDragEnd :: I
+  , onDragExit :: I
+  , onDragEnter :: I
+  , onDragLeave :: I
+  , onDragOver :: I
+  , onDragStart :: I
+  , onDrop :: I
+  | r
+  )
+
+type TouchEvents r =
+  ( onTouchCancel :: I
+  , onTouchEnd :: I
+  , onTouchEnter :: I
+  , onTouchLeave :: I
+  , onTouchMove :: I
+  , onTouchStart :: I
+  | r
+  )
+
+type PointerEvents r =
+  ( onPointerOver :: I
+  , onPointerEnter :: I
+  , onPointerDown :: I
+  , onPointerMove :: I
+  , onPointerUp :: I
+  , onPointerCancel :: I
+  , onPointerOut :: I
+  , onPointerLeave :: I
+  , gotPointerCapture :: I
+  , lostPointerCapture :: I
+  | r
+  )
+
 type KeyEvents r =
   ( onKeyDown :: I
   , onKeyUp :: I
@@ -430,5 +469,5 @@ type FocusEvents r =
   | r
   )
 
-type InteractiveEvents r = FocusEvents (TransitionEvents (KeyEvents (MouseEvents r)))
+type InteractiveEvents r = FocusEvents (TransitionEvents (KeyEvents (PointerEvents (TouchEvents (DragEvents (MouseEvents r))))))
 type GlobalProperties r = GlobalAttributes (GlobalEvents r)

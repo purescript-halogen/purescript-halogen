@@ -157,28 +157,28 @@ onFocusIn = handler (EventType "focusin") <<< focusHandler
 onFocusOut :: forall r i. (FocusEvent -> Maybe i) -> IProp (onFocusOut :: I | r) i
 onFocusOut = handler (EventType "focusout") <<< focusHandler
 
-onDrag :: forall r i. (DragEvent -> Maybe i) -> IProp r i
+onDrag :: forall r i. (DragEvent -> Maybe i) -> IProp (onDrag :: I | r) i
 onDrag = handler (EventType "drag") <<< dragHandler
 
-onDragEnd :: forall r i. (DragEvent -> Maybe i) -> IProp r i
+onDragEnd :: forall r i. (DragEvent -> Maybe i) -> IProp (onDragEnd :: I | r) i
 onDragEnd = handler (EventType "dragend") <<< dragHandler
 
-onDragExit :: forall r i. (DragEvent -> Maybe i) -> IProp r i
+onDragExit :: forall r i. (DragEvent -> Maybe i) -> IProp (onDragExit :: I | r) i
 onDragExit = handler (EventType "dragexit") <<< dragHandler
 
-onDragEnter :: forall r i. (DragEvent -> Maybe i) -> IProp r i
+onDragEnter :: forall r i. (DragEvent -> Maybe i) -> IProp (onDragEnter :: I | r) i
 onDragEnter = handler (EventType "dragenter") <<< dragHandler
 
-onDragLeave :: forall r i. (DragEvent -> Maybe i) -> IProp r i
+onDragLeave :: forall r i. (DragEvent -> Maybe i) -> IProp (onDragLeave :: I | r) i
 onDragLeave = handler (EventType "dragleave") <<< dragHandler
 
-onDragOver :: forall r i. (DragEvent -> Maybe i) -> IProp r i
+onDragOver :: forall r i. (DragEvent -> Maybe i) -> IProp (onDragOver :: I | r) i
 onDragOver = handler (EventType "dragover") <<< dragHandler
 
-onDragStart :: forall r i. (DragEvent -> Maybe i) -> IProp r i
+onDragStart :: forall r i. (DragEvent -> Maybe i) -> IProp (onDragStart :: I | r) i
 onDragStart = handler (EventType "dragstart") <<< dragHandler
 
-onDrop :: forall r i. (DragEvent -> Maybe i) -> IProp r i
+onDrop :: forall r i. (DragEvent -> Maybe i) -> IProp (onDrop :: I | r) i
 onDrop = handler (EventType "drop") <<< dragHandler
 
 keyHandler :: forall i. (KeyboardEvent -> Maybe i) -> Event -> Maybe i
