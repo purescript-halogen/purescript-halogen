@@ -20,7 +20,7 @@ import Halogen.HTML.Core (HTML)
 import Halogen.VirtualDOM.Internal as V
 import Halogen.VirtualDOM.Renderer (renderHTML)
 
-import Halogen.Aff.Driver (Driver)
+import Halogen.Aff.Driver (HalogenIO)
 
 type RenderState =
   { node :: HTMLElement
@@ -38,7 +38,7 @@ runUI
   :: forall f eff o
    . Component HTML f o (Aff (HalogenEffects eff))
   -> HTMLElement
-  -> Aff (HalogenEffects eff) (Driver f eff)
+  -> Aff (HalogenEffects eff) (HalogenIO f o (Aff (HalogenEffects eff)))
 runUI component element = AD.runUI (renderSpec element) component
 
 renderSpec :: forall eff. HTMLElement -> AD.RenderSpec HTML RenderState eff
