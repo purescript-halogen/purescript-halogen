@@ -3,20 +3,13 @@ module Halogen.HTML.Events
   , input_
   , handler
   , onAbort
-  , onBeforeUnload
   , onError
-  , onHashChange
   , onLoad
-  , onPageShow
-  , onPageHide
-  , onResize
   , onScroll
-  , onUnload
   , onChange
   , onInput
   , onInvalid
   , onReset
-  , onSearch
   , onSelect
   , onSubmit
   , onTransitionEnd
@@ -83,32 +76,14 @@ handler = (unsafeCoerce :: (EventType -> (Event -> Maybe i) -> Prop i) -> EventT
 onAbort :: forall r i. (Event -> Maybe i) -> IProp (onAbort :: I | r) i
 onAbort = handler (EventType "abort")
 
-onBeforeUnload :: forall r i. (Event -> Maybe i) -> IProp (onBeforeUnload :: I | r) i
-onBeforeUnload = handler (EventType "beforeunload")
-
 onError :: forall r i. (Event -> Maybe i) -> IProp (onError :: I | r) i
 onError = handler (EventType "error")
-
-onHashChange :: forall r i. (Event -> Maybe i) -> IProp (onHashChange :: I | r) i
-onHashChange = handler (EventType "hashchange")
 
 onLoad :: forall r i. (Event -> Maybe i) -> IProp (onLoad :: I | r) i
 onLoad = handler (EventType "load")
 
-onPageShow :: forall r i. (Event -> Maybe i) -> IProp (onPageShow :: I | r) i
-onPageShow = handler (EventType "pageshow")
-
-onPageHide :: forall r i. (Event -> Maybe i) -> IProp (onPageHide :: I | r) i
-onPageHide = handler (EventType "pagehide")
-
-onResize :: forall r i. (Event -> Maybe i) -> IProp (onResize :: I | r) i
-onResize = handler (EventType "resize")
-
 onScroll :: forall r i. (Event -> Maybe i) -> IProp (onScroll :: I | r) i
 onScroll = handler (EventType "scroll")
-
-onUnload :: forall r i. (Event -> Maybe i) -> IProp (onUnload :: I | r) i
-onUnload = handler (EventType "unload")
 
 onChange :: forall r i. (Event -> Maybe i) -> IProp (onChange :: I | r) i
 onChange = handler (EventType "change")
@@ -121,9 +96,6 @@ onInvalid = handler (EventType "invalid")
 
 onReset :: forall r i. (Event -> Maybe i) -> IProp (onReset :: I | r) i
 onReset = handler (EventType "reset")
-
-onSearch :: forall r i. (Event -> Maybe i) -> IProp (onSearch :: I | r) i
-onSearch = handler (EventType "search")
 
 onSelect :: forall r i. (Event -> Maybe i) -> IProp (onSelect :: I | r) i
 onSelect = handler (EventType "select")
