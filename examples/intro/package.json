@@ -7,7 +7,7 @@
     "virtual-dom": "^2.1.1"
   },
   "devDependencies": {
-    "pulp": "^9.0.1",
-    "purescript": "^0.10.1"
+    "pulp": "^10.0.0",
+    "purescript": "^0.10.2"
   }
 }

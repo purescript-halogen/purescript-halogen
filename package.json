@@ -19,9 +19,9 @@
     "virtual-dom": "^2.1.1"
   },
   "devDependencies": {
-    "eslint": "^3.8.1",
-    "pulp": "^9.0.1",
-    "purescript": "^0.10.1",
+    "eslint": "^3.10.2",
+    "pulp": "^10.0.0",
+    "purescript": "^0.10.2",
     "purescript-psa": "^0.3.9",
     "rimraf": "^2.5.4"
   }
