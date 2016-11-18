@@ -34,6 +34,6 @@ ticker initialState = H.component { render, eval, initialState }
   eval (Tick next) = do
     H.modify (_ + 1)
     pure next
-  eval (GetTick continue) = do
+  eval (GetTick reply) = do
     n <- H.get
-    pure (continue n)
+    pure (reply n)

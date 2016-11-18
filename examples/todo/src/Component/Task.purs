@@ -63,6 +63,6 @@ task initialState = H.component { render, eval, initialState }
   eval (Remove next) = do
     H.raise NotifyRemove
     pure next
-  eval (IsCompleted continue) = do
+  eval (IsCompleted reply) = do
     b <- CMS.gets (_.completed)
-    pure (continue b)
+    pure (reply b)
