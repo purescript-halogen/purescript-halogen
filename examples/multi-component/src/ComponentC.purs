@@ -35,6 +35,6 @@ componentC = H.component { render, eval, initialState }
   eval (ToggleStateC next) = do
     H.modify (\(StateC state) -> StateC { on: not state.on })
     pure next
-  eval (GetStateC continue) = do
+  eval (GetStateC reply) = do
     b <- H.gets (\(StateC state) -> state.on)
-    pure (continue b)
+    pure (reply b)

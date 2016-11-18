@@ -1,5 +1,5 @@
 npm run example-ace
-# npm run example-ajax
+npm run example-ajax
 npm run example-components
 npm run example-counter
 npm run example-interpret

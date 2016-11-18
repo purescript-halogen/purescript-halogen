@@ -14,7 +14,7 @@ data TickQuery a
   | GetTick (Int -> a)
 
 ticker :: forall m. Int -> H.Component HH.HTML TickQuery Void m
-ticker n = H.component { render, eval, initialState: n }
+ticker initialState = H.component { render, eval, initialState }
   where
   render :: TickState -> H.ComponentHTML TickQuery
   render state =
@@ -34,6 +34,6 @@ ticker n = H.component { render, eval, initialState: n }
   eval (Tick next) = do
     H.modify (_ + 1)
     pure next
-  eval (GetTick continue) = do
+  eval (GetTick reply) = do
     n <- H.get
-    pure (continue n)
+    pure (reply n)

@@ -32,6 +32,6 @@ myComponent = component { render, eval, initialState: { on: false } }
   eval (ToggleState next) = do
     modify (\state -> { on: not state.on })
     pure next
-  eval (GetState continue) = do
+  eval (GetState reply) = do
     value <- gets _.on
-    pure (continue value)
+    pure (reply value)

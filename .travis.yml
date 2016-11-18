@@ -1,7 +1,7 @@
 language: node_js
 dist: trusty
 sudo: required
-node_js: 6
+node_js: stable
 install:
   - npm install
   - npm install -g bower
