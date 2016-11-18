@@ -156,20 +156,20 @@ runUI renderSpec component = do
     Subscribe es next -> do
       forkAff do
         { producer, done } <- ES.unEventSource es
-        var <- AV.makeVar
+        isDone <- liftEff $ newRef false
+        blocker <- AV.makeVar
         let
-          consumeES :: CR.Consumer (f' Boolean) (Aff (HalogenEffects eff)) Unit
-          consumeES = flip tailRecM unit \_ -> do
-            b <- lift <<< evalF ref =<< CR.await
-            lift $ AV.putVar var (Left b)
-            pure if b then Loop unit else Done unit
-          consumeVar :: CR.Consumer Boolean (Aff (HalogenEffects eff)) Unit
-          consumeVar = flip tailRecM unit \_ ->
-            CR.await >>= case _ of
-              false -> lift $ AV.putVar var (Right unit) $> Done unit
-              true -> pure (Loop unit)
-        forkAff $ CR.runProcess $ producer $$ consumeES
-        CR.runProcess $ CR.producer (AV.takeVar var) $$ consumeVar
+          consumer :: CR.Consumer (f' Boolean) (Aff (HalogenEffects eff)) Unit
+          consumer = flip tailRecM unit \_ -> do
+            q <- CR.await
+            lift (liftEff (readRef isDone)) >>= case _ of
+              true -> pure (Done unit)
+              false -> lift do
+                forkAff $ unlessM (evalF ref q) (AV.putVar blocker unit)
+                pure (Loop unit)
+        forkAff $ CR.runProcess (producer $$ consumer)
+        AV.takeVar blocker
+        liftEff $ writeRef isDone true
         done
       pure next
     Lift aff ->
