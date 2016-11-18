@@ -8,7 +8,6 @@ module Halogen.Aff.Driver
 import Prelude
 
 import Control.Applicative.Free (hoistFreeAp, retractFreeAp)
-import Control.Coroutine (($$))
 import Control.Coroutine as CR
 import Control.Monad.Aff (Aff, forkAff, forkAll, runAff)
 import Control.Monad.Aff.AVar as AV
@@ -155,18 +154,11 @@ runUI renderSpec component = do
     Subscribe es next -> do
       forkAff do
         { producer, done } <- ES.unEventSource es
-        isDone <- liftEff $ newRef false
-        blocker <- AV.makeVar
         let
-          consumer :: CR.Consumer (f' Boolean) (Aff (HalogenEffects eff)) Unit
           consumer = do
             q <- CR.await
-            unlessM (lift $ liftEff $ readRef isDone) do
-              lift $ forkAff $ unlessM (evalF ref q) (AV.putVar blocker unit)
-              consumer
-        forkAff $ CR.runProcess (producer $$ consumer)
-        AV.takeVar blocker
-        liftEff $ writeRef isDone true
+            whenM (lift (evalF ref q)) consumer
+        CR.runProcess (consumer `CR.pullFrom` producer)
         done
       pure next
     Lift aff ->
