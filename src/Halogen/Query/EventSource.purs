@@ -1,5 +1,8 @@
 module Halogen.Query.EventSource
   ( EventSource(..)
+  , unEventSource
+  , interpret
+  , hoist
   , eventSource
   , eventSource'
   , eventSource_
@@ -25,76 +28,92 @@ import Control.Monad.Free.Trans as FT
 import Control.Monad.Rec.Class (class MonadRec, tailRecM, Step(..))
 import Control.Monad.Trans.Class (lift)
 
-import Data.Either (Either(..), isLeft, isRight)
+import Data.Bifunctor (lmap)
+import Data.Either (Either(..))
 import Data.Foldable (for_)
 import Data.Maybe (Maybe)
-import Data.Newtype (class Newtype)
 
-newtype EventSource f g = EventSource (CR.Producer (f Unit) g Unit)
+newtype EventSource f m = EventSource (m { producer :: CR.Producer (f Boolean) m Unit, done :: m Unit })
 
-instance newtypeEventSource :: Newtype (EventSource f g) (FT.FreeT (CR.Emit (f Unit)) g Unit) where
-  wrap = EventSource
-  unwrap (EventSource cr) = cr
+unEventSource :: forall f m. EventSource f m -> m { producer :: CR.Producer (f Boolean) m Unit, done :: m Unit }
+unEventSource (EventSource e) = e
 
--- | Creates an `EventSource` for an event listener that accepts one argument.
+interpret :: forall f g m. Functor m => (f ~> g) -> EventSource f m -> EventSource g m
+interpret nat (EventSource es) =
+  EventSource $
+    map
+      (\e -> { producer: FT.interpret (lmap nat) e.producer, done: e.done })
+      es
+
+hoist :: forall f m n. Functor n => (m ~> n) -> EventSource f m -> EventSource f n
+hoist nat (EventSource es) =
+  EventSource $
+    map
+      (\e -> { producer: FT.hoistFreeT nat e.producer, done: nat e.done })
+      (nat es)
+
+-- | Creates an `EventSource` for a callback that accepts one argument.
 -- |
--- | - The first argument is the function that attaches the event listener.
+-- | - The first argument is the function that attaches the listener.
 -- | - The second argument is a handler that optionally produces a value in `f`.
 eventSource
   :: forall f m a eff
    . MonadAff (avar :: AVAR | eff) m
   => ((a -> Eff (avar :: AVAR | eff) Unit) -> Eff (avar :: AVAR | eff) Unit)
-  -> (a -> Eff (avar :: AVAR | eff) (Maybe (f Unit)))
+  -> (a -> Maybe (f Boolean))
   -> EventSource f m
-eventSource attach handle =
-  let producer = produce \emit -> attach (emit <<< Left <=< handle)
-  in EventSource $ FT.hoistFreeT liftAff $ catMaybes producer
+eventSource attach handler =
+  EventSource
+    let producer = produce \emit -> attach (emit <<< Left <<< handler)
+    in pure { producer: FT.hoistFreeT liftAff $ catMaybes producer, done: pure unit }
 
 -- | Similar to `eventSource` but allows the attachment function to return an
--- | action to perform to detach the handler also. This allows the `eventSource`
--- | to be unsubscribed from.
+-- | action to perform when the handler is detached.
 eventSource'
   :: forall f m a eff
    . MonadAff (avar :: AVAR | eff) m
   => ((a -> Eff (avar :: AVAR | eff) Unit) -> Eff (avar :: AVAR | eff) (Eff (avar :: AVAR | eff) Unit))
-  -> (a -> Eff (avar :: AVAR | eff) (Maybe (f Unit)))
-  -> m { eventSource :: EventSource f m, unsubscribe :: m Unit }
-eventSource' attach handle = do
-  { producer, cancel } <- liftAff $ produce' (\emit -> attach (emit <<< Left <=< handle))
-  pure
-    { eventSource: EventSource $ FT.hoistFreeT liftAff $ catMaybes producer
-    , unsubscribe: liftAff (cancel unit $> unit)
-    }
+  -> (a -> Maybe (f Boolean))
+  -> EventSource f m
+eventSource' attach handler = do
+  EventSource do
+    { producer, cancel } <- liftAff $ produce' \emit -> attach (emit <<< Left <<< handler)
+    pure
+      { producer: FT.hoistFreeT liftAff $ catMaybes producer
+      , done: liftAff $ void $ cancel unit
+      }
 
--- | Creates an `EventSource` for an event listener that accepts no arguments.
+-- | Creates an `EventSource` for a callback that accepts no arguments.
 -- |
--- | - The first argument is the function that attaches the event listener.
--- | - The second argument is a handler that optionally produces a value in `f`.
+-- | - The first argument is the function that attaches the listener.
+-- | - The second argument is the query to raise whenever the listener is
+-- |   triggered.
 eventSource_
   :: forall f m eff
    . MonadAff (avar :: AVAR | eff) m
   => (Eff (avar :: AVAR | eff) Unit -> Eff (avar :: AVAR | eff) Unit)
-  -> Eff (avar :: AVAR | eff) (Maybe (f Unit))
+  -> f Boolean
   -> EventSource f m
-eventSource_ attach handle =
-  EventSource $ FT.hoistFreeT liftAff $ catMaybes $ produce \emit ->
-    attach (emit <<< Left =<< handle)
+eventSource_ attach query =
+  EventSource
+    let producer = produce \emit -> attach $ emit (Left query)
+    in pure { producer: FT.hoistFreeT liftAff producer, done: pure unit }
 
 -- | Similar to `eventSource_` but allows the attachment function to return an
--- | action to perform to detach the handler also. This allows the `eventSource`
--- | to be unsubscribed from.
+-- | action to perform when the handler is detached.
 eventSource_'
   :: forall f m eff
    . MonadAff (avar :: AVAR | eff) m
   => (Eff (avar :: AVAR | eff) Unit -> Eff (avar :: AVAR | eff) (Eff (avar :: AVAR | eff) Unit))
-  -> Eff (avar :: AVAR | eff) (Maybe (f Unit))
-  -> m { eventSource :: EventSource f m, unsubscribe :: m Unit }
-eventSource_' attach handle = do
-  { producer, cancel } <- liftAff $ produce' (\emit -> attach (emit <<< Left =<< handle))
-  pure
-    { eventSource: EventSource $ FT.hoistFreeT liftAff $ catMaybes producer
-    , unsubscribe: liftAff (cancel unit $> unit)
-    }
+  -> f Boolean
+  -> EventSource f m
+eventSource_' attach query =
+  EventSource do
+    { producer, cancel } <- liftAff $ produce' \emit -> attach $ emit (Left query)
+    pure
+      { producer: FT.hoistFreeT liftAff producer
+      , done: liftAff $ void $ cancel unit
+      }
 
 -- | Takes a producer of `Maybe`s and filters out the `Nothings`. Useful for
 -- | constructing `EventSource`s for producers that don't need to handle every
@@ -143,15 +162,14 @@ produceAff' recv = do
   inputVar <- AV.makeVar
   finalizeVar <- AV.makeVar
   let
-    pro = do
-      lift $ forkAff do
-        done <- recv $ AV.putVar inputVar
-        AV.putVar finalizeVar done
-      CR.producer do
-        out <- AV.takeVar inputVar
-        when (isRight out) do
-          AV.killVar inputVar (Exn.error "ended")
-          join $ AV.takeVar finalizeVar
-        pure out
-    cancel r = pure <<< isLeft =<< attempt (AV.putVar inputVar (Right r))
-  pure { producer: pro, cancel: cancel }
+    producer = do
+      lift $ AV.putVar finalizeVar =<< recv (AV.putVar inputVar)
+      CR.producer (AV.takeVar inputVar)
+    cancel r =
+      attempt (AV.takeVar finalizeVar) >>= case _ of
+        Left _ -> pure false
+        Right finalizer -> do
+          AV.killVar finalizeVar (Exn.error "finalized")
+          finalizer
+          pure true
+  pure { producer, cancel }
