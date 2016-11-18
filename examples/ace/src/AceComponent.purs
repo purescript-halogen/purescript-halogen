@@ -38,6 +38,7 @@ data AceQuery a
   | Initialize a
   | Finalize a
   | ChangeText String a
+  | HandleChange (Boolean -> a)
 
 data AceOutput = TextChanged String
 
@@ -76,9 +77,7 @@ aceComponent =
         editor <- H.liftEff $ Ace.editNode el' Ace.ace
         session <- H.liftEff $ Editor.getSession editor
         H.modify (_ { editor = Just editor })
-        H.subscribe $ H.eventSource_ (Session.onChange session) do
-          text <- H.liftEff (Editor.getValue editor)
-          pure $ Just $ H.action (ChangeText text)
+        H.subscribe $ H.eventSource_ (Session.onChange session) (H.request HandleChange)
     pure next
   eval (Finalize next) = do
     -- Release the reference to the editor and do any other cleanup that a real
@@ -86,8 +85,8 @@ aceComponent =
     H.modify (_ { editor = Nothing })
     pure next
   eval (ChangeText text next) = do
-    state <- H.gets _.editor
-    case state of
+    maybeEditor <- H.gets _.editor
+    case maybeEditor of
       Nothing -> pure unit
       Just editor -> do
         current <- H.liftEff $ Editor.getValue editor
@@ -95,3 +94,11 @@ aceComponent =
           void $ H.liftEff $ Editor.setValue text Nothing editor
     H.raise $ TextChanged text
     pure next
+  eval (HandleChange continue) = do
+    maybeEditor <- H.gets _.editor
+    case maybeEditor of
+      Nothing -> pure unit
+      Just editor -> do
+        text <- H.liftEff (Editor.getValue editor)
+        H.raise $ TextChanged text
+    pure (continue true)
