@@ -20,7 +20,7 @@ import Control.Monad.Eff.Ref (Ref, modifyRef, writeRef, readRef, newRef)
 import Control.Monad.Error.Class (throwError)
 import Control.Monad.Free (foldFree)
 import Control.Monad.Fork (fork)
-import Control.Monad.Rec.Class (forever)
+import Control.Monad.Rec.Class (Step(..), tailRecM)
 import Control.Monad.Trans.Class (lift)
 import Control.Parallel (parSequence_, sequential, parallel)
 
@@ -30,7 +30,6 @@ import Data.List as L
 import Data.Either (Either(..))
 import Data.Map as M
 import Data.Maybe (Maybe(..), maybe)
-import Data.Newtype (unwrap)
 import Data.Traversable (for_, traverse_, sequence_)
 import Data.Tuple (Tuple(..))
 
@@ -42,6 +41,7 @@ import Halogen.Effects (HalogenEffects)
 import Halogen.Query.ChildQuery (ChildQuery, unChildQuery)
 import Halogen.Query.ForkF as FF
 import Halogen.Query.HalogenM (HalogenM(..), HalogenF(..), HalogenAp(..))
+import Halogen.Query.EventSource as ES
 
 import Halogen.Aff.Driver.State (ComponentType(..)) as Exports
 
@@ -154,8 +154,15 @@ runUI renderSpec component = do
           handleLifecycle \lchs -> render lchs ref
           pure a
     Subscribe es next -> do
-      let consumer = forever (lift <<< evalF ref =<< CR.await)
-      forkAff $ CR.runProcess (unwrap es $$ consumer)
+      forkAff do
+        { producer, done } <- ES.unEventSource es
+        let
+          consumer = tailRecM loop unit
+          loop _ = do
+            continue <- lift <<< evalF ref =<< CR.await
+            pure if continue then Loop unit else Done unit
+        CR.runProcess (producer $$ consumer)
+        done
       pure next
     Lift aff ->
       aff

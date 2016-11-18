@@ -8,7 +8,6 @@ import Control.Monad.Eff.Class (class MonadEff, liftEff)
 import Control.Monad.Eff.Exception (Error)
 import Control.Monad.Fork (class MonadFork)
 import Control.Monad.Free (Free, hoistFree, liftF)
-import Control.Monad.Free.Trans (hoistFreeT, interpret)
 import Control.Monad.Reader.Class (class MonadAsk, ask)
 import Control.Monad.Rec.Class (class MonadRec, tailRecM, Step(..))
 import Control.Monad.State.Class (class MonadState)
@@ -145,8 +144,7 @@ hoistF nat (HalogenM fa) = HalogenM (hoistFree go fa)
   go = case _ of
     GetState k -> GetState k
     ModifyState f -> ModifyState f
-    Subscribe (ES.EventSource es) next ->
-      Subscribe (ES.EventSource (interpret (lmap nat) es)) next
+    Subscribe es next -> Subscribe (ES.interpret nat es) next
     Lift q -> Lift q
     Halt msg -> Halt msg
     GetSlots k -> GetSlots k
@@ -168,8 +166,7 @@ hoistM nat (HalogenM fa) = HalogenM (hoistFree go fa)
   go = case _ of
     GetState k -> GetState k
     ModifyState f -> ModifyState f
-    Subscribe (ES.EventSource es) next ->
-      Subscribe (ES.EventSource (hoistFreeT nat es)) next
+    Subscribe es next -> Subscribe (ES.hoist nat es) next
     Lift q -> Lift (nat q)
     Halt msg -> Halt msg
     GetSlots k -> GetSlots k
