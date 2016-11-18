@@ -7,7 +7,6 @@ import Control.Monad.Aff.AVar (AVAR)
 import Control.Monad.Eff (Eff)
 
 import Data.Char as CH
-import Data.Foldable (for_)
 import Data.Maybe (Maybe(..))
 import Data.String as ST
 
@@ -31,9 +30,7 @@ initialState = { chars : "", unsubscribe: Nothing }
 
 data Query a
   = Init a
-  | Append Char a
-  | Clear a
-  | Stop a
+  | HandleKey K.KeyboardEvent (Boolean -> a)
 
 type Effects eff = (dom :: DOM, avar :: AVAR, keyboard :: K.KEYBOARD | eff)
 type DSL eff = H.ComponentDSL (State eff) Query Void (Aff (Effects eff))
@@ -60,31 +57,22 @@ ui =
   eval :: Query ~> DSL eff
   eval (Init next) = do
     document <- H.liftEff $ DOM.window >>= DOM.document <#> DOM.htmlDocumentToDocument
-    { unsubscribe, eventSource } <- H.liftAff $ ES.eventSource' (K.onKeyUp document) \e ->
-      case K.readKeyboardEvent e of
-        info
-          | info.shiftKey -> do
-              K.preventDefault e
-              let char = CH.fromCharCode info.keyCode
-              pure $ Just $ H.action $ Append char
-          | info.keyCode == 13 -> do
-              K.preventDefault e
-              pure $ Just $ H.action Clear
-          | otherwise ->
-              pure Nothing
-    H.subscribe eventSource
-    H.modify (_ { unsubscribe = Just unsubscribe })
+    H.subscribe $ ES.eventSource' (K.onKeyUp document) (Just <<< H.request <<< HandleKey)
     pure next
-  eval (Append c next) = do
-    H.modify (\st -> st { chars = st.chars <> ST.singleton c })
-    pure next
-  eval (Clear next) = do
-    H.modify (_ { chars = "" })
-    eval (Stop next)
-  eval (Stop next) = do
-    unsubscribe <- H.gets _.unsubscribe
-    for_ unsubscribe \go -> H.liftAff go
-    pure next
+  eval (HandleKey e continue) =
+    case K.readKeyboardEvent e of
+      info
+        | info.shiftKey -> do
+            H.liftEff $ K.preventDefault e
+            let char = CH.fromCharCode info.keyCode
+            H.modify (\st -> st { chars = st.chars <> ST.singleton char })
+            pure (continue true)
+        | info.keyCode == 13 -> do
+            H.liftEff $ K.preventDefault e
+            H.modify (_ { chars = "" })
+            pure (continue false)
+        | otherwise ->
+            pure (continue true)
 
 main :: Eff (H.HalogenEffects (keyboard :: K.KEYBOARD)) Unit
 main = runHalogenAff do
