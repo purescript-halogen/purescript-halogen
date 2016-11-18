@@ -38,7 +38,7 @@ data AceQuery a
   | Initialize a
   | Finalize a
   | ChangeText String a
-  | HandleChange (Boolean -> a)
+  | HandleChange (H.SubscribeStatus -> a)
 
 data AceOutput = TextChanged String
 
@@ -94,11 +94,11 @@ aceComponent =
           void $ H.liftEff $ Editor.setValue text Nothing editor
     H.raise $ TextChanged text
     pure next
-  eval (HandleChange continue) = do
+  eval (HandleChange reply) = do
     maybeEditor <- H.gets _.editor
     case maybeEditor of
       Nothing -> pure unit
       Just editor -> do
         text <- H.liftEff (Editor.getValue editor)
         H.raise $ TextChanged text
-    pure (continue true)
+    pure (reply H.Listening)

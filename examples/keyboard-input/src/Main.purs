@@ -30,7 +30,7 @@ initialState = { chars : "", unsubscribe: Nothing }
 
 data Query a
   = Init a
-  | HandleKey K.KeyboardEvent (Boolean -> a)
+  | HandleKey K.KeyboardEvent (H.SubscribeStatus -> a)
 
 type Effects eff = (dom :: DOM, avar :: AVAR, keyboard :: K.KEYBOARD | eff)
 type DSL eff = H.ComponentDSL (State eff) Query Void (Aff (Effects eff))
@@ -59,20 +59,20 @@ ui =
     document <- H.liftEff $ DOM.window >>= DOM.document <#> DOM.htmlDocumentToDocument
     H.subscribe $ ES.eventSource' (K.onKeyUp document) (Just <<< H.request <<< HandleKey)
     pure next
-  eval (HandleKey e continue) =
+  eval (HandleKey e reply) =
     case K.readKeyboardEvent e of
       info
         | info.shiftKey -> do
             H.liftEff $ K.preventDefault e
             let char = CH.fromCharCode info.keyCode
             H.modify (\st -> st { chars = st.chars <> ST.singleton char })
-            pure (continue true)
+            pure (reply H.Listening)
         | info.keyCode == 13 -> do
             H.liftEff $ K.preventDefault e
             H.modify (_ { chars = "" })
-            pure (continue false)
+            pure (reply H.Done)
         | otherwise ->
-            pure (continue true)
+            pure (reply H.Listening)
 
 main :: Eff (H.HalogenEffects (keyboard :: K.KEYBOARD)) Unit
 main = runHalogenAff do

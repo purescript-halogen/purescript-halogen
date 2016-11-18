@@ -22,7 +22,7 @@ import Data.Maybe (Maybe(..))
 import Data.Tuple (Tuple(..))
 
 import Halogen.Component.ChildPath (ChildPath, injSlot, prjSlot, injQuery, cpI)
-import Halogen.Query.EventSource (EventSource, eventSource, eventSource_)
+import Halogen.Query.EventSource (EventSource, SubscribeStatus(..), eventSource, eventSource_)
 import Halogen.Query.HalogenM (HalogenM(..), HalogenF(..), getSlots, checkSlot, mkQuery)
 
 import Control.Parallel (parTraverse)

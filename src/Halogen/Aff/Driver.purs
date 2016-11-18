@@ -156,8 +156,8 @@ runUI renderSpec component = do
         { producer, done } <- ES.unEventSource es
         let
           consumer = do
-            q <- CR.await
-            whenM (lift (evalF ref q)) consumer
+            s <- lift <<< evalF ref =<< CR.await
+            when (s == ES.Listening) consumer
         CR.runProcess (consumer `CR.pullFrom` producer)
         done
       pure next
