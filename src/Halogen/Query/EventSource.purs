@@ -52,9 +52,9 @@ hoist nat (EventSource es) =
       (\e -> { producer: FT.hoistFreeT nat e.producer, done: nat e.done })
       (nat es)
 
--- | Creates an `EventSource` for an event listener that accepts one argument.
+-- | Creates an `EventSource` for a callback that accepts one argument.
 -- |
--- | - The first argument is the function that attaches the event listener.
+-- | - The first argument is the function that attaches the listener.
 -- | - The second argument is a handler that optionally produces a value in `f`.
 eventSource
   :: forall f m a eff
@@ -62,9 +62,9 @@ eventSource
   => ((a -> Eff (avar :: AVAR | eff) Unit) -> Eff (avar :: AVAR | eff) Unit)
   -> (a -> Maybe (f Boolean))
   -> EventSource f m
-eventSource attach handle =
+eventSource attach handler =
   EventSource
-    let producer = produce \emit -> attach (emit <<< Left <<< handle)
+    let producer = produce \emit -> attach (emit <<< Left <<< handler)
     in pure { producer: FT.hoistFreeT liftAff $ catMaybes producer, done: pure unit }
 
 -- | Similar to `eventSource` but allows the attachment function to return an
@@ -75,27 +75,28 @@ eventSource'
   => ((a -> Eff (avar :: AVAR | eff) Unit) -> Eff (avar :: AVAR | eff) (Eff (avar :: AVAR | eff) Unit))
   -> (a -> Maybe (f Boolean))
   -> EventSource f m
-eventSource' attach handle = do
+eventSource' attach handler = do
   EventSource do
-    { producer, cancel } <- liftAff $ produce' (\emit -> attach (emit <<< Left <<< handle))
+    { producer, cancel } <- liftAff $ produce' \emit -> attach (emit <<< Left <<< handler)
     pure
       { producer: FT.hoistFreeT liftAff $ catMaybes producer
       , done: liftAff $ void $ cancel unit
       }
 
--- | Creates an `EventSource` for an event listener that accepts no arguments.
+-- | Creates an `EventSource` for a callback that accepts no arguments.
 -- |
--- | - The first argument is the function that attaches the event listener.
--- | - The second argument is a handler that optionally produces a value in `f`.
+-- | - The first argument is the function that attaches the listener.
+-- | - The second argument is the query to raise whenever the listener is
+-- |   triggered.
 eventSource_
   :: forall f m eff
    . MonadAff (avar :: AVAR | eff) m
   => (Eff (avar :: AVAR | eff) Unit -> Eff (avar :: AVAR | eff) Unit)
   -> f Boolean
   -> EventSource f m
-eventSource_ attach handle =
+eventSource_ attach query =
   EventSource
-    let producer = produce \emit -> attach $ emit (Left handle)
+    let producer = produce \emit -> attach $ emit (Left query)
     in pure { producer: FT.hoistFreeT liftAff producer, done: pure unit }
 
 -- | Similar to `eventSource_` but allows the attachment function to return an
@@ -106,9 +107,9 @@ eventSource_'
   => (Eff (avar :: AVAR | eff) Unit -> Eff (avar :: AVAR | eff) (Eff (avar :: AVAR | eff) Unit))
   -> f Boolean
   -> EventSource f m
-eventSource_' attach handle =
+eventSource_' attach query =
   EventSource do
-    { producer, cancel } <- liftAff $ produce' \emit -> attach $ emit (Left handle)
+    { producer, cancel } <- liftAff $ produce' \emit -> attach $ emit (Left query)
     pure
       { producer: FT.hoistFreeT liftAff producer
       , done: liftAff $ void $ cancel unit
