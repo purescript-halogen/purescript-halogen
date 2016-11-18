@@ -20,7 +20,6 @@ import Control.Monad.Eff.Ref (Ref, modifyRef, writeRef, readRef, newRef)
 import Control.Monad.Error.Class (throwError)
 import Control.Monad.Free (foldFree)
 import Control.Monad.Fork (fork)
-import Control.Monad.Rec.Class (Step(..), tailRecM)
 import Control.Monad.Trans.Class (lift)
 import Control.Parallel (parSequence_, sequential, parallel)
 
@@ -160,13 +159,11 @@ runUI renderSpec component = do
         blocker <- AV.makeVar
         let
           consumer :: CR.Consumer (f' Boolean) (Aff (HalogenEffects eff)) Unit
-          consumer = flip tailRecM unit \_ -> do
+          consumer = do
             q <- CR.await
-            lift (liftEff (readRef isDone)) >>= case _ of
-              true -> pure (Done unit)
-              false -> lift do
-                forkAff $ unlessM (evalF ref q) (AV.putVar blocker unit)
-                pure (Loop unit)
+            unlessM (lift $ liftEff $ readRef isDone) do
+              lift $ forkAff $ unlessM (evalF ref q) (AV.putVar blocker unit)
+              consumer
         forkAff $ CR.runProcess (producer $$ consumer)
         AV.takeVar blocker
         liftEff $ writeRef isDone true
