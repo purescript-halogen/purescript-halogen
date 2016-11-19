@@ -1,4 +1,4 @@
-module Data.Injector
+module Halogen.Data.Injector
   ( Prism
   , Injector
   , type (\/), type (<\/>)
