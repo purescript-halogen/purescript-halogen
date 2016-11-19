@@ -1,14 +1,14 @@
 module Halogen.Component.ChildPath
   ( module Halogen.Component.ChildPath
-  , module Data.Injector
+  , module Halogen.Data.Injector
   ) where
 
 import Prelude hiding (compose)
 
 import Data.Either (Either)
 import Data.Functor.Coproduct (Coproduct)
-import Data.Injector (type (\/), type (<\/>), Injector, prj, inj, injE10, injC10, injE9, injC9, injE8, injC8, injE7, injC7, injE6, injC6, injE5, injC5, injE4, injC4, injE3, injC3, injE2, injC2, injE1, injC1, injI, injRE, injRC, injLE, injLC)
 import Data.Maybe (Maybe)
+import Halogen.Data.Injector (type (\/), type (<\/>), Injector, prj, inj, injE10, injC10, injE9, injC9, injE8, injC8, injE7, injC7, injE6, injC6, injE5, injC5, injE4, injC4, injE3, injC3, injE2, injC2, injE1, injC1, injI, injRE, injRC, injLE, injLC)
 
 -- | Represents a path through `Either` and `Coproduct` types for the state,
 -- | query algebra, and slots of a component. Used when installing children of

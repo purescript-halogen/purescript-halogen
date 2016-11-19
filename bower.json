@@ -30,6 +30,7 @@
     "purescript-coroutines": "^3.1.0",
     "purescript-dom": "^3.0.0",
     "purescript-foreign": "^3.0.0",
+    "purescript-fork": "^1.0.0",
     "purescript-free": "^3.0.0",
     "purescript-freeap": "^2.0.0",
     "purescript-maps": "^2.0.0",
