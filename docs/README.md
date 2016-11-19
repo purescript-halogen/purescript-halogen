@@ -13,3 +13,6 @@
     - [Evaluating requests](2 - Defining a component.md#evaluating-requests)
   - [Putting it all together](2 - Defining a component.md#putting-it-all-together)
 3. [Handling effects](3 - Handling effects.md)
+  - [Using `Eff` during `eval`](3 - Handling effects.md#using-eff-during-eval)
+  - [Using `Aff` during `eval`](3 - Handling effects.md#using-aff-during-eval)
+  - [Mixing `Eff` and `Aff`](3 - Handling effects.md#mixing-eff-and-aff)

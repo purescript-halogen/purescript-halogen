@@ -1,0 +1,8 @@
+{
+  "name": "eff-random",
+  "private": true,
+  "dependencies": {
+    "purescript-halogen": "*",
+    "purescript-random": "^2.0.0"
+  }
+}

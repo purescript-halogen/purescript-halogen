@@ -17,35 +17,35 @@ data Query a
 
 data Message = Toggled Boolean
 
-initialState :: State
-initialState = false
-
-render :: State -> H.ComponentHTML Query
-render state =
-  let
-    label = if state then "On" else "Off"
-  in
-    HH.button
-      [ HP.title label
-      , HE.onClick (HE.input_ Toggle)
-      ]
-      [ HH.text label ]
-
-eval :: forall m. Query ~> H.ComponentDSL State Query Message m
-eval = case _ of
-  Toggle next -> do
-    state <- H.get
-    let nextState = not state
-    H.put nextState
-    H.raise $ Toggled nextState
-    pure next
-  IsOn continue -> do
-    state <- H.get
-    pure (continue state)
-
 myButton :: forall m. H.Component HH.HTML Query Message m
 myButton = H.component { initialState, render, eval }
+  where
 
+  initialState :: State
+  initialState = false
+
+  render :: State -> H.ComponentHTML Query
+  render state =
+    let
+      label = if state then "On" else "Off"
+    in
+      HH.button
+        [ HP.title label
+        , HE.onClick (HE.input_ Toggle)
+        ]
+        [ HH.text label ]
+
+  eval :: Query ~> H.ComponentDSL State Query Message m
+  eval = case _ of
+    Toggle next -> do
+      state <- H.get
+      let nextState = not state
+      H.put nextState
+      H.raise $ Toggled nextState
+      pure next
+    IsOn reply -> do
+      state <- H.get
+      pure (reply state)
 ```
 
 This is a component for a button that displays its current state as the label, and is toggled when clicked by a user. The rest of this chapter will break down the elements involved here.
@@ -56,13 +56,6 @@ For this button component, we just need a simple state type: is the button on or
 
 ``` purescript
 type State = Boolean
-```
-
-We'll also need a default state value so the component has something to render when constructed. Let's assume the button should be off by default:
-
-``` purescript
-initialState :: State
-initialState = false
 ```
 
 Often a component's state type will be a synonym for a record, as the state will need to include more elements than we have here.
@@ -197,27 +190,30 @@ Toggle next -> do
 
 Note the result: `pure next`. `next` is what we called the `a`-typed value for the constructor. Didn't we say earlier that `a` is always `Unit` for actions? Well, yes, but we don't have proof that `a ~ Unit` here. We must return something of type `a` since we're in a natural transformation, so `next` is the only `a`-typed value we have to hand. This is also why we can't just use `Unit` or omit the `a` in the constructor definition for an action.
 
-As for why we call the `a`-typed value `next`? This is a convention that arose as an allusion to what is happening during query evaluation, as the implementation is based on a free monad. The details don't matter if you just want to use Halogen though, so feel free to choose another name if you prefer. Using the same name throughout the cases in `eval` is recommended though.
-
 ### Evaluating requests
 
 Here's the `eval` case for a request:
 
 ``` purescript
-IsOn continue -> do
+IsOn reply -> do
   state <- H.get
-  pure (continue state)
+  pure (reply state)
 ```
 
-To pass a result back for a request, we just call the `continue` function we took from the query constructor. This is the `result -> a` function requests must have, as mentioned earlier. One way of looking at this is it allows us to convert a `Boolean` into an `a` to satisfy the type of the natural transformation.
-
-Again the name here is alluding to implementation details, so choosing something else is fine.
+To pass a result back for a request, we just call the `reply` function we took from the query constructor. This is the `result -> a` function requests must have, as mentioned earlier. One way of looking at this function is it allows us to convert a `Boolean` into an `a`, to satisfy the type of the natural transformation.
 
 ## Putting it all together
 
-We have our `State`, `Query`, and `Message` types, `initialState` value, and `render` and `eval` functions, so what now?
+We have our `State`, `Query`, and `Message` types, and `render` and `eval` functions, so what now?
 
-Bundle it up in a record and throw it at the [`component`][Halogen.Component.component] function!
+One last thing we'll need is an initial state value, so the component has something to render when first constructed. Let's assume the button should be off by default:
+
+``` purescript
+initialState :: State
+initialState = false
+```
+
+Now we just bundle it all up in a record and throw it at the [`component`][Halogen.Component.component] function!
 
 The record has a type, [`ComponentSpec`][Halogen.Component.ComponentSpec]:
 
