@@ -17,7 +17,7 @@ module Halogen.Component
   , lifecycleParentComponent
   , transform
   , transformChild
-  , interpret
+  , hoist
   , ComponentSlot
   , mkComponentSlot
   , unComponentSlot
@@ -267,13 +267,13 @@ transformChild i = transform (injQuery i) (prjQuery i)
 
 -- | Changes the component's `m` type. A use case for this would be to interpret
 -- | some `Free` monad as `Aff` so the component can be used with `runUI`.
-interpret
+hoist
   :: forall h f o m m'
    . (Bifunctor h, Functor m')
   => (m ~> m')
   -> Component h f o m
   -> Component h f o m'
-interpret nat =
+hoist nat =
   unComponent \c ->
     mkComponent
       { initialState: c.initialState
@@ -320,4 +320,4 @@ hoistSlotM
   -> ComponentSlot h g m p i
   -> ComponentSlot h g m' p i
 hoistSlotM nat = unComponentSlot \p ctor k ->
-  mkComponentSlot p (map (interpret nat) ctor) k
+  mkComponentSlot p (map (hoist nat) ctor) k

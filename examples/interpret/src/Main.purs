@@ -48,7 +48,7 @@ ui = H.component { render, eval, initialState }
     pure next
 
 ui' :: forall eff. H.Component HH.HTML Query Void (Aff (H.HalogenEffects (console :: CONSOLE | eff)))
-ui' = H.interpret (foldFree evalMyAlgebra) ui
+ui' = H.hoist (foldFree evalMyAlgebra) ui
   where
   evalMyAlgebra :: MyAlgebra ~> Aff (H.HalogenEffects (console :: CONSOLE | eff))
   evalMyAlgebra (Log msg next) = do

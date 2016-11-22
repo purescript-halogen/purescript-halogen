@@ -19,7 +19,7 @@ import Control.Coroutine as CR
 
 import Data.Lazy (defer)
 
-import Halogen.Component (Component, Component', ComponentDSL, ComponentHTML, ComponentSlot, ComponentSpec, LifecycleComponentSpec, ParentComponentSpec, ParentDSL, ParentHTML, ParentLifecycleComponentSpec, component, interpret, lifecycleComponent, lifecycleParentComponent, mkComponent, mkComponentSlot, parentComponent, transform, transformChild, unComponent, unComponentSlot)
+import Halogen.Component (Component, Component', ComponentDSL, ComponentHTML, ComponentSlot, ComponentSpec, LifecycleComponentSpec, ParentComponentSpec, ParentDSL, ParentHTML, ParentLifecycleComponentSpec, component, hoist, lifecycleComponent, lifecycleParentComponent, mkComponent, mkComponentSlot, parentComponent, transform, transformChild, unComponent, unComponentSlot)
 import Halogen.Effects (HalogenEffects)
 import Halogen.HTML.Core (AttrName(..), ClassName(..), Namespace(..), PropName(..), TagName(..))
 import Halogen.HTML.Core as C
