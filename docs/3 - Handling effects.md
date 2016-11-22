@@ -55,7 +55,7 @@ ui = H.component { render, eval, initialState }
       pure next
 ```
 
-To be able to use `random`, we've populated the `m` type variable with an `Aff`. This needs applying to both the component and `eval` function:
+To be able to use [`random`][Control.Monad.Eff.Random.random], we've populated the `m` type variable with an `Aff`. This needs applying to both the component and `eval` function:
 
 ``` purescript
 ui :: forall eff. H.Component HH.HTML Query Void (Aff (random :: RANDOM | eff))
@@ -63,9 +63,9 @@ ui :: forall eff. H.Component HH.HTML Query Void (Aff (random :: RANDOM | eff))
 eval :: Query ~> H.ComponentDSL State Query Void (Aff (random :: RANDOM | eff))
 ```
 
-Why are we using `Aff` rather than `Eff` here? For convenience - when it's time to run our UI, `Halogen` expects an `Aff` type here. It is possible to `hoist` a component and change the `m` type, but it's easier if we just use `Aff` in the first place. `Aff` can do anything `Eff` can, so we're not losing out, just admitting more possibilities than we might need.
+Why are we using `Aff` rather than `Eff` here? For convenience - when it's time to run our UI, `Halogen` expects an `Aff` here. It is possible to [`hoist`][Halogen.Component.hoist] a component and change the `m` type, but it's easier if we just use `Aff` in the first place. `Aff` can do anything `Eff` can, so we're not losing out, just admitting more possibilities than we might need.
 
-We can now use the `liftEff` function in `ComponentDSL`:
+We can now use the [`liftEff`][Control.Monad.Eff.Class.liftEff] function in `eval`:
 
 ``` purescript
 eval = case _ of
@@ -75,11 +75,11 @@ eval = case _ of
     pure next
 ```
 
-This works as there's a `MonadEff` instance for `HalogenM` for any `m` that also has a `MonadEff` instance, and `Aff` satisfies this constraint. (As a reminder, `ComponentDSL` is an synonym for `HalogenM`).
+This works as there's a [`MonadEff`][Control.Monad.Eff.Class.MonadEff] instance for `HalogenM` for any `m` that also has a `MonadEff` instance, and `Aff` satisfies this constraint. (As a reminder, `ComponentDSL` is an synonym for `HalogenM`).
 
 ## Using `Aff` during `eval`
 
-It's occasionally useful to be able to fetch data from an API, so let's use that as an example. We're going to make use of the `affjax` library as it provides a nice `Aff`-based interface for AJAX requests. Our data source will be GitHub's user API.
+It's occasionally useful to be able to fetch data from an API, so let's use that as an example. We're going to make use of the [`affjax`][purescript-affjax] library as it provides a nice `Aff`-based interface for AJAX requests. Our data source will be GitHub's user API.
 
 ``` purescript
 import Prelude
@@ -150,7 +150,7 @@ ui = H.component { render, eval, initialState }
       pure next
 ```
 
-As with the `Eff`-based example, we've populated the `m` type variables with `Aff`. This time we're going to rely on the `MonadAff` instance and use `liftAff`:
+As with the `Eff`-based example, we've populated the `m` type variables with `Aff`. This time we're going to rely on the [`MonadAff`][Control.Monad.Aff.Class.MonadAff] instance and use [`liftAff`][Control.Monad.Aff.Class.liftAff]:
 
 ``` purescript
     MakeRequest next -> do
@@ -168,4 +168,10 @@ Note how there was no need to setup callbacks or anything of that nature. Using 
 Any type that satisfies a `MonadAff` constraint also satisfies `MonadEff`, so using `Aff` as the base monad for a component allows `liftEff` and `liftAff` to be used together freely. The effect row will need to contain both sets of effects, but other than that no special handling is required.
 
 
+[Control.Monad.Aff.Class.liftAff]: # "Control.Monad.Aff.Class.liftAff"
+[Control.Monad.Aff.Class.MonadAff]: # "Control.Monad.Aff.Class.MonadAff"
+[Control.Monad.Eff.Class.liftEff]: # "Control.Monad.Eff.Class.liftEff"
+[Control.Monad.Eff.Class.MonadEff]: # "Control.Monad.Eff.Class.MonadEff"
+[Control.Monad.Eff.Random.random]: https://pursuit.purescript.org/packages/purescript-random/2.0.0/docs/Control.Monad.Eff.Random#v:random "Control.Monad.Eff.Random.random"
+[Halogen.Component.hoist]: # "Halogen.Component.hoist"
 [purescript-affjax]: https://github.com/slamdata/purescript-affjax
