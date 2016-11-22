@@ -9,9 +9,9 @@ import Control.Monad.Eff.Console (CONSOLE)
 import Data.Maybe (Maybe(..))
 
 import Halogen as H
+import Halogen.Aff as HA
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
-import Halogen.Util (runHalogenAff, awaitBody)
 import Halogen.VirtualDOM.Driver (runUI)
 
 import Ace.Types (ACE)
@@ -69,7 +69,7 @@ ui = H.parentComponent { render, eval, initialState }
   handleAceOuput (TextChanged text) = Just $ H.action $ HandleAceUpdate text
 
 -- | Run the app!
-main :: Eff (H.HalogenEffects (ace :: ACE, console :: CONSOLE)) Unit
-main = runHalogenAff do
-  body <- awaitBody
+main :: Eff (HA.HalogenEffects (ace :: ACE, console :: CONSOLE)) Unit
+main = HA.runHalogenAff do
+  body <- HA.awaitBody
   runUI ui body

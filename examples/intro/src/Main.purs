@@ -7,7 +7,7 @@ import Control.Monad.Eff (Eff)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
-import Halogen.Util (runHalogenAff, awaitBody)
+import Halogen.Aff.Util (runHalogenAff, awaitBody)
 import Halogen.VirtualDOM.Driver (runUI)
 
 type State = { on :: Boolean }
