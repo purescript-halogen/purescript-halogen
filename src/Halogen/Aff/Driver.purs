@@ -2,6 +2,7 @@ module Halogen.Aff.Driver
   ( RenderSpec
   , runUI
   , module Halogen
+  , module Halogen.Effects
   , module Exports
   ) where
 

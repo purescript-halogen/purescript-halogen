@@ -10,7 +10,7 @@ import Data.Lazy (defer)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
-import Halogen.Util (runHalogenAff, awaitBody)
+import Halogen.Aff.Util (runHalogenAff, awaitBody)
 import Halogen.VirtualDOM.Driver (runUI)
 
 import Ticker (TickQuery(..), ticker)

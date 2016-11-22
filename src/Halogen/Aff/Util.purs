@@ -1,4 +1,4 @@
-module Halogen.Util
+module Halogen.Aff.Util
   ( awaitLoad
   , awaitBody
   , selectElement
