@@ -27,7 +27,7 @@ import DOM.HTML.Types (HTMLElement, windowToEventTarget, htmlDocumentToParentNod
 import DOM.HTML.Window (document)
 import DOM.Node.ParentNode (querySelector)
 
-import Halogen.Effects (HalogenEffects)
+import Halogen.Aff.Effects (HalogenEffects)
 
 -- | Waits for the document to load.
 awaitLoad :: forall eff. Aff (dom :: DOM | eff) Unit

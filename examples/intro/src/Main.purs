@@ -1,42 +1,24 @@
 module Main where
 
 import Prelude
-
+import Control.Coroutine as CR
+import Control.Monad.Aff.Console (CONSOLE, log)
 import Control.Monad.Eff (Eff)
-
+import Data.Maybe (Maybe(..))
 import Halogen as H
-import Halogen.HTML as HH
-import Halogen.HTML.Events as HE
-import Halogen.Aff.Util (runHalogenAff, awaitBody)
+import Halogen.Aff as HA
 import Halogen.VirtualDOM.Driver (runUI)
+import Button as B
 
-type State = { on :: Boolean }
+main :: Eff (HA.HalogenEffects (console :: CONSOLE)) Unit
+main = HA.runHalogenAff do
+  body <- HA.awaitBody
+  io <- runUI B.myButton body
 
-initialState :: State
-initialState = { on: false }
+  io.subscribe $ CR.consumer \(B.Toggled newState) -> do
+    log $ "Button was toggled to: " <> show newState
+    pure Nothing
 
-data Query a = ToggleState a
-
-ui :: forall m. H.Component HH.HTML Query Void m
-ui = H.component { initialState, render, eval }
-  where
-
-  render :: State -> H.ComponentHTML Query
-  render state =
-    HH.div_
-      [ HH.h1_
-          [ HH.text "Toggle Button" ]
-      , HH.button
-          [ HE.onClick (HE.input_ ToggleState) ]
-          [ HH.text (if state.on then "On" else "Off") ]
-      ]
-
-  eval :: Query ~> H.ComponentDSL State Query Void m
-  eval (ToggleState next) = do
-    H.modify (\state -> { on: not state.on })
-    pure next
-
-main :: Eff (H.HalogenEffects ()) Unit
-main = runHalogenAff do
-  body <- awaitBody
-  runUI ui body
+  io.query $ H.action $ B.Toggle
+  io.query $ H.action $ B.Toggle
+  io.query $ H.action $ B.Toggle

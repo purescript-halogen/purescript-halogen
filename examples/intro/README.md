@@ -1,6 +1,6 @@
 ## Intro example
 
-This example illustrates a very basic component.
+This example illustrates a very basic button component.
 
 ### Building
 

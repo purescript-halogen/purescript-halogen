@@ -13,7 +13,7 @@ import Data.Newtype (unwrap)
 import Data.Nullable (toNullable)
 import Data.Traversable (traverse)
 
-import Halogen.Effects (HalogenEffects)
+import Halogen.Aff.Effects (HalogenEffects)
 import Halogen.HTML.Core (HTML(..), Prop(..), PropF(..), lowerFuse)
 import Halogen.VirtualDOM.Internal as V
 

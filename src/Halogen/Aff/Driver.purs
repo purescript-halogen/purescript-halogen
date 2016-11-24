@@ -2,7 +2,6 @@ module Halogen.Aff.Driver
   ( RenderSpec
   , runUI
   , module Halogen
-  , module Halogen.Effects
   , module Exports
   ) where
 
@@ -34,13 +33,13 @@ import Data.Tuple (Tuple(..))
 
 import Halogen (HalogenIO)
 import Halogen.Aff.Driver.State (ComponentType(..), DriverStateX, DriverState(..), unDriverStateX, initDriverState)
+import Halogen.Aff.Effects (HalogenEffects)
 import Halogen.Component (Component, ComponentSlot, unComponent, unComponentSlot)
 import Halogen.Data.OrdBox (OrdBox, unOrdBox)
-import Halogen.Effects (HalogenEffects)
 import Halogen.Query.ChildQuery (ChildQuery, unChildQuery)
+import Halogen.Query.EventSource as ES
 import Halogen.Query.ForkF as FF
 import Halogen.Query.HalogenM (HalogenM(..), HalogenF(..), HalogenAp(..))
-import Halogen.Query.EventSource as ES
 
 import Halogen.Aff.Driver.State (ComponentType(..)) as Exports
 
