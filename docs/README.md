@@ -16,3 +16,5 @@
   - [Using `Eff` during `eval`](3 - Handling effects.md#using-eff-during-eval)
   - [Using `Aff` during `eval`](3 - Handling effects.md#using-aff-during-eval)
   - [Mixing `Eff` and `Aff`](3 - Handling effects.md#mixing-eff-and-aff)
+4. [Running a component](4 - Running a component.md)
+  - [`runUI`](4 - Running a component.md#runui)
