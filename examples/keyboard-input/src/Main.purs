@@ -16,9 +16,9 @@ import DOM.HTML.Types (htmlDocumentToDocument) as DOM
 import DOM.HTML.Window (document) as DOM
 
 import Halogen as H
+import Halogen.Aff as HA
 import Halogen.HTML as HH
 import Halogen.Query.EventSource as ES
-import Halogen.Aff.Util (runHalogenAff, awaitBody)
 import Halogen.VirtualDOM.Driver (runUI)
 
 import Keyboard as K
@@ -74,7 +74,7 @@ ui =
         | otherwise ->
             pure (reply H.Listening)
 
-main :: Eff (H.HalogenEffects (keyboard :: K.KEYBOARD)) Unit
-main = runHalogenAff do
-  body <- awaitBody
+main :: Eff (HA.HalogenEffects (keyboard :: K.KEYBOARD)) Unit
+main = HA.runHalogenAff do
+  body <- HA.awaitBody
   runUI ui body

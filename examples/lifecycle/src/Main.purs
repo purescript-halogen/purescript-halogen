@@ -12,10 +12,10 @@ import Data.Maybe (Maybe(..))
 import Data.Lazy (defer)
 
 import Halogen as H
+import Halogen.Aff as HA
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
-import Halogen.Aff.Util (runHalogenAff, awaitBody)
 import Halogen.VirtualDOM.Driver (runUI)
 
 import Child as Child
@@ -99,7 +99,7 @@ ui = H.lifecycleParentComponent
     Child.Refd -> H.action $ ReportRoot ("Heard Refd from child" <> show i)
     Child.Reported msg -> H.action $ ReportRoot ("Re-reporting from child" <> show i <> ": " <> msg)
 
-main :: Eff (H.HalogenEffects (console :: CONSOLE)) Unit
-main = runHalogenAff do
-  body <- awaitBody
+main :: Eff (HA.HalogenEffects (console :: CONSOLE)) Unit
+main = HA.runHalogenAff do
+  body <- HA.awaitBody
   runUI ui body

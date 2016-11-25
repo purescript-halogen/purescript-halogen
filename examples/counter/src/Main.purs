@@ -6,9 +6,9 @@ import Control.Monad.Aff (Aff, later')
 import Control.Monad.Eff (Eff)
 
 import Halogen as H
+import Halogen.Aff as HA
 import Halogen.HTML as HH
 import Halogen.HTML.Properties as HP
-import Halogen.Aff.Util (runHalogenAff, awaitBody)
 import Halogen.VirtualDOM.Driver (runUI)
 
 type State = Int
@@ -38,9 +38,9 @@ ui = H.component { render, eval, initialState }
     pure next
 
 -- | Run the app
-main :: Eff (H.HalogenEffects ()) Unit
-main = runHalogenAff do
-  body <- awaitBody
+main :: Eff (HA.HalogenEffects ()) Unit
+main = HA.runHalogenAff do
+  body <- HA.awaitBody
   app <- runUI ui body
   setInterval 1000 $ app.query (H.action Tick)
 

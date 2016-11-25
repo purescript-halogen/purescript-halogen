@@ -8,9 +8,9 @@ import Data.Maybe (Maybe(..), maybe)
 import Data.Lazy (defer)
 
 import Halogen as H
+import Halogen.Aff as HA
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
-import Halogen.Aff.Util (runHalogenAff, awaitBody)
 import Halogen.VirtualDOM.Driver (runUI)
 
 import Ticker (TickQuery(..), ticker)
@@ -54,7 +54,7 @@ ui = H.parentComponent { render, eval, initialState }
     H.put { tickA: a, tickB: b }
     pure next
 
-main :: Eff (H.HalogenEffects ()) Unit
-main = runHalogenAff do
-  body <- awaitBody
+main :: Eff (HA.HalogenEffects ()) Unit
+main = HA.runHalogenAff do
+  body <- HA.awaitBody
   runUI ui body

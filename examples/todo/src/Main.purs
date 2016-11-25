@@ -4,13 +4,12 @@ import Prelude
 
 import Control.Monad.Eff (Eff)
 
-import Halogen as H
-import Halogen.Aff.Util (runHalogenAff, awaitBody)
+import Halogen.Aff as HA
 import Halogen.VirtualDOM.Driver (runUI)
 
 import Component.List (list)
 
-main :: Eff (H.HalogenEffects ()) Unit
-main = runHalogenAff do
-  body <- awaitBody
+main :: Eff (HA.HalogenEffects ()) Unit
+main = HA.runHalogenAff do
+  body <- HA.awaitBody
   runUI list body
