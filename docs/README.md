@@ -18,3 +18,5 @@
   - [Mixing `Eff` and `Aff`](3 - Handling effects.md#mixing-eff-and-aff)
 4. [Running a component](4 - Running a component.md)
   - [`runUI`](4 - Running a component.md#runui)
+  - [`Aff`-based utility functions](4 - Running a component.md#aff-based-utility-functions)
+5. [Parent and child components](5 - Parent and child components.md)

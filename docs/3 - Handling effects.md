@@ -168,10 +168,11 @@ Note how there was no need to setup callbacks or anything of that nature. Using 
 Any type that satisfies a `MonadAff` constraint also satisfies `MonadEff`, so using `Aff` as the base monad for a component allows `liftEff` and `liftAff` to be used together freely. The effect row will need to contain both sets of effects, but other than that no special handling is required.
 
 
+[purescript-affjax]: https://pursuit.purescript.org/packages/purescript-affjax "purescript-affjax"
+
 [Control.Monad.Aff.Class.liftAff]: # "Control.Monad.Aff.Class.liftAff"
 [Control.Monad.Aff.Class.MonadAff]: # "Control.Monad.Aff.Class.MonadAff"
 [Control.Monad.Eff.Class.liftEff]: # "Control.Monad.Eff.Class.liftEff"
 [Control.Monad.Eff.Class.MonadEff]: # "Control.Monad.Eff.Class.MonadEff"
 [Control.Monad.Eff.Random.random]: https://pursuit.purescript.org/packages/purescript-random/2.0.0/docs/Control.Monad.Eff.Random#v:random "Control.Monad.Eff.Random.random"
 [Halogen.Component.hoist]: # "Halogen.Component.hoist"
-[purescript-affjax]: https://github.com/slamdata/purescript-affjax

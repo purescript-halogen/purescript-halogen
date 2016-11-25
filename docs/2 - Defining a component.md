@@ -239,7 +239,7 @@ All these type variables may be a little intimidating at first, but they become 
 component :: forall h s f o m. ComponentSpec h s f o m -> Component h f o m
 ```
 
-We can now use our component [as a child of another component](#) or [run it to produce a UI](#).
+We can now use our component [as a child of another component](5 - Parent and child components "Parent and child components") or [run it to produce a UI](4 - Running a component "Running a component").
 
 [Control.Monad.State.Class.get]: https://pursuit.purescript.org/packages/purescript-transformers/2.0.2/docs/Control.Monad.State.Class#v:get "Control.Monad.State.Class.get"
 [Control.Monad.State.Class.gets]: https://pursuit.purescript.org/packages/purescript-transformers/2.0.2/docs/Control.Monad.State.Class#v:gets "Control.Monad.State.Class.gets"

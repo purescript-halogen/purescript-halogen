@@ -96,12 +96,32 @@ main = HA.runHalogenAff do
 
 Here we're setting up a consumer that will listen to the component forever (as it returns `pure Nothing` - see the docs for [`consumer`][Control.Coroutine.consumer] for an explanation), and immediately toggling the button several times on start up. Checking the browser console should reveal the corresponding logged "Button was toggled" messages.
 
-[Control.Coroutine.consumer]: https://pursuit.purescript.org/packages/purescript-coroutines/3.1.0/docs/Control.Coroutine#v:consumer "Control.Coroutine.consumer"
-[purescript-coroutines]: # "purescript-coroutines"
-[virtual-dom]: https://github.com/Matt-Esch/virtual-dom
+## `Aff`-based utility functions
+
+Aside from `runUI` we used a couple of other utility functions in our `main`, exported from `Halogen.Aff`:
+
+- [`runHalogenAff`][Halogen.Aff.Util.runHalogenAff] runs a Halogen-produced `Aff` value, turning it into an `Eff` so it can be used as `main` for a PureScript bundle. It's provided as a convenience - there is no special behaviour here that couldn't be implemented with functions provided by [`aff`][purescript-aff].
+- [`awaitBody`][Halogen.Aff.Util.awaitBody] fetches the `body` element when the document loads. Since we're in `Aff` we can use this to avoid the need for callbacks. This is used when the entire page is going to be a Halogen app.
+
+There are also two more functions provided for cases where we want to run our Halogen app as just part of the page, rather than embedding it in the `body`:
+
+- [`awaitLoad`][Halogen.Aff.Util.awaitLoad] does what the name suggests - waits for the document to load.
+- [`selectElement`][Halogen.Aff.Util.selectElement] is a wrapper around `querySelector` - using this after `awaitLoad` allows targeting of a particular container element on the page, to embed our app within.
+
+Now we know how to build simple components and run them, we can take a look at [embedding child components within a parent](5 - Parent and child components "Parent and child components").
+
 [example-driver-routing]: # "Routing example"
 [example-driver-websockets]: # "WebSockets example"
+[purescript-aff]: https://pursuit.purescript.org/packages/purescript-aff "purescript-aff"
+[purescript-coroutines]: https://pursuit.purescript.org/packages/purescript-coroutines "purescript-coroutines"
+[virtual-dom]: https://github.com/Matt-Esch/virtual-dom
+
+[Control.Coroutine.consumer]: https://pursuit.purescript.org/packages/purescript-coroutines/3.1.0/docs/Control.Coroutine#v:consumer "Control.Coroutine.consumer"
 [Halogen.Aff.Effects.HalogenEffects]: # "Halogen.Aff.Effects.HalogenEffects"
+[Halogen.Aff.Util.awaitBody]: # "Halogen.Aff.Util.awaitBody"
+[Halogen.Aff.Util.awaitLoad]: # "Halogen.Aff.Util.awaitLoad"
+[Halogen.Aff.Util.runHalogenAff]: # "Halogen.Aff.Util.runHalogenAff"
+[Halogen.Aff.Util.selectElement]: # "Halogen.Aff.Util.selectElement"
 [Halogen.Component.hoist]: # "Halogen.Component.hoist"
 [Halogen.VirtualDOM.Driver.runUI]: # "Halogen.VirtualDOM.Driver.runUI"
 [Halogen.VirtualDOM.Driver]: # "Halogen.VirtualDOM.Driver"
