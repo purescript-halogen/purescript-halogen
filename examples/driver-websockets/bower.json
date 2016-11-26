@@ -1,0 +1,9 @@
+{
+  "name": "driver-websockets",
+  "private": true,
+  "dependencies": {
+    "purescript-halogen": "*",
+    "purescript-websocket-simple": "^1.0.0",
+    "purescript-aff-coroutines": "garyb/purescript-aff-coroutines#make-browserify-safe"
+  }
+}
