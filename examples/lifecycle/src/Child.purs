@@ -11,6 +11,7 @@ import Data.Maybe (Maybe(..))
 
 import Halogen as H
 import Halogen.HTML as HH
+import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
 
 import DOM.HTML.Types (HTMLElement)
@@ -43,7 +44,7 @@ child initialState = H.lifecycleParentComponent
 
   render :: Int -> H.ParentHTML Query Query Int (ChildEff eff)
   render id =
-    HH.div [ HP.ref (H.action <<< Ref) ]
+    HH.div [ HP.ref (HE.input Ref) ]
       [ HH.text ("Child " <> show id)
       , HH.ul_
         [ HH.slot 0 (defer \_ -> cell 0) (listen 0)
@@ -96,7 +97,7 @@ cell initialState = H.lifecycleComponent
   render :: Int -> H.ComponentHTML Query
   render id =
     HH.li
-      [ HP.ref (H.action <<< Ref) ]
+      [ HP.ref (HE.input Ref) ]
       [ HH.text ("Cell " <> show id) ]
 
   eval :: Query ~> H.ComponentDSL Int Query Message (ChildEff eff)

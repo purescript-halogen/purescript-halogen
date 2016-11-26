@@ -11,6 +11,7 @@ import DOM.HTML.Types (HTMLElement)
 
 import Halogen as H
 import Halogen.HTML as HH
+import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
 
 import Ace as Ace
@@ -61,7 +62,7 @@ aceComponent =
   -- placeholder div here and attach the ref property which will raise a query
   -- when the element is created.
   render :: AceState -> H.ComponentHTML AceQuery
-  render = const $ HH.div [ HP.ref \el -> H.action (SetElement el) ] []
+  render = const $ HH.div [ HP.ref (HE.input SetElement) ] []
 
   -- The query algebra for the component handles the initialization of the Ace
   -- editor as well as responding to the `ChangeText` action that allows us to

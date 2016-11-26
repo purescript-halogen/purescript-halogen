@@ -58,7 +58,7 @@ renderProp driver = case _ of
   Handler name k ->
     runFn2 V.handlerProp (unwrap name) (maybe (pure unit) driver <<< k)
   Ref f ->
-    V.refProp (driver <<< f)
+    V.refProp (maybe (pure unit) driver <<< f)
   _ ->
     mempty
 

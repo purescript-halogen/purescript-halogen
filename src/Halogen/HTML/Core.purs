@@ -78,14 +78,14 @@ data Prop i
   | Attr (Maybe Namespace) AttrName String
   | Key String
   | Handler EventType (Event -> Maybe i)
-  | Ref (Maybe HTMLElement -> i)
+  | Ref (Maybe HTMLElement -> Maybe i)
 
 instance functorProp :: Functor Prop where
   map _ (Prop e) = Prop e
   map _ (Key k) = Key k
   map _ (Attr ns k v) = Attr ns k v
   map f (Handler name k) = Handler name (map f <<< k)
-  map f (Ref g) = Ref (f <<< g)
+  map f (Ref g) = Ref (map f <<< g)
 
 -- | The data which represents a typed property, hidden inside an existential
 -- | package in the `Prop` type.
