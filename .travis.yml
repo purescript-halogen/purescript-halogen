@@ -13,6 +13,7 @@ script:
   - npm run example-ace
   - npm run example-components
   - npm run example-counter
+  - npm run example-driver-websockets
   - npm run example-effects-aff-ajax
   - npm run example-effects-eff-random
   - npm run example-interpret

@@ -7,6 +7,7 @@
     "example-ace": "bower link && cd examples/ace && bower link purescript-halogen && bower install && npm run build",
     "example-components": "bower link && cd examples/components && bower link purescript-halogen && bower install && npm run build",
     "example-counter": "bower link && cd examples/counter && bower link purescript-halogen && bower install && npm run build",
+    "example-driver-websockets": "bower link && cd examples/driver-websockets && bower link purescript-halogen && bower install && npm run build",
     "example-effects-aff-ajax": "bower link && cd examples/effects-aff-ajax && bower link purescript-halogen && bower install && npm run build",
     "example-effects-eff-random": "bower link && cd examples/effects-eff-random && bower link purescript-halogen && bower install && npm run build",
     "example-interpret": "bower link && cd examples/interpret && bower link purescript-halogen && bower install && npm run build",
