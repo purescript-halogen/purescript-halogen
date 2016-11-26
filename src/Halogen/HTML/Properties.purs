@@ -127,8 +127,8 @@ key = (unsafeCoerce :: (String -> Prop i) -> String -> IProp (key :: I | r) i) K
 -- | The `ref` property allows an input to be raised once a `HTMLElement` has
 -- | been created or destroyed in the DOM for the element that the property is
 -- | attached to.
-ref :: forall r i. (Maybe HTMLElement -> i) -> IProp (ref :: I | r) i
-ref = (unsafeCoerce :: ((Maybe HTMLElement -> i) -> Prop i) -> (Maybe HTMLElement -> i) -> IProp (ref :: I | r) i) Ref
+ref :: forall r i. (Maybe HTMLElement -> Maybe i) -> IProp (ref :: I | r) i
+ref = (unsafeCoerce :: ((Maybe HTMLElement -> Maybe i) -> Prop i) -> (Maybe HTMLElement -> Maybe i) -> IProp (ref :: I | r) i) Ref
 
 alt :: forall r i. String -> IProp (alt :: I | r) i
 alt = prop (PropName "alt") (Just $ AttrName "alt")
