@@ -110,7 +110,7 @@ There are also two more functions provided for cases where we want to run our Ha
 
 Now we know how to build simple components and run them, we can take a look at [embedding child components within a parent](5 - Parent and child components "Parent and child components").
 
-[example-driver-routing]: # "Routing example"
+[example-driver-routing]: ../examples/driver-routing "Routing example"
 [example-driver-websockets]: ../examples/driver-websockets "WebSockets example"
 [purescript-aff]: https://pursuit.purescript.org/packages/purescript-aff "purescript-aff"
 [purescript-coroutines]: https://pursuit.purescript.org/packages/purescript-coroutines "purescript-coroutines"
