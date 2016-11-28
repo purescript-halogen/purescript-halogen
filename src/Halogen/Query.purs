@@ -90,7 +90,7 @@ request req = req id
 -- | Sends a query to a child of a component at the specified slot.
 query
   :: forall s f g p o m a
-   . (Applicative m, Eq p)
+   . Eq p
   => p
   -> g a
   -> HalogenM s f g p o m (Maybe a)
@@ -100,7 +100,7 @@ query p q = checkSlot p >>= if _ then Just <$> mkQuery p q else pure Nothing
 -- | `ChildPath` to discriminate the type of child component to query.
 query'
   :: forall s f g g' m p p' o a
-   . (Applicative m, Eq p')
+   . Eq p'
   => ChildPath g g' p p'
   -> p
   -> g a
@@ -110,7 +110,7 @@ query' path p q = query (injSlot path p) (injQuery path q)
 -- | Sends a query to all children of a component.
 queryAll
   :: forall s f g p o m a
-   . (Applicative m, Ord p)
+   . Ord p
   => g a
   -> HalogenM s f g p o m (M.Map p a)
 queryAll = queryAll' cpI
@@ -119,7 +119,7 @@ queryAll = queryAll' cpI
 -- | a `ChildPath` to discriminate the type of child component to query.
 queryAll'
   :: forall s f g g' p p' o m a
-   . (Applicative m, Ord p, Eq p')
+   . (Ord p, Eq p')
   => ChildPath g g' p p'
   -> g a
   -> HalogenM s f g' p' o m (M.Map p a)
