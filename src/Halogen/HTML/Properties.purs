@@ -15,8 +15,6 @@ module Halogen.HTML.Properties
   , NumeralType(..)
   , CaseType(..)
 
-  , key
-
   , alt
   , charset
   , class_, classes
@@ -118,11 +116,6 @@ prop = (unsafeCoerce :: (PropName value -> Maybe AttrName -> value -> Prop i) ->
 -- | Creates an indexed HTML attribute.
 attr :: forall r i. AttrName -> String -> IProp r i
 attr = (unsafeCoerce :: (AttrName -> String -> Prop i) -> AttrName -> String -> IProp r i) Core.attr
-
--- | The `key` property associates a unique key with a node, which can be used
--- | to implement a more efficient diff/patch.
-key :: forall r i. String -> IProp (key :: I | r) i
-key = (unsafeCoerce :: (String -> Prop i) -> String -> IProp (key :: I | r) i) Key
 
 -- | The `ref` property allows an input to be raised once a `HTMLElement` has
 -- | been created or destroyed in the DOM for the element that the property is
