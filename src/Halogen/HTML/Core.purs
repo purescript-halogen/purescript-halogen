@@ -41,19 +41,19 @@ instance functorHTML :: Functor (HTML p) where
 
 -- | A smart constructor for HTML elements.
 element :: forall p i. VDom.ElemName -> Array (Prop i) -> Array (HTML p i) -> HTML p i
-element = coe (\name props children -> VDom.Elem (VDom.ElemSpec name props children))
+element = coe (\name props children -> VDom.Elem (VDom.ElemSpec Nothing name props) children)
   where
   coe
-    :: (Maybe VDom.Namespace -> VDom.ElemName -> Array (Prop i) -> Array (VDom.VDom (Array (Prop i)) p) -> VDom.VDom (Array (Prop i)) p)
+    :: (VDom.ElemName -> Array (Prop i) -> Array (VDom.VDom (Array (Prop i)) p) -> VDom.VDom (Array (Prop i)) p)
     -> VDom.ElemName -> Array (Prop i) -> Array (HTML p i) -> HTML p i
   coe = unsafeCoerce
 
 -- | A smart constructor for HTML elements with keyed children.
 keyed :: forall p i. VDom.ElemName -> Array (Prop i) -> Array (Tuple String (HTML p i)) -> HTML p i
-keyed = coe (\name props children -> VDom.Keyed (VDom.ElemSpec name props children))
+keyed = coe (\name props children -> VDom.Keyed (VDom.ElemSpec Nothing name props) children)
   where
   coe
-    :: (Maybe VDom.Namespace -> VDom.ElemName -> Array (Prop i) -> Array (Tuple String (VDom.VDom (Array (Prop i)) p)) -> VDom.VDom (Array (Prop i)) p)
+    :: (VDom.ElemName -> Array (Prop i) -> Array (Tuple String (VDom.VDom (Array (Prop i)) p)) -> VDom.VDom (Array (Prop i)) p)
     -> VDom.ElemName -> Array (Prop i) -> Array (Tuple String (HTML p i)) -> HTML p i
   coe = unsafeCoerce
 
