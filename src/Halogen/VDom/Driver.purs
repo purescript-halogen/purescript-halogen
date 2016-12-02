@@ -5,9 +5,10 @@ module Halogen.VDom.Driver
 
 import Prelude
 
-import Control.Monad.Aff (Aff)
+import Control.Monad.Aff (Aff, runAff)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Class (liftEff)
+import Control.Plus (empty)
 
 import Data.Maybe (Maybe(..))
 
@@ -36,12 +37,13 @@ foreign import data RenderState :: # ! -> *
 mkSpec
   :: forall f g p eff
    . (f Unit -> Eff (HalogenEffects eff) Unit)
+  -> (ComponentSlot HTML g (Aff (HalogenEffects eff)) p (f Unit) -> Eff (HalogenEffects eff) (RenderState' f g p eff))
   -> DOM.Document
   -> V.VDomSpec
       (HalogenEffects eff)
       (Array (VP.Prop (f Unit)))
       (ComponentSlot HTML g (Aff (HalogenEffects eff)) p (f Unit))
-mkSpec handler document = V.VDomSpec
+mkSpec handler renderChild document = V.VDomSpec
   { buildWidget: buildWidget
   , buildAttributes: buildAttributes
   , document: document
@@ -60,10 +62,14 @@ mkSpec handler document = V.VDomSpec
     -> V.VDomMachine (HalogenEffects eff)
           (ComponentSlot HTML g (Aff (HalogenEffects eff)) p (f Unit))
           DOM.Node
-  buildWidget spec _ = do
-    machine <- V.buildVDom spec (V.Text "<widget>")
-    let node = V.extract machine
-    pure (V.Step node (patch node) done)
+  buildWidget spec slot = do
+    vdom <- renderChild slot
+    pure $ map ?x vdom
+    -- machine <- V.buildVDom spec vdom
+    -- let node = V.extract machine
+    -- pure (V.Step node (patch node) done)
+    -- x <- renderChild slot
+    -- pure $ ?z x
 
   patch
     :: DOM.Node
@@ -98,7 +104,7 @@ renderSpec document container =
   render handler child (HTML vdom) componentType lastRender = do
     liftEff case lastRender of
       Nothing -> do
-        let spec = mkSpec handler document
+        let spec = mkSpec handler child document
         machine <- V.buildVDom spec vdom
         let node = V.extract machine
         appendChild node (htmlElementToNode container)
@@ -113,7 +119,7 @@ renderSpec document container =
   renderChild keyId lastRender =
     liftEff case lastRender of
       Nothing ->
-        V.buildVDom (mkSpec (const (pure unit)) document) (V.Text "<child>")
+        V.buildVDom (mkSpec (const (pure unit)) (const empty) document) (V.Text "<child>")
       Just r ->
         pure r
 
@@ -123,19 +129,19 @@ renderSpec document container =
 type Render eff
   = forall f g p
    . (forall x. f x -> Eff (HalogenEffects eff) Unit)
-  -> (ComponentSlot HTML g (Aff (HalogenEffects eff)) p (f Unit) -> Aff (HalogenEffects eff) (RenderState' f g p eff))
+  -> (ComponentSlot HTML g (Aff (HalogenEffects eff)) p (f Unit) -> Eff (HalogenEffects eff) (RenderState' f g p eff))
   -> HTML (ComponentSlot HTML g (Aff (HalogenEffects eff)) p (f Unit)) (f Unit)
   -> AD.ComponentType
   -> Maybe (RenderState' f g p eff)
-  -> Aff (HalogenEffects eff) (RenderState' f g p eff)
+  -> Eff (HalogenEffects eff) (RenderState' f g p eff)
 
 type Render' eff
   = forall f g p
    . (forall x. f x -> Eff (HalogenEffects eff) Unit)
-  -> (ComponentSlot HTML g (Aff (HalogenEffects eff)) p (f Unit) -> Aff (HalogenEffects eff) (RenderState eff))
+  -> (ComponentSlot HTML g (Aff (HalogenEffects eff)) p (f Unit) -> Eff (HalogenEffects eff) (RenderState eff))
   -> HTML (ComponentSlot HTML g (Aff (HalogenEffects eff)) p (f Unit)) (f Unit)
   -> AD.ComponentType
   -> Maybe (RenderState eff)
-  -> Aff (HalogenEffects eff) (RenderState eff)
+  -> Eff (HalogenEffects eff) (RenderState eff)
 
-type RenderChild rs eff = Int -> Maybe (rs eff) -> Aff (HalogenEffects eff) (rs eff)
+type RenderChild rs eff = Int -> Maybe (rs eff) -> Eff (HalogenEffects eff) (rs eff)

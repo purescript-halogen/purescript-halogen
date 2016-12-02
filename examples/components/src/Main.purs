@@ -11,9 +11,13 @@ import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.Aff.Util (runHalogenAff, awaitBody)
-import Halogen.VirtualDOM.Driver (runUI)
+import Halogen.VDom.Driver (runUI)
 
 import Ticker (TickQuery(..), ticker)
+
+import DOM.HTML (window) as DOM
+import DOM.HTML.Types (htmlDocumentToDocument) as DOM
+import DOM.HTML.Window (document) as DOM
 
 data Query a = ReadTicks a
 
@@ -57,4 +61,5 @@ ui = H.parentComponent { render, eval, initialState }
 main :: Eff (H.HalogenEffects ()) Unit
 main = runHalogenAff do
   body <- awaitBody
-  runUI ui body
+  doc <- H.liftEff $ DOM.document =<< DOM.window
+  runUI (DOM.htmlDocumentToDocument doc) ui body

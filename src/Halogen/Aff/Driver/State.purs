@@ -10,8 +10,8 @@ module Halogen.Aff.Driver.State
 import Prelude
 
 import Control.Monad.Aff (Aff)
-import Control.Monad.Aff.AVar (AVar, putVar, makeVar)
-import Control.Monad.Eff.Ref (Ref)
+import Control.Monad.Eff (Eff)
+import Control.Monad.Eff.Ref (Ref, newRef, writeRef)
 
 import Data.List (List(..))
 import Data.Map as M
@@ -48,9 +48,9 @@ type DriverStateRec h r s f g p o eff =
   { component :: Component' h s f g p o (Aff (HalogenEffects eff))
   , componentType :: ComponentType
   , state :: s
-  , children :: M.Map (OrdBox p) (AVar (DriverStateX h r g eff))
+  , children :: M.Map (OrdBox p) (Ref (DriverStateX h r g eff))
   , mkOrdBox :: p -> OrdBox p
-  , selfRef :: AVar (DriverState h r s f g p o eff)
+  , selfRef :: Ref (DriverState h r s f g p o eff)
   , handler :: o -> Aff (HalogenEffects eff) Unit
   , pendingIn :: Maybe (List (Aff (HalogenEffects eff) Unit))
   , pendingOut :: Maybe (List o)
@@ -65,8 +65,8 @@ data DriverStateX (h :: * -> * -> *) r (g :: * -> *) (eff :: # !)
 
 mkDriverStateXVar
   :: forall h r s f g p o eff
-   . AVar (DriverState h r s f g p o eff)
-  -> AVar (DriverStateX h r f eff)
+   . Ref (DriverState h r s f g p o eff)
+  -> Ref (DriverStateX h r f eff)
 mkDriverStateXVar = unsafeCoerce
 
 unDriverStateX
@@ -83,9 +83,9 @@ initDriverState
   -> (o -> Aff (HalogenEffects eff) Unit)
   -> Int
   -> Ref Int
-  -> Aff (HalogenEffects eff) (AVar (DriverStateX h r f eff))
+  -> Eff (HalogenEffects eff) (Ref (DriverStateX h r f eff))
 initDriverState component componentType handler keyId fresh = do
-  selfRef <- makeVar
+  selfRef <- newRef (unsafeCoerce {})
   let
     ds =
       { component
@@ -101,5 +101,5 @@ initDriverState component componentType handler keyId fresh = do
       , pendingOut: component.initializer $> Nil
       , rendering: Nothing
       }
-  putVar selfRef (DriverState ds)
+  writeRef selfRef (DriverState ds)
   pure $ mkDriverStateXVar selfRef
