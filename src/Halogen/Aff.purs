@@ -1,7 +1,9 @@
 module Halogen.Aff
-  ( module Halogen.Aff.Driver
+  ( module Halogen
+  , module Halogen.Effects
   , module Halogen.Aff.Util
   ) where
 
-import Halogen.Aff.Driver (ComponentType(..), HalogenEffects, HalogenIO, RenderSpec, runUI)
+import Halogen (HalogenIO)
+import Halogen.Effects (HalogenEffects)
 import Halogen.Aff.Util (awaitBody, awaitLoad, runHalogenAff, selectElement)

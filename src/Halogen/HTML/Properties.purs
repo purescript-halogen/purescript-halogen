@@ -85,11 +85,12 @@ import Prelude
 import Data.Maybe (Maybe(..))
 import Data.MediaType (MediaType)
 import Data.Newtype (class Newtype, unwrap)
+import Data.Profunctor (lmap)
 import Data.String (joinWith)
 
 import DOM.HTML.Types (HTMLElement)
 
-import Halogen.HTML.Core (class IsProp, ClassName, AttrName(..), PropName(..), Prop(..))
+import Halogen.HTML.Core (class IsProp, ClassName, AttrName(..), PropName(..), Prop(..), ElemRef(..))
 import Halogen.HTML.Core as Core
 
 import Unsafe.Coerce (unsafeCoerce)
@@ -121,7 +122,11 @@ attr = (unsafeCoerce :: (AttrName -> String -> Prop i) -> AttrName -> String -> 
 -- | been created or destroyed in the DOM for the element that the property is
 -- | attached to.
 ref :: forall r i. (Maybe HTMLElement -> Maybe i) -> IProp (ref :: I | r) i
-ref = (unsafeCoerce :: ((Maybe HTMLElement -> Maybe i) -> Prop i) -> (Maybe HTMLElement -> Maybe i) -> IProp (ref :: I | r) i) Ref
+ref = (unsafeCoerce :: ((Maybe HTMLElement -> Maybe i) -> Prop i) -> (Maybe HTMLElement -> Maybe i) -> IProp (ref :: I | r) i) (lmap (lmap refToMaybe) Ref)
+  where
+  refToMaybe = case _ of
+    Created x -> Just x
+    Removed _ -> Nothing
 
 alt :: forall r i. String -> IProp (alt :: I | r) i
 alt = prop (PropName "alt") (Just $ AttrName "alt")

@@ -33,7 +33,7 @@
     "purescript-fork": "^1.0.0",
     "purescript-free": "^3.0.0",
     "purescript-freeap": "^2.0.0",
-    "purescript-halogen-vdom": "2475904a0806646a6946d491059f46dbc0cf9162",
+    "purescript-halogen-vdom": "41f1f975df5055cb7a3fad39eeebbf8ee38c7b4a",
     "purescript-maps": "^2.0.0",
     "purescript-media-types": "^2.0.0",
     "purescript-nullable": "^2.0.0",

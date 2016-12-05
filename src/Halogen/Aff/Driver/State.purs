@@ -56,12 +56,16 @@ type DriverStateRec h r s f g p o eff =
   , pendingOut :: Maybe (List o)
   , keyId :: Int
   , fresh :: Ref Int
-  , rendering :: Maybe r
+  , rendering :: Maybe (r s f g p o eff)
   }
 
 -- | A version of `DriverState` with the aspects relating to child components
 -- | existentially hidden.
-data DriverStateX (h :: * -> * -> *) r (g :: * -> *) (eff :: # !)
+data DriverStateX
+  (h :: * -> * -> *)
+  (r :: * -> (* -> *) -> (* -> *) -> * -> * -> # ! -> *)
+  (f :: * -> *)
+  (eff :: # !)
 
 mkDriverStateXVar
   :: forall h r s f g p o eff

@@ -29,9 +29,11 @@ import Halogen.VDom.DOM.Prop (Prop(..), PropValue, propFromBoolean, propFromInt,
 import Unsafe.Coerce (unsafeCoerce)
 
 import Halogen.VDom (ElemName(..), Namespace(..)) as Exports
-import Halogen.VDom.DOM.Prop (Prop(..), PropValue) as Exports
+import Halogen.VDom.DOM.Prop (Prop(..), ElemRef(..), PropValue) as Exports
 
 newtype HTML p i = HTML (VDom.VDom (Array (Prop i)) p)
+
+derive instance newtypeHTML :: Newtype (HTML p i) _
 
 instance bifunctorHTML :: Bifunctor HTML where
   bimap f g (HTML vdom) = HTML (bimap (map (map g)) f vdom)
