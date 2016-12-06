@@ -4,6 +4,7 @@ module Halogen.Aff.Driver.State
   , DriverStateRec
   , DriverStateX
   , unDriverStateX
+  , mkDriverStateXRef
   , initDriverState
   ) where
 
@@ -67,11 +68,11 @@ data DriverStateX
   (f :: * -> *)
   (eff :: # !)
 
-mkDriverStateXVar
+mkDriverStateXRef
   :: forall h r s f g p o eff
    . Ref (DriverState h r s f g p o eff)
   -> Ref (DriverStateX h r f eff)
-mkDriverStateXVar = unsafeCoerce
+mkDriverStateXRef = unsafeCoerce
 
 unDriverStateX
   :: forall h r f eff x
@@ -106,4 +107,4 @@ initDriverState component componentType handler keyId fresh = do
       , rendering: Nothing
       }
   writeRef selfRef (DriverState ds)
-  pure $ mkDriverStateXVar selfRef
+  pure $ mkDriverStateXRef selfRef

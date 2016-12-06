@@ -17,10 +17,10 @@ import Ticker (TickQuery(..), ticker)
 
 data Query a = ReadTicks a
 
-type State = { tickA :: Maybe Int, tickB :: Maybe Int }
+type State = { tickA :: Maybe Int, tickB :: Maybe Int, count :: Int }
 
 initialState :: State
-initialState = { tickA: Nothing, tickB: Nothing }
+initialState = { tickA: Nothing, tickB: Nothing, count: 0 }
 
 newtype TickSlot = TickSlot String
 derive instance eqTickSlot :: Eq TickSlot
@@ -30,7 +30,7 @@ ui :: forall m. Applicative m => H.Component HH.HTML Query Void m
 ui = H.parentComponent { render, eval, initialState }
   where
   render :: State -> H.ParentHTML Query TickQuery TickSlot m
-  render { tickA, tickB } =
+  render { tickA, tickB, count } =
     HH.div_
       [ HH.slot (TickSlot "A") (defer \_ -> ticker 100) absurd
       , HH.slot (TickSlot "B") (defer \_ -> ticker 0) absurd
@@ -43,7 +43,7 @@ ui = H.parentComponent { render, eval, initialState }
               ]
           , HH.button
               [ HE.onClick (HE.input_ ReadTicks) ]
-              [ HH.text "Update reading" ]
+              [ HH.text $ "Update reading (" <> show count <> ")" ]
           ]
       ]
 
@@ -51,7 +51,7 @@ ui = H.parentComponent { render, eval, initialState }
   eval (ReadTicks next) = do
     a <- H.query (TickSlot "A") (H.request GetTick)
     b <- H.query (TickSlot "B") (H.request GetTick)
-    H.put { tickA: a, tickB: b }
+    H.modify \st -> { tickA: a, tickB: b, count: st.count + 1 }
     pure next
 
 main :: Eff (H.HalogenEffects ()) Unit
