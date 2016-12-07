@@ -42,13 +42,11 @@ type RenderSpec h r eff =
       -> (ComponentSlot h g (Aff (HalogenEffects eff)) p (f Unit) -> Eff (HalogenEffects eff) (Ref (DriverStateX h r g eff)))
       -> h (ComponentSlot h g (Aff (HalogenEffects eff)) p (f Unit)) (f Unit)
       -> ComponentType
-      -> Ref (DriverState h r s f g p o eff)
       -> Maybe (r s f g p o eff)
       -> Eff (HalogenEffects eff) (r s f g p o eff)
   , renderChild
       :: forall s f g p o
        . Int
-      -> Ref (DriverState h r s f g p o eff)
       -> Maybe (r s f g p o eff)
       -> Eff (HalogenEffects eff) (r s f g p o eff)
   }
@@ -141,7 +139,6 @@ runUI renderSpec component = do
         (renderChild handler' ds.fresh ds.mkOrdBox oldChildren childrenVar lchs)
         (ds.component.render ds.state)
         ds.componentType
-        ds.selfRef
         ds.rendering
     children <- readRef childrenVar
     traverse_ (addFinalizer lchs <=< readRef) =<< readRef oldChildren
@@ -197,7 +194,7 @@ runUI renderSpec component = do
           runComponent (maybe (pure unit) handler <<< k) fresh lchs Child (force ctor)
       modifyRef childrenOutRef (M.insert (mkOrdBox p) var)
       readRef var >>= unDriverStateX \st -> do
-        r <- renderSpec.renderChild st.keyId st.selfRef st.rendering
+        r <- renderSpec.renderChild st.keyId st.rendering
         writeRef st.selfRef $ DriverState $ st { rendering = Just r }
         pure $ mkDriverStateXRef st.selfRef
 

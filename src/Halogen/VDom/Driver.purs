@@ -12,7 +12,6 @@ import Control.Monad.Eff.Ref (Ref, readRef)
 import Control.Monad.Eff.Exception (throw)
 
 import Data.Maybe (Maybe(..), maybe')
-import Data.Map as M
 
 import DOM.HTML (window) as DOM
 import DOM.HTML.Types (htmlDocumentToDocument) as DOM
@@ -24,14 +23,14 @@ import DOM.Node.Types (Document, Element, Node, textToNode) as DOM
 
 import Halogen.Aff.Driver (HalogenIO, ComponentType)
 import Halogen.Aff.Driver as AD
-import Halogen.Aff.Driver.State (ComponentType, DriverState(..), DriverStateX, unDriverStateX)
-import Halogen.Component (Component, ComponentSlot, unComponentSlot)
+import Halogen.Aff.Driver.State (ComponentType, DriverStateX, unDriverStateX)
+import Halogen.Component (Component, ComponentSlot)
 import Halogen.Effects (HalogenEffects)
 import Halogen.HTML.Core (HTML(..), Prop)
 import Halogen.VDom as V
 import Halogen.VDom.DOM.Prop as VP
 
-import Debug.Trace
+-- import Debug.Trace
 
 type VHTML f g p eff =
   V.VDom (Array (Prop (f Unit))) (ComponentSlot HTML g (Aff (HalogenEffects eff)) p (f Unit))
@@ -43,20 +42,16 @@ newtype RenderState s f g p o eff =
     }
 
 mkSpec
-  :: forall s f g p o eff
-   . Ref (DriverState HTML RenderState s f g p o eff)
-  -> (f Unit -> Eff (HalogenEffects eff) Unit)
+  :: forall f g p eff
+   . (f Unit -> Eff (HalogenEffects eff) Unit)
   -> (ComponentSlot HTML g (Aff (HalogenEffects eff)) p (f Unit) -> Eff (HalogenEffects eff) (Ref (DriverStateX HTML RenderState g eff)))
   -> DOM.Document
   -> V.VDomSpec
       (HalogenEffects eff)
       (Array (VP.Prop (f Unit)))
       (ComponentSlot HTML g (Aff (HalogenEffects eff)) p (f Unit))
-mkSpec ref handler renderChild document = V.VDomSpec
-  { buildWidget: buildWidget
-  , buildAttributes: buildAttributes
-  , document: document
-  }
+mkSpec handler renderChild document =
+  V.VDomSpec { buildWidget, buildAttributes, document }
   where
 
   buildAttributes
@@ -72,23 +67,18 @@ mkSpec ref handler renderChild document = V.VDomSpec
           (ComponentSlot HTML g (Aff (HalogenEffects eff)) p (f Unit))
           DOM.Node
   buildWidget spec slot = do
-    DriverState ds <- readRef ref
-    unComponentSlot (\p _ _ -> do
-      dsxRef <- case M.lookup (ds.mkOrdBox p) ds.children of
-        Nothing -> renderChild slot
-        Just dsxRef -> pure dsxRef
-      mnode <- unDriverStateX (\ds' ->
-        pure $ (\(RenderState { node }) -> node) <$> ds'.rendering) =<< readRef dsxRef
-      traceAnyA mnode
-      node <- maybe' (\_ -> DOM.textToNode <$> DOM.createTextNode "" document) pure mnode
-      pure (V.Step node (patch node) done)) slot
+    ref <- renderChild slot
+    mnode <- unDriverStateX (\ds' ->
+      pure $ (\(RenderState { node }) -> node) <$> ds'.rendering) =<< readRef ref
+    node <- maybe' (\_ -> DOM.textToNode <$> DOM.createTextNode "" document) pure mnode
+    pure (V.Step node (patch node) done)
 
   patch
     :: DOM.Node
     -> V.VDomMachine (HalogenEffects eff)
           (ComponentSlot HTML g (Aff (HalogenEffects eff)) p (f Unit))
           DOM.Node
-  patch node _ = pure (V.Step node (patch node) done)
+  patch node slot = pure (V.Step node (patch node) done)
 
   done :: Eff (HalogenEffects eff) Unit
   done = pure unit
@@ -107,10 +97,7 @@ renderSpec
    . DOM.Document
   -> HTMLElement
   -> AD.RenderSpec HTML RenderState eff
-renderSpec document container =
-  { render: render
-  , renderChild: renderChild
-  }
+renderSpec document container = { render, renderChild }
   where
 
   render
@@ -119,13 +106,12 @@ renderSpec document container =
     -> (ComponentSlot HTML g (Aff (HalogenEffects eff)) p (f Unit) -> Eff (HalogenEffects eff) (Ref (DriverStateX HTML RenderState g eff)))
     -> HTML (ComponentSlot HTML g (Aff (HalogenEffects eff)) p (f Unit)) (f Unit)
     -> ComponentType
-    -> Ref (DriverState HTML RenderState s f g p o eff)
     -> Maybe (RenderState s f g p o eff)
     -> Eff (HalogenEffects eff) (RenderState s f g p o eff)
-  render handler child (HTML vdom) componentType ref lastRender = do
-    case lastRender of
+  render handler child (HTML vdom) _ =
+    case _ of
       Nothing -> do
-        let spec = mkSpec ref handler child document
+        let spec = mkSpec handler child document
         machine <- V.buildVDom spec vdom
         let node = V.extract machine
         appendChild node (htmlElementToNode container)
@@ -137,10 +123,9 @@ renderSpec document container =
   renderChild
     :: forall s f g p o
      . Int
-    -> Ref (DriverState HTML RenderState s f g p o eff)
     -> Maybe (RenderState s f g p o eff)
     -> Eff (HalogenEffects eff) (RenderState s f g p o eff)
-  renderChild keyId ref lastRender =
-    case lastRender of
+  renderChild _ =
+    case _ of
       Nothing -> throw "The impossible happened in renderChild"
       Just r -> pure r
