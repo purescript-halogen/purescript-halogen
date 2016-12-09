@@ -13,8 +13,8 @@ data TickQuery a
   = Tick a
   | GetTick (Int -> a)
 
-ticker :: forall m. Int -> H.Component HH.HTML TickQuery Void m
-ticker initialState = H.component { render, eval, initialState }
+ticker :: forall m. Int -> String -> H.Component HH.HTML TickQuery Void m
+ticker initialState name = H.component { render, eval, initialState }
   where
   render :: TickState -> H.ComponentHTML TickQuery
   render state =
@@ -22,7 +22,7 @@ ticker initialState = H.component { render, eval, initialState }
       [ HP.class_ (HH.ClassName "ticker") ]
       [ HH.h1
           [ HP.id_ "header" ]
-          [ HH.text "counter" ]
+          [ HH.text ("counter " <> name) ]
       , HH.p_
           [ HH.text (show state) ]
       , HH.button

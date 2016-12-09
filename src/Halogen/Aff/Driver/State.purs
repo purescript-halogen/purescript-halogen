@@ -4,6 +4,9 @@ module Halogen.Aff.Driver.State
   , DriverStateX
   , unDriverStateX
   , mkDriverStateXRef
+  , RenderStateX
+  , renderStateX
+  , unRenderStateX
   , initDriverState
   ) where
 
@@ -38,13 +41,13 @@ type DriverStateRec h r s f g p o eff =
   { component :: Component' h s f g p o (Aff (HalogenEffects eff))
   , state :: s
   , children :: M.Map (OrdBox p) (Ref (DriverStateX h r g eff))
+  , childrenIn :: Ref (M.Map (OrdBox p) (Ref (DriverStateX h r g eff)))
+  , childrenOut :: Ref (M.Map (OrdBox p) (Ref (DriverStateX h r g eff)))
   , mkOrdBox :: p -> OrdBox p
   , selfRef :: Ref (DriverState h r s f g p o eff)
   , handler :: o -> Aff (HalogenEffects eff) Unit
   , pendingIn :: Maybe (List (Aff (HalogenEffects eff) Unit))
   , pendingOut :: Maybe (List o)
-  , keyId :: Int
-  , fresh :: Ref Int
   , rendering :: Maybe (r s f g p o eff)
   }
 
@@ -69,24 +72,51 @@ unDriverStateX
   -> x
 unDriverStateX = unsafeCoerce
 
+data RenderStateX
+  (h :: * -> * -> *)
+  (r :: * -> (* -> *) -> (* -> *) -> * -> * -> # ! -> *)
+  (f :: * -> *)
+  (eff :: # !)
+
+mkRenderStateX
+  :: forall h r s f g p o eff
+   . r s f g p o eff
+  -> RenderStateX h r f eff
+mkRenderStateX = unsafeCoerce
+
+unRenderStateX
+  :: forall h r f eff x
+   . (forall s g p o. r s f g p o eff -> x)
+  -> RenderStateX h r f eff
+  -> x
+unRenderStateX = unsafeCoerce
+
+renderStateX
+  :: forall m h r f eff
+   . Functor m
+  => (forall s g p o. Maybe (r s f g p o eff) -> m (r s f g p o eff))
+  -> DriverStateX h r f eff
+  -> m (RenderStateX h r f eff)
+renderStateX f = unDriverStateX \st -> mkRenderStateX <$> f st.rendering
+
 initDriverState
   :: forall h r s f g p o eff
    . Component' h s f g p o (Aff (HalogenEffects eff))
   -> (o -> Aff (HalogenEffects eff) Unit)
-  -> Int
-  -> Ref Int
   -> Eff (HalogenEffects eff) (Ref (DriverStateX h r f eff))
-initDriverState component handler keyId fresh = do
+initDriverState component handler = do
   selfRef <- newRef (unsafeCoerce {})
+  childrenIn <- newRef M.empty
+  childrenOut <- newRef M.empty
   let
     ds =
       { component
       , state: component.initialState
       , children: M.empty
+      , childrenIn
+      , childrenOut
       , mkOrdBox: component.mkOrdBox
       , selfRef
-      , keyId
-      , fresh
       , handler
       , pendingIn: component.initializer $> Nil
       , pendingOut: component.initializer $> Nil

@@ -7,14 +7,15 @@ import Prelude
 
 import Control.Monad.Aff (Aff)
 import Control.Monad.Eff (Eff)
-import Control.Monad.Eff.Ref (Ref, readRef)
+import Control.Monad.Eff.Ref (Ref, modifyRef, newRef, readRef)
+import Control.Monad.Eff.Class (liftEff)
 
 import Data.Maybe (Maybe(..))
 import DOM.HTML.Types (HTMLElement, htmlElementToNode)
 import DOM.Node.Node (appendChild)
 
 import Halogen.Aff.Driver as AD
-import Halogen.Aff.Driver.State (DriverStateX, unDriverStateX)
+import Halogen.Aff.Driver.State (RenderStateX, unRenderStateX)
 import Halogen.Component (ComponentSlot, Component)
 import Halogen.Effects (HalogenEffects)
 import Halogen.HTML.Core (HTML)
@@ -25,7 +26,8 @@ import Halogen.Aff.Driver (HalogenIO)
 
 newtype RenderState s (f :: * -> *) (g :: * -> *) p o (eff :: # !) =
   RenderState
-    { node :: HTMLElement
+    { keyId :: Int
+    , node :: HTMLElement
     , vtree :: V.VTree
     }
 
@@ -41,10 +43,16 @@ runUI
    . Component HTML f o (Aff (HalogenEffects eff))
   -> HTMLElement
   -> Aff (HalogenEffects eff) (HalogenIO f o (Aff (HalogenEffects eff)))
-runUI component element = AD.runUI (renderSpec element) component
+runUI component element = do
+  fresh <- liftEff (newRef 0)
+  AD.runUI (mkRenderSpec element fresh) component
 
-renderSpec :: forall eff. HTMLElement -> AD.RenderSpec HTML RenderState eff
-renderSpec element =
+mkRenderSpec
+  :: forall eff
+   . HTMLElement
+  -> Ref Int
+  -> AD.RenderSpec HTML RenderState eff
+mkRenderSpec element fresh =
   { render
   , renderChild
   }
@@ -53,34 +61,29 @@ renderSpec element =
   render
     :: forall s f g p o
      . (forall x. f x -> Eff (HalogenEffects eff) Unit)
-    -> (ComponentSlot HTML g (Aff (HalogenEffects eff)) p (f Unit) -> Eff (HalogenEffects eff) (Ref (DriverStateX HTML RenderState g eff)))
+    -> (ComponentSlot HTML g (Aff (HalogenEffects eff)) p (f Unit) -> Eff (HalogenEffects eff) (RenderStateX HTML RenderState g eff))
     -> HTML (ComponentSlot HTML g (Aff (HalogenEffects eff)) p (f Unit)) (f Unit)
     -> Maybe (RenderState s f g p o eff)
     -> Eff (HalogenEffects eff) (RenderState s f g p o eff)
   render handler child html lastRender = do
-    vtree <- renderHTML handler (getVTree <=< child) html
-    node <- case lastRender of
+    vtree <- renderHTML handler (map getVTree <<< child) html
+    case lastRender of
       Nothing -> do
-        newNode <- V.createElement vtree
-        appendChild (htmlElementToNode newNode) (htmlElementToNode element)
-        pure newNode
-      Just (RenderState r) ->
-        V.patch (V.diff r.vtree vtree) r.node
-    pure $ RenderState { vtree, node }
+        modifyRef fresh (_ + 1)
+        keyId <- readRef fresh
+        node <- V.createElement vtree
+        appendChild (htmlElementToNode node) (htmlElementToNode element)
+        pure $ RenderState { keyId, vtree, node }
+      Just (RenderState r) -> do
+        node <- V.patch (V.diff r.vtree vtree) r.node
+        pure $ RenderState { keyId: r.keyId, vtree, node }
 
-  getVTree :: forall g. Ref (DriverStateX HTML RenderState g eff) -> Eff (HalogenEffects eff) V.VTree
-  getVTree ref = readRef ref >>= unDriverStateX \ds ->
-    pure case ds.rendering of
-      Nothing -> V.vtext ""
-      Just (RenderState { vtree }) -> vtree
+  getVTree :: forall g. RenderStateX HTML RenderState g eff -> V.VTree
+  getVTree = unRenderStateX \(RenderState { vtree }) -> vtree
 
   renderChild
     :: forall s f g p o
-     . Int
-    -> Maybe (RenderState s f g p o eff)
-    -> Eff (HalogenEffects eff) (RenderState s f g p o eff)
-  renderChild keyId lastRender = do
-    node <- case lastRender of
-      Nothing -> V.createElement (V.vtext "")
-      Just (RenderState r) -> pure r.node
-    pure $ RenderState { vtree: V.widget keyId node, node }
+     . RenderState s f g p o eff
+    -> RenderState s f g p o eff
+  renderChild (RenderState r) =
+    RenderState { keyId: r.keyId, vtree: V.widget r.keyId r.node, node: r.node }

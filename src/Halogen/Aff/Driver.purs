@@ -12,7 +12,7 @@ import Control.Monad.Aff (Aff, forkAff, forkAll, runAff)
 import Control.Monad.Aff.AVar as AV
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Class (liftEff)
-import Control.Monad.Eff.Exception (error, throwException)
+import Control.Monad.Eff.Exception (error, throw, throwException)
 import Control.Monad.Eff.Ref (Ref, modifyRef, writeRef, readRef, newRef)
 import Control.Parallel (parSequence_)
 
@@ -27,7 +27,7 @@ import Data.Tuple (Tuple(..))
 
 import Halogen (HalogenIO)
 import Halogen.Aff.Driver.Eval (LifecycleHandlers, eval, handleLifecycle)
-import Halogen.Aff.Driver.State (DriverState(..), DriverStateX, initDriverState, unDriverStateX, mkDriverStateXRef)
+import Halogen.Aff.Driver.State (DriverState(..), DriverStateX, RenderStateX, initDriverState, renderStateX, unDriverStateX)
 import Halogen.Component (Component, ComponentSlot, unComponent, unComponentSlot)
 import Halogen.Data.OrdBox (OrdBox)
 import Halogen.Effects (HalogenEffects)
@@ -36,15 +36,11 @@ type RenderSpec h r eff =
   { render
       :: forall s f g p o
        . (forall x. f x -> Eff (HalogenEffects eff) Unit)
-      -> (ComponentSlot h g (Aff (HalogenEffects eff)) p (f Unit) -> Eff (HalogenEffects eff) (Ref (DriverStateX h r g eff)))
+      -> (ComponentSlot h g (Aff (HalogenEffects eff)) p (f Unit) -> Eff (HalogenEffects eff) (RenderStateX h r g eff))
       -> h (ComponentSlot h g (Aff (HalogenEffects eff)) p (f Unit)) (f Unit)
       -> Maybe (r s f g p o eff)
       -> Eff (HalogenEffects eff) (r s f g p o eff)
-  , renderChild
-      :: forall s f g p o
-       . Int
-      -> Maybe (r s f g p o eff)
-      -> Eff (HalogenEffects eff) (r s f g p o eff)
+  , renderChild :: forall s f g p o. r s f g p o eff -> r s f g p o eff
   }
 
 runUI
@@ -56,7 +52,7 @@ runUI renderSpec component = do
   fresh <- liftEff $ newRef 0
   handleLifecycle \lchs -> liftEff do
     listeners <- newRef M.empty
-    runComponent (rootHandler listeners) fresh lchs component
+    runComponent (rootHandler listeners) lchs component
       >>= readRef
       >>= unDriverStateX \st ->
         pure
@@ -102,14 +98,11 @@ runUI renderSpec component = do
   runComponent
     :: forall f' o'
      . (o' -> Aff (HalogenEffects eff) Unit)
-    -> Ref Int
     -> Ref (LifecycleHandlers eff)
     -> Component h f' o' (Aff (HalogenEffects eff))
     -> Eff (HalogenEffects eff) (Ref (DriverStateX h r f' eff))
-  runComponent handler fresh lchs = unComponent \c -> do
-    keyId <- readRef fresh
-    modifyRef fresh (_ + 1)
-    var <- initDriverState c handler keyId fresh
+  runComponent handler lchs = unComponent \c -> do
+    var <- initDriverState c handler
     unDriverStateX (render lchs <<< _.selfRef) =<< readRef var
     squashChildInitializers lchs =<< readRef var
     pure var
@@ -120,8 +113,8 @@ runUI renderSpec component = do
     -> Ref (DriverState h r s f' g p o' eff)
     -> Eff (HalogenEffects eff) Unit
   render lchs var = readRef var >>= \(DriverState ds) -> do
-    childrenVar <- newRef M.empty
-    oldChildren <- newRef ds.children
+    writeRef ds.childrenOut M.empty
+    writeRef ds.childrenIn ds.children
     let
       selfEval = evalF ds.selfRef
       handler :: forall x. f' x -> Aff (HalogenEffects eff) Unit
@@ -131,24 +124,24 @@ runUI renderSpec component = do
     rendering <-
       renderSpec.render
         (handleAff <<< selfEval)
-        (renderChild handler' ds.fresh ds.mkOrdBox oldChildren childrenVar lchs)
+        (renderChild handler' ds.mkOrdBox ds.childrenIn ds.childrenOut lchs)
         (ds.component.render ds.state)
         ds.rendering
-    children <- readRef childrenVar
-    traverse_ (addFinalizer lchs <=< readRef) =<< readRef oldChildren
+    children <- readRef ds.childrenOut
+    traverse_ (addFinalizer lchs <=< readRef) =<< readRef ds.childrenIn
     writeRef var $
       DriverState
         { rendering: Just rendering
         , component: ds.component
         , state: ds.state
         , children
+        , childrenIn: ds.childrenIn
+        , childrenOut: ds.childrenOut
         , mkOrdBox: ds.mkOrdBox
         , selfRef: ds.selfRef
         , handler: ds.handler
         , pendingIn: ds.pendingIn
         , pendingOut: ds.pendingOut
-        , keyId: ds.keyId
-        , fresh: ds.fresh
         }
 
   queuingHandler
@@ -169,14 +162,13 @@ runUI renderSpec component = do
   renderChild
     :: forall f' g p
      . (forall x. f' x -> Aff (HalogenEffects eff) Unit)
-    -> Ref Int
     -> (p -> OrdBox p)
     -> Ref (M.Map (OrdBox p) (Ref (DriverStateX h r g eff)))
     -> Ref (M.Map (OrdBox p) (Ref (DriverStateX h r g eff)))
     -> Ref (LifecycleHandlers eff)
     -> ComponentSlot h g (Aff (HalogenEffects eff)) p (f' Unit)
-    -> Eff (HalogenEffects eff) (Ref (DriverStateX h r g eff))
-  renderChild handler fresh mkOrdBox childrenInRef childrenOutRef lchs =
+    -> Eff (HalogenEffects eff) (RenderStateX h r g eff)
+  renderChild handler mkOrdBox childrenInRef childrenOutRef lchs =
     unComponentSlot \p ctor k -> do
       childrenIn <- readRef childrenInRef
       var <- case M.pop (mkOrdBox p) childrenIn of
@@ -184,12 +176,11 @@ runUI renderSpec component = do
           writeRef childrenInRef childrenIn'
           pure existing
         Nothing ->
-          runComponent (maybe (pure unit) handler <<< k) fresh lchs (force ctor)
+          runComponent (maybe (pure unit) handler <<< k) lchs (force ctor)
       modifyRef childrenOutRef (M.insert (mkOrdBox p) var)
-      readRef var >>= unDriverStateX \st -> do
-        r <- renderSpec.renderChild st.keyId st.rendering
-        writeRef st.selfRef $ DriverState $ st { rendering = Just r }
-        pure $ mkDriverStateXRef st.selfRef
+      readRef var >>= renderStateX case _ of
+        Nothing -> throw "Halogen internal error: child was not initialized in renderChild"
+        Just r -> pure (renderSpec.renderChild r)
 
   squashChildInitializers
     :: forall f'
@@ -241,9 +232,3 @@ handleAff
    . Aff (HalogenEffects eff) a
   -> Eff (HalogenEffects eff) Unit
 handleAff = void <<< runAff throwException (const (pure unit))
-
-peekVar :: forall eff a. AV.AVar a -> Aff (avar :: AV.AVAR | eff) a
-peekVar v = do
-  a <- AV.takeVar v
-  AV.putVar v a
-  pure a

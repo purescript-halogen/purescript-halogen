@@ -8,22 +8,22 @@ import Prelude
 import Control.Monad.Aff (Aff)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Class (liftEff)
-import Control.Monad.Eff.Ref (Ref, readRef)
-import Control.Monad.Eff.Exception (throw)
 
-import Data.Maybe (Maybe(..), maybe')
+import Data.Maybe (Maybe(..))
+import Data.Nullable (toMaybe)
+import Data.Foldable (traverse_)
 
+import DOM (DOM)
 import DOM.HTML (window) as DOM
 import DOM.HTML.Types (htmlDocumentToDocument) as DOM
 import DOM.HTML.Types (HTMLElement, htmlElementToNode)
 import DOM.HTML.Window (document) as DOM
-import DOM.Node.Document (createTextNode) as DOM
-import DOM.Node.Node (appendChild)
-import DOM.Node.Types (Document, Element, Node, textToNode) as DOM
+import DOM.Node.Node (appendChild, parentNode, replaceChild)
+import DOM.Node.Types (Document, Element, Node) as DOM
 
 import Halogen.Aff.Driver (HalogenIO)
 import Halogen.Aff.Driver as AD
-import Halogen.Aff.Driver.State (DriverStateX, unDriverStateX)
+import Halogen.Aff.Driver.State (RenderStateX, unRenderStateX)
 import Halogen.Component (Component, ComponentSlot)
 import Halogen.Effects (HalogenEffects)
 import Halogen.HTML.Core (HTML(..), Prop)
@@ -42,7 +42,7 @@ newtype RenderState s f g p o eff =
 mkSpec
   :: forall f g p eff
    . (f Unit -> Eff (HalogenEffects eff) Unit)
-  -> (ComponentSlot HTML g (Aff (HalogenEffects eff)) p (f Unit) -> Eff (HalogenEffects eff) (Ref (DriverStateX HTML RenderState g eff)))
+  -> (ComponentSlot HTML g (Aff (HalogenEffects eff)) p (f Unit) -> Eff (HalogenEffects eff) (RenderStateX HTML RenderState g eff))
   -> DOM.Document
   -> V.VDomSpec
       (HalogenEffects eff)
@@ -65,10 +65,8 @@ mkSpec handler renderChild document =
           (ComponentSlot HTML g (Aff (HalogenEffects eff)) p (f Unit))
           DOM.Node
   buildWidget spec slot = do
-    ref <- renderChild slot
-    mnode <- unDriverStateX (\ds' ->
-      pure $ (\(RenderState { node }) -> node) <$> ds'.rendering) =<< readRef ref
-    node <- maybe' (\_ -> DOM.textToNode <$> DOM.createTextNode "" document) pure mnode
+    rsx <- renderChild slot
+    let node = unRenderStateX (\(RenderState { node }) -> node) rsx
     pure (V.Step node (patch node) done)
 
   patch
@@ -76,8 +74,11 @@ mkSpec handler renderChild document =
     -> V.VDomMachine (HalogenEffects eff)
           (ComponentSlot HTML g (Aff (HalogenEffects eff)) p (f Unit))
           DOM.Node
-  patch node slot = do
-    pure (V.Step node (patch node) done)
+  patch oldNode slot = do
+    rsx <- renderChild slot
+    let newNode = unRenderStateX (\(RenderState { node }) -> node) rsx
+    -- when (not nodeRefEq oldNode newNode) $ substInParent newNode oldNode
+    pure (V.Step oldNode (patch newNode) done)
 
   done :: Eff (HalogenEffects eff) Unit
   done = pure unit
@@ -96,13 +97,13 @@ renderSpec
    . DOM.Document
   -> HTMLElement
   -> AD.RenderSpec HTML RenderState eff
-renderSpec document container = { render, renderChild }
+renderSpec document container = { render, renderChild: id }
   where
 
   render
     :: forall s f g p o
      . (forall x. f x -> Eff (HalogenEffects eff) Unit)
-    -> (ComponentSlot HTML g (Aff (HalogenEffects eff)) p (f Unit) -> Eff (HalogenEffects eff) (Ref (DriverStateX HTML RenderState g eff)))
+    -> (ComponentSlot HTML g (Aff (HalogenEffects eff)) p (f Unit) -> Eff (HalogenEffects eff) (RenderStateX HTML RenderState g eff))
     -> HTML (ComponentSlot HTML g (Aff (HalogenEffects eff)) p (f Unit)) (f Unit)
     -> Maybe (RenderState s f g p o eff)
     -> Eff (HalogenEffects eff) (RenderState s f g p o eff)
@@ -115,15 +116,15 @@ renderSpec document container = { render, renderChild }
         appendChild node (htmlElementToNode container)
         pure $ RenderState { machine, node }
       Just (RenderState { machine }) -> do
+        let oldNode = V.extract machine
         machine' <- V.step machine vdom
-        pure $ RenderState { machine: machine', node: V.extract machine'  }
+        let newNode = V.extract machine
+        -- when (not nodeRefEq oldNode newNode) $ substInParent newNode oldNode
+        pure $ RenderState { machine: machine', node: newNode  }
 
-  renderChild
-    :: forall s f g p o
-     . Int
-    -> Maybe (RenderState s f g p o eff)
-    -> Eff (HalogenEffects eff) (RenderState s f g p o eff)
-  renderChild _ =
-    case _ of
-      Nothing -> throw "The impossible happened in renderChild"
-      Just r -> pure r
+substInParent :: forall eff. DOM.Node -> DOM.Node -> Eff (dom :: DOM | eff) Unit
+substInParent oldNode newNode = do
+  npn <- parentNode oldNode
+  traverse_ (\pn -> replaceChild oldNode newNode pn) (toMaybe npn)
+
+foreign import nodeRefEq :: DOM.Node -> DOM.Node -> Boolean
