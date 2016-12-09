@@ -67,18 +67,16 @@ mkSpec handler renderChild document =
   buildWidget spec slot = do
     rsx <- renderChild slot
     let node = unRenderStateX (\(RenderState { node }) -> node) rsx
-    pure (V.Step node (patch node) done)
+    pure (V.Step node patch done)
 
   patch
-    :: DOM.Node
-    -> V.VDomMachine (HalogenEffects eff)
+    :: V.VDomMachine (HalogenEffects eff)
           (ComponentSlot HTML g (Aff (HalogenEffects eff)) p (f Unit))
           DOM.Node
-  patch oldNode slot = do
+  patch slot = do
     rsx <- renderChild slot
-    let newNode = unRenderStateX (\(RenderState { node }) -> node) rsx
-    -- when (not nodeRefEq oldNode newNode) $ substInParent newNode oldNode
-    pure (V.Step oldNode (patch newNode) done)
+    let node = unRenderStateX (\(RenderState { node }) -> node) rsx
+    pure (V.Step node patch done)
 
   done :: Eff (HalogenEffects eff) Unit
   done = pure unit
