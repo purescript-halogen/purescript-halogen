@@ -21,16 +21,14 @@ import DOM.Node.Document (createTextNode) as DOM
 import DOM.Node.Node (appendChild)
 import DOM.Node.Types (Document, Element, Node, textToNode) as DOM
 
-import Halogen.Aff.Driver (HalogenIO, ComponentType)
+import Halogen.Aff.Driver (HalogenIO)
 import Halogen.Aff.Driver as AD
-import Halogen.Aff.Driver.State (ComponentType, DriverStateX, unDriverStateX)
+import Halogen.Aff.Driver.State (DriverStateX, unDriverStateX)
 import Halogen.Component (Component, ComponentSlot)
 import Halogen.Effects (HalogenEffects)
 import Halogen.HTML.Core (HTML(..), Prop)
 import Halogen.VDom as V
 import Halogen.VDom.DOM.Prop as VP
-
--- import Debug.Trace
 
 type VHTML f g p eff =
   V.VDom (Array (Prop (f Unit))) (ComponentSlot HTML g (Aff (HalogenEffects eff)) p (f Unit))
@@ -78,7 +76,8 @@ mkSpec handler renderChild document =
     -> V.VDomMachine (HalogenEffects eff)
           (ComponentSlot HTML g (Aff (HalogenEffects eff)) p (f Unit))
           DOM.Node
-  patch node slot = pure (V.Step node (patch node) done)
+  patch node slot = do
+    pure (V.Step node (patch node) done)
 
   done :: Eff (HalogenEffects eff) Unit
   done = pure unit
@@ -105,10 +104,9 @@ renderSpec document container = { render, renderChild }
      . (forall x. f x -> Eff (HalogenEffects eff) Unit)
     -> (ComponentSlot HTML g (Aff (HalogenEffects eff)) p (f Unit) -> Eff (HalogenEffects eff) (Ref (DriverStateX HTML RenderState g eff)))
     -> HTML (ComponentSlot HTML g (Aff (HalogenEffects eff)) p (f Unit)) (f Unit)
-    -> ComponentType
     -> Maybe (RenderState s f g p o eff)
     -> Eff (HalogenEffects eff) (RenderState s f g p o eff)
-  render handler child (HTML vdom) _ =
+  render handler child (HTML vdom) =
     case _ of
       Nothing -> do
         let spec = mkSpec handler child document

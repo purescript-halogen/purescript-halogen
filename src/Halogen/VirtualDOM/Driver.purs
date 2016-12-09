@@ -8,14 +8,13 @@ import Prelude
 import Control.Monad.Aff (Aff)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Ref (Ref, readRef)
-import Control.Monad.Eff.Class (liftEff)
 
 import Data.Maybe (Maybe(..))
 import DOM.HTML.Types (HTMLElement, htmlElementToNode)
 import DOM.Node.Node (appendChild)
 
 import Halogen.Aff.Driver as AD
-import Halogen.Aff.Driver.State (ComponentType, DriverStateX, unDriverStateX)
+import Halogen.Aff.Driver.State (DriverStateX, unDriverStateX)
 import Halogen.Component (ComponentSlot, Component)
 import Halogen.Effects (HalogenEffects)
 import Halogen.HTML.Core (HTML)
@@ -56,10 +55,9 @@ renderSpec element =
      . (forall x. f x -> Eff (HalogenEffects eff) Unit)
     -> (ComponentSlot HTML g (Aff (HalogenEffects eff)) p (f Unit) -> Eff (HalogenEffects eff) (Ref (DriverStateX HTML RenderState g eff)))
     -> HTML (ComponentSlot HTML g (Aff (HalogenEffects eff)) p (f Unit)) (f Unit)
-    -> AD.ComponentType
     -> Maybe (RenderState s f g p o eff)
     -> Eff (HalogenEffects eff) (RenderState s f g p o eff)
-  render handler child html componentType lastRender = do
+  render handler child html lastRender = do
     vtree <- renderHTML handler (getVTree <=< child) html
     node <- case lastRender of
       Nothing -> do
@@ -70,8 +68,11 @@ renderSpec element =
         V.patch (V.diff r.vtree vtree) r.node
     pure $ RenderState { vtree, node }
 
-  getVTree :: forall g eff. Ref (DriverStateX HTML RenderState g eff) -> Eff (HalogenEffects eff) V.VTree
-  getVTree = unDriverStateX (\ds -> ds.rendering -> (\(RenderState { vtree }) -> vtree)) =<< readRef
+  getVTree :: forall g. Ref (DriverStateX HTML RenderState g eff) -> Eff (HalogenEffects eff) V.VTree
+  getVTree ref = readRef ref >>= unDriverStateX \ds ->
+    pure case ds.rendering of
+      Nothing -> V.vtext ""
+      Just (RenderState { vtree }) -> vtree
 
   renderChild
     :: forall s f g p o

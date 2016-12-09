@@ -3,7 +3,6 @@ module Halogen.Aff.Driver
   , runUI
   , module Halogen
   , module Halogen.Effects
-  , module Exports
   ) where
 
 import Prelude
@@ -28,12 +27,10 @@ import Data.Tuple (Tuple(..))
 
 import Halogen (HalogenIO)
 import Halogen.Aff.Driver.Eval (LifecycleHandlers, eval, handleLifecycle)
-import Halogen.Aff.Driver.State (ComponentType(..), DriverState(..), DriverStateX, initDriverState, unDriverStateX, mkDriverStateXRef)
+import Halogen.Aff.Driver.State (DriverState(..), DriverStateX, initDriverState, unDriverStateX, mkDriverStateXRef)
 import Halogen.Component (Component, ComponentSlot, unComponent, unComponentSlot)
 import Halogen.Data.OrdBox (OrdBox)
 import Halogen.Effects (HalogenEffects)
-
-import Halogen.Aff.Driver.State (ComponentType(..)) as Exports
 
 type RenderSpec h r eff =
   { render
@@ -41,7 +38,6 @@ type RenderSpec h r eff =
        . (forall x. f x -> Eff (HalogenEffects eff) Unit)
       -> (ComponentSlot h g (Aff (HalogenEffects eff)) p (f Unit) -> Eff (HalogenEffects eff) (Ref (DriverStateX h r g eff)))
       -> h (ComponentSlot h g (Aff (HalogenEffects eff)) p (f Unit)) (f Unit)
-      -> ComponentType
       -> Maybe (r s f g p o eff)
       -> Eff (HalogenEffects eff) (r s f g p o eff)
   , renderChild
@@ -60,7 +56,7 @@ runUI renderSpec component = do
   fresh <- liftEff $ newRef 0
   handleLifecycle \lchs -> liftEff do
     listeners <- newRef M.empty
-    runComponent (rootHandler listeners) fresh lchs Root component
+    runComponent (rootHandler listeners) fresh lchs component
       >>= readRef
       >>= unDriverStateX \st ->
         pure
@@ -108,13 +104,12 @@ runUI renderSpec component = do
      . (o' -> Aff (HalogenEffects eff) Unit)
     -> Ref Int
     -> Ref (LifecycleHandlers eff)
-    -> ComponentType
     -> Component h f' o' (Aff (HalogenEffects eff))
     -> Eff (HalogenEffects eff) (Ref (DriverStateX h r f' eff))
-  runComponent handler fresh lchs componentType = unComponent \c -> do
+  runComponent handler fresh lchs = unComponent \c -> do
     keyId <- readRef fresh
     modifyRef fresh (_ + 1)
-    var <- initDriverState c componentType handler keyId fresh
+    var <- initDriverState c handler keyId fresh
     unDriverStateX (render lchs <<< _.selfRef) =<< readRef var
     squashChildInitializers lchs =<< readRef var
     pure var
@@ -138,14 +133,12 @@ runUI renderSpec component = do
         (handleAff <<< selfEval)
         (renderChild handler' ds.fresh ds.mkOrdBox oldChildren childrenVar lchs)
         (ds.component.render ds.state)
-        ds.componentType
         ds.rendering
     children <- readRef childrenVar
     traverse_ (addFinalizer lchs <=< readRef) =<< readRef oldChildren
     writeRef var $
       DriverState
         { rendering: Just rendering
-        , componentType: ds.componentType
         , component: ds.component
         , state: ds.state
         , children
@@ -191,7 +184,7 @@ runUI renderSpec component = do
           writeRef childrenInRef childrenIn'
           pure existing
         Nothing ->
-          runComponent (maybe (pure unit) handler <<< k) fresh lchs Child (force ctor)
+          runComponent (maybe (pure unit) handler <<< k) fresh lchs (force ctor)
       modifyRef childrenOutRef (M.insert (mkOrdBox p) var)
       readRef var >>= unDriverStateX \st -> do
         r <- renderSpec.renderChild st.keyId st.rendering

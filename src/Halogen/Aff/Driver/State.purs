@@ -1,6 +1,5 @@
 module Halogen.Aff.Driver.State
-  ( ComponentType(..)
-  , DriverState(..)
+  ( DriverState(..)
   , DriverStateRec
   , DriverStateX
   , unDriverStateX
@@ -24,16 +23,6 @@ import Halogen.Effects (HalogenEffects)
 
 import Unsafe.Coerce (unsafeCoerce)
 
--- | A type used to track which type of component a driver state value is for.
-data ComponentType = Root | Child
-
-derive instance eqComponentType :: Eq ComponentType
-derive instance ordComponentType :: Ord ComponentType
-
-instance showComponentType :: Show ComponentType where
-  show Root = "Root"
-  show Child = "Child"
-
 -- | The type used to track a driver's persistent state.
 -- |
 -- | - `h` is the type of value the components produce for rendering.
@@ -47,7 +36,6 @@ newtype DriverState h r s f g p o eff = DriverState (DriverStateRec h r s f g p 
 
 type DriverStateRec h r s f g p o eff =
   { component :: Component' h s f g p o (Aff (HalogenEffects eff))
-  , componentType :: ComponentType
   , state :: s
   , children :: M.Map (OrdBox p) (Ref (DriverStateX h r g eff))
   , mkOrdBox :: p -> OrdBox p
@@ -84,17 +72,15 @@ unDriverStateX = unsafeCoerce
 initDriverState
   :: forall h r s f g p o eff
    . Component' h s f g p o (Aff (HalogenEffects eff))
-  -> ComponentType
   -> (o -> Aff (HalogenEffects eff) Unit)
   -> Int
   -> Ref Int
   -> Eff (HalogenEffects eff) (Ref (DriverStateX h r f eff))
-initDriverState component componentType handler keyId fresh = do
+initDriverState component handler keyId fresh = do
   selfRef <- newRef (unsafeCoerce {})
   let
     ds =
       { component
-      , componentType
       , state: component.initialState
       , children: M.empty
       , mkOrdBox: component.mkOrdBox
