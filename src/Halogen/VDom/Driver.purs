@@ -113,16 +113,15 @@ renderSpec document container = { render, renderChild: id }
         let node = V.extract machine
         appendChild node (htmlElementToNode container)
         pure $ RenderState { machine, node }
-      Just (RenderState { machine }) -> do
-        let oldNode = V.extract machine
+      Just (RenderState { machine, node }) -> do
         machine' <- V.step machine vdom
-        let newNode = V.extract machine
-        -- when (not nodeRefEq oldNode newNode) $ substInParent newNode oldNode
-        pure $ RenderState { machine: machine', node: newNode  }
+        let newNode = V.extract machine'
+        when (not nodeRefEq node newNode) (substInParent node newNode)
+        pure $ RenderState { machine: machine', node: newNode }
 
 substInParent :: forall eff. DOM.Node -> DOM.Node -> Eff (dom :: DOM | eff) Unit
 substInParent oldNode newNode = do
   npn <- parentNode oldNode
-  traverse_ (\pn -> replaceChild oldNode newNode pn) (toMaybe npn)
+  traverse_ (\pn -> replaceChild newNode oldNode pn) (toMaybe npn)
 
 foreign import nodeRefEq :: DOM.Node -> DOM.Node -> Boolean
