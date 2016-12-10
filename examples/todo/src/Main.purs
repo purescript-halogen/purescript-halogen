@@ -6,7 +6,7 @@ import Control.Monad.Eff (Eff)
 
 import Halogen as H
 import Halogen.Aff.Util (runHalogenAff, awaitBody)
-import Halogen.VirtualDOM.Driver (runUI)
+import Halogen.VDom.Driver (runUI)
 
 import Component.List (list)
 
