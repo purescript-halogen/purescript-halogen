@@ -3,7 +3,7 @@
   "private": true,
   "dependencies": {
     "purescript-halogen": "*",
-    "purescript-websocket-simple": "garyb/purescript-websocket-simple#make-browserify-safe",
+    "purescript-websocket-simple": "^1.0.1",
     "purescript-aff-coroutines": "^4.0.0"
   }
 }

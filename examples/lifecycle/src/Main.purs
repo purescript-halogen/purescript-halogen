@@ -10,12 +10,13 @@ import Control.Monad.Eff.Console (CONSOLE)
 import Data.Array (snoc, filter, reverse)
 import Data.Maybe (Maybe(..))
 import Data.Lazy (defer)
+import Data.Tuple (Tuple(..))
 
 import Halogen as H
 import Halogen.Aff as HA
 import Halogen.HTML as HH
+import Halogen.HTML.Elements.Keyed as HK
 import Halogen.HTML.Events as HE
-import Halogen.HTML.Properties as HP
 import Halogen.VirtualDOM.Driver (runUI)
 
 import Child as Child
@@ -60,14 +61,14 @@ ui = H.lifecycleParentComponent
       , HH.button
           [ HE.onClick (HE.input_ Reverse) ]
           [ HH.text "Reverse" ]
-      , HH.ul_ $ flip map state.slots \sid ->
-          HH.li
-            [ HP.key (show sid) ]
-            [ HH.button
-                [ HE.onClick (HE.input_ $ Remove sid) ]
-                [ HH.text "Remove" ]
-            , HH.slot sid (defer \_ -> Child.child sid) (listen sid)
-            ]
+      , HK.ul_ $ flip map state.slots \sid ->
+          Tuple (show sid) $
+            HH.li_
+              [ HH.button
+                  [ HE.onClick (HE.input_ $ Remove sid) ]
+                  [ HH.text "Remove" ]
+              , HH.slot sid (defer \_ -> Child.child sid) (listen sid)
+              ]
       ]
 
   eval :: Query ~> H.ParentDSL State Query Child.Query Int Void (UIEff eff)

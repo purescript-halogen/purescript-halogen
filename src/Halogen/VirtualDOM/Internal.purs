@@ -22,11 +22,12 @@ import Prelude
 import Control.Monad.Eff (Eff)
 
 import Data.Monoid (class Monoid)
-import Data.Maybe (Maybe(..))
+import Data.Either (Either(..))
 import Data.Nullable (Nullable)
 import Data.Function.Uncurried (Fn2, runFn2)
 
 import DOM (DOM)
+import DOM.Event.Types (EventType)
 import DOM.HTML.Types (HTMLElement)
 
 -- | Virtual DOM nodes
@@ -44,17 +45,17 @@ foreign import prop :: forall value. Fn2 String value Props
 foreign import attr :: Fn2 String String Props
 
 -- | Create a property from an event handler.
-foreign import handlerProp :: forall eff event. Fn2 String (event -> Eff eff Unit) Props
+foreign import handlerProp :: forall eff event. Fn2 EventType (event -> Eff eff Unit) Props
 
 -- | Create a property from a ref.
-refProp :: forall eff. (Maybe HTMLElement -> Eff eff Unit) -> Props
-refProp = refPropImpl Nothing Just
+refProp :: forall eff. (Either HTMLElement HTMLElement -> Eff eff Unit) -> Props
+refProp = refPropImpl Left Right
 
 foreign import refPropImpl
   :: forall eff
-   . (forall a. Maybe a)
-  -> (forall a. a -> Maybe a)
-  -> (Maybe HTMLElement -> Eff eff Unit)
+   . (forall a b. a -> Either a b)
+  -> (forall a b. b -> Either a b)
+  -> (Either HTMLElement HTMLElement -> Eff eff Unit)
   -> Props
 
 foreign import concatProps :: Fn2 Props Props Props

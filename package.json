@@ -18,9 +18,6 @@
     "example-multi-component": "bower link && cd examples/multi-component && bower link purescript-halogen && bower install && npm run build",
     "example-todo": "bower link && cd examples/todo && bower link purescript-halogen && bower install && npm run build"
   },
-  "dependencies": {
-    "virtual-dom": "^2.1.1"
-  },
   "devDependencies": {
     "eslint": "^3.10.2",
     "pulp": "^10.0.0",

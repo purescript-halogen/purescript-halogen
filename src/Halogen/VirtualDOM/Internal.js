@@ -45,15 +45,15 @@ exports.handlerProp = function (key, f) {
   return props;
 };
 
-exports.refPropImpl = function (nothing) {
-  return function (just) {
+exports.refPropImpl = function (left) {
+  return function (right) {
 
     var ifHookFn = function (init) {
       // jshint maxparams: 3
       return function (node, prop, diff) {
         // jshint validthis: true
         if (typeof diff === "undefined") {
-          this.f(init ? just(node) : nothing)();
+          this.f(init ? right(node) : left(node))();
         }
       };
     };

@@ -1,7 +1,0 @@
-{
-  "name": "counter",
-  "private": true,
-  "dependencies": {
-    "purescript-halogen": "*"
-  }
-}

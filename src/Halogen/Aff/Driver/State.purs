@@ -1,17 +1,20 @@
 module Halogen.Aff.Driver.State
-  ( ComponentType(..)
-  , DriverState(..)
+  ( DriverState(..)
   , DriverStateRec
   , DriverStateX
   , unDriverStateX
+  , mkDriverStateXRef
+  , RenderStateX
+  , renderStateX
+  , unRenderStateX
   , initDriverState
   ) where
 
 import Prelude
 
 import Control.Monad.Aff (Aff)
-import Control.Monad.Aff.AVar (AVar, putVar, makeVar)
-import Control.Monad.Eff.Ref (Ref)
+import Control.Monad.Eff (Eff)
+import Control.Monad.Eff.Ref (Ref, newRef, writeRef)
 
 import Data.List (List(..))
 import Data.Map as M
@@ -22,16 +25,6 @@ import Halogen.Component (Component')
 import Halogen.Data.OrdBox (OrdBox)
 
 import Unsafe.Coerce (unsafeCoerce)
-
--- | A type used to track which type of component a driver state value is for.
-data ComponentType = Root | Child
-
-derive instance eqComponentType :: Eq ComponentType
-derive instance ordComponentType :: Ord ComponentType
-
-instance showComponentType :: Show ComponentType where
-  show Root = "Root"
-  show Child = "Child"
 
 -- | The type used to track a driver's persistent state.
 -- |
@@ -46,28 +39,32 @@ newtype DriverState h r s f g p o eff = DriverState (DriverStateRec h r s f g p 
 
 type DriverStateRec h r s f g p o eff =
   { component :: Component' h s f g p o (Aff (HalogenEffects eff))
-  , componentType :: ComponentType
   , state :: s
-  , children :: M.Map (OrdBox p) (AVar (DriverStateX h r g eff))
+  , children :: M.Map (OrdBox p) (Ref (DriverStateX h r g eff))
+  , childrenIn :: Ref (M.Map (OrdBox p) (Ref (DriverStateX h r g eff)))
+  , childrenOut :: Ref (M.Map (OrdBox p) (Ref (DriverStateX h r g eff)))
   , mkOrdBox :: p -> OrdBox p
-  , selfRef :: AVar (DriverState h r s f g p o eff)
+  , selfRef :: Ref (DriverState h r s f g p o eff)
   , handler :: o -> Aff (HalogenEffects eff) Unit
-  , pendingIn :: Maybe (List (Aff (HalogenEffects eff) Unit))
-  , pendingOut :: Maybe (List o)
-  , keyId :: Int
-  , fresh :: Ref Int
-  , rendering :: Maybe r
+  , pendingRefs :: Ref (Maybe (List (Aff (HalogenEffects eff) Unit)))
+  , pendingQueries :: Ref (Maybe (List (Aff (HalogenEffects eff) Unit)))
+  , pendingOuts :: Ref (Maybe (List (Aff (HalogenEffects eff) Unit)))
+  , rendering :: Maybe (r s f g p o eff)
   }
 
 -- | A version of `DriverState` with the aspects relating to child components
 -- | existentially hidden.
-data DriverStateX (h :: * -> * -> *) r (g :: * -> *) (eff :: # !)
+data DriverStateX
+  (h :: * -> * -> *)
+  (r :: * -> (* -> *) -> (* -> *) -> * -> * -> # ! -> *)
+  (f :: * -> *)
+  (eff :: # !)
 
-mkDriverStateXVar
+mkDriverStateXRef
   :: forall h r s f g p o eff
-   . AVar (DriverState h r s f g p o eff)
-  -> AVar (DriverStateX h r f eff)
-mkDriverStateXVar = unsafeCoerce
+   . Ref (DriverState h r s f g p o eff)
+  -> Ref (DriverStateX h r f eff)
+mkDriverStateXRef = unsafeCoerce
 
 unDriverStateX
   :: forall h r f eff x
@@ -76,30 +73,61 @@ unDriverStateX
   -> x
 unDriverStateX = unsafeCoerce
 
+-- | A wrapper of `r` from `DriverState` with the aspects relating to child
+-- | components existentially hidden.
+data RenderStateX
+  (h :: * -> * -> *)
+  (r :: * -> (* -> *) -> (* -> *) -> * -> * -> # ! -> *)
+  (f :: * -> *)
+  (eff :: # !)
+
+mkRenderStateX
+  :: forall h r s f g p o eff
+   . r s f g p o eff
+  -> RenderStateX h r f eff
+mkRenderStateX = unsafeCoerce
+
+unRenderStateX
+  :: forall h r f eff x
+   . (forall s g p o. r s f g p o eff -> x)
+  -> RenderStateX h r f eff
+  -> x
+unRenderStateX = unsafeCoerce
+
+renderStateX
+  :: forall m h r f eff
+   . Functor m
+  => (forall s g p o. Maybe (r s f g p o eff) -> m (r s f g p o eff))
+  -> DriverStateX h r f eff
+  -> m (RenderStateX h r f eff)
+renderStateX f = unDriverStateX \st -> mkRenderStateX <$> f st.rendering
+
 initDriverState
   :: forall h r s f g p o eff
    . Component' h s f g p o (Aff (HalogenEffects eff))
-  -> ComponentType
   -> (o -> Aff (HalogenEffects eff) Unit)
-  -> Int
-  -> Ref Int
-  -> Aff (HalogenEffects eff) (AVar (DriverStateX h r f eff))
-initDriverState component componentType handler keyId fresh = do
-  selfRef <- makeVar
+  -> Eff (HalogenEffects eff) (Ref (DriverStateX h r f eff))
+initDriverState component handler = do
+  selfRef <- newRef (unsafeCoerce {})
+  childrenIn <- newRef M.empty
+  childrenOut <- newRef M.empty
+  pendingRefs <- newRef (Just Nil)
+  pendingQueries <- newRef (component.initializer $> Nil)
+  pendingOuts <- newRef (Just Nil)
   let
     ds =
       { component
-      , componentType
       , state: component.initialState
       , children: M.empty
+      , childrenIn
+      , childrenOut
       , mkOrdBox: component.mkOrdBox
       , selfRef
-      , keyId
-      , fresh
       , handler
-      , pendingIn: component.initializer $> Nil
-      , pendingOut: component.initializer $> Nil
+      , pendingRefs
+      , pendingQueries
+      , pendingOuts
       , rendering: Nothing
       }
-  putVar selfRef (DriverState ds)
-  pure $ mkDriverStateXVar selfRef
+  writeRef selfRef (DriverState ds)
+  pure $ mkDriverStateXRef selfRef
