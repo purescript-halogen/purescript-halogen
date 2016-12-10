@@ -9,7 +9,7 @@ import Control.Monad.Aff.Unsafe (unsafeCoerceAff)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Class (liftEff)
 import Control.Monad.Eff.Exception (error)
-import Control.Monad.Eff.Ref (Ref, newRef, readRef, writeRef)
+import Control.Monad.Eff.Ref (Ref, readRef, writeRef)
 import Control.Monad.Error.Class (throwError)
 import Control.Monad.Fork (fork)
 import Control.Monad.Free (foldFree)
@@ -38,11 +38,12 @@ type LifecycleHandlers eff =
 
 handleLifecycle
   :: forall eff a
-   . (Ref (LifecycleHandlers eff) -> Aff (HalogenEffects eff) a)
+   . Ref (LifecycleHandlers eff)
+  -> Eff (HalogenEffects eff) a
   -> Aff (HalogenEffects eff) a
-handleLifecycle f = do
-  lchs <- liftEff $ newRef { initializers: L.Nil, finalizers: L.Nil }
-  result <- f lchs
+handleLifecycle lchs f = do
+  liftEff $ writeRef lchs { initializers: L.Nil, finalizers: L.Nil }
+  result <- liftEff f
   { initializers, finalizers } <- liftEff $ readRef lchs
   forkAll finalizers
   -- No need to par/fork initializers here as there's only ever zero or one at
@@ -52,17 +53,17 @@ handleLifecycle f = do
 
 type Renderer h r eff
   = forall s f' g p o'
-   . Ref (LifecycleHandlers eff)
-  -> Ref (DriverState h r s f' g p o' eff)
+   . Ref (DriverState h r s f' g p o' eff)
   -> Eff (HalogenEffects eff) Unit
 
 eval
   :: forall h r eff s'' f g'' p'' o
-   . Renderer h r eff
+   . Ref (LifecycleHandlers eff)
+  -> Renderer h r eff
   -> Ref (DriverState h r s'' f g'' p'' o eff)
   -> f
   ~> Aff (HalogenEffects eff)
-eval render = evalF
+eval lchs render = evalF
   where
 
   go
@@ -79,7 +80,7 @@ eval render = evalF
       case f state of
         Tuple a state' -> do
           liftEff $ writeRef ref (DriverState (st { state = state' }))
-          handleLifecycle \lchs -> liftEff $ render lchs ref
+          handleLifecycle lchs (render ref)
           pure a
     Subscribe es next -> do
       forkAff do
