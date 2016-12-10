@@ -59,10 +59,6 @@ keyed = coe (\name props children -> VDom.Keyed (VDom.ElemSpec Nothing name prop
     -> VDom.ElemName -> Array (Prop i) -> Array (Tuple String (HTML p i)) -> HTML p i
   coe = unsafeCoerce
 
--- | The data which represents a typed property, hidden inside an existential
--- | package in the `Prop` type.
-data PropF value = PropF (PropName value) value (Maybe (Tuple AttrName (AttrName -> PropName value -> value -> String)))
-
 -- | Create a HTML property.
 prop :: forall value i. IsProp value => PropName value -> Maybe AttrName -> value -> Prop i
 prop (PropName name) an v = Property name (toPropValue v)
