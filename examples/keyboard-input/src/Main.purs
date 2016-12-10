@@ -19,7 +19,7 @@ import Halogen as H
 import Halogen.HTML as HH
 import Halogen.Query.EventSource as ES
 import Halogen.Aff.Util (runHalogenAff, awaitBody)
-import Halogen.VirtualDOM.Driver (runUI)
+import Halogen.VDom.Driver (runUI)
 
 import Keyboard as K
 

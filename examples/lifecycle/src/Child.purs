@@ -44,7 +44,8 @@ child initialState = H.lifecycleParentComponent
 
   render :: Int -> H.ParentHTML Query Query Int (ChildEff eff)
   render id =
-    HH.div [ HP.ref (HE.input Ref) ]
+    HH.div
+      [ HP.ref (HE.input Ref) ]
       [ HH.text ("Child " <> show id)
       , HH.ul_
         [ HH.slot 0 (defer \_ -> cell 0) (listen 0)
@@ -57,7 +58,7 @@ child initialState = H.lifecycleParentComponent
   eval (Initialize next) = do
     id <- H.get
     H.lift $ do
-      later' 100 $ pure unit
+      -- later' 100 $ pure unit
       log ("Initialize Child " <> show id)
     H.raise Initialized
     pure next
@@ -68,7 +69,9 @@ child initialState = H.lifecycleParentComponent
     pure next
   eval (Ref _ next) = do
     id <- H.get
-    H.liftAff $ log ("Ref Child " <> show id)
+    H.liftAff do
+      later' 1000 $ pure unit
+      log ("Ref Child " <> show id)
     H.raise Refd
     pure next
   eval (Report msg next) = do
@@ -104,7 +107,7 @@ cell initialState = H.lifecycleComponent
   eval (Initialize next) = do
     id <- H.get
     H.lift $ do
-      later' 150 $ pure unit
+      -- later' 150 $ pure unit
       log ("Initialize Cell " <> show id)
     H.raise Initialized
     pure next

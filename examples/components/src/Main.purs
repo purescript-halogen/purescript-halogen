@@ -12,7 +12,6 @@ import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.Aff.Util (runHalogenAff, awaitBody)
 import Halogen.VDom.Driver (runUI)
--- import Halogen.VirtualDOM.Driver (runUI)
 
 import Ticker (TickQuery(..), ticker)
 
@@ -34,7 +33,7 @@ ui = H.parentComponent { render, eval, initialState }
   where
   render :: State -> H.ParentHTML Query TickQuery TickSlot m
   render { tickA, tickB, count, swap } =
-    HH.div_
+    (if swap then HH.div_ else HH.p_)
       $ (if swap then ba else ab)
       <> [ HH.p_
           [ HH.p_
