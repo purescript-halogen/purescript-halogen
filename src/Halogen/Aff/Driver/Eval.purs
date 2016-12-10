@@ -104,13 +104,8 @@ eval render = evalF
     ChildQuery cq ->
       evalChildQuery ref cq
     Raise o a -> do
-      DriverState (ds@{ handler, pendingOut }) <- liftEff (readRef ref)
-      case pendingOut of
-        Nothing -> do
-          liftEff $ writeRef ref (DriverState ds)
-          handler o
-        Just p ->
-          liftEff $ writeRef ref (DriverState ds { pendingOut = Just (o : p) })
+      DriverState (ds@{ handler, pendingOuts }) <- liftEff (readRef ref)
+      queuingHandler handler pendingOuts o
       pure a
     Par (HalogenAp p) ->
       sequential $ retractFreeAp $ hoistFreeAp (parallel <<< evalM ref) p
@@ -147,3 +142,17 @@ eval render = evalF
     -> HalogenM s' f' g' p' o' (Aff (HalogenEffects eff))
     ~> Aff (HalogenEffects eff)
   evalM ref (HalogenM q) = foldFree (go ref) q
+
+queuingHandler
+  :: forall a eff
+   . (a -> Aff (HalogenEffects eff) Unit)
+  -> Ref (Maybe (List (Aff (HalogenEffects eff) Unit)))
+  -> a
+  -> Aff (HalogenEffects eff) Unit
+queuingHandler handler ref message = do
+  queue <- liftEff (readRef ref)
+  case queue of
+    Nothing ->
+      handler message
+    Just p ->
+      liftEff $ writeRef ref (Just (handler message : p))

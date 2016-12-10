@@ -46,8 +46,9 @@ type DriverStateRec h r s f g p o eff =
   , mkOrdBox :: p -> OrdBox p
   , selfRef :: Ref (DriverState h r s f g p o eff)
   , handler :: o -> Aff (HalogenEffects eff) Unit
-  , pendingIn :: Maybe (List (Aff (HalogenEffects eff) Unit))
-  , pendingOut :: Maybe (List o)
+  , pendingRefs :: Ref (Maybe (List (Aff (HalogenEffects eff) Unit)))
+  , pendingQueries :: Ref (Maybe (List (Aff (HalogenEffects eff) Unit)))
+  , pendingOuts :: Ref (Maybe (List (Aff (HalogenEffects eff) Unit)))
   , rendering :: Maybe (r s f g p o eff)
   }
 
@@ -72,6 +73,8 @@ unDriverStateX
   -> x
 unDriverStateX = unsafeCoerce
 
+-- | A wrapper of `r` from `DriverState` with the aspects relating to child
+-- | components existentially hidden.
 data RenderStateX
   (h :: * -> * -> *)
   (r :: * -> (* -> *) -> (* -> *) -> * -> * -> # ! -> *)
@@ -108,6 +111,9 @@ initDriverState component handler = do
   selfRef <- newRef (unsafeCoerce {})
   childrenIn <- newRef M.empty
   childrenOut <- newRef M.empty
+  pendingRefs <- newRef (Just Nil)
+  pendingQueries <- newRef (component.initializer $> Nil)
+  pendingOuts <- newRef (Just Nil)
   let
     ds =
       { component
@@ -118,8 +124,9 @@ initDriverState component handler = do
       , mkOrdBox: component.mkOrdBox
       , selfRef
       , handler
-      , pendingIn: component.initializer $> Nil
-      , pendingOut: component.initializer $> Nil
+      , pendingRefs
+      , pendingQueries
+      , pendingOuts
       , rendering: Nothing
       }
   writeRef selfRef (DriverState ds)

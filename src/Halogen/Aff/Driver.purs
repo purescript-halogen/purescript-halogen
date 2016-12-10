@@ -26,7 +26,7 @@ import Data.Traversable (for_, traverse_, sequence_)
 import Data.Tuple (Tuple(..))
 
 import Halogen (HalogenIO)
-import Halogen.Aff.Driver.Eval (LifecycleHandlers, eval, handleLifecycle)
+import Halogen.Aff.Driver.Eval (LifecycleHandlers, eval, handleLifecycle, queuingHandler)
 import Halogen.Aff.Driver.State (DriverState(..), DriverStateX, RenderStateX, initDriverState, renderStateX, unDriverStateX)
 import Halogen.Component (Component, ComponentSlot, unComponent, unComponentSlot)
 import Halogen.Data.OrdBox (OrdBox)
@@ -116,48 +116,35 @@ runUI renderSpec component = do
     writeRef ds.childrenOut M.empty
     writeRef ds.childrenIn ds.children
     let
-      selfEval = evalF ds.selfRef
       handler :: forall x. f' x -> Aff (HalogenEffects eff) Unit
-      handler = void <<< selfEval
-      handler' :: forall x. f' x -> Aff (HalogenEffects eff) Unit
-      handler' = maybe handler (\_ -> queuingHandler ds.selfRef handler) ds.pendingIn
+      handler = void <<< evalF ds.selfRef
+      selfHandler :: forall x. f' x -> Aff (HalogenEffects eff) Unit
+      selfHandler = queuingHandler handler ds.pendingRefs
+      childHandler :: forall x. f' x -> Aff (HalogenEffects eff) Unit
+      childHandler = queuingHandler handler ds.pendingQueries
     rendering <-
       renderSpec.render
-        (handleAff <<< selfEval)
-        (renderChild handler' ds.mkOrdBox ds.childrenIn ds.childrenOut lchs)
+        (handleAff <<< selfHandler)
+        (renderChild childHandler ds.mkOrdBox ds.childrenIn ds.childrenOut lchs)
         (ds.component.render ds.state)
         ds.rendering
     children <- readRef ds.childrenOut
     traverse_ (addFinalizer lchs <=< readRef) =<< readRef ds.childrenIn
-    writeRef var $
+    modifyRef var \(DriverState ds') ->
       DriverState
         { rendering: Just rendering
-        , component: ds.component
-        , state: ds.state
         , children
-        , childrenIn: ds.childrenIn
-        , childrenOut: ds.childrenOut
-        , mkOrdBox: ds.mkOrdBox
-        , selfRef: ds.selfRef
-        , handler: ds.handler
-        , pendingIn: ds.pendingIn
-        , pendingOut: ds.pendingOut
+        , component: ds'.component
+        , state: ds'.state
+        , childrenIn: ds'.childrenIn
+        , childrenOut: ds'.childrenOut
+        , mkOrdBox: ds'.mkOrdBox
+        , selfRef: ds'.selfRef
+        , handler: ds'.handler
+        , pendingRefs: ds'.pendingRefs
+        , pendingQueries: ds'.pendingQueries
+        , pendingOuts: ds'.pendingOuts
         }
-
-  queuingHandler
-    :: forall s f' g p o' x
-     . Ref (DriverState h r s f' g p o' eff)
-    -> (f' x -> Aff (HalogenEffects eff) Unit)
-    -> f' x
-    -> Aff (HalogenEffects eff) Unit
-  queuingHandler var handler message = do
-    DriverState (ds@{ pendingIn }) <- liftEff (readRef var)
-    case pendingIn of
-      Nothing -> do
-        liftEff $ writeRef var (DriverState ds)
-        handler message
-      Just p ->
-        liftEff $ writeRef var (DriverState ds { pendingIn = Just (handler message : p) })
 
   renderChild
     :: forall f' g p
@@ -192,23 +179,23 @@ runUI renderSpec component = do
       let parentInitializer = evalF st.selfRef <$> st.component.initializer
       modifyRef ref \lchs ->
         { initializers: pure $ do
+            queue <- liftEff (readRef st.pendingRefs)
+            liftEff $ writeRef st.pendingRefs Nothing
+            for_ queue parSequence_
             parSequence_ (L.reverse lchs.initializers)
             sequence_ parentInitializer
-            handlePending st.selfRef
+            handlePending st.pendingQueries
+            handlePending st.pendingOuts
         , finalizers: lchs.finalizers
         }
 
   handlePending
-    :: forall s f' g p o'
-     . Ref (DriverState h r s f' g p o' eff)
+    :: Ref (Maybe (L.List (Aff (HalogenEffects eff) Unit)))
     -> Aff (HalogenEffects eff) Unit
   handlePending ref = do
-    DriverState (dsi@{ pendingIn }) <- liftEff (readRef ref)
-    liftEff $ writeRef ref (DriverState dsi { pendingIn = Nothing })
-    for_ pendingIn (forkAll <<< L.reverse)
-    DriverState (dso@{ pendingOut, handler }) <- liftEff (readRef ref)
-    liftEff $ writeRef ref (DriverState dso { pendingOut = Nothing })
-    for_ pendingOut (forkAll <<< map handler <<< L.reverse)
+    queue <- liftEff (readRef ref)
+    liftEff $ writeRef ref Nothing
+    for_ queue (forkAll <<< L.reverse)
 
   addFinalizer
     :: forall f'
