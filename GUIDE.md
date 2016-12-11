@@ -194,16 +194,15 @@ One of the most common non-state effect for a component is to [make requests via
 Here’s the `eval` function from the AJAX example:
 
 ``` purescript
-eval :: Query ~> ComponentDSL State Query (Aff (AppEffects eff))
-eval (SetCode code next) = --- ... snip ...
-eval (MakeRequest code next) = do
-  modify (_ { busy = true })
-  result <- fromAff (fetchJS code)
-  modify (_ { busy = false, result = Just result })
-  pure next
-
-fetchJS :: forall eff. String -> Aff (ajax :: AJAX | eff) String
-fetchJS code = -- ... make request ...
+eval :: forall eff. Query ~> H.ComponentDSL State Query Void (Aff (Effects eff))
+eval = case _ of
+  SetUsername username next -> --- ... snip ...
+  MakeRequest next -> do
+    username <- H.gets _.username
+    H.modify (_ { busy = true })
+    response <- H.liftAff $ AX.get ("https://api.github.com/users/" <> username)
+    H.modify (_ { busy = false, result = Just response.response })
+    pure next
 ```
 
 `fetchJS` is a normal `Aff`-returning function. To make use of it in a `Free (HalogenF s f g)` context we use [`fromAff`](https://pursuit.purescript.org/packages/purescript-aff-free/0.1.1/docs/Control.Monad.Aff.Free) to lift it into the right place.
