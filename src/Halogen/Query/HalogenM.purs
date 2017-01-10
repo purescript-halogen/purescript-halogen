@@ -111,7 +111,7 @@ halt msg = HalogenM $ liftF $ Halt msg
 
 mkQuery
   :: forall s f g p o m a
-   . (Applicative m, Eq p)
+   . Eq p
   => p
   -> g a
   -> HalogenM s f g p o m a

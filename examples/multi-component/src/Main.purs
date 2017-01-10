@@ -9,12 +9,12 @@ import Data.Maybe (Maybe(..))
 import Data.Lazy (defer)
 
 import Halogen as H
+import Halogen.Aff as HA
 import Halogen.Component.ChildPath (type (\/), type (<\/>))
 import Halogen.Component.ChildPath as CP
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
-import Halogen.Aff.Util (runHalogenAff, awaitBody)
-import Halogen.VDom.Driver (runUI)
+import Halogen.VirtualDOM.Driver (runUI)
 
 import ComponentA (QueryA(..), SlotA(..), componentA)
 import ComponentB (QueryB(..), SlotB(..), componentB)
@@ -51,7 +51,7 @@ ui = H.parentComponent { render, eval, initialState }
     H.put { a, b, c }
     pure next
 
-main :: Eff (H.HalogenEffects ()) Unit
-main = runHalogenAff do
-  body <- awaitBody
+main :: Eff (HA.HalogenEffects ()) Unit
+main = HA.runHalogenAff do
+  body <- HA.awaitBody
   runUI ui body

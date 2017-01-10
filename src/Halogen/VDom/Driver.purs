@@ -24,8 +24,8 @@ import DOM.Node.Types (Document, Element, Node) as DOM
 import Halogen.Aff.Driver (HalogenIO)
 import Halogen.Aff.Driver as AD
 import Halogen.Aff.Driver.State (RenderStateX, unRenderStateX)
+import Halogen.Aff.Effects (HalogenEffects)
 import Halogen.Component (Component, ComponentSlot)
-import Halogen.Effects (HalogenEffects)
 import Halogen.HTML.Core (HTML(..), Prop)
 import Halogen.VDom as V
 import Halogen.VDom.DOM.Prop as VP

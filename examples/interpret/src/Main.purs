@@ -9,10 +9,10 @@ import Control.Monad.Eff.Console (CONSOLE)
 import Control.Monad.Free (Free, liftF, foldFree)
 
 import Halogen as H
+import Halogen.Aff as HA
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
-import Halogen.Aff.Util (runHalogenAff, awaitBody)
-import Halogen.VDom.Driver (runUI)
+import Halogen.VirtualDOM.Driver (runUI)
 
 type State = { on :: Boolean }
 
@@ -47,15 +47,15 @@ ui = H.component { render, eval, initialState }
     H.lift $ output "State was toggled"
     pure next
 
-ui' :: forall eff. H.Component HH.HTML Query Void (Aff (H.HalogenEffects (console :: CONSOLE | eff)))
+ui' :: forall eff. H.Component HH.HTML Query Void (Aff (HA.HalogenEffects (console :: CONSOLE | eff)))
 ui' = H.hoist (foldFree evalMyAlgebra) ui
   where
-  evalMyAlgebra :: MyAlgebra ~> Aff (H.HalogenEffects (console :: CONSOLE | eff))
+  evalMyAlgebra :: MyAlgebra ~> Aff (HA.HalogenEffects (console :: CONSOLE | eff))
   evalMyAlgebra (Log msg next) = do
     log msg
     pure next
 
-main :: Eff (H.HalogenEffects (console :: CONSOLE)) Unit
-main = runHalogenAff do
-  body <- awaitBody
+main :: Eff (HA.HalogenEffects (console :: CONSOLE)) Unit
+main = HA.runHalogenAff do
+  body <- HA.awaitBody
   runUI ui' body

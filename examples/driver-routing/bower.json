@@ -1,0 +1,8 @@
+{
+  "name": "driver-routing",
+  "private": true,
+  "dependencies": {
+    "purescript-halogen": "*",
+    "purescript-aff-coroutines": "^4.0.0"
+  }
+}

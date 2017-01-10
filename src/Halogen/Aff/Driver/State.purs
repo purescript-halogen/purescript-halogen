@@ -20,9 +20,9 @@ import Data.List (List(..))
 import Data.Map as M
 import Data.Maybe (Maybe(..))
 
+import Halogen.Aff.Effects (HalogenEffects)
 import Halogen.Component (Component')
 import Halogen.Data.OrdBox (OrdBox)
-import Halogen.Effects (HalogenEffects)
 
 import Unsafe.Coerce (unsafeCoerce)
 

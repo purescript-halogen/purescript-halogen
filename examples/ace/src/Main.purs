@@ -12,7 +12,7 @@ import Halogen as H
 import Halogen.Aff as HA
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
-import Halogen.VDom.Driver (runUI)
+import Halogen.VirtualDOM.Driver (runUI)
 
 import Ace.Types (ACE)
 import AceComponent (AceEffects, AceOutput(..), AceQuery(..), aceComponent)

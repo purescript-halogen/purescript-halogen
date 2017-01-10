@@ -2,7 +2,7 @@ module Halogen.Aff.Driver
   ( RenderSpec
   , runUI
   , module Halogen
-  , module Halogen.Effects
+  , module Halogen.Aff.Effects
   ) where
 
 import Prelude
@@ -28,9 +28,9 @@ import Data.Tuple (Tuple(..))
 import Halogen (HalogenIO)
 import Halogen.Aff.Driver.Eval (LifecycleHandlers, eval, handleLifecycle, queuingHandler)
 import Halogen.Aff.Driver.State (DriverState(..), DriverStateX, RenderStateX, initDriverState, renderStateX, unDriverStateX)
+import Halogen.Aff.Effects (HalogenEffects)
 import Halogen.Component (Component, ComponentSlot, unComponent, unComponentSlot)
 import Halogen.Data.OrdBox (OrdBox)
-import Halogen.Effects (HalogenEffects)
 
 type RenderSpec h r eff =
   { render
