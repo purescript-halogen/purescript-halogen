@@ -41,7 +41,7 @@ newtype RenderState s f g p o eff =
 mkSpec
   :: forall f g p eff
    . (f Unit -> Eff (HalogenEffects eff) Unit)
-  -> (ComponentSlot HTML g (Aff (HalogenEffects eff)) p (f Unit) -> Eff (HalogenEffects eff) (RenderStateX HTML RenderState g eff))
+  -> (ComponentSlot HTML g (Aff (HalogenEffects eff)) p (f Unit) -> Eff (HalogenEffects eff) (RenderStateX RenderState eff))
   -> DOM.Document
   -> V.VDomSpec
       (HalogenEffects eff)
@@ -81,13 +81,14 @@ mkSpec handler renderChild document =
   done = pure unit
 
 runUI
-  :: forall f eff o
-   . Component HTML f o (Aff (HalogenEffects eff))
+  :: forall f eff i o
+   . Component HTML f i o (Aff (HalogenEffects eff))
+  -> i
   -> DOM.HTMLElement
   -> Aff (HalogenEffects eff) (HalogenIO f o (Aff (HalogenEffects eff)))
-runUI component element = do
+runUI component i element = do
   document <- liftEff $ DOM.htmlDocumentToDocument <$> (DOM.document =<< DOM.window)
-  AD.runUI (renderSpec document element) component
+  AD.runUI (renderSpec document element) component i
 
 renderSpec
   :: forall eff
@@ -100,7 +101,7 @@ renderSpec document container = { render, renderChild: id, removeChild }
   render
     :: forall s f g p o
      . (forall x. f x -> Eff (HalogenEffects eff) Unit)
-    -> (ComponentSlot HTML g (Aff (HalogenEffects eff)) p (f Unit) -> Eff (HalogenEffects eff) (RenderStateX HTML RenderState g eff))
+    -> (ComponentSlot HTML g (Aff (HalogenEffects eff)) p (f Unit) -> Eff (HalogenEffects eff) (RenderStateX RenderState eff))
     -> HTML (ComponentSlot HTML g (Aff (HalogenEffects eff)) p (f Unit)) (f Unit)
     -> Maybe (RenderState s f g p o eff)
     -> Eff (HalogenEffects eff) (RenderState s f g p o eff)

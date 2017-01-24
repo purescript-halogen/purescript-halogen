@@ -52,24 +52,24 @@ handleLifecycle lchs f = do
   pure result
 
 type Renderer h r eff
-  = forall s f' g p o'
-   . Ref (DriverState h r s f' g p o' eff)
+  = forall s f z g p i o
+   . Ref (DriverState h r s f z g p i o eff)
   -> Eff (HalogenEffects eff) Unit
 
 eval
-  :: forall h r eff s'' f g'' p'' o
+  :: forall h r eff s'' f z g'' p'' i o
    . Ref (LifecycleHandlers eff)
   -> Renderer h r eff
-  -> Ref (DriverState h r s'' f g'' p'' o eff)
-  -> f
+  -> Ref (DriverState h r s'' f z g'' p'' i o eff)
+  -> z
   ~> Aff (HalogenEffects eff)
 eval lchs render = evalF
   where
 
   go
-    :: forall s' f' g' p' o'
-     . Ref (DriverState h r s' f' g' p' o' eff)
-    -> HalogenF s' f' g' p' o' (Aff (HalogenEffects eff))
+    :: forall s' f' z' g' p' i' o'
+     . Ref (DriverState h r s' f' z' g' p' i' o' eff)
+    -> HalogenF s' z' g' p' o' (Aff (HalogenEffects eff))
     ~> Aff (HalogenEffects eff)
   go ref = case _ of
     GetState k -> do
@@ -100,8 +100,8 @@ eval lchs render = evalF
       DriverState { children } <- liftEff (readRef ref)
       pure $ k $ map unOrdBox $ M.keys children
     CheckSlot p k -> do
-      DriverState { mkOrdBox, children } <- liftEff (readRef ref)
-      pure $ k $ M.member (mkOrdBox p) children
+      DriverState { component, children } <- liftEff (readRef ref)
+      pure $ k $ M.member (component.mkOrdBox p) children
     ChildQuery cq ->
       evalChildQuery ref cq
     Raise o a -> do
@@ -115,22 +115,24 @@ eval lchs render = evalF
         k <<< map unsafeCoerceAff <$> fork (evalM ref fx)) f
 
   evalChildQuery
-    :: forall s' f' g' p' o'
-     . Ref (DriverState h r s' f' g' p' o' eff)
+    :: forall s' f' z' g' p' i' o'
+     . Ref (DriverState h r s' f' z' g' p' i' o' eff)
     -> ChildQuery g' (Aff (HalogenEffects eff)) p'
     ~> Aff (HalogenEffects eff)
   evalChildQuery ref = unChildQuery \p k -> do
     DriverState st <- liftEff (readRef ref)
-    case M.lookup (st.mkOrdBox p) st.children of
+    case M.lookup (st.component.mkOrdBox p) st.children of
       Just var -> do
         dsx <- liftEff (readRef var)
-        k (unDriverStateX (\ds -> evalF ds.selfRef) dsx)
+        k (unDriverStateX (\ds q -> case ds.prjQuery q of
+            Just q' -> evalF ds.selfRef q'
+            Nothing -> throwError (error "Query projection failed for child query")) dsx)
       Nothing -> throwError (error "Slot lookup failed for child query")
 
   evalF
-    :: forall s' f' g' p' o'
-     . Ref (DriverState h r s' f' g' p' o' eff)
-    -> f'
+    :: forall s' f' z' g' p' i' o'
+     . Ref (DriverState h r s' f' z' g' p' i' o' eff)
+    -> z'
     ~> Aff (HalogenEffects eff)
   evalF ref q = do
     DriverState st <- liftEff (readRef ref)
@@ -138,9 +140,9 @@ eval lchs render = evalF
       HalogenM fx -> foldFree (go ref) fx
 
   evalM
-    :: forall s' f' g' p' o'
-     . Ref (DriverState h r s' f' g' p' o' eff)
-    -> HalogenM s' f' g' p' o' (Aff (HalogenEffects eff))
+    :: forall s' f' z' g' p' i' o'
+     . Ref (DriverState h r s' f' z' g' p' i' o' eff)
+    -> HalogenM s' z' g' p' o' (Aff (HalogenEffects eff))
     ~> Aff (HalogenEffects eff)
   evalM ref (HalogenM q) = foldFree (go ref) q
 

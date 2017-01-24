@@ -32,26 +32,31 @@ import Unsafe.Coerce (unsafeCoerce)
 -- |
 -- | - `h` is the type of value the components produce for rendering.
 -- | - `r` is the type for the render state for the driver.
--- | - `f` is the component query algebra.
+-- | - `s` is the component state type.
+-- | - `f` is the projected component query algebra - used for multi-child-type
+-- |       components, by projecting to `z` we can avoid the need to remap the
+-- |       entire component.
+-- | - `z` is the unprojected component query algebra.
 -- | - `g` is the component child query algebra.
 -- | - `p` is the type of slots for the component.
+-- | - `i` is the invput value type.
 -- | - `o` is the type of output messages from the component.
 -- | - `eff` is the effect row for the target `Aff`
-newtype DriverState h r s f g p o eff = DriverState (DriverStateRec h r s f g p o eff)
+newtype DriverState h r s f z g p i o eff = DriverState (DriverStateRec h r s f z g p i o eff)
 
-type DriverStateRec h r s f g p o eff =
-  { component :: Component' h s f g p o (Aff (HalogenEffects eff))
+type DriverStateRec h r s f z g p i o eff =
+  { component :: Component' h s z g p i o (Aff (HalogenEffects eff))
   , state :: s
   , children :: M.Map (OrdBox p) (Ref (DriverStateX h r g eff))
   , childrenIn :: Ref (M.Map (OrdBox p) (Ref (DriverStateX h r g eff)))
   , childrenOut :: Ref (M.Map (OrdBox p) (Ref (DriverStateX h r g eff)))
-  , mkOrdBox :: p -> OrdBox p
-  , selfRef :: Ref (DriverState h r s f g p o eff)
+  , selfRef :: Ref (DriverState h r s f z g p i o eff)
   , handler :: o -> Aff (HalogenEffects eff) Unit
   , pendingRefs :: Ref (Maybe (List (Aff (HalogenEffects eff) Unit)))
   , pendingQueries :: Ref (Maybe (List (Aff (HalogenEffects eff) Unit)))
   , pendingOuts :: Ref (Maybe (List (Aff (HalogenEffects eff) Unit)))
-  , rendering :: Maybe (r s f g p o eff)
+  , rendering :: Maybe (r s z g p o eff)
+  , prjQuery :: forall x. f x -> Maybe (z x)
   }
 
 -- | A version of `DriverState` with the aspects relating to child components
@@ -63,14 +68,14 @@ data DriverStateX
   (eff :: # !)
 
 mkDriverStateXRef
-  :: forall h r s f g p o eff
-   . Ref (DriverState h r s f g p o eff)
+  :: forall h r s f z g p i o eff
+   . Ref (DriverState h r s f z g p i o eff)
   -> Ref (DriverStateX h r f eff)
 mkDriverStateXRef = unsafeCoerce
 
 unDriverStateX
   :: forall h r f eff x
-   . (forall s g p o. DriverStateRec h r s f g p o eff -> x)
+   . (forall s z g p i o. DriverStateRec h r s f z g p i o eff -> x)
   -> DriverStateX h r f eff
   -> x
 unDriverStateX = unsafeCoerce
@@ -78,46 +83,48 @@ unDriverStateX = unsafeCoerce
 -- | A wrapper of `r` from `DriverState` with the aspects relating to child
 -- | components existentially hidden.
 data RenderStateX
-  (h :: * -> * -> *)
   (r :: * -> (* -> *) -> (* -> *) -> * -> * -> # ! -> *)
-  (f :: * -> *)
   (eff :: # !)
 
 mkRenderStateX
-  :: forall h r s f g p o eff m
-   . m (r s f g p o eff)
-  -> m (RenderStateX h r f eff)
-mkRenderStateX = unsafeCoerce
+  :: forall r s f z g p o eff m
+   . (forall x. f x -> Maybe (z x))
+  -> m (r s z g p o eff)
+  -> m (RenderStateX r eff)
+mkRenderStateX _ = unsafeCoerce
 
 unRenderStateX
-  :: forall h r f eff x
-   . (forall s g p o. r s f g p o eff -> x)
-  -> RenderStateX h r f eff
+  :: forall r eff x
+   . (forall z s g p o. r s z g p o eff -> x)
+  -> RenderStateX r eff
   -> x
 unRenderStateX = unsafeCoerce
 
 renderStateX
   :: forall m h r f eff
    . Functor m
-  => (forall s g p o. Maybe (r s f g p o eff) -> m (r s f g p o eff))
+  => (forall z s g p o. Maybe (r s z g p o eff) -> m (r s z g p o eff))
   -> DriverStateX h r f eff
-  -> m (RenderStateX h r f eff)
-renderStateX f = unDriverStateX \st -> mkRenderStateX (f st.rendering)
+  -> m (RenderStateX r eff)
+renderStateX f = unDriverStateX \st ->
+  mkRenderStateX st.prjQuery (f st.rendering)
 
 renderStateX_
   :: forall m h r f eff
    . Applicative m
-  => (forall s g p o. r s f g p o eff -> m Unit)
+  => (forall z s g p o. r s z g p o eff -> m Unit)
   -> DriverStateX h r f eff
   -> m Unit
 renderStateX_ f = unDriverStateX \st -> traverse_ f st.rendering
 
 initDriverState
-  :: forall h r s f g p o eff
-   . Component' h s f g p o (Aff (HalogenEffects eff))
+  :: forall h r s f z g p i o eff
+   . Component' h s z g p i o (Aff (HalogenEffects eff))
+  -> i
   -> (o -> Aff (HalogenEffects eff) Unit)
+  -> (forall x. f x -> Maybe (z x))
   -> Eff (HalogenEffects eff) (Ref (DriverStateX h r f eff))
-initDriverState component handler = do
+initDriverState component input handler prjQuery = do
   selfRef <- newRef (unsafeCoerce {})
   childrenIn <- newRef M.empty
   childrenOut <- newRef M.empty
@@ -127,17 +134,17 @@ initDriverState component handler = do
   let
     ds =
       { component
-      , state: component.initialState
+      , state: component.initialState input
       , children: M.empty
       , childrenIn
       , childrenOut
-      , mkOrdBox: component.mkOrdBox
       , selfRef
       , handler
       , pendingRefs
       , pendingQueries
       , pendingOuts
       , rendering: Nothing
+      , prjQuery
       }
   writeRef selfRef (DriverState ds)
   pure $ mkDriverStateXRef selfRef

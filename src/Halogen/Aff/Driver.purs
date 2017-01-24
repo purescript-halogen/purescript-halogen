@@ -16,7 +16,6 @@ import Control.Monad.Eff.Exception (error, throw, throwException)
 import Control.Monad.Eff.Ref (Ref, modifyRef, writeRef, readRef, newRef)
 import Control.Parallel (parSequence_)
 
-import Data.Lazy (force)
 import Data.List ((:))
 import Data.List as L
 import Data.Either (Either(..))
@@ -36,7 +35,7 @@ type RenderSpec h r eff =
   { render
       :: forall s f g p o
        . (forall x. f x -> Eff (HalogenEffects eff) Unit)
-      -> (ComponentSlot h g (Aff (HalogenEffects eff)) p (f Unit) -> Eff (HalogenEffects eff) (RenderStateX h r g eff))
+      -> (ComponentSlot h g (Aff (HalogenEffects eff)) p (f Unit) -> Eff (HalogenEffects eff) (RenderStateX r eff))
       -> h (ComponentSlot h g (Aff (HalogenEffects eff)) p (f Unit)) (f Unit)
       -> Maybe (r s f g p o eff)
       -> Eff (HalogenEffects eff) (r s f g p o eff)
@@ -45,38 +44,51 @@ type RenderSpec h r eff =
   }
 
 runUI
-  :: forall h r f o eff
+  :: forall h r f i o eff
    . RenderSpec h r eff
-  -> Component h f o (Aff (HalogenEffects eff))
+  -> Component h f i o (Aff (HalogenEffects eff))
+  -> i
   -> Aff (HalogenEffects eff) (HalogenIO f o (Aff (HalogenEffects eff)))
-runUI renderSpec component = do
+runUI renderSpec component j = do
   lchs <- liftEff $ newRef { initializers: L.Nil, finalizers: L.Nil }
-  runUI' lchs renderSpec component
+  runUI' lchs renderSpec component j
 
 runUI'
-  :: forall h r f o eff
+  :: forall h r f i o eff
    . Ref (LifecycleHandlers eff)
   -> RenderSpec h r eff
-  -> Component h f o (Aff (HalogenEffects eff))
+  -> Component h f i o (Aff (HalogenEffects eff))
+  -> i
   -> Aff (HalogenEffects eff) (HalogenIO f o (Aff (HalogenEffects eff)))
-runUI' lchs renderSpec component = do
+runUI' lchs renderSpec component i = do
   fresh <- liftEff $ newRef 0
   handleLifecycle lchs do
     listeners <- newRef M.empty
-    runComponent (rootHandler listeners) component
+    runComponent (rootHandler listeners) i Just component
       >>= readRef
       >>= unDriverStateX \st ->
         pure
-          { query: evalF st.selfRef
+          { query: evalDriver st.selfRef st.prjQuery
           , subscribe: subscribe fresh listeners
           }
 
   where
 
-  evalF
-    :: forall s f' g p o'
-     . Ref (DriverState h r s f' g p o' eff)
+  evalDriver
+    :: forall s f' z' g p i' o'
+     . Ref (DriverState h r s f' z' g p i' o' eff)
+    -> (forall x. f' x -> Maybe (z' x))
     -> f'
+    ~> Aff (HalogenEffects eff)
+  evalDriver ref prjQuery q =
+    case prjQuery q of
+      Just q' -> evalF ref q'
+      Nothing -> liftEff $ throwException (error "Halogen internal error: query projection failed in runUI'")
+
+  evalF
+    :: forall s f' z' g p i' o'
+     . Ref (DriverState h r s f' z' g p i' o' eff)
+    -> z'
     ~> Aff (HalogenEffects eff)
   evalF ref = eval lchs render ref
 
@@ -107,34 +119,36 @@ runUI' lchs renderSpec component = do
       AV.killVar inputVar (error "ended")
 
   runComponent
-    :: forall f' o'
+    :: forall z f' i' o'
      . (o' -> Aff (HalogenEffects eff) Unit)
-    -> Component h f' o' (Aff (HalogenEffects eff))
+    -> i'
+    -> (forall x. f' x -> Maybe (z x))
+    -> Component h z i' o' (Aff (HalogenEffects eff))
     -> Eff (HalogenEffects eff) (Ref (DriverStateX h r f' eff))
-  runComponent handler = unComponent \c -> do
-    var <- initDriverState c handler
+  runComponent handler j prjQuery = unComponent \c -> do
+    var <- initDriverState c j handler prjQuery
     unDriverStateX (render <<< _.selfRef) =<< readRef var
     squashChildInitializers =<< readRef var
     pure var
 
   render
-    :: forall s f' g p o'
-     . Ref (DriverState h r s f' g p o' eff)
+    :: forall s f' z' g p i' o'
+     . Ref (DriverState h r s f' z' g p i' o' eff)
     -> Eff (HalogenEffects eff) Unit
   render var = readRef var >>= \(DriverState ds) -> do
     writeRef ds.childrenOut M.empty
     writeRef ds.childrenIn ds.children
     let
-      handler :: forall x. f' x -> Aff (HalogenEffects eff) Unit
+      handler :: forall x. z' x -> Aff (HalogenEffects eff) Unit
       handler = void <<< evalF ds.selfRef
-      selfHandler :: forall x. f' x -> Aff (HalogenEffects eff) Unit
+      selfHandler :: forall x. z' x -> Aff (HalogenEffects eff) Unit
       selfHandler = queuingHandler handler ds.pendingRefs
-      childHandler :: forall x. f' x -> Aff (HalogenEffects eff) Unit
+      childHandler :: forall x. z' x -> Aff (HalogenEffects eff) Unit
       childHandler = queuingHandler handler ds.pendingQueries
     rendering <-
       renderSpec.render
         (handleAff <<< selfHandler)
-        (renderChild childHandler ds.mkOrdBox ds.childrenIn ds.childrenOut)
+        (renderChild childHandler ds.component.mkOrdBox ds.childrenIn ds.childrenOut)
         (ds.component.render ds.state)
         ds.rendering
     children <- readRef ds.childrenOut
@@ -150,12 +164,12 @@ runUI' lchs renderSpec component = do
         , state: ds'.state
         , childrenIn: ds'.childrenIn
         , childrenOut: ds'.childrenOut
-        , mkOrdBox: ds'.mkOrdBox
         , selfRef: ds'.selfRef
         , handler: ds'.handler
         , pendingRefs: ds'.pendingRefs
         , pendingQueries: ds'.pendingQueries
         , pendingOuts: ds'.pendingOuts
+        , prjQuery: ds'.prjQuery
         }
 
   renderChild
@@ -165,16 +179,19 @@ runUI' lchs renderSpec component = do
     -> Ref (M.Map (OrdBox p) (Ref (DriverStateX h r g eff)))
     -> Ref (M.Map (OrdBox p) (Ref (DriverStateX h r g eff)))
     -> ComponentSlot h g (Aff (HalogenEffects eff)) p (f' Unit)
-    -> Eff (HalogenEffects eff) (RenderStateX h r g eff)
+    -> Eff (HalogenEffects eff) (RenderStateX r eff)
   renderChild handler mkOrdBox childrenInRef childrenOutRef =
-    unComponentSlot \p ctor k -> do
+    unComponentSlot \p ctor input inputQuery outputQuery prjQuery -> do
       childrenIn <- readRef childrenInRef
       var <- case M.pop (mkOrdBox p) childrenIn of
         Just (Tuple existing childrenIn') -> do
           writeRef childrenInRef childrenIn'
+          for_ (inputQuery input) \q -> do
+            dsx <- readRef existing
+            unDriverStateX (\st -> for_ (st.prjQuery q) (handleAff <<< evalF st.selfRef)) dsx
           pure existing
         Nothing ->
-          runComponent (maybe (pure unit) handler <<< k) (force ctor)
+          runComponent (maybe (pure unit) handler <<< outputQuery) input prjQuery ctor
       modifyRef childrenOutRef (M.insert (mkOrdBox p) var)
       readRef var >>= renderStateX case _ of
         Nothing -> throw "Halogen internal error: child was not initialized in renderChild"

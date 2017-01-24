@@ -39,13 +39,14 @@ newtype RenderState s (f :: * -> *) (g :: * -> *) p o (eff :: # !) =
 -- | into the component hierarchy, allowing the outside world to communicate
 -- | with the UI.
 runUI
-  :: forall f eff o
-   . Component HTML f o (Aff (HalogenEffects eff))
+  :: forall f eff i o
+   . Component HTML f i o (Aff (HalogenEffects eff))
+  -> i
   -> HTMLElement
   -> Aff (HalogenEffects eff) (HalogenIO f o (Aff (HalogenEffects eff)))
-runUI component element = do
+runUI component i element = do
   fresh <- liftEff (newRef 0)
-  AD.runUI (mkRenderSpec element fresh) component
+  AD.runUI (mkRenderSpec element fresh) component i
 
 mkRenderSpec
   :: forall eff
@@ -62,7 +63,7 @@ mkRenderSpec element fresh =
   render
     :: forall s f g p o
      . (forall x. f x -> Eff (HalogenEffects eff) Unit)
-    -> (ComponentSlot HTML g (Aff (HalogenEffects eff)) p (f Unit) -> Eff (HalogenEffects eff) (RenderStateX HTML RenderState g eff))
+    -> (ComponentSlot HTML g (Aff (HalogenEffects eff)) p (f Unit) -> Eff (HalogenEffects eff) (RenderStateX RenderState eff))
     -> HTML (ComponentSlot HTML g (Aff (HalogenEffects eff)) p (f Unit)) (f Unit)
     -> Maybe (RenderState s f g p o eff)
     -> Eff (HalogenEffects eff) (RenderState s f g p o eff)
@@ -79,7 +80,7 @@ mkRenderSpec element fresh =
         node <- V.patch (V.diff r.vtree vtree) r.node
         pure $ RenderState { keyId: r.keyId, vtree, node }
 
-  getVTree :: forall g. RenderStateX HTML RenderState g eff -> V.VTree
+  getVTree :: RenderStateX RenderState eff -> V.VTree
   getVTree = unRenderStateX \(RenderState { vtree }) -> vtree
 
   renderChild

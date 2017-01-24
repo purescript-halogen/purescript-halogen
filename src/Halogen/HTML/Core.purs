@@ -1,5 +1,7 @@
 module Halogen.HTML.Core
   ( HTML(..)
+  , slot
+  , text
   , element
   , keyed
   , prop
@@ -40,6 +42,14 @@ instance bifunctorHTML :: Bifunctor HTML where
 
 instance functorHTML :: Functor (HTML p) where
   map = rmap
+
+-- | A smart constructor for widget slots in the HTML.
+slot :: forall p q. p -> HTML p q
+slot = HTML <<< VDom.Widget
+
+-- | Constructs a text node `HTML` value.
+text :: forall p i. String -> HTML p i
+text = HTML <<< VDom.Text
 
 -- | A smart constructor for HTML elements.
 element :: forall p i. VDom.ElemName -> Array (Prop i) -> Array (HTML p i) -> HTML p i
