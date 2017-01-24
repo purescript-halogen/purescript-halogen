@@ -25,6 +25,7 @@ import Data.Tuple (Tuple)
 import Halogen.Query.ChildQuery as CQ
 import Halogen.Query.EventSource as ES
 import Halogen.Query.ForkF as FF
+import Halogen.Query.InputF (RefLabel)
 
 -- | The Halogen component algebra
 data HalogenF s (f :: * -> *) g p o m a
@@ -39,7 +40,7 @@ data HalogenF s (f :: * -> *) g p o m a
   | Raise o a
   | Par (HalogenAp s f g p o m a)
   | Fork (FF.Fork (HalogenM s f g p o m) a)
-  | GetRef p (Maybe Foreign -> a)
+  | GetRef RefLabel (Maybe Foreign -> a)
 
 instance functorHalogenF :: Functor m => Functor (HalogenF s f g p o m) where
   map f = case _ of
@@ -127,7 +128,7 @@ getSlots = HalogenM $ liftF $ GetSlots id
 checkSlot :: forall s f g p o m. p -> HalogenM s f g p o m Boolean
 checkSlot p = HalogenM $ liftF $ CheckSlot p id
 
-getRef :: forall s f g p o m. p -> HalogenM s f g p o m (Maybe Foreign)
+getRef :: forall s f g p o m. RefLabel -> HalogenM s f g p o m (Maybe Foreign)
 getRef p = HalogenM $ liftF $ GetRef p id
 
 -- | Provides a way of having a component subscribe to an `EventSource` from

@@ -117,11 +117,13 @@ module Halogen.HTML.Elements
   , wbr
   ) where
 
+import Prelude (Unit)
 import Data.Tuple (Tuple)
 
 import Halogen.HTML.Core (HTML(..), Prop, ElemName(..))
 import Halogen.HTML.Core as Core
 import Halogen.HTML.Properties (I, IndexedProp, GlobalProperties, InteractiveEvents)
+import Halogen.Query.InputF (InputF)
 import Halogen.VDom as VDom
 
 import Unsafe.Coerce (unsafeCoerce)
@@ -163,7 +165,7 @@ withKeys ctor props children =
     HTML (VDom.Elem spec _) -> HTML (VDom.Keyed spec (coe children))
     h -> h
   where
-  coe :: Array (Tuple String (HTML p i)) -> Array (Tuple String (VDom.VDom (Array (Prop i)) p))
+  coe :: Array (Tuple String (HTML p i)) -> Array (Tuple String (VDom.VDom (Array (Prop (InputF Unit i))) p))
   coe = unsafeCoerce
 
 withKeys_ :: forall p i. (Array (HTML p i) -> HTML p i) -> Array (Tuple String (HTML p i)) -> HTML p i
@@ -172,7 +174,7 @@ withKeys_ ctor children =
     HTML (VDom.Elem spec _) -> HTML (VDom.Keyed spec (coe children))
     h -> h
   where
-  coe :: Array (Tuple String (HTML p i)) -> Array (Tuple String (VDom.VDom (Array (Prop i)) p))
+  coe :: Array (Tuple String (HTML p i)) -> Array (Tuple String (VDom.VDom (Array (Prop (InputF Unit i))) p))
   coe = unsafeCoerce
 
 a :: forall p i. Node (download :: I, href :: I, hreflang :: I, mediate :: I, rel :: I, target :: I, mediaType :: I) p i

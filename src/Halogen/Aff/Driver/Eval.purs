@@ -20,6 +20,7 @@ import Data.List (List, (:))
 import Data.List as L
 import Data.Map as M
 import Data.Maybe (Maybe(..))
+import Data.StrMap as SM
 import Data.Traversable (sequence_)
 import Data.Tuple (Tuple(..))
 
@@ -30,7 +31,7 @@ import Halogen.Query.ChildQuery (ChildQuery, unChildQuery)
 import Halogen.Query.EventSource as ES
 import Halogen.Query.ForkF as FF
 import Halogen.Query.HalogenM (HalogenM(..), HalogenF(..), HalogenAp(..))
-import Halogen.Query.InputF (InputF(..))
+import Halogen.Query.InputF (InputF(..), RefLabel(..))
 
 type LifecycleHandlers eff =
   { initializers :: List (Aff (HalogenEffects eff) Unit)
@@ -62,13 +63,13 @@ eval
    . Ref (LifecycleHandlers eff)
   -> Renderer h r eff
   -> Ref (DriverState h r s'' f z g'' p'' i o eff)
-  -> InputF p'' a (z a)
+  -> InputF a (z a)
   -> Aff (HalogenEffects eff) a
 eval lchs render r =
   case _ of
-    RefUpdate p el next -> do
+    RefUpdate (RefLabel p) el next -> do
       liftEff $ modifyRef r \(DriverState st) ->
-        DriverState st { refs = M.alter (const el) (st.component.mkOrdBox p) st.refs }
+        DriverState st { refs = SM.alter (const el) p st.refs }
       pure next
     Query q -> evalF r q
 
@@ -121,9 +122,9 @@ eval lchs render r =
     Fork f ->
       FF.unFork (\(FF.ForkF fx k) →
         k <<< map unsafeCoerceAff <$> fork (evalM ref fx)) f
-    GetRef p k -> do
+    GetRef (RefLabel p) k -> do
       DriverState { component, refs } <- liftEff (readRef ref)
-      pure $ k $ M.lookup (component.mkOrdBox p) refs
+      pure $ k $ SM.lookup p refs
 
   evalChildQuery
     :: forall s' f' z' g' p' i' o'

@@ -3,7 +3,7 @@
 -- | standard unrefined versions.
 module Halogen.HTML.Properties
   ( IndexedProp(..)
-  , IProp
+  , IndexedProp
   , I
   , prop
   , attr
@@ -92,69 +92,67 @@ import DOM.Node.Types (Element)
 
 import Halogen.HTML.Core (class IsProp, ClassName, AttrName(..), PropName(..), Prop)
 import Halogen.HTML.Core as Core
-import Halogen.Query.InputF (InputF(..))
+import Halogen.Query.InputF (InputF(..), RefLabel)
 
 import Unsafe.Coerce (unsafeCoerce)
 
 -- | The phantom row `r` can be thought of as a context which is synthesized in
 -- | the course of constructing a refined HTML expression.
-newtype IndexedProp (r :: # *) i = IProp (Prop i)
+newtype IndexedProp (r :: # *) i = IndexedProp (Prop (InputF Unit i))
 
-derive instance newtypeIProp :: Newtype (IndexedProp r i) _
-
-type IProp r p i = IndexedProp r (InputF p Unit i)
+derive instance newtypeIndexedProp :: Newtype (IndexedProp r i) _
 
 -- | A dummy type to use in the phantom row.
 data I
 
 -- | Creates an indexed HTML property.
 prop
-  :: forall value r p i
+  :: forall value r i
    . IsProp value
   => PropName value
   -> Maybe AttrName
   -> value
-  -> IProp r p i
-prop = (unsafeCoerce :: (PropName value -> Maybe AttrName -> value -> Prop (InputF p Unit i)) -> PropName value -> Maybe AttrName -> value -> IProp r p i) Core.prop
+  -> IndexedProp r i
+prop = (unsafeCoerce :: (PropName value -> Maybe AttrName -> value -> Prop (InputF Unit i)) -> PropName value -> Maybe AttrName -> value -> IndexedProp r i) Core.prop
 
 -- | Creates an indexed HTML attribute.
-attr :: forall r p i. AttrName -> String -> IProp r p i
-attr = (unsafeCoerce :: (AttrName -> String -> Prop (InputF p Unit i)) -> AttrName -> String -> IProp r p i) Core.attr
+attr :: forall r i. AttrName -> String -> IndexedProp r i
+attr = (unsafeCoerce :: (AttrName -> String -> Prop (InputF Unit i)) -> AttrName -> String -> IndexedProp r i) Core.attr
 
 -- | The `ref` property allows an input to be raised once a `HTMLElement` has
 -- | been created or destroyed in the DOM for the element that the property is
 -- | attached to.
-ref :: forall r p i. p -> IProp r p i
-ref = (unsafeCoerce :: ((Maybe Element -> Maybe (InputF p Unit i)) -> Prop (InputF p Unit i)) -> (Maybe Element -> Maybe (InputF p Unit i)) -> IProp r p i) Core.ref <<< go
+ref :: forall r i. RefLabel -> IndexedProp r i
+ref = (unsafeCoerce :: ((Maybe Element -> Maybe (InputF Unit i)) -> Prop (InputF Unit i)) -> (Maybe Element -> Maybe (InputF Unit i)) -> IndexedProp r i) Core.ref <<< go
   where
-  go :: p -> Maybe Element -> Maybe (InputF p Unit i)
+  go :: RefLabel -> Maybe Element -> Maybe (InputF Unit i)
   go p mel = Just $ RefUpdate p (toForeign <$> mel) unit
 
-alt :: forall r p i. String -> IProp (alt :: I | r) p i
+alt :: forall r i. String -> IndexedProp (alt :: I | r) i
 alt = prop (PropName "alt") (Just $ AttrName "alt")
 
-charset :: forall r p i. String -> IProp (charset :: I | r) p i
+charset :: forall r i. String -> IndexedProp (charset :: I | r) i
 charset = prop (PropName "charset") (Just $ AttrName "charset")
 
-class_ :: forall r p i. ClassName -> IProp (class :: I | r) p i
+class_ :: forall r i. ClassName -> IndexedProp (class :: I | r) i
 class_ = prop (PropName "className") (Just $ AttrName "class") <<< unwrap
 
-classes :: forall r p i. Array ClassName -> IProp (class :: I | r) p i
+classes :: forall r i. Array ClassName -> IndexedProp (class :: I | r) i
 classes = prop (PropName "className") (Just $ AttrName "class") <<< joinWith " " <<< map unwrap
 
-cols :: forall r p i. Int -> IProp (cols :: I | r) p i
+cols :: forall r i. Int -> IndexedProp (cols :: I | r) i
 cols = prop (PropName "cols") (Just $ AttrName "cols")
 
-rows :: forall r p i. Int -> IProp (rows :: I | r) p i
+rows :: forall r i. Int -> IndexedProp (rows :: I | r) i
 rows = prop (PropName "rows") (Just $ AttrName "rows")
 
-colSpan :: forall r p i. Int -> IProp (colSpan :: I | r) p i
+colSpan :: forall r i. Int -> IndexedProp (colSpan :: I | r) i
 colSpan = prop (PropName "colSpan") (Just $ AttrName "colspan")
 
-rowSpan :: forall r p i. Int -> IProp (rowSpan :: I | r) p i
+rowSpan :: forall r i. Int -> IndexedProp (rowSpan :: I | r) i
 rowSpan = prop (PropName "rowSpan") (Just $ AttrName "rowspan")
 
-for :: forall r p i. String -> IProp (for :: I | r) p i
+for :: forall r i. String -> IndexedProp (for :: I | r) i
 for = prop (PropName "htmlFor") (Just $ AttrName "for")
 
 data LengthLiteral
@@ -166,31 +164,31 @@ printLengthLiteral = case _ of
   Pixels n -> show n
   Percent n -> show n <> "%"
 
-height :: forall r p i. LengthLiteral -> IProp (height :: I | r) p i
+height :: forall r i. LengthLiteral -> IndexedProp (height :: I | r) i
 height = prop (PropName "height") (Just $ AttrName "height") <<< printLengthLiteral
 
-width :: forall r p i. LengthLiteral -> IProp (width :: I | r) p i
+width :: forall r i. LengthLiteral -> IndexedProp (width :: I | r) i
 width = prop (PropName "width") (Just $ AttrName "width") <<< printLengthLiteral
 
-href :: forall r p i. String -> IProp (href :: I | r) p i
+href :: forall r i. String -> IndexedProp (href :: I | r) i
 href = prop (PropName "href") (Just $ AttrName "href")
 
-id_ :: forall r p i. String -> IProp (id :: I | r) p i
+id_ :: forall r i. String -> IndexedProp (id :: I | r) i
 id_ = prop (PropName "id") (Just $ AttrName "id")
 
-name :: forall r p i. String -> IProp (name :: I | r) p i
+name :: forall r i. String -> IndexedProp (name :: I | r) i
 name = prop (PropName "name") (Just $ AttrName "name")
 
-rel :: forall r p i. String -> IProp (rel :: I | r) p i
+rel :: forall r i. String -> IndexedProp (rel :: I | r) i
 rel = prop (PropName "rel") (Just $ AttrName "rel")
 
-src :: forall r p i. String -> IProp (src :: I | r) p i
+src :: forall r i. String -> IndexedProp (src :: I | r) i
 src = prop (PropName "src") (Just $ AttrName "src")
 
-target :: forall r p i. String -> IProp (target :: I | r) p i
+target :: forall r i. String -> IndexedProp (target :: I | r) i
 target = prop (PropName "target") (Just $ AttrName "target")
 
-title :: forall r p i. String -> IProp (title :: I | r) p i
+title :: forall r i. String -> IndexedProp (title :: I | r) i
 title = prop (PropName "title") (Just $ AttrName "title")
 
 data FormMethod
@@ -202,16 +200,16 @@ renderFormMethod = case _ of
   POST -> "post"
   GET -> "get"
 
-method :: forall r p i. FormMethod -> IProp (method :: I | r) p i
+method :: forall r i. FormMethod -> IndexedProp (method :: I | r) i
 method = prop (PropName "method") (Just $ AttrName "method") <<< renderFormMethod
 
-action :: forall r p i. String -> IProp (action :: I | r) p i
+action :: forall r i. String -> IndexedProp (action :: I | r) i
 action = prop (PropName "action") (Just $ AttrName "action")
 
-enctype :: forall r p i. MediaType -> IProp (action :: I | r) p i
+enctype :: forall r i. MediaType -> IndexedProp (action :: I | r) i
 enctype = prop (PropName "enctype") (Just $ AttrName "enctype") <<< unwrap
 
-novalidate :: forall r p i. Boolean -> IProp (action :: I | r) p i
+novalidate :: forall r i. Boolean -> IndexedProp (action :: I | r) i
 novalidate = prop (PropName "noValidate") (Just $ AttrName "novalidate")
 
 data InputType
@@ -265,10 +263,10 @@ renderInputType = case _ of
   InputUrl -> "url"
   InputWeek -> "week"
 
-_type :: forall r p i value. IsProp value => value -> IProp (r :: # *) p i
+_type :: forall r i value. IsProp value => value -> IndexedProp (r :: # *) i
 _type = prop (PropName "type") (Just $ AttrName "type")
 
-inputType :: forall r p i. InputType -> IProp (inputType :: I | r) p i
+inputType :: forall r i. InputType -> IndexedProp (inputType :: I | r) i
 inputType = _type <<< renderInputType
 
 data MenuType
@@ -282,7 +280,7 @@ renderMenuType = case _ of
   MenuContext -> "context"
   MenuToolbar -> "toolbar"
 
-menuType :: forall r p i. MenuType -> IProp (menuType :: I | r) p i
+menuType :: forall r i. MenuType -> IndexedProp (menuType :: I | r) i
 menuType = _type <<< renderMenuType
 
 data MenuitemType
@@ -296,10 +294,10 @@ renderMenuitemType = case _ of
   MenuitemCheckbox -> "checkbox"
   MenuitemRadio -> "radio"
 
-menuitemType :: forall r p i. MenuitemType -> IProp (menuitemType :: I | r) p i
+menuitemType :: forall r i. MenuitemType -> IndexedProp (menuitemType :: I | r) i
 menuitemType= _type <<< renderMenuitemType
 
-mediaType :: forall r p i. MediaType -> IProp (mediaType :: I | r) p i
+mediaType :: forall r i. MediaType -> IndexedProp (mediaType :: I | r) i
 mediaType = _type <<< unwrap
 
 data ButtonType
@@ -313,7 +311,7 @@ renderButtonType = case _ of
   ButtonSubmit -> "submit"
   ButtonReset -> "reset"
 
-buttonType :: forall r p i. ButtonType -> IProp (buttonType :: I | r) p i
+buttonType :: forall r i. ButtonType -> IndexedProp (buttonType :: I | r) i
 buttonType = _type <<< renderButtonType
 
 data CaseType
@@ -336,49 +334,49 @@ renderOrderedListType = case _ of
   OrderedListAlphabetic Lowercase -> "a"
   OrderedListAlphabetic Uppercase -> "A"
 
-olType :: forall r p i. OrderedListType -> IProp (olType :: I | r) p i
+olType :: forall r i. OrderedListType -> IndexedProp (olType :: I | r) i
 olType = _type <<< renderOrderedListType
 
-value :: forall r p i. String -> IProp (value :: I | r) p i
+value :: forall r i. String -> IndexedProp (value :: I | r) i
 value = prop (PropName "value") (Just $ AttrName "value")
 
-enabled :: forall r p i. Boolean -> IProp (disabled :: I | r) p i
+enabled :: forall r i. Boolean -> IndexedProp (disabled :: I | r) i
 enabled = disabled <<< not
 
-disabled :: forall r p i. Boolean -> IProp (disabled :: I | r) p i
+disabled :: forall r i. Boolean -> IndexedProp (disabled :: I | r) i
 disabled = prop (PropName "disabled") (Just $ AttrName "disabled")
 
-required :: forall r p i. Boolean -> IProp (required :: I | r) p i
+required :: forall r i. Boolean -> IndexedProp (required :: I | r) i
 required = prop (PropName "required") (Just $ AttrName "required")
 
-readonly :: forall r p i. Boolean -> IProp (readonly :: I | r) p i
+readonly :: forall r i. Boolean -> IndexedProp (readonly :: I | r) i
 readonly = prop (PropName "readOnly") (Just $ AttrName "readonly")
 
-spellcheck :: forall r p i. Boolean -> IProp (spellcheck :: I | r) p i
+spellcheck :: forall r i. Boolean -> IndexedProp (spellcheck :: I | r) i
 spellcheck = prop (PropName "spellcheck") (Just $ AttrName "spellcheck")
 
-checked :: forall r p i. Boolean -> IProp (checked :: I | r) p i
+checked :: forall r i. Boolean -> IndexedProp (checked :: I | r) i
 checked = prop (PropName "checked") (Just $ AttrName "checked")
 
-selected :: forall r p i. Boolean -> IProp (selected :: I | r) p i
+selected :: forall r i. Boolean -> IndexedProp (selected :: I | r) i
 selected = prop (PropName "selected") (Just $ AttrName "selected")
 
-placeholder :: forall r p i. String -> IProp (placeholder :: I | r) p i
+placeholder :: forall r i. String -> IndexedProp (placeholder :: I | r) i
 placeholder = prop (PropName "placeholder") (Just $ AttrName "placeholder")
 
-autocomplete :: forall r p i. Boolean -> IProp (autocomplete :: I | r) p i
+autocomplete :: forall r i. Boolean -> IndexedProp (autocomplete :: I | r) i
 autocomplete = prop (PropName "autocomplete") (Just $ AttrName "autocomplete") <<< (\b -> if b then "on" else "off")
 
-autofocus :: forall r p i. Boolean -> IProp (autofocus :: I | r) p i
+autofocus :: forall r i. Boolean -> IndexedProp (autofocus :: I | r) i
 autofocus = prop (PropName "autofocus") (Just $ AttrName "autofocus")
 
-multiple :: forall r p i. Boolean -> IProp (multiple :: I | r) p i
+multiple :: forall r i. Boolean -> IndexedProp (multiple :: I | r) i
 multiple = prop (PropName "multiple") (Just $ AttrName "multiple")
 
-draggable :: forall r p i. Boolean -> IProp (draggable :: I | r) p i
+draggable :: forall r i. Boolean -> IndexedProp (draggable :: I | r) i
 draggable = prop (PropName "draggable") (Just $ AttrName "draggable")
 
-tabIndex :: forall r p i. Int -> IProp (tabIndex :: I | r) p i
+tabIndex :: forall r i. Int -> IndexedProp (tabIndex :: I | r) i
 tabIndex = prop (PropName "tabIndex") (Just $ AttrName "tabindex")
 
 type GlobalAttributes r =

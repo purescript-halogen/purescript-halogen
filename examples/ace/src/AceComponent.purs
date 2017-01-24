@@ -52,17 +52,17 @@ aceComponent =
     { editor: Nothing }
 
   -- As we're embedding a 3rd party component we only need to create a
-  -- placeholder div here and attach the ref property which will raise a query
-  -- when the element is created.
+  -- placeholder div here and attach the ref property which will let us reference
+  -- the element in eval.
   render :: AceState -> H.ParentHTML AceQuery (Const Void) Unit (Aff (AceEffects eff))
-  render = const $ HH.div [ HP.ref unit ] []
+  render = const $ HH.div [ HP.ref (H.RefLabel "ace") ] []
 
   -- The query algebra for the component handles the initialization of the Ace
   -- editor as well as responding to the `ChangeText` action that allows us to
   -- alter the editor's state.
   eval :: AceQuery ~> H.ParentDSL AceState AceQuery (Const Void) Unit AceOutput (Aff (AceEffects eff))
   eval (Initialize next) = do
-    H.getHTMLElementRef unit >>= case _ of
+    H.getHTMLElementRef (H.RefLabel "ace") >>= case _ of
       Nothing -> pure unit
       Just el' -> do
         editor <- H.liftEff $ Ace.editNode el' Ace.ace
