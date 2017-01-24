@@ -9,7 +9,7 @@ import Control.Monad.Aff.Unsafe (unsafeCoerceAff)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Class (liftEff)
 import Control.Monad.Eff.Exception (error)
-import Control.Monad.Eff.Ref (Ref, readRef, modifyRef, writeRef)
+import Control.Monad.Eff.Ref (Ref, readRef, writeRef)
 import Control.Monad.Error.Class (throwError)
 import Control.Monad.Fork (fork)
 import Control.Monad.Free (foldFree)
@@ -22,15 +22,16 @@ import Data.Map as M
 import Data.Maybe (Maybe(..))
 import Data.Traversable (sequence_)
 import Data.Tuple (Tuple(..))
+import Data.Foreign (Foreign)
 
 import Halogen.Aff.Driver.State (DriverState(..), unDriverStateX)
 import Halogen.Aff.Effects (HalogenEffects)
 import Halogen.Data.OrdBox (unOrdBox)
+import Halogen.HTML.Core (RefLabel)
 import Halogen.Query.ChildQuery (ChildQuery, unChildQuery)
 import Halogen.Query.EventSource as ES
 import Halogen.Query.ForkF as FF
 import Halogen.Query.HalogenM (HalogenM(..), HalogenF(..), HalogenAp(..))
-import Halogen.Query.InputF (InputF(..))
 
 type LifecycleHandlers eff =
   { initializers :: List (Aff (HalogenEffects eff) Unit)
@@ -61,17 +62,11 @@ eval
   :: forall h r eff s'' f z g'' p'' i o
    . Ref (LifecycleHandlers eff)
   -> Renderer h r eff
+  -> (forall s' f' g' p' o'. RefLabel -> r s' f' g' p' o' eff -> Eff (HalogenEffects eff) (Maybe Foreign))
   -> Ref (DriverState h r s'' f z g'' p'' i o eff)
-  -> InputF p'' z
+  -> z
   ~> Aff (HalogenEffects eff)
-eval lchs render r =
-  case _ of
-    RefUpdate p el next -> do
-      liftEff $ modifyRef r \(DriverState st) ->
-        DriverState st { refs = M.alter (const el) (st.component.mkOrdBox p) st.refs }
-      pure next
-    Query q -> evalF r q
-
+eval lchs render lookupRef = evalF
   where
 
   go
@@ -122,8 +117,10 @@ eval lchs render r =
       FF.unFork (\(FF.ForkF fx k) →
         k <<< map unsafeCoerceAff <$> fork (evalM ref fx)) f
     GetRef p k -> do
-      DriverState { component, refs } <- liftEff (readRef ref)
-      pure $ k $ M.lookup (component.mkOrdBox p) refs
+      DriverState { component, rendering } <- liftEff (readRef ref)
+      case rendering of
+        Nothing -> pure $ k Nothing
+        Just rs -> k <$> liftEff (lookupRef p rs)
 
   evalChildQuery
     :: forall s' f' z' g' p' i' o'

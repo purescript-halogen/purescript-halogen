@@ -24,16 +24,15 @@ import Data.Maybe (Maybe(..))
 import Data.Newtype (class Newtype)
 import Data.Tuple (Tuple)
 
-import DOM.Node.Types (Element)
 import DOM.Event.Types (Event, EventType)
 
 import Halogen.VDom as VDom
-import Halogen.VDom.DOM.Prop (ElemRef(..), Prop(..), PropValue, propFromBoolean, propFromInt, propFromNumber, propFromString)
+import Halogen.VDom.DOM.Prop (Prop(..), PropValue, RefLabel, propFromBoolean, propFromInt, propFromNumber, propFromString)
 
 import Unsafe.Coerce (unsafeCoerce)
 
 import Halogen.VDom (ElemName(..), Namespace(..)) as Exports
-import Halogen.VDom.DOM.Prop (Prop(..), PropValue) as Exports
+import Halogen.VDom.DOM.Prop (Prop(..), RefLabel(..), PropValue) as Exports
 
 newtype HTML p i = HTML (VDom.VDom (Array (Prop i)) p)
 
@@ -83,10 +82,8 @@ attr (AttrName name) = Attribute Nothing name
 handler :: forall i. EventType -> (Event -> Maybe i) -> Prop i
 handler = Handler
 
-ref :: forall i. (Maybe Element -> Maybe i) -> Prop i
-ref f = Ref $ f <<< case _ of
-  Created x -> Just x
-  Removed _ -> Nothing
+ref :: forall i. RefLabel -> Prop i
+ref = Ref
 
 class IsProp a where
   toPropValue :: a -> PropValue
