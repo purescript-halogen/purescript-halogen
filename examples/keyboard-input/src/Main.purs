@@ -16,9 +16,9 @@ import DOM.HTML.Types (htmlDocumentToDocument) as DOM
 import DOM.HTML.Window (document) as DOM
 
 import Halogen as H
+import Halogen.Aff as HA
 import Halogen.HTML as HH
 import Halogen.Query.EventSource as ES
-import Halogen.Aff.Util (runHalogenAff, awaitBody)
 import Halogen.VDom.Driver (runUI)
 
 import Keyboard as K
@@ -35,14 +35,15 @@ data Query a
 type Effects eff = (dom :: DOM, avar :: AVAR, keyboard :: K.KEYBOARD | eff)
 type DSL eff = H.ComponentDSL (State eff) Query Void (Aff (Effects eff))
 
-ui :: forall eff. H.Component HH.HTML Query Void (Aff (Effects eff))
+ui :: forall eff. H.Component HH.HTML Query Unit Void (Aff (Effects eff))
 ui =
   H.lifecycleComponent
-    { render
+    { initialState: const initialState
+    , render
     , eval
-    , initialState
     , initializer: Just (H.action Init)
     , finalizer: Nothing
+    , receiver: const Nothing
     }
   where
 
@@ -74,7 +75,7 @@ ui =
         | otherwise ->
             pure (reply H.Listening)
 
-main :: Eff (H.HalogenEffects (keyboard :: K.KEYBOARD)) Unit
-main = runHalogenAff do
-  body <- awaitBody
-  runUI ui body
+main :: Eff (HA.HalogenEffects (keyboard :: K.KEYBOARD)) Unit
+main = HA.runHalogenAff do
+  body <- HA.awaitBody
+  runUI ui unit body

@@ -6,14 +6,13 @@ import Control.Monad.Eff (Eff)
 
 import Data.Const (Const)
 import Data.Maybe (Maybe(..))
-import Data.Lazy (defer)
 
 import Halogen as H
+import Halogen.Aff as HA
 import Halogen.Component.ChildPath (type (\/), type (<\/>))
 import Halogen.Component.ChildPath as CP
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
-import Halogen.Aff.Util (runHalogenAff, awaitBody)
 import Halogen.VDom.Driver (runUI)
 
 import ComponentA (QueryA(..), SlotA(..), componentA)
@@ -30,15 +29,21 @@ data Query a = ReadStates a
 type ChildQuery = QueryA <\/> QueryB <\/> QueryC <\/> Const Void
 type ChildSlot = SlotA \/ SlotB \/ SlotC \/ Void
 
-ui :: forall m. Applicative m => H.Component HH.HTML Query Void m
-ui = H.parentComponent { render, eval, initialState }
+ui :: forall m. Applicative m => H.Component HH.HTML Query Unit Void m
+ui =
+  H.parentComponent
+    { initialState: const initialState
+    , render
+    , eval
+    , receiver: const Nothing
+    }
   where
 
   render :: State -> H.ParentHTML Query ChildQuery ChildSlot m
   render state = HH.div_
-    [ HH.div_ [ HH.slot' CP.cp1 SlotA (defer \_ -> componentA) absurd ]
-    , HH.div_ [ HH.slot' CP.cp2 SlotB (defer \_ -> componentB) absurd ]
-    , HH.div_ [ HH.slot' CP.cp3 SlotC (defer \_ -> componentC) absurd ]
+    [ HH.div_ [ HH.slot' CP.cp1 SlotA componentA unit absurd ]
+    , HH.div_ [ HH.slot' CP.cp2 SlotB componentB unit absurd ]
+    , HH.div_ [ HH.slot' CP.cp3 SlotC componentC unit absurd ]
     , HH.div_ [ HH.text $ "Current states: " <> show state.a <> " / " <> show state.b <> " / " <> show state.c ]
     , HH.button [ HE.onClick (HE.input_ ReadStates) ] [ HH.text "Read states" ]
     ]
@@ -51,7 +56,7 @@ ui = H.parentComponent { render, eval, initialState }
     H.put { a, b, c }
     pure next
 
-main :: Eff (H.HalogenEffects ()) Unit
-main = runHalogenAff do
-  body <- awaitBody
-  runUI ui body
+main :: Eff (HA.HalogenEffects ()) Unit
+main = HA.runHalogenAff do
+  body <- HA.awaitBody
+  runUI ui unit body

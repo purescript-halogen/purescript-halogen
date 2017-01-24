@@ -4,9 +4,11 @@ import Prelude
 import Control.Monad.Eff (Eff)
 import Halogen.Aff as HA
 import Halogen.VDom.Driver (runUI)
-import Component.List (list)
+import Network.HTTP.Affjax as AX
+import Component (ui)
 
-main :: Eff (HA.HalogenEffects ()) Unit
+-- | Run the app.
+main :: Eff (HA.HalogenEffects (ajax :: AX.AJAX)) Unit
 main = HA.runHalogenAff do
   body <- HA.awaitBody
-  runUI list unit body
+  runUI ui unit body

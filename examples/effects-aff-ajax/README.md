@@ -1,4 +1,4 @@
-## AJAX example
+## AJAX and `Aff`
 
 This example illustrates an AJAX request being made in a component's `eval` function.
 

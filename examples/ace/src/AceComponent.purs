@@ -6,12 +6,10 @@ import Control.Monad.Aff (Aff)
 import Control.Monad.Aff.AVar (AVAR)
 
 import Data.Maybe (Maybe(..))
-
-import DOM.HTML.Types (HTMLElement)
+import Data.Const (Const)
 
 import Halogen as H
 import Halogen.HTML as HH
-import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
 
 import Ace as Ace
@@ -22,21 +20,11 @@ import Ace.Types (ACE, Editor)
 -- | The state for the ace component - we only need a reference to the editor,
 -- | as Ace editor has its own internal state that we can query instead of
 -- | replicating it within Halogen.
-type AceState =
-  { element :: Maybe HTMLElement
-  , editor :: Maybe Editor
-  }
-
-initAceState :: AceState
-initAceState =
-  { element: Nothing
-  , editor: Nothing
-  }
+type AceState = { editor :: Maybe Editor }
 
 -- | A basic query algebra for the Ace component.
 data AceQuery a
-  = SetElement (Maybe HTMLElement) a
-  | Initialize a
+  = Initialize a
   | Finalize a
   | ChangeText String a
   | HandleChange (H.SubscribeStatus -> a)
@@ -47,32 +35,34 @@ data AceOutput = TextChanged String
 type AceEffects eff = (ace :: ACE, avar :: AVAR | eff)
 
 -- | The Ace component definition.
-aceComponent :: forall eff. H.Component HH.HTML AceQuery AceOutput (Aff (AceEffects eff))
+aceComponent :: forall eff. H.Component HH.HTML AceQuery Unit AceOutput (Aff (AceEffects eff))
 aceComponent =
-  H.lifecycleComponent
-    { render
+  H.lifecycleParentComponent
+    { initialState: const initialState
+    , render
     , eval
-    , initialState: initAceState
     , initializer: Just (H.action Initialize)
     , finalizer: Just (H.action Finalize)
+    , receiver: const Nothing
     }
   where
+
+  initialState :: AceState
+  initialState =
+    { editor: Nothing }
 
   -- As we're embedding a 3rd party component we only need to create a
   -- placeholder div here and attach the ref property which will raise a query
   -- when the element is created.
-  render :: AceState -> H.ComponentHTML AceQuery
-  render = const $ HH.div [ HP.ref (HE.input SetElement) ] []
+  render :: AceState -> H.ParentHTML AceQuery (Const Void) Unit (Aff (AceEffects eff))
+  render = const $ HH.div [ HP.ref unit ] []
 
   -- The query algebra for the component handles the initialization of the Ace
   -- editor as well as responding to the `ChangeText` action that allows us to
   -- alter the editor's state.
-  eval :: AceQuery ~> H.ComponentDSL AceState AceQuery AceOutput (Aff (AceEffects eff))
-  eval (SetElement el next) = do
-    H.modify (_ { element = el })
-    pure next
+  eval :: AceQuery ~> H.ParentDSL AceState AceQuery (Const Void) Unit AceOutput (Aff (AceEffects eff))
   eval (Initialize next) = do
-    H.gets _.element >>= case _ of
+    H.getHTMLElementRef unit >>= case _ of
       Nothing -> pure unit
       Just el' -> do
         editor <- H.liftEff $ Ace.editNode el' Ace.ace

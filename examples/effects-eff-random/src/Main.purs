@@ -4,9 +4,10 @@ import Prelude
 import Control.Monad.Eff (Eff)
 import Halogen.Aff as HA
 import Halogen.VDom.Driver (runUI)
-import Component.List (list)
+import Control.Monad.Eff.Random (RANDOM)
+import Component (ui)
 
-main :: Eff (HA.HalogenEffects ()) Unit
+main :: Eff (HA.HalogenEffects (random :: RANDOM)) Unit
 main = HA.runHalogenAff do
   body <- HA.awaitBody
-  runUI list unit body
+  runUI ui unit body
