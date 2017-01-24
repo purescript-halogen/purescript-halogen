@@ -124,8 +124,8 @@ attr = (unsafeCoerce :: (AttrName -> String -> Prop (InputF p f Unit)) -> AttrNa
 -- | The `ref` property allows an input to be raised once a `HTMLElement` has
 -- | been created or destroyed in the DOM for the element that the property is
 -- | attached to.
-ref :: forall f p r. p -> IProp (ref :: I | r) f p
-ref = (unsafeCoerce :: ((Maybe Element -> Maybe (InputF p f Unit)) -> Prop (InputF p f Unit)) -> (Maybe Element -> Maybe (InputF p f Unit)) -> IProp (ref :: I | r) f p) Core.ref <<< go
+ref :: forall f p r. p -> IProp r f p
+ref = (unsafeCoerce :: ((Maybe Element -> Maybe (InputF p f Unit)) -> Prop (InputF p f Unit)) -> (Maybe Element -> Maybe (InputF p f Unit)) -> IProp r f p) Core.ref <<< go
   where
   go :: p -> Maybe Element -> Maybe (InputF p f Unit)
   go p mel = Just $ RefUpdate p (toForeign <$> mel) unit
@@ -383,15 +383,18 @@ tabIndex = prop (PropName "tabIndex") (Just $ AttrName "tabindex")
 
 type GlobalAttributes r =
   ( id :: I
-  , name :: I
   , title :: I
   , class :: I
   , style :: I
   , spellcheck :: I
-  , key :: I
   , draggable :: I
+  , lang :: I
+  , translate :: I
+  , dir :: I
+  , hidden :: I
   , tabIndex :: I
-  , ref :: I
+  , accessKey :: I
+  , contentEditable :: I
   | r
   )
 
