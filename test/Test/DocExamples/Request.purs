@@ -3,7 +3,6 @@ module Test.DocExamples.Request where
 import Halogen
 import Control.Monad.Aff (Aff)
 import Halogen.Aff (HalogenEffects)
-import Halogen.VirtualDOM.Driver (HalogenIO)
 
 data Query a = GetTickCount (Int -> a)
 
