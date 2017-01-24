@@ -121,43 +121,43 @@ import Data.Tuple (Tuple)
 
 import Halogen.HTML.Core (HTML(..), Prop, ElemName(..))
 import Halogen.HTML.Core as Core
-import Halogen.HTML.Properties (I, IndexedProp, GlobalProperties, InteractiveEvents)
+import Halogen.HTML.Properties (I, IProp, GlobalProperties, InteractiveEvents)
 import Halogen.VDom as VDom
 
 import Unsafe.Coerce (unsafeCoerce)
 
 -- | An HTML element that admits children.
 type Node r p i
-   = Array (IndexedProp (InteractiveEvents (GlobalProperties r)) i)
+   = Array (IProp (InteractiveEvents (GlobalProperties r)) i)
   -> Array (HTML p i)
   -> HTML p i
 
 -- | A `Node` that doesn't support mouse events.
 type NoninteractiveNode r p i
-   = Array (IndexedProp (GlobalProperties r) i)
+   = Array (IProp (GlobalProperties r) i)
   -> Array (HTML p i)
   -> HTML p i
 
 -- | An HTML element that does not admit children.
 type Leaf r p i
-   = Array (IndexedProp (InteractiveEvents (GlobalProperties r)) i)
+   = Array (IProp (InteractiveEvents (GlobalProperties r)) i)
   -> HTML p i
 
 -- | An `Leaf` that doesn't support mouse events.
 type NoninteractiveLeaf r p i
-   = Array (IndexedProp (GlobalProperties r) i)
+   = Array (IProp (GlobalProperties r) i)
   -> HTML p i
 
 -- | Creates an HTML element that expects indexed properties.
-element :: forall r p i. ElemName -> Array (IndexedProp r i) -> Array (HTML p i) -> HTML p i
-element = (unsafeCoerce :: (ElemName -> Array (Prop i) -> Array (HTML p i) -> HTML p i) -> ElemName -> Array (IndexedProp r i) -> Array (HTML p i) -> HTML p i) Core.element
+element :: forall r p i. ElemName -> Array (IProp r i) -> Array (HTML p i) -> HTML p i
+element = (unsafeCoerce :: (ElemName -> Array (Prop i) -> Array (HTML p i) -> HTML p i) -> ElemName -> Array (IProp r i) -> Array (HTML p i) -> HTML p i) Core.element
 
 -- | Creates an HTML element that expects indexed properties, with keyed
 -- | children.
-keyed :: forall r p i. ElemName -> Array (IndexedProp r i) -> Array (Tuple String (HTML p i)) -> HTML p i
-keyed = (unsafeCoerce :: (ElemName -> Array (Prop i) -> Array (Tuple String (HTML p i)) -> HTML p i) -> ElemName -> Array (IndexedProp r i) -> Array (Tuple String (HTML p i)) -> HTML p i) Core.keyed
+keyed :: forall r p i. ElemName -> Array (IProp r i) -> Array (Tuple String (HTML p i)) -> HTML p i
+keyed = (unsafeCoerce :: (ElemName -> Array (Prop i) -> Array (Tuple String (HTML p i)) -> HTML p i) -> ElemName -> Array (IProp r i) -> Array (Tuple String (HTML p i)) -> HTML p i) Core.keyed
 
-withKeys :: forall r p i. (Array (IndexedProp r i) -> Array (HTML p i) -> HTML p i) -> Array (IndexedProp r i) -> Array (Tuple String (HTML p i)) -> HTML p i
+withKeys :: forall r p i. (Array (IProp r i) -> Array (HTML p i) -> HTML p i) -> Array (IProp r i) -> Array (Tuple String (HTML p i)) -> HTML p i
 withKeys ctor props children =
   case ctor props [] of
     HTML (VDom.Elem spec _) -> HTML (VDom.Keyed spec (coe children))

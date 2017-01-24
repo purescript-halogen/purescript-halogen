@@ -31,6 +31,7 @@ import DOM.HTML.Types (HTMLElement, readHTMLElement)
 import Halogen.Component.ChildPath (ChildPath, injSlot, prjSlot, injQuery, cpI)
 import Halogen.Query.EventSource (EventSource, SubscribeStatus(..), eventSource, eventSource_)
 import Halogen.Query.HalogenM (HalogenM(..), HalogenF(..), getRef, getSlots, checkSlot, mkQuery)
+import Halogen.VDom.DOM.Prop (RefLabel)
 
 import Control.Parallel (parTraverse)
 import Control.Monad.Aff.Class (liftAff) as Exports
@@ -137,7 +138,7 @@ queryAll' path q = do
       (\p -> map (Tuple p) (mkQuery (injSlot path p) (injQuery path q)))
       slots
 
-getHTMLElementRef :: forall s f g p o m. p -> HalogenM s f g p o m (Maybe HTMLElement)
+getHTMLElementRef :: forall s f g p o m. RefLabel -> HalogenM s f g p o m (Maybe HTMLElement)
 getHTMLElementRef = map (go =<< _) <<< getRef
   where
   go :: Foreign -> Maybe HTMLElement
