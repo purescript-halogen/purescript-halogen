@@ -35,9 +35,9 @@ import Halogen.Query.InputF (InputF(..))
 type RenderSpec h r eff =
   { render
       :: forall s f g p o
-       . (forall x. InputF p f x -> Eff (HalogenEffects eff) Unit)
+       . (forall x. InputF p x (f x) -> Eff (HalogenEffects eff) Unit)
       -> (ComponentSlot h g (Aff (HalogenEffects eff)) p (f Unit) -> Eff (HalogenEffects eff) (RenderStateX r eff))
-      -> h (ComponentSlot h g (Aff (HalogenEffects eff)) p (f Unit)) (InputF p f Unit)
+      -> h (ComponentSlot h g (Aff (HalogenEffects eff)) p (f Unit)) (InputF p Unit (f Unit))
       -> Maybe (r s f g p o eff)
       -> Eff (HalogenEffects eff) (r s f g p o eff)
   , renderChild :: forall s f g p o. r s f g p o eff -> r s f g p o eff
@@ -87,10 +87,10 @@ runUI' lchs renderSpec component i = do
       Nothing -> liftEff $ throwException (error "Halogen internal error: query projection failed in runUI'")
 
   evalF
-    :: forall s f' z' g p i' o'
+    :: forall s f' z' g p i' o' a
      . Ref (DriverState h r s f' z' g p i' o' eff)
-    -> InputF p z'
-    ~> Aff (HalogenEffects eff)
+    -> InputF p a (z' a)
+    -> Aff (HalogenEffects eff) a
   evalF ref = eval lchs render ref
 
   rootHandler
@@ -140,9 +140,9 @@ runUI' lchs renderSpec component i = do
     writeRef ds.childrenOut M.empty
     writeRef ds.childrenIn ds.children
     let
-      handler :: forall x. InputF p z' x -> Aff (HalogenEffects eff) Unit
+      handler :: forall x. InputF p x (z' x) -> Aff (HalogenEffects eff) Unit
       handler = void <<< evalF ds.selfRef
-      selfHandler :: forall x. InputF p z' x -> Aff (HalogenEffects eff) Unit
+      selfHandler :: forall x. InputF p x (z' x) -> Aff (HalogenEffects eff) Unit
       selfHandler = queuingHandler handler ds.pendingRefs
       childHandler :: forall x. z' x -> Aff (HalogenEffects eff) Unit
       childHandler = queuingHandler (handler <<< Query) ds.pendingQueries
