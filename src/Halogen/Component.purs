@@ -78,7 +78,7 @@ unComponent = unsafeCoerce
 -- | - `m` is the monad used for non-component-state effects
 type Component' h s f g p i o m =
   { initialState :: i -> s
-  , render :: s -> h (ComponentSlot h g m p (f Unit)) (InputF p f Unit)
+  , render :: s -> h (ComponentSlot h g m p (f Unit)) (InputF p Unit (f Unit))
   , eval :: f ~> HalogenM s f g p o m
   , receiver :: i -> Maybe (f Unit)
   , initializer :: Maybe (f Unit)
@@ -97,14 +97,14 @@ type Component' h s f g p i o m =
 -- | - `m` is the monad used for non-component-state effects
 type ComponentSpec h s f i o m =
   { initialState :: i -> s
-  , render :: s -> h Void (InputF Void f Unit)
+  , render :: s -> h Void (InputF Void Unit (f Unit))
   , eval :: f ~> ComponentDSL s f o m
   , receiver :: i -> Maybe (f Unit)
   }
 
 -- | A convenience synonym for the output type of a `render` function, for a
 -- | childless component that renders HTML.
-type ComponentHTML f = HTML Void (InputF Void f Unit)
+type ComponentHTML f = HTML Void (InputF Void Unit (f Unit))
 
 -- | A synonym for `HalogenM` with some type parameters populated that are not
 -- | relevant for childless components.
@@ -138,7 +138,7 @@ component spec =
 -- | - `m` is the monad used for non-component-state effects
 type LifecycleComponentSpec h s f i o m =
   { initialState :: i -> s
-  , render :: s -> h Void (InputF Void f Unit)
+  , render :: s -> h Void (InputF Void Unit (f Unit))
   , eval :: f ~> ComponentDSL s f o m
   , receiver :: i -> Maybe (f Unit)
   , initializer :: Maybe (f Unit)
@@ -163,9 +163,9 @@ lifecycleComponent spec =
     }
   where
   coeRender
-    :: (s -> h Void (InputF Void f Unit))
+    :: (s -> h Void (InputF Void Unit (f Unit)))
     -> s
-    -> h (ComponentSlot h (Const Void) m Void (f Unit)) (InputF Void f Unit)
+    -> h (ComponentSlot h (Const Void) m Void (f Unit)) (InputF Void Unit (f Unit))
   coeRender = map (lmap absurd) -- unsafeCoerce -- ≅ map (lmap absurd id)
 
 -- | A spec for a component.
@@ -179,14 +179,14 @@ lifecycleComponent spec =
 -- | - `m` is the monad used for non-component-state effects
 type ParentComponentSpec h s f g p i o m =
   { initialState :: i -> s
-  , render :: s -> h (ComponentSlot h g m p (f Unit)) (InputF p f Unit)
+  , render :: s -> h (ComponentSlot h g m p (f Unit)) (InputF p Unit (f Unit))
   , eval :: f ~> HalogenM s f g p o m
   , receiver :: i -> Maybe (f Unit)
   }
 
 -- | A convenience synonym for the output type of a `render` function, for a
 -- | parent component that renders HTML.
-type ParentHTML f g p m = HTML (ComponentSlot HTML g m p (f Unit)) (InputF p f Unit)
+type ParentHTML f g p m = HTML (ComponentSlot HTML g m p (f Unit)) (InputF p Unit (f Unit))
 
 -- | A synonym for just `HalogenM`. Provided for consistency with `ComponentDSL`
 -- | in the non-parent-component case.
@@ -220,7 +220,7 @@ parentComponent spec =
 -- | - `m` is the monad used for non-component-state effects
 type ParentLifecycleComponentSpec h s f g p i o m =
   { initialState :: i -> s
-  , render :: s -> h (ComponentSlot h g m p (f Unit)) (InputF p f Unit)
+  , render :: s -> h (ComponentSlot h g m p (f Unit)) (InputF p Unit (f Unit))
   , eval :: f ~> HalogenM s f g p o m
   , receiver :: i -> Maybe (f Unit)
   , initializer :: Maybe (f Unit)

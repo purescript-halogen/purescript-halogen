@@ -31,7 +31,7 @@ slot
   -> Component HTML f i o m
   -> i
   -> (o -> Maybe (q Unit))
-  -> HTML (ComponentSlot HTML f m p (q Unit)) (InputF p q Unit)
+  -> HTML (ComponentSlot HTML f m p (q Unit)) (InputF p Unit (q Unit))
 slot p component input outputQuery =
   let f = unComponent _.receiver component
   in Core.slot (mkComponentSlot p component input f outputQuery Just)
@@ -51,7 +51,7 @@ slot'
   -> Component HTML f i o m
   -> i
   -> (o -> Maybe (q Unit))
-  -> HTML (ComponentSlot HTML f' m p' (q Unit)) (InputF p' q Unit)
+  -> HTML (ComponentSlot HTML f' m p' (q Unit)) (InputF p' Unit (q Unit))
 slot' i p component input outputQuery =
   let
     pq = prjQuery i

@@ -58,12 +58,12 @@ type Renderer h r eff
   -> Eff (HalogenEffects eff) Unit
 
 eval
-  :: forall h r eff s'' f z g'' p'' i o
+  :: forall h r eff s'' f z g'' p'' i o a
    . Ref (LifecycleHandlers eff)
   -> Renderer h r eff
   -> Ref (DriverState h r s'' f z g'' p'' i o eff)
-  -> InputF p'' z
-  ~> Aff (HalogenEffects eff)
+  -> InputF p'' a (z a)
+  -> Aff (HalogenEffects eff) a
 eval lchs render r =
   case _ of
     RefUpdate p el next -> do
