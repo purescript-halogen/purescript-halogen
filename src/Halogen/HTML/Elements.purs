@@ -121,43 +121,43 @@ import Data.Tuple (Tuple)
 
 import Halogen.HTML.Core (HTML(..), Prop, ElemName(..))
 import Halogen.HTML.Core as Core
-import Halogen.HTML.Properties (I, IProp, GlobalProperties, InteractiveEvents)
+import Halogen.HTML.Properties (I, IndexedProp, GlobalProperties, InteractiveEvents)
 import Halogen.VDom as VDom
 
 import Unsafe.Coerce (unsafeCoerce)
 
 -- | An HTML element that admits children.
 type Node r p i
-   = Array (IProp (InteractiveEvents (GlobalProperties r)) i)
+   = Array (IndexedProp (InteractiveEvents (GlobalProperties r)) i)
   -> Array (HTML p i)
   -> HTML p i
 
 -- | A `Node` that doesn't support mouse events.
 type NoninteractiveNode r p i
-   = Array (IProp (GlobalProperties r) i)
+   = Array (IndexedProp (GlobalProperties r) i)
   -> Array (HTML p i)
   -> HTML p i
 
 -- | An HTML element that does not admit children.
 type Leaf r p i
-   = Array (IProp (InteractiveEvents (GlobalProperties r)) i)
+   = Array (IndexedProp (InteractiveEvents (GlobalProperties r)) i)
   -> HTML p i
 
 -- | An `Leaf` that doesn't support mouse events.
 type NoninteractiveLeaf r p i
-   = Array (IProp (GlobalProperties r) i)
+   = Array (IndexedProp (GlobalProperties r) i)
   -> HTML p i
 
 -- | Creates an HTML element that expects indexed properties.
-element :: forall r p i. ElemName -> Array (IProp r i) -> Array (HTML p i) -> HTML p i
-element = (unsafeCoerce :: (ElemName -> Array (Prop i) -> Array (HTML p i) -> HTML p i) -> ElemName -> Array (IProp r i) -> Array (HTML p i) -> HTML p i) Core.element
+element :: forall r p i. ElemName -> Array (IndexedProp r i) -> Array (HTML p i) -> HTML p i
+element = (unsafeCoerce :: (ElemName -> Array (Prop i) -> Array (HTML p i) -> HTML p i) -> ElemName -> Array (IndexedProp r i) -> Array (HTML p i) -> HTML p i) Core.element
 
 -- | Creates an HTML element that expects indexed properties, with keyed
 -- | children.
-keyed :: forall r p i. ElemName -> Array (IProp r i) -> Array (Tuple String (HTML p i)) -> HTML p i
-keyed = (unsafeCoerce :: (ElemName -> Array (Prop i) -> Array (Tuple String (HTML p i)) -> HTML p i) -> ElemName -> Array (IProp r i) -> Array (Tuple String (HTML p i)) -> HTML p i) Core.keyed
+keyed :: forall r p i. ElemName -> Array (IndexedProp r i) -> Array (Tuple String (HTML p i)) -> HTML p i
+keyed = (unsafeCoerce :: (ElemName -> Array (Prop i) -> Array (Tuple String (HTML p i)) -> HTML p i) -> ElemName -> Array (IndexedProp r i) -> Array (Tuple String (HTML p i)) -> HTML p i) Core.keyed
 
-withKeys :: forall r p i. (Array (IProp r i) -> Array (HTML p i) -> HTML p i) -> Array (IProp r i) -> Array (Tuple String (HTML p i)) -> HTML p i
+withKeys :: forall r p i. (Array (IndexedProp r i) -> Array (HTML p i) -> HTML p i) -> Array (IndexedProp r i) -> Array (Tuple String (HTML p i)) -> HTML p i
 withKeys ctor props children =
   case ctor props [] of
     HTML (VDom.Elem spec _) -> HTML (VDom.Keyed spec (coe children))
@@ -229,7 +229,7 @@ bdi = element (ElemName "bdi")
 bdi_ :: forall p i. Array (HTML p i) -> HTML p i
 bdi_ = bdi []
 
-bdo :: forall p i. NoninteractiveNode (dir :: I) p i
+bdo :: forall p i. NoninteractiveNode () p i
 bdo = element (ElemName "bdo")
 
 bdo_ :: forall p i. Array (HTML p i) -> HTML p i
@@ -253,7 +253,7 @@ br props = element (ElemName "br") props []
 br_ :: forall p i. HTML p i
 br_ = br []
 
-button :: forall p i. Node (autofocus :: I, disabled :: I, form :: I, formaction :: I, formenctyp :: I, formmethod :: I, formnovalidate :: I, formtaget :: I, buttonType :: I, value :: I) p i
+button :: forall p i. Node (autofocus :: I, disabled :: I, form :: I, formaction :: I, formenctyp :: I, formmethod :: I, formnovalidate :: I, formtaget :: I, buttonType :: I, name :: I, value :: I) p i
 button = element (ElemName "button")
 
 button_ :: forall p i. Array (HTML p i) -> HTML p i
@@ -358,7 +358,7 @@ embed = element (ElemName "embed")
 embed_ :: forall p i. Array (HTML p i) -> HTML p i
 embed_ = embed []
 
-fieldset :: forall p i. Node (disabled :: I, form :: I, onScroll :: I) p i
+fieldset :: forall p i. Node (disabled :: I, form :: I, onScroll :: I, name :: I) p i
 fieldset = element (ElemName "fieldset")
 
 fieldset_ :: forall p i. Array (HTML p i) -> HTML p i
@@ -382,7 +382,7 @@ footer = element (ElemName "footer")
 footer_ :: forall p i. Array (HTML p i) -> HTML p i
 footer_ = footer []
 
-form :: forall p i. Node (acceptCharset :: I, action :: I, autocomplete :: I, enctype :: I, method :: I, onReset :: I, novalidate :: I, onScroll :: I, onSubmit :: I, target :: I) p i
+form :: forall p i. Node (acceptCharset :: I, action :: I, autocomplete :: I, enctype :: I, method :: I, onReset :: I, novalidate :: I, onScroll :: I, onSubmit :: I, target :: I, name :: I) p i
 form = element (ElemName "form")
 
 form_ :: forall p i. Array (HTML p i) -> HTML p i
@@ -454,13 +454,13 @@ i = element (ElemName "i")
 i_ :: forall p i. Array (HTML p i) -> HTML p i
 i_ = i []
 
-iframe :: forall p i. NoninteractiveLeaf (onLoad :: I, sandbox :: I, scrolling :: I, src :: I, srcdoc :: I, width :: I, height :: I) p i
+iframe :: forall p i. NoninteractiveLeaf (onLoad :: I, sandbox :: I, scrolling :: I, src :: I, srcdoc :: I, width :: I, height :: I, name :: I) p i
 iframe props = element (ElemName "iframe") props []
 
 img :: forall p i. Leaf (alt :: I, crossorigin :: I, height :: I, ismap :: I, longdesc :: I, onAbort :: I, onError :: I, onLoad :: I, src :: I, usemap :: I, width :: I) p i
 img props = element (ElemName "img") props []
 
-input :: forall p i. Leaf (accept :: I, autocomplete :: I, autofocus :: I, checked :: I, disabled :: I, form :: I, formaction :: I, formenctype :: I, formmethod :: I, formnovalidate :: I, formtarget :: I, height :: I, list :: I, max :: I, min :: I, multiple :: I, onAbort :: I, onChange :: I, onError :: I, onInput :: I, onInvalid :: I, onLoad :: I, onSearch :: I, onSelect :: I, pattern :: I, placeholder :: I, readonly :: I, required :: I, size :: I, src :: I, step :: I, inputType :: I, value :: I, width :: I) p i
+input :: forall p i. Leaf (accept :: I, autocomplete :: I, autofocus :: I, checked :: I, disabled :: I, form :: I, formaction :: I, formenctype :: I, formmethod :: I, formnovalidate :: I, formtarget :: I, height :: I, list :: I, max :: I, min :: I, multiple :: I, onAbort :: I, onChange :: I, onError :: I, onInput :: I, onInvalid :: I, onLoad :: I, onSearch :: I, onSelect :: I, pattern :: I, placeholder :: I, readonly :: I, required :: I, size :: I, src :: I, step :: I, inputType :: I, value :: I, width :: I, name :: I) p i
 input props = element (ElemName "input") props []
 
 ins :: forall p i. Node (cite :: I, datetime :: I) p i
@@ -475,7 +475,7 @@ kbd = element (ElemName "kbd")
 kbd_ :: forall p i. Array (HTML p i) -> HTML p i
 kbd_ = kbd []
 
-keygen :: forall p i. Leaf (autofocus :: I, challenge :: I, disabled :: I, form :: I, keytype :: I, onChange :: I, onReset :: I, onSelect :: I, onSubmit :: I) p i
+keygen :: forall p i. Leaf (autofocus :: I, challenge :: I, disabled :: I, form :: I, keytype :: I, onChange :: I, onReset :: I, onSelect :: I, onSubmit :: I, name :: I) p i
 keygen props = element (ElemName "keygen") props []
 
 label :: forall p i. Node (for :: I, form :: I) p i
@@ -505,7 +505,7 @@ main = element (ElemName "main")
 main_ :: forall p i. Array (HTML p i) -> HTML p i
 main_ = main []
 
-map :: forall p i. Node () p i
+map :: forall p i. Node (name :: I) p i
 map = element (ElemName "map")
 
 map_ :: forall p i. Array (HTML p i) -> HTML p i
@@ -529,7 +529,7 @@ menuitem = element (ElemName "menuitem")
 menuitem_ :: forall p i. Array (HTML p i) -> HTML p i
 menuitem_ = menuitem []
 
-meta :: forall p i. NoninteractiveLeaf (charset :: I, content :: I, httpEquiv :: I) p i
+meta :: forall p i. NoninteractiveLeaf (charset :: I, content :: I, httpEquiv :: I, name :: I) p i
 meta props = element (ElemName "meta") props []
 
 meter :: forall p i. Node (form :: I, high :: I, low :: I, max :: I, min :: I, optimum :: I, value :: I) p i
@@ -550,7 +550,7 @@ noscript = element (ElemName "noscript")
 noscript_ :: forall p i. Array (HTML p i) -> HTML p i
 noscript_ = noscript []
 
-object :: forall p i. Node (data :: I, form :: I, height :: I, onError :: I, onScroll :: I, mediaType :: I, usemap :: I, width :: I) p i
+object :: forall p i. Node (data :: I, form :: I, height :: I, onError :: I, onScroll :: I, mediaType :: I, usemap :: I, width :: I, name :: I) p i
 object = element (ElemName "object")
 
 object_ :: forall p i. Array (HTML p i) -> HTML p i
@@ -574,7 +574,7 @@ option = element (ElemName "option")
 option_ :: forall p i. Array (HTML p i) -> HTML p i
 option_ = option []
 
-output :: forall p i. Node (for :: I, form :: I) p i
+output :: forall p i. Node (for :: I, form :: I, name :: I) p i
 output = element (ElemName "output")
 
 output_ :: forall p i. Array (HTML p i) -> HTML p i
@@ -586,7 +586,7 @@ p = element (ElemName "p")
 p_ :: forall p i. Array (HTML p i) -> HTML p i
 p_ = p []
 
-param :: forall p i. NoninteractiveLeaf (value :: I) p i
+param :: forall p i. NoninteractiveLeaf (value :: I, name :: I) p i
 param props = element (ElemName "param") props []
 
 pre :: forall p i. Node (onScroll :: I) p i
@@ -643,7 +643,7 @@ section = element (ElemName "section")
 section_ :: forall p i. Array (HTML p i) -> HTML p i
 section_ = section []
 
-select :: forall p i. Node (autofocus :: I, disabled :: I, form :: I, multiple :: I, onChange :: I, onScroll :: I, required :: I, size :: I, value :: I, selectedIndex :: I) p i
+select :: forall p i. Node (autofocus :: I, disabled :: I, form :: I, multiple :: I, onChange :: I, onScroll :: I, required :: I, size :: I, value :: I, selectedIndex :: I, name :: I) p i
 select = element (ElemName "select")
 
 select_ :: forall p i. Array (HTML p i) -> HTML p i
@@ -712,7 +712,7 @@ td = element (ElemName "td")
 td_ :: forall p i. Array (HTML p i) -> HTML p i
 td_ = td []
 
-textarea :: forall p i. Leaf (autofocus :: I, cols :: I, disabled :: I, form :: I, maxlength :: I, onChange :: I, onInput :: I, onScroll :: I, onSelect :: I, placeholder :: I, readonly :: I, required :: I, rows :: I, value :: I, wrap :: I) p i
+textarea :: forall p i. Leaf (autofocus :: I, cols :: I, disabled :: I, form :: I, maxlength :: I, onChange :: I, onInput :: I, onScroll :: I, onSelect :: I, placeholder :: I, readonly :: I, required :: I, rows :: I, value :: I, wrap :: I, name :: I) p i
 textarea es = element (ElemName "textarea") es []
 
 tfoot :: forall p i. Node (onScroll :: I) p i

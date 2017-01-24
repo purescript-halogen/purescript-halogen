@@ -2,6 +2,8 @@ module ComponentB where
 
 import Prelude
 
+import Data.Maybe (Maybe(..))
+
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
@@ -19,8 +21,14 @@ data SlotB = SlotB
 derive instance eqSlotB :: Eq SlotB
 derive instance ordSlotB :: Ord SlotB
 
-componentB :: forall m. H.Component HH.HTML QueryB Void m
-componentB = H.component { render, eval, initialState }
+componentB :: forall m. H.Component HH.HTML QueryB Unit Void m
+componentB =
+  H.component
+    { initialState: const initialState
+    , render
+    , eval
+    , receiver: const Nothing
+    }
   where
 
   render :: StateB -> H.ComponentHTML QueryB

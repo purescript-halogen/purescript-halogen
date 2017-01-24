@@ -8,16 +8,15 @@ import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Console (CONSOLE)
 import Control.Monad.Free (Free, liftF, foldFree)
 
+import Data.Maybe (Maybe(..))
+
 import Halogen as H
+import Halogen.Aff as HA
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
-import Halogen.Aff.Util (runHalogenAff, awaitBody)
 import Halogen.VDom.Driver (runUI)
 
 type State = { on :: Boolean }
-
-initialState :: State
-initialState = { on: false }
 
 data Query a = ToggleState a
 
@@ -27,9 +26,18 @@ type MyMonad = Free MyAlgebra
 output :: String -> MyMonad Unit
 output msg = liftF (Log msg unit)
 
-ui :: H.Component HH.HTML Query Void MyMonad
-ui = H.component { render, eval, initialState }
+ui :: H.Component HH.HTML Query Unit Void MyMonad
+ui =
+  H.component
+    { initialState: const initialState
+    , render
+    , eval
+    , receiver: const Nothing
+    }
   where
+
+  initialState :: State
+  initialState = { on: false }
 
   render :: State -> H.ComponentHTML Query
   render state =
@@ -47,15 +55,15 @@ ui = H.component { render, eval, initialState }
     H.lift $ output "State was toggled"
     pure next
 
-ui' :: forall eff. H.Component HH.HTML Query Void (Aff (H.HalogenEffects (console :: CONSOLE | eff)))
+ui' :: forall eff. H.Component HH.HTML Query Unit Void (Aff (HA.HalogenEffects (console :: CONSOLE | eff)))
 ui' = H.hoist (foldFree evalMyAlgebra) ui
   where
-  evalMyAlgebra :: MyAlgebra ~> Aff (H.HalogenEffects (console :: CONSOLE | eff))
+  evalMyAlgebra :: MyAlgebra ~> Aff (HA.HalogenEffects (console :: CONSOLE | eff))
   evalMyAlgebra (Log msg next) = do
     log msg
     pure next
 
-main :: Eff (H.HalogenEffects (console :: CONSOLE)) Unit
-main = runHalogenAff do
-  body <- awaitBody
-  runUI ui' body
+main :: Eff (HA.HalogenEffects (console :: CONSOLE)) Unit
+main = HA.runHalogenAff do
+  body <- HA.awaitBody
+  runUI ui' unit body

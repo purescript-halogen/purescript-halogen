@@ -1,6 +1,7 @@
 module Test.ReadmeExamples.Basic where
 
 import Prelude
+import Data.Maybe (Maybe(..))
 import Halogen (ComponentDSL, ComponentHTML, Component, component, gets, modify)
 import Halogen.HTML as H
 import Halogen.HTML.Events as E
@@ -14,8 +15,14 @@ data Query a
   | GetState (Boolean -> a)
 
 -- | The component definition
-myComponent :: forall m. Component H.HTML Query Void m
-myComponent = component { render, eval, initialState: { on: false } }
+myComponent :: forall m. Component H.HTML Query Unit Void m
+myComponent =
+  component
+    { initialState: const { on: false }
+    , render
+    , eval
+    , receiver: const Nothing
+    }
   where
 
   render :: State -> ComponentHTML Query

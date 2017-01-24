@@ -2,6 +2,8 @@ module ComponentC where
 
 import Prelude
 
+import Data.Maybe (Maybe(..))
+
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
@@ -19,8 +21,14 @@ data SlotC = SlotC
 derive instance eqSlotC :: Eq SlotC
 derive instance ordSlotC :: Ord SlotC
 
-componentC :: forall m. H.Component HH.HTML QueryC Void m
-componentC = H.component { render, eval, initialState }
+componentC :: forall m. H.Component HH.HTML QueryC Unit Void m
+componentC =
+  H.component
+    { initialState: const initialState
+    , render
+    , eval
+    , receiver: const Nothing
+    }
   where
 
   render :: StateC -> H.ComponentHTML QueryC

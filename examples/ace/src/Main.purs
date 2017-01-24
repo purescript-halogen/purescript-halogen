@@ -21,9 +21,6 @@ import AceComponent (AceEffects, AceOutput(..), AceQuery(..), aceComponent)
 -- | the editor.
 type State = { text :: String }
 
-initialState :: State
-initialState = { text: "" }
-
 -- | The query algebra for the app.
 data Query a
   = ClearText a
@@ -35,9 +32,18 @@ derive instance eqAceSlot :: Eq AceSlot
 derive instance ordAceSlot :: Ord AceSlot
 
 -- | The main UI component definition.
-ui :: forall eff. H.Component HH.HTML Query Void (Aff (AceEffects eff))
-ui = H.parentComponent { render, eval, initialState }
+ui :: forall eff. H.Component HH.HTML Query Unit Void (Aff (AceEffects eff))
+ui =
+  H.parentComponent
+    { initialState: const initialState
+    , render
+    , eval
+    , receiver: const Nothing
+    }
   where
+
+  initialState :: State
+  initialState = { text: "" }
 
   render :: State -> H.ParentHTML Query AceQuery AceSlot (Aff (AceEffects eff))
   render { text: text } =
@@ -52,7 +58,7 @@ ui = H.parentComponent { render, eval, initialState }
               ]
           ]
       , HH.div_
-          [ HH.slot AceSlot (H.defer \_ -> aceComponent) handleAceOuput ]
+          [ HH.slot AceSlot aceComponent unit handleAceOuput ]
       , HH.p_
           [ HH.text ("Current text: " <> text) ]
       ]
@@ -72,4 +78,4 @@ ui = H.parentComponent { render, eval, initialState }
 main :: Eff (HA.HalogenEffects (ace :: ACE, console :: CONSOLE)) Unit
 main = HA.runHalogenAff do
   body <- HA.awaitBody
-  runUI ui body
+  runUI ui unit body

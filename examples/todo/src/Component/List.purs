@@ -4,7 +4,6 @@ import Prelude
 
 import Data.Array (snoc, filter, length)
 
-import Data.Lazy (defer)
 import Data.Map as M
 import Data.Maybe (Maybe(..), fromMaybe)
 
@@ -27,8 +26,14 @@ derive instance eqTaskSlot :: Eq TaskSlot
 derive instance ordTaskSlot :: Ord TaskSlot
 
 -- | The list component definition.
-list :: forall m. Applicative m => H.Component HH.HTML ListQuery Void m
-list = H.parentComponent { render, eval, initialState: initialList }
+list :: forall m. Applicative m => H.Component HH.HTML ListQuery Unit Void m
+list =
+  H.parentComponent
+    { initialState: const initialList
+    , render
+    , eval
+    , receiver: const Nothing
+    }
   where
 
   render :: List -> H.ParentHTML ListQuery TaskQuery TaskSlot m
@@ -51,8 +56,9 @@ list = H.parentComponent { render, eval, initialState: initialList }
   renderTask taskId =
     HH.slot
       (TaskSlot taskId)
-      (defer \_ -> task initialTask)
-      (Just <<< flip (HandleTaskMessage taskId) unit)
+      (task initialTask)
+      unit
+      (HE.input (HandleTaskMessage taskId))
 
   eval :: ListQuery ~> H.ParentDSL List ListQuery TaskQuery TaskSlot Void m
   eval (NewTask next) = do

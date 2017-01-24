@@ -2,9 +2,10 @@ module Component.Task where
 
 import Prelude
 
-import Data.Bifunctor (bimap)
-
 import Control.Monad.State as CMS
+
+import Data.Bifunctor (bimap)
+import Data.Maybe (Maybe(..))
 
 import Halogen as H
 import Halogen.HTML as HH
@@ -25,8 +26,14 @@ data TaskMessage
   | Toggled Boolean
 
 -- | The task component definition.
-task :: forall m. Task -> H.Component HH.HTML TaskQuery TaskMessage m
-task initialState = H.component { render, eval, initialState }
+task :: forall m. Task -> H.Component HH.HTML TaskQuery Unit TaskMessage m
+task initialState =
+  H.component
+    { initialState: const initialState
+    , render
+    , eval
+    , receiver: const Nothing
+    }
   where
 
   render :: Task -> H.ComponentHTML TaskQuery

@@ -1,10 +1,13 @@
 module Halogen.HTML.Core
   ( HTML(..)
+  , slot
+  , text
   , element
   , keyed
   , prop
   , attr
   , handler
+  , ref
   , class IsProp
   , toPropValue
   , PropName(..)
@@ -21,15 +24,16 @@ import Data.Maybe (Maybe(..))
 import Data.Newtype (class Newtype)
 import Data.Tuple (Tuple)
 
+import DOM.Node.Types (Element)
 import DOM.Event.Types (Event, EventType)
 
 import Halogen.VDom as VDom
-import Halogen.VDom.DOM.Prop (Prop(..), PropValue, propFromBoolean, propFromInt, propFromNumber, propFromString)
+import Halogen.VDom.DOM.Prop (ElemRef(..), Prop(..), PropValue, propFromBoolean, propFromInt, propFromNumber, propFromString)
 
 import Unsafe.Coerce (unsafeCoerce)
 
 import Halogen.VDom (ElemName(..), Namespace(..)) as Exports
-import Halogen.VDom.DOM.Prop (Prop(..), ElemRef(..), PropValue) as Exports
+import Halogen.VDom.DOM.Prop (Prop(..), PropValue) as Exports
 
 newtype HTML p i = HTML (VDom.VDom (Array (Prop i)) p)
 
@@ -40,6 +44,14 @@ instance bifunctorHTML :: Bifunctor HTML where
 
 instance functorHTML :: Functor (HTML p) where
   map = rmap
+
+-- | A smart constructor for widget slots in the HTML.
+slot :: forall p q. p -> HTML p q
+slot = HTML <<< VDom.Widget
+
+-- | Constructs a text node `HTML` value.
+text :: forall p i. String -> HTML p i
+text = HTML <<< VDom.Text
 
 -- | A smart constructor for HTML elements.
 element :: forall p i. VDom.ElemName -> Array (Prop i) -> Array (HTML p i) -> HTML p i
@@ -70,6 +82,11 @@ attr (AttrName name) = Attribute Nothing name
 -- | Create an event handler.
 handler :: forall i. EventType -> (Event -> Maybe i) -> Prop i
 handler = Handler
+
+ref :: forall i. (Maybe Element -> Maybe i) -> Prop i
+ref f = Ref $ f <<< case _ of
+  Created x -> Just x
+  Removed _ -> Nothing
 
 class IsProp a where
   toPropValue :: a -> PropValue

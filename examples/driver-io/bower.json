@@ -1,0 +1,7 @@
+{
+  "name": "driver-io",
+  "private": true,
+  "dependencies": {
+    "purescript-halogen": "*"
+  }
+}
