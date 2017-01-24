@@ -7,13 +7,7 @@ A declarative, type-safe UI library for PureScript.
 
 ## Getting Started
 
-- Read the [guide](GUIDE.md)
-- Take a look at some of the examples:
-  - [A basic counter](examples/counter/)
-  - [AJAX requests](examples/ajax/)
-  - [TODO list](examples/todo/)
-  - [Ace editor](examples/ace/)
-- Clone the [template project](https://github.com/slamdata/purescript-halogen-template) and give it a try!
+:warning: The guide and template project are currently being updated for the new release. There are plenty of [examples](examples/) to dig into though.
 
 ## Installation
 
@@ -23,5 +17,4 @@ bower install purescript-halogen
 
 ## Documentation
 
-- [The guide](GUIDE.md) attempts to cover all the common uses cases and features of Halogen.
 - Module documentation is [published on Pursuit](http://pursuit.purescript.org/packages/purescript-halogen).
