@@ -9,6 +9,7 @@ module Halogen.Query
   , query'
   , queryAll
   , queryAll'
+  , getHTMLElementRef
   , module Exports
   , module Halogen.Query.EventSource
   , module Halogen.Query.HalogenM
@@ -16,14 +17,20 @@ module Halogen.Query
 
 import Prelude
 
+import Control.Monad.Except (runExcept)
+
 import Data.List as L
 import Data.Map as M
 import Data.Maybe (Maybe(..))
 import Data.Tuple (Tuple(..))
+import Data.Either (either)
+import Data.Foreign (Foreign)
+
+import DOM.HTML.Types (HTMLElement, readHTMLElement)
 
 import Halogen.Component.ChildPath (ChildPath, injSlot, prjSlot, injQuery, cpI)
 import Halogen.Query.EventSource (EventSource, SubscribeStatus(..), eventSource, eventSource_)
-import Halogen.Query.HalogenM (HalogenM(..), HalogenF(..), getSlots, checkSlot, mkQuery)
+import Halogen.Query.HalogenM (HalogenM(..), HalogenF(..), getRef, getSlots, checkSlot, mkQuery)
 
 import Control.Parallel (parTraverse)
 import Control.Monad.Aff.Class (liftAff) as Exports
@@ -129,3 +136,9 @@ queryAll' path q = do
     parTraverse
       (\p -> map (Tuple p) (mkQuery (injSlot path p) (injQuery path q)))
       slots
+
+getHTMLElementRef :: forall s f g p o m. p -> HalogenM s f g p o m (Maybe HTMLElement)
+getHTMLElementRef = map (go =<< _) <<< getRef
+  where
+  go :: Foreign -> Maybe HTMLElement
+  go = either (const Nothing) Just <<< runExcept <<< readHTMLElement

@@ -17,6 +17,7 @@ import Control.Monad.Aff (Aff)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Ref (Ref, newRef, writeRef)
 
+import Data.Foreign (Foreign)
 import Data.List (List(..))
 import Data.Map as M
 import Data.Maybe (Maybe(..))
@@ -47,6 +48,7 @@ newtype DriverState h r s f z g p i o eff = DriverState (DriverStateRec h r s f 
 type DriverStateRec h r s f z g p i o eff =
   { component :: Component' h s z g p i o (Aff (HalogenEffects eff))
   , state :: s
+  , refs :: M.Map (OrdBox p) Foreign
   , children :: M.Map (OrdBox p) (Ref (DriverStateX h r g eff))
   , childrenIn :: Ref (M.Map (OrdBox p) (Ref (DriverStateX h r g eff)))
   , childrenOut :: Ref (M.Map (OrdBox p) (Ref (DriverStateX h r g eff)))
@@ -135,6 +137,7 @@ initDriverState component input handler prjQuery = do
     ds =
       { component
       , state: component.initialState input
+      , refs: M.empty
       , children: M.empty
       , childrenIn
       , childrenOut

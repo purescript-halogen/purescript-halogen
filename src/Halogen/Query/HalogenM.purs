@@ -16,7 +16,9 @@ import Control.Monad.Writer.Class (class MonadTell, tell)
 import Control.Parallel.Class (class Parallel)
 
 import Data.Bifunctor (lmap)
+import Data.Foreign (Foreign)
 import Data.List as L
+import Data.Maybe (Maybe)
 import Data.Newtype (class Newtype, over)
 import Data.Tuple (Tuple)
 
@@ -37,6 +39,7 @@ data HalogenF s (f :: * -> *) g p o m a
   | Raise o a
   | Par (HalogenAp s f g p o m a)
   | Fork (FF.Fork (HalogenM s f g p o m) a)
+  | GetRef p (Maybe Foreign -> a)
 
 instance functorHalogenF :: Functor m => Functor (HalogenF s f g p o m) where
   map f = case _ of
@@ -51,6 +54,7 @@ instance functorHalogenF :: Functor m => Functor (HalogenF s f g p o m) where
     Raise o a -> Raise o (f a)
     Par pa -> Par (map f pa)
     Fork fa -> Fork (map f fa)
+    GetRef p k -> GetRef p (map f k)
 
 newtype HalogenAp s f g p o m a = HalogenAp (FreeAp (HalogenM s f g p o m) a)
 
@@ -123,6 +127,9 @@ getSlots = HalogenM $ liftF $ GetSlots id
 checkSlot :: forall s f g p o m. p -> HalogenM s f g p o m Boolean
 checkSlot p = HalogenM $ liftF $ CheckSlot p id
 
+getRef :: forall s f g p o m. p -> HalogenM s f g p o m (Maybe Foreign)
+getRef p = HalogenM $ liftF $ GetRef p id
+
 -- | Provides a way of having a component subscribe to an `EventSource` from
 -- | within an `Eval` function.
 subscribe :: forall s f g p o m. ES.EventSource f m -> HalogenM s f g p o m Unit
@@ -132,35 +139,13 @@ subscribe es = HalogenM $ liftF $ Subscribe es unit
 raise :: forall s f g p o m. o -> HalogenM s f g p o m Unit
 raise o = HalogenM $ liftF $ Raise o unit
 
-hoistF
-  :: forall s f f' g p o m
-   . Functor m
-  => (f ~> f')
-  -> HalogenM s f g p o m
-  ~> HalogenM s f' g p o m
-hoistF nat (HalogenM fa) = HalogenM (hoistFree go fa)
-  where
-  go :: HalogenF s f g p o m ~> HalogenF s f' g p o m
-  go = case _ of
-    GetState k -> GetState k
-    ModifyState f -> ModifyState f
-    Subscribe es next -> Subscribe (ES.interpret nat es) next
-    Lift q -> Lift q
-    Halt msg -> Halt msg
-    GetSlots k -> GetSlots k
-    CheckSlot p k -> CheckSlot p k
-    ChildQuery cq -> ChildQuery cq
-    Raise o a -> Raise o a
-    Par p -> Par (over HalogenAp (hoistFreeAp (hoistF nat)) p)
-    Fork f -> Fork (FF.hoistFork (hoistF nat) f)
-
-hoistM
+hoist
   :: forall s f g p o m m'
    . Functor m'
   => (m ~> m')
   -> HalogenM s f g p o m
   ~> HalogenM s f g p o m'
-hoistM nat (HalogenM fa) = HalogenM (hoistFree go fa)
+hoist nat (HalogenM fa) = HalogenM (hoistFree go fa)
   where
   go :: HalogenF s f g p o m ~> HalogenF s f g p o m'
   go = case _ of
@@ -173,5 +158,6 @@ hoistM nat (HalogenM fa) = HalogenM (hoistFree go fa)
     CheckSlot p k -> CheckSlot p k
     ChildQuery cq -> ChildQuery (CQ.hoistChildQuery nat cq)
     Raise o a -> Raise o a
-    Par p -> Par (over HalogenAp (hoistFreeAp (hoistM nat)) p)
-    Fork f -> Fork (FF.hoistFork (hoistM nat) f)
+    Par p -> Par (over HalogenAp (hoistFreeAp (hoist nat)) p)
+    Fork f -> Fork (FF.hoistFork (hoist nat) f)
+    GetRef p k -> GetRef p k

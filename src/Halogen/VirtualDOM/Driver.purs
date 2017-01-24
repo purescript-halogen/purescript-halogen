@@ -7,18 +7,20 @@ import Prelude
 
 import Control.Monad.Aff (Aff)
 import Control.Monad.Eff (Eff)
-import Control.Monad.Eff.Ref (Ref, modifyRef, newRef, readRef)
 import Control.Monad.Eff.Class (liftEff)
+import Control.Monad.Eff.Ref (Ref, modifyRef, newRef, readRef)
 
 import Data.Maybe (Maybe(..))
+
 import DOM.HTML.Types (HTMLElement, htmlElementToNode)
 import DOM.Node.Node (appendChild)
 
 import Halogen.Aff.Driver as AD
-import Halogen.Aff.Effects (HalogenEffects)
 import Halogen.Aff.Driver.State (RenderStateX, unRenderStateX)
+import Halogen.Aff.Effects (HalogenEffects)
 import Halogen.Component (ComponentSlot, Component)
 import Halogen.HTML.Core (HTML)
+import Halogen.Query.InputF (InputF)
 import Halogen.VirtualDOM.Internal as V
 import Halogen.VirtualDOM.Renderer (renderHTML)
 
@@ -62,9 +64,9 @@ mkRenderSpec element fresh =
 
   render
     :: forall s f g p o
-     . (forall x. f x -> Eff (HalogenEffects eff) Unit)
+     . (forall x. InputF p f x -> Eff (HalogenEffects eff) Unit)
     -> (ComponentSlot HTML g (Aff (HalogenEffects eff)) p (f Unit) -> Eff (HalogenEffects eff) (RenderStateX RenderState eff))
-    -> HTML (ComponentSlot HTML g (Aff (HalogenEffects eff)) p (f Unit)) (f Unit)
+    -> HTML (ComponentSlot HTML g (Aff (HalogenEffects eff)) p (f Unit)) (InputF p f Unit)
     -> Maybe (RenderState s f g p o eff)
     -> Eff (HalogenEffects eff) (RenderState s f g p o eff)
   render handler child html lastRender = do

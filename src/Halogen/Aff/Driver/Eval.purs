@@ -9,7 +9,7 @@ import Control.Monad.Aff.Unsafe (unsafeCoerceAff)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Class (liftEff)
 import Control.Monad.Eff.Exception (error)
-import Control.Monad.Eff.Ref (Ref, readRef, writeRef)
+import Control.Monad.Eff.Ref (Ref, readRef, modifyRef, writeRef)
 import Control.Monad.Error.Class (throwError)
 import Control.Monad.Fork (fork)
 import Control.Monad.Free (foldFree)
@@ -30,6 +30,7 @@ import Halogen.Query.ChildQuery (ChildQuery, unChildQuery)
 import Halogen.Query.EventSource as ES
 import Halogen.Query.ForkF as FF
 import Halogen.Query.HalogenM (HalogenM(..), HalogenF(..), HalogenAp(..))
+import Halogen.Query.InputF (InputF(..))
 
 type LifecycleHandlers eff =
   { initializers :: List (Aff (HalogenEffects eff) Unit)
@@ -61,9 +62,16 @@ eval
    . Ref (LifecycleHandlers eff)
   -> Renderer h r eff
   -> Ref (DriverState h r s'' f z g'' p'' i o eff)
-  -> z
+  -> InputF p'' z
   ~> Aff (HalogenEffects eff)
-eval lchs render = evalF
+eval lchs render r =
+  case _ of
+    RefUpdate p el next -> do
+      liftEff $ modifyRef r \(DriverState st) ->
+        DriverState st { refs = M.alter (const el) (st.component.mkOrdBox p) st.refs }
+      pure next
+    Query q -> evalF r q
+
   where
 
   go
@@ -105,7 +113,7 @@ eval lchs render = evalF
     ChildQuery cq ->
       evalChildQuery ref cq
     Raise o a -> do
-      DriverState (ds@{ handler, pendingOuts }) <- liftEff (readRef ref)
+      DriverState { handler, pendingOuts } <- liftEff (readRef ref)
       queuingHandler handler pendingOuts o
       pure a
     Par (HalogenAp p) ->
@@ -113,6 +121,9 @@ eval lchs render = evalF
     Fork f ->
       FF.unFork (\(FF.ForkF fx k) →
         k <<< map unsafeCoerceAff <$> fork (evalM ref fx)) f
+    GetRef p k -> do
+      DriverState { component, refs } <- liftEff (readRef ref)
+      pure $ k $ M.lookup (component.mkOrdBox p) refs
 
   evalChildQuery
     :: forall s' f' z' g' p' i' o'

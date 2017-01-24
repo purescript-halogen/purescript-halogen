@@ -9,9 +9,9 @@ import Control.Monad.Aff (Aff)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Class (liftEff)
 
+import Data.Foldable (traverse_)
 import Data.Maybe (Maybe(..))
 import Data.Nullable (toMaybe)
-import Data.Foldable (traverse_)
 
 import DOM (DOM)
 import DOM.HTML (window) as DOM
@@ -26,11 +26,12 @@ import Halogen.Aff.Driver.State (RenderStateX, unRenderStateX)
 import Halogen.Aff.Effects (HalogenEffects)
 import Halogen.Component (Component, ComponentSlot)
 import Halogen.HTML.Core (HTML(..), Prop)
+import Halogen.Query.InputF (InputF)
 import Halogen.VDom as V
 import Halogen.VDom.DOM.Prop as VP
 
 type VHTML f g p eff =
-  V.VDom (Array (Prop (f Unit))) (ComponentSlot HTML g (Aff (HalogenEffects eff)) p (f Unit))
+  V.VDom (Array (Prop (InputF p f Unit))) (ComponentSlot HTML g (Aff (HalogenEffects eff)) p (f Unit))
 
 newtype RenderState s f g p o eff =
   RenderState
@@ -40,12 +41,12 @@ newtype RenderState s f g p o eff =
 
 mkSpec
   :: forall f g p eff
-   . (f Unit -> Eff (HalogenEffects eff) Unit)
+   . (InputF p f Unit -> Eff (HalogenEffects eff) Unit)
   -> (ComponentSlot HTML g (Aff (HalogenEffects eff)) p (f Unit) -> Eff (HalogenEffects eff) (RenderStateX RenderState eff))
   -> DOM.Document
   -> V.VDomSpec
       (HalogenEffects eff)
-      (Array (VP.Prop (f Unit)))
+      (Array (VP.Prop (InputF p f Unit)))
       (ComponentSlot HTML g (Aff (HalogenEffects eff)) p (f Unit))
 mkSpec handler renderChild document =
   V.VDomSpec { buildWidget, buildAttributes, document }
@@ -53,12 +54,12 @@ mkSpec handler renderChild document =
 
   buildAttributes
     :: DOM.Element
-    -> V.VDomMachine (HalogenEffects eff) (Array (VP.Prop (f Unit))) Unit
+    -> V.VDomMachine (HalogenEffects eff) (Array (VP.Prop (InputF p f Unit))) Unit
   buildAttributes = VP.buildProp handler
 
   buildWidget
     :: V.VDomSpec (HalogenEffects eff)
-          (Array (VP.Prop (f Unit)))
+          (Array (VP.Prop (InputF p f Unit)))
           (ComponentSlot HTML g (Aff (HalogenEffects eff)) p (f Unit))
     -> V.VDomMachine (HalogenEffects eff)
           (ComponentSlot HTML g (Aff (HalogenEffects eff)) p (f Unit))
@@ -100,9 +101,9 @@ renderSpec document container = { render, renderChild: id, removeChild }
 
   render
     :: forall s f g p o
-     . (forall x. f x -> Eff (HalogenEffects eff) Unit)
+     . (forall x. InputF p f x -> Eff (HalogenEffects eff) Unit)
     -> (ComponentSlot HTML g (Aff (HalogenEffects eff)) p (f Unit) -> Eff (HalogenEffects eff) (RenderStateX RenderState eff))
-    -> HTML (ComponentSlot HTML g (Aff (HalogenEffects eff)) p (f Unit)) (f Unit)
+    -> HTML (ComponentSlot HTML g (Aff (HalogenEffects eff)) p (f Unit)) (InputF p f Unit)
     -> Maybe (RenderState s f g p o eff)
     -> Eff (HalogenEffects eff) (RenderState s f g p o eff)
   render handler child (HTML vdom) =
