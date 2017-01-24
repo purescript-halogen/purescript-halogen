@@ -2,7 +2,7 @@ module Halogen.Aff.Driver
   ( RenderSpec
   , runUI
   , module Halogen
-  , module Halogen.Effects
+  , module Halogen.Aff.Effects
   ) where
 
 import Prelude
@@ -27,10 +27,10 @@ import Data.Tuple (Tuple(..))
 
 import Halogen (HalogenIO)
 import Halogen.Aff.Driver.Eval (LifecycleHandlers, eval, handleLifecycle, queuingHandler)
-import Halogen.Aff.Driver.State (DriverState(..), DriverStateX, RenderStateX, initDriverState, renderStateX, unDriverStateX)
+import Halogen.Aff.Driver.State (DriverState(..), DriverStateX, RenderStateX, initDriverState, renderStateX, renderStateX_, unDriverStateX)
+import Halogen.Aff.Effects (HalogenEffects)
 import Halogen.Component (Component, ComponentSlot, unComponent, unComponentSlot)
 import Halogen.Data.OrdBox (OrdBox)
-import Halogen.Effects (HalogenEffects)
 
 type RenderSpec h r eff =
   { render
@@ -41,6 +41,7 @@ type RenderSpec h r eff =
       -> Maybe (r s f g p o eff)
       -> Eff (HalogenEffects eff) (r s f g p o eff)
   , renderChild :: forall s f g p o. r s f g p o eff -> r s f g p o eff
+  , removeChild :: forall s f g p o. r s f g p o eff -> Eff (HalogenEffects eff) Unit
   }
 
 runUI
@@ -137,7 +138,10 @@ runUI' lchs renderSpec component = do
         (ds.component.render ds.state)
         ds.rendering
     children <- readRef ds.childrenOut
-    traverse_ (addFinalizer <=< readRef) =<< readRef ds.childrenIn
+    readRef ds.childrenIn >>= traverse_ \childVar -> do
+      childDS <- readRef childVar
+      renderStateX_ renderSpec.removeChild childDS
+      addFinalizer childDS
     modifyRef var \(DriverState ds') ->
       DriverState
         { rendering: Just rendering

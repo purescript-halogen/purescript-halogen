@@ -15,9 +15,9 @@ import DOM.HTML.Types (HTMLElement, htmlElementToNode)
 import DOM.Node.Node (appendChild)
 
 import Halogen.Aff.Driver as AD
+import Halogen.Aff.Effects (HalogenEffects)
 import Halogen.Aff.Driver.State (RenderStateX, unRenderStateX)
 import Halogen.Component (ComponentSlot, Component)
-import Halogen.Effects (HalogenEffects)
 import Halogen.HTML.Core (HTML)
 import Halogen.VirtualDOM.Internal as V
 import Halogen.VirtualDOM.Renderer (renderHTML)
@@ -55,6 +55,7 @@ mkRenderSpec
 mkRenderSpec element fresh =
   { render
   , renderChild
+  , removeChild: const (pure unit)
   }
   where
 

@@ -88,7 +88,7 @@ import Data.Newtype (class Newtype, unwrap)
 import Data.Profunctor (lmap)
 import Data.String (joinWith)
 
-import DOM.HTML.Types (HTMLElement)
+import DOM.Node.Types (Element)
 
 import Halogen.HTML.Core (class IsProp, ClassName, AttrName(..), PropName(..), Prop(..), ElemRef(..))
 import Halogen.HTML.Core as Core
@@ -118,11 +118,11 @@ prop = (unsafeCoerce :: (PropName value -> Maybe AttrName -> value -> Prop i) ->
 attr :: forall r i. AttrName -> String -> IProp r i
 attr = (unsafeCoerce :: (AttrName -> String -> Prop i) -> AttrName -> String -> IProp r i) Core.attr
 
--- | The `ref` property allows an input to be raised once a `HTMLElement` has
+-- | The `ref` property allows an input to be raised once an `Element` has
 -- | been created or destroyed in the DOM for the element that the property is
 -- | attached to.
-ref :: forall r i. (Maybe HTMLElement -> Maybe i) -> IProp (ref :: I | r) i
-ref = (unsafeCoerce :: ((Maybe HTMLElement -> Maybe i) -> Prop i) -> (Maybe HTMLElement -> Maybe i) -> IProp (ref :: I | r) i) (lmap (lmap refToMaybe) Ref)
+ref :: forall r i. (Maybe Element -> Maybe i) -> IProp (ref :: I | r) i
+ref = (unsafeCoerce :: ((Maybe Element -> Maybe i) -> Prop i) -> (Maybe Element -> Maybe i) -> IProp (ref :: I | r) i) (lmap (lmap refToMaybe) Ref)
   where
   refToMaybe = case _ of
     Created x -> Just x

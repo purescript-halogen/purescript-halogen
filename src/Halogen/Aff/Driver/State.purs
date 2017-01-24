@@ -6,6 +6,7 @@ module Halogen.Aff.Driver.State
   , mkDriverStateXRef
   , RenderStateX
   , renderStateX
+  , renderStateX_
   , unRenderStateX
   , initDriverState
   ) where
@@ -19,10 +20,11 @@ import Control.Monad.Eff.Ref (Ref, newRef, writeRef)
 import Data.List (List(..))
 import Data.Map as M
 import Data.Maybe (Maybe(..))
+import Data.Traversable (traverse_)
 
+import Halogen.Aff.Effects (HalogenEffects)
 import Halogen.Component (Component')
 import Halogen.Data.OrdBox (OrdBox)
-import Halogen.Effects (HalogenEffects)
 
 import Unsafe.Coerce (unsafeCoerce)
 
@@ -82,9 +84,9 @@ data RenderStateX
   (eff :: # !)
 
 mkRenderStateX
-  :: forall h r s f g p o eff
-   . r s f g p o eff
-  -> RenderStateX h r f eff
+  :: forall h r s f g p o eff m
+   . m (r s f g p o eff)
+  -> m (RenderStateX h r f eff)
 mkRenderStateX = unsafeCoerce
 
 unRenderStateX
@@ -100,7 +102,15 @@ renderStateX
   => (forall s g p o. Maybe (r s f g p o eff) -> m (r s f g p o eff))
   -> DriverStateX h r f eff
   -> m (RenderStateX h r f eff)
-renderStateX f = unDriverStateX \st -> mkRenderStateX <$> f st.rendering
+renderStateX f = unDriverStateX \st -> mkRenderStateX (f st.rendering)
+
+renderStateX_
+  :: forall m h r f eff
+   . Applicative m
+  => (forall s g p o. r s f g p o eff -> m Unit)
+  -> DriverStateX h r f eff
+  -> m Unit
+renderStateX_ f = unDriverStateX \st -> traverse_ f st.rendering
 
 initDriverState
   :: forall h r s f g p o eff

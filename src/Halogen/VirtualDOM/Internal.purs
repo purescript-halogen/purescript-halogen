@@ -29,6 +29,7 @@ import Data.Function.Uncurried (Fn2, runFn2)
 import DOM (DOM)
 import DOM.Event.Types (EventType)
 import DOM.HTML.Types (HTMLElement)
+import DOM.Node.Types (Element)
 
 -- | Virtual DOM nodes
 data VTree
@@ -48,14 +49,14 @@ foreign import attr :: Fn2 String String Props
 foreign import handlerProp :: forall eff event. Fn2 EventType (event -> Eff eff Unit) Props
 
 -- | Create a property from a ref.
-refProp :: forall eff. (Either HTMLElement HTMLElement -> Eff eff Unit) -> Props
+refProp :: forall eff. (Either Element Element -> Eff eff Unit) -> Props
 refProp = refPropImpl Left Right
 
 foreign import refPropImpl
   :: forall eff
    . (forall a b. a -> Either a b)
   -> (forall a b. b -> Either a b)
-  -> (Either HTMLElement HTMLElement -> Eff eff Unit)
+  -> (Either Element Element -> Eff eff Unit)
   -> Props
 
 foreign import concatProps :: Fn2 Props Props Props

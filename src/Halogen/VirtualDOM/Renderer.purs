@@ -13,7 +13,7 @@ import Data.Nullable (Nullable, toNullable)
 import Data.Traversable (traverse)
 import Data.Tuple (Tuple(..))
 
-import Halogen.Effects (HalogenEffects)
+import Halogen.Aff.Effects (HalogenEffects)
 import Halogen.HTML.Core (HTML(..))
 import Halogen.VDom (ElemSpec(..), VDom(..), runGraft)
 import Halogen.VDom.DOM.Prop (ElemRef(..), Prop(..))

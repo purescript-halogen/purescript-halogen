@@ -15,17 +15,16 @@ import Data.Foldable (traverse_)
 
 import DOM (DOM)
 import DOM.HTML (window) as DOM
-import DOM.HTML.Types (htmlDocumentToDocument) as DOM
-import DOM.HTML.Types (HTMLElement, htmlElementToNode)
+import DOM.HTML.Types (HTMLElement, htmlElementToNode, htmlDocumentToDocument) as DOM
 import DOM.HTML.Window (document) as DOM
-import DOM.Node.Node (appendChild, parentNode, replaceChild)
+import DOM.Node.Node (appendChild, removeChild, parentNode, replaceChild) as DOM
 import DOM.Node.Types (Document, Element, Node) as DOM
 
 import Halogen.Aff.Driver (HalogenIO)
 import Halogen.Aff.Driver as AD
 import Halogen.Aff.Driver.State (RenderStateX, unRenderStateX)
+import Halogen.Aff.Effects (HalogenEffects)
 import Halogen.Component (Component, ComponentSlot)
-import Halogen.Effects (HalogenEffects)
 import Halogen.HTML.Core (HTML(..), Prop)
 import Halogen.VDom as V
 import Halogen.VDom.DOM.Prop as VP
@@ -84,7 +83,7 @@ mkSpec handler renderChild document =
 runUI
   :: forall f eff o
    . Component HTML f o (Aff (HalogenEffects eff))
-  -> HTMLElement
+  -> DOM.HTMLElement
   -> Aff (HalogenEffects eff) (HalogenIO f o (Aff (HalogenEffects eff)))
 runUI component element = do
   document <- liftEff $ DOM.htmlDocumentToDocument <$> (DOM.document =<< DOM.window)
@@ -93,9 +92,9 @@ runUI component element = do
 renderSpec
   :: forall eff
    . DOM.Document
-  -> HTMLElement
+  -> DOM.HTMLElement
   -> AD.RenderSpec HTML RenderState eff
-renderSpec document container = { render, renderChild: id }
+renderSpec document container = { render, renderChild: id, removeChild }
   where
 
   render
@@ -111,7 +110,7 @@ renderSpec document container = { render, renderChild: id }
         let spec = mkSpec handler child document
         machine <- V.buildVDom spec vdom
         let node = V.extract machine
-        appendChild node (htmlElementToNode container)
+        DOM.appendChild node (DOM.htmlElementToNode container)
         pure $ RenderState { machine, node }
       Just (RenderState { machine, node }) -> do
         machine' <- V.step machine vdom
@@ -119,9 +118,16 @@ renderSpec document container = { render, renderChild: id }
         when (not nodeRefEq node newNode) (substInParent node newNode)
         pure $ RenderState { machine: machine', node: newNode }
 
+removeChild
+  :: forall eff o p g f s. RenderState s f g p o eff
+  -> Eff (HalogenEffects eff) Unit
+removeChild (RenderState { node }) = do
+  npn <- DOM.parentNode node
+  traverse_ (\pn -> DOM.removeChild node pn) (toMaybe npn)
+
 substInParent :: forall eff. DOM.Node -> DOM.Node -> Eff (dom :: DOM | eff) Unit
 substInParent oldNode newNode = do
-  npn <- parentNode oldNode
-  traverse_ (\pn -> replaceChild newNode oldNode pn) (toMaybe npn)
+  npn <- DOM.parentNode oldNode
+  traverse_ (\pn -> DOM.replaceChild newNode oldNode pn) (toMaybe npn)
 
 foreign import nodeRefEq :: DOM.Node -> DOM.Node -> Boolean

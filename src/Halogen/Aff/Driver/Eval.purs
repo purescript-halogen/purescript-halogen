@@ -24,8 +24,8 @@ import Data.Traversable (sequence_)
 import Data.Tuple (Tuple(..))
 
 import Halogen.Aff.Driver.State (DriverState(..), unDriverStateX)
+import Halogen.Aff.Effects (HalogenEffects)
 import Halogen.Data.OrdBox (unOrdBox)
-import Halogen.Effects (HalogenEffects)
 import Halogen.Query.ChildQuery (ChildQuery, unChildQuery)
 import Halogen.Query.EventSource as ES
 import Halogen.Query.ForkF as FF
