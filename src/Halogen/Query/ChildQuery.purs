@@ -19,7 +19,7 @@ instance bifunctorChildQuery :: Functor m => Bifunctor (ChildQuery g m) where
 instance functorChildQuery :: Functor m => Functor (ChildQuery g m p) where
   map f (ChildQuery p k) = ChildQuery p (map f <$> k)
 
-childQuery :: forall g m p a. Applicative m => p -> g a -> ChildQuery g m p a
+childQuery :: forall g m p a. p -> g a -> ChildQuery g m p a
 childQuery p q = ChildQuery p (_ $ q)
 
 unChildQuery
