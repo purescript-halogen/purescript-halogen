@@ -165,7 +165,7 @@ lifecycleComponent spec =
     :: (s -> h Void (f Unit))
     -> s
     -> h (ComponentSlot h (Const Void) m Void (f Unit)) (f Unit)
-  coeRender = map (lmap absurd) -- unsafeCoerce -- ≅ map (lmap absurd id)
+  coeRender = unsafeCoerce -- ≅ map (lmap absurd)
 
 -- | A spec for a component.
 -- |
