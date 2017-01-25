@@ -21,12 +21,12 @@ module Halogen.HTML.Elements.Keyed
 import Data.Tuple (Tuple)
 
 import Halogen.HTML.Core (ElemName(..), HTML)
-import Halogen.HTML.Properties (IndexedProp, I, GlobalProperties, InteractiveEvents)
+import Halogen.HTML.Properties (IProp, I, GlobalProperties, InteractiveEvents)
 
 import Halogen.HTML.Elements (keyed)
 
 type KeyedNode r p i
-   = Array (IndexedProp (InteractiveEvents (GlobalProperties r)) i)
+   = Array (IProp (InteractiveEvents (GlobalProperties r)) i)
   -> Array (Tuple String (HTML p i))
   -> HTML p i
 
