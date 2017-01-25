@@ -4,110 +4,110 @@ module Halogen.HTML.Properties.ARIA where
 import Halogen.HTML.Core (AttrName(..))
 import Halogen.HTML.Properties (IProp, attr)
 
-activeDescendant :: forall r f p. String -> IProp r f p
+activeDescendant :: forall r i. String -> IProp r i
 activeDescendant = attr (AttrName "aria-activedescendant")
 
-atomic :: forall r f p. String -> IProp r f p
+atomic :: forall r i. String -> IProp r i
 atomic = attr (AttrName "aria-atomic")
 
-autoComplete :: forall r f p. String -> IProp r f p
+autoComplete :: forall r i. String -> IProp r i
 autoComplete = attr (AttrName "aria-autocomplete")
 
-busy :: forall r f p. String -> IProp r f p
+busy :: forall r i. String -> IProp r i
 busy = attr (AttrName "aria-busy")
 
-checked :: forall r f p. String -> IProp r f p
+checked :: forall r i. String -> IProp r i
 checked = attr (AttrName "aria-checked")
 
-controls :: forall r f p. String -> IProp r f p
+controls :: forall r i. String -> IProp r i
 controls = attr (AttrName "aria-controls")
 
-describedBy :: forall r f p. String -> IProp r f p
+describedBy :: forall r i. String -> IProp r i
 describedBy = attr (AttrName "aria-describedby")
 
-disabled :: forall r f p. String -> IProp r f p
+disabled :: forall r i. String -> IProp r i
 disabled = attr (AttrName "aria-disabled")
 
-dropEffect :: forall r f p. String -> IProp r f p
+dropEffect :: forall r i. String -> IProp r i
 dropEffect = attr (AttrName "aria-dropeffect")
 
-expanded :: forall r f p. String -> IProp r f p
+expanded :: forall r i. String -> IProp r i
 expanded = attr (AttrName "aria-expanded")
 
-flowTo :: forall r f p. String -> IProp r f p
+flowTo :: forall r i. String -> IProp r i
 flowTo = attr (AttrName "aria-flowto")
 
-grabbed :: forall r f p. String -> IProp r f p
+grabbed :: forall r i. String -> IProp r i
 grabbed = attr (AttrName "aria-grabbed")
 
-hasPopup :: forall r f p. String -> IProp r f p
+hasPopup :: forall r i. String -> IProp r i
 hasPopup = attr (AttrName "aria-haspopup")
 
-hidden :: forall r f p. String -> IProp r f p
+hidden :: forall r i. String -> IProp r i
 hidden = attr (AttrName "aria-hidden")
 
-invalid :: forall r f p. String -> IProp r f p
+invalid :: forall r i. String -> IProp r i
 invalid = attr (AttrName "aria-invalid")
 
-label :: forall r f p. String -> IProp r f p
+label :: forall r i. String -> IProp r i
 label = attr (AttrName "aria-label")
 
-labelledBy :: forall r f p. String -> IProp r f p
+labelledBy :: forall r i. String -> IProp r i
 labelledBy = attr (AttrName "aria-labelledby")
 
-level :: forall r f p. String -> IProp r f p
+level :: forall r i. String -> IProp r i
 level = attr (AttrName "aria-level")
 
-live :: forall r f p. String -> IProp r f p
+live :: forall r i. String -> IProp r i
 live = attr (AttrName "aria-live")
 
-multiLine :: forall r f p. String -> IProp r f p
+multiLine :: forall r i. String -> IProp r i
 multiLine = attr (AttrName "aria-multiline")
 
-multiSelectable :: forall r f p. String -> IProp r f p
+multiSelectable :: forall r i. String -> IProp r i
 multiSelectable = attr (AttrName "aria-multiselectable")
 
-orientation :: forall r f p. String -> IProp r f p
+orientation :: forall r i. String -> IProp r i
 orientation = attr (AttrName "aria-orientation")
 
-owns :: forall r f p. String -> IProp r f p
+owns :: forall r i. String -> IProp r i
 owns = attr (AttrName "aria-owns")
 
-posInSet :: forall r f p. String -> IProp r f p
+posInSet :: forall r i. String -> IProp r i
 posInSet = attr (AttrName "aria-posinset")
 
-pressed :: forall r f p. String -> IProp r f p
+pressed :: forall r i. String -> IProp r i
 pressed = attr (AttrName "aria-pressed")
 
-readOnly :: forall r f p. String -> IProp r f p
+readOnly :: forall r i. String -> IProp r i
 readOnly = attr (AttrName "aria-readonly")
 
-relevant :: forall r f p. String -> IProp r f p
+relevant :: forall r i. String -> IProp r i
 relevant = attr (AttrName "aria-relevant")
 
-required :: forall r f p. String -> IProp r f p
+required :: forall r i. String -> IProp r i
 required = attr (AttrName "aria-required")
 
-selected :: forall r f p. String -> IProp r f p
+selected :: forall r i. String -> IProp r i
 selected = attr (AttrName "aria-selected")
 
-setSize :: forall r f p. String -> IProp r f p
+setSize :: forall r i. String -> IProp r i
 setSize = attr (AttrName "aria-setsize")
 
-sort :: forall r f p. String -> IProp r f p
+sort :: forall r i. String -> IProp r i
 sort = attr (AttrName "aria-sort")
 
-valueMax :: forall r f p. String -> IProp r f p
+valueMax :: forall r i. String -> IProp r i
 valueMax = attr (AttrName "aria-valuemax")
 
-valueMin :: forall r f p. String -> IProp r f p
+valueMin :: forall r i. String -> IProp r i
 valueMin = attr (AttrName "aria-valuemin")
 
-valueNow :: forall r f p. String -> IProp r f p
+valueNow :: forall r i. String -> IProp r i
 valueNow = attr (AttrName "aria-valuenow")
 
-valueText :: forall r f p. String -> IProp r f p
+valueText :: forall r i. String -> IProp r i
 valueText = attr (AttrName "aria-valuetext")
 
-role :: forall r f p. String -> IProp r f p
+role :: forall r i. String -> IProp r i
 role = attr (AttrName "role")

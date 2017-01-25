@@ -12,6 +12,7 @@ module Halogen.Query
   , getHTMLElementRef
   , module Exports
   , module Halogen.Query.EventSource
+  , module Halogen.Query.InputF
   , module Halogen.Query.HalogenM
   ) where
 
@@ -37,6 +38,7 @@ import Control.Monad.Aff.Class (liftAff) as Exports
 import Control.Monad.Eff.Class (liftEff) as Exports
 import Control.Monad.State.Class (get, gets, modify, put) as Exports
 import Control.Monad.Trans.Class (lift) as Exports
+import Halogen.Query.InputF (RefLabel(..))
 import Halogen.Query.HalogenM (subscribe, raise) as Exports
 
 -- | Type synonym for an "action" - An action only causes effects and has no
@@ -137,7 +139,7 @@ queryAll' path q = do
       (\p -> map (Tuple p) (mkQuery (injSlot path p) (injQuery path q)))
       slots
 
-getHTMLElementRef :: forall s f g p o m. p -> HalogenM s f g p o m (Maybe HTMLElement)
+getHTMLElementRef :: forall s f g p o m. RefLabel -> HalogenM s f g p o m (Maybe HTMLElement)
 getHTMLElementRef = map (go =<< _) <<< getRef
   where
   go :: Foreign -> Maybe HTMLElement

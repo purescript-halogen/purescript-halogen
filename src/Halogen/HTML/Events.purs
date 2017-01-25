@@ -61,7 +61,7 @@ import Halogen.Query (Action, action)
 import Halogen.Query.InputF (InputF(..))
 import Halogen.HTML.Core (Prop)
 import Halogen.HTML.Core as Core
-import Halogen.HTML.Properties (IProp, IndexedProp, I)
+import Halogen.HTML.Properties (I, IProp)
 
 import Unsafe.Coerce (unsafeCoerce)
 
@@ -71,115 +71,115 @@ input f x = Just $ action (f x)
 input_ :: forall f a. Action f -> a -> Maybe (f Unit)
 input_ f _ = Just $ action f
 
-handler :: forall r f p. EventType -> (Event -> Maybe (f Unit)) -> IProp r f p
-handler et = (unsafeCoerce :: forall i. (EventType -> (Event -> Maybe i) -> Prop i) -> EventType -> (Event -> Maybe i) -> IndexedProp r i) Core.handler et <<< map (map Query)
+handler :: forall r i. EventType -> (Event -> Maybe i) -> IProp r i
+handler et = (unsafeCoerce :: (EventType -> (Event -> Maybe i) -> Prop i) -> EventType -> (Event -> Maybe (InputF Unit i)) -> IProp r i) Core.handler et <<< map (map Query)
 
-onAbort :: forall r f p. (Event -> Maybe (f Unit)) -> IProp (onAbort :: I | r) f p
+onAbort :: forall r i. (Event -> Maybe i) -> IProp (onAbort :: I | r) i
 onAbort = handler (EventType "abort")
 
-onError :: forall r f p. (Event -> Maybe (f Unit)) -> IProp (onError :: I | r) f p
+onError :: forall r i. (Event -> Maybe i) -> IProp (onError :: I | r) i
 onError = handler (EventType "error")
 
-onLoad :: forall r f p. (Event -> Maybe (f Unit)) -> IProp (onLoad :: I | r) f p
+onLoad :: forall r i. (Event -> Maybe i) -> IProp (onLoad :: I | r) i
 onLoad = handler (EventType "load")
 
-onScroll :: forall r f p. (Event -> Maybe (f Unit)) -> IProp (onScroll :: I | r) f p
+onScroll :: forall r i. (Event -> Maybe i) -> IProp (onScroll :: I | r) i
 onScroll = handler (EventType "scroll")
 
-onChange :: forall r f p. (Event -> Maybe (f Unit)) -> IProp (onChange :: I | r) f p
+onChange :: forall r i. (Event -> Maybe i) -> IProp (onChange :: I | r) i
 onChange = handler (EventType "change")
 
-onInput :: forall r f p. (Event -> Maybe (f Unit)) -> IProp (onInput :: I | r) f p
+onInput :: forall r i. (Event -> Maybe i) -> IProp (onInput :: I | r) i
 onInput = handler (EventType "input")
 
-onInvalid :: forall r f p. (Event -> Maybe (f Unit)) -> IProp (onInvalid :: I | r) f p
+onInvalid :: forall r i. (Event -> Maybe i) -> IProp (onInvalid :: I | r) i
 onInvalid = handler (EventType "invalid")
 
-onReset :: forall r f p. (Event -> Maybe (f Unit)) -> IProp (onReset :: I | r) f p
+onReset :: forall r i. (Event -> Maybe i) -> IProp (onReset :: I | r) i
 onReset = handler (EventType "reset")
 
-onSelect :: forall r f p. (Event -> Maybe (f Unit)) -> IProp (onSelect :: I | r) f p
+onSelect :: forall r i. (Event -> Maybe i) -> IProp (onSelect :: I | r) i
 onSelect = handler (EventType "select")
 
-onSubmit :: forall r f p. (Event -> Maybe (f Unit)) -> IProp (onSubmit :: I | r) f p
+onSubmit :: forall r i. (Event -> Maybe i) -> IProp (onSubmit :: I | r) i
 onSubmit = handler (EventType "submit")
 
-onTransitionEnd :: forall r f p. (Event -> Maybe (f Unit)) -> IProp (onTransitionEnd :: I | r) f p
+onTransitionEnd :: forall r i. (Event -> Maybe i) -> IProp (onTransitionEnd :: I | r) i
 onTransitionEnd = handler (EventType "transitionend")
 
-onClick :: forall r f p. (MouseEvent -> Maybe (f Unit)) -> IProp (onClick :: I | r) f p
+onClick :: forall r i. (MouseEvent -> Maybe i) -> IProp (onClick :: I | r) i
 onClick = handler (EventType "click") <<< mouseHandler
 
-onContextMenu :: forall r f p. (MouseEvent -> Maybe (f Unit)) -> IProp (onContextMenu :: I | r) f p
+onContextMenu :: forall r i. (MouseEvent -> Maybe i) -> IProp (onContextMenu :: I | r) i
 onContextMenu = handler (EventType "contextmenu") <<< mouseHandler
 
-onDoubleClick :: forall r f p. (MouseEvent -> Maybe (f Unit)) -> IProp (onDoubleClick :: I | r) f p
+onDoubleClick :: forall r i. (MouseEvent -> Maybe i) -> IProp (onDoubleClick :: I | r) i
 onDoubleClick = handler (EventType "dblclick") <<< mouseHandler
 
-onMouseDown :: forall r f p. (MouseEvent -> Maybe (f Unit)) -> IProp (onMouseDown :: I | r) f p
+onMouseDown :: forall r i. (MouseEvent -> Maybe i) -> IProp (onMouseDown :: I | r) i
 onMouseDown = handler (EventType "mousedown") <<< mouseHandler
 
-onMouseEnter :: forall r f p. (MouseEvent -> Maybe (f Unit)) -> IProp (onMouseEnter :: I | r) f p
+onMouseEnter :: forall r i. (MouseEvent -> Maybe i) -> IProp (onMouseEnter :: I | r) i
 onMouseEnter = handler (EventType "mouseenter") <<< mouseHandler
 
-onMouseLeave :: forall r f p. (MouseEvent -> Maybe (f Unit)) -> IProp (onMouseLeave :: I | r) f p
+onMouseLeave :: forall r i. (MouseEvent -> Maybe i) -> IProp (onMouseLeave :: I | r) i
 onMouseLeave = handler (EventType "mouseleave") <<< mouseHandler
 
-onMouseMove :: forall r f p. (MouseEvent -> Maybe (f Unit)) -> IProp (onMouseMove :: I | r) f p
+onMouseMove :: forall r i. (MouseEvent -> Maybe i) -> IProp (onMouseMove :: I | r) i
 onMouseMove = handler (EventType "mousemove") <<< mouseHandler
 
-onMouseOver :: forall r f p. (MouseEvent -> Maybe (f Unit)) -> IProp (onMouseOver :: I | r) f p
+onMouseOver :: forall r i. (MouseEvent -> Maybe i) -> IProp (onMouseOver :: I | r) i
 onMouseOver = handler (EventType "mouseover") <<< mouseHandler
 
-onMouseOut :: forall r f p. (MouseEvent -> Maybe (f Unit)) -> IProp (onMouseOut :: I | r) f p
+onMouseOut :: forall r i. (MouseEvent -> Maybe i) -> IProp (onMouseOut :: I | r) i
 onMouseOut = handler (EventType "mouseout") <<< mouseHandler
 
-onMouseUp :: forall r f p. (MouseEvent -> Maybe (f Unit)) -> IProp (onMouseUp :: I | r) f p
+onMouseUp :: forall r i. (MouseEvent -> Maybe i) -> IProp (onMouseUp :: I | r) i
 onMouseUp = handler (EventType "mouseup") <<< mouseHandler
 
-onKeyDown :: forall r f p. (KeyboardEvent -> Maybe (f Unit)) -> IProp (onKeyDown :: I | r) f p
+onKeyDown :: forall r i. (KeyboardEvent -> Maybe i) -> IProp (onKeyDown :: I | r) i
 onKeyDown = handler (EventType "keydown") <<< keyHandler
 
-onKeyPress :: forall r f p. (KeyboardEvent -> Maybe (f Unit)) -> IProp (onKeyPress :: I | r) f p
+onKeyPress :: forall r i. (KeyboardEvent -> Maybe i) -> IProp (onKeyPress :: I | r) i
 onKeyPress = handler (EventType "keypress") <<< keyHandler
 
-onKeyUp :: forall r f p. (KeyboardEvent -> Maybe (f Unit)) -> IProp (onKeyUp :: I | r) f p
+onKeyUp :: forall r i. (KeyboardEvent -> Maybe i) -> IProp (onKeyUp :: I | r) i
 onKeyUp = handler (EventType "keyup") <<< keyHandler
 
-onBlur :: forall r f p. (FocusEvent -> Maybe (f Unit)) -> IProp (onBlur :: I | r) f p
+onBlur :: forall r i. (FocusEvent -> Maybe i) -> IProp (onBlur :: I | r) i
 onBlur = handler (EventType "blur") <<< focusHandler
 
-onFocus :: forall r f p. (FocusEvent -> Maybe (f Unit)) -> IProp (onFocus :: I | r) f p
+onFocus :: forall r i. (FocusEvent -> Maybe i) -> IProp (onFocus :: I | r) i
 onFocus = handler (EventType "focus") <<< focusHandler
 
-onFocusIn :: forall r f p. (FocusEvent -> Maybe (f Unit)) -> IProp (onFocusIn :: I | r) f p
+onFocusIn :: forall r i. (FocusEvent -> Maybe i) -> IProp (onFocusIn :: I | r) i
 onFocusIn = handler (EventType "focusin") <<< focusHandler
 
-onFocusOut :: forall r f p. (FocusEvent -> Maybe (f Unit)) -> IProp (onFocusOut :: I | r) f p
+onFocusOut :: forall r i. (FocusEvent -> Maybe i) -> IProp (onFocusOut :: I | r) i
 onFocusOut = handler (EventType "focusout") <<< focusHandler
 
-onDrag :: forall r f p. (DragEvent -> Maybe (f Unit)) -> IProp (onDrag :: I | r) f p
+onDrag :: forall r i. (DragEvent -> Maybe i) -> IProp (onDrag :: I | r) i
 onDrag = handler (EventType "drag") <<< dragHandler
 
-onDragEnd :: forall r f p. (DragEvent -> Maybe (f Unit)) -> IProp (onDragEnd :: I | r) f p
+onDragEnd :: forall r i. (DragEvent -> Maybe i) -> IProp (onDragEnd :: I | r) i
 onDragEnd = handler (EventType "dragend") <<< dragHandler
 
-onDragExit :: forall r f p. (DragEvent -> Maybe (f Unit)) -> IProp (onDragExit :: I | r) f p
+onDragExit :: forall r i. (DragEvent -> Maybe i) -> IProp (onDragExit :: I | r) i
 onDragExit = handler (EventType "dragexit") <<< dragHandler
 
-onDragEnter :: forall r f p. (DragEvent -> Maybe (f Unit)) -> IProp (onDragEnter :: I | r) f p
+onDragEnter :: forall r i. (DragEvent -> Maybe i) -> IProp (onDragEnter :: I | r) i
 onDragEnter = handler (EventType "dragenter") <<< dragHandler
 
-onDragLeave :: forall r f p. (DragEvent -> Maybe (f Unit)) -> IProp (onDragLeave :: I | r) f p
+onDragLeave :: forall r i. (DragEvent -> Maybe i) -> IProp (onDragLeave :: I | r) i
 onDragLeave = handler (EventType "dragleave") <<< dragHandler
 
-onDragOver :: forall r f p. (DragEvent -> Maybe (f Unit)) -> IProp (onDragOver :: I | r) f p
+onDragOver :: forall r i. (DragEvent -> Maybe i) -> IProp (onDragOver :: I | r) i
 onDragOver = handler (EventType "dragover") <<< dragHandler
 
-onDragStart :: forall r f p. (DragEvent -> Maybe (f Unit)) -> IProp (onDragStart :: I | r) f p
+onDragStart :: forall r i. (DragEvent -> Maybe i) -> IProp (onDragStart :: I | r) i
 onDragStart = handler (EventType "dragstart") <<< dragHandler
 
-onDrop :: forall r f p. (DragEvent -> Maybe (f Unit)) -> IProp (onDrop :: I | r) f p
+onDrop :: forall r i. (DragEvent -> Maybe i) -> IProp (onDrop :: I | r) i
 onDrop = handler (EventType "drop") <<< dragHandler
 
 keyHandler :: forall i. (KeyboardEvent -> Maybe i) -> Event -> Maybe i
@@ -196,25 +196,25 @@ dragHandler = unsafeCoerce
 
 -- | Attaches event handler to event `key` with getting `prop` field as an
 -- | argument of `handler`.
-addForeignPropHandler :: forall r f p value. IsForeign value => EventType -> String -> (value -> Maybe (f Unit)) -> IProp r f p
+addForeignPropHandler :: forall r i value. IsForeign value => EventType -> String -> (value -> Maybe i) -> IProp r i
 addForeignPropHandler key prop f =
   handler key (either (const Nothing) f <<< runExcept <<< readProp prop <<< toForeign <<< EE.currentTarget)
 
 -- | Attaches an event handler which will produce an input when the value of an
 -- | input field changes.
-onValueChange :: forall r f p. (String -> Maybe (f Unit)) -> IProp (value :: I, onChange :: I | r) f p
+onValueChange :: forall r i. (String -> Maybe i) -> IProp (value :: I, onChange :: I | r) i
 onValueChange = addForeignPropHandler (EventType "change") "value"
 
 -- | Attaches an event handler which will produce an input when the seleced index of a
 -- | `select` element changes.
-onSelectedIndexChange :: forall r f p. (Int -> Maybe (f Unit)) -> IProp (selectedIndex :: I, onChange :: I | r) f p
+onSelectedIndexChange :: forall r i. (Int -> Maybe i) -> IProp (selectedIndex :: I, onChange :: I | r) i
 onSelectedIndexChange = addForeignPropHandler (EventType "change") "selectedIndex"
 
 -- | Attaches an event handler which will fire on input.
-onValueInput :: forall r f p. (String -> Maybe (f Unit)) -> IProp (value :: I, onInput :: I | r) f p
+onValueInput :: forall r i. (String -> Maybe i) -> IProp (value :: I, onInput :: I | r) i
 onValueInput = addForeignPropHandler (EventType "input") "value"
 
 -- | Attaches an event handler which will fire when a checkbox is checked or
 -- | unchecked.
-onChecked :: forall r f p. (Boolean -> Maybe (f Unit)) -> IProp (checked :: I, onChange :: I | r) f p
+onChecked :: forall r i. (Boolean -> Maybe i) -> IProp (checked :: I, onChange :: I | r) i
 onChecked = addForeignPropHandler (EventType "change") "checked"

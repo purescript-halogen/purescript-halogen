@@ -27,6 +27,7 @@ import Data.Tuple (Tuple)
 import DOM.Node.Types (Element)
 import DOM.Event.Types (Event, EventType)
 
+import Halogen.Query.InputF (InputF)
 import Halogen.VDom as VDom
 import Halogen.VDom.DOM.Prop (ElemRef(..), Prop(..), PropValue, propFromBoolean, propFromInt, propFromNumber, propFromString)
 
@@ -35,12 +36,12 @@ import Unsafe.Coerce (unsafeCoerce)
 import Halogen.VDom (ElemName(..), Namespace(..)) as Exports
 import Halogen.VDom.DOM.Prop (Prop(..), PropValue) as Exports
 
-newtype HTML p i = HTML (VDom.VDom (Array (Prop i)) p)
+newtype HTML p i = HTML (VDom.VDom (Array (Prop (InputF Unit i))) p)
 
 derive instance newtypeHTML :: Newtype (HTML p i) _
 
 instance bifunctorHTML :: Bifunctor HTML where
-  bimap f g (HTML vdom) = HTML (bimap (map (map g)) f vdom)
+  bimap f g (HTML vdom) = HTML (bimap (map (map (map g))) f vdom)
 
 instance functorHTML :: Functor (HTML p) where
   map = rmap
