@@ -71,7 +71,7 @@ Often a component's state type will be a synonym for a record, as the state will
 
 ## Query algebra
 
-The type that specifies the queries for a component is known as the _query algebra_. Query algebras are of kind `* -> *` (meaning they always have a type variable). This type variable allows us to specify the return type of a query when we construct it. Constructors in a query algebra define operations on the component that we call _actions_ and _requests_.
+The type that specifies the queries for a component is known as the _query algebra_. Query algebras are of kind `Type -> Type` (meaning they always have a type variable). This type variable allows us to specify the return type of a query when we construct it. Constructors in a query algebra define operations on the component that we call _actions_ and _requests_.
 
 _Actions_ cause some change within a component and then return the `Unit` value. A constructor for an action will look something like this:
 
@@ -87,7 +87,7 @@ _Requests_ can cause changes within the component but also return useful informa
 IsOn (Boolean -> a)
 ```
 
-The callback-looking function we have here also must go at the end of any possible parameters. Additionally it must be exactly `result -> a` where `result` is the value we want as the return type.
+The callback-looking function we have here also must go at the end of any possible parameters. Additionally it must be exactly `result -> a` where `result` is the value we want as the return type. These request-style queries are also why we need to have a `Type -> Type` kind. Without the type variable we would have no way to define a constructor that will yield values other than `Unit` during query evaluation.
 
 These rules about the definitions may seem rather arbitrary, but they arise from the way query evaluation is implemented.
 
