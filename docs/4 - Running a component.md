@@ -27,13 +27,16 @@ The main function involved here is [`runUI`][Halogen.VDom.Driver.runUI]. It take
 
 ``` purescript
 runUI
-  :: forall f eff o
-   . Component HTML f o (Aff (HalogenEffects eff))
-  -> HTMLElement
+  :: forall f eff i o
+   . Component HTML f i o (Aff (HalogenEffects eff))
+  -> i
+  -> DOM.HTMLElement
   -> Aff (HalogenEffects eff) (HalogenIO f o (Aff (HalogenEffects eff)))
 ```
 
-The element we pass in here should already be present in the DOM, and should be empty. If either of these conditions are not met then strange things may occur - the behaviour is unspecified.
+The `i` argument is the input type for the component - since we're creating the root component here this will never change. We still need to provide a value though, as the component's initial state might be based on it. All the examples we've covered so far don't make use of this, so for those cases we'd be passing `unit`.
+
+The element we pass in should already be present in the DOM, and should be empty. If either of these conditions are not met then strange things may occur - the behaviour is unspecified.
 
 We expect the component's `m` type variable to be `Aff (HalogenEffects eff)` at this point, and this is also what `runUI` returns in. This is why in the previous chapter the recommendation was made to use `Aff` for components even if you only need `Eff`. If the component is pure, this type will work out since the `m` type should be a type variable and we can substitute `Aff` in. If we have something else in here, then the component will have to be [`hoist`][Halogen.Component.hoist]ed into `Aff`.
 
