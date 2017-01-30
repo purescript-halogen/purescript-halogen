@@ -16,6 +16,7 @@ import Control.Monad.Free (foldFree)
 import Control.Monad.Trans.Class (lift)
 import Control.Parallel (parallel, sequential)
 
+import Data.Coyoneda (Coyoneda, unCoyoneda)
 import Data.List (List, (:))
 import Data.List as L
 import Data.Map as M
@@ -27,7 +28,6 @@ import Data.Tuple (Tuple(..))
 import Halogen.Aff.Driver.State (DriverState(..), unDriverStateX)
 import Halogen.Aff.Effects (HalogenEffects)
 import Halogen.Data.OrdBox (unOrdBox)
-import Halogen.Query.ChildQuery (ChildQuery, unChildQuery)
 import Halogen.Query.EventSource as ES
 import Halogen.Query.ForkF as FF
 import Halogen.Query.HalogenM (HalogenM(..), HalogenF(..), HalogenAp(..))
@@ -111,8 +111,8 @@ eval lchs render r =
     CheckSlot p k -> do
       DriverState { component, children } <- liftEff (readRef ref)
       pure $ k $ M.member (component.mkOrdBox p) children
-    ChildQuery cq ->
-      evalChildQuery ref cq
+    ChildQuery p cq ->
+      evalChildQuery ref p cq
     Raise o a -> do
       DriverState { handler, pendingOuts } <- liftEff (readRef ref)
       queuingHandler handler pendingOuts o
@@ -129,16 +129,17 @@ eval lchs render r =
   evalChildQuery
     :: forall s' f' z' g' p' i' o'
      . Ref (DriverState h r s' f' z' g' p' i' o' eff)
-    -> ChildQuery g' (Aff (HalogenEffects eff)) p'
+    -> p'
+    -> Coyoneda g'
     ~> Aff (HalogenEffects eff)
-  evalChildQuery ref = unChildQuery \p k -> do
+  evalChildQuery ref p = unCoyoneda \k q -> do
     DriverState st <- liftEff (readRef ref)
     case M.lookup (st.component.mkOrdBox p) st.children of
       Just var -> do
         dsx <- liftEff (readRef var)
-        k (unDriverStateX (\ds q -> case ds.prjQuery q of
-            Just q' -> evalF ds.selfRef q'
-            Nothing -> throwError (error "Query projection failed for child query")) dsx)
+        unDriverStateX (\ds -> case ds.prjQuery q of
+          Just q' -> k <$> evalF ds.selfRef q'
+          Nothing -> throwError (error "Query projection failed for child query")) dsx
       Nothing -> throwError (error "Slot lookup failed for child query")
 
   evalF
