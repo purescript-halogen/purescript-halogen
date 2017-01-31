@@ -16,13 +16,13 @@ import Control.Monad.Writer.Class (class MonadTell, tell)
 import Control.Parallel.Class (class Parallel)
 
 import Data.Bifunctor (lmap)
+import Data.Coyoneda (Coyoneda, coyoneda)
 import Data.Foreign (Foreign)
 import Data.List as L
 import Data.Maybe (Maybe)
 import Data.Newtype (class Newtype, over)
 import Data.Tuple (Tuple)
 
-import Halogen.Query.ChildQuery as CQ
 import Halogen.Query.EventSource as ES
 import Halogen.Query.ForkF as FF
 import Halogen.Query.InputF (RefLabel)
@@ -36,7 +36,7 @@ data HalogenF s (f :: * -> *) g p o m a
   | Halt String
   | GetSlots (L.List p -> a)
   | CheckSlot p (Boolean -> a)
-  | ChildQuery (CQ.ChildQuery g m p a)
+  | ChildQuery p (Coyoneda g a)
   | Raise o a
   | Par (HalogenAp s f g p o m a)
   | Fork (FF.Fork (HalogenM s f g p o m) a)
@@ -51,7 +51,7 @@ instance functorHalogenF :: Functor m => Functor (HalogenF s f g p o m) where
     Halt msg -> Halt msg
     CheckSlot p k -> CheckSlot p (map f k)
     GetSlots k -> GetSlots (map f k)
-    ChildQuery cq -> ChildQuery (map f cq)
+    ChildQuery p cq -> ChildQuery p (map f cq)
     Raise o a -> Raise o (f a)
     Par pa -> Par (map f pa)
     Fork fa -> Fork (map f fa)
@@ -120,7 +120,7 @@ mkQuery
   => p
   -> g a
   -> HalogenM s f g p o m a
-mkQuery p q = HalogenM $ liftF $ ChildQuery (CQ.childQuery p q)
+mkQuery p = HalogenM <<< liftF <<< ChildQuery p <<< coyoneda id
 
 getSlots :: forall s f g p o m. HalogenM s f g p o m (L.List p)
 getSlots = HalogenM $ liftF $ GetSlots id
@@ -157,7 +157,7 @@ hoist nat (HalogenM fa) = HalogenM (hoistFree go fa)
     Halt msg -> Halt msg
     GetSlots k -> GetSlots k
     CheckSlot p k -> CheckSlot p k
-    ChildQuery cq -> ChildQuery (CQ.hoistChildQuery nat cq)
+    ChildQuery p cq -> ChildQuery p cq
     Raise o a -> Raise o a
     Par p -> Par (over HalogenAp (hoistFreeAp (hoist nat)) p)
     Fork f -> Fork (FF.hoistFork (hoist nat) f)
