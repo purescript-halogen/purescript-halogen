@@ -40,13 +40,13 @@ task initialState =
   render t =
     bimap id id $ HH.li_
       [ HH.input
-          [ HP.inputType HP.InputCheckbox
+          [ HP.type_ HP.InputCheckbox
           , HP.title "Mark as completed"
           , HP.checked t.completed
           , HE.onChecked (HE.input ToggleCompleted)
           ]
       , HH.input
-          [ HP.inputType HP.InputText
+          [ HP.type_ HP.InputText
           , HP.placeholder "Task description"
           , HP.autofocus true
           , HP.value t.description

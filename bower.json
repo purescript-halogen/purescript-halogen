@@ -39,6 +39,7 @@
     "purescript-nullable": "^2.0.0",
     "purescript-parallel": "^2.1.0",
     "purescript-profunctor": "^2.0.0",
-    "purescript-unsafe-coerce": "^2.0.0"
+    "purescript-unsafe-coerce": "^2.0.0",
+    "purescript-dom-indexed": "https://github.com/slamdata/purescript-dom-indexed.git#a27743fc798c58e67b87a80e790e272b04482c9e"
   }
 }

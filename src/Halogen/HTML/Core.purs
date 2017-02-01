@@ -21,11 +21,26 @@ import Prelude
 import Data.Bifunctor (class Bifunctor, bimap, rmap)
 import Data.Generic (class Generic)
 import Data.Maybe (Maybe(..))
-import Data.Newtype (class Newtype)
+import Data.MediaType (MediaType)
+import Data.Newtype (class Newtype, unwrap)
 import Data.Tuple (Tuple)
 
 import DOM.Node.Types (Element)
 import DOM.Event.Types (Event, EventType)
+import DOM.HTML.Indexed.ButtonType (ButtonType, renderButtonType)
+import DOM.HTML.Indexed.CrossOriginValue (CrossOriginValue, renderCrossOriginValue)
+import DOM.HTML.Indexed.DirValue (DirValue, renderDirValue)
+import DOM.HTML.Indexed.FormMethod (FormMethod, renderFormMethod)
+import DOM.HTML.Indexed.InputType (InputType, renderInputType)
+import DOM.HTML.Indexed.KindValue (KindValue, renderKindValue)
+import DOM.HTML.Indexed.MenuitemType (MenuitemType, renderMenuitemType)
+import DOM.HTML.Indexed.MenuType (MenuType, renderMenuType)
+import DOM.HTML.Indexed.OnOff (OnOff, renderOnOff)
+import DOM.HTML.Indexed.OrderedListType (OrderedListType, renderOrderedListType)
+import DOM.HTML.Indexed.PreloadValue (PreloadValue, renderPreloadValue)
+import DOM.HTML.Indexed.ScopeValue (ScopeValue, renderScopeValue)
+import DOM.HTML.Indexed.StepValue (StepValue, renderStepValue)
+import DOM.HTML.Indexed.WrapValue (WrapValue, renderWrapValue)
 
 import Halogen.Query.InputF (InputF)
 import Halogen.VDom as VDom
@@ -103,6 +118,51 @@ instance numberIsProp :: IsProp Number where
 
 instance booleanIsProp :: IsProp Boolean where
   toPropValue = propFromBoolean
+
+instance mediaTypeIsProp :: IsProp MediaType where
+  toPropValue = propFromString <<< unwrap
+
+instance buttonTypeIsProp :: IsProp ButtonType where
+  toPropValue = propFromString <<< renderButtonType
+
+instance crossOriginValueIsProp :: IsProp CrossOriginValue where
+  toPropValue = propFromString <<< renderCrossOriginValue
+
+instance dirValueIsProp :: IsProp DirValue where
+  toPropValue = propFromString <<< renderDirValue
+
+instance formMethodIsProp :: IsProp FormMethod where
+  toPropValue = propFromString <<< renderFormMethod
+
+instance inputTypeIsProp :: IsProp InputType where
+  toPropValue = propFromString <<< renderInputType
+
+instance kindValueIsProp :: IsProp KindValue where
+  toPropValue = propFromString <<< renderKindValue
+
+instance menuitemTypeIsProp :: IsProp MenuitemType where
+  toPropValue = propFromString <<< renderMenuitemType
+
+instance menuTypeIsProp :: IsProp MenuType where
+  toPropValue = propFromString <<< renderMenuType
+
+instance onOffIsProp :: IsProp OnOff where
+  toPropValue = propFromString <<< renderOnOff
+
+instance orderedListTypeIsProp :: IsProp OrderedListType where
+  toPropValue = propFromString <<< renderOrderedListType
+
+instance preloadValueIsProp :: IsProp PreloadValue where
+  toPropValue = propFromString <<< renderPreloadValue
+
+instance scopeValueIsProp :: IsProp ScopeValue where
+  toPropValue = propFromString <<< renderScopeValue
+
+instance stepValueIsProp :: IsProp StepValue where
+  toPropValue = propFromString <<< renderStepValue
+
+instance wrapValueIsProp :: IsProp WrapValue where
+  toPropValue = propFromString <<< renderWrapValue
 
 -- | A type-safe wrapper for property names.
 -- |
