@@ -73,8 +73,8 @@ keyed = coe (\name props children -> VDom.Keyed (VDom.ElemSpec Nothing name prop
   coe = unsafeCoerce
 
 -- | Create a HTML property.
-prop :: forall value i. IsProp value => PropName value -> Maybe AttrName -> value -> Prop i
-prop (PropName name) an v = Property name (toPropValue v)
+prop :: forall value i. IsProp value => PropName value -> value -> Prop i
+prop (PropName name) = Property name <<< toPropValue
 
 -- | Create a HTML attribute.
 attr :: forall i. AttrName -> String -> Prop i
