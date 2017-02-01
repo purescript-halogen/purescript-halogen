@@ -388,31 +388,31 @@ h2 :: forall p i. Node I.HTMLh2 p i
 h2 = element (ElemName "h2")
 
 h2_ :: forall p i. Array (HTML p i) -> HTML p i
-h2_ = h1 []
+h2_ = h2 []
 
 h3 :: forall p i. Node I.HTMLh3 p i
 h3 = element (ElemName "h3")
 
 h3_ :: forall p i. Array (HTML p i) -> HTML p i
-h3_ = h1 []
+h3_ = h3 []
 
 h4 :: forall p i. Node I.HTMLh4 p i
 h4 = element (ElemName "h4")
 
 h4_ :: forall p i. Array (HTML p i) -> HTML p i
-h4_ = h1 []
+h4_ = h4 []
 
 h5 :: forall p i. Node I.HTMLh5 p i
 h5 = element (ElemName "h5")
 
 h5_ :: forall p i. Array (HTML p i) -> HTML p i
-h5_ = h1 []
+h5_ = h5 []
 
 h6 :: forall p i. Node I.HTMLh6 p i
 h6 = element (ElemName "h6")
 
 h6_ :: forall p i. Array (HTML p i) -> HTML p i
-h6_ = h1 []
+h6_ = h6 []
 
 head :: forall p i. Node I.HTMLhead p i
 head = element (ElemName "head")
