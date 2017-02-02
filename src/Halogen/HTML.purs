@@ -7,12 +7,12 @@ module Halogen.HTML
   , module Halogen.HTML.Properties
   ) where
 
-import Prelude (Unit, class Functor, (<<<))
+import Prelude (Unit, (<<<))
 
 import Data.Functor as F
 import Data.Maybe (Maybe(..))
 
-import Halogen.Component (Component, ComponentSlot, mkComponentSlot, unComponent)
+import Halogen.Component (Component, ParentHTML, mkComponentSlot, unComponent)
 import Halogen.Component.ChildPath (ChildPath, injSlot, prjQuery, injQuery)
 import Halogen.HTML.Core (class IsProp, AttrName(..), ClassName(..), HTML(..), Namespace(..), PropName(..), ElemName(..), text, handler)
 import Halogen.HTML.Core as Core
@@ -25,12 +25,12 @@ import Halogen.HTML.Properties (IProp, attr, prop)
 -- | - the input value to pass to the component
 -- | - a function mapping outputs from the component to a query in the parent
 slot
-  :: forall f m p i o q
+  :: forall f m p i o g
    . p
-  -> Component HTML f i o m
+  -> Component HTML g i o m
   -> i
-  -> (o -> Maybe (q Unit))
-  -> HTML (ComponentSlot HTML f m p (q Unit)) (q Unit)
+  -> (o -> Maybe (f Unit))
+  -> ParentHTML f g p m
 slot p component input outputQuery =
   let f = unComponent _.receiver component
   in Core.slot (mkComponentSlot p component input f outputQuery Just)
@@ -43,14 +43,13 @@ slot p component input outputQuery =
 -- | - the input value to pass to the component
 -- | - a function mapping outputs from the component to a query in the parent
 slot'
-  :: forall f f' m p p' i o q
-   . Functor m
-  => ChildPath f f' p p'
+  :: forall f g g' p p' i o m
+   . ChildPath g g' p p'
   -> p
-  -> Component HTML f i o m
+  -> Component HTML g i o m
   -> i
-  -> (o -> Maybe (q Unit))
-  -> HTML (ComponentSlot HTML f' m p' (q Unit)) (q Unit)
+  -> (o -> Maybe (f Unit))
+  -> ParentHTML f g' p' m
 slot' i p component input outputQuery =
   let
     pq = prjQuery i
