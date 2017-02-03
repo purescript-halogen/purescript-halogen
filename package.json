@@ -11,6 +11,7 @@
     "example-driver-websockets": "bower link && cd examples/driver-websockets && bower link purescript-halogen && bower install && npm run build",
     "example-effects-aff-ajax": "bower link && cd examples/effects-aff-ajax && bower link purescript-halogen && bower install && npm run build",
     "example-effects-eff-random": "bower link && cd examples/effects-eff-random && bower link purescript-halogen && bower install && npm run build",
+    "example-higher-order-components": "bower link && cd examples/higher-order-components && bower link purescript-halogen && bower install && npm run build",
     "example-interpret": "bower link && cd examples/interpret && bower link purescript-halogen && bower install && npm run build",
     "example-keyboard-input": "bower link && cd examples/keyboard-input && bower link purescript-halogen && bower install && npm run build",
     "example-lifecycle": "bower link && cd examples/lifecycle && bower link purescript-halogen && bower install && npm run build",

@@ -1,0 +1,7 @@
+{
+  "name": "higher-order-components",
+  "private": true,
+  "dependencies": {
+    "purescript-halogen": "*"
+  }
+}
