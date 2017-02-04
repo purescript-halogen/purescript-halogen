@@ -128,8 +128,10 @@ runUI' lchs renderSpec component i = do
     -> Eff (HalogenEffects eff) (Ref (DriverStateX h r f' eff))
   runComponent handler j prjQuery = unComponent \c -> do
     var <- initDriverState c j handler prjQuery
+    pre <- readRef lchs
+    writeRef lchs { initializers: L.Nil, finalizers: pre.finalizers }
     unDriverStateX (render <<< _.selfRef) =<< readRef var
-    squashChildInitializers =<< readRef var
+    squashChildInitializers pre.initializers =<< readRef var
     pure var
 
   render
@@ -201,20 +203,21 @@ runUI' lchs renderSpec component i = do
 
   squashChildInitializers
     :: forall f'
-     . DriverStateX h r f' eff
+     . L.List (Aff (HalogenEffects eff) Unit)
+    -> DriverStateX h r f' eff
     -> Eff (HalogenEffects eff) Unit
-  squashChildInitializers =
+  squashChildInitializers preInits =
     unDriverStateX \st -> do
       let parentInitializer = evalF st.selfRef <<< Query <$> st.component.initializer
       modifyRef lchs \handlers ->
-        { initializers: pure $ do
+        { initializers: (do
             queue <- liftEff (readRef st.pendingRefs)
             liftEff $ writeRef st.pendingRefs Nothing
             for_ queue parSequence_
             parSequence_ (L.reverse handlers.initializers)
             sequence_ parentInitializer
             handlePending st.pendingQueries
-            handlePending st.pendingOuts
+            handlePending st.pendingOuts) : preInits
         , finalizers: handlers.finalizers
         }
 
