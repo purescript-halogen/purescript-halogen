@@ -6,10 +6,11 @@ import Control.Applicative.Free (hoistFreeAp, retractFreeAp)
 import Control.Coroutine as CR
 import Control.Monad.Aff (Aff, forkAff, forkAll)
 import Control.Monad.Aff.Unsafe (unsafeCoerceAff)
+import Control.Monad.Aff.AVar as AV
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Class (liftEff)
 import Control.Monad.Eff.Exception (error)
-import Control.Monad.Eff.Ref (Ref, readRef, modifyRef, writeRef)
+import Control.Monad.Eff.Ref (REF, Ref, readRef, modifyRef, writeRef, newRef)
 import Control.Monad.Error.Class (throwError)
 import Control.Monad.Fork (fork)
 import Control.Monad.Free (foldFree)
@@ -23,6 +24,7 @@ import Data.Map as M
 import Data.Maybe (Maybe(..))
 import Data.StrMap as SM
 import Data.Tuple (Tuple(..))
+import Data.Foldable (class Foldable)
 
 import Halogen.Aff.Driver.State (DriverState(..), unDriverStateX)
 import Halogen.Aff.Effects (HalogenEffects)
@@ -37,6 +39,25 @@ type LifecycleHandlers eff =
   , finalizers :: List (Aff (HalogenEffects eff) Unit)
   }
 
+parSequenceAff_
+  :: forall eff a
+   . L.List (Aff (avar :: AV.AVAR, ref :: REF | eff) a)
+  -> Aff (avar :: AV.AVAR, ref :: REF | eff) Unit
+parSequenceAff_ as = do
+  let n = L.length as
+  when (n > 0) do
+    var <- AV.makeVar
+    ref <- liftEff $ newRef n
+    let
+      blocker = do
+        c <- liftEff $ readRef ref
+        if c > 1
+          then liftEff $ writeRef ref (c - 1)
+          else AV.putVar var unit
+    _ <- forkAll ((_ *> blocker) <$> as)
+    AV.peekVar var
+  pure unit
+
 handleLifecycle
   :: forall eff a
    . Ref (LifecycleHandlers eff)
@@ -47,7 +68,7 @@ handleLifecycle lchs f = do
   result <- liftEff f
   { initializers, finalizers } <- liftEff $ readRef lchs
   forkAll finalizers
-  parSequence_ initializers
+  parSequenceAff_ initializers
   pure result
 
 type Renderer h r eff
