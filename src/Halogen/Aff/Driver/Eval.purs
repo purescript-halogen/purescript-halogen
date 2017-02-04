@@ -14,7 +14,7 @@ import Control.Monad.Error.Class (throwError)
 import Control.Monad.Fork (fork)
 import Control.Monad.Free (foldFree)
 import Control.Monad.Trans.Class (lift)
-import Control.Parallel (parallel, sequential)
+import Control.Parallel (parallel, sequential, parSequence_)
 
 import Data.Coyoneda (Coyoneda, unCoyoneda)
 import Data.List (List, (:))
@@ -22,7 +22,6 @@ import Data.List as L
 import Data.Map as M
 import Data.Maybe (Maybe(..))
 import Data.StrMap as SM
-import Data.Traversable (sequence_)
 import Data.Tuple (Tuple(..))
 
 import Halogen.Aff.Driver.State (DriverState(..), unDriverStateX)
@@ -48,9 +47,7 @@ handleLifecycle lchs f = do
   result <- liftEff f
   { initializers, finalizers } <- liftEff $ readRef lchs
   forkAll finalizers
-  -- No need to par/fork initializers here as there's only ever zero or one at
-  -- this point, due to the squashing at each level of the component hierarchy.
-  sequence_ initializers
+  parSequence_ initializers
   pure result
 
 type Renderer h r eff
