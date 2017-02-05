@@ -1,6 +1,6 @@
 ## Components example
 
-This example illustrates a child component (ticker) embedded in a parent component, with the parent component making queries to the children.
+This example illustrates a button component embedded in a parent component, with the parent component receiving messages from the button and sending queries to it.
 
 ### Building
 
