@@ -4,7 +4,7 @@ import Prelude
 
 import Control.Applicative.Free (hoistFreeAp, retractFreeAp)
 import Control.Coroutine as CR
-import Control.Monad.Aff (Aff, forkAff, forkAll)
+import Control.Monad.Aff (Aff, attempt, forkAff, forkAll)
 import Control.Monad.Aff.Unsafe (unsafeCoerceAff)
 import Control.Monad.Aff.AVar as AV
 import Control.Monad.Eff (Eff)
@@ -18,6 +18,7 @@ import Control.Monad.Trans.Class (lift)
 import Control.Parallel (parallel, sequential)
 
 import Data.Coyoneda (Coyoneda, unCoyoneda)
+import Data.Either (Either(..))
 import Data.List (List, (:))
 import Data.List as L
 import Data.Map as M
@@ -49,13 +50,18 @@ parSequenceAff_ = case _ of
     var <- AV.makeVar
     ref <- liftEff $ newRef tail
     let
-      blocker = do
-        liftEff (readRef ref) >>=
-          case _ of
-            L.Nil -> AV.putVar var unit
-            L.Cons _ xs -> liftEff $ writeRef ref xs
-    _ <- forkAll ((_ *> blocker) <$> as)
-    AV.peekVar var
+      run a = do
+        attempt a >>= case _ of
+          Left err -> AV.putVar var (Just err)
+          Right _ ->
+            liftEff (readRef ref) >>=
+              case _ of
+                L.Nil -> AV.putVar var Nothing
+                L.Cons _ xs -> liftEff $ writeRef ref xs
+    _ <- forkAll (run <$> as)
+    AV.peekVar var >>= case _ of
+      Nothing -> pure unit
+      Just err -> throwError err
 
 handleLifecycle
   :: forall eff a
