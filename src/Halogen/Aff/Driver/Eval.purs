@@ -15,7 +15,7 @@ import Control.Monad.Error.Class (throwError)
 import Control.Monad.Fork (fork)
 import Control.Monad.Free (foldFree)
 import Control.Monad.Trans.Class (lift)
-import Control.Parallel (parallel, sequential, parSequence_)
+import Control.Parallel (parallel, sequential)
 
 import Data.Coyoneda (Coyoneda, unCoyoneda)
 import Data.List (List, (:))
@@ -24,7 +24,6 @@ import Data.Map as M
 import Data.Maybe (Maybe(..))
 import Data.StrMap as SM
 import Data.Tuple (Tuple(..))
-import Data.Foldable (class Foldable)
 
 import Halogen.Aff.Driver.State (DriverState(..), unDriverStateX)
 import Halogen.Aff.Effects (HalogenEffects)
@@ -43,20 +42,20 @@ parSequenceAff_
   :: forall eff a
    . L.List (Aff (avar :: AV.AVAR, ref :: REF | eff) a)
   -> Aff (avar :: AV.AVAR, ref :: REF | eff) Unit
-parSequenceAff_ as = do
-  let n = L.length as
-  when (n > 0) do
+parSequenceAff_ = case _ of
+  L.Nil -> pure unit
+  L.Cons a L.Nil -> void a
+  as@(L.Cons _ tail) -> do
     var <- AV.makeVar
-    ref <- liftEff $ newRef n
+    ref <- liftEff $ newRef tail
     let
       blocker = do
-        c <- liftEff $ readRef ref
-        if c > 1
-          then liftEff $ writeRef ref (c - 1)
-          else AV.putVar var unit
+        liftEff (readRef ref) >>=
+          case _ of
+            L.Nil -> AV.putVar var unit
+            L.Cons _ xs -> liftEff $ writeRef ref xs
     _ <- forkAll ((_ *> blocker) <$> as)
     AV.peekVar var
-  pure unit
 
 handleLifecycle
   :: forall eff a
