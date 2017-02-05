@@ -14,7 +14,6 @@ import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Class (liftEff)
 import Control.Monad.Eff.Exception (error, throw, throwException)
 import Control.Monad.Eff.Ref (Ref, modifyRef, writeRef, readRef, newRef)
-import Control.Parallel (parSequence_)
 
 import Data.List ((:))
 import Data.List as L
@@ -25,7 +24,7 @@ import Data.Traversable (for_, traverse_, sequence_)
 import Data.Tuple (Tuple(..))
 
 import Halogen (HalogenIO)
-import Halogen.Aff.Driver.Eval (LifecycleHandlers, eval, handleLifecycle, queuingHandler)
+import Halogen.Aff.Driver.Eval (LifecycleHandlers, eval, handleLifecycle, queuingHandler, parSequenceAff_)
 import Halogen.Aff.Driver.State (DriverState(..), DriverStateX, RenderStateX, initDriverState, renderStateX, renderStateX_, unDriverStateX)
 import Halogen.Aff.Effects (HalogenEffects)
 import Halogen.Component (Component, ComponentSlot, unComponent, unComponentSlot)
@@ -144,13 +143,11 @@ runUI' lchs renderSpec component i = do
     let
       handler :: forall x. InputF x (z' x) -> Aff (HalogenEffects eff) Unit
       handler = void <<< evalF ds.selfRef
-      selfHandler :: forall x. InputF x (z' x) -> Aff (HalogenEffects eff) Unit
-      selfHandler = queuingHandler handler ds.pendingRefs
       childHandler :: forall x. z' x -> Aff (HalogenEffects eff) Unit
       childHandler = queuingHandler (handler <<< Query) ds.pendingQueries
     rendering <-
       renderSpec.render
-        (handleAff <<< selfHandler)
+        (handleAff <<< handler)
         (renderChild childHandler ds.component.mkOrdBox ds.childrenIn ds.childrenOut)
         (ds.component.render ds.state)
         ds.rendering
@@ -170,7 +167,6 @@ runUI' lchs renderSpec component i = do
         , childrenOut: ds'.childrenOut
         , selfRef: ds'.selfRef
         , handler: ds'.handler
-        , pendingRefs: ds'.pendingRefs
         , pendingQueries: ds'.pendingQueries
         , pendingOuts: ds'.pendingOuts
         , prjQuery: ds'.prjQuery
@@ -211,23 +207,21 @@ runUI' lchs renderSpec component i = do
       let parentInitializer = evalF st.selfRef <<< Query <$> st.component.initializer
       modifyRef lchs \handlers ->
         { initializers: (do
-            queue <- liftEff (readRef st.pendingRefs)
-            liftEff $ writeRef st.pendingRefs Nothing
-            for_ queue parSequence_
-            parSequence_ (L.reverse handlers.initializers)
+            parSequenceAff_ (L.reverse handlers.initializers)
             sequence_ parentInitializer
-            handlePending st.pendingQueries
-            handlePending st.pendingOuts) : preInits
+            liftEff do
+              handlePending st.pendingQueries
+              handlePending st.pendingOuts) : preInits
         , finalizers: handlers.finalizers
         }
 
   handlePending
     :: Ref (Maybe (L.List (Aff (HalogenEffects eff) Unit)))
-    -> Aff (HalogenEffects eff) Unit
+    -> Eff (HalogenEffects eff) Unit
   handlePending ref = do
-    queue <- liftEff (readRef ref)
-    liftEff $ writeRef ref Nothing
-    for_ queue (forkAll <<< L.reverse)
+    queue <- readRef ref
+    writeRef ref Nothing
+    for_ queue (handleAff <<< forkAll <<< L.reverse)
 
   addFinalizer
     :: forall f'

@@ -55,7 +55,6 @@ type DriverStateRec h r s f z g p i o eff =
   , childrenOut :: Ref (M.Map (OrdBox p) (Ref (DriverStateX h r g eff)))
   , selfRef :: Ref (DriverState h r s f z g p i o eff)
   , handler :: o -> Aff (HalogenEffects eff) Unit
-  , pendingRefs :: Ref (Maybe (List (Aff (HalogenEffects eff) Unit)))
   , pendingQueries :: Ref (Maybe (List (Aff (HalogenEffects eff) Unit)))
   , pendingOuts :: Ref (Maybe (List (Aff (HalogenEffects eff) Unit)))
   , rendering :: Maybe (r s z g p o eff)
@@ -131,7 +130,6 @@ initDriverState component input handler prjQuery = do
   selfRef <- newRef (unsafeCoerce {})
   childrenIn <- newRef M.empty
   childrenOut <- newRef M.empty
-  pendingRefs <- newRef (Just Nil)
   pendingQueries <- newRef (component.initializer $> Nil)
   pendingOuts <- newRef (Just Nil)
   let
@@ -144,7 +142,6 @@ initDriverState component input handler prjQuery = do
       , childrenOut
       , selfRef
       , handler
-      , pendingRefs
       , pendingQueries
       , pendingOuts
       , rendering: Nothing

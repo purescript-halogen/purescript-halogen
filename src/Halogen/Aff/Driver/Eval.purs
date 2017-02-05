@@ -4,19 +4,21 @@ import Prelude
 
 import Control.Applicative.Free (hoistFreeAp, retractFreeAp)
 import Control.Coroutine as CR
-import Control.Monad.Aff (Aff, forkAff, forkAll)
+import Control.Monad.Aff (Aff, attempt, forkAff, forkAll)
 import Control.Monad.Aff.Unsafe (unsafeCoerceAff)
+import Control.Monad.Aff.AVar as AV
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Class (liftEff)
 import Control.Monad.Eff.Exception (error)
-import Control.Monad.Eff.Ref (Ref, readRef, modifyRef, writeRef)
+import Control.Monad.Eff.Ref (REF, Ref, readRef, modifyRef, writeRef, newRef)
 import Control.Monad.Error.Class (throwError)
 import Control.Monad.Fork (fork)
 import Control.Monad.Free (foldFree)
 import Control.Monad.Trans.Class (lift)
-import Control.Parallel (parallel, sequential, parSequence_)
+import Control.Parallel (parallel, sequential)
 
 import Data.Coyoneda (Coyoneda, unCoyoneda)
+import Data.Either (Either(..))
 import Data.List (List, (:))
 import Data.List as L
 import Data.Map as M
@@ -37,6 +39,30 @@ type LifecycleHandlers eff =
   , finalizers :: List (Aff (HalogenEffects eff) Unit)
   }
 
+parSequenceAff_
+  :: forall eff a
+   . L.List (Aff (avar :: AV.AVAR, ref :: REF | eff) a)
+  -> Aff (avar :: AV.AVAR, ref :: REF | eff) Unit
+parSequenceAff_ = case _ of
+  L.Nil -> pure unit
+  L.Cons a L.Nil -> void a
+  as@(L.Cons _ tail) -> do
+    var <- AV.makeVar
+    ref <- liftEff $ newRef tail
+    let
+      run a = do
+        attempt a >>= case _ of
+          Left err -> AV.putVar var (Just err)
+          Right _ ->
+            liftEff (readRef ref) >>=
+              case _ of
+                L.Nil -> AV.putVar var Nothing
+                L.Cons _ xs -> liftEff $ writeRef ref xs
+    _ <- forkAll (run <$> as)
+    AV.peekVar var >>= case _ of
+      Nothing -> pure unit
+      Just err -> throwError err
+
 handleLifecycle
   :: forall eff a
    . Ref (LifecycleHandlers eff)
@@ -47,7 +73,7 @@ handleLifecycle lchs f = do
   result <- liftEff f
   { initializers, finalizers } <- liftEff $ readRef lchs
   forkAll finalizers
-  parSequence_ initializers
+  parSequenceAff_ initializers
   pure result
 
 type Renderer h r eff
