@@ -1,0 +1,7 @@
+{
+  "name": "components-inputs",
+  "private": true,
+  "dependencies": {
+    "purescript-halogen": "*"
+  }
+}
