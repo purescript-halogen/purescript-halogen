@@ -1,5 +1,7 @@
 npm run example-ace
 npm run example-components
+npm run example-components-inputs
+npm run example-components-multitype
 npm run example-driver-io
 npm run example-driver-routing
 npm run example-driver-websockets
@@ -9,5 +11,4 @@ npm run example-higher-order-components
 npm run example-interpret
 npm run example-keyboard-input
 npm run example-lifecycle
-npm run example-multi-component
 npm run example-todo
