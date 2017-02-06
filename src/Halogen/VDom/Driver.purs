@@ -17,7 +17,7 @@ import DOM (DOM)
 import DOM.HTML (window) as DOM
 import DOM.HTML.Types (HTMLElement, htmlElementToNode, htmlDocumentToDocument) as DOM
 import DOM.HTML.Window (document) as DOM
-import DOM.Node.Node (appendChild, removeChild, parentNode, replaceChild) as DOM
+import DOM.Node.Node (appendChild, removeChild, parentNode, nextSibling, insertBefore) as DOM
 import DOM.Node.Types (Document, Element, Node) as DOM
 
 import Halogen.Aff.Driver (HalogenIO)
@@ -115,9 +115,12 @@ renderSpec document container = { render, renderChild: id, removeChild }
         DOM.appendChild node (DOM.htmlElementToNode container)
         pure $ RenderState { machine, node }
       Just (RenderState { machine, node }) -> do
+        parent <- DOM.parentNode node
+        nextSib <- DOM.nextSibling node
         machine' <- V.step machine vdom
         let newNode = V.extract machine'
-        when (not nodeRefEq node newNode) (substInParent node newNode)
+        when (not nodeRefEq node newNode) do
+          substInParent newNode (toMaybe nextSib) (toMaybe parent)
         pure $ RenderState { machine: machine', node: newNode }
 
 removeChild
@@ -127,9 +130,14 @@ removeChild (RenderState { node }) = do
   npn <- DOM.parentNode node
   traverse_ (\pn -> DOM.removeChild node pn) (toMaybe npn)
 
-substInParent :: forall eff. DOM.Node -> DOM.Node -> Eff (dom :: DOM | eff) Unit
-substInParent oldNode newNode = do
-  npn <- DOM.parentNode oldNode
-  traverse_ (\pn -> DOM.replaceChild newNode oldNode pn) (toMaybe npn)
+substInParent
+  :: forall eff
+   . DOM.Node
+  -> Maybe DOM.Node
+  -> Maybe DOM.Node
+  -> Eff (dom :: DOM | eff) Unit
+substInParent newNode (Just sib) (Just pn) = void $ DOM.insertBefore newNode sib pn
+substInParent newNode Nothing (Just pn) = void $ DOM.appendChild newNode pn
+substInParent _ _ _ = pure unit
 
 foreign import nodeRefEq :: DOM.Node -> DOM.Node -> Boolean
