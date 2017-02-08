@@ -81,7 +81,7 @@ action act = act unit
 -- | ``` purescript
 -- | data Query a = SomeRequest (Boolean -> a)
 -- | ```
-type Request f a = forall i. (a -> i) -> f i
+type Request f a = (a -> a) -> f a
 
 -- | Takes a data constructor of query algebra `f` and creates a request.
 -- |
