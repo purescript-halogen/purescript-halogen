@@ -10,7 +10,7 @@ import Control.Monad.Aff.AVar as AV
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Class (liftEff)
 import Control.Monad.Eff.Exception (error)
-import Control.Monad.Eff.Ref (REF, Ref, readRef, modifyRef, writeRef, newRef)
+import Control.Monad.Eff.Ref (REF, Ref, readRef, modifyRef, modifyRef', writeRef, newRef)
 import Control.Monad.Error.Class (throwError)
 import Control.Monad.Fork (fork)
 import Control.Monad.Free (foldFree)
@@ -22,7 +22,7 @@ import Data.Either (Either(..))
 import Data.List (List, (:))
 import Data.List as L
 import Data.Map as M
-import Data.Maybe (Maybe(..))
+import Data.Maybe (Maybe(..), isJust)
 import Data.StrMap as SM
 import Data.Tuple (Tuple(..))
 
@@ -115,14 +115,23 @@ eval lchs render r =
           handleLifecycle lchs (render ref)
           pure a
     Subscribe es next -> do
+      DriverState ({ subscriptions, fresh }) <- liftEff (readRef ref)
       forkAff do
         { producer, done } <- ES.unEventSource es
+        i <- liftEff do
+          i <- modifyRef' fresh (\i -> { state: i + 1, value: i })
+          modifyRef subscriptions (map (M.insert i done))
+          pure i
         let
           consumer = do
-            s <- lift <<< evalF ref =<< CR.await
-            when (s == ES.Listening) consumer
+            q <- CR.await
+            subs <- lift $ liftEff (readRef subscriptions)
+            when (isJust subs) do
+              s <- lift $ evalF ref q
+              when (s == ES.Listening) consumer
         CR.runProcess (consumer `CR.pullFrom` producer)
         done
+        liftEff $ modifyRef subscriptions (map (M.delete i))
       pure next
     Lift aff ->
       aff
