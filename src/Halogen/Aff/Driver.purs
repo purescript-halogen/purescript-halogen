@@ -155,6 +155,7 @@ runUI' lchs renderSpec component i = do
     readRef ds.childrenIn >>= traverse_ \childVar -> do
       childDS <- readRef childVar
       renderStateX_ renderSpec.removeChild childDS
+      cleanupSubscriptions childDS
       addFinalizer childDS
     modifyRef var \(DriverState ds') ->
       DriverState
@@ -170,6 +171,8 @@ runUI' lchs renderSpec component i = do
         , pendingQueries: ds'.pendingQueries
         , pendingOuts: ds'.pendingOuts
         , prjQuery: ds'.prjQuery
+        , fresh: ds'.fresh
+        , subscriptions: ds'.subscriptions
         }
 
   renderChild
@@ -222,6 +225,14 @@ runUI' lchs renderSpec component i = do
     queue <- readRef ref
     writeRef ref Nothing
     for_ queue (handleAff <<< forkAll <<< L.reverse)
+
+  cleanupSubscriptions
+    :: forall f'
+     . DriverStateX h r f' eff
+    -> Eff (HalogenEffects eff) Unit
+  cleanupSubscriptions = unDriverStateX \ds -> do
+    traverse_ (handleAff <<< forkAll) =<< readRef ds.subscriptions
+    writeRef ds.subscriptions Nothing
 
   addFinalizer
     :: forall f'
