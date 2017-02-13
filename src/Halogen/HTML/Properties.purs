@@ -32,6 +32,7 @@ module Halogen.HTML.Properties
 
   , type_
   , value
+  , step
   , disabled
   , enabled
   , required
@@ -65,7 +66,6 @@ import Data.MediaType (MediaType)
 import Data.Newtype (class Newtype, unwrap)
 import Data.String (joinWith)
 
-import DOM.Node.Types (Element)
 import DOM.HTML.Indexed (CSSPixel) as I
 import DOM.HTML.Indexed.ButtonType (ButtonType(..)) as I
 import DOM.HTML.Indexed.FormMethod (FormMethod(..)) as I
@@ -75,6 +75,8 @@ import DOM.HTML.Indexed.MenuType (MenuType(..)) as I
 import DOM.HTML.Indexed.OnOff (OnOff(..)) as I
 import DOM.HTML.Indexed.OrderedListType (OrderedListType(..)) as I
 import DOM.HTML.Indexed.PreloadValue (PreloadValue(..)) as I
+import DOM.HTML.Indexed.StepValue (StepValue(..)) as I
+import DOM.Node.Types (Element)
 
 import Halogen.HTML.Core (class IsProp, ClassName, AttrName, PropName(..), Prop)
 import Halogen.HTML.Core as Core
@@ -181,6 +183,9 @@ type_ = prop (PropName "type")
 
 value :: forall r i. String -> IProp (value :: String | r) i
 value = prop (PropName "value")
+
+step :: forall r i. I.StepValue -> IProp (step :: I.StepValue | r) i
+step = prop (PropName "step")
 
 enabled :: forall r i. Boolean -> IProp (disabled :: Boolean | r) i
 enabled = disabled <<< not
