@@ -32,6 +32,7 @@ module Halogen.HTML.Properties
 
   , type_
   , value
+  , step
   , disabled
   , enabled
   , required
@@ -43,6 +44,13 @@ module Halogen.HTML.Properties
   , autocomplete
   , autofocus
   , multiple
+
+  , autoplay
+  , controls
+  , loop
+  , muted
+  , poster
+  , preload
 
   , draggable
   , tabIndex
@@ -58,7 +66,6 @@ import Data.MediaType (MediaType)
 import Data.Newtype (class Newtype, unwrap)
 import Data.String (joinWith)
 
-import DOM.Node.Types (Element)
 import DOM.HTML.Indexed (CSSPixel) as I
 import DOM.HTML.Indexed.ButtonType (ButtonType(..)) as I
 import DOM.HTML.Indexed.FormMethod (FormMethod(..)) as I
@@ -67,6 +74,9 @@ import DOM.HTML.Indexed.MenuitemType (MenuitemType(..)) as I
 import DOM.HTML.Indexed.MenuType (MenuType(..)) as I
 import DOM.HTML.Indexed.OnOff (OnOff(..)) as I
 import DOM.HTML.Indexed.OrderedListType (OrderedListType(..)) as I
+import DOM.HTML.Indexed.PreloadValue (PreloadValue(..)) as I
+import DOM.HTML.Indexed.StepValue (StepValue(..)) as I
+import DOM.Node.Types (Element)
 
 import Halogen.HTML.Core (class IsProp, ClassName, AttrName, PropName(..), Prop)
 import Halogen.HTML.Core as Core
@@ -174,6 +184,9 @@ type_ = prop (PropName "type")
 value :: forall r i. String -> IProp (value :: String | r) i
 value = prop (PropName "value")
 
+step :: forall r i. I.StepValue -> IProp (step :: I.StepValue | r) i
+step = prop (PropName "step")
+
 enabled :: forall r i. Boolean -> IProp (disabled :: Boolean | r) i
 enabled = disabled <<< not
 
@@ -206,6 +219,24 @@ autofocus = prop (PropName "autofocus")
 
 multiple :: forall r i. Boolean -> IProp (multiple :: Boolean | r) i
 multiple = prop (PropName "multiple")
+
+autoplay :: forall r i. Boolean -> IProp (autoplay :: Boolean | r) i
+autoplay = prop (PropName "autoplay")
+
+controls :: forall r i. Boolean -> IProp (controls :: Boolean | r) i
+controls = prop (PropName "controls")
+
+loop :: forall r i. Boolean -> IProp (loop :: Boolean | r) i
+loop = prop (PropName "loop")
+
+muted :: forall r i. Boolean -> IProp (muted :: Boolean | r) i
+muted = prop (PropName "muted")
+
+poster :: forall r i. String -> IProp (poster :: String | r) i
+poster = prop (PropName "poster")
+
+preload :: forall r i. I.PreloadValue -> IProp (preload :: I.PreloadValue | r) i
+preload = prop (PropName "preload")
 
 draggable :: forall r i. Boolean -> IProp (draggable :: Boolean | r) i
 draggable = prop (PropName "draggable")
