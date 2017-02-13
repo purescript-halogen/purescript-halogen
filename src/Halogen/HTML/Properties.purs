@@ -44,6 +44,13 @@ module Halogen.HTML.Properties
   , autofocus
   , multiple
 
+  , autoplay
+  , controls
+  , loop
+  , muted
+  , poster
+  , preload
+
   , draggable
   , tabIndex
 
@@ -67,6 +74,7 @@ import DOM.HTML.Indexed.MenuitemType (MenuitemType(..)) as I
 import DOM.HTML.Indexed.MenuType (MenuType(..)) as I
 import DOM.HTML.Indexed.OnOff (OnOff(..)) as I
 import DOM.HTML.Indexed.OrderedListType (OrderedListType(..)) as I
+import DOM.HTML.Indexed.PreloadValue (PreloadValue(..)) as I
 
 import Halogen.HTML.Core (class IsProp, ClassName, AttrName, PropName(..), Prop)
 import Halogen.HTML.Core as Core
@@ -206,6 +214,24 @@ autofocus = prop (PropName "autofocus")
 
 multiple :: forall r i. Boolean -> IProp (multiple :: Boolean | r) i
 multiple = prop (PropName "multiple")
+
+autoplay :: forall r i. Boolean -> IProp (autoplay :: Boolean | r) i
+autoplay = prop (PropName "autoplay")
+
+controls :: forall r i. Boolean -> IProp (controls :: Boolean | r) i
+controls = prop (PropName "controls")
+
+loop :: forall r i. Boolean -> IProp (loop :: Boolean | r) i
+loop = prop (PropName "loop")
+
+muted :: forall r i. Boolean -> IProp (muted :: Boolean | r) i
+muted = prop (PropName "muted")
+
+poster :: forall r i. String -> IProp (poster :: String | r) i
+poster = prop (PropName "poster")
+
+preload :: forall r i. I.PreloadValue -> IProp (preload :: I.PreloadValue | r) i
+preload = prop (PropName "preload")
 
 draggable :: forall r i. Boolean -> IProp (draggable :: Boolean | r) i
 draggable = prop (PropName "draggable")
