@@ -26,18 +26,13 @@ import Data.Maybe (Maybe(..), isJust)
 import Data.StrMap as SM
 import Data.Tuple (Tuple(..))
 
-import Halogen.Aff.Driver.State (DriverState(..), unDriverStateX)
+import Halogen.Aff.Driver.State (DriverState(..), LifecycleHandlers, unDriverStateX)
 import Halogen.Aff.Effects (HalogenEffects)
 import Halogen.Data.OrdBox (unOrdBox)
 import Halogen.Query.EventSource as ES
 import Halogen.Query.ForkF as FF
 import Halogen.Query.HalogenM (HalogenM(..), HalogenF(..), HalogenAp(..))
 import Halogen.Query.InputF (InputF(..), RefLabel(..))
-
-type LifecycleHandlers eff =
-  { initializers :: List (Aff (HalogenEffects eff) Unit)
-  , finalizers :: List (Aff (HalogenEffects eff) Unit)
-  }
 
 parSequenceAff_
   :: forall eff a
@@ -83,12 +78,11 @@ type Renderer h r eff
 
 eval
   :: forall h r eff s'' f z g'' p'' i o a
-   . Ref (LifecycleHandlers eff)
-  -> Renderer h r eff
+   . Renderer h r eff
   -> Ref (DriverState h r s'' f z g'' p'' i o eff)
   -> InputF a (z a)
   -> Aff (HalogenEffects eff) a
-eval lchs render r =
+eval render r =
   case _ of
     RefUpdate (RefLabel p) el next -> do
       liftEff $ modifyRef r \(DriverState st) ->
@@ -108,11 +102,11 @@ eval lchs render r =
       DriverState { state } <- liftEff (readRef ref)
       pure (k state)
     ModifyState f -> do
-      DriverState (st@{ state }) <- liftEff (readRef ref)
+      DriverState (st@{ state, lifecycleHandlers }) <- liftEff (readRef ref)
       case f state of
         Tuple a state' -> do
           liftEff $ writeRef ref (DriverState (st { state = state' }))
-          handleLifecycle lchs (render ref)
+          handleLifecycle lifecycleHandlers (render ref)
           pure a
     Subscribe es next -> do
       DriverState ({ subscriptions, fresh }) <- liftEff (readRef ref)

@@ -24,8 +24,8 @@ import Data.Traversable (for_, traverse_, sequence_)
 import Data.Tuple (Tuple(..))
 
 import Halogen (HalogenIO)
-import Halogen.Aff.Driver.Eval (LifecycleHandlers, eval, handleLifecycle, queuingHandler, parSequenceAff_)
-import Halogen.Aff.Driver.State (DriverState(..), DriverStateX, RenderStateX, initDriverState, renderStateX, renderStateX_, unDriverStateX)
+import Halogen.Aff.Driver.Eval (eval, handleLifecycle, queuingHandler, parSequenceAff_)
+import Halogen.Aff.Driver.State (LifecycleHandlers, DriverState(..), DriverStateX, RenderStateX, initDriverState, renderStateX, renderStateX_, unDriverStateX)
 import Halogen.Aff.Effects (HalogenEffects)
 import Halogen.Component (Component, ComponentSlot, unComponent, unComponentSlot)
 import Halogen.Data.OrdBox (OrdBox)
@@ -43,6 +43,9 @@ type RenderSpec h r eff =
   , removeChild :: forall s f g p o. r s f g p o eff -> Eff (HalogenEffects eff) Unit
   }
 
+newLifecycleHandlers :: forall eff. Eff (HalogenEffects eff) (Ref (LifecycleHandlers eff))
+newLifecycleHandlers = newRef { initializers: L.Nil, finalizers: L.Nil }
+
 runUI
   :: forall h r f i o eff
    . RenderSpec h r eff
@@ -50,7 +53,7 @@ runUI
   -> i
   -> Aff (HalogenEffects eff) (HalogenIO f o (Aff (HalogenEffects eff)))
 runUI renderSpec component j = do
-  lchs <- liftEff $ newRef { initializers: L.Nil, finalizers: L.Nil }
+  lchs <- liftEff newLifecycleHandlers
   runUI' lchs renderSpec component j
 
 runUI'
@@ -90,7 +93,7 @@ runUI' lchs renderSpec component i = do
      . Ref (DriverState h r s f' z' g p i' o' eff)
     -> InputF a (z' a)
     -> Aff (HalogenEffects eff) a
-  evalF ref = eval lchs render ref
+  evalF ref = eval render ref
 
   rootHandler
     :: Ref (M.Map Int (AV.AVar o))
@@ -126,7 +129,8 @@ runUI' lchs renderSpec component i = do
     -> Component h z i' o' (Aff (HalogenEffects eff))
     -> Eff (HalogenEffects eff) (Ref (DriverStateX h r f' eff))
   runComponent handler j prjQuery = unComponent \c -> do
-    var <- initDriverState c j handler prjQuery
+    lchs' <- newLifecycleHandlers
+    var <- initDriverState c j handler prjQuery lchs'
     pre <- readRef lchs
     writeRef lchs { initializers: L.Nil, finalizers: pre.finalizers }
     unDriverStateX (render <<< _.selfRef) =<< readRef var
@@ -173,6 +177,7 @@ runUI' lchs renderSpec component i = do
         , prjQuery: ds'.prjQuery
         , fresh: ds'.fresh
         , subscriptions: ds'.subscriptions
+        , lifecycleHandlers: ds'.lifecycleHandlers
         }
 
   renderChild

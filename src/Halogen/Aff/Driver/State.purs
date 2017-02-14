@@ -1,5 +1,6 @@
 module Halogen.Aff.Driver.State
-  ( DriverState(..)
+  ( LifecycleHandlers
+  , DriverState(..)
   , DriverStateRec
   , DriverStateX
   , unDriverStateX
@@ -29,6 +30,11 @@ import Halogen.Component (Component')
 import Halogen.Data.OrdBox (OrdBox)
 
 import Unsafe.Coerce (unsafeCoerce)
+
+type LifecycleHandlers eff =
+  { initializers :: List (Aff (HalogenEffects eff) Unit)
+  , finalizers :: List (Aff (HalogenEffects eff) Unit)
+  }
 
 -- | The type used to track a driver's persistent state.
 -- |
@@ -61,6 +67,7 @@ type DriverStateRec h r s f z g p i o eff =
   , prjQuery :: forall x. f x -> Maybe (z x)
   , fresh :: Ref Int
   , subscriptions :: Ref (Maybe (M.Map Int (Aff (HalogenEffects eff) Unit)))
+  , lifecycleHandlers :: Ref (LifecycleHandlers eff)
   }
 
 -- | A version of `DriverState` with the aspects relating to child components
@@ -127,8 +134,9 @@ initDriverState
   -> i
   -> (o -> Aff (HalogenEffects eff) Unit)
   -> (forall x. f x -> Maybe (z x))
+  -> Ref (LifecycleHandlers eff)
   -> Eff (HalogenEffects eff) (Ref (DriverStateX h r f eff))
-initDriverState component input handler prjQuery = do
+initDriverState component input handler prjQuery lchs = do
   selfRef <- newRef (unsafeCoerce {})
   childrenIn <- newRef M.empty
   childrenOut <- newRef M.empty
@@ -152,6 +160,7 @@ initDriverState component input handler prjQuery = do
       , prjQuery
       , fresh
       , subscriptions
+      , lifecycleHandlers: lchs
       }
   writeRef selfRef (DriverState ds)
   pure $ mkDriverStateXRef selfRef
