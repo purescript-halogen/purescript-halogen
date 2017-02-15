@@ -8,6 +8,7 @@ import Prelude
 import Control.Monad.Aff (Aff)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Class (liftEff)
+import Control.Monad.Eff.Ref (Ref, newRef, readRef, writeRef)
 
 import Data.Foldable (traverse_)
 import Data.Maybe (Maybe(..))
@@ -33,22 +34,26 @@ import Halogen.VDom.DOM.Prop as VP
 type VHTML f g p eff =
   V.VDom (Array (Prop (InputF Unit (f Unit)))) (ComponentSlot HTML g (Aff (HalogenEffects eff)) p (f Unit))
 
+type ChildRenderer f g p eff
+  = ComponentSlot HTML g (Aff (HalogenEffects eff)) p (f Unit) -> Eff (HalogenEffects eff) (RenderStateX RenderState eff)
+
 newtype RenderState s f g p o eff =
   RenderState
     { node :: DOM.Node
     , machine :: V.Step (Eff (HalogenEffects eff)) (VHTML f g p eff) DOM.Node
+    , renderChildRef :: Ref (ChildRenderer f g p eff)
     }
 
 mkSpec
   :: forall f g p eff
    . (InputF Unit (f Unit) -> Eff (HalogenEffects eff) Unit)
-  -> (ComponentSlot HTML g (Aff (HalogenEffects eff)) p (f Unit) -> Eff (HalogenEffects eff) (RenderStateX RenderState eff))
+  -> Ref (ChildRenderer f g p eff)
   -> DOM.Document
   -> V.VDomSpec
       (HalogenEffects eff)
       (Array (VP.Prop (InputF Unit (f Unit))))
       (ComponentSlot HTML g (Aff (HalogenEffects eff)) p (f Unit))
-mkSpec handler renderChild document =
+mkSpec handler renderChildRef document =
   V.VDomSpec { buildWidget, buildAttributes, document }
   where
 
@@ -65,6 +70,7 @@ mkSpec handler renderChild document =
           (ComponentSlot HTML g (Aff (HalogenEffects eff)) p (f Unit))
           DOM.Node
   buildWidget spec slot = do
+    renderChild <- readRef renderChildRef
     rsx <- renderChild slot
     let node = unRenderStateX (\(RenderState { node }) -> node) rsx
     pure (V.Step node patch done)
@@ -74,6 +80,7 @@ mkSpec handler renderChild document =
           (ComponentSlot HTML g (Aff (HalogenEffects eff)) p (f Unit))
           DOM.Node
   patch slot = do
+    renderChild <- readRef renderChildRef
     rsx <- renderChild slot
     let node = unRenderStateX (\(RenderState { node }) -> node) rsx
     pure (V.Step node patch done)
@@ -109,19 +116,21 @@ renderSpec document container = { render, renderChild: id, removeChild }
   render handler child (HTML vdom) =
     case _ of
       Nothing -> do
-        let spec = mkSpec handler child document
+        renderChildRef <- newRef child
+        let spec = mkSpec handler renderChildRef document
         machine <- V.buildVDom spec vdom
         let node = V.extract machine
         DOM.appendChild node (DOM.htmlElementToNode container)
-        pure $ RenderState { machine, node }
-      Just (RenderState { machine, node }) -> do
+        pure $ RenderState { machine, node, renderChildRef }
+      Just (RenderState { machine, node, renderChildRef }) -> do
+        writeRef renderChildRef child
         parent <- DOM.parentNode node
         nextSib <- DOM.nextSibling node
         machine' <- V.step machine vdom
         let newNode = V.extract machine'
         when (not nodeRefEq node newNode) do
           substInParent newNode (toMaybe nextSib) (toMaybe parent)
-        pure $ RenderState { machine: machine', node: newNode }
+        pure $ RenderState { machine: machine', node: newNode, renderChildRef }
 
 removeChild
   :: forall eff o p g f s. RenderState s f g p o eff
