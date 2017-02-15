@@ -73,7 +73,8 @@ handleLifecycle lchs f = do
 
 type Renderer h r eff
   = forall s f z g p i o
-   . Ref (DriverState h r s f z g p i o eff)
+   . Ref (LifecycleHandlers eff)
+  -> Ref (DriverState h r s f z g p i o eff)
   -> Eff (HalogenEffects eff) Unit
 
 eval
@@ -106,7 +107,7 @@ eval render r =
       case f state of
         Tuple a state' -> do
           liftEff $ writeRef ref (DriverState (st { state = state' }))
-          handleLifecycle lifecycleHandlers (render ref)
+          handleLifecycle lifecycleHandlers (render lifecycleHandlers ref)
           pure a
     Subscribe es next -> do
       DriverState ({ subscriptions, fresh }) <- liftEff (readRef ref)
