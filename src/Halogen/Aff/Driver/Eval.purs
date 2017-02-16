@@ -13,7 +13,7 @@ import Control.Monad.Eff.Exception (error)
 import Control.Monad.Eff.Ref (REF, Ref, readRef, modifyRef, modifyRef', writeRef, newRef)
 import Control.Monad.Error.Class (throwError)
 import Control.Monad.Fork (fork)
-import Control.Monad.Free (foldFree)
+import Control.Monad.Free.Trans (runFreeT)
 import Control.Monad.Trans.Class (lift)
 import Control.Parallel (parallel, sequential)
 
@@ -128,8 +128,6 @@ eval render r =
         done
         liftEff $ modifyRef subscriptions (map (M.delete i))
       pure next
-    Lift aff ->
-      aff
     Halt msg ->
       throwError (error msg)
     GetSlots k -> do
@@ -177,14 +175,14 @@ eval render r =
   evalF ref q = do
     DriverState st <- liftEff (readRef ref)
     case st.component.eval q of
-      HalogenM fx -> foldFree (go ref) fx
+      HalogenM fx -> runFreeT (go ref) fx
 
   evalM
     :: forall s' f' z' g' p' i' o'
      . Ref (DriverState h r s' f' z' g' p' i' o' eff)
     -> HalogenM s' z' g' p' o' (Aff (HalogenEffects eff))
     ~> Aff (HalogenEffects eff)
-  evalM ref (HalogenM q) = foldFree (go ref) q
+  evalM ref (HalogenM q) = runFreeT (go ref) q
 
 queuingHandler
   :: forall a eff
