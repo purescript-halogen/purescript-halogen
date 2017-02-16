@@ -111,7 +111,7 @@ There are also two more functions provided for cases where we want to run our Ha
 - [`awaitLoad`][Halogen.Aff.Util.awaitLoad] does what the name suggests - waits for the document to load.
 - [`selectElement`][Halogen.Aff.Util.selectElement] is a wrapper around `querySelector` - using this after `awaitLoad` allows targeting of a particular container element on the page, to embed our app within.
 
-Now we know how to build simple components and run them, we can take a look at [embedding child components within a parent](5 - Parent and child components "Parent and child components").
+Now we know how to build simple components and run them, we can take a look at [embedding child components within a parent](5 - Parent and child components.md "Parent and child components").
 
 [example-driver-routing]: ../examples/driver-routing "Routing example"
 [example-driver-websockets]: ../examples/driver-websockets "WebSockets example"
