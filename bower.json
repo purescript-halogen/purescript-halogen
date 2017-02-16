@@ -41,6 +41,7 @@
     "purescript-parallel": "^2.1.0",
     "purescript-profunctor-lenses": "^2.6.0",
     "purescript-profunctor": "^2.0.0",
-    "purescript-unsafe-coerce": "^2.0.0"
+    "purescript-unsafe-coerce": "^2.0.0",
+    "purescript-aff-coroutines": "^4.0.0"
   }
 }

@@ -6,7 +6,7 @@ import Control.Applicative.Free (FreeAp, liftFreeAp, hoistFreeAp)
 import Control.Monad.Aff.Class (class MonadAff, liftAff)
 import Control.Monad.Eff.Class (class MonadEff, liftEff)
 import Control.Monad.Eff.Exception (Error)
-import Control.Monad.Fork (class MonadFork)
+import Control.Monad.Fork (class MonadFork, fork)
 import Control.Monad.Reader.Class (class MonadAsk, ask)
 import Control.Monad.Rec.Class (class MonadRec, tailRecM)
 import Control.Monad.State.Class (class MonadState)
@@ -24,7 +24,6 @@ import Data.Newtype (class Newtype, over)
 import Data.Tuple (Tuple)
 
 import Halogen.Query.EventSource as ES
-import Halogen.Query.ForkF as FF
 import Halogen.Query.InputF (RefLabel)
 
 -- | The Halogen component algebra
@@ -38,7 +37,6 @@ data HalogenF s (f :: * -> *) g p o m a
   | ChildQuery p (Coyoneda g a)
   | Raise o a
   | Par (HalogenAp s f g p o m a)
-  | Fork (FF.Fork (HalogenM s f g p o m) a)
   | GetRef RefLabel (Maybe Foreign -> a)
 
 instance functorHalogenF :: Functor m => Functor (HalogenF s f g p o m) where
@@ -52,7 +50,6 @@ instance functorHalogenF :: Functor m => Functor (HalogenF s f g p o m) where
     ChildQuery p cq -> ChildQuery p (map f cq)
     Raise o a -> Raise o (f a)
     Par pa -> Par (map f pa)
-    Fork fa -> Fork (map f fa)
     GetRef p k -> GetRef p (map f k)
 
 newtype HalogenAp s f g p o m a = HalogenAp (FreeAp (HalogenM s f g p o m) a)
@@ -88,8 +85,8 @@ instance parallelHalogenM :: Monad m => Parallel (HalogenAp s f g p o m) (Haloge
   parallel = HalogenAp <<< liftFreeAp
   sequential = HalogenM <<< FT.liftFreeT <<< Par
 
-instance monadForkHalogenM :: MonadAff eff m => MonadFork Error (HalogenM s f g p o m) where
-  fork a = map liftAff <$> HalogenM (FT.liftFreeT $ Fork $ FF.fork a)
+-- instance monadForkHalogenM :: MonadFork e m => MonadFork e (HalogenM s f g p o m) where
+--   fork = HalogenM <<< lift <<< fork
 
 instance monadTransHalogenM :: MonadTrans (HalogenM s f g p o) where
   lift = HalogenM <<< lift
@@ -154,5 +151,4 @@ hoist nat (HalogenM fa) = HalogenM (FT.bimapFreeT go nat fa)
     ChildQuery p cq -> ChildQuery p cq
     Raise o a -> Raise o a
     Par p -> Par (over HalogenAp (hoistFreeAp (hoist nat)) p)
-    Fork f -> Fork (FF.hoistFork (hoist nat) f)
     GetRef p k -> GetRef p k
