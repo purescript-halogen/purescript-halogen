@@ -4,18 +4,19 @@ import Prelude
 
 import Control.Applicative.Free (hoistFreeAp, retractFreeAp)
 import Control.Coroutine as CR
-import Control.Monad.Aff (Aff, attempt, forkAff, forkAll)
-import Control.Monad.Aff.Unsafe (unsafeCoerceAff)
+import Control.Monad.Aff (Aff, attempt, forkAll)
 import Control.Monad.Aff.AVar as AV
+import Control.Monad.Aff.Class (class MonadAff)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Class (liftEff)
-import Control.Monad.Eff.Exception (error)
+import Control.Monad.Eff.Exception (Error, error)
 import Control.Monad.Eff.Ref (REF, Ref, readRef, modifyRef, modifyRef', writeRef, newRef)
-import Control.Monad.Error.Class (throwError)
-import Control.Monad.Fork (fork)
-import Control.Monad.Free (foldFree)
+import Control.Monad.Error.Class (class MonadError, throwError)
+import Control.Monad.Fork (class MonadFork, fork)
+import Control.Monad.Free.Trans (runFreeT)
+import Control.Monad.Rec.Class (class MonadRec)
 import Control.Monad.Trans.Class (lift)
-import Control.Parallel (parallel, sequential)
+import Control.Parallel (class Parallel, parSequence_, parallel, sequential)
 
 import Data.Coyoneda (Coyoneda, unCoyoneda)
 import Data.Either (Either(..))
@@ -30,7 +31,6 @@ import Halogen.Aff.Driver.State (DriverState(..), LifecycleHandlers, unDriverSta
 import Halogen.Aff.Effects (HalogenEffects)
 import Halogen.Data.OrdBox (unOrdBox)
 import Halogen.Query.EventSource as ES
-import Halogen.Query.ForkF as FF
 import Halogen.Query.HalogenM (HalogenM(..), HalogenF(..), HalogenAp(..))
 import Halogen.Query.InputF (InputF(..), RefLabel(..))
 
@@ -59,30 +59,32 @@ parSequenceAff_ = case _ of
       Just err -> throwError err
 
 handleLifecycle
-  :: forall eff a
-   . Ref (LifecycleHandlers eff)
-  -> Eff (HalogenEffects eff) a
-  -> Aff (HalogenEffects eff) a
+  :: forall eff t c m
+   . (MonadAff (HalogenEffects eff) m, Parallel t m, MonadFork c m)
+  => Ref (LifecycleHandlers m)
+  -> Eff (HalogenEffects eff)
+  ~> m
 handleLifecycle lchs f = do
   liftEff $ writeRef lchs { initializers: L.Nil, finalizers: L.Nil }
   result <- liftEff f
   { initializers, finalizers } <- liftEff $ readRef lchs
-  forkAll finalizers
-  parSequenceAff_ initializers
+  fork $ parSequence_ finalizers
+  parSequence_ initializers
   pure result
 
-type Renderer h r eff
+type Renderer h r m eff
   = forall s f z g p i o
-   . Ref (LifecycleHandlers eff)
-  -> Ref (DriverState h r s f z g p i o eff)
+   . Ref (LifecycleHandlers m)
+  -> Ref (DriverState h r s f z g p i o m)
   -> Eff (HalogenEffects eff) Unit
 
 eval
-  :: forall h r eff s'' f z g'' p'' i o a
-   . Renderer h r eff
-  -> Ref (DriverState h r s'' f z g'' p'' i o eff)
+  :: forall h r eff s'' f z g'' p'' i o a t m
+   . (MonadAff (HalogenEffects eff) m, Parallel t m, MonadFork Error m, MonadRec m, MonadError Error m)
+  => Renderer h r m eff
+  -> Ref (DriverState h r s'' f z g'' p'' i o m)
   -> InputF a (z a)
-  -> Aff (HalogenEffects eff) a
+  -> m a
 eval render r =
   case _ of
     RefUpdate (RefLabel p) el next -> do
@@ -95,9 +97,9 @@ eval render r =
 
   go
     :: forall s' f' z' g' p' i' o'
-     . Ref (DriverState h r s' f' z' g' p' i' o' eff)
-    -> HalogenF s' z' g' p' o' (Aff (HalogenEffects eff))
-    ~> Aff (HalogenEffects eff)
+     . Ref (DriverState h r s' f' z' g' p' i' o' m)
+    -> HalogenF s' z' g' p' o' m
+    ~> m
   go ref = case _ of
     GetState k -> do
       DriverState { state } <- liftEff (readRef ref)
@@ -111,7 +113,7 @@ eval render r =
           pure a
     Subscribe es next -> do
       DriverState ({ subscriptions, fresh }) <- liftEff (readRef ref)
-      forkAff do
+      fork do
         { producer, done } <- ES.unEventSource es
         i <- liftEff do
           i <- modifyRef' fresh (\i -> { state: i + 1, value: i })
@@ -128,8 +130,6 @@ eval render r =
         done
         liftEff $ modifyRef subscriptions (map (M.delete i))
       pure next
-    Lift aff ->
-      aff
     Halt msg ->
       throwError (error msg)
     GetSlots k -> do
@@ -146,19 +146,19 @@ eval render r =
       pure a
     Par (HalogenAp p) ->
       sequential $ retractFreeAp $ hoistFreeAp (parallel <<< evalM ref) p
-    Fork f ->
-      FF.unFork (\(FF.ForkF fx k) →
-        k <<< map unsafeCoerceAff <$> fork (evalM ref fx)) f
+    -- Fork f ->
+    --   FF.unFork (\(FF.ForkF fx k) →
+    --     k <<< map ?f <$> fork (evalM ref fx)) f
     GetRef (RefLabel p) k -> do
       DriverState { component, refs } <- liftEff (readRef ref)
       pure $ k $ SM.lookup p refs
 
   evalChildQuery
     :: forall s' f' z' g' p' i' o'
-     . Ref (DriverState h r s' f' z' g' p' i' o' eff)
+     . Ref (DriverState h r s' f' z' g' p' i' o' m)
     -> p'
     -> Coyoneda g'
-    ~> Aff (HalogenEffects eff)
+    ~> m
   evalChildQuery ref p = unCoyoneda \k q -> do
     DriverState st <- liftEff (readRef ref)
     case M.lookup (st.component.mkOrdBox p) st.children of
@@ -171,27 +171,28 @@ eval render r =
 
   evalF
     :: forall s' f' z' g' p' i' o'
-     . Ref (DriverState h r s' f' z' g' p' i' o' eff)
+     . Ref (DriverState h r s' f' z' g' p' i' o' m)
     -> z'
-    ~> Aff (HalogenEffects eff)
+    ~> m
   evalF ref q = do
     DriverState st <- liftEff (readRef ref)
     case st.component.eval q of
-      HalogenM fx -> foldFree (go ref) fx
+      HalogenM fx -> runFreeT (go ref) fx
 
   evalM
     :: forall s' f' z' g' p' i' o'
-     . Ref (DriverState h r s' f' z' g' p' i' o' eff)
-    -> HalogenM s' z' g' p' o' (Aff (HalogenEffects eff))
-    ~> Aff (HalogenEffects eff)
-  evalM ref (HalogenM q) = foldFree (go ref) q
+     . Ref (DriverState h r s' f' z' g' p' i' o' m)
+    -> HalogenM s' z' g' p' o' m
+    ~> m
+  evalM ref (HalogenM q) = runFreeT (go ref) q
 
 queuingHandler
-  :: forall a eff
-   . (a -> Aff (HalogenEffects eff) Unit)
-  -> Ref (Maybe (List (Aff (HalogenEffects eff) Unit)))
+  :: forall a m eff
+   . MonadAff (HalogenEffects eff) m
+  => (a -> m Unit)
+  -> Ref (Maybe (List (m Unit)))
   -> a
-  -> Aff (HalogenEffects eff) Unit
+  -> m Unit
 queuingHandler handler ref message = do
   queue <- liftEff (readRef ref)
   case queue of

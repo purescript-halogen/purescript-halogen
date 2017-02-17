@@ -247,7 +247,7 @@ lifecycleParentComponent spec =
 -- | some `Free` monad as `Aff` so the component can be used with `runUI`.
 hoist
   :: forall h f i o m m'
-   . (Bifunctor h, Functor m')
+   . (Monad m, Bifunctor h, Functor m')
   => (m ~> m')
   -> Component h f i o m
   -> Component h f i o m'
@@ -300,7 +300,7 @@ unComponentSlot f cs =
 
 hoistSlot
   :: forall h g m m' p q
-   . (Bifunctor h, Functor m')
+   . (Monad m, Bifunctor h, Functor m')
   => (m ~> m')
   -> ComponentSlot h g m p q
   -> ComponentSlot h g m' p q
