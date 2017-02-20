@@ -34,6 +34,8 @@ import Halogen.Query.ForkF as FF
 import Halogen.Query.HalogenM (HalogenM(..), HalogenF(..), HalogenAp(..))
 import Halogen.Query.InputF (InputF(..), RefLabel(..))
 
+import Unsafe.Reference (unsafeRefEq)
+
 parSequenceAff_
   :: forall eff a
    . L.List (Aff (avar :: AV.AVAR, ref :: REF | eff) a)
@@ -99,16 +101,15 @@ eval render r =
     -> HalogenF s' z' g' p' o' (Aff (HalogenEffects eff))
     ~> Aff (HalogenEffects eff)
   go ref = case _ of
-    GetState k -> do
-      DriverState { state } <- liftEff (readRef ref)
-      pure (k state)
-    ModifyState f -> do
+    State f -> do
       DriverState (st@{ state, lifecycleHandlers }) <- liftEff (readRef ref)
       case f state of
-        Tuple a state' -> do
-          liftEff $ writeRef ref (DriverState (st { state = state' }))
-          handleLifecycle lifecycleHandlers (render lifecycleHandlers ref)
-          pure a
+        Tuple a state'
+          | unsafeRefEq state state' -> pure a
+          | otherwise -> do
+              liftEff $ writeRef ref (DriverState (st { state = state' }))
+              handleLifecycle lifecycleHandlers (render lifecycleHandlers ref)
+              pure a
     Subscribe es next -> do
       DriverState ({ subscriptions, fresh }) <- liftEff (readRef ref)
       forkAff do

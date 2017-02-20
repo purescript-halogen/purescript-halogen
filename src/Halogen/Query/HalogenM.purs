@@ -29,8 +29,7 @@ import Halogen.Query.InputF (RefLabel)
 
 -- | The Halogen component algebra
 data HalogenF s (f :: * -> *) g p o m a
-  = GetState (s -> a)
-  | ModifyState (s -> Tuple a s)
+  = State (s -> Tuple a s)
   | Subscribe (ES.EventSource f m) a
   | Lift (m a)
   | Halt String
@@ -44,8 +43,7 @@ data HalogenF s (f :: * -> *) g p o m a
 
 instance functorHalogenF :: Functor m => Functor (HalogenF s f g p o m) where
   map f = case _ of
-    GetState k -> GetState (f <<< k)
-    ModifyState k -> ModifyState (lmap f <<< k)
+    State k -> State (lmap f <<< k)
     Subscribe es a -> Subscribe es (f a)
     Lift q -> Lift (map f q)
     Halt msg -> Halt msg
@@ -103,7 +101,7 @@ instance monadRecHalogenM :: MonadRec (HalogenM s f g p o m) where
     go (Done y) = pure y
 
 instance monadStateHalogenM :: MonadState s (HalogenM s f g p o m) where
-  state = HalogenM <<< liftF <<< ModifyState
+  state = HalogenM <<< liftF <<< State
 
 instance monadAskHalogenM :: MonadAsk r m => MonadAsk r (HalogenM s f g p o m) where
   ask = HalogenM $ liftF $ Lift $ ask
@@ -150,8 +148,7 @@ hoist nat (HalogenM fa) = HalogenM (hoistFree go fa)
   where
   go :: HalogenF s f g p o m ~> HalogenF s f g p o m'
   go = case _ of
-    GetState k -> GetState k
-    ModifyState f -> ModifyState f
+    State f -> State f
     Subscribe es next -> Subscribe (ES.hoist nat es) next
     Lift q -> Lift (nat q)
     Halt msg -> Halt msg
