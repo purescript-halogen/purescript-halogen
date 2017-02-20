@@ -31,12 +31,12 @@ import DOM.HTML.Types (HTMLElement, readHTMLElement)
 
 import Halogen.Component.ChildPath (ChildPath, injSlot, prjSlot, injQuery, cpI)
 import Halogen.Query.EventSource (EventSource, SubscribeStatus(..), eventSource, eventSource_)
-import Halogen.Query.HalogenM (HalogenM(..), HalogenF(..), getRef, getSlots, checkSlot, mkQuery)
+import Halogen.Query.HalogenM (HalogenM(..), HalogenF(..), getRef, getSlots, checkSlot, get, gets, mkQuery)
 
 import Control.Parallel (parTraverse)
 import Control.Monad.Aff.Class (liftAff) as Exports
 import Control.Monad.Eff.Class (liftEff) as Exports
-import Control.Monad.State.Class (get, gets, modify, put) as Exports
+import Control.Monad.State.Class (modify, put) as Exports
 import Control.Monad.Trans.Class (lift) as Exports
 import Halogen.Query.InputF (RefLabel(..))
 import Halogen.Query.HalogenM (subscribe, raise) as Exports
