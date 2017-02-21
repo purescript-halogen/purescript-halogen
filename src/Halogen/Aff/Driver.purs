@@ -14,6 +14,7 @@ import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Class (liftEff)
 import Control.Monad.Eff.Exception (error, throw, throwException)
 import Control.Monad.Eff.Ref (Ref, modifyRef, writeRef, readRef, newRef)
+import Control.Monad.Rec.Class (Step(..), tailRecM)
 
 import Data.List ((:))
 import Data.List as L
@@ -25,7 +26,7 @@ import Data.Tuple (Tuple(..))
 
 import Halogen (HalogenIO)
 import Halogen.Aff.Driver.Eval (eval, handleLifecycle, queuingHandler, parSequenceAff_)
-import Halogen.Aff.Driver.State (LifecycleHandlers, DriverState(..), DriverStateX, RenderStateX, initDriverState, renderStateX, renderStateX_, unDriverStateX)
+import Halogen.Aff.Driver.State (LifecycleHandlers, DriverState(..), DriverStateX, DriverStateRec, RenderStateX, initDriverState, renderStateX, renderStateX_, unDriverStateX)
 import Halogen.Aff.Effects (HalogenEffects)
 import Halogen.Component (Component, ComponentSlot, unComponent, unComponentSlot)
 import Halogen.Data.OrdBox (OrdBox)
@@ -133,7 +134,26 @@ runUI renderSpec component i = do
      . Ref (LifecycleHandlers eff)
     -> Ref (DriverState h r s f' z' g p i' o' eff)
     -> Eff (HalogenEffects eff) Unit
-  render lchs var = readRef var >>= \(DriverState ds) -> do
+  render lchs var = readRef var >>= \(DriverState ds) ->
+    flip tailRecM unit \_ ->
+      readRef ds.isRendering >>=
+        if _
+        then do
+          writeRef ds.needsRender true
+          pure $ Done unit
+        else do
+          render' lchs ds
+          needsRender <- readRef ds.needsRender
+          writeRef ds.needsRender false
+          pure if needsRender then Loop unit else Done unit
+
+  render'
+    :: forall s f' z' g p i' o'
+     . Ref (LifecycleHandlers eff)
+    -> DriverStateRec h r s f' z' g p i' o' eff
+    -> Eff (HalogenEffects eff) Unit
+  render' lchs ds = do
+    writeRef ds.isRendering true
     writeRef ds.childrenOut M.empty
     writeRef ds.childrenIn ds.children
     let
@@ -153,7 +173,7 @@ runUI renderSpec component i = do
       renderStateX_ renderSpec.removeChild childDS
       cleanupSubscriptions childDS
       addFinalizer lchs childDS
-    modifyRef var \(DriverState ds') ->
+    modifyRef ds.selfRef \(DriverState ds') ->
       DriverState
         { rendering: Just rendering
         , children
@@ -170,7 +190,10 @@ runUI renderSpec component i = do
         , fresh: ds'.fresh
         , subscriptions: ds'.subscriptions
         , lifecycleHandlers: ds'.lifecycleHandlers
+        , needsRender: ds'.needsRender
+        , isRendering: ds'.isRendering
         }
+    writeRef ds.isRendering false
 
   renderChild
     :: forall f' g p
