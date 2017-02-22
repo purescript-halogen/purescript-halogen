@@ -63,6 +63,7 @@ type DriverStateRec h r s f z g p i o eff =
   , handler :: o -> Aff (HalogenEffects eff) Unit
   , pendingQueries :: Ref (Maybe (List (Aff (HalogenEffects eff) Unit)))
   , pendingOuts :: Ref (Maybe (List (Aff (HalogenEffects eff) Unit)))
+  , pendingHandlers :: Ref (Maybe (List (Aff (HalogenEffects eff) Unit)))
   , rendering :: Maybe (r s z g p o eff)
   , prjQuery :: forall x. f x -> Maybe (z x)
   , fresh :: Ref Int
@@ -142,6 +143,7 @@ initDriverState component input handler prjQuery lchs = do
   childrenOut <- newRef M.empty
   pendingQueries <- newRef (component.initializer $> Nil)
   pendingOuts <- newRef (Just Nil)
+  pendingHandlers <- newRef Nothing
   fresh <- newRef 0
   subscriptions <- newRef (Just M.empty)
   let
@@ -156,6 +158,7 @@ initDriverState component input handler prjQuery lchs = do
       , handler
       , pendingQueries
       , pendingOuts
+      , pendingHandlers
       , rendering: Nothing
       , prjQuery
       , fresh

@@ -14,12 +14,13 @@ import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Class (liftEff)
 import Control.Monad.Eff.Exception (error, throw, throwException)
 import Control.Monad.Eff.Ref (Ref, modifyRef, writeRef, readRef, newRef)
+import Control.Monad.Rec.Class (Step(..), tailRecM)
 
 import Data.List ((:))
 import Data.List as L
 import Data.Either (Either(..))
 import Data.Map as M
-import Data.Maybe (Maybe(..), maybe)
+import Data.Maybe (Maybe(..), maybe, isNothing)
 import Data.Traversable (for_, traverse_, sequence_)
 import Data.Tuple (Tuple(..))
 
@@ -134,11 +135,13 @@ runUI renderSpec component i = do
     -> Ref (DriverState h r s f' z' g p i' o' eff)
     -> Eff (HalogenEffects eff) Unit
   render lchs var = readRef var >>= \(DriverState ds) -> do
+    shouldProcessHandlers <- isNothing <$> readRef ds.pendingHandlers
+    when shouldProcessHandlers $ writeRef ds.pendingHandlers (Just L.Nil)
     writeRef ds.childrenOut M.empty
     writeRef ds.childrenIn ds.children
     let
       handler :: forall x. InputF x (z' x) -> Aff (HalogenEffects eff) Unit
-      handler = void <<< evalF ds.selfRef
+      handler = queuingHandler (void <<< evalF ds.selfRef) ds.pendingHandlers
       childHandler :: forall x. z' x -> Aff (HalogenEffects eff) Unit
       childHandler = queuingHandler (handler <<< Query) ds.pendingQueries
     rendering <-
@@ -153,7 +156,7 @@ runUI renderSpec component i = do
       renderStateX_ renderSpec.removeChild childDS
       cleanupSubscriptions childDS
       addFinalizer lchs childDS
-    modifyRef var \(DriverState ds') ->
+    modifyRef ds.selfRef \(DriverState ds') ->
       DriverState
         { rendering: Just rendering
         , children
@@ -166,11 +169,21 @@ runUI renderSpec component i = do
         , handler: ds'.handler
         , pendingQueries: ds'.pendingQueries
         , pendingOuts: ds'.pendingOuts
+        , pendingHandlers: ds'.pendingHandlers
         , prjQuery: ds'.prjQuery
         , fresh: ds'.fresh
         , subscriptions: ds'.subscriptions
         , lifecycleHandlers: ds'.lifecycleHandlers
         }
+    when shouldProcessHandlers do
+      flip tailRecM unit \_ -> do
+        handlers <- readRef ds.pendingHandlers
+        writeRef ds.pendingHandlers (Just L.Nil)
+        traverse_ (handleAff <<< forkAll <<< L.reverse) handlers
+        mmore <- readRef ds.pendingHandlers
+        if maybe false L.null mmore
+          then writeRef ds.pendingHandlers Nothing $> Done unit
+          else pure $ Loop unit
 
   renderChild
     :: forall f' g p
