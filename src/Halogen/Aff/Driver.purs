@@ -179,7 +179,7 @@ runUI renderSpec component i = do
       flip tailRecM unit \_ -> do
         handlers <- readRef ds.pendingHandlers
         writeRef ds.pendingHandlers (Just L.Nil)
-        maybe (pure unit) (handleAff <<< forkAll <<< L.reverse) handlers
+        traverse_ (handleAff <<< forkAll <<< L.reverse) handlers
         mmore <- readRef ds.pendingHandlers
         if maybe false L.null mmore
           then writeRef ds.pendingHandlers Nothing $> Done unit
