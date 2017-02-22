@@ -12,8 +12,10 @@ import Control.Monad.Aff (Aff, forkAff, forkAll, runAff)
 import Control.Monad.Aff.AVar as AV
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Class (liftEff)
+import Control.Monad.Eff.Console (warn)
 import Control.Monad.Eff.Exception (error, throw, throwException)
 import Control.Monad.Eff.Ref (Ref, modifyRef, writeRef, readRef, newRef)
+import Control.Monad.Eff.Unsafe (unsafeCoerceEff)
 import Control.Monad.Rec.Class (Step(..), tailRecM)
 
 import Data.List ((:))
@@ -196,8 +198,9 @@ runUI renderSpec component i = do
     -> Eff (HalogenEffects eff) (RenderStateX r eff)
   renderChild lchs handler mkOrdBox childrenInRef childrenOutRef =
     unComponentSlot \p ctor input inputQuery outputQuery prjQuery -> do
+      let ordP = mkOrdBox p
       childrenIn <- readRef childrenInRef
-      var <- case M.pop (mkOrdBox p) childrenIn of
+      var <- case M.pop ordP childrenIn of
         Just (Tuple existing childrenIn') -> do
           writeRef childrenInRef childrenIn'
           for_ (inputQuery input) \q -> do
@@ -206,7 +209,11 @@ runUI renderSpec component i = do
           pure existing
         Nothing ->
           runComponent lchs (maybe (pure unit) handler <<< outputQuery) input prjQuery ctor
-      modifyRef childrenOutRef (M.insert (mkOrdBox p) var)
+      isDuplicate <- M.member ordP <$> readRef childrenOutRef
+      when isDuplicate
+        $ unsafeCoerceEff
+        $ warn "Halogen: Duplicate slot address was detected during rendering, unexpected results may occur"
+      modifyRef childrenOutRef (M.insert ordP var)
       readRef var >>= renderStateX case _ of
         Nothing -> throw "Halogen internal error: child was not initialized in renderChild"
         Just r -> pure (renderSpec.renderChild r)
