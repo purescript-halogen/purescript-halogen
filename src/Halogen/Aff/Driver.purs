@@ -136,7 +136,7 @@ runUI renderSpec component i = do
     -> Eff (HalogenEffects eff) Unit
   render lchs var = readRef var >>= \(DriverState ds) -> do
     shouldProcessHandlers <- isNothing <$> readRef ds.pendingHandlers
-    unless shouldProcessHandlers $ writeRef ds.pendingHandlers (Just L.Nil)
+    when shouldProcessHandlers $ writeRef ds.pendingHandlers (Just L.Nil)
     writeRef ds.childrenOut M.empty
     writeRef ds.childrenIn ds.children
     let
