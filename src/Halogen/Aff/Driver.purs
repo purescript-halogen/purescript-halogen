@@ -20,13 +20,13 @@ import Data.List ((:))
 import Data.List as L
 import Data.Either (Either(..))
 import Data.Map as M
-import Data.Maybe (Maybe(..), maybe)
+import Data.Maybe (Maybe(..), maybe, isNothing)
 import Data.Traversable (for_, traverse_, sequence_)
 import Data.Tuple (Tuple(..))
 
 import Halogen (HalogenIO)
 import Halogen.Aff.Driver.Eval (eval, handleLifecycle, queuingHandler, parSequenceAff_)
-import Halogen.Aff.Driver.State (LifecycleHandlers, DriverState(..), DriverStateX, DriverStateRec, RenderStateX, initDriverState, renderStateX, renderStateX_, unDriverStateX)
+import Halogen.Aff.Driver.State (LifecycleHandlers, DriverState(..), DriverStateX, RenderStateX, initDriverState, renderStateX, renderStateX_, unDriverStateX)
 import Halogen.Aff.Effects (HalogenEffects)
 import Halogen.Component (Component, ComponentSlot, unComponent, unComponentSlot)
 import Halogen.Data.OrdBox (OrdBox)
@@ -134,31 +134,14 @@ runUI renderSpec component i = do
      . Ref (LifecycleHandlers eff)
     -> Ref (DriverState h r s f' z' g p i' o' eff)
     -> Eff (HalogenEffects eff) Unit
-  render lchs var = readRef var >>= \(DriverState ds) ->
-    flip tailRecM unit \_ ->
-      readRef ds.isRendering >>=
-        if _
-        then do
-          writeRef ds.needsRender true
-          pure $ Done unit
-        else do
-          render' lchs ds
-          needsRender <- readRef ds.needsRender
-          writeRef ds.needsRender false
-          pure if needsRender then Loop unit else Done unit
-
-  render'
-    :: forall s f' z' g p i' o'
-     . Ref (LifecycleHandlers eff)
-    -> DriverStateRec h r s f' z' g p i' o' eff
-    -> Eff (HalogenEffects eff) Unit
-  render' lchs ds = do
-    writeRef ds.isRendering true
+  render lchs var = readRef var >>= \(DriverState ds) -> do
+    shouldProcessHandlers <- isNothing <$> readRef ds.pendingHandlers
+    unless shouldProcessHandlers $ writeRef ds.pendingHandlers (Just L.Nil)
     writeRef ds.childrenOut M.empty
     writeRef ds.childrenIn ds.children
     let
       handler :: forall x. InputF x (z' x) -> Aff (HalogenEffects eff) Unit
-      handler = void <<< evalF ds.selfRef
+      handler = queuingHandler (void <<< evalF ds.selfRef) ds.pendingHandlers
       childHandler :: forall x. z' x -> Aff (HalogenEffects eff) Unit
       childHandler = queuingHandler (handler <<< Query) ds.pendingQueries
     rendering <-
@@ -186,14 +169,21 @@ runUI renderSpec component i = do
         , handler: ds'.handler
         , pendingQueries: ds'.pendingQueries
         , pendingOuts: ds'.pendingOuts
+        , pendingHandlers: ds'.pendingHandlers
         , prjQuery: ds'.prjQuery
         , fresh: ds'.fresh
         , subscriptions: ds'.subscriptions
         , lifecycleHandlers: ds'.lifecycleHandlers
-        , needsRender: ds'.needsRender
-        , isRendering: ds'.isRendering
         }
-    writeRef ds.isRendering false
+    when shouldProcessHandlers do
+      flip tailRecM unit \_ -> do
+        handlers <- readRef ds.pendingHandlers
+        writeRef ds.pendingHandlers (Just L.Nil)
+        maybe (pure unit) (handleAff <<< forkAll <<< L.reverse) handlers
+        mmore <- readRef ds.pendingHandlers
+        if maybe false L.null mmore
+          then writeRef ds.pendingHandlers Nothing $> Done unit
+          else pure $ Loop unit
 
   renderChild
     :: forall f' g p

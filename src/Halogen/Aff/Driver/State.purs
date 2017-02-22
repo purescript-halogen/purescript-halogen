@@ -63,13 +63,12 @@ type DriverStateRec h r s f z g p i o eff =
   , handler :: o -> Aff (HalogenEffects eff) Unit
   , pendingQueries :: Ref (Maybe (List (Aff (HalogenEffects eff) Unit)))
   , pendingOuts :: Ref (Maybe (List (Aff (HalogenEffects eff) Unit)))
+  , pendingHandlers :: Ref (Maybe (List (Aff (HalogenEffects eff) Unit)))
   , rendering :: Maybe (r s z g p o eff)
   , prjQuery :: forall x. f x -> Maybe (z x)
   , fresh :: Ref Int
   , subscriptions :: Ref (Maybe (M.Map Int (Aff (HalogenEffects eff) Unit)))
   , lifecycleHandlers :: Ref (LifecycleHandlers eff)
-  , needsRender :: Ref Boolean
-  , isRendering :: Ref Boolean
   }
 
 -- | A version of `DriverState` with the aspects relating to child components
@@ -144,10 +143,9 @@ initDriverState component input handler prjQuery lchs = do
   childrenOut <- newRef M.empty
   pendingQueries <- newRef (component.initializer $> Nil)
   pendingOuts <- newRef (Just Nil)
+  pendingHandlers <- newRef Nothing
   fresh <- newRef 0
   subscriptions <- newRef (Just M.empty)
-  needsRender <- newRef false
-  isRendering <- newRef false
   let
     ds =
       { component
@@ -160,13 +158,12 @@ initDriverState component input handler prjQuery lchs = do
       , handler
       , pendingQueries
       , pendingOuts
+      , pendingHandlers
       , rendering: Nothing
       , prjQuery
       , fresh
       , subscriptions
       , lifecycleHandlers: lchs
-      , needsRender
-      , isRendering
       }
   writeRef selfRef (DriverState ds)
   pure $ mkDriverStateXRef selfRef
