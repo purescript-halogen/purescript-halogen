@@ -44,6 +44,7 @@ module Halogen.HTML.Properties
   , autocomplete
   , autofocus
   , multiple
+  , pattern
 
   , autoplay
   , controls
@@ -219,6 +220,9 @@ autofocus = prop (PropName "autofocus")
 
 multiple :: forall r i. Boolean -> IProp (multiple :: Boolean | r) i
 multiple = prop (PropName "multiple")
+
+pattern :: forall r i. String -> IProp (pattern :: String | r) i
+pattern = prop (PropName "pattern")
 
 autoplay :: forall r i. Boolean -> IProp (autoplay :: Boolean | r) i
 autoplay = prop (PropName "autoplay")
