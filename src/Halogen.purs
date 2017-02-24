@@ -38,4 +38,4 @@ type HTML p i = C.HTML p (i Unit)
 
 -- | A specialised version of the `Halogen.HTML.Properties.IProp` type where
 -- | `i` is `* -> *` kinded to match the kind of a component query algebra.
-type IProp i = P.IProp (i Unit)
+type IProp r i = P.IProp r (i Unit)
