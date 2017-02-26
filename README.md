@@ -9,6 +9,8 @@ A declarative, type-safe UI library for PureScript.
 
 :warning: The guide and template project are currently being updated for the new release. There are plenty of [examples](examples/) to dig into though.
 
+If you're working on the latest current release (0.12.0), you can check out [the v0.12.0 tag in this repo](https://github.com/slamdata/purescript-halogen/tree/v0.12.0) to see the guide and examples from that release.
+
 ## Installation
 
 ```
