@@ -6,6 +6,8 @@ module Halogen.Component.ChildPath
 import Prelude hiding (compose)
 
 import Data.Lens (Prism', review, preview)
+import Data.Lens.Prism.Coproduct as PC
+import Data.Lens.Prism.Either as PE
 import Data.Maybe (Maybe)
 
 import Halogen.Data.Prism (type (<\/>), type (\/), _Coproduct1, _Coproduct10, _Coproduct2, _Coproduct3, _Coproduct4, _Coproduct5, _Coproduct6, _Coproduct7, _Coproduct8, _Coproduct9, _Either1, _Either10, _Either2, _Either3, _Either4, _Either5, _Either6, _Either7, _Either8, _Either9)
@@ -24,6 +26,14 @@ infixl 4 compose as :>
 -- | An identity `ChildPath`.
 cpI :: forall f p. ChildPath f f p p
 cpI = ChildPath id id
+
+-- | A `ChildPath` that goes to the left.
+cpL :: forall f g p q. ChildPath f (f <\/> g) p (p \/ q)
+cpL = ChildPath PC._Left PE._Left
+
+-- | A `ChildPath` that goes to the right.
+cpR :: forall f g p q. ChildPath f (g <\/> f) p (q \/ p)
+cpR = ChildPath PC._Right PE._Right
 
 -- | A `ChildPath` for the 1st component defined using a `Either.Nested` and
 -- | `Coproduct.Nested` representation for the sum.
