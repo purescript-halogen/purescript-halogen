@@ -5,12 +5,23 @@ import Data.Array as A
 import Data.Maybe (Maybe(..))
 import Halogen as H
 import Halogen.HTML as HH
+import Halogen.HTML.Events as HE
+import Halogen.HTML.Properties as HP
 
-type State = { messages :: Array String }
+type State =
+  { messages :: Array String
+  , inputText :: String
+  }
 
-data Query a = AddMessage String a
+data Query a
+  = AddMessage String a
+  | UpdateInputText String a
+  | SendMessage a
 
-component :: forall m. H.Component HH.HTML Query Unit Void m
+data Message
+  = OutputMessage String                 
+
+component :: forall m. H.Component HH.HTML Query Unit Message m
 component =
   H.component
     { initialState: const initialState
@@ -21,13 +32,35 @@ component =
   where
 
   initialState :: State
-  initialState = { messages: [] }
+  initialState = { messages: [] , inputText: "" }
 
   render :: State -> H.ComponentHTML Query
   render state =
-    HH.ol_ $ map (\msg -> HH.li_ [ HH.text msg ]) state.messages
+    HH.div_
+      [ HH.ol_ $ map (\msg -> HH.li_ [ HH.text msg ]) state.messages
+      , HH.input
+          [ HP.type_ HP.InputText
+          , HP.value (state.inputText)
+          , HE.onValueInput (HE.input UpdateInputText)
+          ]
+      , HH.button
+          [ HE.onClick (HE.input_ SendMessage) ]
+          [ HH.text "Send Message" ]
+      ]
 
-  eval :: Query ~> H.ComponentDSL State Query Void m
+  eval :: Query ~> H.ComponentDSL State Query Message m
   eval (AddMessage msg next) = do
-    H.modify \st -> { messages: st.messages `A.snoc` msg }
+    let incomingMessage = "Received: " <> msg
+    H.modify \st -> st { messages = st.messages `A.snoc` incomingMessage }
+    pure next
+  eval (SendMessage next) = do
+    st <- H.get
+    let outgoingMessage = st.inputText
+    H.raise $ OutputMessage outgoingMessage
+    H.modify \st' -> st'
+      { messages = st'.messages `A.snoc` ("Sending: " <> outgoingMessage)
+      , inputText = "" }
+    pure next              
+  eval (UpdateInputText text next) = do
+    H.modify (_ { inputText = text })
     pure next
