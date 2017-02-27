@@ -198,11 +198,11 @@ CheckButtonState next -> do
   pure next
 ```
 
-As it happens the `buttonState` we're storing in the container component is `Maybe Boolean`, so we didn't have to do anything before storing it here. Often we'll need to handle the `Maybe` first however. A common pattern is to use the `Traversable` instance of `Maybe`, allowing us to write handlers like:
+As it happens the `buttonState` we're storing in the container component is `Maybe Boolean`, so we didn't have to do anything before storing it here. Often we'll need to handle the `Maybe` first however. A common pattern is to use the `Foldable` instance of `Maybe`, allowing us to write handlers like:
 
 ``` purescript
 CheckButtonState next -> do
-  H.query ButtonSlot (H.request Button.IsOn) >>= for_ \isOn ->
+  H.query ButtonSlot (H.request Button.IsOn) >>= traverse_ \isOn ->
     -- do something with `isOn :: Boolean`
     pure unit
   pure next
