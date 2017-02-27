@@ -328,7 +328,9 @@ This gives us a variety of displays, each with a different permutations of the p
 
 The need for multiple types of child component under a parent arises quite often, so Halogen has some tools to help with that.
 
-The first step in modifying a parent component to accept multiple types of children is to declare synonyms for the child queries and slots. We'll need a sum type in each case to represent the possibly query and slot types now.
+By "multiple types", an example would be where we have a component for the top level of an app, and inside that view we'd want a menu bar component, a current page view component, a dialog box component, etc. It's unlikely that all these elements would share the same query algebra, so we need a way of dealing with that.
+
+Our parent component only has one one type variable for the child component query algebra and one for the slot types, so how do we do this? By introducing sum types for the various child query algebra and slot types.
 
 It is possible to write your own sum types here, but Halogen offers some convenience functions that should suffice for most cases. We'll be using values from [`Data.Either.Nested`][Data.Either.Nested] for the slot types and [`Data.Functor.Coproduct.Nested`][Data.Functor.Coproduct.Nested] for the query types:
 
@@ -368,11 +370,11 @@ render state = HH.div_
   ]
 ```
 
-Note in the render function we're now using the [`slot'`][Halogen.HTML.slot'] function rather than `slot`, and each one is passed a `cpN` function, where `N` corresponds to the position of the query/slot in the sum for that type of child component.
+Now we're using the [`slot'`][Halogen.HTML.slot'] function we also pass a `cpN` value through. The `N` corresponds to the position of the query/slot in the sum for that type of child component.
 
 These `cpN` functions are provided in [`Halogen.Component.ChildPath`][Halogen.Component.ChildPath] and range from [`cp1`][Halogen.Component.ChildPath.cp1] to [`cp10`][Halogen.Component.ChildPath.cp10].
 
-It's important to note that we want to use `Either2` and `Coproduct2` rather than `Either` and `Coproduct` when there are only two types of child component. Even though they have the same arity, their structure is a little different. There is an alternative notation for these nested types that makes the differences more apparent:
+It's important to note that we want to use [`Either2`](Data.Either.Nested.Either2) and [`Coproduct2`](Data.Functor.Coproduct.Nested.Coproduct2) rather than `Either` and `Coproduct` when there are only two types of child component. Even though they have the same arity, their structure is a little different. There is an alternative notation for these nested types that makes the differences more apparent:
 
 ``` purescript
 type ChildQuery = CA.Query <\/> CB.Query <\/> CC.Query <\/> Const Void
@@ -383,7 +385,7 @@ These definitions are identical to those we saw earlier, but taking advantage of
 
 ### Querying
 
-As with `slot` being replaced with `slot' cpN` in the rendering, we use [`query' cpN`][Halogen.Query.query'] instead of `query` in `eval`:
+As with `slot` being replaced with `slot'` in the rendering, we use [`query'`][Halogen.Query.query'] with a `cpN` value instead of `query` in `eval`:
 
 ``` purescript
 eval :: Query ~> H.ParentDSL State Query ChildQuery ChildSlot Void m
@@ -428,14 +430,16 @@ This way you don't need to remember the index of each child when writing the ren
 
 ### Custom `ChildPath` definitions
 
-If for some reason 10 variations in child component isn't enough(!), it is possible to write your own sum types and corresponding `ChildPath` values. If you have a `Coproduct` / `Either` based setup then it is possible to construct your own paths with the [`cpL`][Halogen.Component.ChildPath.cpL] and [`cpR`][Halogen.Component.ChildPath.cpR] functions and the [`:>`][Halogen.Component.ChildPath.compose] operator that composes `ChildPath`s. For example:
+If for some reason 10 variations in child component isn't enough, it is possible to write your own sum types and corresponding `ChildPath` values. If you have a `Coproduct` / `Either` based setup then it is possible to construct your own paths with the [`cpL`][Halogen.Component.ChildPath.cpL] and [`cpR`][Halogen.Component.ChildPath.cpR] functions and the [`:>`][Halogen.Component.ChildPath.compose] operator that composes `ChildPath`s. For example:
 
 ``` purescript
 myPath :: forall f g h i p q r s. ChildPath f (Coproduct (Coproduct (Coproduct g f) h) i) p (Either (Either (Either q p) r) s)
 myPath = cpL :> cpL :> cpR
 ```
 
-These functions are also useful if your sum doesn't follow the default nesting order for some reason, as the above path illustrates. `cp2` is equivalent to `cpR :> cpL`, `cp3` is equivalent to `cpR :> cpR :> cpL`, and so on.
+These functions are also useful if your sum doesn't follow the default nesting order for some reason, as the above path illustrates.
+
+When using `cpL` and `cpR`, `cp2` is equivalent to `cpR :> cpL`, `cp3` is equivalent to `cpR :> cpR :> cpL`, and so on.
 
 If you want to define your own sum types entirely, then this is also possible, as a `ChildPath` is just a container of two [`Prism'`][Data.Lens.Types.Prism'] values from [`purescript-profunctor-lenses`][purescript-profunctor-lenses]. The first prism is for the query algebra, the second for the slot address. Lenses are a bit beyond the scope of this guide, but essentially you can build these prisms using the [`prism'`][Data.Lens.Prism.prism'] function.
 
@@ -444,8 +448,10 @@ You've made it to the end of the guide, as it stands... happy Halogen-ing!
 [purescript-profunctor-lenses]: https://github.com/purescript-contrib/purescript-profunctor-lenses
 
 [Data.Either.Nested]: https://pursuit.purescript.org/packages/purescript-either/2.1.0/docs/Data.Either.Nested "Data.Either.Nested"
+[Data.Either.Nested.Either2]: https://pursuit.purescript.org/packages/purescript-either/2.1.0/docs/Data.Either.Nested#t:Either2 "Data.Either.Nested.Either2"
 [Data.Functor.Coproduct.Coproduct]: https://pursuit.purescript.org/packages/purescript-functors/1.1.0/docs/Data.Functor.Coproduct#t:Coproduct "Data.Functor.Coproduct.Coproduct"
 [Data.Functor.Coproduct.Nested]: https://pursuit.purescript.org/packages/purescript-functors/1.1.0/docs/Data.Functor.Coproduct.Nested "Data.Functor.Coproduct.Nested"
+[Data.Functor.Coproduct.Nested.Coproduct2]: https://pursuit.purescript.org/packages/purescript-functors/1.1.0/docs/Data.Functor.Coproduct.Nested#t:Coproduct2 "Data.Functor.Coproduct.Nested.Coproduct2"
 [Data.Lens.Prism.prism']: https://pursuit.purescript.org/packages/purescript-profunctor-lenses/2.6.0/docs/Data.Lens.Prism#v:prism' "Data.Lens.Prism.prism'"
 [Data.Lens.Types.Prism']: https://pursuit.purescript.org/packages/purescript-profunctor-lenses/2.6.0/docs/Data.Lens.Types#t:Prism' "Data.Lens.Types.Prism'"
 [Halogen.Component.ChildPath.ChildPath]: https://pursuit.purescript.org/packages/purescript-halogen/1.0.0/docs/Halogen.Component.ChildPath#t:ChildPath "Halogen.Component.ChildPath.ChildPath"
