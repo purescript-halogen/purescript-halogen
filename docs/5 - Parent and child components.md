@@ -2,34 +2,6 @@
 
 So far the examples have only concerned a single component, however this will only take us so far before the state and query algebra becomes unmanageable. The answer is to break our app into components that can be composed.
 
-A component that can contain other components is constructed with the [`parentComponent`](Halogen.Component.parentComponent) function:
-
-``` purescript
-type ParentComponentSpec h s f g p i o m =
-  { initialState :: i -> s
-  , render :: s -> h (ComponentSlot h g m p (f Unit)) (f Unit)
-  , eval :: f ~> HalogenM s f g p o m
-  , receiver :: i -> Maybe (f Unit)
-  }
-
-parentComponent
-  :: forall h s f g p i o m
-   . Ord p
-  => ParentComponentSpec h s f g p i o m
-  -> Component h f i o m
-```
-
-There are a lot of type variables here, but only `g` and `p` are new on top of the [variables used in `ComponentSpec`](2 - Defining a component.md#putting-it-all-together "Defining a component - Putting it all together"). Here's a breakdown of what they all mean:
-
-- `h` is the type of value that will be rendered by the parent component.
-- `s` is the parent component's state type.
-- `f` is the parent component's query algebra.
-- `g` is the query algebra for child components.
-- `p` is the "slot address" for child components.
-- `i` is the type for the parent component's input values.
-- `o` is the type for the parent component's output messages.
-- `m` is a monad used for non-component-state effects.
-
 Let's take a look at a component that uses our button component as a child:
 
 ``` purescript
@@ -96,15 +68,17 @@ component =
       pure next
 ```
 
+A runnable version of this is available in the [`components` example](../examples/components/).
+
 This is a somewhat silly example of a container wrapping a button. It counts counts how many times the button has been toggled, and when asked it can check whether the button is on or off. In reality the "ask" part of this would be unnecessary as the container could use the message from the button to track the state changes, but doing this gives us an excuse to illustrate a request query.
 
 ## Slot address
 
-The first new element we see defined for this component is the `Slot` type, which corresponds to the `p` ("slot address") parameter of the component. We use values of this type as ids for the child components.
+The first new element we see defined for this component is the `Slot` type. We use values of this type as the IDs for child components in the rendered HTML. "Slot", "slot address", "slot id" are all used interchangeably to refer to these values.
 
 We're only using one button in the container in this example, so the type only admits one value. Given that, `Unit` would have been an equally suitable option to use here.
 
-If a container has a list of items then this slot type could be based on an `Int` index or `String` name, or some other kind of id value.
+When a parent component is being used for displaying a list of items then this slot type could be an `Int` index for the items, or perhaps some `String` key value that each item has.
 
 The type we use must implement instances for the `Ord` and `Eq` classes, but we can make the compiler derive these instances for us:
 
@@ -125,7 +99,12 @@ render :: s -> H.ComponentHTML f
 render :: s -> H.ParentHTML f g p m
 ```
 
-These type variables have the same meaning as those we listed earlier.
+- `f` is the query algebra for the parent component
+- `g` is the query algebra for child components
+- `p` is the slot address type
+- `m` is the effect monad
+
+It may seem a little odd that we have to include `m` here when rendering, since no side effects can occur here. We do need evidence that both parent and child components share the same effect monad type for things to work out though.
 
 When we want to render a child component in the HTML we use the [`slot`]() function:
 
@@ -179,7 +158,7 @@ The change in component and handler would have no effect. The child component th
 
 Changing the slot address value will cause the original component to be destroyed and a new one will be initialized in its place with a fresh state.
 
-Changing input values will be covered in a moment, after querying.
+Changing input values will be covered later in this chapter.
 
 ## Querying
 
@@ -195,6 +174,8 @@ eval :: f ~> H.ParentDSL s f g p o m
 
 [`ParentDSL`][Halogen.Component.ParentDSL] is just a name synonym for [`HalogenM`][Halogen.Query.HalogenM], but provided for symmetry with `ComponentHTML` becoming `ParentHTML`.
 
+As with the `render` function we looked at earlier, the additional `g` and `p` parameters are the query algebra for child components and the slot address type.
+
 Now we have a child component we can query it during `eval`, using the aptly named [`query`][Halogen.Query.query]:
 
 ``` purescript
@@ -206,7 +187,7 @@ query
   -> HalogenM s f g p o m (Maybe a)
 ```
 
-We pass it the slot address value for the component we want to query, and the query to send to it. The result here uses a `Maybe` as we have no guarantee that the slot we're querying is present in the current rendered HTML.
+We pass it the slot address value for the component we want to query, and the query to send to it. The result here uses a `Maybe` as we have no guarantee that the child component we're querying is present in the current rendered HTML.
 
 In our example we use `query` to check what the current button state is when evaluating `CheckButtonState` for the parent:
 
@@ -240,6 +221,38 @@ queryAll
 This sends the same query to every child, and then gives us the result back as a map where the keys are slot addresses and the values are the query result for that child.
 
 That covers it for basic parent/child setups: the only differences between standalone and parent components are the need to define a slot type, some type synonyms with extra parameters, and the ability to query children.
+
+## Component definition
+
+A component that can contain other components is constructed with the [`parentComponent`](Halogen.Component.parentComponent) function:
+
+``` purescript
+type ParentComponentSpec h s f g p i o m =
+  { initialState :: i -> s
+  , render :: s -> h (ComponentSlot h g m p (f Unit)) (f Unit)
+  , eval :: f ~> HalogenM s f g p o m
+  , receiver :: i -> Maybe (f Unit)
+  }
+
+parentComponent
+  :: forall h s f g p i o m
+   . Ord p
+  => ParentComponentSpec h s f g p i o m
+  -> Component h f i o m
+```
+
+The type signature is a little horrifying with all those type variables, but we've already encountered all of them at this point. It's rare to actually use the `ParentComponentSpec` type too - it's just there as a way of bundling up the arguments we want to pass to `parentComponent`, usually we'd pass the record in immediately.
+
+Nevertheless, here's one more reminder of what they all mean:
+
+- `h` is the type of value that will be rendered by the parent component (`HH.HTML` for "normal" use).
+- `s` is the parent component's state type.
+- `f` is the parent component's query algebra.
+- `g` is the query algebra for child components.
+- `p` is the slot address type for child components.
+- `i` is the type for the parent component's input values.
+- `o` is the type for the parent component's output messages.
+- `m` is a monad used for non-component-state effects.
 
 ## Input values
 
