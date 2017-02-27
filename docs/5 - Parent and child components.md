@@ -1,5 +1,4 @@
 # Parent and child components
-# Parent and child components
 
 So far the examples have only concerned a single component, however this will only take us so far before the state and query algebra becomes unmanageable. The answer is to break our app into components that can be composed.
 
