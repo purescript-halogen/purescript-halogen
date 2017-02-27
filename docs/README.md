@@ -20,3 +20,13 @@
   - [`runUI`](4 - Running a component.md#runui)
   - [`Aff`-based utility functions](4 - Running a component.md#aff-based-utility-functions)
 5. [Parent and child components](5 - Parent and child components.md)
+  - [Slot addresses](5 - Parent and child components.md#slot-addresses)
+  - [Rendering](5 - Parent and child components.md#rendering)
+  - [Querying](5 - Parent and child components.md#querying)
+  - [Input values](5 - Parent and child components.md#input-values)
+  - [Multiple types of child component](5 - Parent and child components.md#multiple-types-of-child-component)
+5. Component lifecycle hooks*
+6. Event sources*
+7. Non-`Aff` effect monads*
+
+\* Coming soon... ish.
