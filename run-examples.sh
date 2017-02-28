@@ -1,15 +1,15 @@
-npm run example-ace
-npm run example-basic
-npm run example-components
-npm run example-components-inputs
-npm run example-components-multitype
-npm run example-driver-io
-npm run example-driver-routing
-npm run example-driver-websockets
-npm run example-effects-aff-ajax
-npm run example-effects-eff-random
-npm run example-higher-order-components
-npm run example-interpret
-npm run example-keyboard-input
-npm run example-lifecycle
-npm run example-todo
+npm run -s example-ace
+npm run -s example-basic
+npm run -s example-components
+npm run -s example-components-inputs
+npm run -s example-components-multitype
+npm run -s example-driver-io
+npm run -s example-driver-routing
+npm run -s example-driver-websockets
+npm run -s example-effects-aff-ajax
+npm run -s example-effects-eff-random
+npm run -s example-higher-order-components
+npm run -s example-interpret
+npm run -s example-keyboard-input
+npm run -s example-lifecycle
+npm run -s example-todo

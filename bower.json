@@ -28,8 +28,8 @@
     "purescript-aff": "^2.0.3",
     "purescript-const": "^2.0.0",
     "purescript-coroutines": "^3.1.0",
-    "purescript-dom-indexed": "^1.0.0",
     "purescript-dom": "^3.5.1",
+    "purescript-dom-indexed": "^1.0.0",
     "purescript-foreign": "^3.2.0",
     "purescript-fork": "^1.1.0",
     "purescript-free": "^3.4.0",
@@ -39,9 +39,16 @@
     "purescript-media-types": "^2.0.0",
     "purescript-nullable": "^2.0.0",
     "purescript-parallel": "^2.1.0",
-    "purescript-profunctor-lenses": "^2.6.0",
     "purescript-profunctor": "^2.0.0",
+    "purescript-profunctor-lenses": "^2.6.0",
     "purescript-unsafe-coerce": "^2.0.0",
     "purescript-unsafe-reference": "^1.0.0"
+  },
+  "devDependencies": {
+    "purescript-ace": "^3.0.0",
+    "purescript-aff-coroutines": "^4.0.0",
+    "purescript-affjax": "^3.0.2",
+    "purescript-random": "^2.0.0",
+    "purescript-websocket-simple": "^1.0.1"
   }
 }
