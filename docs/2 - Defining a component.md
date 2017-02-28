@@ -262,7 +262,7 @@ As this component does not use the input value we use a `const initialState` and
 
 When a component does use inputs, we can construct the initial state from the input value the component is provided with. The `receiver` is a way of mapping input values to queries. As mentioned earlier, input values will be covered properly in [a later chapter](5 - Parent and child components.md "Parent and child components").
 
-Now we pass our component spec to [`component`][Halogen.Component.component], and we're done:
+Now we pass our component spec to [`component`][Halogen.Component.component-1], and we're done:
 
 ``` purescript
 component :: forall h s f o m. ComponentSpec h s f o m -> Component h f o m
@@ -280,7 +280,7 @@ Next up, let's take a look at how to create a component that can [do something e
 [Data.NaturalTransformation]: https://pursuit.purescript.org/packages/purescript-prelude/2.1.0/docs/Data.NaturalTransformation "Data.NaturalTransformation"
 [Data.Void.Void]: https://pursuit.purescript.org/packages/purescript-prelude/2.1.0/docs/Data.Void#t:Void "Data.Void.Void"
 [Data.Unit.Unit]: https://pursuit.purescript.org/packages/purescript-prelude/2.1.0/docs/Data.Unit#t:Unit "Data.Unit.Unit"
-[Halogen.Component.component]: https://pursuit.purescript.org/packages/purescript-halogen/1.0.0/docs/Halogen.Component#v:component "Halogen.Component.component"
+[Halogen.Component.component-1]: https://pursuit.purescript.org/packages/purescript-halogen/1.0.0/docs/Halogen.Component#v:component "Halogen.Component.component"
 [Halogen.Component.Component]: https://pursuit.purescript.org/packages/purescript-halogen/1.0.0/docs/Halogen.Component#t:Component "Halogen.Component.Component"
 [Halogen.Component.ComponentHTML]: https://pursuit.purescript.org/packages/purescript-halogen/1.0.0/docs/Halogen.Component#t:ComponentHTML "Halogen.Component.ComponentHTML"
 [Halogen.Component.ComponentSpec]: https://pursuit.purescript.org/packages/purescript-halogen/1.0.0/docs/Halogen.Component#t:ComponentSpec "Halogen.Component.ComponentSpec"

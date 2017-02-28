@@ -108,7 +108,7 @@ render :: s -> H.ParentHTML f g p m
 
 It may seem a little odd that we have to include `m` here when rendering, since no side effects can occur here. We do need evidence that both parent and child components share the same effect monad type for things to work out though.
 
-When we want to render a child component in the HTML we use the [`slot`]() function:
+When we want to render a child component in the HTML we use the [`slot`][Halogen.HTML.slot] function:
 
 ``` purescript
 slot
@@ -140,7 +140,7 @@ We're using:
 - `unit` for the input value (that's all the button component expects)
 - a mapping to the `HandleButton` query for our parent component as the message handler.
 
-The handler function take a message value from the child component's and translates it into a query on the parent component. We can filter the messages by using the `Maybe` return type, so if we're not interested in what the child has to say we can just use `const Nothing`. If the child outputs no messages, using `Void` as its message type, we can use [`absurd`](Data.Void.absurd).
+The handler function take a message value from the child component's and translates it into a query on the parent component. We can filter the messages by using the `Maybe` return type, so if we're not interested in what the child has to say we can just use `const Nothing`. If the child outputs no messages, using `Void` as its message type, we can use [`absurd`][Data.Void.absurd].
 
 Care should be taken to avoid using the same slot address for multiple child components. The resulting behaviour is undefined... but almost certainly won't be good. If duplicate slot values are detected a warning message will be logged in the browser console.
 
@@ -226,7 +226,7 @@ That covers it for basic parent/child setups: the only differences between stand
 
 ## Component definition
 
-A component that can contain other components is constructed with the [`parentComponent`](Halogen.Component.parentComponent) function:
+A component that can contain other components is constructed with the [`parentComponent`][Halogen.Component.parentComponent] function:
 
 ``` purescript
 type ParentComponentSpec h s f g p i o m =
@@ -378,7 +378,7 @@ Now we're using the [`slot'`][Halogen.HTML.slot'] function we also pass a `cpN` 
 
 These `cpN` functions are provided in [`Halogen.Component.ChildPath`][Halogen.Component.ChildPath] and range from [`cp1`][Halogen.Component.ChildPath.cp1] to [`cp10`][Halogen.Component.ChildPath.cp10].
 
-It's important to note that we want to use [`Either2`](Data.Either.Nested.Either2) and [`Coproduct2`](Data.Functor.Coproduct.Nested.Coproduct2) rather than `Either` and `Coproduct` when there are only two types of child component. Even though they have the same arity, their structure is a little different. There is an alternative notation for these nested types that makes the differences more apparent:
+It's important to note that we want to use [`Either2`][Data.Either.Nested.Either2] and [`Coproduct2`][Data.Functor.Coproduct.Nested.Coproduct2] rather than `Either` and `Coproduct` when there are only two types of child component. Even though they have the same arity, their structure is a little different. There is an alternative notation for these nested types that makes the differences more apparent:
 
 ``` purescript
 type ChildQuery = CA.Query <\/> CB.Query <\/> CC.Query <\/> Const Void
@@ -475,3 +475,4 @@ You've made it to the end of the guide, as it stands... happy Halogen-ing!
 [Halogen.Query.query]: https://pursuit.purescript.org/packages/purescript-halogen/1.0.0/docs/Halogen.Query#v:query "Halogen.Query.query"
 [Halogen.Query.queryAll']: https://pursuit.purescript.org/packages/purescript-halogen/1.0.0/docs/Halogen.Query#v:queryAll' "Halogen.Query.queryAll'"
 [Halogen.Query.queryAll]: https://pursuit.purescript.org/packages/purescript-halogen/1.0.0/docs/Halogen.Query#v:queryAll "Halogen.Query.queryAll"
+[Data.Void.absurd]: https://pursuit.purescript.org/packages/purescript-prelude/2.4.0/docs/Data.Void#v:absurd "Data.Void.absurd"
