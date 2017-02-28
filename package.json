@@ -2,7 +2,7 @@
   "private": true,
   "scripts": {
     "clean": "rimraf output && rimraf .pulp-cache",
-    "build": "eslint src && pulp build -- --censor-lib --strict",
+    "build": "pulp build -- --censor-lib --strict",
     "test": "pulp build -I test -- --censor-lib --strict",
     "example-ace": "bower link && cd examples/ace && bower link purescript-halogen && bower install && npm run build",
     "example-basic": "bower link && cd examples/basic && bower link purescript-halogen && bower install && npm run build",
@@ -21,7 +21,6 @@
     "example-todo": "bower link && cd examples/todo && bower link purescript-halogen && bower install && npm run build"
   },
   "devDependencies": {
-    "eslint": "^3.10.2",
     "pulp": "^10.0.0",
     "purescript": "^0.10.7",
     "purescript-psa": "^0.4.0",
