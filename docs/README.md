@@ -20,14 +20,20 @@
   - [`runUI`](4 - Running a component.md#runui)
   - [`Aff`-based utility functions](4 - Running a component.md#aff-based-utility-functions)
 5. [Parent and child components](5 - Parent and child components.md)
-  - [Slot addresses](5 - Parent and child components.md#slot-addresses)
+  - [Slot address](5 - Parent and child components.md#slot-address)
   - [Rendering](5 - Parent and child components.md#rendering)
   - [Querying](5 - Parent and child components.md#querying)
   - [Component definition](5 - Parent and child components.md#component-definition)
   - [Input values](5 - Parent and child components.md#input-values)
   - [Multiple types of child component](5 - Parent and child components.md#multiple-types-of-child-component)
+    - [Rendering](5 - Parent and child components.md#rendering-1)
+    - [Querying](5 - Parent and child components.md#querying-1)
+    - [Custom `ChildPath` definitions](5 - Parent and child components.md#custom-childpath-definitions)
 5. Component lifecycle hooks*
-6. Event sources*
-7. Non-`Aff` effect monads*
+6. Event sources**
+7. Non-`Aff` effect monads**
 
-\* Coming soon... ish.
+\* Coming soon...
+\** ...ish
+
+**Note:** Please feel free to open issues if you encounter things in the guide that are confusing or need further explanation!
