@@ -57,6 +57,8 @@ myButton =
       pure (reply state)
 ```
 
+A runnable version of this is available in the [`basic` example](../examples/basic/).
+
 This is a component for a button that displays its current state as the label, and is toggled when clicked by a user. The rest of this chapter will break down the elements involved here.
 
 ## State

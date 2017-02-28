@@ -341,6 +341,8 @@ type ChildQuery = Coproduct3 CA.Query CB.Query CC.Query
 type ChildSlot = Either3 Unit Unit Unit
 ```
 
+This and most of the following code snippets are based on the [`components-multitype` example](../examples/components-multitype/).
+
 If you haven't encountered [`Coproduct`][Data.Functor.Coproduct.Coproduct] before, it can be thought of as "either for type constructors" - it expects types of kind `Type -> Type` rather than `Type` for its parameters.
 
 Each position in the nested `Either` should correspond to a position in the nested `Coproduct`. Here we are just using `Unit` for each of the slots since the example only uses one instance of each child component, but in other cases it might look something like:

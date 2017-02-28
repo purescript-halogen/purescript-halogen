@@ -61,6 +61,8 @@ ui =
       pure next
 ```
 
+A runnable version of this is available in the [`effects-eff-random` example](../examples/effects-eff-random/).
+
 To be able to use [`random`][Control.Monad.Eff.Random.random], we've populated the `m` type variable with an `Aff`. This needs applying to both the component and `eval` function:
 
 ``` purescript
@@ -162,6 +164,8 @@ ui =
       pure next
 
 ```
+
+A runnable version of this is available in the [`effects-aff-ajax` example](../examples/effects-aff-ajax/).
 
 As with the `Eff`-based example, we've populated the `m` type variables with `Aff`. This time we're going to rely on the [`MonadAff`][Control.Monad.Aff.Class.MonadAff] instance and use [`liftAff`][Control.Monad.Aff.Class.liftAff]:
 
