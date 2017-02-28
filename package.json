@@ -23,7 +23,7 @@
   "devDependencies": {
     "eslint": "^3.10.2",
     "pulp": "^10.0.0",
-    "purescript": "^0.10.5",
+    "purescript": "^0.10.7",
     "purescript-psa": "^0.4.0",
     "rimraf": "^2.5.4"
   }
