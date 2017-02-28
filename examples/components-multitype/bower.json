@@ -1,0 +1,7 @@
+{
+  "name": "components-multitype",
+  "private": true,
+  "dependencies": {
+    "purescript-halogen": "*"
+  }
+}

@@ -16,9 +16,9 @@ type State =
   , buttonState :: Maybe Boolean
   }
 
-data Slot = Button
-derive instance eqTickSlot :: Eq Slot
-derive instance ordTickSlot :: Ord Slot
+data Slot = ButtonSlot
+derive instance eqButtonSlot :: Eq Slot
+derive instance ordButtonSlot :: Ord Slot
 
 component :: forall m. H.Component HH.HTML Query Unit Void m
 component =
@@ -38,7 +38,7 @@ component =
   render :: State -> H.ParentHTML Query Button.Query Slot m
   render state =
     HH.div_
-      [ HH.slot Button Button.myButton unit (HE.input HandleButton)
+      [ HH.slot ButtonSlot Button.myButton unit (HE.input HandleButton)
       , HH.p_
           [ HH.text ("Button has been toggled " <> show state.toggleCount <> " time(s)") ]
       , HH.p_
@@ -58,6 +58,6 @@ component =
       H.modify (\st -> st { toggleCount = st.toggleCount + 1 })
       pure next
     CheckButtonState next -> do
-      buttonState <- H.query Button $ H.request Button.IsOn
+      buttonState <- H.query ButtonSlot $ H.request Button.IsOn
       H.modify (_ { buttonState = buttonState })
       pure next

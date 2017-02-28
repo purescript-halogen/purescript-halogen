@@ -8,7 +8,7 @@ From the root of the Halogen project:
 
 ```
 $ npm install
-$ npm run example-multi-component
+$ npm run example-components-multitype
 ```
 
 Or from the current directory:
@@ -19,4 +19,4 @@ $ bower install
 $ npm run build
 ```
 
-The code will be built as `example.js` in the `examples/multi-component/dist` directory within the example, runnable by opening the corresponding `index.html`.
+The code will be built as `example.js` in the `examples-components-multitype/dist` directory within the example, runnable by opening the corresponding `index.html`.

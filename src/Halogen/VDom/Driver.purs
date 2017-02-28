@@ -31,6 +31,8 @@ import Halogen.Query.InputF (InputF)
 import Halogen.VDom as V
 import Halogen.VDom.DOM.Prop as VP
 
+import Unsafe.Reference (unsafeRefEq)
+
 type VHTML f g p eff =
   V.VDom (Array (Prop (InputF Unit (f Unit)))) (ComponentSlot HTML g (Aff (HalogenEffects eff)) p (f Unit))
 
@@ -128,7 +130,7 @@ renderSpec document container = { render, renderChild: id, removeChild }
         nextSib <- DOM.nextSibling node
         machine' <- V.step machine vdom
         let newNode = V.extract machine'
-        when (not nodeRefEq node newNode) do
+        when (not unsafeRefEq node newNode) do
           substInParent newNode (toMaybe nextSib) (toMaybe parent)
         pure $ RenderState { machine: machine', node: newNode, renderChildRef }
 
@@ -148,5 +150,3 @@ substInParent
 substInParent newNode (Just sib) (Just pn) = void $ DOM.insertBefore newNode sib pn
 substInParent newNode Nothing (Just pn) = void $ DOM.appendChild newNode pn
 substInParent _ _ _ = pure unit
-
-foreign import nodeRefEq :: DOM.Node -> DOM.Node -> Boolean

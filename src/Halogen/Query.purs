@@ -1,5 +1,5 @@
 -- | Functions and types used to describe the `HalogenF` algebra used in a
--- | component's `eval` and `peek` functions.
+-- | component's `eval` function.
 module Halogen.Query
   ( Action
   , action

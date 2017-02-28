@@ -1,6 +1,6 @@
 ## TODO list
 
-This example illustrates a basic TODO list, taking advantage of parent and child components, and the `peek` function.
+This example illustrates a basic TODO list, taking advantage of parent and child components, querying and message listening.
 
 ### Building
 

@@ -117,7 +117,6 @@ Now we know how to build simple components and run them, we can take a look at [
 [example-driver-websockets]: ../examples/driver-websockets "WebSockets example"
 [purescript-aff]: https://pursuit.purescript.org/packages/purescript-aff "purescript-aff"
 [purescript-coroutines]: https://pursuit.purescript.org/packages/purescript-coroutines "purescript-coroutines"
-[virtual-dom]: https://github.com/Matt-Esch/virtual-dom
 
 [Control.Coroutine.consumer]: https://pursuit.purescript.org/packages/purescript-coroutines/3.1.0/docs/Control.Coroutine#v:consumer "Control.Coroutine.consumer"
 [Halogen.Aff.Effects.HalogenEffects]: https://pursuit.purescript.org/packages/purescript-halogen/1.0.0/docs/Halogen.Aff.Effects#t:HalogenEffects "Halogen.Aff.Effects.HalogenEffects"
