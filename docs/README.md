@@ -23,6 +23,7 @@
   - [Slot addresses](5 - Parent and child components.md#slot-addresses)
   - [Rendering](5 - Parent and child components.md#rendering)
   - [Querying](5 - Parent and child components.md#querying)
+  - [Component definition](5 - Parent and child components.md#component-definition)
   - [Input values](5 - Parent and child components.md#input-values)
   - [Multiple types of child component](5 - Parent and child components.md#multiple-types-of-child-component)
 5. Component lifecycle hooks*
