@@ -11,7 +11,7 @@ A declarative, type-safe UI library for PureScript.
 - Take a look at some of the examples:
   - [A basic button](examples/basic/)
   - [AJAX requests](examples/effects-aff-ajax/)
-  - [Routing with `purescript-routing`](examples/driver-routing/)
+  - [Rudimentary routing](examples/driver-routing/)
   - [TODO list](examples/todo/)
   - [Ace editor](examples/ace/) (external component integration)
 - Clone the [template project](https://github.com/slamdata/purescript-halogen-template) and give it a try!
