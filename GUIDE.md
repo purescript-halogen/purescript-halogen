@@ -1,3 +1,3 @@
-# The Halogen guide
+# :warning: The guide has moved! :warning:
 
-The guide is currently being reworked for the new release. For now, take a look at the [examples](examples/).
+Please update your links: https://github.com/slamdata/purescript-halogen/tree/master/docs
