@@ -72,6 +72,8 @@ A runnable version of this is available in the [`components` example](../example
 
 This is a somewhat silly example of a container wrapping a button. It counts counts how many times the button has been toggled, and when asked it can check whether the button is on or off. In reality the "ask" part of this would be unnecessary as the container could use the message from the button to track the state changes, but doing this gives us an excuse to illustrate a request query.
 
+As you can see, things are much the same as with a standalone component, only we're using the `parentComponent` constructor now and there a some new types involved.
+
 ## Slot address
 
 The first new element we see defined for this component is the `Slot` type. We use values of this type as the IDs for child components in the rendered HTML. "Slot", "slot address", "slot id" are all used interchangeably to refer to these values.
