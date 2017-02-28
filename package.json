@@ -5,6 +5,7 @@
     "build": "eslint src && pulp build -- --censor-lib --strict",
     "test": "pulp build -I test -- --censor-lib --strict",
     "example-ace": "bower link && cd examples/ace && bower link purescript-halogen && bower install && npm run build",
+    "example-basic": "bower link && cd examples/basic && bower link purescript-halogen && bower install && npm run build",
     "example-components": "bower link && cd examples/components && bower link purescript-halogen && bower install && npm run build",
     "example-components-inputs": "bower link && cd examples/components-inputs && bower link purescript-halogen && bower install && npm run build",
     "example-components-multitype": "bower link && cd examples/components-multitype && bower link purescript-halogen && bower install && npm run build",

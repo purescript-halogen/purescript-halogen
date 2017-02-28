@@ -1,4 +1,5 @@
 npm run example-ace
+npm run example-basic
 npm run example-components
 npm run example-components-inputs
 npm run example-components-multitype

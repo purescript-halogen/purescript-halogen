@@ -1,0 +1,7 @@
+{
+  "name": "basic",
+  "private": true,
+  "dependencies": {
+    "purescript-halogen": "*"
+  }
+}
