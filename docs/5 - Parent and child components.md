@@ -70,7 +70,7 @@ component =
 
 A runnable version of this is available in the [`components` example](../examples/components/).
 
-This is a somewhat silly example of a container wrapping a button. It counts counts how many times the button has been toggled, and when asked it can check whether the button is on or off. In reality the "ask" part of this would be unnecessary as the container could use the message from the button to track the state changes, but doing this gives us an excuse to illustrate a request query.
+This is a somewhat silly example of a container wrapping a button. It counts how many times the button has been toggled, and when asked it can check whether the button is on or off. In reality the "ask" part of this would be unnecessary as the container could use the message from the button to track the state changes, but doing this gives us an excuse to illustrate a request query.
 
 As you can see, things are much the same as with a standalone component, only we're using the `parentComponent` constructor now and there a some new types involved.
 
