@@ -140,7 +140,7 @@ We're using:
 - `unit` for the input value (that's all the button component expects)
 - a mapping to the `HandleButton` query for our parent component as the message handler.
 
-The handler function take a message value from the child component's and translates it into a query on the parent component. We can filter the messages by using the `Maybe` return type, so if we're not interested in what the child has to say we can just use `const Nothing`. If the child outputs no messages, using `Void` as its message type, we can use [`absurd`][Data.Void.absurd].
+The handler function takes a message value from the child component's and translates it into a query on the parent component. We can filter the messages by using the `Maybe` return type, so if we're not interested in what the child has to say we can just use `const Nothing`. If the child outputs no messages, using `Void` as its message type, we can use [`absurd`][Data.Void.absurd].
 
 Care should be taken to avoid using the same slot address for multiple child components. The resulting behaviour is undefined... but almost certainly won't be good. If duplicate slot values are detected a warning message will be logged in the browser console.
 
