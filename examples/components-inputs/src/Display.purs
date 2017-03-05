@@ -14,15 +14,12 @@ data Query a = HandleInput Int a
 component :: forall m. H.Component HH.HTML Query Input Void m
 component =
   H.component
-    { initialState: const initialState
+    { initialState: id
     , render
     , eval
     , receiver: HE.input HandleInput
     }
   where
-
-  initialState :: State
-  initialState = 0
 
   render :: State -> H.ComponentHTML Query
   render state =
