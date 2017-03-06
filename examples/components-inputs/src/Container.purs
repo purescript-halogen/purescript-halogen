@@ -29,7 +29,7 @@ component =
   where
 
   initialState :: State
-  initialState = 0
+  initialState = 1
 
   render :: State -> H.ParentHTML Query Display.Query Slot m
   render state =
