@@ -55,7 +55,6 @@ import Data.Maybe (Maybe(..))
 
 import DOM.Event.Types (Event, EventType(..), FocusEvent, KeyboardEvent, MouseEvent)
 import DOM.Event.Event as EE
-import DOM.File.Types (FileList)
 import DOM.HTML.Event.Types (DragEvent)
 
 import Halogen.Query (Action, action)
