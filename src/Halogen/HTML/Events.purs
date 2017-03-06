@@ -42,7 +42,6 @@ module Halogen.HTML.Events
   , onValueInput
   , onSelectedIndexChange
   , onChecked
-  , onFilesSelected
   ) where
 
 import Prelude
@@ -220,7 +219,3 @@ onValueInput = addForeignPropHandler (EventType "input") "value"
 -- | unchecked.
 onChecked :: forall r i. (Boolean -> Maybe i) -> IProp (checked :: Boolean, onChange :: Event | r) i
 onChecked = addForeignPropHandler (EventType "change") "checked"
-
--- | Attaches an event handler which will fire when files are selected.
-onFilesSelected :: forall r i. (FileList -> Maybe i) -> IProp (files :: FileList, onChange :: Event | r) i
-onFilesSelected = addForeignPropHandler (EventType "change") "files"
