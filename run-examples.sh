@@ -13,3 +13,4 @@ npm run -s example-interpret
 npm run -s example-keyboard-input
 npm run -s example-lifecycle
 npm run -s example-todo
+npm run -s example-i18n
