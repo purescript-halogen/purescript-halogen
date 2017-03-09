@@ -1,5 +1,5 @@
 {
-  "name": "higher-order-components",
+  "name": "i18n",
   "private": true,
   "dependencies": {
     "purescript-halogen": "*",
