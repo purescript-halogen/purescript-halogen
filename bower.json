@@ -49,6 +49,7 @@
     "purescript-aff-coroutines": "^4.0.0",
     "purescript-affjax": "^3.0.2",
     "purescript-random": "^2.0.0",
-    "purescript-websocket-simple": "^1.0.1"
+    "purescript-websocket-simple": "^1.0.1",
+    "purescript-reflection": "^2.0.0"
   }
 }

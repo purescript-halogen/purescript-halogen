@@ -18,7 +18,8 @@
     "example-interpret": "pulp build --include examples/interpret/src --to examples/interpret/dist/example.js",
     "example-keyboard-input": "pulp build --include examples/keyboard-input/src --to examples/keyboard-input/dist/example.js",
     "example-lifecycle": "pulp build --include examples/lifecycle/src --to examples/lifecycle/dist/example.js",
-    "example-todo": "pulp build --include examples/todo/src --to examples/todo/dist/example.js"
+    "example-todo": "pulp build --include examples/todo/src --to examples/todo/dist/example.js",
+    "example-i18n": "pulp build --include examples/i18n/src --to examples/i18n/dist/example.js"
   },
   "devDependencies": {
     "pulp": "^10.0.0",
