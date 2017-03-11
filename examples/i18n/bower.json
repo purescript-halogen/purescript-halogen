@@ -1,0 +1,8 @@
+{
+  "name": "i18n",
+  "private": true,
+  "dependencies": {
+    "purescript-halogen": "*",
+    "purescript-reflection": "^2.0.0"
+  }
+}

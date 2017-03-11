@@ -1,0 +1,10 @@
+{
+  "private": true,
+  "scripts": {
+    "build": "pulp build --to dist/example.js"
+  },
+  "devDependencies": {
+    "pulp": "^10.0.0",
+    "purescript": "^0.10.7"
+  }
+}
