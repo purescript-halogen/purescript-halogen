@@ -13,6 +13,9 @@ module Halogen.HTML.Events
   , onSelect
   , onSubmit
   , onTransitionEnd
+  , onCopy
+  , onPaste
+  , onCut
   , onClick
   , onContextMenu
   , onDoubleClick
@@ -45,24 +48,19 @@ module Halogen.HTML.Events
   ) where
 
 import Prelude
-
+import DOM.Event.Event as EE
+import Halogen.HTML.Core as Core
 import Control.Monad.Except (runExcept)
-
+import DOM.Event.Types (ClipboardEvent, Event, EventType(..), FocusEvent, KeyboardEvent, MouseEvent)
+import DOM.HTML.Event.Types (DragEvent)
 import Data.Either (either)
 import Data.Foreign (toForeign)
 import Data.Foreign.Class (class IsForeign, readProp)
 import Data.Maybe (Maybe(..))
-
-import DOM.Event.Types (Event, EventType(..), FocusEvent, KeyboardEvent, MouseEvent)
-import DOM.Event.Event as EE
-import DOM.HTML.Event.Types (DragEvent)
-
+import Halogen.HTML.Core (Prop)
+import Halogen.HTML.Properties (IProp)
 import Halogen.Query (Action, action)
 import Halogen.Query.InputF (InputF(..))
-import Halogen.HTML.Core (Prop)
-import Halogen.HTML.Core as Core
-import Halogen.HTML.Properties (IProp)
-
 import Unsafe.Coerce (unsafeCoerce)
 
 input :: forall f a. (a -> Action f) -> a -> Maybe (f Unit)
@@ -106,6 +104,15 @@ onSubmit = handler (EventType "submit")
 
 onTransitionEnd :: forall r i. (Event -> Maybe i) -> IProp (onTransitionEnd :: Event | r) i
 onTransitionEnd = handler (EventType "transitionend")
+
+onCopy :: forall r i. (ClipboardEvent-> Maybe i) -> IProp (onCopy :: ClipboardEvent | r) i
+onCopy = handler (EventType "copy") <<< clipboardHandler
+
+onPaste :: forall r i. (ClipboardEvent-> Maybe i) -> IProp (onPaste :: ClipboardEvent | r) i
+onPaste = handler (EventType "paste") <<< clipboardHandler
+
+onCut :: forall r i. (ClipboardEvent-> Maybe i) -> IProp (onCut :: ClipboardEvent | r) i
+onCut = handler (EventType "cut") <<< clipboardHandler
 
 onClick :: forall r i. (MouseEvent -> Maybe i) -> IProp (onClick :: MouseEvent | r) i
 onClick = handler (EventType "click") <<< mouseHandler
@@ -193,6 +200,9 @@ focusHandler = unsafeCoerce
 
 dragHandler :: forall i. (DragEvent -> Maybe i) -> Event -> Maybe i
 dragHandler = unsafeCoerce
+
+clipboardHandler :: forall i. (ClipboardEvent -> Maybe i) -> Event -> Maybe i
+clipboardHandler = unsafeCoerce
 
 -- | Attaches event handler to event `key` with getting `prop` field as an
 -- | argument of `handler`.
