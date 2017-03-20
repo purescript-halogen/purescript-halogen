@@ -193,4 +193,4 @@ Let's take a look at [running a component](4 - Running a component.md) to produc
 [Control.Monad.Eff.Class.liftEff]: https://pursuit.purescript.org/packages/purescript-eff/2.0.0/docs/Control.Monad.Eff.Class#v:liftEff "Control.Monad.Eff.Class.liftEff"
 [Control.Monad.Eff.Class.MonadEff]: https://pursuit.purescript.org/packages/purescript-eff/2.0.0/docs/Control.Monad.Eff.Class#t:MonadEff "Control.Monad.Eff.Class.MonadEff"
 [Control.Monad.Eff.Random.random]: https://pursuit.purescript.org/packages/purescript-random/2.0.0/docs/Control.Monad.Eff.Random#v:random "Control.Monad.Eff.Random.random"
-[Halogen.Component.hoist]: https://pursuit.purescript.org/packages/purescript-halogen/1.1.0/docs/Halogen.Component#v:hoist "Halogen.Component.hoist"
+[Halogen.Component.hoist]: https://pursuit.purescript.org/packages/purescript-halogen/1.2.0/docs/Halogen.Component#v:hoist "Halogen.Component.hoist"
