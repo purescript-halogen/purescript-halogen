@@ -105,13 +105,13 @@ onSubmit = handler (EventType "submit")
 onTransitionEnd :: forall r i. (Event -> Maybe i) -> IProp (onTransitionEnd :: Event | r) i
 onTransitionEnd = handler (EventType "transitionend")
 
-onCopy :: forall r i. (ClipboardEvent-> Maybe i) -> IProp (onCopy :: ClipboardEvent | r) i
+onCopy :: forall r i. (ClipboardEvent -> Maybe i) -> IProp (onCopy :: ClipboardEvent | r) i
 onCopy = handler (EventType "copy") <<< clipboardHandler
 
-onPaste :: forall r i. (ClipboardEvent-> Maybe i) -> IProp (onPaste :: ClipboardEvent | r) i
+onPaste :: forall r i. (ClipboardEvent -> Maybe i) -> IProp (onPaste :: ClipboardEvent | r) i
 onPaste = handler (EventType "paste") <<< clipboardHandler
 
-onCut :: forall r i. (ClipboardEvent-> Maybe i) -> IProp (onCut :: ClipboardEvent | r) i
+onCut :: forall r i. (ClipboardEvent -> Maybe i) -> IProp (onCut :: ClipboardEvent | r) i
 onCut = handler (EventType "cut") <<< clipboardHandler
 
 onClick :: forall r i. (MouseEvent -> Maybe i) -> IProp (onClick :: MouseEvent | r) i
