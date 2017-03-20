@@ -48,19 +48,24 @@ module Halogen.HTML.Events
   ) where
 
 import Prelude
-import DOM.Event.Event as EE
-import Halogen.HTML.Core as Core
+
 import Control.Monad.Except (runExcept)
-import DOM.Event.Types (ClipboardEvent, Event, EventType(..), FocusEvent, KeyboardEvent, MouseEvent)
-import DOM.HTML.Event.Types (DragEvent)
+
 import Data.Either (either)
 import Data.Foreign (toForeign)
 import Data.Foreign.Class (class IsForeign, readProp)
 import Data.Maybe (Maybe(..))
+
+import DOM.Event.Types (ClipboardEvent, Event, EventType(..), FocusEvent, KeyboardEvent, MouseEvent)
+import DOM.Event.Event as EE
+import DOM.HTML.Event.Types (DragEvent)
+
+import Halogen.HTML.Core as Core
 import Halogen.HTML.Core (Prop)
 import Halogen.HTML.Properties (IProp)
 import Halogen.Query (Action, action)
 import Halogen.Query.InputF (InputF(..))
+
 import Unsafe.Coerce (unsafeCoerce)
 
 input :: forall f a. (a -> Action f) -> a -> Maybe (f Unit)
