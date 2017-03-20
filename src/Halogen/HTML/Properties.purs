@@ -32,6 +32,8 @@ module Halogen.HTML.Properties
 
   , type_
   , value
+  , min
+  , max
   , step
   , disabled
   , enabled
@@ -185,6 +187,12 @@ type_ = prop (PropName "type")
 
 value :: forall r i. String -> IProp (value :: String | r) i
 value = prop (PropName "value")
+
+min :: forall r i. Number -> IProp (min :: Number | r) i
+min = prop (PropName "min")
+
+max :: forall r i. Number -> IProp (max :: Number | r) i
+max = prop (PropName "max")
 
 step :: forall r i. I.StepValue -> IProp (step :: I.StepValue | r) i
 step = prop (PropName "step")
