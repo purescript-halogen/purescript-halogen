@@ -10,4 +10,6 @@ Component definitions are pure. Running the root component to actually produce t
 
 Halogen's types do allow for more than just HTML based UIs, but the guide will focus on this primary use case.
 
-Let's take a look at a [defining a component](2 - Defining a component.md).
+Let's take a look at a [defining a component][Defining_a_componen].
+
+[Defining_a_componen]: 2%20-%20Defining%20a%20component.md "Defining a component"

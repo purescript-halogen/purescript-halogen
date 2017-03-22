@@ -70,7 +70,7 @@ Note that `m` is polymorphic in the synonym. It's populated with `Aff (HalogenEf
 - `query` allows us to send queries into the component, using its query algebra (`f`). This is useful for things like [routing][example-driver-routing], or driving an app from an external source - [WebSockets][example-driver-websockets], for example.
 - `subscribe` allows us to receive the messages the component emits by providing a [`coroutine`][purescript-coroutines] `Consumer`.
 
-If we go back to our basic button example from [chapter 2](2 - Defining a component.md "Defining a component"), we can demonstrate both of the above with something like this:
+If we go back to our basic button example from [chapter 2][Defining_a_componen], we can demonstrate both of the above with something like this:
 
 ``` purescript
 import Prelude
@@ -111,7 +111,10 @@ There are also two more functions provided for cases where we want to run our Ha
 - [`awaitLoad`][Halogen.Aff.Util.awaitLoad] does what the name suggests - waits for the document to load.
 - [`selectElement`][Halogen.Aff.Util.selectElement] is a wrapper around `querySelector` - using this after `awaitLoad` allows targeting of a particular container element on the page, to embed our app within.
 
-Now we know how to build simple components and run them, we can take a look at [embedding child components within a parent](5 - Parent and child components.md "Parent and child components").
+Now we know how to build simple components and run them, we can take a look at [embedding child components within a parent][Parent_and_child_components].
+
+[Defining_a_componen]: 2%20-%20Defining%20a%20component.md "Defining a component"
+[Parent_and_child_components]: 5%20-%20Parent%20and%20child%20components.md "Parent and child components"
 
 [example-driver-routing]: ../examples/driver-routing "Routing example"
 [example-driver-websockets]: ../examples/driver-websockets "WebSockets example"

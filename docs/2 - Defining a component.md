@@ -97,7 +97,7 @@ These rules about the definitions may seem rather arbitrary, but they arise from
 
 When a component appears as a child of another it can be useful to be able to pass values down to it when the parent re-renders. Our button component needs no input like this, so [`Unit`][Data.Unit.Unit] is used.
 
-More details on this will be covered later, in the chapter on [parent and child components](5 - Parent and child components.md "Parent and child components").
+More details on this will be covered later, in the chapter on [parent and child components][Parent_and_child_components].
 
 ## Output messages
 
@@ -248,7 +248,7 @@ All these type variables may be a little intimidating at first, but they become 
 - `f` is the component's query algebra.
 - `i` is the type for the component's input values.
 - `o` is the type for the component's output messages.
-- `m` is a monad used for non-component-state effects (AJAX requests, for example - see [the next chapter](3 - Handling effects.md "Handling effects")). If a component only manipulates its state, like our button, this should be left as a type variable.
+- `m` is a monad used for non-component-state effects (AJAX requests, for example - see [the next chapter][Handling_effects]). If a component only manipulates its state, like our button, this should be left as a type variable.
 
 As this component does not use the input value we use a `const initialState` and `const Nothing` in the record for values relating to it:
 
@@ -260,7 +260,7 @@ As this component does not use the input value we use a `const initialState` and
 }
 ```
 
-When a component does use inputs, we can construct the initial state from the input value the component is provided with. The `receiver` is a way of mapping input values to queries. As mentioned earlier, input values will be covered properly in [a later chapter](5 - Parent and child components.md "Parent and child components").
+When a component does use inputs, we can construct the initial state from the input value the component is provided with. The `receiver` is a way of mapping input values to queries. As mentioned earlier, input values will be covered properly in [a later chapter][Parent_and_child_components].
 
 Now we pass our component spec to [`component`][Halogen.Component.component-1], and we're done:
 
@@ -268,9 +268,13 @@ Now we pass our component spec to [`component`][Halogen.Component.component-1], 
 component :: forall h s f o m. ComponentSpec h s f o m -> Component h f o m
 ```
 
-The resulting [`Component`][Halogen.Component.Component] can now be used [as a child of another component](5 - Parent and child components.md "Parent and child components") or can be [run to produce a UI](4 - Running a component.md "Running a component").
+The resulting [`Component`][Halogen.Component.Component] can now be used [as a child of another component][Parent_and_child_components] or can be [run to produce a UI][Running_a_component].
 
-Next up, let's take a look at how to create a component that can [do something effectful](3 - Handling effects.md "Handling effects") other than update its own state.
+Next up, let's take a look at how to create a component that can [do something effectful][Handling_effects] other than update its own state.
+
+[Handling_effects]: 3%20-%20Handling%20effects.md "Handling effects"
+[Running_a_component]: 4%20-%20Running%20a%20component.md "Running a component"
+[Parent_and_child_components]: 5%20-%20Parent%20and%20child%20components.md "Parent and child components"
 
 [Control.Monad.State.Class.get]: https://pursuit.purescript.org/packages/purescript-transformers/2.2.0/docs/Control.Monad.State.Class#v:get "Control.Monad.State.Class.get"
 [Control.Monad.State.Class.gets]: https://pursuit.purescript.org/packages/purescript-transformers/2.2.0/docs/Control.Monad.State.Class#v:gets "Control.Monad.State.Class.gets"
