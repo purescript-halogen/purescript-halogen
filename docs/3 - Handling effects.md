@@ -184,7 +184,7 @@ Note how there was no need to setup callbacks or anything of that nature. Using 
 
 Any type that satisfies a `MonadAff` constraint also satisfies `MonadEff`, so using `Aff` as the base monad for a component allows `liftEff` and `liftAff` to be used together freely. The effect row will need to contain both sets of effects, but other than that no special handling is required.
 
-Let's take a look at [running a component](4 - Running a component.md) to produce a UI next.
+Let's take a look at [running a component][running-components] to produce a UI next.
 
 [purescript-affjax]: https://pursuit.purescript.org/packages/purescript-affjax "purescript-affjax"
 
@@ -193,4 +193,6 @@ Let's take a look at [running a component](4 - Running a component.md) to produc
 [Control.Monad.Eff.Class.liftEff]: https://pursuit.purescript.org/packages/purescript-eff/2.0.0/docs/Control.Monad.Eff.Class#v:liftEff "Control.Monad.Eff.Class.liftEff"
 [Control.Monad.Eff.Class.MonadEff]: https://pursuit.purescript.org/packages/purescript-eff/2.0.0/docs/Control.Monad.Eff.Class#t:MonadEff "Control.Monad.Eff.Class.MonadEff"
 [Control.Monad.Eff.Random.random]: https://pursuit.purescript.org/packages/purescript-random/2.0.0/docs/Control.Monad.Eff.Random#v:random "Control.Monad.Eff.Random.random"
-[Halogen.Component.hoist]: https://pursuit.purescript.org/packages/purescript-halogen/1.2.0/docs/Halogen.Component#v:hoist "Halogen.Component.hoist"
+[Halogen.Component.hoist]: https://pursuit.purescript.org/packages/purescript-halogen/1.2.1/docs/Halogen.Component#v:hoist "Halogen.Component.hoist"
+
+[running-components]: 4%20-%20Running%20a%20component.md "Running a component"
