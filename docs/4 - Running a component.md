@@ -70,7 +70,7 @@ Note that `m` is polymorphic in the synonym. It's populated with `Aff (HalogenEf
 - `query` allows us to send queries into the component, using its query algebra (`f`). This is useful for things like [routing][example-driver-routing], or driving an app from an external source - [WebSockets][example-driver-websockets], for example.
 - `subscribe` allows us to receive the messages the component emits by providing a [`coroutine`][purescript-coroutines] `Consumer`.
 
-If we go back to our basic button example from [chapter 2](2 - Defining a component.md "Defining a component"), we can demonstrate both of the above with something like this:
+If we go back to our basic button example from [chapter 2][defining-components], we can demonstrate both of the above with something like this:
 
 ``` purescript
 import Prelude
@@ -111,7 +111,7 @@ There are also two more functions provided for cases where we want to run our Ha
 - [`awaitLoad`][Halogen.Aff.Util.awaitLoad] does what the name suggests - waits for the document to load.
 - [`selectElement`][Halogen.Aff.Util.selectElement] is a wrapper around `querySelector` - using this after `awaitLoad` allows targeting of a particular container element on the page, to embed our app within.
 
-Now we know how to build simple components and run them, we can take a look at [embedding child components within a parent](5 - Parent and child components.md "Parent and child components").
+Now we know how to build simple components and run them, we can take a look at [embedding child components within a parent][parent-child-components].
 
 [example-driver-routing]: ../examples/driver-routing "Routing example"
 [example-driver-websockets]: ../examples/driver-websockets "WebSockets example"
@@ -119,11 +119,14 @@ Now we know how to build simple components and run them, we can take a look at [
 [purescript-coroutines]: https://pursuit.purescript.org/packages/purescript-coroutines "purescript-coroutines"
 
 [Control.Coroutine.consumer]: https://pursuit.purescript.org/packages/purescript-coroutines/3.1.0/docs/Control.Coroutine#v:consumer "Control.Coroutine.consumer"
-[Halogen.Aff.Effects.HalogenEffects]: https://pursuit.purescript.org/packages/purescript-halogen/1.2.0/docs/Halogen.Aff.Effects#t:HalogenEffects "Halogen.Aff.Effects.HalogenEffects"
-[Halogen.Aff.Util.awaitBody]: https://pursuit.purescript.org/packages/purescript-halogen/1.2.0/docs/Halogen.Aff.Util#v:awaitBody "Halogen.Aff.Util.awaitBody"
-[Halogen.Aff.Util.awaitLoad]: https://pursuit.purescript.org/packages/purescript-halogen/1.2.0/docs/Halogen.Aff.Util#v:awaitLoad "Halogen.Aff.Util.awaitLoad"
-[Halogen.Aff.Util.runHalogenAff]: https://pursuit.purescript.org/packages/purescript-halogen/1.2.0/docs/Halogen.Aff.Util#v:runHalogenAff "Halogen.Aff.Util.runHalogenAff"
-[Halogen.Aff.Util.selectElement]: https://pursuit.purescript.org/packages/purescript-halogen/1.2.0/docs/Halogen.Aff.Util#v:selectElement "Halogen.Aff.Util.selectElement"
-[Halogen.Component.hoist]: https://pursuit.purescript.org/packages/purescript-halogen/1.2.0/docs/Halogen.Component#v:hoist "Halogen.Component.hoist"
-[Halogen.VDom.Driver.runUI]: https://pursuit.purescript.org/packages/purescript-halogen/1.2.0/docs/Halogen.VDom.Driver#v:runUI "Halogen.VDom.Driver.runUI"
-[Halogen.VDom.Driver]: https://pursuit.purescript.org/packages/purescript-halogen/1.2.0/docs/Halogen.VDom.Driver "Halogen.VDom.Driver"
+[Halogen.Aff.Effects.HalogenEffects]: https://pursuit.purescript.org/packages/purescript-halogen/1.2.1/docs/Halogen.Aff.Effects#t:HalogenEffects "Halogen.Aff.Effects.HalogenEffects"
+[Halogen.Aff.Util.awaitBody]: https://pursuit.purescript.org/packages/purescript-halogen/1.2.1/docs/Halogen.Aff.Util#v:awaitBody "Halogen.Aff.Util.awaitBody"
+[Halogen.Aff.Util.awaitLoad]: https://pursuit.purescript.org/packages/purescript-halogen/1.2.1/docs/Halogen.Aff.Util#v:awaitLoad "Halogen.Aff.Util.awaitLoad"
+[Halogen.Aff.Util.runHalogenAff]: https://pursuit.purescript.org/packages/purescript-halogen/1.2.1/docs/Halogen.Aff.Util#v:runHalogenAff "Halogen.Aff.Util.runHalogenAff"
+[Halogen.Aff.Util.selectElement]: https://pursuit.purescript.org/packages/purescript-halogen/1.2.1/docs/Halogen.Aff.Util#v:selectElement "Halogen.Aff.Util.selectElement"
+[Halogen.Component.hoist]: https://pursuit.purescript.org/packages/purescript-halogen/1.2.1/docs/Halogen.Component#v:hoist "Halogen.Component.hoist"
+[Halogen.VDom.Driver.runUI]: https://pursuit.purescript.org/packages/purescript-halogen/1.2.1/docs/Halogen.VDom.Driver#v:runUI "Halogen.VDom.Driver.runUI"
+[Halogen.VDom.Driver]: https://pursuit.purescript.org/packages/purescript-halogen/1.2.1/docs/Halogen.VDom.Driver "Halogen.VDom.Driver"
+
+[defining-components]: 2%20-%20Defining%20a%20component.md "Defining a component"
+[parent-child-components]: 5%20-%20Parent%20and%20child%20components.md "Parent and child components"
