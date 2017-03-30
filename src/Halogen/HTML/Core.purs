@@ -70,8 +70,9 @@ text :: forall p i. String -> HTML p i
 text = HTML <<< VDom.Text
 
 -- | A smart constructor for HTML elements.
-element :: forall p i. VDom.ElemName -> Array (Prop i) -> Array (HTML p i) -> HTML p i
-element = coe (\name props children -> VDom.Elem (VDom.ElemSpec Nothing name props) children)
+element :: forall p i. Maybe VDom.Namespace -> VDom.ElemName -> Array (Prop i) -> Array (HTML p i) -> HTML p i
+element ns =
+  coe (\name props children -> VDom.Elem (VDom.ElemSpec ns name props) children)
   where
   coe
     :: (VDom.ElemName -> Array (Prop i) -> Array (VDom.VDom (Array (Prop i)) p) -> VDom.VDom (Array (Prop i)) p)
@@ -79,8 +80,8 @@ element = coe (\name props children -> VDom.Elem (VDom.ElemSpec Nothing name pro
   coe = unsafeCoerce
 
 -- | A smart constructor for HTML elements with keyed children.
-keyed :: forall p i. VDom.ElemName -> Array (Prop i) -> Array (Tuple String (HTML p i)) -> HTML p i
-keyed = coe (\name props children -> VDom.Keyed (VDom.ElemSpec Nothing name props) children)
+keyed :: forall p i. Maybe VDom.Namespace -> VDom.ElemName -> Array (Prop i) -> Array (Tuple String (HTML p i)) -> HTML p i
+keyed ns = coe (\name props children -> VDom.Keyed (VDom.ElemSpec ns name props) children)
   where
   coe
     :: (VDom.ElemName -> Array (Prop i) -> Array (Tuple String (VDom.VDom (Array (Prop i)) p)) -> VDom.VDom (Array (Prop i)) p)
@@ -92,8 +93,8 @@ prop :: forall value i. IsProp value => PropName value -> value -> Prop i
 prop (PropName name) = Property name <<< toPropValue
 
 -- | Create a HTML attribute.
-attr :: forall i. AttrName -> String -> Prop i
-attr (AttrName name) = Attribute Nothing name
+attr :: forall i. Maybe VDom.Namespace -> AttrName -> String -> Prop i
+attr ns (AttrName name) = Attribute ns name
 
 -- | Create an event handler.
 handler :: forall i. EventType -> (Event -> Maybe i) -> Prop i
