@@ -2,7 +2,9 @@ module Halogen.HTML.Elements
   ( Node
   , Leaf
   , element
+  , elementNs
   , keyed
+  , keyedNs
   , withKeys, withKeys_
   , a, a_
   , abbr, abbr_
@@ -114,12 +116,13 @@ module Halogen.HTML.Elements
   , wbr
   ) where
 
-import Prelude (Unit)
+import Prelude (Unit, (#), (>>>), pure)
+import Data.Maybe (Maybe(Nothing))
 import Data.Tuple (Tuple)
 
 import DOM.HTML.Indexed as I
 
-import Halogen.HTML.Core (HTML(..), Prop, ElemName(..))
+import Halogen.HTML.Core (ElemName(..), HTML(..), Namespace, Prop)
 import Halogen.HTML.Core as Core
 import Halogen.HTML.Properties (IProp)
 import Halogen.Query.InputF (InputF)
@@ -140,12 +143,47 @@ type Leaf r p i
 
 -- | Creates an HTML element that expects indexed properties.
 element :: forall r p i. ElemName -> Array (IProp r i) -> Array (HTML p i) -> HTML p i
-element = (unsafeCoerce :: (ElemName -> Array (Prop i) -> Array (HTML p i) -> HTML p i) -> ElemName -> Array (IProp r i) -> Array (HTML p i) -> HTML p i) Core.element
+element =
+  Core.element Nothing #
+    (unsafeCoerce
+      :: (ElemName -> Array (Prop i) -> Array (HTML p i) -> HTML p i) -> ElemName -> Array (IProp r i)
+      -> Array (HTML p i)
+      -> HTML p i)
+
+-- | Creates a Namespaced HTML element that expects indexed properties.
+elementNs :: forall r p i. Namespace -> ElemName -> Array (IProp r i) -> Array (HTML p i) -> HTML p i
+elementNs =
+  pure >>> Core.element >>>
+    (unsafeCoerce
+      :: (ElemName -> Array (Prop i) -> Array (HTML p i) -> HTML p i)
+      -> ElemName
+      -> Array (IProp r i)
+      -> Array (HTML p i)
+      -> HTML p i)
 
 -- | Creates an HTML element that expects indexed properties, with keyed
 -- | children.
 keyed :: forall r p i. ElemName -> Array (IProp r i) -> Array (Tuple String (HTML p i)) -> HTML p i
-keyed = (unsafeCoerce :: (ElemName -> Array (Prop i) -> Array (Tuple String (HTML p i)) -> HTML p i) -> ElemName -> Array (IProp r i) -> Array (Tuple String (HTML p i)) -> HTML p i) Core.keyed
+keyed =
+  Core.keyed Nothing #
+    (unsafeCoerce
+      :: (ElemName -> Array (Prop i) -> Array (Tuple String (HTML p i)) -> HTML p i)
+      -> ElemName
+      -> Array (IProp r i)
+      -> Array (Tuple String (HTML p i))
+      -> HTML p i)
+
+-- | Creates a Namespaced HTML element that expects indexed properties, with
+-- | keyed children.
+keyedNs :: forall r p i. Namespace -> ElemName -> Array (IProp r i) -> Array (Tuple String (HTML p i)) -> HTML p i
+keyedNs =
+  pure >>> Core.keyed >>>
+    (unsafeCoerce
+      :: (ElemName -> Array (Prop i) -> Array (Tuple String (HTML p i)) -> HTML p i)
+      -> ElemName
+      -> Array (IProp r i)
+      -> Array (Tuple String (HTML p i))
+      -> HTML p i)
 
 withKeys :: forall r p i. (Array (IProp r i) -> Array (HTML p i) -> HTML p i) -> Array (IProp r i) -> Array (Tuple String (HTML p i)) -> HTML p i
 withKeys ctor props children =

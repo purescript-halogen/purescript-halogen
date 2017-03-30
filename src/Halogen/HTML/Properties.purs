@@ -5,6 +5,7 @@ module Halogen.HTML.Properties
   ( IProp(..)
   , prop
   , attr
+  , attrNs
   , ref
 
   , alt
@@ -82,7 +83,7 @@ import DOM.HTML.Indexed.PreloadValue (PreloadValue(..)) as I
 import DOM.HTML.Indexed.StepValue (StepValue(..)) as I
 import DOM.Node.Types (Element)
 
-import Halogen.HTML.Core (class IsProp, ClassName, AttrName, PropName(..), Prop)
+import Halogen.HTML.Core (class IsProp, AttrName, ClassName, Namespace, PropName(..), Prop)
 import Halogen.HTML.Core as Core
 import Halogen.Query.InputF (InputF(..), RefLabel)
 
@@ -105,7 +106,23 @@ prop = (unsafeCoerce :: (PropName value -> value -> Prop (InputF Unit i)) -> Pro
 
 -- | Creates an indexed HTML attribute.
 attr :: forall r i. AttrName -> String -> IProp r i
-attr = (unsafeCoerce :: (AttrName -> String -> Prop (InputF Unit i)) -> AttrName -> String -> IProp r i) Core.attr
+attr =
+  Core.attr Nothing #
+    (unsafeCoerce
+      :: (AttrName -> String -> Prop (InputF Unit i))
+      -> AttrName
+      -> String
+      -> IProp r i)
+
+-- | Creates an indexed HTML attribute.
+attrNs :: forall r i. Namespace -> AttrName -> String -> IProp r i
+attrNs =
+  pure >>> Core.attr >>>
+    (unsafeCoerce
+      :: (AttrName -> String -> Prop (InputF Unit i))
+      -> AttrName
+      -> String
+      -> IProp r i)
 
 -- | The `ref` property allows an input to be raised once a `HTMLElement` has
 -- | been created or destroyed in the DOM for the element that the property is
