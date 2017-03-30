@@ -5,7 +5,7 @@ module Halogen.HTML.Properties
   ( IProp(..)
   , prop
   , attr
-  , attrNs
+  , attrNS
   , ref
 
   , alt
@@ -115,8 +115,8 @@ attr =
       -> IProp r i)
 
 -- | Creates an indexed HTML attribute.
-attrNs :: forall r i. Namespace -> AttrName -> String -> IProp r i
-attrNs =
+attrNS :: forall r i. Namespace -> AttrName -> String -> IProp r i
+attrNS =
   pure >>> Core.attr >>>
     (unsafeCoerce
       :: (AttrName -> String -> Prop (InputF Unit i))

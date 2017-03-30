@@ -2,9 +2,9 @@ module Halogen.HTML.Elements
   ( Node
   , Leaf
   , element
-  , elementNs
+  , elementNS
   , keyed
-  , keyedNs
+  , keyedNS
   , withKeys, withKeys_
   , a, a_
   , abbr, abbr_
@@ -151,8 +151,8 @@ element =
       -> HTML p i)
 
 -- | Creates a Namespaced HTML element that expects indexed properties.
-elementNs :: forall r p i. Namespace -> ElemName -> Array (IProp r i) -> Array (HTML p i) -> HTML p i
-elementNs =
+elementNS :: forall r p i. Namespace -> ElemName -> Array (IProp r i) -> Array (HTML p i) -> HTML p i
+elementNS =
   pure >>> Core.element >>>
     (unsafeCoerce
       :: (ElemName -> Array (Prop i) -> Array (HTML p i) -> HTML p i)
@@ -175,8 +175,8 @@ keyed =
 
 -- | Creates a Namespaced HTML element that expects indexed properties, with
 -- | keyed children.
-keyedNs :: forall r p i. Namespace -> ElemName -> Array (IProp r i) -> Array (Tuple String (HTML p i)) -> HTML p i
-keyedNs =
+keyedNS :: forall r p i. Namespace -> ElemName -> Array (IProp r i) -> Array (Tuple String (HTML p i)) -> HTML p i
+keyedNS =
   pure >>> Core.keyed >>>
     (unsafeCoerce
       :: (ElemName -> Array (Prop i) -> Array (Tuple String (HTML p i)) -> HTML p i)
