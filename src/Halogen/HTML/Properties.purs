@@ -91,7 +91,7 @@ import Unsafe.Coerce (unsafeCoerce)
 
 -- | The phantom row `r` can be thought of as a context which is synthesized in
 -- | the course of constructing a refined HTML expression.
-newtype IProp (r :: # *) i = IProp (Prop (InputF Unit i))
+newtype IProp (r :: # Type) i = IProp (Prop (InputF Unit i))
 
 derive instance newtypeIProp :: Newtype (IProp r i) _
 
