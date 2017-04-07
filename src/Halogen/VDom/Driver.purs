@@ -122,7 +122,7 @@ renderSpec document container = { render, renderChild: id, removeChild }
         let spec = mkSpec handler renderChildRef document
         machine <- V.buildVDom spec vdom
         let node = V.extract machine
-        DOM.appendChild node (DOM.htmlElementToNode container)
+        void $ DOM.appendChild node (DOM.htmlElementToNode container)
         pure $ RenderState { machine, node, renderChildRef }
       Just (RenderState { machine, node, renderChildRef }) -> do
         writeRef renderChildRef child
