@@ -12,7 +12,6 @@ import Control.Monad.Eff.Ref (Ref, newRef, readRef, writeRef)
 
 import Data.Foldable (traverse_)
 import Data.Maybe (Maybe(..))
-import Data.Nullable (toMaybe)
 
 import DOM (DOM)
 import DOM.HTML (window) as DOM
@@ -131,7 +130,7 @@ renderSpec document container = { render, renderChild: id, removeChild }
         machine' <- V.step machine vdom
         let newNode = V.extract machine'
         when (not unsafeRefEq node newNode) do
-          substInParent newNode (toMaybe nextSib) (toMaybe parent)
+          substInParent newNode nextSib parent
         pure $ RenderState { machine: machine', node: newNode, renderChildRef }
 
 removeChild
@@ -139,7 +138,7 @@ removeChild
   -> Eff (HalogenEffects eff) Unit
 removeChild (RenderState { node }) = do
   npn <- DOM.parentNode node
-  traverse_ (\pn -> DOM.removeChild node pn) (toMaybe npn)
+  traverse_ (\pn -> DOM.removeChild node pn) npn
 
 substInParent
   :: forall eff
