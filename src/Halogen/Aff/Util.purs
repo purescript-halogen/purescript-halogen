@@ -6,27 +6,22 @@ module Halogen.Aff.Util
   ) where
 
 import Prelude
-
 import Control.Monad.Aff (Aff, makeAff, runAff)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Class (liftEff)
 import Control.Monad.Eff.Exception (throwException, error)
 import Control.Monad.Error.Class (throwError)
 import Control.Monad.Except (runExcept)
-
-import Data.Maybe (Maybe(..), maybe)
-import Data.Either (either)
-import Data.Nullable (toMaybe)
-import Data.Foreign (toForeign)
-
 import DOM (DOM)
 import DOM.Event.EventTarget (eventListener, addEventListener)
-import DOM.HTML.Event.EventTypes (load)
 import DOM.HTML (window)
+import DOM.HTML.Event.EventTypes (load)
 import DOM.HTML.Types (HTMLElement, windowToEventTarget, htmlDocumentToParentNode, readHTMLElement)
 import DOM.HTML.Window (document)
-import DOM.Node.ParentNode (querySelector)
-
+import DOM.Node.ParentNode (QuerySelector(..), querySelector)
+import Data.Either (either)
+import Data.Foreign (toForeign)
+import Data.Maybe (Maybe(..), maybe)
 import Halogen.Aff.Effects (HalogenEffects)
 
 -- | Waits for the document to load.
@@ -40,17 +35,17 @@ awaitLoad = makeAff \_ callback -> liftEff $
 awaitBody :: forall eff. Aff (dom :: DOM | eff) HTMLElement
 awaitBody = do
   awaitLoad
-  maybe (throwError (error "Could not find body")) pure =<< selectElement "body"
+  body <- selectElement (QuerySelector "body")
+  maybe (throwError (error "Could not find body")) pure body
 
 -- | Tries to find an element in the document.
 selectElement
   :: forall eff
-   . String
+   . QuerySelector
   -> Aff (dom :: DOM | eff) (Maybe HTMLElement)
 selectElement query = do
   mel <- liftEff $
-    toMaybe <$>
-      ((querySelector query <<< htmlDocumentToParentNode <=< document) =<< window)
+    ((querySelector query <<< htmlDocumentToParentNode <=< document) =<< window)
   pure case mel of
     Nothing -> Nothing
     Just el -> either (const Nothing) Just $ runExcept $ readHTMLElement (toForeign el)
