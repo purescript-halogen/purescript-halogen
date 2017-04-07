@@ -160,7 +160,7 @@ initDriverState component input handler prjQuery lchs = do
       , pendingOuts
       , pendingHandlers
       , rendering: Nothing
-      , prjQuery
+      , prjQuery: prjQuery :: (forall a. f a -> Maybe (z a))
       , fresh
       , subscriptions
       , lifecycleHandlers: lchs
