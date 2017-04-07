@@ -10,6 +10,7 @@ import Control.Monad.Aff (Aff, makeAff, runAff)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Class (liftEff)
 import Control.Monad.Eff.Exception (throwException, error)
+import Control.Monad.Eff.Unsafe (unsafeCoerceEff)
 import Control.Monad.Error.Class (throwError)
 import Control.Monad.Except (runExcept)
 import DOM (DOM)
@@ -30,6 +31,7 @@ awaitLoad = makeAff \_ callback -> liftEff $
   window
     >>= windowToEventTarget
     >>> addEventListener load (eventListener (\_ -> callback unit)) false
+    >>> unsafeCoerceEff -- FIXME: hack to work around row polymorphism errors
 
 -- | Waits for the document to load and then finds the `body` element.
 awaitBody :: forall eff. Aff (dom :: DOM | eff) HTMLElement
