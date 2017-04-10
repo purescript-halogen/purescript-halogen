@@ -147,6 +147,7 @@ initDriverState component input handler prjQuery lchs = do
   fresh <- newRef 0
   subscriptions <- newRef (Just M.empty)
   let
+    ds :: DriverStateRec h r s f z g p i o eff
     ds =
       { component
       , state: component.initialState input
@@ -160,7 +161,7 @@ initDriverState component input handler prjQuery lchs = do
       , pendingOuts
       , pendingHandlers
       , rendering: Nothing
-      , prjQuery: prjQuery :: (forall a. f a -> Maybe (z a))
+      , prjQuery
       , fresh
       , subscriptions
       , lifecycleHandlers: lchs
