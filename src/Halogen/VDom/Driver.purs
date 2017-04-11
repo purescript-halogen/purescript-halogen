@@ -73,7 +73,7 @@ mkSpec handler renderChildRef document =
   buildWidget spec slot = do
     renderChild <- readRef renderChildRef
     rsx <- renderChild slot
-    let node = unRenderStateX (\(RenderState { node }) -> node) rsx
+    let node = getNode rsx
     pure (V.Step node patch done)
 
   patch
@@ -83,11 +83,14 @@ mkSpec handler renderChildRef document =
   patch slot = do
     renderChild <- readRef renderChildRef
     rsx <- renderChild slot
-    let node = unRenderStateX (\(RenderState { node }) -> node) rsx
+    let node = getNode rsx
     pure (V.Step node patch done)
 
   done :: Eff (HalogenEffects eff) Unit
   done = pure unit
+
+  getNode :: RenderStateX RenderState eff -> DOM.Node
+  getNode = unRenderStateX (\(RenderState { node }) -> node)
 
 runUI
   :: forall f eff i o
