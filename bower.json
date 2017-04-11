@@ -47,7 +47,7 @@
   "devDependencies": {
     "purescript-ace": "latest",
     "purescript-aff-coroutines": "^5.0.0",
-    "purescript-affjax": "latest",
+    "purescript-affjax": "^4.0.0",
     "purescript-random": "^3.0.0",
     "purescript-websocket-simple": "latest",
     "purescript-reflection": "^3.0.0"
