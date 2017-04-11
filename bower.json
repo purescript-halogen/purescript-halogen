@@ -29,12 +29,12 @@
     "purescript-const": "^3.0.0",
     "purescript-coroutines": "^4.0.0",
     "purescript-dom": "^4.0.0",
-    "purescript-dom-indexed": "latest",
+    "purescript-dom-indexed": "^3.0.0",
     "purescript-foreign": "^4.0.0",
     "purescript-fork": "^2.0.0",
     "purescript-free": "^4.0.0",
     "purescript-freeap": "^3.0.0",
-    "purescript-halogen-vdom": "latest",
+    "purescript-halogen-vdom": "^2.0.0",
     "purescript-maps": "^3.0.0",
     "purescript-media-types": "^3.0.0",
     "purescript-nullable": "^3.0.0",
@@ -45,7 +45,7 @@
     "purescript-unsafe-reference": "^2.0.0"
   },
   "devDependencies": {
-    "purescript-ace": "latest",
+    "purescript-ace": "^4.0.0",
     "purescript-aff-coroutines": "^5.0.0",
     "purescript-affjax": "^4.0.0",
     "purescript-random": "^3.0.0",
