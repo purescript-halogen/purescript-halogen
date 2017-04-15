@@ -28,7 +28,7 @@
     "purescript-aff": "^3.0.0",
     "purescript-const": "^3.0.0",
     "purescript-coroutines": "^4.0.0",
-    "purescript-dom": "^4.0.0",
+    "purescript-dom": "4.1.1",
     "purescript-dom-indexed": "^3.0.0",
     "purescript-foreign": "^4.0.0",
     "purescript-fork": "^2.0.0",
