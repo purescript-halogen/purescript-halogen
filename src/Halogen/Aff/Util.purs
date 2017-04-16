@@ -6,22 +6,26 @@ module Halogen.Aff.Util
   ) where
 
 import Prelude
+
 import Control.Monad.Aff (Aff, makeAff, runAff)
-import Control.Monad.Eff (Eff)
+import Control.Monad.Eff (kind Effect, Eff)
 import Control.Monad.Eff.Class (liftEff)
 import Control.Monad.Eff.Exception (throwException, error)
 import Control.Monad.Error.Class (throwError)
 import Control.Monad.Except (runExcept)
+
+import Data.Maybe (Maybe(..), maybe)
+import Data.Either (either)
+import Data.Foreign (toForeign)
+
 import DOM (DOM)
 import DOM.Event.EventTarget (eventListener, addEventListener)
-import DOM.HTML (window)
 import DOM.HTML.Event.EventTypes (load)
+import DOM.HTML (window)
 import DOM.HTML.Types (HTMLElement, windowToEventTarget, htmlDocumentToParentNode, readHTMLElement)
 import DOM.HTML.Window (document)
 import DOM.Node.ParentNode (QuerySelector(..), querySelector)
-import Data.Either (either)
-import Data.Foreign (toForeign)
-import Data.Maybe (Maybe(..), maybe)
+
 import Halogen.Aff.Effects (HalogenEffects)
 
 -- | Waits for the document to load.

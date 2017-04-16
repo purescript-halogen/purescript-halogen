@@ -48,19 +48,24 @@ module Halogen.HTML.Events
   ) where
 
 import Prelude
-import DOM.Event.Event as EE
-import Halogen.HTML.Core as Core
+
 import Control.Monad.Except (runExcept)
-import DOM.Event.Types (ClipboardEvent, Event, EventType(..), FocusEvent, KeyboardEvent, MouseEvent)
-import DOM.HTML.Event.Types (DragEvent)
+
 import Data.Either (either)
 import Data.Foreign (Foreign, F, toForeign, readString, readInt, readBoolean)
 import Data.Foreign.Index (readProp)
 import Data.Maybe (Maybe(..))
+
+import DOM.Event.Types (ClipboardEvent, Event, EventType(..), FocusEvent, KeyboardEvent, MouseEvent)
+import DOM.Event.Event as EE
+import DOM.HTML.Event.Types (DragEvent)
+
+import Halogen.HTML.Core as Core
 import Halogen.HTML.Core (Prop)
 import Halogen.HTML.Properties (IProp)
 import Halogen.Query (Action, action)
 import Halogen.Query.InputF (InputF(..))
+
 import Unsafe.Coerce (unsafeCoerce)
 
 input :: forall f a. (a -> Action f) -> a -> Maybe (f Unit)
@@ -208,9 +213,7 @@ clipboardHandler = unsafeCoerce
 -- | argument of `handler`.
 addForeignPropHandler :: forall r i value. EventType -> String -> (Foreign -> F value) -> (value -> Maybe i) -> IProp r i
 addForeignPropHandler key prop reader f =
-  handler key (either (const Nothing) (maybeRead >=> f) <<< runExcept <<< readProp prop <<< toForeign <<< EE.currentTarget)
-  where
-    maybeRead = reader >>> runExcept >>> either (const Nothing) Just
+  handler key (either (const Nothing) f <<< runExcept <<< (reader <=< readProp prop) <<< toForeign <<< EE.currentTarget)
 
 -- | Attaches an event handler which will produce an input when the value of an
 -- | input field changes.
