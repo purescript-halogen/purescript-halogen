@@ -69,7 +69,7 @@ handleLifecycle lchs f = do
   liftEff $ writeRef lchs { initializers: L.Nil, finalizers: L.Nil }
   result <- liftEff f
   { initializers, finalizers } <- liftEff $ readRef lchs
-  forkAll finalizers
+  _ <- forkAll finalizers
   parSequenceAff_ initializers
   pure result
 
@@ -112,7 +112,7 @@ eval render r =
               pure a
     Subscribe es next -> do
       DriverState ({ subscriptions, fresh }) <- liftEff (readRef ref)
-      forkAff do
+      _ <- forkAff do
         { producer, done } <- ES.unEventSource es
         i <- liftEff do
           i <- modifyRef' fresh (\i -> { state: i + 1, value: i })

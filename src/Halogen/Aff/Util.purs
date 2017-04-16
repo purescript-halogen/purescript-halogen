@@ -16,7 +16,6 @@ import Control.Monad.Except (runExcept)
 
 import Data.Maybe (Maybe(..), maybe)
 import Data.Either (either)
-import Data.Nullable (toMaybe)
 import Data.Foreign (toForeign)
 
 import DOM (DOM)
@@ -25,7 +24,7 @@ import DOM.HTML.Event.EventTypes (load)
 import DOM.HTML (window)
 import DOM.HTML.Types (HTMLElement, windowToEventTarget, htmlDocumentToParentNode, readHTMLElement)
 import DOM.HTML.Window (document)
-import DOM.Node.ParentNode (querySelector)
+import DOM.Node.ParentNode (querySelector, QuerySelector(..))
 
 import Halogen.Aff.Effects (HalogenEffects)
 
@@ -49,8 +48,7 @@ selectElement
   -> Aff (dom :: DOM | eff) (Maybe HTMLElement)
 selectElement query = do
   mel <- liftEff $
-    toMaybe <$>
-      ((querySelector query <<< htmlDocumentToParentNode <=< document) =<< window)
+      ((querySelector (QuerySelector query) <<< htmlDocumentToParentNode <=< document) =<< window)
   pure case mel of
     Nothing -> Nothing
     Just el -> either (const Nothing) Just $ runExcept $ readHTMLElement (toForeign el)

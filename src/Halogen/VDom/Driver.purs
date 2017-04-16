@@ -12,7 +12,6 @@ import Control.Monad.Eff.Ref (Ref, newRef, readRef, writeRef)
 
 import Data.Foldable (traverse_)
 import Data.Maybe (Maybe(..))
-import Data.Nullable (toMaybe)
 
 import DOM (DOM)
 import DOM.HTML (window) as DOM
@@ -74,8 +73,8 @@ mkSpec handler renderChildRef document =
   buildWidget spec slot = do
     renderChild <- readRef renderChildRef
     rsx <- renderChild slot
-    let node = unRenderStateX (\(RenderState { node }) -> node) rsx
-    pure (V.Step node patch done)
+    let node' = unRenderStateX (\(RenderState { node }) -> node) rsx
+    pure (V.Step node' patch done)
 
   patch
     :: V.VDomMachine (HalogenEffects eff)
@@ -84,8 +83,8 @@ mkSpec handler renderChildRef document =
   patch slot = do
     renderChild <- readRef renderChildRef
     rsx <- renderChild slot
-    let node = unRenderStateX (\(RenderState { node }) -> node) rsx
-    pure (V.Step node patch done)
+    let node' = unRenderStateX (\(RenderState { node }) -> node) rsx
+    pure (V.Step node' patch done)
 
   done :: Eff (HalogenEffects eff) Unit
   done = pure unit
@@ -122,7 +121,7 @@ renderSpec document container = { render, renderChild: id, removeChild }
         let spec = mkSpec handler renderChildRef document
         machine <- V.buildVDom spec vdom
         let node = V.extract machine
-        DOM.appendChild node (DOM.htmlElementToNode container)
+        _ <- DOM.appendChild node (DOM.htmlElementToNode container)
         pure $ RenderState { machine, node, renderChildRef }
       Just (RenderState { machine, node, renderChildRef }) -> do
         writeRef renderChildRef child
@@ -131,7 +130,7 @@ renderSpec document container = { render, renderChild: id, removeChild }
         machine' <- V.step machine vdom
         let newNode = V.extract machine'
         when (not unsafeRefEq node newNode) do
-          substInParent newNode (toMaybe nextSib) (toMaybe parent)
+          substInParent newNode nextSib parent
         pure $ RenderState { machine: machine', node: newNode, renderChildRef }
 
 removeChild
@@ -139,7 +138,7 @@ removeChild
   -> Eff (HalogenEffects eff) Unit
 removeChild (RenderState { node }) = do
   npn <- DOM.parentNode node
-  traverse_ (\pn -> DOM.removeChild node pn) (toMaybe npn)
+  traverse_ (\pn -> DOM.removeChild node pn) npn
 
 substInParent
   :: forall eff

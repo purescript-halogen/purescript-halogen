@@ -161,7 +161,7 @@ produceAff
   -> CR.Producer a m r
 produceAff recv = do
   v <- lift $ liftAff AV.makeVar
-  lift $ liftAff $ forkAff $ recv $ AV.putVar v
+  _ <- lift $ liftAff $ forkAff $ recv $ AV.putVar v
   CR.producer $ liftAff $ AV.takeVar v
 
 produceAff'

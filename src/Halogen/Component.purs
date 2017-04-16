@@ -44,7 +44,7 @@ import Unsafe.Coerce (unsafeCoerce)
 -- |       parent of this component renders
 -- | - `o` is the type for the component's output messages
 -- | - `m` is the monad used for non-component-state effects
-data Component (h :: * -> * -> *) (f :: * -> *) i o (m :: * -> *)
+data Component (h :: Type -> Type -> Type) (f :: Type -> Type) i o (m :: Type -> Type)
 
 -- | Makes a `Component` from a `Component'`, existentially hiding details about
 -- | the component's state and potential children.
@@ -247,7 +247,7 @@ lifecycleParentComponent spec =
 -- | some `Free` monad as `Aff` so the component can be used with `runUI`.
 hoist
   :: forall h f i o m m'
-   . (Bifunctor h, Functor m')
+   . Bifunctor h => Functor m'
   => (m ~> m')
   -> Component h f i o m
   -> Component h f i o m'
@@ -267,7 +267,7 @@ hoist nat =
 
 data ComponentSlot' h z g m p j q o = ComponentSlot p (Component h z j o m) j (j -> Maybe (g Unit)) (o -> Maybe q) (forall x. g x -> Maybe (z x))
 
-data ComponentSlot (h :: * -> * -> *) (g :: * -> *) (m :: * -> *) p q
+data ComponentSlot (h :: Type -> Type -> Type) (g :: Type -> Type) (m :: Type -> Type) p q
 
 instance bifunctorSlotF :: Bifunctor (ComponentSlot h g m) where
   bimap f g = unComponentSlot \p ctor input inputQuery outputQuery projQuery ->
@@ -300,7 +300,7 @@ unComponentSlot f cs =
 
 hoistSlot
   :: forall h g m m' p q
-   . (Bifunctor h, Functor m')
+   . Bifunctor h => Functor m'
   => (m ~> m')
   -> ComponentSlot h g m p q
   -> ComponentSlot h g m' p q

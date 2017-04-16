@@ -10,7 +10,7 @@ import DOM (DOM)
 type HalogenEffects eff =
   ( avar :: AVAR
   , ref :: REF
-  , err :: EXCEPTION
+  , exception :: EXCEPTION
   , dom :: DOM
   | eff
   )
