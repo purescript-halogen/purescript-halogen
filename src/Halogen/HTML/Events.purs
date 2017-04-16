@@ -49,11 +49,13 @@ module Halogen.HTML.Events
 
 import Prelude
 
-import Control.Monad.Except (runExcept)
+import Control.Monad.Except (Except, mapExcept, runExcept)
 
 import Data.Either (either)
-import Data.Foreign (toForeign)
-import Data.Foreign.Class (class IsForeign, readProp)
+import Data.Foreign (F, Foreign, MultipleErrors, toForeign)
+import Data.Foreign.Index (class Index, (!), errorAt)
+import Data.Foreign.Class (class Decode, decode)
+import Data.Bifunctor (lmap)
 import Data.Maybe (Maybe(..))
 
 import DOM.Event.Types (ClipboardEvent, Event, EventType(..), FocusEvent, KeyboardEvent, MouseEvent)
@@ -211,9 +213,18 @@ clipboardHandler = unsafeCoerce
 
 -- | Attaches event handler to event `key` with getting `prop` field as an
 -- | argument of `handler`.
-addForeignPropHandler :: forall r i value. IsForeign value => EventType -> String -> (value -> Maybe i) -> IProp r i
+addForeignPropHandler :: forall r i value. Decode value => EventType -> String -> (value -> Maybe i) -> IProp r i
 addForeignPropHandler key prop f =
-  handler key (either (const Nothing) f <<< runExcept <<< readProp prop <<< toForeign <<< EE.currentTarget)
+  handler key (either (const Nothing) f <<< runExcept <<< decodeProp prop <<< toForeign <<< EE.currentTarget)
+
+-- Note: Reproduced from the old Data.Foreign.Class in `purescript-foreign`
+-- | Attempt to decode a foreign value, handling errors using the specified function
+decodeWith :: forall a e. Decode a => (MultipleErrors -> e) -> Foreign -> Except e a
+decodeWith f = mapExcept (lmap f) <<< decode
+
+-- | Attempt to decode a property of a foreign value at the specified index
+decodeProp :: forall a i. Decode a => Index i => i -> Foreign -> F a
+decodeProp prop value = value ! prop >>= decodeWith (map (errorAt prop))
 
 -- | Attaches an event handler which will produce an input when the value of an
 -- | input field changes.
