@@ -332,7 +332,7 @@ The need for multiple types of child component under a parent arises quite often
 
 By "multiple types", an example would be where we have a component for the top level of an app, and inside that view we'd want a menu bar component, a current page view component, a dialog box component, etc. It's unlikely that all these elements would share the same query algebra, so we need a way of dealing with that.
 
-Our parent component only has one one type variable for the child component query algebra and one for the slot types, so how do we do this? By introducing sum types for the various child query algebra and slot types.
+Our parent component only has one type variable for the child component query algebra and one for the slot types, so how do we do this? By introducing sum types for the various child query algebra and slot types.
 
 It is possible to write your own sum types here, but Halogen offers some convenience functions that should suffice for most cases. We'll be using values from [`Data.Either.Nested`][Data.Either.Nested] for the slot types and [`Data.Functor.Coproduct.Nested`][Data.Functor.Coproduct.Nested] for the query types:
 
