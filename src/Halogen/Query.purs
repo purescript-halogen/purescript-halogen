@@ -128,7 +128,8 @@ queryAll = queryAll' cpI
 -- | a `ChildPath` to discriminate the type of child component to query.
 queryAll'
   :: forall s f g g' p p' o m a
-   . (Ord p, Eq p')
+   . Ord p
+  => Eq p'
   => ChildPath g g' p p'
   -> g a
   -> HalogenM s f g' p' o m (M.Map p a)

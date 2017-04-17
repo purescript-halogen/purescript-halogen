@@ -65,7 +65,7 @@ ui =
 
   eval :: Query ~> H.ParentDSL State Query AceQuery AceSlot Void (Aff (AceEffects eff))
   eval (ClearText next) = do
-    H.query AceSlot $ H.action (ChangeText "")
+    _ <- H.query AceSlot $ H.action (ChangeText "")
     pure next
   eval (HandleAceUpdate text next) = do
     H.modify (_ { text = text })

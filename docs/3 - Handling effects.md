@@ -193,6 +193,6 @@ Let's take a look at [running a component][running-components] to produce a UI n
 [Control.Monad.Eff.Class.liftEff]: https://pursuit.purescript.org/packages/purescript-eff/2.0.0/docs/Control.Monad.Eff.Class#v:liftEff "Control.Monad.Eff.Class.liftEff"
 [Control.Monad.Eff.Class.MonadEff]: https://pursuit.purescript.org/packages/purescript-eff/2.0.0/docs/Control.Monad.Eff.Class#t:MonadEff "Control.Monad.Eff.Class.MonadEff"
 [Control.Monad.Eff.Random.random]: https://pursuit.purescript.org/packages/purescript-random/2.0.0/docs/Control.Monad.Eff.Random#v:random "Control.Monad.Eff.Random.random"
-[Halogen.Component.hoist]: https://pursuit.purescript.org/packages/purescript-halogen/1.2.1/docs/Halogen.Component#v:hoist "Halogen.Component.hoist"
+[Halogen.Component.hoist]: https:///docs/Halogen.Component#v:hoist "Halogen.Component.hoist"
 
 [running-components]: 4%20-%20Running%20a%20component.md "Running a component"

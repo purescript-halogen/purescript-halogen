@@ -28,7 +28,7 @@ import Halogen.Query.ForkF as FF
 import Halogen.Query.InputF (RefLabel)
 
 -- | The Halogen component algebra
-data HalogenF s (f :: * -> *) g p o m a
+data HalogenF s (f :: Type -> Type) g p o m a
   = State (s -> Tuple a s)
   | Subscribe (ES.EventSource f m) a
   | Lift (m a)
@@ -62,7 +62,7 @@ derive newtype instance functorHalogenAp :: Functor (HalogenAp s f g p o m)
 derive newtype instance applyHalogenAp :: Apply (HalogenAp s f g p o m)
 derive newtype instance applicativeHalogenAp :: Applicative (HalogenAp s f g p o m)
 
-newtype HalogenM s (f :: * -> *) g p o m a = HalogenM (Free (HalogenF s f g p o m) a)
+newtype HalogenM s (f :: Type -> Type) g p o m a = HalogenM (Free (HalogenF s f g p o m) a)
 
 instance functorHalogenM :: Functor (HalogenM s f g p o m) where
   map f (HalogenM fa) = HalogenM (map f fa)

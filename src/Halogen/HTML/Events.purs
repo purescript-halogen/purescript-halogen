@@ -52,8 +52,8 @@ import Prelude
 import Control.Monad.Except (runExcept)
 
 import Data.Either (either)
-import Data.Foreign (toForeign)
-import Data.Foreign.Class (class IsForeign, readProp)
+import Data.Foreign (Foreign, F, toForeign, readString, readInt, readBoolean)
+import Data.Foreign.Index (readProp)
 import Data.Maybe (Maybe(..))
 
 import DOM.Event.Types (ClipboardEvent, Event, EventType(..), FocusEvent, KeyboardEvent, MouseEvent)
@@ -211,25 +211,25 @@ clipboardHandler = unsafeCoerce
 
 -- | Attaches event handler to event `key` with getting `prop` field as an
 -- | argument of `handler`.
-addForeignPropHandler :: forall r i value. IsForeign value => EventType -> String -> (value -> Maybe i) -> IProp r i
-addForeignPropHandler key prop f =
-  handler key (either (const Nothing) f <<< runExcept <<< readProp prop <<< toForeign <<< EE.currentTarget)
+addForeignPropHandler :: forall r i value. EventType -> String -> (Foreign -> F value) -> (value -> Maybe i) -> IProp r i
+addForeignPropHandler key prop reader f =
+  handler key (either (const Nothing) f <<< runExcept <<< (reader <=< readProp prop) <<< toForeign <<< EE.currentTarget)
 
 -- | Attaches an event handler which will produce an input when the value of an
 -- | input field changes.
 onValueChange :: forall r i. (String -> Maybe i) -> IProp (value :: String, onChange :: Event | r) i
-onValueChange = addForeignPropHandler (EventType "change") "value"
+onValueChange = addForeignPropHandler (EventType "change") "value" readString
 
 -- | Attaches an event handler which will produce an input when the seleced index of a
 -- | `select` element changes.
 onSelectedIndexChange :: forall r i. (Int -> Maybe i) -> IProp (selectedIndex :: Int, onChange :: Event | r) i
-onSelectedIndexChange = addForeignPropHandler (EventType "change") "selectedIndex"
+onSelectedIndexChange = addForeignPropHandler (EventType "change") "selectedIndex" readInt
 
 -- | Attaches an event handler which will fire on input.
 onValueInput :: forall r i. (String -> Maybe i) -> IProp (value :: String, onInput :: Event | r) i
-onValueInput = addForeignPropHandler (EventType "input") "value"
+onValueInput = addForeignPropHandler (EventType "input") "value" readString
 
 -- | Attaches an event handler which will fire when a checkbox is checked or
 -- | unchecked.
 onChecked :: forall r i. (Boolean -> Maybe i) -> IProp (checked :: Boolean, onChange :: Event | r) i
-onChecked = addForeignPropHandler (EventType "change") "checked"
+onChecked = addForeignPropHandler (EventType "change") "checked" readBoolean

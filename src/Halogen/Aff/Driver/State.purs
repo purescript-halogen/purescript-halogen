@@ -15,7 +15,7 @@ module Halogen.Aff.Driver.State
 import Prelude
 
 import Control.Monad.Aff (Aff)
-import Control.Monad.Eff (Eff)
+import Control.Monad.Eff (kind Effect, Eff)
 import Control.Monad.Eff.Ref (Ref, newRef, writeRef)
 
 import Data.Foreign (Foreign)
@@ -74,10 +74,10 @@ type DriverStateRec h r s f z g p i o eff =
 -- | A version of `DriverState` with the aspects relating to child components
 -- | existentially hidden.
 data DriverStateX
-  (h :: * -> * -> *)
-  (r :: * -> (* -> *) -> (* -> *) -> * -> * -> # ! -> *)
-  (f :: * -> *)
-  (eff :: # !)
+  (h :: Type -> Type -> Type)
+  (r :: Type -> (Type -> Type) -> (Type -> Type) -> Type -> Type -> # Effect -> Type)
+  (f :: Type -> Type)
+  (eff :: # Effect)
 
 mkDriverStateXRef
   :: forall h r s f z g p i o eff
@@ -95,8 +95,8 @@ unDriverStateX = unsafeCoerce
 -- | A wrapper of `r` from `DriverState` with the aspects relating to child
 -- | components existentially hidden.
 data RenderStateX
-  (r :: * -> (* -> *) -> (* -> *) -> * -> * -> # ! -> *)
-  (eff :: # !)
+  (r :: Type -> (Type -> Type) -> (Type -> Type) -> Type -> Type -> # Effect -> Type)
+  (eff :: # Effect)
 
 mkRenderStateX
   :: forall r s f z g p o eff m
@@ -147,6 +147,7 @@ initDriverState component input handler prjQuery lchs = do
   fresh <- newRef 0
   subscriptions <- newRef (Just M.empty)
   let
+    ds :: DriverStateRec h r s f z g p i o eff
     ds =
       { component
       , state: component.initialState input
