@@ -34,7 +34,7 @@ ui =
 
   render :: State -> H.ComponentHTML Query
   render st =
-    HH.div_ $
+    HH.form_ $
       [ HH.h1_ [ HH.text "Lookup GitHub user" ]
       , HH.label_
           [ HH.div_ [ HH.text "Enter username:" ]
