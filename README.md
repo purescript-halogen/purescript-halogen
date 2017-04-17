@@ -5,6 +5,30 @@
 
 A declarative, type-safe UI library for PureScript.
 
+- [Getting Started](#)
+- [Introduction](#)
+	- [Query algebras](#)
+	- [State](#)
+	- [Component definitions](#)
+	- [Rendering](#)
+		- [Event listeners](#)
+	- [Evaluating queries](#)
+		- [Eval’s free monad](#)
+		- [Non-state effects](#)
+	- [The driver](#)
+	- [Child components](#)
+		- [Parent components](#)
+		- [Slots](#)
+		- [Querying children](#)
+		- [Peeking](#)
+		- [Multiple types of child component](#)
+	- [Widgets (3rd party components)](#)
+		- [A widget component](#)
+		- [Initializers and finalizers](#)
+		- [Initializing the widget](#)
+		- [Subscriptions and event sources](#)
+		- [Widget queries](#)
+
 ## Getting Started
 
 - Read the [guide](docs/)
