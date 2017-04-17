@@ -3,12 +3,13 @@ module Container where
 import Prelude
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Newtype (un)
-import Data.Reflection (class Given, given)
+import Data.Reflection (class Reifies, reflect)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
-import Button as Button
+import Type.Proxy (Proxy)
 
+import Button as Button
 import I18n (I18n(..), I18n')
 
 data Query a
@@ -19,10 +20,11 @@ type State =
   }
 
 component
-  :: forall m
-   . Given I18n
-  => H.Component HH.HTML Query Unit Void m
-component =
+  :: forall t m
+   . Reifies t I18n
+  => Proxy t
+  -> H.Component HH.HTML Query Unit Void m
+component proxy =
   H.parentComponent
     { render
     , eval
@@ -31,13 +33,13 @@ component =
     }
   where
   i18n :: I18n' String
-  i18n = un I18n given
+  i18n = un I18n (reflect proxy)
 
   render :: State -> H.ParentHTML Query Button.Query Unit m
   render st =
     HH.div_
       [ HH.p_ [ HH.text i18n.description ]
-      , HH.slot unit Button.component unit (HE.input HandleMessage)
+      , HH.slot unit (Button.component proxy) unit (HE.input HandleMessage)
       , HH.p_ [ HH.text (fromMaybe "" st.message) ]
       ]
 

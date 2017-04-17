@@ -88,7 +88,7 @@ factory innerComponent =
     H.modify $ \state -> state { on = not state.on }
     pure next
   eval (Set next) = do
-    H.query unit $ H.action (set false)
+    _ <- H.query unit $ H.action (set false)
     pure next
   eval (Inner iq) = iq # unCoyoneda \k q -> do
     result <- H.query unit q

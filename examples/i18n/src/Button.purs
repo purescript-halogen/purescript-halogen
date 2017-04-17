@@ -3,10 +3,11 @@ module Button where
 import Prelude
 import Data.Maybe (Maybe(..))
 import Data.Newtype (un)
-import Data.Reflection (class Given, given)
+import Data.Reflection (class Reifies, reflect)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
+import Type.Proxy (Proxy)
 
 import I18n (I18n(..), I18n')
 
@@ -14,10 +15,11 @@ data Query a
   = HandleClick a
 
 component
-  :: forall m
-   . Given I18n
-  => H.Component HH.HTML Query Unit String m
-component =
+  :: forall t m
+   . Reifies t I18n
+  => Proxy t
+  -> H.Component HH.HTML Query Unit String m
+component proxy =
   H.component
     { render
     , eval
@@ -26,7 +28,7 @@ component =
     }
   where
   i18n :: I18n' String
-  i18n = un I18n given
+  i18n = un I18n (reflect proxy)
 
   render :: Unit -> H.ComponentHTML Query
   render _ =

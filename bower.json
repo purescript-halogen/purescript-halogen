@@ -28,19 +28,19 @@
     "purescript-aff": "^3.0.0",
     "purescript-const": "^3.0.0",
     "purescript-coroutines": "^4.0.0",
-    "purescript-dom": "4.1.1",
+    "purescript-dom": "^4.2.0",
     "purescript-dom-indexed": "^3.0.0",
     "purescript-foreign": "^4.0.0",
     "purescript-fork": "^2.0.0",
     "purescript-free": "^4.0.0",
-    "purescript-freeap": "^3.0.0",
+    "purescript-freeap": "^3.0.1",
     "purescript-halogen-vdom": "^2.0.0",
     "purescript-maps": "^3.0.0",
     "purescript-media-types": "^3.0.0",
     "purescript-nullable": "^3.0.0",
     "purescript-parallel": "^3.0.0",
     "purescript-profunctor": "^3.0.0",
-    "purescript-profunctor-lenses": "^3.0.0",
+    "purescript-profunctor-lenses": "^3.2.0",
     "purescript-unsafe-coerce": "^3.0.0",
     "purescript-unsafe-reference": "^2.0.0"
   },
@@ -49,7 +49,6 @@
     "purescript-aff-coroutines": "^5.0.0",
     "purescript-affjax": "^4.0.0",
     "purescript-random": "^3.0.0",
-    "purescript-websocket-simple": "latest",
     "purescript-reflection": "^3.0.0"
   }
 }
