@@ -46,7 +46,7 @@ The [`HalogenEffects`][Halogen.Aff.Effects.HalogenEffects] type here is a synony
 type HalogenEffects eff =
   ( avar :: AVAR
   , ref :: REF
-  , err :: EXCEPTION
+  , exception :: EXCEPTION
   , dom :: DOM
   | eff
   )
@@ -119,14 +119,14 @@ Now we know how to build simple components and run them, we can take a look at [
 [purescript-coroutines]: https://pursuit.purescript.org/packages/purescript-coroutines "purescript-coroutines"
 
 [Control.Coroutine.consumer]: https://pursuit.purescript.org/packages/purescript-coroutines/3.1.0/docs/Control.Coroutine#v:consumer "Control.Coroutine.consumer"
-[Halogen.Aff.Effects.HalogenEffects]: https://pursuit.purescript.org/packages/purescript-halogen/1.2.1/docs/Halogen.Aff.Effects#t:HalogenEffects "Halogen.Aff.Effects.HalogenEffects"
-[Halogen.Aff.Util.awaitBody]: https://pursuit.purescript.org/packages/purescript-halogen/1.2.1/docs/Halogen.Aff.Util#v:awaitBody "Halogen.Aff.Util.awaitBody"
-[Halogen.Aff.Util.awaitLoad]: https://pursuit.purescript.org/packages/purescript-halogen/1.2.1/docs/Halogen.Aff.Util#v:awaitLoad "Halogen.Aff.Util.awaitLoad"
-[Halogen.Aff.Util.runHalogenAff]: https://pursuit.purescript.org/packages/purescript-halogen/1.2.1/docs/Halogen.Aff.Util#v:runHalogenAff "Halogen.Aff.Util.runHalogenAff"
-[Halogen.Aff.Util.selectElement]: https://pursuit.purescript.org/packages/purescript-halogen/1.2.1/docs/Halogen.Aff.Util#v:selectElement "Halogen.Aff.Util.selectElement"
-[Halogen.Component.hoist]: https://pursuit.purescript.org/packages/purescript-halogen/1.2.1/docs/Halogen.Component#v:hoist "Halogen.Component.hoist"
-[Halogen.VDom.Driver.runUI]: https://pursuit.purescript.org/packages/purescript-halogen/1.2.1/docs/Halogen.VDom.Driver#v:runUI "Halogen.VDom.Driver.runUI"
-[Halogen.VDom.Driver]: https://pursuit.purescript.org/packages/purescript-halogen/1.2.1/docs/Halogen.VDom.Driver "Halogen.VDom.Driver"
+[Halogen.Aff.Effects.HalogenEffects]: https:///docs/Halogen.Aff.Effects#t:HalogenEffects "Halogen.Aff.Effects.HalogenEffects"
+[Halogen.Aff.Util.awaitBody]: https:///docs/Halogen.Aff.Util#v:awaitBody "Halogen.Aff.Util.awaitBody"
+[Halogen.Aff.Util.awaitLoad]: https:///docs/Halogen.Aff.Util#v:awaitLoad "Halogen.Aff.Util.awaitLoad"
+[Halogen.Aff.Util.runHalogenAff]: https:///docs/Halogen.Aff.Util#v:runHalogenAff "Halogen.Aff.Util.runHalogenAff"
+[Halogen.Aff.Util.selectElement]: https:///docs/Halogen.Aff.Util#v:selectElement "Halogen.Aff.Util.selectElement"
+[Halogen.Component.hoist]: https:///docs/Halogen.Component#v:hoist "Halogen.Component.hoist"
+[Halogen.VDom.Driver.runUI]: https:///docs/Halogen.VDom.Driver#v:runUI "Halogen.VDom.Driver.runUI"
+[Halogen.VDom.Driver]: https:///docs/Halogen.VDom.Driver "Halogen.VDom.Driver"
 
 [defining-components]: 2%20-%20Defining%20a%20component.md "Defining a component"
 [parent-child-components]: 5%20-%20Parent%20and%20child%20components.md "Parent and child components"
