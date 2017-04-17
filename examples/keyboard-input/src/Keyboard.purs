@@ -8,11 +8,11 @@ module Keyboard
   ) where
 
 import Prelude
-import Control.Monad.Eff (Eff)
+import Control.Monad.Eff (kind Effect, Eff)
 import Data.Function.Uncurried as F
 import DOM.Node.Types as DOM
 
-foreign import data KEYBOARD :: !
+foreign import data KEYBOARD :: Effect
 foreign import addEventListenerImpl :: forall ev eff a. F.Fn3 String (ev -> Eff (keyboard :: KEYBOARD | eff) a) DOM.Document (Eff (keyboard :: KEYBOARD | eff) (Eff (keyboard :: KEYBOARD | eff) Unit))
 
 type KeyboardEventR =
@@ -23,7 +23,7 @@ type KeyboardEventR =
   , shiftKey :: Boolean
   }
 
-foreign import data KeyboardEvent :: *
+foreign import data KeyboardEvent :: Type
 foreign import readKeyboardEvent :: KeyboardEvent -> KeyboardEventR
 foreign import preventDefault :: forall eff. KeyboardEvent -> Eff (keyboard :: KEYBOARD | eff) Unit
 
