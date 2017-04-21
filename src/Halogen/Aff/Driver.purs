@@ -214,8 +214,7 @@ runUI renderSpec component i = do
     readRef ds.childrenIn >>= traverse_ \childVar -> do
       childDS <- readRef childVar
       renderStateX_ renderSpec.removeChild childDS
-      cleanupSubscriptions childDS
-      addFinalizer lchs childDS
+      finalize lchs childDS
     modifyRef ds.selfRef \(DriverState ds') ->
       DriverState
         { rendering: Just rendering
@@ -304,26 +303,27 @@ runUI renderSpec component i = do
     for_ queue (handleAff <<< forkAll <<< L.reverse)
 
   cleanupSubscriptions
-    :: forall f'
-     . DriverStateX h r f' eff
+    :: forall s f' z' g p i' o'
+     . DriverState h r s f' z' g p i' o' eff
     -> Eff (HalogenEffects eff) Unit
-  cleanupSubscriptions = unDriverStateX \ds -> do
+  cleanupSubscriptions (DriverState ds) = do
     traverse_ (handleAff <<< forkAll) =<< readRef ds.subscriptions
     writeRef ds.subscriptions Nothing
 
-  addFinalizer
+  finalize
     :: forall f'
      . Ref (LifecycleHandlers eff)
     -> DriverStateX h r f' eff
     -> Eff (HalogenEffects eff) Unit
-  addFinalizer lchs =
+  finalize lchs = do
     unDriverStateX \st -> do
+      cleanupSubscriptions (DriverState st)
       for_ (evalF st.selfRef <<< Query <$> st.component.finalizer) \f ->
         modifyRef lchs (\handlers ->
           { initializers: handlers.initializers
           , finalizers: f : handlers.finalizers
           })
-      for_ st.children (addFinalizer lchs <=< readRef)
+      for_ st.children (finalize lchs <=< readRef)
 
 -- | TODO: we could do something more intelligent now this isn't baked into the
 -- | virtual-dom rendering. Perhaps write to an avar when an error occurs...
