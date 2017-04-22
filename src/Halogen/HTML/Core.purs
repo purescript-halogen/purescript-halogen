@@ -8,6 +8,7 @@ module Halogen.HTML.Core
   , attr
   , handler
   , ref
+  , className
   , class IsProp
   , toPropValue
   , PropName(..)
@@ -186,6 +187,9 @@ derive instance genericAttrName :: Generic AttrName
 
 -- | A wrapper for strings which are used as CSS classes.
 newtype ClassName = ClassName String
+
+className :: String -> ClassName
+className = ClassName
 
 derive instance newtypeClassName :: Newtype ClassName _
 derive newtype instance eqClassName :: Eq ClassName
