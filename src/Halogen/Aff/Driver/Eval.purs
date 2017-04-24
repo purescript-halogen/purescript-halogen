@@ -22,7 +22,7 @@ import Data.Either (Either(..))
 import Data.List (List, (:))
 import Data.List as L
 import Data.Map as M
-import Data.Maybe (Maybe(..), isJust)
+import Data.Maybe (Maybe(..), isJust, maybe)
 import Data.StrMap as SM
 import Data.Tuple (Tuple(..))
 
@@ -114,10 +114,14 @@ eval render r =
       DriverState ({ subscriptions, fresh }) <- liftEff (readRef ref)
       void $ forkAff do
         { producer, done } <- ES.unEventSource es
-        i <- liftEff do
-          i <- modifyRef' fresh (\i -> { state: i + 1, value: i })
-          modifyRef subscriptions (map (M.insert i done))
-          pure i
+        i <- liftEff $ modifyRef' fresh (\i -> { state: i + 1, value: i })
+        let
+          done' = do
+            subs <- liftEff $ readRef subscriptions
+            when (maybe false (M.member i) subs) do
+              done
+              liftEff $ modifyRef subscriptions (map (M.delete i))
+        liftEff $ modifyRef subscriptions (map (M.insert i done'))
         let
           consumer = do
             q <- CR.await
@@ -126,8 +130,7 @@ eval render r =
               s <- lift $ evalF ref q
               when (s == ES.Listening) consumer
         CR.runProcess (consumer `CR.pullFrom` producer)
-        done
-        liftEff $ modifyRef subscriptions (map (M.delete i))
+        done'
       pure next
     Lift aff ->
       aff
