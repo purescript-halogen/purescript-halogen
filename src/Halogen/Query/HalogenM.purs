@@ -103,6 +103,12 @@ instance monadRecHalogenM :: MonadRec (HalogenM s f g p o m) where
 instance monadStateHalogenM :: MonadState s (HalogenM s f g p o m) where
   state = HalogenM <<< liftF <<< State
 
+get :: forall s f g p o m. HalogenM s f g p o m s
+get = gets id
+
+gets :: forall s f g p o m a. (s -> a) -> HalogenM s f g p o m a
+gets f = HalogenM $ liftF $ GetState f
+
 instance monadAskHalogenM :: MonadAsk r m => MonadAsk r (HalogenM s f g p o m) where
   ask = HalogenM $ liftF $ Lift $ ask
 
