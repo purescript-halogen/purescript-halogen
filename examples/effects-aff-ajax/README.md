@@ -8,7 +8,7 @@ From the root of the Halogen project:
 
 ```
 $ npm install
-$ npm run example-ajax
+$ npm run example-effects-aff-ajax
 ```
 
 Or from the current directory:
