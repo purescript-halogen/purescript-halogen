@@ -3,6 +3,6 @@
   "private": true,
   "dependencies": {
     "purescript-halogen": "*",
-    "purescript-random": "^2.0.0"
+    "purescript-random": "^3.0.0"
   }
 }
