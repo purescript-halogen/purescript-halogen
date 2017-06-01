@@ -41,6 +41,12 @@ module Halogen.HTML.Events
   , onDragOver
   , onDragStart
   , onDrop
+  , onTouchCancel
+  , onTouchEnd
+  , onTouchEnter
+  , onTouchLeave
+  , onTouchMove
+  , onTouchStart
   , onValueChange
   , onValueInput
   , onSelectedIndexChange
@@ -48,24 +54,20 @@ module Halogen.HTML.Events
   ) where
 
 import Prelude
-
+import DOM.Event.Event as EE
+import DOM.HTML.Event.EventTypes as ET
+import Halogen.HTML.Core as Core
 import Control.Monad.Except (runExcept)
-
+import DOM.Event.Types (ClipboardEvent, Event, EventType(..), FocusEvent, KeyboardEvent, MouseEvent, TouchEvent)
+import DOM.HTML.Event.Types (DragEvent)
 import Data.Either (either)
 import Data.Foreign (Foreign, F, toForeign, readString, readInt, readBoolean)
 import Data.Foreign.Index (readProp)
 import Data.Maybe (Maybe(..))
-
-import DOM.Event.Types (ClipboardEvent, Event, EventType(..), FocusEvent, KeyboardEvent, MouseEvent)
-import DOM.Event.Event as EE
-import DOM.HTML.Event.Types (DragEvent)
-
-import Halogen.HTML.Core as Core
 import Halogen.HTML.Core (Prop)
 import Halogen.HTML.Properties (IProp)
 import Halogen.Query (Action, action)
 import Halogen.Query.InputF (InputF(..))
-
 import Unsafe.Coerce (unsafeCoerce)
 
 input :: forall f a. (a -> Action f) -> a -> Maybe (f Unit)
@@ -194,6 +196,24 @@ onDragStart = handler (EventType "dragstart") <<< dragHandler
 onDrop :: forall r i. (DragEvent -> Maybe i) -> IProp (onDrop :: DragEvent | r) i
 onDrop = handler (EventType "drop") <<< dragHandler
 
+onTouchCancel :: forall r i. (TouchEvent -> Maybe i) -> IProp (onTouchCancel :: TouchEvent | r) i
+onTouchCancel = handler ET.touchcancel <<< touchHandler
+
+onTouchEnd :: forall r i. (TouchEvent -> Maybe i) -> IProp (onTouchEnd :: TouchEvent | r) i
+onTouchEnd = handler ET.touchend <<< touchHandler
+
+onTouchEnter :: forall r i. (TouchEvent -> Maybe i) -> IProp (onTouchEnter :: TouchEvent | r) i
+onTouchEnter = handler ET.touchenter <<< touchHandler
+
+onTouchLeave :: forall r i. (TouchEvent -> Maybe i) -> IProp (onTouchEnter :: TouchEvent | r) i
+onTouchLeave = handler ET.touchleave <<< touchHandler
+
+onTouchMove :: forall r i. (TouchEvent -> Maybe i) -> IProp (onTouchMove :: TouchEvent | r) i
+onTouchMove = handler ET.touchmove <<< touchHandler
+
+onTouchStart :: forall r i. (TouchEvent -> Maybe i) -> IProp (onTouchStart :: TouchEvent | r) i
+onTouchStart = handler ET.touchstart <<< touchHandler
+
 keyHandler :: forall i. (KeyboardEvent -> Maybe i) -> Event -> Maybe i
 keyHandler = unsafeCoerce
 
@@ -208,6 +228,10 @@ dragHandler = unsafeCoerce
 
 clipboardHandler :: forall i. (ClipboardEvent -> Maybe i) -> Event -> Maybe i
 clipboardHandler = unsafeCoerce
+
+touchHandler :: forall i. (TouchEvent -> Maybe i) -> Event -> Maybe i
+touchHandler = unsafeCoerce
+
 
 -- | Attaches event handler to event `key` with getting `prop` field as an
 -- | argument of `handler`.
