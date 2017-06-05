@@ -19,7 +19,8 @@ type State =
 
 data Query a
   = SetUsername String a
-  | MakeRequest Event a
+  | MakeRequest a
+  | PreventDefault Event (Query a)
 
 ui :: forall eff. H.Component HH.HTML Query Unit Void (Aff (dom :: DOM, ajax :: AX.AJAX | eff))
 ui =
@@ -37,7 +38,7 @@ ui =
   render :: State -> H.ComponentHTML Query
   render st =
     HH.form
-      [ HE.onSubmit (HE.input MakeRequest)]
+      [ HE.onSubmit (HE.input $ \e a -> PreventDefault e (MakeRequest a))]
       [ HH.h1_ [ HH.text "Lookup GitHub user" ]
       , HH.label_
           [ HH.div_ [ HH.text "Enter username:" ]
@@ -69,10 +70,12 @@ ui =
     SetUsername username next -> do
       H.modify (_ { username = username, result = Nothing :: Maybe String })
       pure next
-    MakeRequest e next -> do
-      H.liftEff $ preventDefault e
+    MakeRequest next -> do
       username <- H.gets _.username
       H.modify (_ { loading = true })
       response <- H.liftAff $ AX.get ("https://api.github.com/users/" <> username)
       H.modify (_ { loading = false, result = Just response.response })
       pure next
+    PreventDefault e query -> do
+      H.liftEff $ preventDefault e
+      eval query
