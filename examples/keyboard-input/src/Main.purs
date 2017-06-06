@@ -23,17 +23,17 @@ import Halogen.VDom.Driver (runUI)
 
 import Keyboard as K
 
-type State eff = { chars :: String, unsubscribe :: Maybe (Aff (Effects eff) Unit) }
+type State = { chars :: String }
 
-initialState :: forall eff. State eff
-initialState = { chars : "", unsubscribe: Nothing }
+initialState :: State
+initialState = { chars : "" }
 
 data Query a
   = Init a
   | HandleKey K.KeyboardEvent (H.SubscribeStatus -> a)
 
 type Effects eff = (dom :: DOM, avar :: AVAR, keyboard :: K.KEYBOARD | eff)
-type DSL eff = H.ComponentDSL (State eff) Query Void (Aff (Effects eff))
+type DSL eff = H.ComponentDSL State Query Void (Aff (Effects eff))
 
 ui :: forall eff. H.Component HH.HTML Query Unit Void (Aff (Effects eff))
 ui =
@@ -47,7 +47,7 @@ ui =
     }
   where
 
-  render :: State eff -> H.ComponentHTML Query
+  render :: State -> H.ComponentHTML Query
   render state =
     HH.div_
       [ HH.p_ [ HH.text "Hold down the shift key and type some characters!" ]
