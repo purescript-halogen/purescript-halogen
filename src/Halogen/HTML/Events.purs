@@ -55,20 +55,25 @@ module Halogen.HTML.Events
   ) where
 
 import Prelude
-import DOM.Event.Event as EE
-import DOM.HTML.Event.EventTypes as ET
-import Halogen.HTML.Core as Core
+
 import Control.Monad.Except (runExcept)
-import DOM.Event.Types (ClipboardEvent, Event, EventType, FocusEvent, KeyboardEvent, MouseEvent, TouchEvent)
-import DOM.HTML.Event.Types (DragEvent)
+
 import Data.Either (either)
 import Data.Foreign (Foreign, F, toForeign, readString, readInt, readBoolean)
 import Data.Foreign.Index (readProp)
 import Data.Maybe (Maybe(..))
+
+import DOM.Event.Event as EE
+import DOM.Event.Types (ClipboardEvent, Event, EventType, FocusEvent, KeyboardEvent, MouseEvent, TouchEvent)
+import DOM.HTML.Event.EventTypes as ET
+import DOM.HTML.Event.Types (DragEvent)
+
+import Halogen.HTML.Core as Core
 import Halogen.HTML.Core (Prop)
 import Halogen.HTML.Properties (IProp)
 import Halogen.Query (Action, action)
 import Halogen.Query.InputF (InputF(..))
+
 import Unsafe.Coerce (unsafeCoerce)
 
 input :: forall f a. (a -> Action f) -> a -> Maybe (f Unit)
@@ -236,7 +241,6 @@ clipboardHandler = unsafeCoerce
 touchHandler :: forall i. (TouchEvent -> Maybe i) -> Event -> Maybe i
 touchHandler = unsafeCoerce
 
-
 -- | Attaches event handler to event `key` with getting `prop` field as an
 -- | argument of `handler`.
 addForeignPropHandler :: forall r i value. EventType -> String -> (Foreign -> F value) -> (value -> Maybe i) -> IProp r i
@@ -261,5 +265,3 @@ onValueInput = addForeignPropHandler ET.input "value" readString
 -- | unchecked.
 onChecked :: forall r i. (Boolean -> Maybe i) -> IProp (checked :: Boolean, onChange :: Event | r) i
 onChecked = addForeignPropHandler ET.change "checked" readBoolean
-
-
