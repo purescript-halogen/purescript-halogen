@@ -16,7 +16,7 @@ import Control.Monad.Writer.Class (class MonadTell, tell)
 import Control.Parallel.Class (class Parallel)
 
 import Data.Bifunctor (lmap)
-import Data.Coyoneda (Coyoneda, coyoneda)
+import Data.Coyoneda (Coyoneda, coyoneda, hoistCoyoneda)
 import Data.Foreign (Foreign)
 import Data.List as L
 import Data.Maybe (Maybe)
@@ -137,6 +137,114 @@ subscribe es = HalogenM $ liftF $ Subscribe es unit
 -- | Raises an output message for the component.
 raise :: forall s f g p o m. o -> HalogenM s f g p o m Unit
 raise o = HalogenM $ liftF $ Raise o unit
+
+imapState
+  :: forall s s' f g p o m
+   . (s -> s')
+  -> (s' -> s)
+  -> HalogenM s  f g p o m
+  ~> HalogenM s' f g p o m
+imapState f f' (HalogenM h) = HalogenM (hoistFree go h)
+  where
+  go :: HalogenF s f g p o m ~> HalogenF s' f g p o m
+  go = case _ of
+    State fs -> State (map f <<< fs <<< f')
+    Subscribe es next -> Subscribe es next
+    Lift q -> Lift q
+    Halt msg -> Halt msg
+    GetSlots k -> GetSlots k
+    CheckSlot p k -> CheckSlot p k
+    ChildQuery p cq -> ChildQuery p cq
+    Raise o a -> Raise o a
+    Par p -> Par (over HalogenAp (hoistFreeAp (imapState f f')) p)
+    Fork fo -> Fork (FF.hoistFork (imapState f f') fo)
+    GetRef p k -> GetRef p k
+
+mapQuery
+  :: forall s f f' g p o m
+   . Functor m
+  => (f ~> f')
+  -> HalogenM s f  g p o m
+  ~> HalogenM s f' g p o m
+mapQuery nat (HalogenM h) = HalogenM (hoistFree go h)
+  where
+  go :: HalogenF s f g p o m ~> HalogenF s f' g p o m
+  go = case _ of
+    State f -> State f
+    Subscribe es next -> Subscribe (ES.interpret nat es) next
+    Lift q -> Lift q
+    Halt msg -> Halt msg
+    GetSlots k -> GetSlots k
+    CheckSlot p k -> CheckSlot p k
+    ChildQuery p cq -> ChildQuery p cq
+    Raise o a -> Raise o a
+    Par p -> Par (over HalogenAp (hoistFreeAp (mapQuery nat)) p)
+    Fork f -> Fork (FF.hoistFork (mapQuery nat) f)
+    GetRef p k -> GetRef p k
+
+mapChildQuery
+  :: forall s f g g' p o m
+   . (g ~> g')
+  -> HalogenM s f g  p o m
+  ~> HalogenM s f g' p o m
+mapChildQuery nat (HalogenM h) = HalogenM (hoistFree go h)
+  where
+  go :: HalogenF s f g p o m ~> HalogenF s f g' p o m
+  go = case _ of
+    State f -> State f
+    Subscribe es next -> Subscribe es next
+    Lift q -> Lift q
+    Halt msg -> Halt msg
+    GetSlots k -> GetSlots k
+    CheckSlot p k -> CheckSlot p k
+    ChildQuery p cq -> ChildQuery p (hoistCoyoneda nat cq)
+    Raise o a -> Raise o a
+    Par p -> Par (over HalogenAp (hoistFreeAp (mapChildQuery nat)) p)
+    Fork f -> Fork (FF.hoistFork (mapChildQuery nat) f)
+    GetRef p k -> GetRef p k
+
+imapSlots
+  :: forall s f g p p' o m
+   . (p -> p')
+  -> (p' -> p)
+  -> HalogenM s f g p  o m
+  ~> HalogenM s f g p' o m
+imapSlots f f' (HalogenM h) = HalogenM (hoistFree go h)
+  where
+  go :: HalogenF s f g p o m ~> HalogenF s f g p' o m
+  go = case _ of
+    State fs -> State fs
+    Subscribe es next -> Subscribe es next
+    Lift q -> Lift q
+    Halt msg -> Halt msg
+    GetSlots k -> GetSlots (k <<< map f')
+    CheckSlot p k -> CheckSlot (f p) k
+    ChildQuery p cq -> ChildQuery (f p) cq
+    Raise o a -> Raise o a
+    Par p -> Par (over HalogenAp (hoistFreeAp (imapSlots f f')) p)
+    Fork fo -> Fork (FF.hoistFork (imapSlots f f') fo)
+    GetRef p k -> GetRef p k
+
+mapOutput
+  :: forall s f g p o o' m
+   . (o -> o')
+  -> HalogenM s f g p o  m
+  ~> HalogenM s f g p o' m
+mapOutput f (HalogenM h) = HalogenM (hoistFree go h)
+  where
+  go :: HalogenF s f g p o m ~> HalogenF s f g p o' m
+  go = case _ of
+    State fs -> State fs
+    Subscribe es next -> Subscribe es next
+    Lift q -> Lift q
+    Halt msg -> Halt msg
+    GetSlots k -> GetSlots k
+    CheckSlot p k -> CheckSlot p k
+    ChildQuery p cq -> ChildQuery p cq
+    Raise o a -> Raise (f o) a
+    Par p -> Par (over HalogenAp (hoistFreeAp (mapOutput f)) p)
+    Fork fo -> Fork (FF.hoistFork (mapOutput f) fo)
+    GetRef p k -> GetRef p k
 
 hoist
   :: forall s f g p o m m'
