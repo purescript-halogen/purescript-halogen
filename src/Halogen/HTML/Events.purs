@@ -26,6 +26,7 @@ module Halogen.HTML.Events
   , onMouseOver
   , onMouseOut
   , onMouseUp
+  , onWheel
   , onKeyDown
   , onKeyPress
   , onKeyUp
@@ -64,7 +65,7 @@ import Data.Foreign.Index (readProp)
 import Data.Maybe (Maybe(..))
 
 import DOM.Event.Event as EE
-import DOM.Event.Types (ClipboardEvent, Event, EventType, FocusEvent, KeyboardEvent, MouseEvent, TouchEvent)
+import DOM.Event.Types (ClipboardEvent, Event, EventType, FocusEvent, KeyboardEvent, MouseEvent, TouchEvent, WheelEvent)
 import DOM.HTML.Event.EventTypes as ET
 import DOM.HTML.Event.Types (DragEvent)
 
@@ -157,6 +158,9 @@ onMouseOut = handler ET.mouseout <<< mouseHandler
 onMouseUp :: forall r i. (MouseEvent -> Maybe i) -> IProp (onMouseUp :: MouseEvent | r) i
 onMouseUp = handler ET.mouseup <<< mouseHandler
 
+onWheel :: forall r i. (WheelEvent -> Maybe i) -> IProp (onWheel :: WheelEvent | r) i
+onWheel = handler ET.wheel <<< wheelHandler
+
 onKeyDown :: forall r i. (KeyboardEvent -> Maybe i) -> IProp (onKeyDown :: KeyboardEvent | r) i
 onKeyDown = handler ET.keydown <<< keyHandler
 
@@ -228,6 +232,9 @@ keyHandler = unsafeCoerce
 
 mouseHandler :: forall i. (MouseEvent -> Maybe i) -> Event -> Maybe i
 mouseHandler = unsafeCoerce
+
+wheelHandler :: forall i. (WheelEvent -> Maybe i) -> Event -> Maybe i
+wheelHandler = unsafeCoerce
 
 focusHandler :: forall i. (FocusEvent -> Maybe i) -> Event -> Maybe i
 focusHandler = unsafeCoerce
