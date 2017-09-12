@@ -190,4 +190,5 @@ newtype ClassName = ClassName String
 derive instance newtypeClassName :: Newtype ClassName _
 derive newtype instance eqClassName :: Eq ClassName
 derive newtype instance ordClassName :: Ord ClassName
+derive newtype instance semigroupClassName :: Semigroup ClassName
 derive instance genericClassName :: Generic ClassName
