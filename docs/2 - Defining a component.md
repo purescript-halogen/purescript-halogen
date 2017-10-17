@@ -265,7 +265,7 @@ When a component does use inputs, we can construct the initial state from the in
 Now we pass our component spec to [`component`][Halogen.Component.component-1], and we're done:
 
 ``` purescript
-component :: forall h s f o m. ComponentSpec h s f o m -> Component h f o m
+component :: forall h s f i o m. Bifunctor h => ComponentSpec h s f i o m -> Component h f i o m
 ```
 
 The resulting [`Component`][Halogen.Component.Component] can now be used [as a child of another component][parent-child-components] or can be [run to produce a UI][running-components].
