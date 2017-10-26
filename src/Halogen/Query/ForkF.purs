@@ -7,9 +7,9 @@ import Control.Monad.Eff.Exception (Error)
 
 import Unsafe.Coerce (unsafeCoerce)
 
-data ForkF eff f x a = ForkF (f x) ((Error -> Aff eff Boolean) -> a)
+data ForkF eff f x a = ForkF (f x) ((Error -> Aff eff Unit) -> a)
 
-fork :: forall eff f x. f x -> Fork f (Error -> Aff eff Boolean)
+fork :: forall eff f x. f x -> Fork f (Error -> Aff eff Unit)
 fork fx = mkFork $ ForkF fx id
 
 data Fork (f :: Type -> Type) a

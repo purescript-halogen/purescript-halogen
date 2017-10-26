@@ -18,7 +18,7 @@ module Halogen.Query.EventSource
 import Prelude
 
 import Control.Coroutine as CR
-import Control.Monad.Aff (Aff, runAff, forkAff, attempt)
+import Control.Monad.Aff (Aff, attempt, forkAff, runAff_)
 import Control.Monad.Aff.AVar (AVAR)
 import Control.Monad.Aff.AVar as AV
 import Control.Monad.Aff.Class (class MonadAff, liftAff)
@@ -28,9 +28,8 @@ import Control.Monad.Eff.Exception as Exn
 import Control.Monad.Free.Trans as FT
 import Control.Monad.Rec.Class as Rec
 import Control.Monad.Trans.Class (lift)
-
 import Data.Bifunctor (lmap)
-import Data.Either (Either(..))
+import Data.Either (Either(..), either)
 import Data.Foldable (for_)
 import Data.Maybe (Maybe)
 
@@ -143,7 +142,7 @@ produce
    . ((Either a r -> Eff (avar :: AVAR | eff) Unit) -> Eff (avar :: AVAR | eff) Unit)
   -> CR.Producer a (Aff (avar :: AVAR | eff)) r
 produce recv = produceAff (\send ->
-  liftEff (recv (void <<< runAff (const (pure unit)) pure <<< send)))
+  liftEff (recv (void <<< runAff' <<< send)))
 
 produce'
   :: forall a r eff
@@ -151,8 +150,11 @@ produce'
   -> Aff (avar :: AVAR | eff) { producer :: CR.Producer a (Aff (avar :: AVAR | eff)) r, cancel :: r -> Aff (avar :: AVAR | eff) Boolean }
 produce' recv =
   produceAff' \send -> do
-    x <- liftEff $ recv (void <<< runAff (const (pure unit)) pure <<< send)
+    x <- liftEff $ recv (void <<< runAff' <<< send)
     pure (liftEff x)
+
+runAff' :: forall eff. Aff eff Unit -> Eff eff Unit
+runAff' = runAff_ (either (const (pure unit)) pure)
 
 produceAff
   :: forall a r eff m
@@ -160,8 +162,8 @@ produceAff
   => ((Either a r -> Aff (avar :: AVAR | eff) Unit) -> Aff (avar :: AVAR | eff) Unit)
   -> CR.Producer a m r
 produceAff recv = do
-  v <- lift $ liftAff AV.makeVar
-  void $ lift $ liftAff $ forkAff $ recv $ AV.putVar v
+  v <- lift $ liftAff AV.makeEmptyVar
+  void $ lift $ liftAff $ forkAff $ recv $ flip AV.putVar v
   CR.producer $ liftAff $ AV.takeVar v
 
 produceAff'
@@ -169,17 +171,17 @@ produceAff'
    . ((Either a r -> Aff (avar :: AVAR | eff) Unit) -> Aff (avar :: AVAR | eff) (Aff (avar :: AVAR | eff) Unit))
   -> Aff (avar :: AVAR | eff) { producer :: CR.Producer a (Aff (avar :: AVAR | eff)) r, cancel :: r -> Aff (avar :: AVAR | eff) Boolean }
 produceAff' recv = do
-  inputVar <- AV.makeVar
-  finalizeVar <- AV.makeVar
+  inputVar <- AV.makeEmptyVar
+  finalizeVar <- AV.makeEmptyVar
   let
     producer = do
-      lift $ AV.putVar finalizeVar =<< recv (AV.putVar inputVar)
+      lift $ flip AV.putVar finalizeVar =<< recv (flip AV.putVar inputVar)
       CR.producer (AV.takeVar inputVar)
     cancel r =
       attempt (AV.takeVar finalizeVar) >>= case _ of
         Left _ -> pure false
         Right finalizer -> do
-          AV.killVar finalizeVar (Exn.error "finalized")
+          AV.killVar (Exn.error "finalized") finalizeVar
           finalizer
           pure true
   pure { producer, cancel }

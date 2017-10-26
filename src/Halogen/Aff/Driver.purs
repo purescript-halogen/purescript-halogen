@@ -8,7 +8,7 @@ module Halogen.Aff.Driver
 import Prelude
 
 import Control.Coroutine as CR
-import Control.Monad.Aff (Aff, forkAff, forkAll, runAff)
+import Control.Monad.Aff (Aff, runAff_)
 import Control.Monad.Aff.AVar as AV
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Class (liftEff)
@@ -16,18 +16,18 @@ import Control.Monad.Eff.Console (warn)
 import Control.Monad.Eff.Exception (error, throw, throwException)
 import Control.Monad.Eff.Ref (Ref, modifyRef, writeRef, readRef, newRef)
 import Control.Monad.Eff.Unsafe (unsafeCoerceEff)
+import Control.Monad.Fork.Class (fork)
 import Control.Monad.Rec.Class (Step(..), tailRecM)
-
+import Control.Parallel (parSequence_)
+import Data.Either (Either(..), either)
 import Data.List ((:))
 import Data.List as L
-import Data.Either (Either(..))
 import Data.Map as M
 import Data.Maybe (Maybe(..), maybe, isNothing)
 import Data.Traversable (for_, traverse_, sequence_)
 import Data.Tuple (Tuple(..))
-
 import Halogen (HalogenIO)
-import Halogen.Aff.Driver.Eval (eval, handleLifecycle, queuingHandler, parSequenceAff_)
+import Halogen.Aff.Driver.Eval (eval, handleLifecycle, queuingHandler)
 import Halogen.Aff.Driver.State (LifecycleHandlers, DriverState(..), DriverStateX, RenderStateX, initDriverState, renderStateX, renderStateX_, unDriverStateX)
 import Halogen.Aff.Effects (HalogenEffects)
 import Halogen.Component (Component, ComponentSlot, unComponent, unComponentSlot)
@@ -152,7 +152,7 @@ runUI renderSpec component i = do
     -> Aff (HalogenEffects eff) Unit
   rootHandler ref message = do
     listeners <- liftEff $ readRef ref
-    void $ forkAll $ map (\var -> AV.putVar var message) listeners
+    traverse_ fork $ map (AV.putVar message) listeners
 
   subscribe
     :: Ref Int
@@ -160,17 +160,17 @@ runUI renderSpec component i = do
     -> CR.Consumer o (Aff (HalogenEffects eff)) Unit
     -> Aff (HalogenEffects eff) Unit
   subscribe fresh ref consumer = do
-    inputVar <- AV.makeVar
+    inputVar <- AV.makeEmptyVar
     listenerId <- liftEff do
       listenerId <- readRef fresh
       modifyRef fresh (_ + 1)
       modifyRef ref (M.insert listenerId inputVar)
       pure listenerId
     let producer = CR.producer (Left <$> AV.takeVar inputVar)
-    void $ forkAff do
+    void $ fork do
       CR.runProcess (CR.connect producer consumer)
       liftEff $ modifyRef ref (M.delete listenerId)
-      AV.killVar inputVar (error "ended")
+      AV.killVar (error "ended") inputVar
 
   runComponent
     :: forall z f' i' o'
@@ -238,7 +238,7 @@ runUI renderSpec component i = do
       flip tailRecM unit \_ -> do
         handlers <- readRef ds.pendingHandlers
         writeRef ds.pendingHandlers (Just L.Nil)
-        traverse_ (handleAff <<< forkAll <<< L.reverse) handlers
+        traverse_ (handleAff <<< traverse_ fork <<< L.reverse) handlers
         mmore <- readRef ds.pendingHandlers
         if maybe false L.null mmore
           then writeRef ds.pendingHandlers Nothing $> Done unit
@@ -286,7 +286,7 @@ runUI renderSpec component i = do
       let parentInitializer = evalF st.selfRef <<< Query <$> st.component.initializer
       modifyRef lchs \handlers ->
         { initializers: (do
-            parSequenceAff_ (L.reverse handlers.initializers)
+            parSequence_ (L.reverse handlers.initializers)
             sequence_ parentInitializer
             liftEff do
               handlePending st.pendingQueries
@@ -300,14 +300,14 @@ runUI renderSpec component i = do
   handlePending ref = do
     queue <- readRef ref
     writeRef ref Nothing
-    for_ queue (handleAff <<< forkAll <<< L.reverse)
+    for_ queue (handleAff <<< traverse_ fork <<< L.reverse)
 
   cleanupSubscriptions
     :: forall s f' z' g p i' o'
      . DriverState h r s f' z' g p i' o' eff
     -> Eff (HalogenEffects eff) Unit
   cleanupSubscriptions (DriverState ds) = do
-    traverse_ (handleAff <<< forkAll) =<< readRef ds.subscriptions
+    traverse_ (handleAff <<< traverse_ fork) =<< readRef ds.subscriptions
     writeRef ds.subscriptions Nothing
 
   finalize
@@ -332,4 +332,4 @@ handleAff
   :: forall eff a
    . Aff (HalogenEffects eff) a
   -> Eff (HalogenEffects eff) Unit
-handleAff = void <<< runAff throwException (const (pure unit))
+handleAff = runAff_ (either throwException (const (pure unit)))

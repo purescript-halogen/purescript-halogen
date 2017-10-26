@@ -6,7 +6,6 @@ import Control.Applicative.Free (FreeAp, liftFreeAp, hoistFreeAp)
 import Control.Monad.Aff.Class (class MonadAff, liftAff)
 import Control.Monad.Eff.Class (class MonadEff, liftEff)
 import Control.Monad.Eff.Exception (Error)
-import Control.Monad.Fork (class MonadFork)
 import Control.Monad.Free (Free, hoistFree, liftF)
 import Control.Monad.Reader.Class (class MonadAsk, ask)
 import Control.Monad.Rec.Class (class MonadRec, tailRecM, Step(..))
@@ -88,9 +87,6 @@ instance parallelHalogenM :: Parallel (HalogenAp s f g p o m) (HalogenM s f g p 
   parallel = HalogenAp <<< liftFreeAp
   sequential = HalogenM <<< liftF <<< Par
 
-instance monadForkHalogenM :: MonadAff eff m => MonadFork Error (HalogenM s f g p o m) where
-  fork a = map liftAff <$> HalogenM (liftF $ Fork $ FF.fork a)
-
 instance monadTransHalogenM :: MonadTrans (HalogenM s f g p o) where
   lift m = HalogenM $ liftF $ Lift m
 
@@ -137,6 +133,9 @@ subscribe es = HalogenM $ liftF $ Subscribe es unit
 -- | Raises an output message for the component.
 raise :: forall s f g p o m. o -> HalogenM s f g p o m Unit
 raise o = HalogenM $ liftF $ Raise o unit
+
+fork :: forall s f g p o m eff a. MonadAff eff m => HalogenM s f g p o m a -> HalogenM s f g p o m (Error -> m Unit)
+fork a = map liftAff <$> HalogenM (liftF $ Fork $ FF.fork a)
 
 imapState
   :: forall s s' f g p o m
