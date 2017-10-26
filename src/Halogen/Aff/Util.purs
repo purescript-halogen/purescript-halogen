@@ -7,7 +7,7 @@ module Halogen.Aff.Util
 
 import Prelude
 
-import Control.Monad.Aff (Aff, Canceler(..), makeAff, runAff_)
+import Control.Monad.Aff (Aff, Canceler(..), makeAff, nonCanceler, runAff_)
 import Control.Monad.Eff (kind Effect, Eff)
 import Control.Monad.Eff.Class (liftEff)
 import Control.Monad.Eff.Exception (throwException, error)
@@ -16,6 +16,7 @@ import Control.Monad.Except (runExcept)
 import DOM (DOM)
 import DOM.Event.EventTarget (addEventListener, eventListener, removeEventListener)
 import DOM.HTML (window)
+import DOM.HTML.Document (ReadyState(..), readyState)
 import DOM.HTML.Event.EventTypes (load)
 import DOM.HTML.Types (HTMLElement, windowToEventTarget, htmlDocumentToParentNode, readHTMLElement)
 import DOM.HTML.Window (document)
@@ -28,10 +29,16 @@ import Halogen.Aff.Effects (HalogenEffects)
 -- | Waits for the document to load.
 awaitLoad :: forall eff. Aff (dom :: DOM | eff) Unit
 awaitLoad = makeAff \callback -> liftEff do
-  et <- windowToEventTarget <$> window
-  let listener = eventListener (\_ -> callback (Right unit))
-  addEventListener load listener false et
-  pure $ Canceler \_ -> liftEff (removeEventListener load listener false et)
+  rs <- readyState =<< document =<< window
+  case rs of
+    Complete -> do
+      callback (Right unit)
+      pure nonCanceler
+    _ -> do
+      et <- windowToEventTarget <$> window
+      let listener = eventListener (\_ -> callback (Right unit))
+      addEventListener load listener false et
+      pure $ Canceler \_ -> liftEff (removeEventListener load listener false et)
 
 -- | Waits for the document to load and then finds the `body` element.
 awaitBody :: forall eff. Aff (dom :: DOM | eff) HTMLElement
