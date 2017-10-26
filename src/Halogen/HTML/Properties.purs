@@ -45,6 +45,7 @@ module Halogen.HTML.Properties
   , selected
   , placeholder
   , autocomplete
+  , list
   , autofocus
   , multiple
   , pattern
@@ -240,6 +241,9 @@ placeholder = prop (PropName "placeholder")
 
 autocomplete :: forall r i. Boolean -> IProp (autocomplete :: I.OnOff | r) i
 autocomplete = prop (PropName "autocomplete") <<< (\b -> if b then I.On else I.Off)
+
+list :: forall r i. String -> IProp (list :: String | r) i
+list = prop (PropName "list")
 
 autofocus :: forall r i. Boolean -> IProp (autofocus :: Boolean | r) i
 autofocus = prop (PropName "autofocus")
