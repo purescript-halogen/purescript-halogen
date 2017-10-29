@@ -15,6 +15,7 @@ import Control.Monad.Error.Class (throwError)
 import Control.Monad.Except (runExcept)
 import DOM (DOM)
 import DOM.Event.EventTarget (addEventListener, eventListener, removeEventListener)
+import DOM.Event.Types (EventType(..))
 import DOM.HTML (window)
 import DOM.HTML.Document (ReadyState(..), readyState)
 import DOM.HTML.Event.EventTypes (load)
@@ -31,14 +32,14 @@ awaitLoad :: forall eff. Aff (dom :: DOM | eff) Unit
 awaitLoad = makeAff \callback -> liftEff do
   rs <- readyState =<< document =<< window
   case rs of
-    Complete -> do
-      callback (Right unit)
-      pure nonCanceler
-    _ -> do
+    Loading -> do
       et <- windowToEventTarget <$> window
       let listener = eventListener (\_ -> callback (Right unit))
-      addEventListener load listener false et
+      addEventListener (EventType "DOMContentLoaded") listener false et
       pure $ Canceler \_ -> liftEff (removeEventListener load listener false et)
+    _ -> do
+      callback (Right unit)
+      pure nonCanceler
 
 -- | Waits for the document to load and then finds the `body` element.
 awaitBody :: forall eff. Aff (dom :: DOM | eff) HTMLElement
