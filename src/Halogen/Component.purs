@@ -264,6 +264,42 @@ hoist nat =
       , mkOrdBox: c.mkOrdBox
       }
 
+-- | Changes the component's `i` type, contravariantly.
+cmapInput
+  :: forall h f i i' o m
+   . (i' -> i)
+  -> Component h f i o m
+  -> Component h f i' o m
+cmapInput f =
+  unComponent \c ->
+    mkComponent
+      { initialState: c.initialState <<< f
+      , render: c.render
+      , eval: c.eval
+      , receiver: c.receiver <<< f
+      , initializer: c.initializer
+      , finalizer: c.finalizer
+      , mkOrdBox: c.mkOrdBox
+      }
+
+-- | Changes the component's `o` type, mapping outputs to a new type.
+mapOutput
+  :: forall h f i o o' m
+   . (o -> o')
+  -> Component h f i o m
+  -> Component h f i o' m
+mapOutput f =
+  unComponent \c ->
+    mkComponent
+      { initialState: c.initialState
+      , render: c.render
+      , eval: HM.mapOutput f <<< c.eval
+      , receiver: c.receiver
+      , initializer: c.initializer
+      , finalizer: c.finalizer
+      , mkOrdBox: c.mkOrdBox
+      }
+
 --------------------------------------------------------------------------------
 
 data ComponentSlot' h z g m p j q o = ComponentSlot p (Component h z j o m) j (j -> Maybe (g Unit)) (o -> Maybe q) (forall x. g x -> Maybe (z x))
