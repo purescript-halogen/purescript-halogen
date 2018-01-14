@@ -95,6 +95,7 @@ import Unsafe.Coerce (unsafeCoerce)
 newtype IProp (r :: # Type) i = IProp (Prop (InputF Unit i))
 
 derive instance newtypeIProp :: Newtype (IProp r i) _
+derive instance functorIProp :: Functor (IProp r)
 
 -- | Creates an indexed HTML property.
 prop
