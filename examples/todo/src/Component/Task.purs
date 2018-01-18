@@ -38,7 +38,7 @@ task initialState =
 
   render :: Task -> H.ComponentHTML TaskQuery
   render t =
-    bimap id id $ HH.li_
+    HH.li_
       [ HH.input
           [ HP.type_ HP.InputCheckbox
           , HP.title "Mark as completed"
