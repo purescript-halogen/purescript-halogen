@@ -84,7 +84,7 @@ import DOM.HTML.Indexed.PreloadValue (PreloadValue(..)) as I
 import DOM.HTML.Indexed.StepValue (StepValue(..)) as I
 import DOM.Node.Types (Element)
 
-import Halogen.HTML.Core (class IsProp, AttrName, ClassName, Namespace, PropName(..), Prop)
+import Halogen.HTML.Core (class IsProp, AttrName(..), ClassName, Namespace, PropName(..), Prop)
 import Halogen.HTML.Core as Core
 import Halogen.Query.InputF (InputF(..), RefLabel)
 
@@ -244,7 +244,7 @@ autocomplete :: forall r i. Boolean -> IProp (autocomplete :: I.OnOff | r) i
 autocomplete = prop (PropName "autocomplete") <<< (\b -> if b then I.On else I.Off)
 
 list :: forall r i. String -> IProp (list :: String | r) i
-list = prop (PropName "list")
+list = attr (AttrName "list")
 
 autofocus :: forall r i. Boolean -> IProp (autofocus :: Boolean | r) i
 autofocus = prop (PropName "autofocus")
