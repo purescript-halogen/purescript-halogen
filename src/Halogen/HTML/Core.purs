@@ -190,5 +190,8 @@ newtype ClassName = ClassName String
 derive instance newtypeClassName :: Newtype ClassName _
 derive newtype instance eqClassName :: Eq ClassName
 derive newtype instance ordClassName :: Ord ClassName
-derive newtype instance semigroupClassName :: Semigroup ClassName
+--derive newtype instance semigroupClassName :: Semigroup ClassName
 derive instance genericClassName :: Generic ClassName
+
+instance semigroupClassName :: Semigroup ClassName where
+    append (ClassName c1) (ClassName c2) = ClassName (c1 <> " " <> c2)        
