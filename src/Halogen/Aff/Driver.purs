@@ -230,7 +230,6 @@ runUI renderSpec component i = do
         , pendingOuts: ds'.pendingOuts
         , pendingHandlers: ds'.pendingHandlers
         , prjQuery: ds'.prjQuery
-        , fresh: ds'.fresh
         , subscriptions: ds'.subscriptions
         , lifecycleHandlers: ds'.lifecycleHandlers
         }

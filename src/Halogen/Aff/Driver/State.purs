@@ -17,18 +17,16 @@ import Prelude
 import Control.Monad.Aff (Aff)
 import Control.Monad.Eff (kind Effect, Eff)
 import Control.Monad.Eff.Ref (Ref, newRef, writeRef)
-
 import Data.Foreign (Foreign)
 import Data.List (List(..))
 import Data.Map as M
 import Data.Maybe (Maybe(..))
 import Data.StrMap as SM
 import Data.Traversable (traverse_)
-
 import Halogen.Aff.Effects (HalogenEffects)
 import Halogen.Component (Component')
 import Halogen.Data.OrdBox (OrdBox)
-
+import Halogen.Query.HalogenM (SubscriptionId)
 import Unsafe.Coerce (unsafeCoerce)
 
 type LifecycleHandlers eff =
@@ -66,8 +64,7 @@ type DriverStateRec h r s f z g p i o eff =
   , pendingHandlers :: Ref (Maybe (List (Aff (HalogenEffects eff) Unit)))
   , rendering :: Maybe (r s z g p o eff)
   , prjQuery :: forall x. f x -> Maybe (z x)
-  , fresh :: Ref Int
-  , subscriptions :: Ref (Maybe (M.Map Int (Aff (HalogenEffects eff) Unit)))
+  , subscriptions :: Ref (Maybe (M.Map SubscriptionId (Aff (HalogenEffects eff) Unit)))
   , lifecycleHandlers :: Ref (LifecycleHandlers eff)
   }
 
@@ -144,7 +141,6 @@ initDriverState component input handler prjQuery lchs = do
   pendingQueries <- newRef (component.initializer $> Nil)
   pendingOuts <- newRef (Just Nil)
   pendingHandlers <- newRef Nothing
-  fresh <- newRef 0
   subscriptions <- newRef (Just M.empty)
   let
     ds :: DriverStateRec h r s f z g p i o eff
@@ -162,7 +158,6 @@ initDriverState component input handler prjQuery lchs = do
       , pendingHandlers
       , rendering: Nothing
       , prjQuery
-      , fresh
       , subscriptions
       , lifecycleHandlers: lchs
       }

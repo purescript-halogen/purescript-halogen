@@ -9,7 +9,7 @@ import Control.Monad.Aff.Unsafe (unsafeCoerceAff)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Class (liftEff)
 import Control.Monad.Eff.Exception (error)
-import Control.Monad.Eff.Ref (Ref, modifyRef, modifyRef', readRef, writeRef)
+import Control.Monad.Eff.Ref (Ref, modifyRef, readRef, writeRef)
 import Control.Monad.Error.Class (throwError)
 import Control.Monad.Fork.Class (fork)
 import Control.Monad.Free (foldFree)
@@ -82,18 +82,17 @@ eval render r =
               liftEff $ writeRef ref (DriverState (st { state = state' }))
               handleLifecycle lifecycleHandlers (render lifecycleHandlers ref)
               pure a
-    Subscribe es next -> do
-      DriverState ({ subscriptions, fresh }) <- liftEff (readRef ref)
+    Subscribe sid es next -> do
+      DriverState ({ subscriptions }) <- liftEff (readRef ref)
       _ ← fork do
         { producer, done } <- ES.unEventSource es
-        i <- liftEff $ modifyRef' fresh (\i -> { state: i + 1, value: i })
         let
           done' = do
             subs <- liftEff $ readRef subscriptions
-            when (maybe false (M.member i) subs) do
+            when (maybe false (M.member sid) subs) do
               done
-              liftEff $ modifyRef subscriptions (map (M.delete i))
-        liftEff $ modifyRef subscriptions (map (M.insert i done'))
+              liftEff $ modifyRef subscriptions (map (M.delete sid))
+        liftEff $ modifyRef subscriptions (map (M.insert sid done'))
         let
           consumer = do
             q <- CR.await

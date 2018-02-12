@@ -13,7 +13,6 @@ import Control.Monad.State.Class (class MonadState)
 import Control.Monad.Trans.Class (class MonadTrans)
 import Control.Monad.Writer.Class (class MonadTell, tell)
 import Control.Parallel.Class (class Parallel)
-
 import Data.Bifunctor (lmap)
 import Data.Coyoneda (Coyoneda, coyoneda, hoistCoyoneda)
 import Data.Foreign (Foreign)
@@ -21,15 +20,20 @@ import Data.List as L
 import Data.Maybe (Maybe)
 import Data.Newtype (class Newtype, over)
 import Data.Tuple (Tuple)
-
 import Halogen.Query.EventSource as ES
 import Halogen.Query.ForkF as FF
 import Halogen.Query.InputF (RefLabel)
 
+newtype SubscriptionId = SubscriptionId String
+
+derive newtype instance eqSubscriptionId :: Eq SubscriptionId
+derive newtype instance ordSubscriptionId :: Ord SubscriptionId
+derive instance newtypeSubscriptionId :: Newtype SubscriptionId _
+
 -- | The Halogen component algebra
 data HalogenF s (f :: Type -> Type) g p o m a
   = State (s -> Tuple a s)
-  | Subscribe (ES.EventSource f m) a
+  | Subscribe SubscriptionId (ES.EventSource f m) a
   | Lift (m a)
   | Halt String
   | GetSlots (L.List p -> a)
@@ -43,7 +47,7 @@ data HalogenF s (f :: Type -> Type) g p o m a
 instance functorHalogenF :: Functor m => Functor (HalogenF s f g p o m) where
   map f = case _ of
     State k -> State (lmap f <<< k)
-    Subscribe es a -> Subscribe es (f a)
+    Subscribe sid es a -> Subscribe sid es (f a)
     Lift q -> Lift (map f q)
     Halt msg -> Halt msg
     CheckSlot p k -> CheckSlot p (map f k)
@@ -127,8 +131,8 @@ getRef p = HalogenM $ liftF $ GetRef p id
 
 -- | Provides a way of having a component subscribe to an `EventSource` from
 -- | within an `Eval` function.
-subscribe :: forall s f g p o m. ES.EventSource f m -> HalogenM s f g p o m Unit
-subscribe es = HalogenM $ liftF $ Subscribe es unit
+subscribe :: forall s f g p o m. SubscriptionId -> ES.EventSource f m -> HalogenM s f g p o m Unit
+subscribe sid es = HalogenM $ liftF $ Subscribe sid es unit
 
 -- | Raises an output message for the component.
 raise :: forall s f g p o m. o -> HalogenM s f g p o m Unit
@@ -148,7 +152,7 @@ imapState f f' (HalogenM h) = HalogenM (hoistFree go h)
   go :: HalogenF s f g p o m ~> HalogenF s' f g p o m
   go = case _ of
     State fs -> State (map f <<< fs <<< f')
-    Subscribe es next -> Subscribe es next
+    Subscribe sid es next -> Subscribe sid es next
     Lift q -> Lift q
     Halt msg -> Halt msg
     GetSlots k -> GetSlots k
@@ -170,7 +174,7 @@ mapQuery nat (HalogenM h) = HalogenM (hoistFree go h)
   go :: HalogenF s f g p o m ~> HalogenF s f' g p o m
   go = case _ of
     State f -> State f
-    Subscribe es next -> Subscribe (ES.interpret nat es) next
+    Subscribe sid es next -> Subscribe sid (ES.interpret nat es) next
     Lift q -> Lift q
     Halt msg -> Halt msg
     GetSlots k -> GetSlots k
@@ -191,7 +195,7 @@ mapChildQuery nat (HalogenM h) = HalogenM (hoistFree go h)
   go :: HalogenF s f g p o m ~> HalogenF s f g' p o m
   go = case _ of
     State f -> State f
-    Subscribe es next -> Subscribe es next
+    Subscribe sid es next -> Subscribe sid es next
     Lift q -> Lift q
     Halt msg -> Halt msg
     GetSlots k -> GetSlots k
@@ -213,7 +217,7 @@ imapSlots f f' (HalogenM h) = HalogenM (hoistFree go h)
   go :: HalogenF s f g p o m ~> HalogenF s f g p' o m
   go = case _ of
     State fs -> State fs
-    Subscribe es next -> Subscribe es next
+    Subscribe sid es next -> Subscribe sid es next
     Lift q -> Lift q
     Halt msg -> Halt msg
     GetSlots k -> GetSlots (k <<< map f')
@@ -234,7 +238,7 @@ mapOutput f (HalogenM h) = HalogenM (hoistFree go h)
   go :: HalogenF s f g p o m ~> HalogenF s f g p o' m
   go = case _ of
     State fs -> State fs
-    Subscribe es next -> Subscribe es next
+    Subscribe sid es next -> Subscribe sid es next
     Lift q -> Lift q
     Halt msg -> Halt msg
     GetSlots k -> GetSlots k
@@ -256,7 +260,7 @@ hoist nat (HalogenM fa) = HalogenM (hoistFree go fa)
   go :: HalogenF s f g p o m ~> HalogenF s f g p o m'
   go = case _ of
     State f -> State f
-    Subscribe es next -> Subscribe (ES.hoist nat es) next
+    Subscribe sid es next -> Subscribe sid (ES.hoist nat es) next
     Lift q -> Lift (nat q)
     Halt msg -> Halt msg
     GetSlots k -> GetSlots k
