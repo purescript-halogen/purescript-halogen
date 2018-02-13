@@ -30,9 +30,9 @@ ui :: H.Component HH.HTML Query Unit Void MyMonad
 ui =
   H.component
     { initialState: const initialState
+    , lifecycle: const Nothing
     , render
     , eval
-    , receiver: const Nothing
     }
   where
 

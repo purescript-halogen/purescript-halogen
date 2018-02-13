@@ -36,9 +36,9 @@ ui :: forall eff. H.Component HH.HTML Query Unit Void (Aff (AceEffects eff))
 ui =
   H.parentComponent
     { initialState: const initialState
+    , lifecycle: const Nothing
     , render
     , eval
-    , receiver: const Nothing
     }
   where
 

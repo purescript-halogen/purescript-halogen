@@ -16,9 +16,9 @@ ui :: forall eff. H.Component HH.HTML Query Unit Void (Aff (random :: RANDOM | e
 ui =
   H.component
     { initialState: const initialState
+    , lifecycle: const Nothing
     , render
     , eval
-    , receiver: const Nothing
     }
   where
 

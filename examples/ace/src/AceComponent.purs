@@ -36,18 +36,22 @@ type AceEffects eff = (ace :: ACE, avar :: AVAR | eff)
 -- | The Ace component definition.
 aceComponent :: forall eff. H.Component HH.HTML AceQuery Unit AceOutput (Aff (AceEffects eff))
 aceComponent =
-  H.lifecycleComponent
+  H.component
     { initialState: const initialState
+    , lifecycle
     , render
     , eval
-    , initializer: Just (H.action Initialize)
-    , finalizer: Just (H.action Finalize)
-    , receiver: const Nothing
     }
   where
 
   initialState :: AceState
   initialState = { editor: Nothing }
+
+  lifecycle :: H.Lifecycle Unit -> Maybe (AceQuery Unit)
+  lifecycle = case _ of
+    H.Initialize -> Just (H.action Initialize)
+    H.Receive _ -> Nothing
+    H.Finalize -> Just (H.action Finalize)
 
   -- As we're embedding a 3rd party component we only need to create a
   -- placeholder div here and attach the ref property which will let us reference

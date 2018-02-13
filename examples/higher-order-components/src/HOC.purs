@@ -55,12 +55,17 @@ factory
 factory innerComponent =
   H.parentComponent
     { initialState: { on: true, input: _ }
+    , lifecycle
     , render
     , eval
-    , receiver: \i -> Just $ InnerInput i unit
     }
 
   where
+
+  lifecycle :: H.Lifecycle i -> Maybe (Query f i o Unit)
+  lifecycle = case _ of
+    H.Receive i -> Just (H.action (InnerInput i))
+    _ -> Nothing
 
   render :: State i -> H.ParentHTML (Query f i o) f Slot m
   render state =

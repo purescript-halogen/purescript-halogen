@@ -26,9 +26,9 @@ myButton :: forall m. H.Component HH.HTML Query Boolean Message m
 myButton =
   H.component
     { initialState: id
+    , lifecycle: const Nothing
     , render
     , eval
-    , receiver: const Nothing
     }
   where
 

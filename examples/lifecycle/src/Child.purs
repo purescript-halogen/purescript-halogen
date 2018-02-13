@@ -25,14 +25,18 @@ type Slot = Unit
 
 type ChildEff eff = Aff (console :: CONSOLE | eff)
 
+lifecycle :: forall a. H.Lifecycle a -> Maybe (Query Unit)
+lifecycle = case _ of
+  H.Initialize -> Just (H.action Initialize)
+  H.Receive _ -> Nothing
+  H.Finalize -> Just (H.action Finalize)
+
 child :: forall eff. Int -> H.Component HH.HTML Query Unit Message (ChildEff eff)
-child initialState = H.lifecycleParentComponent
+child initialState = H.parentComponent
   { initialState: const initialState
+  , lifecycle
   , render
   , eval
-  , initializer: Just (H.action Initialize)
-  , finalizer: Just (H.action Finalize)
-  , receiver: const Nothing
   }
   where
 
@@ -73,13 +77,11 @@ child initialState = H.lifecycleParentComponent
     Reported msg -> H.action $ Report ("Re-reporting from cell" <> show i <> ": " <> msg)
 
 cell :: forall eff. Int -> H.Component HH.HTML Query Unit Message (ChildEff eff)
-cell initialState = H.lifecycleComponent
+cell initialState = H.component
   { initialState: const initialState
+  , lifecycle
   , render
   , eval
-  , initializer: Just (H.action Initialize)
-  , finalizer: Just (H.action Finalize)
-  , receiver: const Nothing
   }
   where
 

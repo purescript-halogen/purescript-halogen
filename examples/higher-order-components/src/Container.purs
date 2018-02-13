@@ -29,9 +29,9 @@ component :: forall m. H.Component HH.HTML Query Unit Void m
 component =
   H.parentComponent
     { initialState: const initialState
+    , lifecycle: const Nothing
     , render
     , eval
-    , receiver: const Nothing
     }
   where
 

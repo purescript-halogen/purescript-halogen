@@ -10,16 +10,17 @@ module Halogen.HTML
   , module Halogen.HTML.Properties
   ) where
 
-import Prelude (Unit, Void, (<<<))
+import Halogen.HTML.Elements
 
 import Data.Functor as F
 import Data.Maybe (Maybe(..))
 import Halogen.Component (Component, ParentHTML, mkComponentSlot, unComponent)
 import Halogen.Component.ChildPath (ChildPath, injSlot, prjQuery, injQuery)
+import Halogen.Component.Lifecycle (Lifecycle(..))
 import Halogen.HTML.Core (class IsProp, AttrName(..), ClassName(..), HTML(..), Namespace(..), PropName(..), ElemName(..), text, handler)
 import Halogen.HTML.Core as Core
-import Halogen.HTML.Elements
 import Halogen.HTML.Properties (IProp, attr, attrNS, prop)
+import Prelude (Unit, Void, (<<<))
 import Unsafe.Coerce (unsafeCoerce)
 
 -- | A type useful for a chunk of HTML with no slot-embedding or query-raising.
@@ -47,7 +48,7 @@ slot
   -> (o -> Maybe (f Unit))
   -> ParentHTML f g p m
 slot p component input outputQuery =
-  let f = unComponent _.receiver component
+  let f = unComponent _.lifecycle component <<< Receive
   in Core.slot (mkComponentSlot p component input f outputQuery Just)
 
 -- | Defines a slot for a child component when a parent has multiple types of
@@ -68,6 +69,6 @@ slot'
 slot' i p component input outputQuery =
   let
     pq = prjQuery i
-    f = F.map (injQuery i) <<< unComponent _.receiver component
+    f = (F.map (injQuery i) <<< unComponent _.lifecycle component) <<< Receive
   in
     Core.slot (mkComponentSlot (injSlot i p) component input f outputQuery pq)

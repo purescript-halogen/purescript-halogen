@@ -17,18 +17,16 @@ import Prelude
 import Control.Monad.Aff (Aff)
 import Control.Monad.Eff (kind Effect, Eff)
 import Control.Monad.Eff.Ref (Ref, newRef, writeRef)
-
 import Data.Foreign (Foreign)
 import Data.List (List(..))
 import Data.Map as M
 import Data.Maybe (Maybe(..))
 import Data.StrMap as SM
 import Data.Traversable (traverse_)
-
 import Halogen.Aff.Effects (HalogenEffects)
 import Halogen.Component (Component')
+import Halogen.Component.Lifecycle (Lifecycle(..))
 import Halogen.Data.OrdBox (OrdBox)
-
 import Unsafe.Coerce (unsafeCoerce)
 
 type LifecycleHandlers eff =
@@ -141,7 +139,7 @@ initDriverState component input handler prjQuery lchs = do
   selfRef <- newRef (unsafeCoerce {})
   childrenIn <- newRef M.empty
   childrenOut <- newRef M.empty
-  pendingQueries <- newRef (component.initializer $> Nil)
+  pendingQueries <- newRef (component.lifecycle Initialize $> Nil)
   pendingOuts <- newRef (Just Nil)
   pendingHandlers <- newRef Nothing
   fresh <- newRef 0

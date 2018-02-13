@@ -23,9 +23,9 @@ ui :: forall eff. H.Component HH.HTML Query Unit Void (Aff (ajax :: AX.AJAX | ef
 ui =
   H.component
     { initialState: const initialState
+    , lifecycle: const Nothing
     , render
     , eval
-    , receiver: const Nothing
     }
   where
 

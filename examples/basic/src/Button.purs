@@ -19,9 +19,9 @@ myButton :: forall m. H.Component HH.HTML Query Unit Message m
 myButton =
   H.component
     { initialState: const initialState
+    , lifecycle: const Nothing
     , render
     , eval
-    , receiver: const Nothing
     }
   where
 

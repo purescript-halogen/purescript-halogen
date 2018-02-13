@@ -30,9 +30,9 @@ list :: forall m. Applicative m => H.Component HH.HTML ListQuery Unit Void m
 list =
   H.parentComponent
     { initialState: const initialList
+    , lifecycle: const Nothing
     , render
     , eval
-    , receiver: const Nothing
     }
   where
 
