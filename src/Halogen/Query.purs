@@ -30,8 +30,8 @@ import Data.Foreign (Foreign)
 import DOM.HTML.Types (HTMLElement, readHTMLElement)
 
 import Halogen.Component.ChildPath (ChildPath, injSlot, prjSlot, injQuery, cpI)
-import Halogen.Query.EventSource (EventSource, SubscribeStatus(..), eventSource, eventSource_)
-import Halogen.Query.HalogenM (HalogenM(..), HalogenF(..), fork, getRef, getSlots, checkSlot, mkQuery)
+import Halogen.Query.EventSource (EventSource, eventSource, eventSource_)
+import Halogen.Query.HalogenM (HalogenM(..), HalogenF(..), SubscriptionId(..), fork, getRef, getSlots, checkSlot, mkQuery)
 
 import Control.Parallel (parTraverse)
 import Control.Monad.Aff.Class (liftAff) as Exports

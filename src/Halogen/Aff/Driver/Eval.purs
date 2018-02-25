@@ -99,7 +99,7 @@ eval render r =
             subs <- lift $ liftEff (readRef subscriptions)
             when (isJust subs) do
               s <- lift $ evalF ref q
-              when (s == ES.Listening) consumer
+              consumer
         CR.runProcess (consumer `CR.pullFrom` producer)
         done'
       pure next
