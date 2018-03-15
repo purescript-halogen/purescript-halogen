@@ -31,6 +31,7 @@ import Halogen.Aff.Driver.Eval (eval, handleLifecycle, queuingHandler)
 import Halogen.Aff.Driver.State (LifecycleHandlers, DriverState(..), DriverStateX, RenderStateX, initDriverState, renderStateX, renderStateX_, unDriverStateX)
 import Halogen.Aff.Effects (HalogenEffects)
 import Halogen.Component (Component, ComponentSlot, unComponent, unComponentSlot)
+import Halogen.Component.Lifecycle (Lifecycle(..))
 import Halogen.Data.OrdBox (OrdBox)
 import Halogen.Query.InputF (InputF(..))
 
@@ -283,7 +284,7 @@ runUI renderSpec component i = do
     -> Eff (HalogenEffects eff) Unit
   squashChildInitializers lchs preInits =
     unDriverStateX \st -> do
-      let parentInitializer = evalF st.selfRef <<< Query <$> st.component.initializer
+      let parentInitializer = evalF st.selfRef <<< Query <$> st.component.lifecycle Initialize
       modifyRef lchs \handlers ->
         { initializers: (do
             parSequence_ (L.reverse handlers.initializers)
@@ -318,7 +319,7 @@ runUI renderSpec component i = do
   finalize lchs = do
     unDriverStateX \st -> do
       cleanupSubscriptions (DriverState st)
-      for_ (evalF st.selfRef <<< Query <$> st.component.finalizer) \f ->
+      for_ (evalF st.selfRef <<< Query <$> st.component.lifecycle Finalize) \f ->
         modifyRef lchs (\handlers ->
           { initializers: handlers.initializers
           , finalizers: f : handlers.finalizers

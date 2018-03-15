@@ -37,15 +37,18 @@ type DSL eff = H.ComponentDSL State Query Void (Aff (Effects eff))
 
 ui :: forall eff. H.Component HH.HTML Query Unit Void (Aff (Effects eff))
 ui =
-  H.lifecycleComponent
+  H.component
     { initialState: const initialState
+    , lifecycle
     , render
     , eval
-    , initializer: Just (H.action Init)
-    , finalizer: Nothing
-    , receiver: const Nothing
     }
   where
+
+  lifecycle :: H.Lifecycle Unit -> Maybe (Query Unit)
+  lifecycle = case _ of
+    H.Initialize -> Just (H.action Init)
+    _ -> Nothing
 
   render :: State -> H.ComponentHTML Query
   render state =

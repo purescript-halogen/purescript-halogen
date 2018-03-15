@@ -4,7 +4,6 @@ import Prelude
 
 import Control.Monad.State as CMS
 
-import Data.Bifunctor (bimap)
 import Data.Maybe (Maybe(..))
 
 import Halogen as H
@@ -30,9 +29,9 @@ task :: forall m. Task -> H.Component HH.HTML TaskQuery Unit TaskMessage m
 task initialState =
   H.component
     { initialState: const initialState
+    , lifecycle: const Nothing
     , render
     , eval
-    , receiver: const Nothing
     }
   where
 

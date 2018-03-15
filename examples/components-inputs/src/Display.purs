@@ -1,9 +1,10 @@
 module Display where
 
 import Prelude
+
+import Data.Maybe (Maybe(..))
 import Halogen as H
 import Halogen.HTML as HH
-import Halogen.HTML.Events as HE
 
 type Input = Int
 
@@ -15,11 +16,16 @@ component :: forall m. H.Component HH.HTML Query Input Void m
 component =
   H.component
     { initialState: id
+    , lifecycle
     , render
     , eval
-    , receiver: HE.input HandleInput
     }
   where
+
+  lifecycle :: H.Lifecycle Input -> Maybe (Query Unit)
+  lifecycle = case _ of
+    H.Receive i -> Just (H.action (HandleInput i))
+    _ -> Nothing
 
   render :: State -> H.ComponentHTML Query
   render state =

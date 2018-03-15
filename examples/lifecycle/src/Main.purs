@@ -42,15 +42,19 @@ data Query a
 type UIEff eff = Aff (console :: CONSOLE | eff)
 
 ui :: forall eff. H.Component HH.HTML Query Unit Void (UIEff eff)
-ui = H.lifecycleParentComponent
+ui = H.parentComponent
   { initialState: const initialState
+  , lifecycle
   , render
   , eval
-  , initializer: Just (H.action Initialize)
-  , finalizer: Just (H.action Finalize)
-  , receiver: const Nothing
   }
   where
+
+  lifecycle :: H.Lifecycle Unit -> Maybe (Query Unit)
+  lifecycle = case _ of
+    H.Initialize -> Just (H.action Initialize)
+    H.Receive _ -> Nothing
+    H.Finalize -> Just (H.action Finalize)
 
   render :: State -> H.ParentHTML Query Child.Query Int (UIEff eff)
   render state =
