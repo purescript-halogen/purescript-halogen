@@ -5,6 +5,7 @@ import Prelude
 import Control.Applicative.Free (hoistFreeAp, retractFreeAp)
 import Control.Coroutine as CR
 import Control.Monad.Aff (Aff, killFiber)
+import Control.Monad.Aff.AVar as AV
 import Control.Monad.Aff.Unsafe (unsafeCoerceAff)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Class (liftEff)
@@ -16,7 +17,8 @@ import Control.Monad.Free (foldFree)
 import Control.Monad.Trans.Class (lift)
 import Control.Parallel (parSequence_, parallel, sequential)
 import Data.Coyoneda (Coyoneda, unCoyoneda)
-import Data.Foldable (traverse_)
+import Data.Either (Either(..))
+import Data.Foldable (sequence_, traverse_)
 import Data.List (List, (:))
 import Data.List as L
 import Data.Map as M
@@ -28,7 +30,7 @@ import Halogen.Aff.Effects (HalogenEffects)
 import Halogen.Data.OrdBox (unOrdBox)
 import Halogen.Query.EventSource as ES
 import Halogen.Query.ForkF as FF
-import Halogen.Query.HalogenM (HalogenM(..), HalogenF(..), HalogenAp(..))
+import Halogen.Query.HalogenM (HalogenAp(..), HalogenF(..), HalogenM(..), SubscriptionId)
 import Halogen.Query.InputF (InputF(..), RefLabel(..))
 import Unsafe.Reference (unsafeRefEq)
 
@@ -83,25 +85,30 @@ eval render r =
               handleLifecycle lifecycleHandlers (render lifecycleHandlers ref)
               pure a
     Subscribe sid es next -> do
+      unsubscribe sid ref
       DriverState ({ subscriptions }) <- liftEff (readRef ref)
       _ ← fork do
         { producer, done } <- ES.unEventSource es
+        cancel <- AV.makeEmptyVar
         let
+          cancelProducer = CR.producer do
+            AV.takeVar cancel $> Right unit
           done' = do
             subs <- liftEff $ readRef subscriptions
-            when (maybe false (M.member sid) subs) do
-              done
-              liftEff $ modifyRef subscriptions (map (M.delete sid))
-        liftEff $ modifyRef subscriptions (map (M.insert sid done'))
-        let
+            liftEff $ modifyRef subscriptions (map (M.delete sid))
+            when (maybe false (M.member sid) subs) done
           consumer = do
             q <- CR.await
             subs <- lift $ liftEff (readRef subscriptions)
             when (isJust subs) do
               s <- lift $ evalF ref q
               consumer
+        liftEff $ modifyRef subscriptions (map (M.insert sid done'))
         CR.runProcess (consumer `CR.pullFrom` producer)
         done'
+      pure next
+    Unsubscribe sid next -> do
+      unsubscribe sid ref
       pure next
     Lift aff ->
       aff
@@ -161,6 +168,16 @@ eval render r =
     -> HalogenM s' z' g' p' o' (Aff (HalogenEffects eff))
     ~> Aff (HalogenEffects eff)
   evalM ref (HalogenM q) = foldFree (go ref) q
+
+  unsubscribe
+    :: forall s' f' z' g' p' i' o'
+     . SubscriptionId
+    -> Ref (DriverState h r s' f' z' g' p' i' o' eff)
+    -> Aff (HalogenEffects eff) Unit
+  unsubscribe sid ref = do
+    DriverState ({ subscriptions }) <- liftEff (readRef ref)
+    subs <- liftEff (readRef subscriptions)
+    sequence_ (M.lookup sid =<< subs)
 
 queuingHandler
   :: forall a eff

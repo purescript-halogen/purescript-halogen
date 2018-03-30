@@ -42,6 +42,7 @@ mapOutput f (HM.HalogenM h) = HM.HalogenM (hoistFree go h)
   go = case _ of
     HM.State s -> HM.State s
     HM.Subscribe sid es next -> HM.Subscribe sid es next
+    HM.Unsubscribe sid next -> HM.Unsubscribe sid next
     HM.Lift q -> HM.Lift q
     HM.Halt msg -> HM.Halt msg
     HM.GetSlots k -> HM.GetSlots k

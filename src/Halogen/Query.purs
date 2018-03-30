@@ -39,7 +39,7 @@ import Control.Monad.Eff.Class (liftEff) as Exports
 import Control.Monad.State.Class (get, gets, modify, put) as Exports
 import Control.Monad.Trans.Class (lift) as Exports
 import Halogen.Query.InputF (RefLabel(..))
-import Halogen.Query.HalogenM (subscribe, raise) as Exports
+import Halogen.Query.HalogenM (subscribe, unsubscribe, raise) as Exports
 
 -- | Type synonym for an "action" - An action only causes effects and has no
 -- | result value.

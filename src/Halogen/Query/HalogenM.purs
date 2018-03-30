@@ -34,6 +34,7 @@ derive instance newtypeSubscriptionId :: Newtype SubscriptionId _
 data HalogenF s (f :: Type -> Type) g p o m a
   = State (s -> Tuple a s)
   | Subscribe SubscriptionId (ES.EventSource m (f Unit)) a
+  | Unsubscribe SubscriptionId a
   | Lift (m a)
   | Halt String
   | GetSlots (L.List p -> a)
@@ -48,6 +49,7 @@ instance functorHalogenF :: Functor m => Functor (HalogenF s f g p o m) where
   map f = case _ of
     State k -> State (lmap f <<< k)
     Subscribe sid es a -> Subscribe sid es (f a)
+    Unsubscribe sid a -> Unsubscribe sid (f a)
     Lift q -> Lift (map f q)
     Halt msg -> Halt msg
     CheckSlot p k -> CheckSlot p (map f k)
@@ -134,6 +136,9 @@ getRef p = HalogenM $ liftF $ GetRef p id
 subscribe :: forall s f g p o m. SubscriptionId -> ES.EventSource m (f Unit) -> HalogenM s f g p o m Unit
 subscribe sid es = HalogenM $ liftF $ Subscribe sid es unit
 
+unsubscribe :: forall s f g p o m. SubscriptionId -> HalogenM s f g p o m Unit
+unsubscribe sid = HalogenM $ liftF $ Unsubscribe sid unit
+
 -- | Raises an output message for the component.
 raise :: forall s f g p o m. o -> HalogenM s f g p o m Unit
 raise o = HalogenM $ liftF $ Raise o unit
@@ -152,7 +157,8 @@ imapState f f' (HalogenM h) = HalogenM (hoistFree go h)
   go :: HalogenF s f g p o m ~> HalogenF s' f g p o m
   go = case _ of
     State fs -> State (map f <<< fs <<< f')
-    Subscribe sid es next -> Subscribe sid es next
+    Subscribe sid es a -> Subscribe sid es a
+    Unsubscribe sid a -> Unsubscribe sid a
     Lift q -> Lift q
     Halt msg -> Halt msg
     GetSlots k -> GetSlots k
@@ -174,7 +180,8 @@ mapQuery nat (HalogenM h) = HalogenM (hoistFree go h)
   go :: HalogenF s f g p o m ~> HalogenF s f' g p o m
   go = case _ of
     State f -> State f
-    Subscribe sid es next -> Subscribe sid (map nat es) next
+    Subscribe sid es a -> Subscribe sid (map nat es) a
+    Unsubscribe sid a -> Unsubscribe sid a
     Lift q -> Lift q
     Halt msg -> Halt msg
     GetSlots k -> GetSlots k
@@ -195,7 +202,8 @@ mapChildQuery nat (HalogenM h) = HalogenM (hoistFree go h)
   go :: HalogenF s f g p o m ~> HalogenF s f g' p o m
   go = case _ of
     State f -> State f
-    Subscribe sid es next -> Subscribe sid es next
+    Subscribe sid es a -> Subscribe sid es a
+    Unsubscribe sid a -> Unsubscribe sid a
     Lift q -> Lift q
     Halt msg -> Halt msg
     GetSlots k -> GetSlots k
@@ -217,7 +225,8 @@ imapSlots f f' (HalogenM h) = HalogenM (hoistFree go h)
   go :: HalogenF s f g p o m ~> HalogenF s f g p' o m
   go = case _ of
     State fs -> State fs
-    Subscribe sid es next -> Subscribe sid es next
+    Subscribe sid es a -> Subscribe sid es a
+    Unsubscribe sid a -> Unsubscribe sid a
     Lift q -> Lift q
     Halt msg -> Halt msg
     GetSlots k -> GetSlots (k <<< map f')
@@ -238,7 +247,8 @@ mapOutput f (HalogenM h) = HalogenM (hoistFree go h)
   go :: HalogenF s f g p o m ~> HalogenF s f g p o' m
   go = case _ of
     State fs -> State fs
-    Subscribe sid es next -> Subscribe sid es next
+    Subscribe sid es a -> Subscribe sid es a
+    Unsubscribe sid a -> Unsubscribe sid a
     Lift q -> Lift q
     Halt msg -> Halt msg
     GetSlots k -> GetSlots k
@@ -260,7 +270,8 @@ hoist nat (HalogenM fa) = HalogenM (hoistFree go fa)
   go :: HalogenF s f g p o m ~> HalogenF s f g p o m'
   go = case _ of
     State f -> State f
-    Subscribe sid es next -> Subscribe sid (ES.hoist nat es) next
+    Subscribe sid es a -> Subscribe sid (ES.hoist nat es) a
+    Unsubscribe sid a -> Unsubscribe sid a
     Lift q -> Lift (nat q)
     Halt msg -> Halt msg
     GetSlots k -> GetSlots k
