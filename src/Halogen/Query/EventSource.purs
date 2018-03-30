@@ -50,15 +50,6 @@ hoist nat (EventSource es) =
       (\e -> { producer: FT.hoistFreeT nat e.producer, done: nat e.done })
       (nat es)
 
--- -- | The status of an `EventSource` subscription. When a query raised by an
--- -- | `EventSource` evaluates to `Done` the producer will be unsubscribed from.
--- data SubscribeStatus
---   = Listening
---   | Done
---
--- derive instance eqSubscribeStatus :: Eq SubscribeStatus
--- derive instance ordSubscribeStatus :: Ord SubscribeStatus
-
 -- | Creates an `EventSource` for a callback that accepts one argument.
 -- |
 -- | - The first argument is the function that attaches the listener.
