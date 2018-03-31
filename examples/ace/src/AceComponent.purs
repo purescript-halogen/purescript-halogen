@@ -2,19 +2,18 @@ module AceComponent (AceEffects, AceQuery(..), AceOutput(..), aceComponent) wher
 
 import Prelude
 
+import Ace as Ace
+import Ace.EditSession as Session
+import Ace.Editor as Editor
+import Ace.Types (ACE, Editor)
 import Control.Monad.Aff (Aff)
 import Control.Monad.Aff.AVar (AVAR)
-
 import Data.Maybe (Maybe(..))
-
+import Data.Monoid (mempty)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Properties as HP
-
-import Ace as Ace
-import Ace.Editor as Editor
-import Ace.EditSession as Session
-import Ace.Types (ACE, Editor)
+import Halogen.Query.EventSource as ES
 
 -- | The state for the ace component - we only need a reference to the editor,
 -- | as Ace editor has its own internal state that we can query instead of
@@ -26,7 +25,7 @@ data AceQuery a
   = Initialize a
   | Finalize a
   | ChangeText String a
-  | HandleChange (H.SubscribeStatus -> a)
+  | HandleChange a
 
 data AceOutput = TextChanged String
 
@@ -67,7 +66,9 @@ aceComponent =
           editor <- H.liftEff $ Ace.editNode el' Ace.ace
           session <- H.liftEff $ Editor.getSession editor
           H.modify (_ { editor = Just editor })
-          H.subscribe $ H.eventSource_ (Session.onChange session) (H.request HandleChange)
+          H.subscribe changeSubscription $ ES.effEventSource \emitter -> do
+            Session.onChange session (ES.emit emitter (H.action HandleChange))
+            pure mempty
       pure next
     Finalize next -> do
       -- Release the reference to the editor and do any other cleanup that a
@@ -84,11 +85,15 @@ aceComponent =
             void $ H.liftEff $ Editor.setValue text Nothing editor
       H.raise $ TextChanged text
       pure next
-    HandleChange reply -> do
+    HandleChange next -> do
       maybeEditor <- H.gets _.editor
       case maybeEditor of
         Nothing -> pure unit
         Just editor -> do
           text <- H.liftEff (Editor.getValue editor)
           H.raise $ TextChanged text
-      pure (reply H.Listening)
+      pure next
+
+  -- | The subscription ID for the editor change listener
+  changeSubscription :: H.SubscriptionId
+  changeSubscription = H.SubscriptionId "change"
