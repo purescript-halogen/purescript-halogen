@@ -30,7 +30,7 @@ import Data.Foreign (Foreign)
 import DOM.HTML.Types (HTMLElement, readHTMLElement)
 
 import Halogen.Component.ChildPath (ChildPath, injSlot, prjSlot, injQuery, cpI)
-import Halogen.Query.EventSource (EventSource, eventSource, eventSource_)
+import Halogen.Query.EventSource (EventSource, affEventSource, effEventSource)
 import Halogen.Query.HalogenM (HalogenM(..), HalogenF(..), SubscriptionId(..), fork, getRef, getSlots, checkSlot, mkQuery)
 
 import Control.Parallel (parTraverse)

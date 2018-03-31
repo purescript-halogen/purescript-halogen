@@ -28,6 +28,7 @@ import Data.Tuple (Tuple(..))
 import Halogen.Aff.Driver.State (DriverState(..), LifecycleHandlers, unDriverStateX)
 import Halogen.Aff.Effects (HalogenEffects)
 import Halogen.Data.OrdBox (unOrdBox)
+import Halogen.Query.EventSource (finalize)
 import Halogen.Query.EventSource as ES
 import Halogen.Query.ForkF as FF
 import Halogen.Query.HalogenM (HalogenAp(..), HalogenF(..), HalogenM(..), SubscriptionId)
@@ -88,24 +89,24 @@ eval render r =
       unsubscribe sid ref
       DriverState ({ subscriptions }) <- liftEff (readRef ref)
       _ ← fork do
-        { producer, done } <- ES.unEventSource es
+        { producer, finalizer } <- ES.unEventSource es
         cancel <- AV.makeEmptyVar
         let
           cancelProducer = CR.producer do
             AV.takeVar cancel $> Right unit
-          done' = do
+          finalizer' = do
             subs <- liftEff $ readRef subscriptions
             liftEff $ modifyRef subscriptions (map (M.delete sid))
-            when (maybe false (M.member sid) subs) done
+            when (maybe false (M.member sid) subs) (finalize finalizer)
           consumer = do
             q <- CR.await
             subs <- lift $ liftEff (readRef subscriptions)
             when (isJust subs) do
               s <- lift $ evalF ref q
               consumer
-        liftEff $ modifyRef subscriptions (map (M.insert sid done'))
+        liftEff $ modifyRef subscriptions (map (M.insert sid finalizer'))
         CR.runProcess (consumer `CR.pullFrom` producer)
-        done'
+        finalizer'
       pure next
     Unsubscribe sid next -> do
       unsubscribe sid ref
