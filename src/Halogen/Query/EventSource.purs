@@ -17,8 +17,23 @@ import Data.Either (Either(..))
 import Data.Monoid (class Monoid)
 import Data.Profunctor (dimap)
 
+-- | An event source definition - an effect in `m` that when run returns a
+-- | producer coroutine that emits queries of type `f`, and runs in the effect
+-- | monad `m`.
+-- |
+-- | It's generally unnecessary to build values of this type directly with this
+-- | constructor, the `affEventSource` and `effEventSource` cover the most
+-- | event source constructions.
 newtype EventSource m f = EventSource (m { producer :: CR.Producer (f Unit) m Unit, finalizer :: Finalizer m })
 
+-- | Constructs an event source from a setup function that operates in `Aff`.
+-- |
+-- | - The `Emitter` that the passed function receives is used to `emit` queries
+-- |   that will be received by the current component, or can be `close`d to
+-- |   shut down the event source and remove the subscription.
+-- | - The `Finalizer` that the passed function produces is there to allow for
+-- |   some clean-up action to be taken when the event source is unsubscribed
+-- |   from. This also runs if the `Emitter` is `close`d.
 affEventSource
   :: forall m f eff
    . MonadAff (avar :: AVAR | eff) m
@@ -39,6 +54,14 @@ affEventSource recv = EventSource $ liftAff do
           finalize finalizer
   pure { producer, finalizer }
 
+-- | Constructs an event source from a setup function that operates in `Eff`.
+-- |
+-- | - The `Emitter` that the passed function receives is used to `emit` queries
+-- |   that will be received by the current component, or can be `close`d to
+-- |   shut down the event source and remove the subscription.
+-- | - The `Finalizer` that the passed function produces is there to allow for
+-- |   some clean-up action to be taken when the event source is unsubscribed
+-- |   from. This also runs if the `Emitter` is `close`d.
 effEventSource
   :: forall m f eff
    . MonadAff (avar :: AVAR | eff) m
@@ -46,6 +69,7 @@ effEventSource
   -> EventSource m f
 effEventSource = affEventSource <<< dimap (hoistEmitter launchAff_) (liftEff <<< map (hoistFinalizer liftEff))
 
+-- | Maps the query component of an event source.
 interpret :: forall m f g. Functor m => (f ~> g) -> EventSource m f -> EventSource m g
 interpret f (EventSource es) =
   EventSource $
@@ -53,6 +77,7 @@ interpret f (EventSource es) =
       (\e -> { producer: FT.interpret (lmap f) e.producer, finalizer: e.finalizer })
       es
 
+-- | Maps the effect monad component of an event source.
 hoist :: forall m n f. Functor n => (m ~> n) -> EventSource m f -> EventSource n f
 hoist nat (EventSource es) =
   EventSource $
