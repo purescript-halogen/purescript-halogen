@@ -83,11 +83,11 @@ eval render r =
               liftEff $ writeRef ref (DriverState (st { state = state' }))
               handleLifecycle lifecycleHandlers (render lifecycleHandlers ref)
               pure a
-    Subscribe sid es next -> do
+    Subscribe sid (ES.EventSource setup) next -> do
       unsubscribe sid ref
       DriverState ({ subscriptions }) <- liftEff (readRef ref)
       _ ← fork do
-        { producer, finalizer } <- ES.unEventSource es
+        { producer, finalizer } <- setup
         let
           done = do
             subs <- liftEff $ readRef subscriptions
