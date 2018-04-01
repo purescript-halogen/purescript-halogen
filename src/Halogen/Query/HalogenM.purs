@@ -33,7 +33,7 @@ derive instance newtypeSubscriptionId :: Newtype SubscriptionId _
 -- | The Halogen component algebra
 data HalogenF s (f :: Type -> Type) g p o m a
   = State (s -> Tuple a s)
-  | Subscribe SubscriptionId (ES.EventSource m (f Unit)) a
+  | Subscribe SubscriptionId (ES.EventSource m f) a
   | Unsubscribe SubscriptionId a
   | Lift (m a)
   | Halt String
@@ -133,7 +133,7 @@ getRef p = HalogenM $ liftF $ GetRef p id
 
 -- | Provides a way of having a component subscribe to an `EventSource` from
 -- | within an `Eval` function.
-subscribe :: forall s f g p o m. SubscriptionId -> ES.EventSource m (f Unit) -> HalogenM s f g p o m Unit
+subscribe :: forall s f g p o m. SubscriptionId -> ES.EventSource m f -> HalogenM s f g p o m Unit
 subscribe sid es = HalogenM $ liftF $ Subscribe sid es unit
 
 unsubscribe :: forall s f g p o m. SubscriptionId -> HalogenM s f g p o m Unit
@@ -180,7 +180,7 @@ mapQuery nat (HalogenM h) = HalogenM (hoistFree go h)
   go :: HalogenF s f g p o m ~> HalogenF s f' g p o m
   go = case _ of
     State f -> State f
-    Subscribe sid es a -> Subscribe sid (map nat es) a
+    Subscribe sid es a -> Subscribe sid (ES.interpret nat es) a
     Unsubscribe sid a -> Unsubscribe sid a
     Lift q -> Lift q
     Halt msg -> Halt msg

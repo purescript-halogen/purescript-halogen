@@ -58,7 +58,7 @@ ui =
   eval (Init next) = do
     document <- H.liftEff $ DOM.window >>= DOM.document <#> DOM.htmlDocumentToDocument
     H.subscribe keyboardSubscription $ ES.effEventSource \emitter -> do
-      removeListener <- K.onKeyUp document \ev -> ES.emit emitter (H.action (HandleKey ev))
+      removeListener <- K.onKeyUp document \ev -> ES.emit emitter (HandleKey ev)
       pure $ ES.Finalizer removeListener
     pure next
   eval (HandleKey e next) = do

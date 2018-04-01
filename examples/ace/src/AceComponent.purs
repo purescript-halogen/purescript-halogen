@@ -67,7 +67,7 @@ aceComponent =
           session <- H.liftEff $ Editor.getSession editor
           H.modify (_ { editor = Just editor })
           H.subscribe changeSubscription $ ES.effEventSource \emitter -> do
-            Session.onChange session (ES.emit emitter (H.action HandleChange))
+            Session.onChange session (ES.emit emitter HandleChange)
             pure mempty
       pure next
     Finalize next -> do

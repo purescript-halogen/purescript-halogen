@@ -17,16 +17,16 @@ import Data.Either (Either(..))
 import Data.Monoid (class Monoid)
 import Data.Profunctor (dimap)
 
-newtype Emitter m a = Emitter (Step a -> m Unit)
+newtype Emitter m f = Emitter (Step (f Unit) -> m Unit)
 
-unEmitter :: forall m a. Emitter m a -> Step a -> m Unit
+unEmitter :: forall m f. Emitter m f -> Step (f Unit) -> m Unit
 unEmitter (Emitter f) = f
 
-hoistEmitter :: forall m n a r. (m Unit -> n Unit) -> Emitter m a -> Emitter n a
+hoistEmitter :: forall m n f. (m Unit -> n Unit) -> Emitter m f -> Emitter n f
 hoistEmitter nat (Emitter f) = Emitter (nat <<< f)
 
-emit :: forall m a. Emitter m a -> a -> m Unit
-emit (Emitter f) = f <<< Emit
+emit :: forall m f. Emitter m f -> (Unit -> f Unit) -> m Unit
+emit (Emitter f) q = f (Emit (q unit))
 
 close :: forall m a. Emitter m a -> m Unit
 close (Emitter f) = f Close
@@ -52,17 +52,17 @@ hoistFinalizer nat (Finalizer f) = Finalizer (nat f)
 finalize :: forall m. Finalizer m -> m Unit
 finalize (Finalizer a) = a
 
-newtype EventSource m a = EventSource (m { producer :: CR.Producer a m Unit, finalizer :: Finalizer m })
+newtype EventSource m f = EventSource (m { producer :: CR.Producer (f Unit) m Unit, finalizer :: Finalizer m })
 
-unEventSource :: forall m a. EventSource m a -> m { producer :: CR.Producer a m Unit, finalizer :: Finalizer m }
+unEventSource :: forall m f. EventSource m f -> m { producer :: CR.Producer (f Unit) m Unit, finalizer :: Finalizer m }
 unEventSource (EventSource e) = e
 
-instance functorEventSource :: Functor m => Functor (EventSource m) where
-  map f (EventSource es) =
-    EventSource $
-      map
-        (\e -> { producer: FT.interpret (lmap f) e.producer, finalizer: e.finalizer })
-        es
+interpret :: forall m f g. Functor m => (f ~> g) -> EventSource m f -> EventSource m g
+interpret f (EventSource es) =
+  EventSource $
+    map
+      (\e -> { producer: FT.interpret (lmap f) e.producer, finalizer: e.finalizer })
+      es
 
 hoist :: forall m n a. Functor n => (m ~> n) -> EventSource m a -> EventSource n a
 hoist nat (EventSource es) =
@@ -72,10 +72,10 @@ hoist nat (EventSource es) =
       (nat es)
 
 affEventSource
-  :: forall m a eff
+  :: forall m f eff
    . MonadAff (avar :: AVAR | eff) m
-  => (Emitter (Aff (avar :: AVAR | eff)) a -> Aff (avar :: AVAR | eff) (Finalizer (Aff (avar :: AVAR | eff))))
-  -> EventSource m a
+  => (Emitter (Aff (avar :: AVAR | eff)) f -> Aff (avar :: AVAR | eff) (Finalizer (Aff (avar :: AVAR | eff))))
+  -> EventSource m f
 affEventSource recv = EventSource $ liftAff do
   inputVar <- AV.makeEmptyVar
   finalizeVar <- AV.makeEmptyVar
@@ -92,8 +92,8 @@ affEventSource recv = EventSource $ liftAff do
   pure { producer, finalizer }
 
 effEventSource
-  :: forall m a eff
+  :: forall m f eff
    . MonadAff (avar :: AVAR | eff) m
-  => (Emitter (Eff (avar :: AVAR | eff)) a -> Eff (avar :: AVAR | eff) (Finalizer (Eff (avar :: AVAR | eff))))
-  -> EventSource m a
+  => (Emitter (Eff (avar :: AVAR | eff)) f -> Eff (avar :: AVAR | eff) (Finalizer (Eff (avar :: AVAR | eff))))
+  -> EventSource m f
 effEventSource = affEventSource <<< dimap (hoistEmitter launchAff_) (liftEff <<< map (hoistFinalizer liftEff))
