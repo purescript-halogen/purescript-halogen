@@ -33,7 +33,8 @@ newtype EventSource m f = EventSource (m { producer :: CR.Producer (f Unit) m Un
 -- |   shut down the event source and remove the subscription.
 -- | - The `Finalizer` that the passed function produces is there to allow for
 -- |   some clean-up action to be taken when the event source is unsubscribed
--- |   from. This also runs if the `Emitter` is `close`d.
+-- |   from. This also runs if the `Emitter` is `close`d. `mempty` can be used
+-- |   here if there is no clean-up to perform.
 affEventSource
   :: forall m f eff
    . MonadAff (avar :: AVAR | eff) m
@@ -61,15 +62,18 @@ affEventSource recv = EventSource $ liftAff do
 -- |   shut down the event source and remove the subscription.
 -- | - The `Finalizer` that the passed function produces is there to allow for
 -- |   some clean-up action to be taken when the event source is unsubscribed
--- |   from. This also runs if the `Emitter` is `close`d.
+-- |   from. This also runs if the `Emitter` is `close`d. `mempty` can be used
+-- |   here if there is no clean-up to perform.
 effEventSource
   :: forall m f eff
    . MonadAff (avar :: AVAR | eff) m
   => (Emitter (Eff (avar :: AVAR | eff)) f -> Eff (avar :: AVAR | eff) (Finalizer (Eff (avar :: AVAR | eff))))
   -> EventSource m f
-effEventSource = affEventSource <<< dimap (hoistEmitter launchAff_) (liftEff <<< map (hoistFinalizer liftEff))
+effEventSource =
+  affEventSource <<<
+    dimap (hoistEmitter launchAff_) (liftEff <<< map (hoistFinalizer liftEff))
 
--- | Maps the query component of an event source.
+-- | Changes the query component of an event source.
 interpret :: forall m f g. Functor m => (f ~> g) -> EventSource m f -> EventSource m g
 interpret f (EventSource es) =
   EventSource $
@@ -77,7 +81,7 @@ interpret f (EventSource es) =
       (\e -> { producer: FT.interpret (lmap f) e.producer, finalizer: e.finalizer })
       es
 
--- | Maps the effect monad component of an event source.
+-- | Changes the effect monad component of an event source.
 hoist :: forall m n f. Functor n => (m ~> n) -> EventSource m f -> EventSource n f
 hoist nat (EventSource es) =
   EventSource $
@@ -85,17 +89,50 @@ hoist nat (EventSource es) =
       (\e -> { producer: FT.hoistFreeT nat e.producer, finalizer: hoistFinalizer nat e.finalizer })
       (nat es)
 
+-- | Values of this type are created internally by `affEventSource` and
+-- | `effEventSource`, and then passed into the user-provided setup function.
+-- |
+-- | This type is just a wrapper around a callback, used to simplify the type
+-- | signatures for setting up event sources.
 newtype Emitter m f = Emitter (Either (f Unit) Unit -> m Unit)
 
+-- | Emits an "action style" query via the emitter. Accepts a partially applied
+-- | query constructor to save having to use `H.action` or applying `unit` when
+-- | constructing the query, for example:
+-- |
+-- | ``` purescript
+-- | data Query a = Notify String a
+-- |
+-- | myEventSource = EventSource.affEventSource \emitter -> do
+-- |   Aff.delay (Milliseconds 1000.0)
+-- |   EventSource.emit emitter (Notify "hello")
+-- |   pure mempty
+-- | ```
 emit :: forall m f. Emitter m f -> (Unit -> f Unit) -> m Unit
 emit (Emitter f) q = f (Left (q unit))
 
+-- | Closes the emitter, shutting down the event source. This allows an event
+-- | source to stop itself internally, rather than requiring external shutdown
+-- | by unsubscribing from it.
+-- |
+-- | The event source will automatically be unsubscribed from when this is
+-- | called, and the finalizer returned during event source setup will be
+-- | executed.
+-- |
+-- | Any further calls to `emit` after `close` will be ignored.
 close :: forall m a. Emitter m a -> m Unit
 close (Emitter f) = f (Right unit)
 
+-- | Changes the effect monad for an emitter.
 hoistEmitter :: forall m n f. (m Unit -> n Unit) -> Emitter m f -> Emitter n f
 hoistEmitter nat (Emitter f) = Emitter (nat <<< f)
 
+-- | When setting up an event source, values of this type should be returned to
+-- | describe any clean-up operations required. This is just a newtype around
+-- | an effectful operation, but helps with type signature comprehension.
+-- |
+-- | There is a `Monoid` instance provided for finalizers, so `mempty` can be
+-- | used in cases where there are no relevant clean-up actions to take.
 newtype Finalizer m = Finalizer (m Unit)
 
 instance semigroupFinalizer :: Apply m => Semigroup (Finalizer m) where
@@ -104,8 +141,10 @@ instance semigroupFinalizer :: Apply m => Semigroup (Finalizer m) where
 instance monoidFinalizer :: Applicative m => Monoid (Finalizer m) where
   mempty = Finalizer (pure unit)
 
+-- | Runs a finalizer.
 finalize :: forall m. Finalizer m -> m Unit
 finalize (Finalizer a) = a
 
+-- | Changes the effect monad for a finalizer.
 hoistFinalizer :: forall m n. (m ~> n) -> Finalizer m -> Finalizer n
 hoistFinalizer nat (Finalizer a) = Finalizer (nat a)
