@@ -5,7 +5,6 @@ import Prelude
 import Control.Applicative.Free (hoistFreeAp, retractFreeAp)
 import Control.Coroutine as CR
 import Control.Monad.Aff (Aff, killFiber)
-import Control.Monad.Aff.AVar as AV
 import Control.Monad.Aff.Unsafe (unsafeCoerceAff)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Class (liftEff)
@@ -17,12 +16,11 @@ import Control.Monad.Free (foldFree)
 import Control.Monad.Trans.Class (lift)
 import Control.Parallel (parSequence_, parallel, sequential)
 import Data.Coyoneda (Coyoneda, unCoyoneda)
-import Data.Either (Either(..))
 import Data.Foldable (sequence_, traverse_)
 import Data.List (List, (:))
 import Data.List as L
 import Data.Map as M
-import Data.Maybe (Maybe(..), isJust, maybe)
+import Data.Maybe (Maybe(..), maybe)
 import Data.StrMap as SM
 import Data.Tuple (Tuple(..))
 import Halogen.Aff.Driver.State (DriverState(..), LifecycleHandlers, unDriverStateX)
@@ -90,23 +88,20 @@ eval render r =
       DriverState ({ subscriptions }) <- liftEff (readRef ref)
       _ ← fork do
         { producer, finalizer } <- ES.unEventSource es
-        cancel <- AV.makeEmptyVar
         let
-          cancelProducer = CR.producer do
-            AV.takeVar cancel $> Right unit
-          finalizer' = do
+          done = do
             subs <- liftEff $ readRef subscriptions
             liftEff $ modifyRef subscriptions (map (M.delete sid))
             when (maybe false (M.member sid) subs) (finalize finalizer)
           consumer = do
             q <- CR.await
             subs <- lift $ liftEff (readRef subscriptions)
-            when (isJust subs) do
-              s <- lift $ evalF ref q
+            when (M.member sid <$> subs == Just true) do
+              _ <- lift $ fork $ evalF ref q
               consumer
-        liftEff $ modifyRef subscriptions (map (M.insert sid finalizer'))
+        liftEff $ modifyRef subscriptions (map (M.insert sid done))
         CR.runProcess (consumer `CR.pullFrom` producer)
-        finalizer'
+        done
       pure next
     Unsubscribe sid next -> do
       unsubscribe sid ref
