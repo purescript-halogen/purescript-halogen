@@ -28,7 +28,7 @@ import Halogen.Aff.Effects (HalogenEffects)
 
 -- | Waits for the document to load.
 awaitLoad :: forall eff. Aff (dom :: DOM | eff) Unit
-awaitLoad = makeAff \callback -> liftEff do
+awaitLoad = makeAff \callback -> do
   rs <- readyState =<< document =<< window
   case rs of
     Loading -> do
