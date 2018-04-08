@@ -18,7 +18,6 @@ import DOM.Event.EventTarget (addEventListener, eventListener, removeEventListen
 import DOM.Event.Types (EventType(..))
 import DOM.HTML (window)
 import DOM.HTML.Document (ReadyState(..), readyState)
-import DOM.HTML.Event.EventTypes (load)
 import DOM.HTML.Types (HTMLElement, windowToEventTarget, htmlDocumentToParentNode, readHTMLElement)
 import DOM.HTML.Window (document)
 import DOM.Node.ParentNode (QuerySelector(..), querySelector)
@@ -35,8 +34,9 @@ awaitLoad = makeAff \callback -> liftEff do
     Loading -> do
       et <- windowToEventTarget <$> window
       let listener = eventListener (\_ -> callback (Right unit))
-      addEventListener (EventType "DOMContentLoaded") listener false et
-      pure $ Canceler \_ -> liftEff (removeEventListener load listener false et)
+          domContentLoaded = EventType "DOMContentLoaded"
+      addEventListener domContentLoaded listener false et
+      pure $ Canceler \_ -> liftEff (removeEventListener domContentLoaded listener false et)
     _ -> do
       callback (Right unit)
       pure nonCanceler
