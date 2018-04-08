@@ -7,7 +7,7 @@ module Halogen.Aff.Util
 
 import Prelude
 
-import Control.Monad.Aff (Aff, Canceler(..), makeAff, nonCanceler, runAff_)
+import Control.Monad.Aff (Aff, effCanceler, makeAff, nonCanceler, runAff_)
 import Control.Monad.Eff (kind Effect, Eff)
 import Control.Monad.Eff.Class (liftEff)
 import Control.Monad.Eff.Exception (throwException, error)
@@ -36,7 +36,7 @@ awaitLoad = makeAff \callback -> liftEff do
       let listener = eventListener (\_ -> callback (Right unit))
           domContentLoaded = EventType "DOMContentLoaded"
       addEventListener domContentLoaded listener false et
-      pure $ Canceler \_ -> liftEff (removeEventListener domContentLoaded listener false et)
+      pure $ effCanceler (removeEventListener domContentLoaded listener false et)
     _ -> do
       callback (Right unit)
       pure nonCanceler
