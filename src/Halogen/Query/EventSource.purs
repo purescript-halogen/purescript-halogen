@@ -50,9 +50,9 @@ affEventSource recv = EventSource $ liftAff do
     finalizer = Finalizer do
       liftAff (attempt (AV.takeVar finalizeVar)) >>= case _ of
         Left _ -> pure unit
-        Right finalizer -> liftAff do
+        Right z -> liftAff do
           AV.killVar (Exn.error "finalized") finalizeVar
-          finalize finalizer
+          finalize z
   pure { producer, finalizer }
 
 -- | Constructs an event source from a setup function that operates in `Eff`.
