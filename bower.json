@@ -42,7 +42,8 @@
     "purescript-profunctor": "^3.2.0",
     "purescript-profunctor-lenses": "^3.7.0",
     "purescript-unsafe-coerce": "^3.0.0",
-    "purescript-unsafe-reference": "^2.0.0"
+    "purescript-unsafe-reference": "^2.0.0",
+    "purescript-dom-classy": "^2.2.0"
   },
   "devDependencies": {
     "purescript-ace": "^4.0.0",

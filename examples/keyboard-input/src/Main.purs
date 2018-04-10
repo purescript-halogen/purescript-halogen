@@ -6,18 +6,21 @@ import Control.Monad.Aff (Aff)
 import Control.Monad.Aff.AVar (AVAR)
 import Control.Monad.Eff (Eff)
 import DOM (DOM)
+import DOM.Classy.Event as DCE
+import DOM.Event.KeyboardEvent as KE
+import DOM.Event.Types (KeyboardEvent)
 import DOM.HTML (window) as DOM
+import DOM.HTML.Event.EventTypes as ET
 import DOM.HTML.Types (htmlDocumentToDocument) as DOM
 import DOM.HTML.Window (document) as DOM
-import Data.Char as CH
 import Data.Maybe (Maybe(..))
-import Data.String as ST
+import Data.String as String
 import Halogen as H
 import Halogen.Aff as HA
 import Halogen.HTML as HH
+import Halogen.HTML.Events as HE
 import Halogen.Query.EventSource as ES
 import Halogen.VDom.Driver (runUI)
-import Keyboard as K
 
 type State = { chars :: String }
 
@@ -26,9 +29,9 @@ initialState = { chars : "" }
 
 data Query a
   = Init a
-  | HandleKey K.KeyboardEvent a
+  | HandleKey KeyboardEvent a
 
-type Effects eff = (dom :: DOM, avar :: AVAR, keyboard :: K.KEYBOARD | eff)
+type Effects eff = (dom :: DOM, avar :: AVAR | eff)
 type DSL eff = H.ComponentDSL State Query Void (Aff (Effects eff))
 
 keyboardSubscription :: H.SubscriptionId
@@ -55,28 +58,28 @@ ui =
       ]
 
   eval :: Query ~> DSL eff
-  eval (Init next) = do
-    document <- H.liftEff $ DOM.window >>= DOM.document <#> DOM.htmlDocumentToDocument
-    H.subscribe keyboardSubscription $ ES.effEventSource \emitter -> do
-      removeListener <- K.onKeyUp document \ev -> ES.emit emitter (HandleKey ev)
-      pure $ ES.Finalizer removeListener
-    pure next
-  eval (HandleKey e next) = do
-    case K.readKeyboardEvent e of
-      info
-        | info.shiftKey -> do
-            H.liftEff $ K.preventDefault e
-            let char = CH.fromCharCode info.keyCode
-            H.modify (\st -> st { chars = st.chars <> ST.singleton char })
-        | info.keyCode == 13 -> do
-            H.liftEff $ K.preventDefault e
-            H.modify (_ { chars = "" })
-            H.unsubscribe keyboardSubscription
-        | otherwise ->
-            pure unit
-    pure next
+  eval = case _ of
+    Init next -> do
+      document <- H.liftEff $ DOM.window >>= DOM.document <#> DOM.htmlDocumentToDocument
+      H.subscribe keyboardSubscription $
+        ES.eventListenerEventSource ET.keyup document (HE.input HandleKey)
+      pure next
+    HandleKey ev next
+      | KE.shiftKey ev -> do
+          H.liftEff $ DCE.preventDefault ev
+          let char = KE.key ev
+          when (String.length char == 1) do
+            H.modify (\st -> st { chars = st.chars <> char })
+          pure next
+      | KE.key ev == "Enter" -> do
+          H.liftEff $ DCE.preventDefault ev
+          H.modify (_ { chars = "" })
+          H.unsubscribe keyboardSubscription
+          pure next
+      | otherwise ->
+          pure next
 
-main :: Eff (HA.HalogenEffects (keyboard :: K.KEYBOARD)) Unit
+main :: Eff (HA.HalogenEffects ()) Unit
 main = HA.runHalogenAff do
   body <- HA.awaitBody
   runUI ui unit body

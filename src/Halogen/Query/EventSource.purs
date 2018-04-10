@@ -12,8 +12,13 @@ import Control.Monad.Eff.Class (liftEff)
 import Control.Monad.Eff.Exception as Exn
 import Control.Monad.Free.Trans as FT
 import Control.Monad.Trans.Class (lift)
+import DOM (DOM)
+import DOM.Classy.Event (class IsEvent)
+import DOM.Classy.Event.EventTarget (class EventTarget, addEventListener, eventListener, removeEventListener)
+import DOM.Event.Types (EventType)
 import Data.Bifunctor (lmap)
 import Data.Either (Either(..))
+import Data.Maybe (Maybe, maybe)
 import Data.Monoid (class Monoid)
 import Data.Profunctor (dimap)
 
@@ -72,6 +77,23 @@ effEventSource
 effEventSource =
   affEventSource <<<
     dimap (hoistEmitter launchAff_) (liftEff <<< map (hoistFinalizer liftEff))
+
+-- | Constructs an event source from an event in the DOM. Accepts a function
+-- | that maps event values to a `Maybe`-wrapped query, allowing it to filter
+-- | events if necessary.
+eventListenerEventSource
+  :: forall m event f eff target
+   . MonadAff (avar :: AVAR, dom :: DOM | eff) m
+  => IsEvent event
+  => EventTarget target
+  => EventType
+  -> target
+  -> (event -> Maybe (f Unit))
+  -> EventSource m f
+eventListenerEventSource eventType target f = effEventSource \emitter -> do
+  let listener = eventListener \ev -> maybe (pure unit) (emit emitter <<< pure) (f ev)
+  addEventListener eventType listener false target
+  pure $ Finalizer (removeEventListener eventType listener false target)
 
 -- | Changes the query component of an event source.
 interpret :: forall m f g. Functor m => (f ~> g) -> EventSource m f -> EventSource m g
