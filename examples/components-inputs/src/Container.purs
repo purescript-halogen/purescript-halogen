@@ -1,11 +1,13 @@
 module Container where
 
 import Prelude
+
 import Data.Maybe (Maybe(..))
+import Data.Symbol (SProxy(..))
+import Display as Display
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
-import Display as Display
 
 data Query a
   = Increment a
@@ -13,10 +15,11 @@ data Query a
 
 type State = Int
 
-newtype Slot = Slot Int
+type ChildSlots =
+  ( display :: Display.Slot Int
+  )
 
-derive newtype instance eqSlot :: Eq Slot
-derive newtype instance ordSlot :: Ord Slot
+_display = SProxy :: SProxy "display"
 
 component :: forall m. H.Component HH.HTML Query Unit Void m
 component =
@@ -31,15 +34,15 @@ component =
   initialState :: State
   initialState = 1
 
-  render :: State -> H.ParentHTML Query Display.Query Slot m
+  render :: State -> H.ParentHTML Query ChildSlots m
   render state =
     HH.div_
       [ HH.ul_
-          [ HH.slot (Slot 1) Display.component state absurd
-          , HH.slot (Slot 2) Display.component (state * 2) absurd
-          , HH.slot (Slot 3) Display.component (state * 3) absurd
-          , HH.slot (Slot 4) Display.component (state * 10) absurd
-          , HH.slot (Slot 5) Display.component (state * state) absurd
+          [ HH.slot _display 1 Display.component state absurd
+          , HH.slot _display 2 Display.component (state * 2) absurd
+          , HH.slot _display 3 Display.component (state * 3) absurd
+          , HH.slot _display 4 Display.component (state * 10) absurd
+          , HH.slot _display 5 Display.component (state * state) absurd
           ]
       , HH.button
           [ HE.onClick (HE.input_ Increment) ]
@@ -49,7 +52,7 @@ component =
           [ HH.text "-1"]
       ]
 
-  eval :: Query ~> H.ParentDSL State Query Display.Query Slot Void m
+  eval :: Query ~> H.ParentDSL State Query ChildSlots Void m
   eval = case _ of
     Increment next -> do
       H.modify (_ + 1)
