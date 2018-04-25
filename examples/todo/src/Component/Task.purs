@@ -25,6 +25,8 @@ data TaskMessage
   = NotifyRemove
   | Toggled Boolean
 
+type TaskSlot = H.Slot TaskQuery TaskMessage
+
 -- | The task component definition.
 task :: forall m. Task -> H.Component HH.HTML TaskQuery Unit TaskMessage m
 task initialState =
@@ -36,7 +38,7 @@ task initialState =
     }
   where
 
-  render :: Task -> H.ComponentHTML TaskQuery
+  render :: Task -> H.ComponentHTML TaskQuery () m
   render t =
     HH.li_
       [ HH.input
@@ -59,7 +61,7 @@ task initialState =
           [ HH.text "✖" ]
       ]
 
-  eval :: TaskQuery ~> H.ComponentDSL Task TaskQuery TaskMessage m
+  eval :: TaskQuery ~> H.HalogenM Task TaskQuery () TaskMessage m
   eval (UpdateDescription desc next) = do
     CMS.modify (_ { description = desc })
     pure next

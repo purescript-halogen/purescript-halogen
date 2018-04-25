@@ -24,7 +24,7 @@ component =
   initialState :: State
   initialState = { history: [] }
 
-  render :: State -> H.ComponentHTML Query
+  render :: State -> H.ComponentHTML Query () m
   render state =
     HH.div_
       [ HH.p_ [ HH.text "Change the URL hash or choose an anchor link..." ]
@@ -37,7 +37,7 @@ component =
       , HH.ol_ $ map (\msg -> HH.li_ [ HH.text msg ]) state.history
       ]
 
-  eval :: Query ~> H.ComponentDSL State Query Void m
+  eval :: Query ~> H.HalogenM State Query () Void m
   eval = case _ of
     ChangeRoute msg next -> do
       H.modify \st -> { history: st.history `A.snoc` msg }

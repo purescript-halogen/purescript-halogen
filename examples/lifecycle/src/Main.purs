@@ -2,23 +2,21 @@ module Main where
 
 import Prelude
 
+import Child as Child
 import Control.Monad.Aff (Aff)
 import Control.Monad.Aff.Console (log)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Console (CONSOLE)
-
 import Data.Array (snoc, filter, reverse)
 import Data.Maybe (Maybe(..))
+import Data.Symbol (SProxy(..))
 import Data.Tuple (Tuple(..))
-
 import Halogen as H
 import Halogen.Aff as HA
 import Halogen.HTML as HH
 import Halogen.HTML.Elements.Keyed as HK
 import Halogen.HTML.Events as HE
 import Halogen.VDom.Driver (runUI)
-
-import Child as Child
 
 type State =
   { currentId :: Int
@@ -41,8 +39,14 @@ data Query a
 
 type UIEff eff = Aff (console :: CONSOLE | eff)
 
+type ChildSlots =
+  ( child :: H.Slot Child.Query Child.Message Int
+  )
+
+_child = SProxy :: SProxy "child"
+
 ui :: forall eff. H.Component HH.HTML Query Unit Void (UIEff eff)
-ui = H.lifecycleParentComponent
+ui = H.lifecycleComponent
   { initialState: const initialState
   , render
   , eval
@@ -52,7 +56,7 @@ ui = H.lifecycleParentComponent
   }
   where
 
-  render :: State -> H.ParentHTML Query Child.Query Int (UIEff eff)
+  render :: State -> H.ComponentHTML Query ChildSlots (UIEff eff)
   render state =
     HH.div_
       [ HH.button
@@ -67,11 +71,11 @@ ui = H.lifecycleParentComponent
               [ HH.button
                   [ HE.onClick (HE.input_ $ Remove sid) ]
                   [ HH.text "Remove" ]
-              , HH.slot sid (Child.child sid) unit (listen sid)
+              , HH.slot _child sid (Child.child sid) unit (listen sid)
               ]
       ]
 
-  eval :: Query ~> H.ParentDSL State Query Child.Query Int Void (UIEff eff)
+  eval :: Query ~> H.HalogenM State Query ChildSlots Void (UIEff eff)
   eval (Initialize next) = do
     H.liftAff $ log "Initialize Root"
     pure next

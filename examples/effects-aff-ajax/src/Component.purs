@@ -32,7 +32,7 @@ ui =
   initialState :: State
   initialState = { loading: false, username: "", result: Nothing }
 
-  render :: State -> H.ComponentHTML Query
+  render :: forall m. State -> H.ComponentHTML Query () m
   render st =
     HH.form_ $
       [ HH.h1_ [ HH.text "Lookup GitHub user" ]
@@ -61,7 +61,7 @@ ui =
               ]
       ]
 
-  eval :: Query ~> H.ComponentDSL State Query Void (Aff (ajax :: AX.AJAX | eff))
+  eval :: Query ~> H.HalogenM State Query () Void (Aff (ajax :: AX.AJAX | eff))
   eval = case _ of
     SetUsername username next -> do
       H.modify (_ { username = username, result = Nothing :: Maybe String })

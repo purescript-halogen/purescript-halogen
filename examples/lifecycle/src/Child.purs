@@ -5,9 +5,8 @@ import Prelude
 import Control.Monad.Aff (Aff)
 import Control.Monad.Aff.Console (log)
 import Control.Monad.Eff.Console (CONSOLE)
-
 import Data.Maybe (Maybe(..))
-
+import Data.Symbol (SProxy(..))
 import Halogen as H
 import Halogen.HTML as HH
 
@@ -25,8 +24,14 @@ type Slot = Unit
 
 type ChildEff eff = Aff (console :: CONSOLE | eff)
 
+type ChildSlots =
+  ( cell :: H.Slot Query Message Int
+  )
+
+_cell = SProxy :: SProxy "cell"
+
 child :: forall eff. Int -> H.Component HH.HTML Query Unit Message (ChildEff eff)
-child initialState = H.lifecycleParentComponent
+child initialState = H.lifecycleComponent
   { initialState: const initialState
   , render
   , eval
@@ -36,18 +41,18 @@ child initialState = H.lifecycleParentComponent
   }
   where
 
-  render :: Int -> H.ParentHTML Query Query Int (ChildEff eff)
+  render :: Int -> H.ComponentHTML Query ChildSlots (ChildEff eff)
   render id =
     HH.div_
       [ HH.text ("Child " <> show id)
       , HH.ul_
-        [ HH.slot 0 (cell 0) unit (listen 0)
-        , HH.slot 1 (cell 1) unit (listen 1)
-        , HH.slot 2 (cell 2) unit (listen 2)
+        [ HH.slot _cell 0 (cell 0) unit (listen 0)
+        , HH.slot _cell 1 (cell 1) unit (listen 1)
+        , HH.slot _cell 2 (cell 2) unit (listen 2)
         ]
       ]
 
-  eval :: Query ~> H.ParentDSL Int Query Query Int Message (ChildEff eff)
+  eval :: Query ~> H.HalogenM Int Query ChildSlots Message (ChildEff eff)
   eval (Initialize next) = do
     id <- H.get
     H.lift $ do
@@ -83,11 +88,11 @@ cell initialState = H.lifecycleComponent
   }
   where
 
-  render :: Int -> H.ComponentHTML Query
+  render :: forall f m. Int -> H.ComponentHTML f () m
   render id =
     HH.li_ [ HH.text ("Cell " <> show id) ]
 
-  eval :: Query ~> H.ComponentDSL Int Query Message (ChildEff eff)
+  eval :: Query ~> H.HalogenM Int Query () Message (ChildEff eff)
   eval (Initialize next) = do
     id <- H.get
     H.lift $ do

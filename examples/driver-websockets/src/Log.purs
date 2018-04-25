@@ -19,7 +19,7 @@ data Query a
   | SendMessage a
 
 data Message
-  = OutputMessage String                 
+  = OutputMessage String
 
 component :: forall m. H.Component HH.HTML Query Unit Message m
 component =
@@ -34,7 +34,7 @@ component =
   initialState :: State
   initialState = { messages: [] , inputText: "" }
 
-  render :: State -> H.ComponentHTML Query
+  render :: State -> H.ComponentHTML Query () m
   render state =
     HH.div_
       [ HH.ol_ $ map (\msg -> HH.li_ [ HH.text msg ]) state.messages
@@ -48,7 +48,7 @@ component =
           [ HH.text "Send Message" ]
       ]
 
-  eval :: Query ~> H.ComponentDSL State Query Message m
+  eval :: Query ~> H.HalogenM State Query () Message m
   eval (AddMessage msg next) = do
     let incomingMessage = "Received: " <> msg
     H.modify \st -> st { messages = st.messages `A.snoc` incomingMessage }
@@ -60,7 +60,7 @@ component =
     H.modify \st' -> st'
       { messages = st'.messages `A.snoc` ("Sending: " <> outgoingMessage)
       , inputText = "" }
-    pure next              
+    pure next
   eval (UpdateInputText text next) = do
     H.modify (_ { inputText = text })
     pure next

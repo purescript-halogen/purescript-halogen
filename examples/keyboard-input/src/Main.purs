@@ -33,7 +33,7 @@ data Query a
   | HandleKey K.KeyboardEvent (H.SubscribeStatus -> a)
 
 type Effects eff = (dom :: DOM, avar :: AVAR, keyboard :: K.KEYBOARD | eff)
-type DSL eff = H.ComponentDSL State Query Void (Aff (Effects eff))
+type DSL eff = H.HalogenM State Query () Void (Aff (Effects eff))
 
 ui :: forall eff. H.Component HH.HTML Query Unit Void (Aff (Effects eff))
 ui =
@@ -47,7 +47,7 @@ ui =
     }
   where
 
-  render :: State -> H.ComponentHTML Query
+  render :: forall m. State -> H.ComponentHTML Query () m
   render state =
     HH.div_
       [ HH.p_ [ HH.text "Hold down the shift key and type some characters!" ]
