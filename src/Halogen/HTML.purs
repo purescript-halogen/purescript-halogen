@@ -49,12 +49,5 @@ slot
   -> i
   -> (o -> Maybe (f Unit))
   -> ParentHTML f ps m
--- slot
---   :: forall f m p i o g
---    . p
---   -> Component HTML g i o m
---   -> i
---   -> (o -> Maybe (f Unit))
---   -> ParentHTML f g p m
 slot sym p component input outputQuery =
   Core.slot (mkComponentSlot sym p component input outputQuery)

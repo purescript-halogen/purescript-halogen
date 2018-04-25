@@ -26,7 +26,7 @@ import Halogen.Aff.Driver.State (DriverState(..), DriverStateRef(..), LifecycleH
 import Halogen.Aff.Effects (HalogenEffects)
 import Halogen.Query.EventSource as ES
 import Halogen.Query.ForkF as FF
-import Halogen.Query.HalogenM (ChildQueryBox, HalogenAp(..), HalogenF(..), HalogenM(..), unChildQuery)
+import Halogen.Query.HalogenM (HalogenAp(..), HalogenF(..), HalogenM(..), QueryBox, UnpackQuery(..), unQuery)
 import Halogen.Query.InputF (InputF(..), RefLabel(..))
 import Unsafe.Reference (unsafeRefEq)
 
@@ -126,16 +126,16 @@ eval render r =
   evalChildQuery
     :: forall s' f' ps' i' o' a'
      . Ref (DriverState h r s' f' ps' i' o' eff)
-    -> ChildQueryBox ps' a'
+    -> QueryBox ps' a'
     -> Aff (HalogenEffects eff) a'
   evalChildQuery ref cqb = do
     DriverState st <- liftEff (readRef ref)
-    unChildQuery (\{ get, query, next } -> do
-      case get st.children of
-        Just (DriverStateRef var) -> do
+    unQuery (\{ unpack: UnpackQuery unpack, query, reply } -> do
+      let
+        go (DriverStateRef var) = parallel do
           dsx <- liftEff (readRef var)
-          unDriverStateX (\ds -> next <<< Just <$> evalF ds.selfRef query) dsx
-        Nothing -> pure (next Nothing)) cqb
+          unDriverStateX (\ds -> evalF ds.selfRef query) dsx
+      reply <$> sequential (unpack go st.children)) cqb
 
   evalF
     :: forall s' f' ps' i' o'

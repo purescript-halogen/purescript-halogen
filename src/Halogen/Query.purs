@@ -23,7 +23,7 @@ import Data.Foreign (Foreign)
 import DOM.HTML.Types (HTMLElement, readHTMLElement)
 
 import Halogen.Query.EventSource (EventSource, SubscribeStatus(..), eventSource, eventSource_)
-import Halogen.Query.HalogenM (HalogenM(..), HalogenF(..), fork, getRef, query)
+import Halogen.Query.HalogenM (HalogenM(..), HalogenF(..), fork, getRef, query, queryAll)
 
 import Control.Monad.Aff.Class (liftAff) as Exports
 import Control.Monad.Eff.Class (liftEff) as Exports
@@ -86,52 +86,6 @@ type Request f a = (a -> a) -> f a
 -- | ```
 request :: forall f a. Request f a -> f a
 request req = req id
-
-{-
--- | Sends a query to a child of a component at the specified slot.
-query
-  :: forall s f g p o m a
-   . Eq p
-  => p
-  -> g a
-  -> HalogenM s f g p o m (Maybe a)
-query p q = checkSlot p >>= if _ then Just <$> mkQuery p q else pure Nothing
-
--- | Sends a query to a child of a component at the specified slot, using a
--- | `ChildPath` to discriminate the type of child component to query.
-query'
-  :: forall s f g g' m p p' o a
-   . Eq p'
-  => ChildPath g g' p p'
-  -> p
-  -> g a
-  -> HalogenM s f g' p' o m (Maybe a)
-query' path p q = query (injSlot path p) (injQuery path q)
-
--- | Sends a query to all children of a component.
-queryAll
-  :: forall s f g p o m a
-   . Ord p
-  => g a
-  -> HalogenM s f g p o m (M.Map p a)
-queryAll = queryAll' cpI
-
--- | Sends a query to all children of a specific type within a component, using
--- | a `ChildPath` to discriminate the type of child component to query.
-queryAll'
-  :: forall s f g g' p p' o m a
-   . Ord p
-  => Eq p'
-  => ChildPath g g' p p'
-  -> g a
-  -> HalogenM s f g' p' o m (M.Map p a)
-queryAll' path q = do
-  slots <- L.mapMaybe (prjSlot path) <$> getSlots
-  M.fromFoldable <$>
-    parTraverse
-      (\p -> map (Tuple p) (mkQuery (injSlot path p) (injQuery path q)))
-      slots
--}
 
 getHTMLElementRef :: forall s f ps o m. RefLabel -> HalogenM s f ps o m (Maybe HTMLElement)
 getHTMLElementRef = map (go =<< _) <<< getRef

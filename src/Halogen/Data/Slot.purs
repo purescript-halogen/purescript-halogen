@@ -5,6 +5,7 @@ module Halogen.Data.Slot
   , lookup
   , insert
   , pop
+  , slots
   , foreachSlot
   ) where
 
@@ -13,10 +14,11 @@ import Prelude
 import Data.Foldable (traverse_)
 import Data.Map (Map)
 import Data.Map as Map
-import Data.Maybe (Maybe)
+import Data.Maybe (Maybe(..))
+import Data.Monoid (mempty)
 import Data.Symbol (class IsSymbol, SProxy, reflectSymbol)
 import Data.Tuple (Tuple(..))
-import Halogen.Data.OrdBox (OrdBox, mkOrdBox)
+import Halogen.Data.OrdBox (OrdBox, mkOrdBox, unOrdBox)
 import Unsafe.Coerce (unsafeCoerce)
 
 foreign import data Any :: Type
@@ -82,6 +84,28 @@ insert sym key val (SlotStorage m) =
   coerceBox = unsafeCoerce
 
   coerceVal :: slot g o -> Any
+  coerceVal = unsafeCoerce
+
+slots
+  :: forall sym px ps slot g o p
+   . RowCons sym (Slot g o p) px ps
+  => IsSymbol sym
+  => Ord p
+  => SProxy sym
+  -> SlotStorage ps slot
+  -> Map p (slot g o)
+slots sym (SlotStorage m) = Map.foldSubmap Nothing Nothing go m
+  where
+  key = reflectSymbol sym
+
+  go (Tuple key' ob) val
+    | key == key' = Map.singleton (unOrdBox (coerceBox ob)) (coerceVal val)
+    | otherwise = mempty
+
+  coerceBox :: OrdBox Any -> OrdBox p
+  coerceBox = unsafeCoerce
+
+  coerceVal :: Any -> slot g o
   coerceVal = unsafeCoerce
 
 foreachSlot

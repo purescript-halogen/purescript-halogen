@@ -15,9 +15,11 @@ import Control.Monad.Writer.Class (class MonadTell, tell)
 import Control.Parallel.Class (class Parallel)
 import Data.Bifunctor (lmap)
 import Data.Foreign (Foreign)
+import Data.Map (Map)
 import Data.Maybe (Maybe)
 import Data.Newtype (class Newtype, over)
 import Data.Symbol (class IsSymbol, SProxy)
+import Data.Traversable (traverse)
 import Data.Tuple (Tuple)
 import Halogen.Data.Slot (Slot, SlotStorage)
 import Halogen.Data.Slot as Slot
@@ -26,40 +28,22 @@ import Halogen.Query.ForkF as FF
 import Halogen.Query.InputF (RefLabel)
 import Unsafe.Coerce (unsafeCoerce)
 
-type ChildQueryBox' (ps :: # Type) slot g o a b =
-  { get :: forall slot. SlotStorage ps slot -> Maybe (slot g o)
-  , set :: forall slot. slot g o -> SlotStorage ps slot -> SlotStorage ps slot
+newtype UnpackQuery ps g o f b =
+  UnpackQuery (forall slot m . Applicative m => (slot g o -> m b) -> SlotStorage ps slot -> m (f b))
+
+type QueryBox' ps g o a f b =
+  { unpack :: UnpackQuery ps g o f b
   , query :: g b
-  , next :: Maybe b -> a
+  , reply :: f b -> a
   }
 
-data ChildQueryBox (ps :: # Type) a
+data QueryBox (ps :: # Type) a
 
-mkChildQuery
-  :: forall sym px ps g o p a
-   . RowCons sym (Slot g o p) px ps
-  => IsSymbol sym
-  => Ord p
-  => SProxy sym
-  -> p
-  -> g a
-  -> ChildQueryBox ps (Maybe a)
-mkChildQuery sym p query = unsafeCoerce childQuery
-  where
-  childQuery :: forall slot. ChildQueryBox' ps slot g o (Maybe a) a
-  childQuery = { get, set, query, next: id }
+mkQuery' :: forall ps g o a f b. QueryBox' ps g o a f b -> QueryBox ps a
+mkQuery' = unsafeCoerce
 
-  get :: forall slot. SlotStorage ps slot -> Maybe (slot g o)
-  get = Slot.lookup sym p
-
-  set :: forall slot. slot g o -> SlotStorage ps slot -> SlotStorage ps slot
-  set = Slot.insert sym p
-
-mkChildQuery' :: forall ps slot g o a b . ChildQueryBox' ps slot g o a b -> ChildQueryBox ps a
-mkChildQuery' = unsafeCoerce
-
-unChildQuery :: forall ps slot a r. (forall g o b. ChildQueryBox' ps slot g o a b -> r) -> ChildQueryBox ps a -> r
-unChildQuery = unsafeCoerce
+unQuery :: forall ps a r. (forall g o f b. QueryBox' ps g o a f b -> r) -> QueryBox ps a -> r
+unQuery = unsafeCoerce
 
 -- | The Halogen component algebra
 data HalogenF s (f :: Type -> Type) (ps :: # Type) o m a
@@ -67,7 +51,7 @@ data HalogenF s (f :: Type -> Type) (ps :: # Type) o m a
   | Subscribe (ES.EventSource f m) a
   | Lift (m a)
   | Halt String
-  | ChildQuery (ChildQueryBox ps a)
+  | ChildQuery (QueryBox ps a)
   | Raise o a
   | Par (HalogenAp s f ps o m a)
   | Fork (FF.Fork (HalogenM s f ps o m) a)
@@ -79,7 +63,7 @@ instance functorHalogenF :: Functor m => Functor (HalogenF s f ps o m) where
     Subscribe es a -> Subscribe es (f a)
     Lift q -> Lift (map f q)
     Halt msg -> Halt msg
-    ChildQuery cq -> ChildQuery (unChildQuery (\cq' -> mkChildQuery' $ cq' { next = (cq'.next >>> f) }) cq)
+    ChildQuery cq -> ChildQuery (unQuery (\cq' -> mkQuery' $ cq' { reply = cq'.reply >>> f }) cq)
     Raise o a -> Raise o (f a)
     Par pa -> Par (map f pa)
     Fork fa -> Fork (map f fa)
@@ -148,7 +132,25 @@ query
   -> p
   -> g a
   -> HalogenM s f ps o m (Maybe a)
-query sym p q = HalogenM $ liftF $ ChildQuery $ mkChildQuery sym p q
+query sym p query = HalogenM $ liftF $ ChildQuery $ mkQuery'
+  { unpack: UnpackQuery \k -> Slot.lookup sym p >>> traverse k
+  , query
+  , reply: id
+  }
+
+queryAll
+  :: forall s f o m sym px ps g o' p a
+   . RowCons sym (Slot g o' p) px ps
+  => IsSymbol sym
+  => Ord p
+  => SProxy sym
+  -> g a
+  -> HalogenM s f ps o m (Map p a)
+queryAll sym query = HalogenM $ liftF $ ChildQuery $ mkQuery'
+  { unpack: UnpackQuery \k -> Slot.slots sym >>> traverse k
+  , query
+  , reply: id
+  }
 
 getRef :: forall s f ps o m. RefLabel -> HalogenM s f ps o m (Maybe Foreign)
 getRef p = HalogenM $ liftF $ GetRef p id
