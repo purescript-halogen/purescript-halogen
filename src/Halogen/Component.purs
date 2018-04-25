@@ -5,16 +5,9 @@ module Halogen.Component
   , unComponent
   , ComponentSpec
   , ComponentHTML
-  , ComponentDSL
   , component
   , LifecycleComponentSpec
   , lifecycleComponent
-  , ParentComponentSpec
-  , parentComponent
-  , ParentHTML
-  , ParentDSL
-  , ParentLifecycleComponentSpec
-  , lifecycleParentComponent
   , hoist
   , ComponentSlot'
   , ComponentSlot
@@ -86,87 +79,6 @@ type Component' h s f ps i o m =
   , finalizer :: Maybe (f Unit)
   }
 
--- | A spec for a component with no possible children.
--- |
--- | - `h` is the type that will be rendered by the component, usually `HTML`
--- | - `s` is the component's state
--- | - `f` is the query algebra
--- | - `i` is the input value type that will be mapped to an `f` whenever the
--- |       parent of this component renders
--- | - `o` is the type for the component's output messages
--- | - `m` is the monad used for non-component-state effects
-type ComponentSpec h s f i o m =
-  { initialState :: i -> s
-  , render :: s -> h Void (f Unit)
-  , eval :: f ~> ComponentDSL s f o m
-  , receiver :: i -> Maybe (f Unit)
-  }
-
--- | A convenience synonym for the output type of a `render` function, for a
--- | childless component that renders HTML.
-type ComponentHTML f = HTML Void (f Unit)
-
--- | A synonym for `HalogenM` with some type parameters populated that are not
--- | relevant for childless components.
-type ComponentDSL s f = HalogenM s f ()
-
--- | Builds a component with no possible children.
-component
-  :: forall h s f i o m
-   . Bifunctor h
-  => ComponentSpec h s f i o m
-  -> Component h f i o m
-component spec =
-  lifecycleComponent
-    { initialState: spec.initialState
-    , render: spec.render
-    , eval: spec.eval
-    , receiver: spec.receiver
-    , initializer: Nothing
-    , finalizer: Nothing
-    }
-
--- | A spec for a component with no possible children, including lifecycle
--- | inputs.
--- |
--- | - `h` is the type that will be rendered by the component, usually `HTML`
--- | - `s` is the component's state
--- | - `f` is the query algebra
--- | - `i` is the input value type that will be mapped to an `f` whenever the
--- |       parent of this component renders
--- | - `o` is the type for the component's output messages
--- | - `m` is the monad used for non-component-state effects
-type LifecycleComponentSpec h s f i o m =
-  { initialState :: i -> s
-  , render :: s -> h Void (f Unit)
-  , eval :: f ~> ComponentDSL s f o m
-  , receiver :: i -> Maybe (f Unit)
-  , initializer :: Maybe (f Unit)
-  , finalizer :: Maybe (f Unit)
-  }
-
--- | Builds a component with lifecycle inputs and no possible children.
-lifecycleComponent
-  :: forall h s f i o m
-   . Bifunctor h
-  => LifecycleComponentSpec h s f i o m
-  -> Component h f i o m
-lifecycleComponent spec =
-  mkComponent
-    { initialState: spec.initialState
-    , render: coeRender spec.render
-    , eval: spec.eval
-    , receiver: spec.receiver
-    , initializer: spec.initializer
-    , finalizer: spec.finalizer
-    }
-  where
-  coeRender
-    :: (s -> h Void (f Unit))
-    -> s
-    -> h (ComponentSlot h () m (f Unit)) (f Unit)
-  coeRender = unsafeCoerce -- ≅ map (lmap absurd)
-
 -- | A spec for a component.
 -- |
 -- | - `h` is the type that will be rendered by the component, usually `HTML`
@@ -176,7 +88,7 @@ lifecycleComponent spec =
 -- | - `p` is the slot type for addressing child components
 -- | - `o` is the type for the component's output messages
 -- | - `m` is the monad used for non-component-state effects
-type ParentComponentSpec h s f ps i o m =
+type ComponentSpec h s f ps i o m =
   { initialState :: i -> s
   , render :: s -> h (ComponentSlot h ps m (f Unit)) (f Unit)
   , eval :: f ~> HalogenM s f ps o m
@@ -185,18 +97,14 @@ type ParentComponentSpec h s f ps i o m =
 
 -- | A convenience synonym for the output type of a `render` function, for a
 -- | parent component that renders HTML.
-type ParentHTML f ps m = HTML (ComponentSlot HTML ps m (f Unit)) (f Unit)
-
--- | A synonym for just `HalogenM`. Provided for consistency with `ComponentDSL`
--- | in the non-parent-component case.
-type ParentDSL = HalogenM
+type ComponentHTML f ps m = HTML (ComponentSlot HTML ps m (f Unit)) (f Unit)
 
 -- | Builds a component that allows for children.
-parentComponent
+component
   :: forall h s f ps i o m
-   . ParentComponentSpec h s f ps i o m
+   . ComponentSpec h s f ps i o m
   -> Component h f i o m
-parentComponent spec =
+component spec =
   mkComponent
     { initialState: spec.initialState
     , render: spec.render
@@ -215,7 +123,7 @@ parentComponent spec =
 -- | - `p` is the slot type for addressing child components
 -- | - `o` is the type for the component's output messages
 -- | - `m` is the monad used for non-component-state effects
-type ParentLifecycleComponentSpec h s f ps i o m =
+type LifecycleComponentSpec h s f ps i o m =
   { initialState :: i -> s
   , render :: s -> h (ComponentSlot h ps m (f Unit)) (f Unit)
   , eval :: f ~> HalogenM s f ps o m
@@ -225,11 +133,11 @@ type ParentLifecycleComponentSpec h s f ps i o m =
   }
 
 -- | Builds a component with lifecycle inputs that allows for children.
-lifecycleParentComponent
+lifecycleComponent
   :: forall h s f ps i o m
-   . ParentLifecycleComponentSpec h s f ps i o m
+   . LifecycleComponentSpec h s f ps i o m
   -> Component h f i o m
-lifecycleParentComponent spec =
+lifecycleComponent spec =
   mkComponent
     { initialState: spec.initialState
     , render: spec.render

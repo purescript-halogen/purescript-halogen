@@ -29,7 +29,7 @@ component =
   initialState :: State
   initialState = 0
 
-  render :: State -> H.ComponentHTML Query
+  render :: State -> H.ComponentHTML Query () m
   render state =
     HH.div_
       [ HH.p_
@@ -41,7 +41,7 @@ component =
           [ HH.text ("Increment") ]
       ]
 
-  eval :: Query ~> H.ComponentDSL State Query Void m
+  eval :: Query ~> H.HalogenM State Query () Void m
   eval (Increment next) = do
     H.modify (_ + 1)
     pure next

@@ -32,7 +32,7 @@ _c = SProxy :: SProxy "c"
 
 component :: forall m. Applicative m => H.Component HH.HTML Query Unit Void m
 component =
-  H.parentComponent
+  H.component
     { initialState: const initialState
     , render
     , eval
@@ -43,7 +43,7 @@ component =
   initialState :: State
   initialState = { a: Nothing, b: Nothing, c: Nothing }
 
-  render :: State -> H.ParentHTML Query ChildSlots m
+  render :: State -> H.ComponentHTML Query ChildSlots m
   render state = HH.div_
     [ HH.div
         [ HP.class_ (H.ClassName "box")]
@@ -72,7 +72,7 @@ component =
         [ HH.text "Check states now" ]
     ]
 
-  eval :: Query ~> H.ParentDSL State Query ChildSlots Void m
+  eval :: Query ~> H.HalogenM State Query ChildSlots Void m
   eval (ReadStates next) = do
     a <- H.query _a unit (H.request CA.GetState)
     b <- H.query _b unit (H.request CB.GetCount)

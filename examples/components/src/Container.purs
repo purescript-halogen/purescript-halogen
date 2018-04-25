@@ -27,7 +27,7 @@ _button = SProxy
 
 component :: forall m. H.Component HH.HTML Query Unit Void m
 component =
-  H.parentComponent
+  H.component
     { initialState: const initialState
     , render
     , eval
@@ -38,9 +38,10 @@ component =
   initialState :: State
   initialState =
     { toggleCount: 0
-    , buttonState: Nothing }
+    , buttonState: Nothing
+    }
 
-  render :: State -> H.ParentHTML Query ChildSlots m
+  render :: State -> H.ComponentHTML Query ChildSlots m
   render state =
     HH.div_
       [ HH.slot _button unit Button.myButton unit (HE.input HandleButton)
@@ -57,7 +58,7 @@ component =
           ]
       ]
 
-  eval :: Query ~> H.ParentDSL State Query ChildSlots Void m
+  eval :: Query ~> H.HalogenM State Query ChildSlots Void m
   eval = case _ of
     HandleButton (Button.Toggled _) next -> do
       H.modify (\st -> st { toggleCount = st.toggleCount + 1 })

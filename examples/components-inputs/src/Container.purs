@@ -23,7 +23,7 @@ _display = SProxy :: SProxy "display"
 
 component :: forall m. H.Component HH.HTML Query Unit Void m
 component =
-  H.parentComponent
+  H.component
     { initialState: const initialState
     , render
     , eval
@@ -34,7 +34,7 @@ component =
   initialState :: State
   initialState = 1
 
-  render :: State -> H.ParentHTML Query ChildSlots m
+  render :: State -> H.ComponentHTML Query ChildSlots m
   render state =
     HH.div_
       [ HH.ul_
@@ -52,7 +52,7 @@ component =
           [ HH.text "-1"]
       ]
 
-  eval :: Query ~> H.ParentDSL State Query ChildSlots Void m
+  eval :: Query ~> H.HalogenM State Query ChildSlots Void m
   eval = case _ of
     Increment next -> do
       H.modify (_ + 1)
