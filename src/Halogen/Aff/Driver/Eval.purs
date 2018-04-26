@@ -132,10 +132,10 @@ eval render r =
     DriverState st <- liftEff (readRef ref)
     unQuery (\{ unpack: UnpackQuery unpack, query, reply } -> do
       let
-        go (DriverStateRef var) = parallel do
+        evalChild (DriverStateRef var) = parallel do
           dsx <- liftEff (readRef var)
           unDriverStateX (\ds -> evalF ds.selfRef query) dsx
-      reply <$> sequential (unpack go st.children)) cqb
+      reply <$> sequential (unpack evalChild st.children)) cqb
 
   evalF
     :: forall s' f' ps' i' o'

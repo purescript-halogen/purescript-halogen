@@ -133,9 +133,9 @@ query
   -> p
   -> g a
   -> HalogenM s f ps o m (Maybe a)
-query sym p query = HalogenM $ liftF $ ChildQuery $ mkQuery'
+query sym p q = HalogenM $ liftF $ ChildQuery $ mkQuery'
   { unpack: UnpackQuery \k -> Slot.lookup sym p >>> traverse k
-  , query
+  , query: q
   , reply: id
   }
 
@@ -148,9 +148,9 @@ queryAll
   => SProxy sym
   -> g a
   -> HalogenM s f ps o m (Map p a)
-queryAll sym query = HalogenM $ liftF $ ChildQuery $ mkQuery'
+queryAll sym q = HalogenM $ liftF $ ChildQuery $ mkQuery'
   { unpack: UnpackQuery \k -> Slot.slots sym >>> traverse k
-  , query
+  , query: q
   , reply: id
   }
 
