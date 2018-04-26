@@ -67,7 +67,7 @@ type ComponentSpec h s f ps i o m =
   }
 
 -- | A convenience synonym for the output type of a `render` function, for a
--- | parent component that renders HTML.
+-- | component that renders HTML.
 type ComponentHTML f ps m = HTML (ComponentSlot HTML ps m (f Unit)) (f Unit)
 
 -- | Builds a component that allows for children.

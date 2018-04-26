@@ -34,7 +34,8 @@ fromPlainHTML :: forall p i. PlainHTML -> HTML p i
 fromPlainHTML = unsafeCoerce -- ≅ bimap absurd absurd
 
 -- | Defines a slot for a child component. Takes:
--- | - the slot "address" value
+-- | - the slot address label
+-- | - the slot address index
 -- | - the component for the slot
 -- | - the input value to pass to the component
 -- | - a function mapping outputs from the component to a query in the parent

@@ -123,6 +123,7 @@ instance monadTellHalogenM :: MonadTell w m => MonadTell w (HalogenM s f ps o m)
 halt :: forall s f ps o m a. String -> HalogenM s f ps o m a
 halt msg = HalogenM $ liftF $ Halt msg
 
+-- | Sends a query to a child of a component at the specified slot.
 query
   :: forall s f o m sym px ps g o' p a
    . RowCons sym (Slot g o' p) px ps
@@ -138,6 +139,7 @@ query sym p query = HalogenM $ liftF $ ChildQuery $ mkQuery'
   , reply: id
   }
 
+-- | Sends a query to all children of a component at a given slot label.
 queryAll
   :: forall s f o m sym px ps g o' p a
    . RowCons sym (Slot g o' p) px ps
