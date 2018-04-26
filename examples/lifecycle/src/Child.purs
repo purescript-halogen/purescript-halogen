@@ -31,7 +31,7 @@ type ChildSlots =
 _cell = SProxy :: SProxy "cell"
 
 child :: forall eff. Int -> H.Component HH.HTML Query Unit Message (ChildEff eff)
-child initialState = H.lifecycleComponent
+child initialState = H.component
   { initialState: const initialState
   , render
   , eval
@@ -78,7 +78,7 @@ child initialState = H.lifecycleComponent
     Reported msg -> H.action $ Report ("Re-reporting from cell" <> show i <> ": " <> msg)
 
 cell :: forall eff. Int -> H.Component HH.HTML Query Unit Message (ChildEff eff)
-cell initialState = H.lifecycleComponent
+cell initialState = H.component
   { initialState: const initialState
   , render
   , eval

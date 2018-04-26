@@ -46,7 +46,7 @@ type ChildSlots =
 _child = SProxy :: SProxy "child"
 
 ui :: forall eff. H.Component HH.HTML Query Unit Void (UIEff eff)
-ui = H.lifecycleComponent
+ui = H.component
   { initialState: const initialState
   , render
   , eval

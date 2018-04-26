@@ -65,6 +65,8 @@ factory innerComponent =
     , render
     , eval
     , receiver: \i -> Just $ InnerInput i unit
+    , initializer: Nothing
+    , finalizer: Nothing
     }
 
   where

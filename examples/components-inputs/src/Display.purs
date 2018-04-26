@@ -1,6 +1,8 @@
 module Display where
 
 import Prelude
+
+import Data.Maybe (Maybe(..))
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
@@ -20,6 +22,8 @@ component =
     , render
     , eval
     , receiver: HE.input HandleInput
+    , initializer: Nothing
+    , finalizer: Nothing
     }
   where
 

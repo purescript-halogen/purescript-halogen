@@ -4,7 +4,6 @@ import Prelude
 
 import Control.Monad.State as CMS
 
-import Data.Bifunctor (bimap)
 import Data.Maybe (Maybe(..))
 
 import Halogen as H
@@ -35,6 +34,8 @@ task initialState =
     , render
     , eval
     , receiver: const Nothing
+    , initializer: Nothing
+    , finalizer: Nothing
     }
   where
 

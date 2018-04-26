@@ -37,7 +37,7 @@ type DSL eff = H.HalogenM State Query () Void (Aff (Effects eff))
 
 ui :: forall eff. H.Component HH.HTML Query Unit Void (Aff (Effects eff))
 ui =
-  H.lifecycleComponent
+  H.component
     { initialState: const initialState
     , render
     , eval

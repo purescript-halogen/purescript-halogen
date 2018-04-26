@@ -1,13 +1,9 @@
 module Halogen.Component
   ( Component
-  , Component'
-  , mkComponent
-  , unComponent
   , ComponentSpec
   , ComponentHTML
   , component
-  , LifecycleComponentSpec
-  , lifecycleComponent
+  , unComponent
   , hoist
   , ComponentSlot'
   , ComponentSlot
@@ -20,7 +16,7 @@ module Halogen.Component
 import Prelude
 
 import Data.Bifunctor (class Bifunctor, lmap)
-import Data.Maybe (Maybe(..))
+import Data.Maybe (Maybe)
 import Data.Symbol (class IsSymbol, SProxy)
 import Data.Tuple (Tuple)
 import Halogen.Data.Slot (Slot, SlotStorage)
@@ -41,51 +37,24 @@ import Unsafe.Coerce (unsafeCoerce)
 -- | - `m` is the monad used for non-component-state effects
 data Component (h :: Type -> Type -> Type) (f :: Type -> Type) i o (m :: Type -> Type)
 
--- | Makes a `Component` from a `Component'`, existentially hiding details about
--- | the component's state and potential children.
-mkComponent
-  :: forall h s f ps i o m
-   . Component' h s f ps i o m
-  -> Component h f i o m
-mkComponent = unsafeCoerce
-
 -- | Exposes the inner details of a component to a function to produce a new
 -- | result. The inner details will not be allowed to be revealed in the result
 -- | of the function - the compiler will complain about an escaped skolem.
 unComponent
   :: forall h f i o m r
-   . (forall s ps. Component' h s f ps i o m -> r)
+   . (forall s ps. ComponentSpec h s f ps i o m -> r)
   -> Component h f i o m
   -> r
 unComponent = unsafeCoerce
 
--- | The "private" type for a component.
+-- | The spec for a component.
 -- |
 -- | - `h` is the type that will be rendered by the component, usually `HTML`
 -- | - `s` is the component's state
 -- | - `f` is the query algebra for the component itself
--- | - `g` is the query algebra for child components
--- | - `p` is the slot type for addressing child components
+-- | - `ps` is the set of slots for addressing child components
 -- | - `i` is the input value type that will be mapped to an `f` whenever the
 -- |       parent of this component renders
--- | - `o` is the type for the component's output messages
--- | - `m` is the monad used for non-component-state effects
-type Component' h s f ps i o m =
-  { initialState :: i -> s
-  , render :: s -> h (ComponentSlot h ps m (f Unit)) (f Unit)
-  , eval :: f ~> HalogenM s f ps o m
-  , receiver :: i -> Maybe (f Unit)
-  , initializer :: Maybe (f Unit)
-  , finalizer :: Maybe (f Unit)
-  }
-
--- | A spec for a component.
--- |
--- | - `h` is the type that will be rendered by the component, usually `HTML`
--- | - `s` is the component's state
--- | - `f` is the query algebra for the component itself
--- | - `g` is the query algebra for child components
--- | - `p` is the slot type for addressing child components
 -- | - `o` is the type for the component's output messages
 -- | - `m` is the monad used for non-component-state effects
 type ComponentSpec h s f ps i o m =
@@ -93,6 +62,8 @@ type ComponentSpec h s f ps i o m =
   , render :: s -> h (ComponentSlot h ps m (f Unit)) (f Unit)
   , eval :: f ~> HalogenM s f ps o m
   , receiver :: i -> Maybe (f Unit)
+  , initializer :: Maybe (f Unit)
+  , finalizer :: Maybe (f Unit)
   }
 
 -- | A convenience synonym for the output type of a `render` function, for a
@@ -104,48 +75,7 @@ component
   :: forall h s f ps i o m
    . ComponentSpec h s f ps i o m
   -> Component h f i o m
-component spec =
-  mkComponent
-    { initialState: spec.initialState
-    , render: spec.render
-    , eval: spec.eval
-    , receiver: spec.receiver
-    , initializer: Nothing
-    , finalizer: Nothing
-    }
-
--- | A spec for a parent component, including lifecycle inputs.
--- |
--- | - `h` is the type that will be rendered by the component, usually `HTML`
--- | - `s` is the component's state
--- | - `f` is the query algebra for the component itself
--- | - `g` is the query algebra for child components
--- | - `p` is the slot type for addressing child components
--- | - `o` is the type for the component's output messages
--- | - `m` is the monad used for non-component-state effects
-type LifecycleComponentSpec h s f ps i o m =
-  { initialState :: i -> s
-  , render :: s -> h (ComponentSlot h ps m (f Unit)) (f Unit)
-  , eval :: f ~> HalogenM s f ps o m
-  , receiver :: i -> Maybe (f Unit)
-  , initializer :: Maybe (f Unit)
-  , finalizer :: Maybe (f Unit)
-  }
-
--- | Builds a component with lifecycle inputs that allows for children.
-lifecycleComponent
-  :: forall h s f ps i o m
-   . LifecycleComponentSpec h s f ps i o m
-  -> Component h f i o m
-lifecycleComponent spec =
-  mkComponent
-    { initialState: spec.initialState
-    , render: spec.render
-    , eval: spec.eval
-    , receiver: spec.receiver
-    , initializer: spec.initializer
-    , finalizer: spec.finalizer
-    }
+component = unsafeCoerce
 
 -- | Changes the component's `m` type. A use case for this would be to interpret
 -- | some `Free` monad as `Aff` so the component can be used with `runUI`.
@@ -157,7 +87,7 @@ hoist
   -> Component h f i o m
   -> Component h f i o m'
 hoist nat = unComponent \c ->
-  mkComponent
+  component
     { initialState: c.initialState
     , render: lmap (hoistSlot nat) <<< c.render
     , eval: HM.hoist nat <<< c.eval

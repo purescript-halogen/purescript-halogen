@@ -24,8 +24,8 @@ dimapProComponent
   -> ProComponent h f m i' o'
 dimapProComponent f g (ProComponent c) = ProComponent (HC.unComponent go c)
   where
-  go :: forall s ps. HC.Component' h s f ps i o m -> HC.Component h f i' o' m
-  go comp = HC.mkComponent $ comp
+  go :: forall s ps. HC.ComponentSpec h s f ps i o m -> HC.Component h f i' o' m
+  go comp = HC.component $ comp
     { initialState = lmap f comp.initialState
     , receiver = lmap f comp.receiver
     , eval = mapOutput g <$> comp.eval

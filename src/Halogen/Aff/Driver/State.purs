@@ -25,7 +25,7 @@ import Data.Maybe (Maybe(..))
 import Data.StrMap as SM
 import Data.Traversable (traverse_)
 import Halogen.Aff.Effects (HalogenEffects)
-import Halogen.Component (Component')
+import Halogen.Component (ComponentSpec)
 import Halogen.Data.Slot (SlotStorage)
 import Halogen.Data.Slot as SlotStorage
 import Unsafe.Coerce (unsafeCoerce)
@@ -52,7 +52,7 @@ type LifecycleHandlers eff =
 newtype DriverState h r s f ps i o eff = DriverState (DriverStateRec h r s f ps i o eff)
 
 type DriverStateRec h r s f ps i o eff =
-  { component :: Component' h s f ps i o (Aff (HalogenEffects eff))
+  { component :: ComponentSpec h s f ps i o (Aff (HalogenEffects eff))
   , state :: s
   , refs :: SM.StrMap Foreign
   , children :: SlotStorage ps (DriverStateRef h r eff)
@@ -131,7 +131,7 @@ renderStateX_ f = unDriverStateX \st -> traverse_ f st.rendering
 
 initDriverState
   :: forall h r s f ps i o eff
-   . Component' h s f ps i o (Aff (HalogenEffects eff))
+   . ComponentSpec h s f ps i o (Aff (HalogenEffects eff))
   -> i
   -> (o -> Aff (HalogenEffects eff) Unit)
   -> Ref (LifecycleHandlers eff)

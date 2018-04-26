@@ -44,7 +44,7 @@ type AceEffects eff = (ace :: ACE, avar :: AVAR | eff)
 -- | The Ace component definition.
 aceComponent :: forall eff. H.Component HH.HTML AceQuery Unit AceOutput (Aff (AceEffects eff))
 aceComponent =
-  H.lifecycleComponent
+  H.component
     { initialState: const initialState
     , render
     , eval
