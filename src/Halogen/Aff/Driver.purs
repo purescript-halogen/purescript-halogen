@@ -23,7 +23,7 @@ import Data.Either (Either(..), either)
 import Data.List ((:))
 import Data.List as L
 import Data.Map as M
-import Data.Maybe (Maybe(..), maybe, isNothing)
+import Data.Maybe (Maybe(..), maybe, isJust, isNothing)
 import Data.Traversable (for_, traverse_, sequence_)
 import Data.Tuple (Tuple(..))
 import Halogen (HalogenIO)
@@ -263,7 +263,7 @@ runUI renderSpec component i = do
           pure existing
         Nothing ->
           runComponent lchs (maybe (pure unit) handler <<< slot.output) slot.input slot.component
-      isDuplicate <- isNothing <<< slot.get <$> readRef childrenOutRef
+      isDuplicate <- isJust <<< slot.get <$> readRef childrenOutRef
       when isDuplicate
         $ unsafeCoerceEff
         $ warn "Halogen: Duplicate slot address was detected during rendering, unexpected results may occur"
