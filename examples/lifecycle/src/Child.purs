@@ -2,12 +2,9 @@ module Child where
 
 import Prelude
 
-import Control.Monad.Aff (Aff)
-import Control.Monad.Aff.Console (log)
-import Control.Monad.Eff.Console (CONSOLE)
-
+import Effect.Aff (Aff)
+import Effect.Console (log)
 import Data.Maybe (Maybe(..))
-
 import Halogen as H
 import Halogen.HTML as HH
 
@@ -23,9 +20,7 @@ data Message
 
 type Slot = Unit
 
-type ChildEff eff = Aff (console :: CONSOLE | eff)
-
-child :: forall eff. Int -> H.Component HH.HTML Query Unit Message (ChildEff eff)
+child :: Int -> H.Component HH.HTML Query Unit Message Aff
 child initialState = H.lifecycleParentComponent
   { initialState: const initialState
   , render
@@ -36,7 +31,7 @@ child initialState = H.lifecycleParentComponent
   }
   where
 
-  render :: Int -> H.ParentHTML Query Query Int (ChildEff eff)
+  render :: Int -> H.ParentHTML Query Query Int Aff
   render id =
     HH.div_
       [ HH.text ("Child " <> show id)
@@ -47,22 +42,20 @@ child initialState = H.lifecycleParentComponent
         ]
       ]
 
-  eval :: Query ~> H.ParentDSL Int Query Query Int Message (ChildEff eff)
+  eval :: Query ~> H.ParentDSL Int Query Query Int Message Aff
   eval (Initialize next) = do
     id <- H.get
-    H.lift $ do
-      -- later' 100 $ pure unit
-      log ("Initialize Child " <> show id)
+    H.liftEffect $ log ("Initialize Child " <> show id)
     H.raise Initialized
     pure next
   eval (Finalize next) = do
     id <- H.get
-    H.liftAff $ log ("Finalize Child " <> show id)
+    H.liftEffect $ log ("Finalize Child " <> show id)
     H.raise Finalized
     pure next
   eval (Report msg next) = do
     id <- H.get
-    H.liftAff $ log $ "Child " <> show id <> " >>> " <> msg
+    H.liftEffect $ log $ "Child " <> show id <> " >>> " <> msg
     H.raise (Reported msg)
     pure next
 
@@ -72,7 +65,7 @@ child initialState = H.lifecycleParentComponent
     Finalized -> H.action $ Report ("Heard Finalized from cell" <> show i)
     Reported msg -> H.action $ Report ("Re-reporting from cell" <> show i <> ": " <> msg)
 
-cell :: forall eff. Int -> H.Component HH.HTML Query Unit Message (ChildEff eff)
+cell :: Int -> H.Component HH.HTML Query Unit Message Aff
 cell initialState = H.lifecycleComponent
   { initialState: const initialState
   , render
@@ -87,17 +80,15 @@ cell initialState = H.lifecycleComponent
   render id =
     HH.li_ [ HH.text ("Cell " <> show id) ]
 
-  eval :: Query ~> H.ComponentDSL Int Query Message (ChildEff eff)
+  eval :: Query ~> H.ComponentDSL Int Query Message Aff
   eval (Initialize next) = do
     id <- H.get
-    H.lift $ do
-      -- later' 150 $ pure unit
-      log ("Initialize Cell " <> show id)
+    H.liftEffect $ log ("Initialize Cell " <> show id)
     H.raise Initialized
     pure next
   eval (Finalize next) = do
     id <- H.get
-    H.liftAff $ log ("Finalize Cell " <> show id)
+    H.liftEffect $ log ("Finalize Cell " <> show id)
     H.raise Finalized
     pure next
   eval (Report msg next) =

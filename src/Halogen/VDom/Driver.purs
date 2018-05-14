@@ -5,150 +5,146 @@ module Halogen.VDom.Driver
 
 import Prelude
 
-import Control.Monad.Aff (Aff)
-import Control.Monad.Eff (Eff)
-import Control.Monad.Eff.Class (liftEff)
-import Control.Monad.Eff.Ref (Ref, newRef, readRef, writeRef)
-
 import Data.Foldable (traverse_)
 import Data.Maybe (Maybe(..))
-
-import DOM (DOM)
-import DOM.HTML (window) as DOM
-import DOM.HTML.Types (HTMLElement, htmlElementToNode, htmlDocumentToDocument) as DOM
-import DOM.HTML.Window (document) as DOM
-import DOM.Node.Node (appendChild, removeChild, parentNode, nextSibling, insertBefore) as DOM
-import DOM.Node.Types (Document, Element, Node) as DOM
-
+import Effect (Effect)
+import Effect.Aff (Aff)
+import Effect.Class (liftEffect)
+import Effect.Ref (Ref)
+import Effect.Ref as Ref
+import Effect.Uncurried as EFn
 import Halogen.Aff.Driver (HalogenIO)
 import Halogen.Aff.Driver as AD
 import Halogen.Aff.Driver.State (RenderStateX, unRenderStateX)
-import Halogen.Aff.Effects (HalogenEffects)
 import Halogen.Component (Component, ComponentSlot)
 import Halogen.HTML.Core (HTML(..), Prop)
 import Halogen.Query.InputF (InputF)
 import Halogen.VDom as V
 import Halogen.VDom.DOM.Prop as VP
-
 import Unsafe.Reference (unsafeRefEq)
+import Web.DOM.Document (Document) as DOM
+import Web.DOM.Element (Element) as DOM
+import Web.DOM.Node (Node, appendChild, removeChild, parentNode, nextSibling, insertBefore) as DOM
+import Web.HTML (window) as DOM
+import Web.HTML.HTMLDocument as HTMLDocument
+import Web.HTML.HTMLElement (HTMLElement) as DOM
+import Web.HTML.HTMLElement as HTMLElement
+import Web.HTML.Window (document) as DOM
 
-type VHTML f g p eff =
-  V.VDom (Array (Prop (InputF Unit (f Unit)))) (ComponentSlot HTML g (Aff (HalogenEffects eff)) p (f Unit))
+type VHTML f g p =
+  V.VDom (Array (Prop (InputF Unit (f Unit)))) (ComponentSlot HTML g Aff p (f Unit))
 
-type ChildRenderer f g p eff
-  = ComponentSlot HTML g (Aff (HalogenEffects eff)) p (f Unit) -> Eff (HalogenEffects eff) (RenderStateX RenderState eff)
+type ChildRenderer f g p
+  = ComponentSlot HTML g Aff p (f Unit) -> Effect (RenderStateX RenderState)
 
-newtype RenderState s f g p o eff =
+newtype RenderState s f g p o =
   RenderState
     { node :: DOM.Node
-    , machine :: V.Step (Eff (HalogenEffects eff)) (VHTML f g p eff) DOM.Node
-    , renderChildRef :: Ref (ChildRenderer f g p eff)
+    , machine :: V.Step (VHTML f g p) DOM.Node
+    , renderChildRef :: Ref (ChildRenderer f g p)
     }
 
 mkSpec
-  :: forall f g p eff
-   . (InputF Unit (f Unit) -> Eff (HalogenEffects eff) Unit)
-  -> Ref (ChildRenderer f g p eff)
+  :: forall f g p
+   . (InputF Unit (f Unit) -> Effect Unit)
+  -> Ref (ChildRenderer f g p)
   -> DOM.Document
   -> V.VDomSpec
-      (HalogenEffects eff)
       (Array (VP.Prop (InputF Unit (f Unit))))
-      (ComponentSlot HTML g (Aff (HalogenEffects eff)) p (f Unit))
+      (ComponentSlot HTML g Aff p (f Unit))
 mkSpec handler renderChildRef document =
   V.VDomSpec { buildWidget, buildAttributes, document }
   where
 
   buildAttributes
     :: DOM.Element
-    -> V.VDomMachine (HalogenEffects eff) (Array (VP.Prop (InputF Unit (f Unit)))) Unit
+    -> V.Machine (Array (VP.Prop (InputF Unit (f Unit)))) Unit
   buildAttributes = VP.buildProp handler
 
   buildWidget
-    :: V.VDomSpec (HalogenEffects eff)
+    :: V.VDomSpec
           (Array (VP.Prop (InputF Unit (f Unit))))
-          (ComponentSlot HTML g (Aff (HalogenEffects eff)) p (f Unit))
-    -> V.VDomMachine (HalogenEffects eff)
-          (ComponentSlot HTML g (Aff (HalogenEffects eff)) p (f Unit))
+          (ComponentSlot HTML g Aff p (f Unit))
+    -> V.Machine
+          (ComponentSlot HTML g Aff p (f Unit))
           DOM.Node
-  buildWidget spec slot = do
-    renderChild <- readRef renderChildRef
+  buildWidget spec = EFn.mkEffectFn1 \slot -> do
+    renderChild <- Ref.read renderChildRef
     rsx <- renderChild slot
     let node = getNode rsx
     pure (V.Step node patch done)
 
   patch
-    :: V.VDomMachine (HalogenEffects eff)
-          (ComponentSlot HTML g (Aff (HalogenEffects eff)) p (f Unit))
+    :: V.Machine
+          (ComponentSlot HTML g Aff p (f Unit))
           DOM.Node
-  patch slot = do
-    renderChild <- readRef renderChildRef
+  patch = EFn.mkEffectFn1 \slot -> do
+    renderChild <- Ref.read renderChildRef
     rsx <- renderChild slot
     let node = getNode rsx
     pure (V.Step node patch done)
 
-  done :: Eff (HalogenEffects eff) Unit
+  done :: Effect Unit
   done = pure unit
 
-  getNode :: RenderStateX RenderState eff -> DOM.Node
+  getNode :: RenderStateX RenderState -> DOM.Node
   getNode = unRenderStateX (\(RenderState { node }) -> node)
 
 runUI
-  :: forall f eff i o
-   . Component HTML f i o (Aff (HalogenEffects eff))
+  :: forall f i o
+   . Component HTML f i o Aff
   -> i
   -> DOM.HTMLElement
-  -> Aff (HalogenEffects eff) (HalogenIO f o (Aff (HalogenEffects eff)))
+  -> Aff (HalogenIO f o Aff)
 runUI component i element = do
-  document <- liftEff $ DOM.htmlDocumentToDocument <$> (DOM.document =<< DOM.window)
+  document <- liftEffect $ HTMLDocument.toDocument <$> (DOM.document =<< DOM.window)
   AD.runUI (renderSpec document element) component i
 
 renderSpec
-  :: forall eff
-   . DOM.Document
+  :: DOM.Document
   -> DOM.HTMLElement
-  -> AD.RenderSpec HTML RenderState eff
-renderSpec document container = { render, renderChild: id, removeChild }
+  -> AD.RenderSpec HTML RenderState
+renderSpec document container = { render, renderChild: identity, removeChild }
   where
 
   render
     :: forall s f g p o
-     . (forall x. InputF x (f x) -> Eff (HalogenEffects eff) Unit)
-    -> (ComponentSlot HTML g (Aff (HalogenEffects eff)) p (f Unit) -> Eff (HalogenEffects eff) (RenderStateX RenderState eff))
-    -> HTML (ComponentSlot HTML g (Aff (HalogenEffects eff)) p (f Unit)) (f Unit)
-    -> Maybe (RenderState s f g p o eff)
-    -> Eff (HalogenEffects eff) (RenderState s f g p o eff)
+     . (forall x. InputF x (f x) -> Effect Unit)
+    -> (ComponentSlot HTML g Aff p (f Unit) -> Effect (RenderStateX RenderState))
+    -> HTML (ComponentSlot HTML g Aff p (f Unit)) (f Unit)
+    -> Maybe (RenderState s f g p o)
+    -> Effect (RenderState s f g p o)
   render handler child (HTML vdom) =
     case _ of
       Nothing -> do
-        renderChildRef <- newRef child
+        renderChildRef <- Ref.new child
         let spec = mkSpec handler renderChildRef document
-        machine <- V.buildVDom spec vdom
+        machine <- EFn.runEffectFn1 (V.buildVDom spec) vdom
         let node = V.extract machine
-        void $ DOM.appendChild node (DOM.htmlElementToNode container)
+        void $ DOM.appendChild node (HTMLElement.toNode container)
         pure $ RenderState { machine, node, renderChildRef }
       Just (RenderState { machine, node, renderChildRef }) -> do
-        writeRef renderChildRef child
+        Ref.write child renderChildRef
         parent <- DOM.parentNode node
         nextSib <- DOM.nextSibling node
-        machine' <- V.step machine vdom
+        machine' <- EFn.runEffectFn1 (V.step machine) vdom
         let newNode = V.extract machine'
         when (not unsafeRefEq node newNode) do
           substInParent newNode nextSib parent
         pure $ RenderState { machine: machine', node: newNode, renderChildRef }
 
 removeChild
-  :: forall eff o p g f s. RenderState s f g p o eff
-  -> Eff (HalogenEffects eff) Unit
+  :: forall o p g f s. RenderState s f g p o
+  -> Effect Unit
 removeChild (RenderState { node }) = do
   npn <- DOM.parentNode node
   traverse_ (\pn -> DOM.removeChild node pn) npn
 
 substInParent
-  :: forall eff
-   . DOM.Node
+  :: DOM.Node
   -> Maybe DOM.Node
   -> Maybe DOM.Node
-  -> Eff (dom :: DOM | eff) Unit
+  -> Effect Unit
 substInParent newNode (Just sib) (Just pn) = void $ DOM.insertBefore newNode sib pn
 substInParent newNode Nothing (Just pn) = void $ DOM.appendChild newNode pn
 substInParent _ _ _ = pure unit

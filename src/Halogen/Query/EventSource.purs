@@ -18,13 +18,12 @@ module Halogen.Query.EventSource
 import Prelude
 
 import Control.Coroutine as CR
-import Control.Monad.Aff (Aff, attempt, forkAff, runAff_)
-import Control.Monad.Aff.AVar (AVAR)
-import Control.Monad.Aff.AVar as AV
-import Control.Monad.Aff.Class (class MonadAff, liftAff)
-import Control.Monad.Eff (Eff)
-import Control.Monad.Eff.Class (liftEff)
-import Control.Monad.Eff.Exception as Exn
+import Effect.Aff (Aff, attempt, forkAff, runAff_)
+import Effect.Aff.AVar as AV
+import Effect.Aff.Class (class MonadAff, liftAff)
+import Effect (Effect)
+import Effect.Class (liftEffect)
+import Effect.Exception as Exn
 import Control.Monad.Free.Trans as FT
 import Control.Monad.Rec.Class as Rec
 import Control.Monad.Trans.Class (lift)
@@ -66,9 +65,9 @@ derive instance ordSubscribeStatus :: Ord SubscribeStatus
 -- | - The first argument is the function that attaches the listener.
 -- | - The second argument is a handler that optionally produces a value in `f`.
 eventSource
-  :: forall f m a eff
-   . MonadAff (avar :: AVAR | eff) m
-  => ((a -> Eff (avar :: AVAR | eff) Unit) -> Eff (avar :: AVAR | eff) Unit)
+  :: forall f m a
+   . MonadAff m
+  => ((a -> Effect Unit) -> Effect Unit)
   -> (a -> Maybe (f SubscribeStatus))
   -> EventSource f m
 eventSource attach handler =
@@ -79,9 +78,9 @@ eventSource attach handler =
 -- | Similar to `eventSource` but allows the attachment function to return an
 -- | action to perform when the handler is detached.
 eventSource'
-  :: forall f m a eff
-   . MonadAff (avar :: AVAR | eff) m
-  => ((a -> Eff (avar :: AVAR | eff) Unit) -> Eff (avar :: AVAR | eff) (Eff (avar :: AVAR | eff) Unit))
+  :: forall f m a
+   . MonadAff m
+  => ((a -> Effect Unit) -> Effect (Effect Unit))
   -> (a -> Maybe (f SubscribeStatus))
   -> EventSource f m
 eventSource' attach handler = do
@@ -98,9 +97,9 @@ eventSource' attach handler = do
 -- | - The second argument is the query to raise whenever the listener is
 -- |   triggered.
 eventSource_
-  :: forall f m eff
-   . MonadAff (avar :: AVAR | eff) m
-  => (Eff (avar :: AVAR | eff) Unit -> Eff (avar :: AVAR | eff) Unit)
+  :: forall f m
+   . MonadAff m
+  => (Effect Unit -> Effect Unit)
   -> f SubscribeStatus
   -> EventSource f m
 eventSource_ attach query =
@@ -111,9 +110,9 @@ eventSource_ attach query =
 -- | Similar to `eventSource_` but allows the attachment function to return an
 -- | action to perform when the handler is detached.
 eventSource_'
-  :: forall f m eff
-   . MonadAff (avar :: AVAR | eff) m
-  => (Eff (avar :: AVAR | eff) Unit -> Eff (avar :: AVAR | eff) (Eff (avar :: AVAR | eff) Unit))
+  :: forall f m
+   . MonadAff m
+  => (Effect Unit -> Effect (Effect Unit))
   -> f SubscribeStatus
   -> EventSource f m
 eventSource_' attach query =
@@ -138,50 +137,50 @@ catMaybes =
     Right (CR.Emit ma next) -> for_ ma CR.emit $> Rec.Loop next
 
 produce
-  :: forall a r eff
-   . ((Either a r -> Eff (avar :: AVAR | eff) Unit) -> Eff (avar :: AVAR | eff) Unit)
-  -> CR.Producer a (Aff (avar :: AVAR | eff)) r
+  :: forall a r
+   . ((Either a r -> Effect Unit) -> Effect Unit)
+  -> CR.Producer a Aff r
 produce recv = produceAff (\send ->
-  liftEff (recv (void <<< runAff' <<< send)))
+  liftEffect (recv (void <<< runAff' <<< send)))
 
 produce'
-  :: forall a r eff
-   . ((Either a r -> Eff (avar :: AVAR | eff) Unit) -> Eff (avar :: AVAR | eff) (Eff (avar :: AVAR | eff) Unit))
-  -> Aff (avar :: AVAR | eff) { producer :: CR.Producer a (Aff (avar :: AVAR | eff)) r, cancel :: r -> Aff (avar :: AVAR | eff) Boolean }
+  :: forall a r
+   . ((Either a r -> Effect Unit) -> Effect (Effect Unit))
+  -> Aff { producer :: CR.Producer a Aff r, cancel :: r -> Aff Boolean }
 produce' recv =
   produceAff' \send -> do
-    x <- liftEff $ recv (void <<< runAff' <<< send)
-    pure (liftEff x)
+    x <- liftEffect $ recv (void <<< runAff' <<< send)
+    pure (liftEffect x)
 
-runAff' :: forall eff. Aff eff Unit -> Eff eff Unit
+runAff' :: Aff Unit -> Effect Unit
 runAff' = runAff_ (either (const (pure unit)) pure)
 
 produceAff
-  :: forall a r eff m
-   . MonadAff (avar :: AVAR | eff) m
-  => ((Either a r -> Aff (avar :: AVAR | eff) Unit) -> Aff (avar :: AVAR | eff) Unit)
+  :: forall a r m
+   . MonadAff m
+  => ((Either a r -> Aff Unit) -> Aff Unit)
   -> CR.Producer a m r
 produceAff recv = do
-  v <- lift $ liftAff AV.makeEmptyVar
-  void $ lift $ liftAff $ forkAff $ recv $ flip AV.putVar v
-  CR.producer $ liftAff $ AV.takeVar v
+  v <- lift $ liftAff AV.empty
+  void $ lift $ liftAff $ forkAff $ recv $ flip AV.put v
+  CR.producer $ liftAff $ AV.take v
 
 produceAff'
-  :: forall a r eff
-   . ((Either a r -> Aff (avar :: AVAR | eff) Unit) -> Aff (avar :: AVAR | eff) (Aff (avar :: AVAR | eff) Unit))
-  -> Aff (avar :: AVAR | eff) { producer :: CR.Producer a (Aff (avar :: AVAR | eff)) r, cancel :: r -> Aff (avar :: AVAR | eff) Boolean }
+  :: forall a r
+   . ((Either a r -> Aff Unit) -> Aff (Aff Unit))
+  -> Aff { producer :: CR.Producer a Aff r, cancel :: r -> Aff Boolean }
 produceAff' recv = do
-  inputVar <- AV.makeEmptyVar
-  finalizeVar <- AV.makeEmptyVar
+  inputVar <- AV.empty
+  finalizeVar <- AV.empty
   let
     producer = do
-      lift $ flip AV.putVar finalizeVar =<< recv (flip AV.putVar inputVar)
-      CR.producer (AV.takeVar inputVar)
+      lift $ flip AV.put finalizeVar =<< recv (flip AV.put inputVar)
+      CR.producer (AV.take inputVar)
     cancel r =
-      attempt (AV.takeVar finalizeVar) >>= case _ of
+      attempt (AV.take finalizeVar) >>= case _ of
         Left _ -> pure false
         Right finalizer -> do
-          AV.killVar (Exn.error "finalized") finalizeVar
+          AV.kill (Exn.error "finalized") finalizeVar
           finalizer
           pure true
   pure { producer, cancel }

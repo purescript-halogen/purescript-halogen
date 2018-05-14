@@ -19,7 +19,7 @@ data Query a
   | SendMessage a
 
 data Message
-  = OutputMessage String                 
+  = OutputMessage String
 
 component :: forall m. H.Component HH.HTML Query Unit Message m
 component =
@@ -51,16 +51,16 @@ component =
   eval :: Query ~> H.ComponentDSL State Query Message m
   eval (AddMessage msg next) = do
     let incomingMessage = "Received: " <> msg
-    H.modify \st -> st { messages = st.messages `A.snoc` incomingMessage }
+    H.modify_ \st -> st { messages = st.messages `A.snoc` incomingMessage }
     pure next
   eval (SendMessage next) = do
     st <- H.get
     let outgoingMessage = st.inputText
     H.raise $ OutputMessage outgoingMessage
-    H.modify \st' -> st'
+    H.modify_ \st' -> st'
       { messages = st'.messages `A.snoc` ("Sending: " <> outgoingMessage)
       , inputText = "" }
-    pure next              
+    pure next
   eval (UpdateInputText text next) = do
-    H.modify (_ { inputText = text })
+    H.modify_ (_ { inputText = text })
     pure next

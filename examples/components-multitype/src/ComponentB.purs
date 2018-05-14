@@ -41,7 +41,7 @@ component =
 
   eval :: Query ~> H.ComponentDSL State Query Void m
   eval (Increment next) = do
-    H.modify (_ + 1)
+    H.modify_ (_ + 1)
     pure next
   eval (GetCount reply) = do
     reply <$> H.get

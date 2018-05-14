@@ -8,12 +8,12 @@ The most basic possible `main` function for a Halogen app will look something li
 
 ``` purescript
 import Prelude
-import Control.Monad.Eff (Eff)
+import Effect (Effect)
 import Halogen.Aff as HA
 import Halogen.VDom.Driver (runUI)
 import Button (myButton)
 
-main :: Eff (HA.HalogenEffects ()) Unit
+main :: Effect Unit
 main = HA.runHalogenAff do
   body <- HA.awaitBody
   runUI myButton unit body
@@ -76,7 +76,7 @@ If we go back to our basic button example from [chapter 2][defining-components],
 import Prelude
 import Control.Coroutine as CR
 import Control.Monad.Aff.Console (CONSOLE, log)
-import Control.Monad.Eff (Eff)
+import Effect (Effect)
 import Data.Maybe (Maybe(..))
 import Halogen as H
 import Halogen.Aff as HA

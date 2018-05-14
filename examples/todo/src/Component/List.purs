@@ -3,14 +3,11 @@ module Component.List where
 import Prelude
 
 import Data.Array (snoc, filter, length)
-
 import Data.Map as M
 import Data.Maybe (Maybe(..), fromMaybe)
-
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
-
 import Model (List, TaskId, initialList, initialTask)
 import Component.Task (TaskQuery(..), TaskMessage(..), task)
 
@@ -62,20 +59,20 @@ list =
 
   eval :: ListQuery ~> H.ParentDSL List ListQuery TaskQuery TaskSlot Void m
   eval (NewTask next) = do
-    H.modify addTask
+    H.modify_ addTask
     pure next
   eval (AllDone next) = do
     toggled <- H.queryAll (H.action (ToggleCompleted true))
-    H.modify $ updateNumCompleted (const (M.size toggled))
+    H.modify_ $ updateNumCompleted (const (M.size toggled))
     pure next
   eval (HandleTaskMessage p msg next) = do
     case msg of
       NotifyRemove -> do
         wasComplete <- H.query (TaskSlot p) (H.request IsCompleted)
-        when (fromMaybe false wasComplete) $ H.modify $ updateNumCompleted (_ `sub` 1)
-        H.modify (removeTask p)
+        when (fromMaybe false wasComplete) $ H.modify_ $ updateNumCompleted (_ `sub` 1)
+        H.modify_ (removeTask p)
       Toggled b ->
-        H.modify $ updateNumCompleted (if b then (_ + 1) else (_ `sub` 1))
+        H.modify_ $ updateNumCompleted (if b then (_ + 1) else (_ `sub` 1))
     pure next
 
 -- | Adds a task to the current state.

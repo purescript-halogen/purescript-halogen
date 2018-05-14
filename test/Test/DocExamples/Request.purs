@@ -1,13 +1,9 @@
 module Test.DocExamples.Request where
 
 import Halogen
-import Control.Monad.Aff (Aff)
-import Halogen.Aff (HalogenEffects)
+import Effect.Aff (Aff)
 
 data Query a = GetTickCount (Int -> a)
 
-getTickCount
-  :: forall o eff
-   . HalogenIO Query o (Aff (HalogenEffects eff))
-  -> Aff (HalogenEffects eff) Int
+getTickCount :: forall o. HalogenIO Query o Aff -> Aff Int
 getTickCount app = app.query (request GetTickCount)

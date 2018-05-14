@@ -3,9 +3,9 @@ module Halogen.Query.InputF where
 import Prelude
 
 import Data.Bifunctor (class Bifunctor, rmap)
-import Data.Foreign (Foreign)
 import Data.Maybe (Maybe)
 import Data.Newtype (class Newtype)
+import Web.DOM (Element)
 
 newtype RefLabel = RefLabel String
 
@@ -14,7 +14,7 @@ derive newtype instance eqRefLabel :: Eq RefLabel
 derive newtype instance ordRefLabel :: Ord RefLabel
 
 data InputF a i
-  = RefUpdate RefLabel (Maybe Foreign) a
+  = RefUpdate RefLabel (Maybe Element) a
   | Query i
 
 instance bifunctorInputF :: Bifunctor InputF where
