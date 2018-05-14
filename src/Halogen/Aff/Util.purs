@@ -7,63 +7,53 @@ module Halogen.Aff.Util
 
 import Prelude
 
-import Control.Monad.Aff (Aff, effCanceler, makeAff, nonCanceler, runAff_)
-import Control.Monad.Eff (kind Effect, Eff)
-import Control.Monad.Eff.Class (liftEff)
-import Control.Monad.Eff.Exception (throwException, error)
 import Control.Monad.Error.Class (throwError)
-import Control.Monad.Except (runExcept)
-import DOM (DOM)
-import DOM.Event.EventTarget (addEventListener, eventListener, removeEventListener)
-import DOM.Event.Types (EventType(..))
-import DOM.HTML (window)
-import DOM.HTML.Document (ReadyState(..), readyState)
-import DOM.HTML.Types (HTMLElement, windowToEventTarget, htmlDocumentToParentNode, readHTMLElement)
-import DOM.HTML.Window (document)
-import DOM.Node.ParentNode (QuerySelector(..), querySelector)
 import Data.Either (Either(..), either)
-import Data.Foreign (toForeign)
-import Data.Maybe (Maybe(..), maybe)
-import Halogen.Aff.Effects (HalogenEffects)
+import Data.Maybe (Maybe, maybe)
+import Effect (Effect)
+import Effect.Aff (Aff, effectCanceler, makeAff, nonCanceler, runAff_)
+import Effect.Class (liftEffect)
+import Effect.Exception (throwException, error)
+import Web.DOM.ParentNode (QuerySelector(..), querySelector)
+import Web.Event.EventTarget (addEventListener, eventListener, removeEventListener)
+import Web.HTML (window)
+import Web.HTML.Event.EventTypes as ET
+import Web.HTML.HTMLDocument (readyState)
+import Web.HTML.HTMLDocument as HTMLDocument
+import Web.HTML.HTMLDocument.ReadyState (ReadyState(..))
+import Web.HTML.HTMLElement (HTMLElement)
+import Web.HTML.HTMLElement as HTMLElement
+import Web.HTML.Window as Window
 
 -- | Waits for the document to load.
-awaitLoad :: forall eff. Aff (dom :: DOM | eff) Unit
+awaitLoad :: Aff Unit
 awaitLoad = makeAff \callback -> do
-  rs <- readyState =<< document =<< window
+  rs <- readyState =<< Window.document =<< window
   case rs of
     Loading -> do
-      et <- windowToEventTarget <$> window
-      let listener = eventListener (\_ -> callback (Right unit))
-          domContentLoaded = EventType "DOMContentLoaded"
-      addEventListener domContentLoaded listener false et
-      pure $ effCanceler (removeEventListener domContentLoaded listener false et)
+      et <- Window.toEventTarget <$> window
+      listener <- eventListener (\_ -> callback (Right unit))
+      addEventListener ET.domcontentloaded listener false et
+      pure $ effectCanceler (removeEventListener ET.domcontentloaded listener false et)
     _ -> do
       callback (Right unit)
       pure nonCanceler
 
 -- | Waits for the document to load and then finds the `body` element.
-awaitBody :: forall eff. Aff (dom :: DOM | eff) HTMLElement
+awaitBody :: Aff HTMLElement
 awaitBody = do
   awaitLoad
   body <- selectElement (QuerySelector "body")
   maybe (throwError (error "Could not find body")) pure body
 
 -- | Tries to find an element in the document.
-selectElement
-  :: forall eff
-   . QuerySelector
-  -> Aff (dom :: DOM | eff) (Maybe HTMLElement)
+selectElement :: QuerySelector -> Aff (Maybe HTMLElement)
 selectElement query = do
-  mel <- liftEff $
-    ((querySelector query <<< htmlDocumentToParentNode <=< document) =<< window)
-  pure case mel of
-    Nothing -> Nothing
-    Just el -> either (const Nothing) Just $ runExcept $ readHTMLElement (toForeign el)
+  mel <- liftEffect $
+    ((querySelector query <<< HTMLDocument.toParentNode <=< Window.document) =<< window)
+  pure $ HTMLElement.fromElement =<< mel
 
 -- | Runs an `Aff` value of the type commonly used by Halogen components. Any
 -- | unhandled errors will be re-thrown as exceptions.
-runHalogenAff
-  :: forall eff x
-   . Aff (HalogenEffects eff) x
-  -> Eff (HalogenEffects eff) Unit
+runHalogenAff :: forall x. Aff x -> Effect Unit
 runHalogenAff = runAff_ (either throwException (const (pure unit)))

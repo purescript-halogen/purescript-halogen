@@ -2,14 +2,12 @@ module Main where
 
 import Prelude
 
-import Control.Monad.Aff (Aff)
-import Control.Monad.Aff.Console (log)
-import Control.Monad.Eff (Eff)
-import Control.Monad.Eff.Console (CONSOLE)
 import Control.Monad.Free (Free, liftF, foldFree)
-
 import Data.Maybe (Maybe(..))
-
+import Effect (Effect)
+import Effect.Aff (Aff)
+import Effect.Console (log)
+import Halogen (liftEffect)
 import Halogen as H
 import Halogen.Aff as HA
 import Halogen.HTML as HH
@@ -55,15 +53,15 @@ ui =
     H.lift $ output "State was toggled"
     pure next
 
-ui' :: forall eff. H.Component HH.HTML Query Unit Void (Aff (HA.HalogenEffects (console :: CONSOLE | eff)))
+ui' :: H.Component HH.HTML Query Unit Void Aff
 ui' = H.hoist (foldFree evalMyAlgebra) ui
   where
-  evalMyAlgebra :: MyAlgebra ~> Aff (HA.HalogenEffects (console :: CONSOLE | eff))
+  evalMyAlgebra :: MyAlgebra ~> Aff
   evalMyAlgebra (Log msg next) = do
-    log msg
+    liftEffect $ log msg
     pure next
 
-main :: Eff (HA.HalogenEffects (console :: CONSOLE)) Unit
+main :: Effect Unit
 main = HA.runHalogenAff do
   body <- HA.awaitBody
   runUI ui' unit body

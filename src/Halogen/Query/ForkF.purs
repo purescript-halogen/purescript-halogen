@@ -2,22 +2,22 @@ module Halogen.Query.ForkF where
 
 import Prelude
 
-import Control.Monad.Aff (Aff)
-import Control.Monad.Eff.Exception (Error)
+import Effect.Aff (Aff)
+import Effect.Exception (Error)
 
 import Unsafe.Coerce (unsafeCoerce)
 
-data ForkF eff f x a = ForkF (f x) ((Error -> Aff eff Unit) -> a)
+data ForkF f x a = ForkF (f x) ((Error -> Aff Unit) -> a)
 
-fork :: forall eff f x. f x -> Fork f (Error -> Aff eff Unit)
-fork fx = mkFork $ ForkF fx id
+fork :: forall f x. f x -> Fork f (Error -> Aff Unit)
+fork fx = mkFork $ ForkF fx identity
 
 data Fork (f :: Type -> Type) a
 
-mkFork :: forall eff f x a. ForkF eff f x a -> Fork f a
+mkFork :: forall f x a. ForkF f x a -> Fork f a
 mkFork = unsafeCoerce
 
-unFork :: forall f a r. (forall eff x. ForkF eff f x a -> r) -> Fork f a -> r
+unFork :: forall f a r. (forall x. ForkF f x a -> r) -> Fork f a -> r
 unFork = unsafeCoerce
 
 instance functorFork :: Functor (Fork f) where

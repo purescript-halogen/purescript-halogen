@@ -19,7 +19,7 @@ data Query a
   | SendMessage a
 
 data Message
-  = OutputMessage String                 
+  = OutputMessage String
 
 component :: forall m. H.Component HH.HTML Query Unit Message m
 component =
@@ -60,7 +60,7 @@ component =
     H.modify \st' -> st'
       { messages = st'.messages `A.snoc` ("Sending: " <> outgoingMessage)
       , inputText = "" }
-    pure next              
+    pure next
   eval (UpdateInputText text next) = do
     H.modify (_ { inputText = text })
     pure next

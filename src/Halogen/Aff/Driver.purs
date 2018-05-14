@@ -2,20 +2,11 @@ module Halogen.Aff.Driver
   ( RenderSpec
   , runUI
   , module Halogen
-  , module Halogen.Aff.Effects
   ) where
 
 import Prelude
 
 import Control.Coroutine as CR
-import Control.Monad.Aff (Aff, runAff_)
-import Control.Monad.Aff.AVar as AV
-import Control.Monad.Eff (Eff)
-import Control.Monad.Eff.Class (liftEff)
-import Control.Monad.Eff.Console (warn)
-import Control.Monad.Eff.Exception (error, throw, throwException)
-import Control.Monad.Eff.Ref (Ref, modifyRef, writeRef, readRef, newRef)
-import Control.Monad.Eff.Unsafe (unsafeCoerceEff)
 import Control.Monad.Fork.Class (fork)
 import Control.Monad.Rec.Class (Step(..), tailRecM)
 import Control.Parallel (parSequence_)
@@ -26,10 +17,17 @@ import Data.Map as M
 import Data.Maybe (Maybe(..), maybe, isNothing)
 import Data.Traversable (for_, traverse_, sequence_)
 import Data.Tuple (Tuple(..))
+import Effect (Effect)
+import Effect.Aff (Aff, runAff_)
+import Effect.Aff.AVar as AV
+import Effect.Class (liftEffect)
+import Effect.Console (warn)
+import Effect.Exception (error, throw, throwException)
+import Effect.Ref (Ref)
+import Effect.Ref as Ref
 import Halogen (HalogenIO)
 import Halogen.Aff.Driver.Eval (eval, handleLifecycle, queuingHandler)
 import Halogen.Aff.Driver.State (LifecycleHandlers, DriverState(..), DriverStateX, RenderStateX, initDriverState, renderStateX, renderStateX_, unDriverStateX)
-import Halogen.Aff.Effects (HalogenEffects)
 import Halogen.Component (Component, ComponentSlot, unComponent, unComponentSlot)
 import Halogen.Data.OrdBox (OrdBox)
 import Halogen.Query.InputF (InputF(..))
@@ -46,7 +44,7 @@ import Halogen.Query.InputF (InputF(..))
 -- |   state between each rendering of a component. This will differ entirely
 -- |   for each driver. `r` accepts a number of parameters that will be
 -- |   explained below.
--- | - `eff` is the type variable for the open effect row.
+-- | - `eff` is the type variable for the openect row.
 -- |
 -- | The "inner" type variables, used by `r` and the other functions are as
 -- | follows:
@@ -92,34 +90,34 @@ import Halogen.Query.InputF (InputF(..))
 -- | driver this actually performs the `removeChild` from the DOM. For the
 -- | `virtual-dom` driver nothing needs to happen here, so it is
 -- | `const (pure unit)`.
-type RenderSpec h r eff =
+type RenderSpec h r =
   { render
       :: forall s f g p o
-       . (forall x. InputF x (f x) -> Eff (HalogenEffects eff) Unit)
-      -> (ComponentSlot h g (Aff (HalogenEffects eff)) p (f Unit) -> Eff (HalogenEffects eff) (RenderStateX r eff))
-      -> h (ComponentSlot h g (Aff (HalogenEffects eff)) p (f Unit)) (f Unit)
-      -> Maybe (r s f g p o eff)
-      -> Eff (HalogenEffects eff) (r s f g p o eff)
-  , renderChild :: forall s f g p o. r s f g p o eff -> r s f g p o eff
-  , removeChild :: forall s f g p o. r s f g p o eff -> Eff (HalogenEffects eff) Unit
+       . (forall x. InputF x (f x) -> Effect Unit)
+      -> (ComponentSlot h g Aff p (f Unit) -> Effect (RenderStateX r))
+      -> h (ComponentSlot h g Aff p (f Unit)) (f Unit)
+      -> Maybe (r s f g p o)
+      -> Effect (r s f g p o)
+  , renderChild :: forall s f g p o. r s f g p o -> r s f g p o
+  , removeChild :: forall s f g p o. r s f g p o -> Effect Unit
   }
 
-newLifecycleHandlers :: forall eff. Eff (HalogenEffects eff) (Ref (LifecycleHandlers eff))
-newLifecycleHandlers = newRef { initializers: L.Nil, finalizers: L.Nil }
+newLifecycleHandlers :: Effect (Ref LifecycleHandlers)
+newLifecycleHandlers = Ref.new { initializers: L.Nil, finalizers: L.Nil }
 
 runUI
-  :: forall h r f i o eff
-   . RenderSpec h r eff
-  -> Component h f i o (Aff (HalogenEffects eff))
+  :: forall h r f i o
+   . RenderSpec h r
+  -> Component h f i o Aff
   -> i
-  -> Aff (HalogenEffects eff) (HalogenIO f o (Aff (HalogenEffects eff)))
+  -> Aff (HalogenIO f o Aff)
 runUI renderSpec component i = do
-  lchs <- liftEff newLifecycleHandlers
-  fresh <- liftEff $ newRef 0
+  lchs <- liftEffect newLifecycleHandlers
+  fresh <- liftEffect $ Ref.new 0
   handleLifecycle lchs do
-    listeners <- newRef M.empty
+    listeners <- Ref.new M.empty
     runComponent lchs (rootHandler listeners) i Just component
-      >>= readRef
+      >>= Ref.read
       >>= unDriverStateX \st ->
         pure
           { query: evalDriver st.selfRef st.prjQuery
@@ -130,79 +128,79 @@ runUI renderSpec component i = do
 
   evalDriver
     :: forall s f' z' g p i' o'
-     . Ref (DriverState h r s f' z' g p i' o' eff)
+     . Ref (DriverState h r s f' z' g p i' o')
     -> (forall x. f' x -> Maybe (z' x))
     -> f'
-    ~> Aff (HalogenEffects eff)
+    ~> Aff
   evalDriver ref prjQuery q =
     case prjQuery q of
       Just q' -> evalF ref (Query q')
-      Nothing -> liftEff $ throwException (error "Halogen internal error: query projection failed in runUI'")
+      Nothing -> liftEffect $ throwException (error "Halogen internal error: query projection failed in runUI'")
 
   evalF
     :: forall s f' z' g p i' o' a
-     . Ref (DriverState h r s f' z' g p i' o' eff)
+     . Ref (DriverState h r s f' z' g p i' o')
     -> InputF a (z' a)
-    -> Aff (HalogenEffects eff) a
+    -> Aff a
   evalF ref = eval render ref
 
   rootHandler
     :: Ref (M.Map Int (AV.AVar o))
     -> o
-    -> Aff (HalogenEffects eff) Unit
+    -> Aff Unit
   rootHandler ref message = do
-    listeners <- liftEff $ readRef ref
-    traverse_ fork $ map (AV.putVar message) listeners
+    listeners <- liftEffect $ Ref.read ref
+    traverse_ fork $ map (AV.put message) listeners
 
   subscribe
     :: Ref Int
     -> Ref (M.Map Int (AV.AVar o))
-    -> CR.Consumer o (Aff (HalogenEffects eff)) Unit
-    -> Aff (HalogenEffects eff) Unit
+    -> CR.Consumer o Aff Unit
+    -> Aff Unit
   subscribe fresh ref consumer = do
-    inputVar <- AV.makeEmptyVar
-    listenerId <- liftEff do
-      listenerId <- readRef fresh
-      modifyRef fresh (_ + 1)
-      modifyRef ref (M.insert listenerId inputVar)
+    inputVar <- AV.empty
+    listenerId <- liftEffect do
+      listenerId <- Ref.read fresh
+      Ref.modify (_ + 1) fresh
+      Ref.modify (M.insert listenerId inputVar) ref
       pure listenerId
-    let producer = CR.producer (Left <$> AV.takeVar inputVar)
+    let producer = CR.producer (Left <$> AV.take inputVar)
     void $ fork do
       CR.runProcess (CR.connect producer consumer)
-      liftEff $ modifyRef ref (M.delete listenerId)
-      AV.killVar (error "ended") inputVar
+      liftEffect $ Ref.modify (M.delete listenerId) ref
+      AV.kill (error "ended") inputVar
 
   runComponent
     :: forall z f' i' o'
-     . Ref (LifecycleHandlers eff)
-    -> (o' -> Aff (HalogenEffects eff) Unit)
+     . Ref LifecycleHandlers
+    -> (o' -> Aff Unit)
     -> i'
     -> (forall x. f' x -> Maybe (z x))
-    -> Component h z i' o' (Aff (HalogenEffects eff))
-    -> Eff (HalogenEffects eff) (Ref (DriverStateX h r f' eff))
+    -> Component h z i' o' Aff
+    -> Effect (Ref (DriverStateX h r f'))
   runComponent lchs handler j prjQuery = unComponent \c -> do
     lchs' <- newLifecycleHandlers
     var <- initDriverState c j handler prjQuery lchs'
-    pre <- readRef lchs
-    writeRef lchs { initializers: L.Nil, finalizers: pre.finalizers }
-    unDriverStateX (render lchs <<< _.selfRef) =<< readRef var
-    squashChildInitializers lchs pre.initializers =<< readRef var
+    pre <- Ref.read lchs
+    Ref.write { initializers: L.Nil, finalizers: pre.finalizers } lchs
+    unDriverStateX (render lchs <<< _.selfRef) =<< Ref.read var
+    squashChildInitializers lchs pre.initializers =<< Ref.read var
     pure var
 
   render
     :: forall s f' z' g p i' o'
-     . Ref (LifecycleHandlers eff)
-    -> Ref (DriverState h r s f' z' g p i' o' eff)
-    -> Eff (HalogenEffects eff) Unit
-  render lchs var = readRef var >>= \(DriverState ds) -> do
-    shouldProcessHandlers <- isNothing <$> readRef ds.pendingHandlers
-    when shouldProcessHandlers $ writeRef ds.pendingHandlers (Just L.Nil)
-    writeRef ds.childrenOut M.empty
-    writeRef ds.childrenIn ds.children
+     . Ref LifecycleHandlers
+    -> Ref (DriverState h r s f' z' g p i' o')
+    -> Effect Unit
+  render lchs var = Ref.read var >>= \(DriverState ds) -> do
+    shouldProcessHandlers <- isNothing <$> Ref.read ds.pendingHandlers
+    when shouldProcessHandlers $ Ref.write (Just L.Nil) ds.pendingHandlers
+    Ref.write M.empty ds.childrenOut
+    Ref.write ds.children ds.childrenIn
     let
-      handler :: forall x. InputF x (z' x) -> Aff (HalogenEffects eff) Unit
+      handler :: forall x. InputF x (z' x) -> Aff Unit
       handler = queuingHandler (void <<< evalF ds.selfRef) ds.pendingHandlers
-      childHandler :: forall x. z' x -> Aff (HalogenEffects eff) Unit
+      childHandler :: forall x. z' x -> Aff Unit
       childHandler = queuingHandler (handler <<< Query) ds.pendingQueries
     rendering <-
       renderSpec.render
@@ -210,12 +208,12 @@ runUI renderSpec component i = do
         (renderChild lchs childHandler ds.component.mkOrdBox ds.childrenIn ds.childrenOut)
         (ds.component.render ds.state)
         ds.rendering
-    children <- readRef ds.childrenOut
-    readRef ds.childrenIn >>= traverse_ \childVar -> do
-      childDS <- readRef childVar
+    children <- Ref.read ds.childrenOut
+    Ref.read ds.childrenIn >>= traverse_ \childVar -> do
+      childDS <- Ref.read childVar
       renderStateX_ renderSpec.removeChild childDS
       finalize lchs childDS
-    modifyRef ds.selfRef \(DriverState ds') ->
+    Ref.modify (\(DriverState ds') ->
       DriverState
         { rendering: Just rendering
         , children
@@ -233,103 +231,102 @@ runUI renderSpec component i = do
         , fresh: ds'.fresh
         , subscriptions: ds'.subscriptions
         , lifecycleHandlers: ds'.lifecycleHandlers
-        }
+        }) ds.selfRef
     when shouldProcessHandlers do
       flip tailRecM unit \_ -> do
-        handlers <- readRef ds.pendingHandlers
-        writeRef ds.pendingHandlers (Just L.Nil)
+        handlers <- Ref.read ds.pendingHandlers
+        Ref.write (Just L.Nil) ds.pendingHandlers
         traverse_ (handleAff <<< traverse_ fork <<< L.reverse) handlers
-        mmore <- readRef ds.pendingHandlers
+        mmore <- Ref.read ds.pendingHandlers
         if maybe false L.null mmore
-          then writeRef ds.pendingHandlers Nothing $> Done unit
+          then Ref.write Nothing ds.pendingHandlers $> Done unit
           else pure $ Loop unit
 
   renderChild
     :: forall f' g p
-     . Ref (LifecycleHandlers eff)
-    -> (forall x. f' x -> Aff (HalogenEffects eff) Unit)
+     . Ref LifecycleHandlers
+    -> (forall x. f' x -> Aff Unit)
     -> (p -> OrdBox p)
-    -> Ref (M.Map (OrdBox p) (Ref (DriverStateX h r g eff)))
-    -> Ref (M.Map (OrdBox p) (Ref (DriverStateX h r g eff)))
-    -> ComponentSlot h g (Aff (HalogenEffects eff)) p (f' Unit)
-    -> Eff (HalogenEffects eff) (RenderStateX r eff)
+    -> Ref (M.Map (OrdBox p) (Ref (DriverStateX h r g)))
+    -> Ref (M.Map (OrdBox p) (Ref (DriverStateX h r g)))
+    -> ComponentSlot h g Aff p (f' Unit)
+    -> Effect (RenderStateX r)
   renderChild lchs handler mkOrdBox childrenInRef childrenOutRef =
     unComponentSlot \p ctor input inputQuery outputQuery prjQuery -> do
       let ordP = mkOrdBox p
-      childrenIn <- readRef childrenInRef
+      childrenIn <- Ref.read childrenInRef
       var <- case M.pop ordP childrenIn of
         Just (Tuple existing childrenIn') -> do
-          writeRef childrenInRef childrenIn'
+          Ref.write childrenIn' childrenInRef
           for_ (inputQuery input) \q -> do
-            dsx <- readRef existing
+            dsx <- Ref.read existing
             unDriverStateX (\st -> for_ (st.prjQuery q) (handleAff <<< evalF st.selfRef <<< Query)) dsx
           pure existing
         Nothing ->
           runComponent lchs (maybe (pure unit) handler <<< outputQuery) input prjQuery ctor
-      isDuplicate <- M.member ordP <$> readRef childrenOutRef
+      isDuplicate <- M.member ordP <$> Ref.read childrenOutRef
       when isDuplicate
-        $ unsafeCoerceEff
         $ warn "Halogen: Duplicate slot address was detected during rendering, unexpected results may occur"
-      modifyRef childrenOutRef (M.insert ordP var)
-      readRef var >>= renderStateX case _ of
+      Ref.modify (M.insert ordP var) childrenOutRef
+      Ref.read var >>= renderStateX case _ of
         Nothing -> throw "Halogen internal error: child was not initialized in renderChild"
         Just r -> pure (renderSpec.renderChild r)
 
   squashChildInitializers
     :: forall f'
-     . Ref (LifecycleHandlers eff)
-    -> L.List (Aff (HalogenEffects eff) Unit)
-    -> DriverStateX h r f' eff
-    -> Eff (HalogenEffects eff) Unit
+     . Ref LifecycleHandlers
+    -> L.List (Aff Unit)
+    -> DriverStateX h r f'
+    -> Effect Unit
   squashChildInitializers lchs preInits =
     unDriverStateX \st -> do
       let parentInitializer = evalF st.selfRef <<< Query <$> st.component.initializer
-      modifyRef lchs \handlers ->
+      Ref.modify (\handlers ->
         { initializers: (do
             parSequence_ (L.reverse handlers.initializers)
             sequence_ parentInitializer
-            liftEff do
+            liftEffect do
               handlePending st.pendingQueries
               handlePending st.pendingOuts) : preInits
         , finalizers: handlers.finalizers
-        }
+        }) lchs
 
   handlePending
-    :: Ref (Maybe (L.List (Aff (HalogenEffects eff) Unit)))
-    -> Eff (HalogenEffects eff) Unit
+    :: Ref (Maybe (L.List (Aff Unit)))
+    -> Effect Unit
   handlePending ref = do
-    queue <- readRef ref
-    writeRef ref Nothing
+    queue <- Ref.read ref
+    Ref.write Nothing ref
     for_ queue (handleAff <<< traverse_ fork <<< L.reverse)
 
   cleanupSubscriptions
     :: forall s f' z' g p i' o'
-     . DriverState h r s f' z' g p i' o' eff
-    -> Eff (HalogenEffects eff) Unit
+     . DriverState h r s f' z' g p i' o'
+    -> Effect Unit
   cleanupSubscriptions (DriverState ds) = do
-    traverse_ (handleAff <<< traverse_ fork) =<< readRef ds.subscriptions
-    writeRef ds.subscriptions Nothing
+    traverse_ (handleAff <<< traverse_ fork) =<< Ref.read ds.subscriptions
+    Ref.write Nothing ds.subscriptions
 
   finalize
     :: forall f'
-     . Ref (LifecycleHandlers eff)
-    -> DriverStateX h r f' eff
-    -> Eff (HalogenEffects eff) Unit
+     . Ref LifecycleHandlers
+    -> DriverStateX h r f'
+    -> Effect Unit
   finalize lchs = do
     unDriverStateX \st -> do
       cleanupSubscriptions (DriverState st)
       for_ (evalF st.selfRef <<< Query <$> st.component.finalizer) \f ->
-        modifyRef lchs (\handlers ->
+        Ref.modify (\handlers ->
           { initializers: handlers.initializers
           , finalizers: f : handlers.finalizers
-          })
-      for_ st.children (finalize lchs <=< readRef)
+          }) lchs
+      for_ st.children (finalize lchs <=< Ref.read)
 
 -- | TODO: we could do something more intelligent now this isn't baked into the
 -- | virtual-dom rendering. Perhaps write to an avar when an error occurs...
 -- | something other than a runtime exception anyway.
 handleAff
-  :: forall eff a
-   . Aff (HalogenEffects eff) a
-  -> Eff (HalogenEffects eff) Unit
+  :: forall a
+   . Aff a
+  -> Effect Unit
 handleAff = runAff_ (either throwException (const (pure unit)))

@@ -18,28 +18,22 @@ module Halogen.Query
 
 import Prelude
 
-import Control.Monad.Except (runExcept)
-
+import Control.Monad.State.Class (get, gets, modify, put) as Exports
+import Control.Monad.Trans.Class (lift) as Exports
+import Control.Parallel (parTraverse)
 import Data.List as L
 import Data.Map as M
 import Data.Maybe (Maybe(..))
 import Data.Tuple (Tuple(..))
-import Data.Either (either)
-import Data.Foreign (Foreign)
-
-import DOM.HTML.Types (HTMLElement, readHTMLElement)
-
+import Effect.Aff.Class (liftAff) as Exports
+import Effect.Class (liftEffect) as Exports
 import Halogen.Component.ChildPath (ChildPath, injSlot, prjSlot, injQuery, cpI)
 import Halogen.Query.EventSource (EventSource, SubscribeStatus(..), eventSource, eventSource_)
 import Halogen.Query.HalogenM (HalogenM(..), HalogenF(..), fork, getRef, getSlots, checkSlot, mkQuery)
-
-import Control.Parallel (parTraverse)
-import Control.Monad.Aff.Class (liftAff) as Exports
-import Control.Monad.Eff.Class (liftEff) as Exports
-import Control.Monad.State.Class (get, gets, modify, put) as Exports
-import Control.Monad.Trans.Class (lift) as Exports
-import Halogen.Query.InputF (RefLabel(..))
 import Halogen.Query.HalogenM (subscribe, raise) as Exports
+import Halogen.Query.InputF (RefLabel(..))
+import Web.HTML.HTMLElement (HTMLElement)
+import Web.HTML.HTMLElement as HTMLElement
 
 -- | Type synonym for an "action" - An action only causes effects and has no
 -- | result value.
@@ -94,7 +88,7 @@ type Request f a = (a -> a) -> f a
 -- | getTickCount app = app.query (request GetTickCount)
 -- | ```
 request :: forall f a. Request f a -> f a
-request req = req id
+request req = req identity
 
 -- | Sends a query to a child of a component at the specified slot.
 query
@@ -141,7 +135,4 @@ queryAll' path q = do
       slots
 
 getHTMLElementRef :: forall s f g p o m. RefLabel -> HalogenM s f g p o m (Maybe HTMLElement)
-getHTMLElementRef = map (go =<< _) <<< getRef
-  where
-  go :: Foreign -> Maybe HTMLElement
-  go = either (const Nothing) Just <<< runExcept <<< readHTMLElement
+getHTMLElementRef = map (HTMLElement.fromElement =<< _) <<< getRef

@@ -3,14 +3,11 @@ module Component.List where
 import Prelude
 
 import Data.Array (snoc, filter, length)
-
 import Data.Map as M
 import Data.Maybe (Maybe(..), fromMaybe)
-
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
-
 import Model (List, TaskId, initialList, initialTask)
 import Component.Task (TaskQuery(..), TaskMessage(..), task)
 

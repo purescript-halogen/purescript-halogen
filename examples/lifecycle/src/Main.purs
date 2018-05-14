@@ -2,23 +2,19 @@ module Main where
 
 import Prelude
 
-import Control.Monad.Aff (Aff)
-import Control.Monad.Aff.Console (log)
-import Control.Monad.Eff (Eff)
-import Control.Monad.Eff.Console (CONSOLE)
-
+import Child as Child
 import Data.Array (snoc, filter, reverse)
 import Data.Maybe (Maybe(..))
 import Data.Tuple (Tuple(..))
-
+import Effect (Effect)
+import Effect.Aff (Aff)
+import Effect.Console (log)
 import Halogen as H
 import Halogen.Aff as HA
 import Halogen.HTML as HH
 import Halogen.HTML.Elements.Keyed as HK
 import Halogen.HTML.Events as HE
 import Halogen.VDom.Driver (runUI)
-
-import Child as Child
 
 type State =
   { currentId :: Int
@@ -39,9 +35,7 @@ data Query a
   | Remove Int a
   | ReportRoot String a
 
-type UIEff eff = Aff (console :: CONSOLE | eff)
-
-ui :: forall eff. H.Component HH.HTML Query Unit Void (UIEff eff)
+ui :: H.Component HH.HTML Query Unit Void Aff
 ui = H.lifecycleParentComponent
   { initialState: const initialState
   , render
@@ -52,7 +46,7 @@ ui = H.lifecycleParentComponent
   }
   where
 
-  render :: State -> H.ParentHTML Query Child.Query Int (UIEff eff)
+  render :: State -> H.ParentHTML Query Child.Query Int Aff
   render state =
     HH.div_
       [ HH.button
@@ -71,9 +65,9 @@ ui = H.lifecycleParentComponent
               ]
       ]
 
-  eval :: Query ~> H.ParentDSL State Query Child.Query Int Void (UIEff eff)
+  eval :: Query ~> H.ParentDSL State Query Child.Query Int Void Aff
   eval (Initialize next) = do
-    H.liftAff $ log "Initialize Root"
+    H.liftEffect $ log "Initialize Root"
     pure next
   eval (Finalize next) = do
     pure next
@@ -90,7 +84,7 @@ ui = H.lifecycleParentComponent
     H.modify \s -> s { slots = reverse s.slots }
     pure next
   eval (ReportRoot msg next) = do
-    H.liftAff $ log ("Root >>> " <> msg)
+    H.liftEffect $ log ("Root >>> " <> msg)
     pure next
 
   listen :: Int -> Child.Message -> Maybe (Query Unit)
@@ -99,7 +93,7 @@ ui = H.lifecycleParentComponent
     Child.Finalized -> H.action $ ReportRoot ("Heard Finalized from child" <> show i)
     Child.Reported msg -> H.action $ ReportRoot ("Re-reporting from child" <> show i <> ": " <> msg)
 
-main :: Eff (HA.HalogenEffects (console :: CONSOLE)) Unit
+main :: Effect Unit
 main = HA.runHalogenAff do
   body <- HA.awaitBody
   runUI ui unit body

@@ -14,7 +14,7 @@ data Query a = HandleInput Int a
 component :: forall m. H.Component HH.HTML Query Input Void m
 component =
   H.component
-    { initialState: id
+    { initialState: identity
     , render
     , eval
     , receiver: HE.input HandleInput
