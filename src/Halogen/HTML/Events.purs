@@ -60,7 +60,7 @@ import Prelude
 import Control.Monad.Except (runExcept)
 import Data.Either (either)
 import Data.Maybe (Maybe(..))
-import Foreign (Foreign, F, toForeign, readString, readInt, readBoolean)
+import Foreign (F, Foreign, readBoolean, readInt, readString, unsafeToForeign)
 import Foreign.Index (readProp)
 import Halogen.HTML.Core (Prop)
 import Halogen.HTML.Core as Core
@@ -75,13 +75,13 @@ import Web.Event.Event as EE
 import Web.HTML.Event.DragEvent (DragEvent)
 import Web.HTML.Event.DragEvent.EventTypes as DET
 import Web.HTML.Event.EventTypes as ET
+import Web.TouchEvent.TouchEvent (TouchEvent)
 import Web.UIEvent.FocusEvent (FocusEvent)
 import Web.UIEvent.FocusEvent.EventTypes as FET
 import Web.UIEvent.KeyboardEvent (KeyboardEvent)
 import Web.UIEvent.KeyboardEvent.EventTypes as KET
 import Web.UIEvent.MouseEvent (MouseEvent)
 import Web.UIEvent.MouseEvent.EventTypes as MET
-import Web.TouchEvent.TouchEvent (TouchEvent)
 import Web.UIEvent.WheelEvent (WheelEvent)
 import Web.UIEvent.WheelEvent.EventTypes as WET
 
@@ -260,7 +260,7 @@ touchHandler = unsafeCoerce
 -- | argument of `handler`.
 addForeignPropHandler :: forall r i value. EventType -> String -> (Foreign -> F value) -> (value -> Maybe i) -> IProp r i
 addForeignPropHandler key prop reader f =
-  handler key (either (const Nothing) f <<< runExcept <<< (reader <=< readProp prop) <<< toForeign <<< EE.currentTarget)
+  handler key (either (const Nothing) f <<< runExcept <<< (reader <=< readProp prop) <<< unsafeToForeign <<< EE.currentTarget)
 
 -- | Attaches an event handler which will produce an input when the value of an
 -- | input field changes.
