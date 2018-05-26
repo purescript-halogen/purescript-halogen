@@ -161,13 +161,13 @@ runUI renderSpec component i = do
     inputVar <- AV.empty
     listenerId <- liftEffect do
       listenerId <- Ref.read fresh
-      Ref.modify (_ + 1) fresh
-      Ref.modify (M.insert listenerId inputVar) ref
+      _ <- Ref.modify (_ + 1) fresh
+      _ <- Ref.modify (M.insert listenerId inputVar) ref
       pure listenerId
     let producer = CR.producer (Left <$> AV.take inputVar)
     void $ fork do
       CR.runProcess (CR.connect producer consumer)
-      liftEffect $ Ref.modify (M.delete listenerId) ref
+      _ <- liftEffect $ Ref.modify (M.delete listenerId) ref
       AV.kill (error "ended") inputVar
 
   runComponent
@@ -213,7 +213,7 @@ runUI renderSpec component i = do
       childDS <- Ref.read childVar
       renderStateX_ renderSpec.removeChild childDS
       finalize lchs childDS
-    Ref.modify (\(DriverState ds') ->
+    _ <- Ref.modify (\(DriverState ds') ->
       DriverState
         { rendering: Just rendering
         , children
@@ -267,7 +267,7 @@ runUI renderSpec component i = do
       isDuplicate <- M.member ordP <$> Ref.read childrenOutRef
       when isDuplicate
         $ warn "Halogen: Duplicate slot address was detected during rendering, unexpected results may occur"
-      Ref.modify (M.insert ordP var) childrenOutRef
+      _ <- Ref.modify (M.insert ordP var) childrenOutRef
       Ref.read var >>= renderStateX case _ of
         Nothing -> throw "Halogen internal error: child was not initialized in renderChild"
         Just r -> pure (renderSpec.renderChild r)
@@ -281,7 +281,7 @@ runUI renderSpec component i = do
   squashChildInitializers lchs preInits =
     unDriverStateX \st -> do
       let parentInitializer = evalF st.selfRef <<< Query <$> st.component.initializer
-      Ref.modify (\handlers ->
+      void $ Ref.modify (\handlers ->
         { initializers: (do
             parSequence_ (L.reverse handlers.initializers)
             sequence_ parentInitializer
