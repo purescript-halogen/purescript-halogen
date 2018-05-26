@@ -58,7 +58,7 @@ eval
 eval render r =
   case _ of
     RefUpdate (RefLabel p) el next -> do
-      liftEffect $ Ref.modify (\(DriverState st) ->
+      _ <- liftEffect $ Ref.modify (\(DriverState st) ->
         DriverState st { refs = M.alter (const el) p st.refs }) r
       pure next
     Query q -> evalF r q
@@ -90,8 +90,8 @@ eval render r =
             subs <- liftEffect $ Ref.read subscriptions
             when (maybe false (M.member i) subs) do
               done
-              liftEffect $ Ref.modify (map (M.delete i)) subscriptions
-        liftEffect $ Ref.modify (map (M.insert i done')) subscriptions
+              void $ liftEffect $ Ref.modify (map (M.delete i)) subscriptions
+        _ <- liftEffect $ Ref.modify (map (M.insert i done')) subscriptions
         let
           consumer = do
             q <- CR.await
