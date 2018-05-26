@@ -4,7 +4,7 @@ import Prelude
 import Control.Applicative.Free (hoistFreeAp)
 import Control.Monad.Free (hoistFree)
 import Data.Newtype (class Newtype, over)
-import Data.Profunctor (class Profunctor, lmap)
+import Data.Profunctor (class Profunctor, lcmap)
 import Halogen.Component as HC
 import Halogen.Query.HalogenM as HM
 import Halogen.Query.ForkF as FF
@@ -26,8 +26,8 @@ dimapProComponent f g (ProComponent c) = ProComponent (HC.unComponent go c)
   where
   go :: forall s g p. HC.Component' h s f g p i o m -> HC.Component h f i' o' m
   go comp = HC.mkComponent $ comp
-    { initialState = lmap f comp.initialState
-    , receiver = lmap f comp.receiver
+    { initialState = lcmap f comp.initialState
+    , receiver = lcmap f comp.receiver
     , eval = mapOutput g <$> comp.eval
     }
 
