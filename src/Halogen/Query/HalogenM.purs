@@ -3,9 +3,6 @@ module Halogen.Query.HalogenM where
 import Prelude
 
 import Control.Applicative.Free (FreeAp, liftFreeAp, hoistFreeAp)
-import Control.Monad.Aff.Class (class MonadAff, liftAff)
-import Control.Monad.Eff.Class (class MonadEff, liftEff)
-import Control.Monad.Eff.Exception (Error)
 import Control.Monad.Free (Free, hoistFree, liftF)
 import Control.Monad.Reader.Class (class MonadAsk, ask)
 import Control.Monad.Rec.Class (class MonadRec, tailRecM, Step(..))
@@ -13,18 +10,19 @@ import Control.Monad.State.Class (class MonadState)
 import Control.Monad.Trans.Class (class MonadTrans)
 import Control.Monad.Writer.Class (class MonadTell, tell)
 import Control.Parallel.Class (class Parallel)
-
 import Data.Bifunctor (lmap)
 import Data.Coyoneda (Coyoneda, coyoneda, hoistCoyoneda)
-import Data.Foreign (Foreign)
 import Data.List as L
 import Data.Maybe (Maybe)
 import Data.Newtype (class Newtype, over)
 import Data.Tuple (Tuple)
-
+import Effect.Aff.Class (class MonadAff, liftAff)
+import Effect.Class (class MonadEffect, liftEffect)
+import Effect.Exception (Error)
 import Halogen.Query.EventSource as ES
 import Halogen.Query.ForkF as FF
 import Halogen.Query.InputF (RefLabel)
+import Web.DOM (Element)
 
 -- | The Halogen component algebra
 data HalogenF s (f :: Type -> Type) g p o m a
@@ -38,7 +36,7 @@ data HalogenF s (f :: Type -> Type) g p o m a
   | Raise o a
   | Par (HalogenAp s f g p o m a)
   | Fork (FF.Fork (HalogenM s f g p o m) a)
-  | GetRef RefLabel (Maybe Foreign -> a)
+  | GetRef RefLabel (Maybe Element -> a)
 
 instance functorHalogenF :: Functor m => Functor (HalogenF s f g p o m) where
   map f = case _ of
@@ -77,10 +75,10 @@ instance bindHalogenM :: Bind (HalogenM s f g p o m) where
 
 instance monadHalogenM :: Monad (HalogenM s f g p o m)
 
-instance monadEffHalogenM :: MonadEff eff m => MonadEff eff (HalogenM s f g p o m) where
-  liftEff eff = HalogenM $ liftF $ Lift $ liftEff eff
+instance monadEffectHalogenM :: MonadEffect m => MonadEffect (HalogenM s f g p o m) where
+  liftEffect eff = HalogenM $ liftF $ Lift $ liftEffect eff
 
-instance monadAffHalogenM :: MonadAff eff m => MonadAff eff (HalogenM s f g p o m) where
+instance monadAffHalogenM :: MonadAff m => MonadAff (HalogenM s f g p o m) where
   liftAff aff = HalogenM $ liftF $ Lift $ liftAff aff
 
 instance parallelHalogenM :: Parallel (HalogenAp s f g p o m) (HalogenM s f g p o m) where
@@ -114,16 +112,16 @@ mkQuery
   => p
   -> g a
   -> HalogenM s f g p o m a
-mkQuery p = HalogenM <<< liftF <<< ChildQuery p <<< coyoneda id
+mkQuery p = HalogenM <<< liftF <<< ChildQuery p <<< coyoneda identity
 
 getSlots :: forall s f g p o m. HalogenM s f g p o m (L.List p)
-getSlots = HalogenM $ liftF $ GetSlots id
+getSlots = HalogenM $ liftF $ GetSlots identity
 
 checkSlot :: forall s f g p o m. p -> HalogenM s f g p o m Boolean
-checkSlot p = HalogenM $ liftF $ CheckSlot p id
+checkSlot p = HalogenM $ liftF $ CheckSlot p identity
 
-getRef :: forall s f g p o m. RefLabel -> HalogenM s f g p o m (Maybe Foreign)
-getRef p = HalogenM $ liftF $ GetRef p id
+getRef :: forall s f g p o m. RefLabel -> HalogenM s f g p o m (Maybe Element)
+getRef p = HalogenM $ liftF $ GetRef p identity
 
 -- | Provides a way of having a component subscribe to an `EventSource` from
 -- | within an `Eval` function.
@@ -134,7 +132,7 @@ subscribe es = HalogenM $ liftF $ Subscribe es unit
 raise :: forall s f g p o m. o -> HalogenM s f g p o m Unit
 raise o = HalogenM $ liftF $ Raise o unit
 
-fork :: forall s f g p o m eff a. MonadAff eff m => HalogenM s f g p o m a -> HalogenM s f g p o m (Error -> m Unit)
+fork :: forall s f g p o m a. MonadAff m => HalogenM s f g p o m a -> HalogenM s f g p o m (Error -> m Unit)
 fork a = map liftAff <$> HalogenM (liftF $ Fork $ FF.fork a)
 
 imapState

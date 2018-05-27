@@ -25,7 +25,7 @@ infixl 4 compose as :>
 
 -- | An identity `ChildPath`.
 cpI :: forall f p. ChildPath f f p p
-cpI = ChildPath id id
+cpI = ChildPath identity identity
 
 -- | A `ChildPath` that goes to the left.
 cpL :: forall f g p q. ChildPath f (f <\/> g) p (p \/ q)

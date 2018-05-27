@@ -1,36 +1,19 @@
-module Keyboard
-  ( KEYBOARD
-  , KeyboardEvent
-  , KeyboardEventR
-  , readKeyboardEvent
-  , preventDefault
-  , onKeyUp
-  ) where
+module Keyboard where
 
 import Prelude
-import Control.Monad.Eff (kind Effect, Eff)
-import Data.Function.Uncurried as F
-import DOM.Node.Types as DOM
 
-foreign import data KEYBOARD :: Effect
-foreign import addEventListenerImpl :: forall ev eff a. F.Fn3 String (ev -> Eff (keyboard :: KEYBOARD | eff) a) DOM.Document (Eff (keyboard :: KEYBOARD | eff) (Eff (keyboard :: KEYBOARD | eff) Unit))
+import Data.Foldable (traverse_)
+import Effect (Effect)
+import Web.Event.EventTarget as ET
+import Web.HTML.HTMLDocument (HTMLDocument)
+import Web.HTML.HTMLDocument as HTMLDocument
+import Web.UIEvent.KeyboardEvent (KeyboardEvent)
+import Web.UIEvent.KeyboardEvent as KE
+import Web.UIEvent.KeyboardEvent.EventTypes as KET
 
-type KeyboardEventR =
-  { keyCode :: Int
-  , ctrlKey :: Boolean
-  , altKey :: Boolean
-  , metaKey :: Boolean
-  , shiftKey :: Boolean
-  }
-
-foreign import data KeyboardEvent :: Type
-foreign import readKeyboardEvent :: KeyboardEvent -> KeyboardEventR
-foreign import preventDefault :: forall eff. KeyboardEvent -> Eff (keyboard :: KEYBOARD | eff) Unit
-
-onKeyUp
-  :: forall eff
-   . DOM.Document
-  -> (KeyboardEvent -> Eff (keyboard :: KEYBOARD | eff) Unit)
-  -> Eff (keyboard :: KEYBOARD | eff) (Eff (keyboard :: KEYBOARD | eff) Unit)
-onKeyUp document fn =
-  F.runFn3 addEventListenerImpl "keyup" fn document
+onKeyUp :: HTMLDocument -> (KeyboardEvent -> Effect Unit) -> Effect (Effect Unit)
+onKeyUp document fn = do
+  let target = HTMLDocument.toEventTarget document
+  listener <- ET.eventListener (traverse_ fn <<< KE.fromEvent)
+  ET.addEventListener KET.keyup listener false target
+  pure $ ET.removeEventListener KET.keyup listener false target

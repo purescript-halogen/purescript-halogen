@@ -85,7 +85,7 @@ factory innerComponent =
 
   eval :: Query f i o ~> H.ParentDSL (State i) (Query f i o) f Slot o m
   eval (ToggleOn next) = do
-    H.modify $ \state -> state { on = not state.on }
+    H.modify_ $ \state -> state { on = not state.on }
     pure next
   eval (Set next) = do
     _ <- H.query unit $ H.action (set false)
@@ -100,5 +100,5 @@ factory innerComponent =
     H.raise o
     pure next
   eval (InnerInput i next) = do
-    H.modify $ _{ input = i }
+    H.modify_ $ _{ input = i }
     pure next
