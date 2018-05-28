@@ -27,34 +27,18 @@ The main function involved here is [`runUI`][Halogen.VDom.Driver.runUI]. It take
 
 ``` purescript
 runUI
-  :: forall f eff i o
-   . Component HTML f i o (Aff (HalogenEffects eff))
+  :: forall f i o
+   . Component HTML f i o Aff
   -> i
   -> DOM.HTMLElement
-  -> Aff (HalogenEffects eff) (HalogenIO f o (Aff (HalogenEffects eff)))
+  -> Aff (HalogenIO f o Aff)
 ```
 
 The `i` argument is the input type for the component - since we're creating the root component here this will never change. We still need to provide a value though, as the component's initial state might be based on it. All the examples we've covered so far don't make use of this, so for those cases we'd be passing `unit`.
 
 The element we pass in should already be present in the DOM, and should be empty. If either of these conditions are not met then strange things may occur - the behaviour is unspecified.
 
-We expect the component's `m` type variable to be `Aff (HalogenEffects eff)` at this point, and this is also what `runUI` returns in. This is why in the previous chapter the recommendation was made to use `Aff` for components even if you only need `Eff`. If the component is pure, this type will work out since the `m` type should be a type variable and we can substitute `Aff` in. If we have something else in here, then the component will have to be [`hoist`][Halogen.Component.hoist]ed into `Aff`.
-
-The [`HalogenEffects`][Halogen.Aff.Effects.HalogenEffects] type here is a synonym for the row of effects involved in actually running components:
-
-``` purescript
-type HalogenEffects eff =
-  ( avar :: AVAR
-  , ref :: REF
-  , exception :: EXCEPTION
-  , dom :: DOM
-  | eff
-  )
-```
-
-- `AVAR` and `REF` are both used in the internal component machinery.
-- `EXCEPTION`s are possible, but only if you try _really_ hard. They should never occur from operations provided by Halogen itself.
-- `DOM`... well, this one is probably self explanatory.
+We expect the component's `m` type variable to be `Aff` at this point, and this is also what `runUI` returns in. This is why in the previous chapter the recommendation was made to use `Aff` for components even if you only need `Effect`. If the component is pure, this type will work out since the `m` type should be a type variable and we can substitute `Aff` in. If we have something else in here, then the component will have to be [`hoist`][Halogen.Component.hoist]ed into `Aff`.
 
 The last thing to look at here is the resulting `HalogenIO` value. It's a record that gives us some options for communicating with the component we just ran:
 
@@ -65,7 +49,7 @@ type HalogenIO f o m =
   }
 ```
 
-Note that `m` is polymorphic in the synonym. It's populated with `Aff (HalogenEffects eff)` once again for our case.
+Note that `m` is polymorphic in the synonym. It's populated with `Aff` once again for our case.
 
 - `query` allows us to send queries into the component, using its query algebra (`f`). This is useful for things like [routing][example-driver-routing], or driving an app from an external source - [WebSockets][example-driver-websockets], for example.
 - `subscribe` allows us to receive the messages the component emits by providing a [`coroutine`][purescript-coroutines] `Consumer`.
@@ -75,7 +59,7 @@ If we go back to our basic button example from [chapter 2][defining-components],
 ``` purescript
 import Prelude
 import Control.Coroutine as CR
-import Control.Monad.Aff.Console (CONSOLE, log)
+import Effect.Class.Console (log)
 import Effect (Effect)
 import Data.Maybe (Maybe(..))
 import Halogen as H
@@ -83,7 +67,7 @@ import Halogen.Aff as HA
 import Halogen.VDom.Driver (runUI)
 import Button as B
 
-main :: Eff (HA.HalogenEffects (console :: CONSOLE)) Unit
+main :: Effect Unit
 main = HA.runHalogenAff do
   body <- HA.awaitBody
   io <- runUI B.myButton unit body
@@ -103,7 +87,7 @@ Here we're setting up a consumer that will listen to the component forever (as i
 
 Aside from `runUI` we used a couple of other utility functions in our `main`, exported from `Halogen.Aff`:
 
-- [`runHalogenAff`][Halogen.Aff.Util.runHalogenAff] runs a Halogen-produced `Aff` value, turning it into an `Eff` so it can be used as `main` for a PureScript bundle. It's provided as a convenience - there is no special behaviour here that couldn't be implemented with functions provided by [`aff`][purescript-aff].
+- [`runHalogenAff`][Halogen.Aff.Util.runHalogenAff] runs a Halogen-produced `Aff` value, turning it into an `Effect` so it can be used as `main` for a PureScript bundle. It's provided as a convenience - there is no special behaviour here that couldn't be implemented with functions provided by [`aff`][purescript-aff].
 - [`awaitBody`][Halogen.Aff.Util.awaitBody] fetches the `body` element when the document loads. Since we're in `Aff` we can use this to avoid the need for callbacks. This is used when the entire page is going to be a Halogen app.
 
 There are also two more functions provided for cases where we want to run our Halogen app as just part of the page, rather than embedding it in the `body`:

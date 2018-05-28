@@ -10,14 +10,14 @@ myButton :: forall m. H.Component HH.HTML Query Input Message m
 
 The `m` parameter we left polymorphic here is our means of introducing effect handling into a component `eval` function.
 
-## Using `Eff` during `eval`
+## Using `Effect` during `eval`
 
 Here's a component that generates a random number on demand and displays it to the user:
 
 ``` purescript
 import Prelude
-import Control.Monad.Aff (Aff)
-import Control.Monad.Eff.Random (RANDOM, random)
+import Effect.Aff (Aff)
+import Effect.Random (random)
 import Data.Maybe (Maybe(..), maybe)
 import Halogen as H
 import Halogen.HTML as HH
@@ -27,7 +27,7 @@ type State = Maybe Number
 
 data Query a = Regenerate a
 
-ui :: forall eff. H.Component HH.HTML Query Unit Void (Aff (random :: RANDOM | eff))
+ui :: H.Component HH.HTML Query Unit Void Aff
 ui =
   H.component
     { initialState: const initialState
@@ -53,37 +53,37 @@ ui =
             [ HH.text "Generate new number" ]
         ]
 
-  eval :: Query ~> H.ComponentDSL State Query Void (Aff (random :: RANDOM | eff))
+  eval :: Query ~> H.ComponentDSL State Query Void Aff
   eval = case _ of
     Regenerate next -> do
-      newNumber <- H.liftEff random
+      newNumber <- H.liftEffect random
       H.put (Just newNumber)
       pure next
 ```
 
 A runnable version of this is available in the [`effects-eff-random` example](../examples/effects-eff-random/).
 
-To be able to use [`random`][Control.Monad.Eff.Random.random], we've populated the `m` type variable with an `Aff`. This needs applying to both the component and `eval` function:
+To be able to use [`random`][Effect.Random.random], we've populated the `m` type variable with an `Aff`. This needs applying to both the component and `eval` function:
 
 ``` purescript
-ui :: forall eff. H.Component HH.HTML Query Unit Void (Aff (random :: RANDOM | eff))
+ui :: H.Component HH.HTML Query Unit Void Aff
 
-eval :: Query ~> H.ComponentDSL State Query Void (Aff (random :: RANDOM | eff))
+eval :: Query ~> H.ComponentDSL State Query Void Aff
 ```
 
-Why are we using `Aff` rather than `Eff`? For convenience - when it's time to run our UI, Halogen expects an `Aff` here. It is possible to [`hoist`][Halogen.Component.hoist] a component and change the `m` type, but it's easier if we just use `Aff` in the first place. `Aff` can do anything `Eff` can, so we're not losing out, just admitting more possibilities than we might need.
+Why are we using `Aff` rather than `Effect`? For convenience - when it's time to run our UI, Halogen expects an `Aff` here. It is possible to [`hoist`][Halogen.Component.hoist] a component and change the `m` type, but it's easier if we just use `Aff` in the first place. `Aff` can do anything `Effect` can, so we're not losing out, just admitting more possibilities than we might need.
 
-We can now use the [`liftEff`][Control.Monad.Eff.Class.liftEff] function in `eval`:
+We can now use the [`liftEffect`][Effect.Class.liftEffect] function in `eval`:
 
 ``` purescript
 eval = case _ of
   Regenerate next -> do
-    newNumber <- H.liftEff random
+    newNumber <- H.liftEffect random
     H.put (Just newNumber)
     pure next
 ```
 
-This works as there's a [`MonadEff`][Control.Monad.Eff.Class.MonadEff] instance for `HalogenM` for any `m` that also has a `MonadEff` instance, and `Aff` satisfies this constraint. (As a reminder, `ComponentDSL` is an synonym for `HalogenM`).
+This works as there's a [`MonadEffect`][Effect.Class.MonadEffect] instance for `HalogenM` for any `m` that also has a `MonadEffect` instance, and `Aff` satisfies this constraint. (As a reminder, `ComponentDSL` is an synonym for `HalogenM`).
 
 ## Using `Aff` during `eval`
 
@@ -91,7 +91,7 @@ Occasionally it's useful to be able to fetch data from an API, so let's use that
 
 ``` purescript
 import Prelude
-import Control.Monad.Aff (Aff)
+import Effect.Aff (Aff)
 import Data.Maybe (Maybe(..))
 import Halogen as H
 import Halogen.HTML as HH
@@ -109,7 +109,7 @@ data Query a
   = SetUsername String a
   | MakeRequest a
 
-ui :: forall eff. H.Component HH.HTML Query Unit Void (Aff (ajax :: AX.AJAX | eff))
+ui :: H.Component HH.HTML Query Unit Void Aff
 ui =
   H.component
     { initialState: const initialState
@@ -151,7 +151,7 @@ ui =
               ]
       ]
 
-  eval :: Query ~> H.ComponentDSL State Query Void (Aff (ajax :: AX.AJAX | eff))
+  eval :: Query ~> H.ComponentDSL State Query Void Aff
   eval = case _ of
     SetUsername username next -> do
       H.modify (_ { username = username, result = Nothing :: Maybe String })
@@ -167,7 +167,7 @@ ui =
 
 A runnable version of this is available in the [`effects-aff-ajax` example](../examples/effects-aff-ajax/).
 
-As with the `Eff`-based example, we've populated the `m` type variables with `Aff`. This time we're going to rely on the [`MonadAff`][Control.Monad.Aff.Class.MonadAff] instance and use [`liftAff`][Control.Monad.Aff.Class.liftAff]:
+As with the `Effect`-based example, we've populated the `m` type variables with `Aff`. This time we're going to rely on the [`MonadAff`][Effect.Aff.Class.MonadAff] instance and use [`liftAff`][Effect.Aff.Class.liftAff]:
 
 ``` purescript
     MakeRequest next -> do
@@ -180,19 +180,19 @@ As with the `Eff`-based example, we've populated the `m` type variables with `Af
 
 Note how there was no need to setup callbacks or anything of that nature. Using `liftAff` means we can mix the behaviour of `Aff` with our other component-related operations, giving us seamless async capabilities.
 
-## Mixing `Eff` and `Aff`
+## Mixing `Effect` and `Aff`
 
-Any type that satisfies a `MonadAff` constraint also satisfies `MonadEff`, so using `Aff` as the base monad for a component allows `liftEff` and `liftAff` to be used together freely. The effect row will need to contain both sets of effects, but other than that no special handling is required.
+Any type that satisfies a `MonadAff` constraint also satisfies `MonadEffect`, so using `Aff` as the base monad for a component allows `liftEffect` and `liftAff` to be used together freely.
 
 Let's take a look at [running a component][running-components] to produce a UI next.
 
 [purescript-affjax]: https://pursuit.purescript.org/packages/purescript-affjax "purescript-affjax"
 
-[Control.Monad.Aff.Class.liftAff]: https://pursuit.purescript.org/packages/purescript-aff/3.0.0/docs/Control.Monad.Aff.Class#v:liftAff "Control.Monad.Aff.Class.liftAff"
-[Control.Monad.Aff.Class.MonadAff]: https://pursuit.purescript.org/packages/purescript-aff/3.0.0/docs/Control.Monad.Aff.Class#t:MonadAff "Control.Monad.Aff.Class.MonadAff"
-[Control.Monad.Eff.Class.liftEff]: https://pursuit.purescript.org/packages/purescript-eff/3.1.0/docs/Control.Monad.Eff.Class#v:liftEff "Control.Monad.Eff.Class.liftEff"
-[Control.Monad.Eff.Class.MonadEff]: https://pursuit.purescript.org/packages/purescript-eff/3.1.0/docs/Control.Monad.Eff.Class#t:MonadEff "Control.Monad.Eff.Class.MonadEff"
-[Control.Monad.Eff.Random.random]: https://pursuit.purescript.org/packages/purescript-random/3.0.0/docs/Control.Monad.Eff.Random#v:random "Control.Monad.Eff.Random.random"
+[Effect.Aff.Class.liftAff]: https://pursuit.purescript.org/packages/purescript-aff/3.0.0/docs/Effect.Aff.Class#v:liftAff "Effect.Aff.Class.liftAff"
+[Effect.Aff.Class.MonadAff]: https://pursuit.purescript.org/packages/purescript-aff/3.0.0/docs/Effect.Aff.Class#t:MonadAff "Effect.Aff.Class.MonadAff"
+[Effect.Class.liftEffect]: https://pursuit.purescript.org/packages/purescript-eff/3.1.0/docs/Effect.Class#v:liftEffect "Effect.Class.liftEffect"
+[Effect.Class.MonadEffect]: https://pursuit.purescript.org/packages/purescript-eff/3.1.0/docs/Effect.Class#t:MonadEffect "Effect.Class.MonadEffect"
+[Effect.Random.random]: https://pursuit.purescript.org/packages/purescript-random/3.0.0/docs/Effect.Random#v:random "Effect.Random.random"
 [Halogen.Component.hoist]: https://pursuit.purescript.org/packages/purescript-halogen/docs/Halogen.Component#v:hoist "Halogen.Component.hoist"
 
 [running-components]: 4%20-%20Running%20a%20component.md "Running a component"

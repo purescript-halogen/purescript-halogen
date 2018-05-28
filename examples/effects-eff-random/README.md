@@ -1,6 +1,6 @@
 ## Random number via Eff
 
-This example illustrates an Eff function being used in a component's `eval` function.
+This example illustrates an `Effect` function being used in a component's `eval` function.
 
 ### Building
 
