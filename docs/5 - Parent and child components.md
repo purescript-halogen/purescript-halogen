@@ -60,11 +60,11 @@ component =
   eval :: Query ~> H.ParentDSL State Query Button.Query Slot Void m
   eval = case _ of
     HandleButton (Button.Toggled _) next -> do
-      H.modify (\st -> st { toggleCount = st.toggleCount + 1 })
+      H.modify_ (\st -> st { toggleCount = st.toggleCount + 1 })
       pure next
     CheckButtonState next -> do
       buttonState <- H.query ButtonSlot $ H.request Button.IsOn
-      H.modify (_ { buttonState = buttonState })
+      H.modify_ (_ { buttonState = buttonState })
       pure next
 ```
 
@@ -196,7 +196,7 @@ In our example we use `query` to check what the current button state is when eva
 ``` purescript
 CheckButtonState next -> do
   buttonState <- H.query ButtonSlot $ H.request Button.IsOn
-  H.modify (_ { buttonState = buttonState })
+  H.modify_ (_ { buttonState = buttonState })
   pure next
 ```
 

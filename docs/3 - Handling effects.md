@@ -154,13 +154,13 @@ ui =
   eval :: Query ~> H.ComponentDSL State Query Void Aff
   eval = case _ of
     SetUsername username next -> do
-      H.modify (_ { username = username, result = Nothing :: Maybe String })
+      H.modify_ (_ { username = username, result = Nothing :: Maybe String })
       pure next
     MakeRequest next -> do
       username <- H.gets _.username
-      H.modify (_ { loading = true })
+      H.modify_ (_ { loading = true })
       response <- H.liftAff $ AX.get ("https://api.github.com/users/" <> username)
-      H.modify (_ { loading = false, result = Just response.response })
+      H.modify_ (_ { loading = false, result = Just response.response })
       pure next
 
 ```
@@ -172,9 +172,9 @@ As with the `Effect`-based example, we've populated the `m` type variables with 
 ``` purescript
     MakeRequest next -> do
       username <- H.gets _.username
-      H.modify (_ { loading = true })
+      H.modify_ (_ { loading = true })
       response <- H.liftAff $ AX.get ("https://api.github.com/users/" <> username)
-      H.modify (_ { loading = false, result = Just response.response })
+      H.modify_ (_ { loading = false, result = Just response.response })
       pure next
 ```
 

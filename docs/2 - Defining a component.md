@@ -177,7 +177,7 @@ We use `ComponentDSL` for components without children - it fills in some type pa
 
 - [`get`][Control.Monad.State.Class.get] retrieves the current state value
 - [`gets f`][Control.Monad.State.Class.gets] retrieves the state value and applies `f` - generally used to extract a part of the state (for example, `gets _.someProp` when using a record state).
-- [`modify f`][Control.Monad.State.Class.modify] updates the stored state value by applying `f` to it.
+- [`modify_ f`][Control.Monad.State.Class.modify_] updates the stored state value by applying `f` to it.
 - [`put`][Control.Monad.State.Class.put] overwrites the entire current state value. Be careful with this!
 
 Halogen re-exports these functions from the main `Halogen` module  for convenience.
@@ -274,7 +274,7 @@ Next up, let's take a look at how to create a component that can [do something e
 
 [Control.Monad.State.Class.get]: https://pursuit.purescript.org/packages/purescript-transformers/4.1.0/docs/Control.Monad.State.Class#v:get "Control.Monad.State.Class.get"
 [Control.Monad.State.Class.gets]: https://pursuit.purescript.org/packages/purescript-transformers/4.1.0/docs/Control.Monad.State.Class#v:gets "Control.Monad.State.Class.gets"
-[Control.Monad.State.Class.modify]: https://pursuit.purescript.org/packages/purescript-transformers/4.1.0/docs/Control.Monad.State.Class#v:modify "Control.Monad.State.Class.modify"
+[Control.Monad.State.Class.modify_]: https://pursuit.purescript.org/packages/purescript-transformers/4.1.0/docs/Control.Monad.State.Class#v:modify_ "Control.Monad.State.Class.modify_"
 [Control.Monad.State.Class.MonadState]: https://pursuit.purescript.org/packages/purescript-transformers/4.1.0/docs/Control.Monad.State.Class#t:MonadState "Control.Monad.State.Class.MonadState"
 [Control.Monad.State.Class.put]: https://pursuit.purescript.org/packages/purescript-transformers/4.1.0/docs/Control.Monad.State.Class#v:put "Control.Monad.State.Class.put"
 [Data.NaturalTransformation]: https://pursuit.purescript.org/packages/purescript-prelude/4.0.0/docs/Data.NaturalTransformation "Data.NaturalTransformation"
