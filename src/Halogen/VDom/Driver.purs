@@ -31,27 +31,27 @@ import Web.HTML.HTMLElement (HTMLElement) as DOM
 import Web.HTML.HTMLElement as HTMLElement
 import Web.HTML.Window (document) as DOM
 
-type VHTML f g p =
-  V.VDom (Array (Prop (InputF Unit (f Unit)))) (ComponentSlot HTML g Aff p (f Unit))
+type VHTML f ps =
+  V.VDom (Array (Prop (InputF Unit (f Unit)))) (ComponentSlot HTML ps Aff (f Unit))
 
-type ChildRenderer f g p
-  = ComponentSlot HTML g Aff p (f Unit) -> Effect (RenderStateX RenderState)
+type ChildRenderer f ps
+  = ComponentSlot HTML ps Aff (f Unit) -> Effect (RenderStateX RenderState)
 
-newtype RenderState s f g p o =
+newtype RenderState s f ps o =
   RenderState
     { node :: DOM.Node
-    , machine :: V.Step (VHTML f g p) DOM.Node
-    , renderChildRef :: Ref (ChildRenderer f g p)
+    , machine :: V.Step (VHTML f ps) DOM.Node
+    , renderChildRef :: Ref (ChildRenderer f ps)
     }
 
 mkSpec
-  :: forall f g p
+  :: forall f ps
    . (InputF Unit (f Unit) -> Effect Unit)
-  -> Ref (ChildRenderer f g p)
+  -> Ref (ChildRenderer f ps)
   -> DOM.Document
   -> V.VDomSpec
       (Array (VP.Prop (InputF Unit (f Unit))))
-      (ComponentSlot HTML g Aff p (f Unit))
+      (ComponentSlot HTML ps Aff (f Unit))
 mkSpec handler renderChildRef document =
   V.VDomSpec { buildWidget, buildAttributes, document }
   where
@@ -64,9 +64,9 @@ mkSpec handler renderChildRef document =
   buildWidget
     :: V.VDomSpec
           (Array (VP.Prop (InputF Unit (f Unit))))
-          (ComponentSlot HTML g Aff p (f Unit))
+          (ComponentSlot HTML ps Aff (f Unit))
     -> V.Machine
-          (ComponentSlot HTML g Aff p (f Unit))
+          (ComponentSlot HTML ps Aff (f Unit))
           DOM.Node
   buildWidget spec = EFn.mkEffectFn1 \slot -> do
     renderChild <- Ref.read renderChildRef
@@ -76,8 +76,8 @@ mkSpec handler renderChildRef document =
 
   patch
     :: V.Machine
-          (ComponentSlot HTML g Aff p (f Unit))
-          DOM.Node
+         (ComponentSlot HTML ps Aff (f Unit))
+         DOM.Node
   patch = EFn.mkEffectFn1 \slot -> do
     renderChild <- Ref.read renderChildRef
     rsx <- renderChild slot
@@ -108,12 +108,12 @@ renderSpec document container = { render, renderChild: identity, removeChild }
   where
 
   render
-    :: forall s f g p o
+    :: forall s f ps o
      . (forall x. InputF x (f x) -> Effect Unit)
-    -> (ComponentSlot HTML g Aff p (f Unit) -> Effect (RenderStateX RenderState))
-    -> HTML (ComponentSlot HTML g Aff p (f Unit)) (f Unit)
-    -> Maybe (RenderState s f g p o)
-    -> Effect (RenderState s f g p o)
+    -> (ComponentSlot HTML ps Aff (f Unit) -> Effect (RenderStateX RenderState))
+    -> HTML (ComponentSlot HTML ps Aff (f Unit)) (f Unit)
+    -> Maybe (RenderState s f ps o)
+    -> Effect (RenderState s f ps o)
   render handler child (HTML vdom) =
     case _ of
       Nothing -> do
@@ -133,9 +133,7 @@ renderSpec document container = { render, renderChild: identity, removeChild }
           substInParent newNode nextSib parent
         pure $ RenderState { machine: machine', node: newNode, renderChildRef }
 
-removeChild
-  :: forall o p g f s. RenderState s f g p o
-  -> Effect Unit
+removeChild :: forall o ps f s. RenderState s f ps o -> Effect Unit
 removeChild (RenderState { node }) = do
   npn <- DOM.parentNode node
   traverse_ (\pn -> DOM.removeChild node pn) npn

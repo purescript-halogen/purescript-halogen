@@ -1,14 +1,14 @@
 module Container where
 
 import Prelude
-import Data.Maybe (Maybe(..), maybe)
 
+import Button as Button
+import Data.Maybe (Maybe(..), maybe)
+import Data.Symbol (SProxy(..))
+import HOC as HOC
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
-
-import Button as Button
-import HOC as HOC
 
 data Query a
   = HandleButton Button.Message a
@@ -19,19 +19,21 @@ type State =
   , buttonState :: Maybe Boolean
   }
 
-data Slot = Button
-derive instance eqTickSlot :: Eq Slot
-derive instance ordTickSlot :: Ord Slot
+type ChildSlots =
+  ( button :: HOC.Slot Button.Query Boolean Button.Message Unit
+  )
 
-type ChildQuery = HOC.Query Button.Query Boolean Button.Message
+_button = SProxy :: SProxy "button"
 
 component :: forall m. H.Component HH.HTML Query Unit Void m
 component =
-  H.parentComponent
+  H.component
     { initialState: const initialState
     , render
     , eval
     , receiver: const Nothing
+    , initializer: Nothing
+    , finalizer: Nothing
     }
   where
 
@@ -41,10 +43,10 @@ component =
     , buttonState: Nothing
     }
 
-  render :: State -> H.ParentHTML Query ChildQuery Slot m
+  render :: State -> H.ComponentHTML Query ChildSlots m
   render state =
     HH.div_
-      [ HH.slot Button (HOC.factory Button.myButton) true (HE.input HandleButton)
+      [ HH.slot _button unit (HOC.factory Button.myButton) true (HE.input HandleButton)
       , HH.p_
           [ HH.text ("Button has been toggled " <> show state.toggleCount <> " time(s)") ]
       , HH.p_
@@ -58,12 +60,12 @@ component =
           ]
       ]
 
-  eval :: Query ~> H.ParentDSL State Query ChildQuery Slot Void m
+  eval :: Query ~> H.HalogenM State Query ChildSlots Void m
   eval = case _ of
     HandleButton (Button.Toggled _) next -> do
       H.modify_ (\st -> st { toggleCount = st.toggleCount + 1 })
       pure next
     CheckButtonState next -> do
-      buttonState <- H.query Button $ HOC.liftQuery $ H.request Button.IsOn
+      buttonState <- H.query _button unit $ HOC.liftQuery $ H.request Button.IsOn
       H.modify_ (_ { buttonState = buttonState })
       pure next

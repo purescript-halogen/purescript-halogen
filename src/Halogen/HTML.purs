@@ -4,22 +4,22 @@ module Halogen.HTML
   ( PlainHTML
   , fromPlainHTML
   , slot
-  , slot'
   , module Halogen.HTML.Core
   , module Halogen.HTML.Elements
   , module Halogen.HTML.Properties
   ) where
 
-import Prelude (Unit, Void, (<<<))
+import Halogen.HTML.Elements
 
-import Data.Functor as F
-import Data.Maybe (Maybe(..))
-import Halogen.Component (Component, ParentHTML, mkComponentSlot, unComponent)
-import Halogen.Component.ChildPath (ChildPath, injSlot, prjQuery, injQuery)
+import Data.Maybe (Maybe)
+import Data.Symbol (class IsSymbol, SProxy)
+import Halogen.Component (Component, ComponentHTML, mkComponentSlot)
+import Halogen.Data.Slot (Slot)
 import Halogen.HTML.Core (class IsProp, AttrName(..), ClassName(..), HTML(..), Namespace(..), PropName(..), ElemName(..), text, handler)
 import Halogen.HTML.Core as Core
-import Halogen.HTML.Elements
 import Halogen.HTML.Properties (IProp, attr, attrNS, prop)
+import Prelude (class Ord, Unit, Void)
+import Prim.Row as Row
 import Unsafe.Coerce (unsafeCoerce)
 
 -- | A type useful for a chunk of HTML with no slot-embedding or query-raising.
@@ -35,39 +35,21 @@ fromPlainHTML :: forall p i. PlainHTML -> HTML p i
 fromPlainHTML = unsafeCoerce -- ≅ bimap absurd absurd
 
 -- | Defines a slot for a child component. Takes:
--- | - the slot "address" value
+-- | - the slot address label
+-- | - the slot address index
 -- | - the component for the slot
 -- | - the input value to pass to the component
 -- | - a function mapping outputs from the component to a query in the parent
 slot
-  :: forall f m p i o g
-   . p
-  -> Component HTML g i o m
-  -> i
-  -> (o -> Maybe (f Unit))
-  -> ParentHTML f g p m
-slot p component input outputQuery =
-  let f = unComponent _.receiver component
-  in Core.slot (mkComponentSlot p component input f outputQuery Just)
-
--- | Defines a slot for a child component when a parent has multiple types of
--- | child component. Takes:
--- | - the `ChildPath` for this particular child component type
--- | - the slot "address" value
--- | - the component for the slot
--- | - the input value to pass to the component
--- | - a function mapping outputs from the component to a query in the parent
-slot'
-  :: forall f g g' p p' i o m
-   . ChildPath g g' p p'
+  :: forall sym px ps g i o p m f
+   . Row.Cons sym (Slot g o p) px ps
+  => IsSymbol sym
+  => Ord p
+  => SProxy sym
   -> p
   -> Component HTML g i o m
   -> i
   -> (o -> Maybe (f Unit))
-  -> ParentHTML f g' p' m
-slot' i p component input outputQuery =
-  let
-    pq = prjQuery i
-    f = F.map (injQuery i) <<< unComponent _.receiver component
-  in
-    Core.slot (mkComponentSlot (injSlot i p) component input f outputQuery pq)
+  -> ComponentHTML f ps m
+slot sym p component input outputQuery =
+  Core.slot (mkComponentSlot sym p component input outputQuery)

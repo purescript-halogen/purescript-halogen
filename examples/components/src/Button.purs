@@ -15,6 +15,8 @@ data Query a
 
 data Message = Toggled Boolean
 
+type Slot = H.Slot Query Message
+
 myButton :: forall m. H.Component HH.HTML Query Unit Message m
 myButton =
   H.component
@@ -22,13 +24,15 @@ myButton =
     , render
     , eval
     , receiver: const Nothing
+    , initializer: Nothing
+    , finalizer: Nothing
     }
   where
 
   initialState :: State
   initialState = false
 
-  render :: State -> H.ComponentHTML Query
+  render :: State -> H.ComponentHTML Query () m
   render state =
     let
       label = if state then "On" else "Off"
@@ -39,7 +43,7 @@ myButton =
         ]
         [ HH.text label ]
 
-  eval :: Query ~> H.ComponentDSL State Query Message m
+  eval :: Query ~> H.HalogenM State Query () Message m
   eval = case _ of
     Toggle next -> do
       state <- H.get

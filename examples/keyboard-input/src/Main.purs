@@ -29,14 +29,14 @@ data Query a
   = Init a
   | HandleKey KeyboardEvent a
 
-type DSL = H.ComponentDSL State Query Void Aff
-
 keyboardSubscription :: H.SubscriptionId
 keyboardSubscription = H.SubscriptionId "keyboard"
 
+type DSL = H.HalogenM State Query () Void Aff
+
 ui :: H.Component HH.HTML Query Unit Void Aff
 ui =
-  H.lifecycleComponent
+  H.component
     { initialState: const initialState
     , render
     , eval
@@ -46,7 +46,7 @@ ui =
     }
   where
 
-  render :: State -> H.ComponentHTML Query
+  render :: forall m. State -> H.ComponentHTML Query () m
   render state =
     HH.div_
       [ HH.p_ [ HH.text "Hold down the shift key and type some characters!" ]

@@ -15,6 +15,8 @@ data Query a
   = HandleInput String a
   | GetValue (String -> a)
 
+type Slot = H.Slot Query Void
+
 component :: forall m. H.Component HH.HTML Query Unit Void m
 component =
   H.component
@@ -22,13 +24,15 @@ component =
     , render
     , eval
     , receiver: const Nothing
+    , initializer: Nothing
+    , finalizer: Nothing
     }
   where
 
   initialState :: State
   initialState = "Hello"
 
-  render :: State -> H.ComponentHTML Query
+  render :: State -> H.ComponentHTML Query () m
   render state =
     HH.label_
       [ HH.p_ [ HH.text "What do you have to say?" ]
@@ -38,7 +42,7 @@ component =
           ]
       ]
 
-  eval :: Query ~> H.ComponentDSL State Query Void m
+  eval :: Query ~> H.HalogenM State Query () Void m
   eval (HandleInput value next) = do
     H.put value
     pure next

@@ -1,4 +1,9 @@
-module AceComponent (AceQuery(..), AceOutput(..), aceComponent) where
+module AceComponent
+  ( AceQuery(..)
+  , AceOutput(..)
+  , AceSlot
+  , aceComponent
+  ) where
 
 import Prelude
 
@@ -18,6 +23,8 @@ import Halogen.Query.EventSource as ES
 -- | replicating it within Halogen.
 type AceState = { editor :: Maybe Editor }
 
+type AceSlot = H.Slot AceQuery AceOutput
+
 -- | A basic query algebra for the Ace component.
 data AceQuery a
   = Initialize a
@@ -30,7 +37,7 @@ data AceOutput = TextChanged String
 -- | The Ace component definition.
 aceComponent :: H.Component HH.HTML AceQuery Unit AceOutput Aff
 aceComponent =
-  H.lifecycleComponent
+  H.component
     { initialState: const initialState
     , render
     , eval
@@ -46,13 +53,13 @@ aceComponent =
   -- As we're embedding a 3rd party component we only need to create a
   -- placeholder div here and attach the ref property which will let us reference
   -- the element in eval.
-  render :: AceState -> H.ComponentHTML AceQuery
+  render :: forall m. AceState -> H.ComponentHTML AceQuery () m
   render = const $ HH.div [ HP.ref (H.RefLabel "ace") ] []
 
   -- The query algebra for the component handles the initialization of the Ace
   -- editor as well as responding to the `ChangeText` action that allows us to
   -- alter the editor's state.
-  eval :: AceQuery ~> H.ComponentDSL AceState AceQuery AceOutput Aff
+  eval :: AceQuery ~> H.HalogenM AceState AceQuery () AceOutput Aff
   eval = case _ of
     Initialize next -> do
       H.getHTMLElementRef (H.RefLabel "ace") >>= case _ of
