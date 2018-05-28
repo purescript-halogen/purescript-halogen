@@ -102,7 +102,7 @@ Now we know how to build simple components and run them, we can take a look at [
 [purescript-aff]: https://pursuit.purescript.org/packages/purescript-aff "purescript-aff"
 [purescript-coroutines]: https://pursuit.purescript.org/packages/purescript-coroutines "purescript-coroutines"
 
-[Control.Coroutine.consumer]: https://pursuit.purescript.org/packages/purescript-coroutines/4.0.0/docs/Control.Coroutine#v:consumer "Control.Coroutine.consumer"
+[Control.Coroutine.consumer]: https://pursuit.purescript.org/packages/purescript-coroutines/5.0.0/docs/Control.Coroutine#v:consumer "Control.Coroutine.consumer"
 [Halogen.Aff.Effects.HalogenEffects]: https://pursuit.purescript.org/packages/purescript-halogen/docs/Halogen.Aff.Effects#t:HalogenEffects "Halogen.Aff.Effects.HalogenEffects"
 [Halogen.Aff.Util.awaitBody]: https://pursuit.purescript.org/packages/purescript-halogen/docs/Halogen.Aff.Util#v:awaitBody "Halogen.Aff.Util.awaitBody"
 [Halogen.Aff.Util.awaitLoad]: https://pursuit.purescript.org/packages/purescript-halogen/docs/Halogen.Aff.Util#v:awaitLoad "Halogen.Aff.Util.awaitLoad"

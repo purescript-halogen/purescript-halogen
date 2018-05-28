@@ -272,14 +272,14 @@ The resulting [`Component`][Halogen.Component.Component] can now be used [as a c
 
 Next up, let's take a look at how to create a component that can [do something effectful][handling-effects] other than update its own state.
 
-[Control.Monad.State.Class.get]: https://pursuit.purescript.org/packages/purescript-transformers/3.1.0/docs/Control.Monad.State.Class#v:get "Control.Monad.State.Class.get"
-[Control.Monad.State.Class.gets]: https://pursuit.purescript.org/packages/purescript-transformers/3.1.0/docs/Control.Monad.State.Class#v:gets "Control.Monad.State.Class.gets"
-[Control.Monad.State.Class.modify]: https://pursuit.purescript.org/packages/purescript-transformers/3.1.0/docs/Control.Monad.State.Class#v:modify "Control.Monad.State.Class.modify"
-[Control.Monad.State.Class.MonadState]: https://pursuit.purescript.org/packages/purescript-transformers/3.1.0/docs/Control.Monad.State.Class#t:MonadState "Control.Monad.State.Class.MonadState"
-[Control.Monad.State.Class.put]: https://pursuit.purescript.org/packages/purescript-transformers/3.1.0/docs/Control.Monad.State.Class#v:put "Control.Monad.State.Class.put"
-[Data.NaturalTransformation]: https://pursuit.purescript.org/packages/purescript-prelude/3.0.0/docs/Data.NaturalTransformation "Data.NaturalTransformation"
-[Data.Void.Void]: https://pursuit.purescript.org/packages/purescript-prelude/3.0.0/docs/Data.Void#t:Void "Data.Void.Void"
-[Data.Unit.Unit]: https://pursuit.purescript.org/packages/purescript-prelude/3.0.0/docs/Data.Unit#t:Unit "Data.Unit.Unit"
+[Control.Monad.State.Class.get]: https://pursuit.purescript.org/packages/purescript-transformers/4.1.0/docs/Control.Monad.State.Class#v:get "Control.Monad.State.Class.get"
+[Control.Monad.State.Class.gets]: https://pursuit.purescript.org/packages/purescript-transformers/4.1.0/docs/Control.Monad.State.Class#v:gets "Control.Monad.State.Class.gets"
+[Control.Monad.State.Class.modify]: https://pursuit.purescript.org/packages/purescript-transformers/4.1.0/docs/Control.Monad.State.Class#v:modify "Control.Monad.State.Class.modify"
+[Control.Monad.State.Class.MonadState]: https://pursuit.purescript.org/packages/purescript-transformers/4.1.0/docs/Control.Monad.State.Class#t:MonadState "Control.Monad.State.Class.MonadState"
+[Control.Monad.State.Class.put]: https://pursuit.purescript.org/packages/purescript-transformers/4.1.0/docs/Control.Monad.State.Class#v:put "Control.Monad.State.Class.put"
+[Data.NaturalTransformation]: https://pursuit.purescript.org/packages/purescript-prelude/4.0.0/docs/Data.NaturalTransformation "Data.NaturalTransformation"
+[Data.Void.Void]: https://pursuit.purescript.org/packages/purescript-prelude/4.0.0/docs/Data.Void#t:Void "Data.Void.Void"
+[Data.Unit.Unit]: https://pursuit.purescript.org/packages/purescript-prelude/4.0.0/docs/Data.Unit#t:Unit "Data.Unit.Unit"
 [Halogen.Component.component-1]: https://pursuit.purescript.org/packages/purescript-halogen/docs/Halogen.Component#v:component "Halogen.Component.component"
 [Halogen.Component.Component]: https://pursuit.purescript.org/packages/purescript-halogen/docs/Halogen.Component#t:Component "Halogen.Component.Component"
 [Halogen.Component.ComponentHTML]: https://pursuit.purescript.org/packages/purescript-halogen/docs/Halogen.Component#t:ComponentHTML "Halogen.Component.ComponentHTML"

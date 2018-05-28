@@ -188,11 +188,11 @@ Let's take a look at [running a component][running-components] to produce a UI n
 
 [purescript-affjax]: https://pursuit.purescript.org/packages/purescript-affjax "purescript-affjax"
 
-[Effect.Aff.Class.liftAff]: https://pursuit.purescript.org/packages/purescript-aff/3.0.0/docs/Effect.Aff.Class#v:liftAff "Effect.Aff.Class.liftAff"
-[Effect.Aff.Class.MonadAff]: https://pursuit.purescript.org/packages/purescript-aff/3.0.0/docs/Effect.Aff.Class#t:MonadAff "Effect.Aff.Class.MonadAff"
-[Effect.Class.liftEffect]: https://pursuit.purescript.org/packages/purescript-eff/3.1.0/docs/Effect.Class#v:liftEffect "Effect.Class.liftEffect"
-[Effect.Class.MonadEffect]: https://pursuit.purescript.org/packages/purescript-eff/3.1.0/docs/Effect.Class#t:MonadEffect "Effect.Class.MonadEffect"
-[Effect.Random.random]: https://pursuit.purescript.org/packages/purescript-random/3.0.0/docs/Effect.Random#v:random "Effect.Random.random"
+[Effect.Aff.Class.liftAff]: https://pursuit.purescript.org/packages/purescript-aff/4.0.0/docs/Effect.Aff.Class#v:liftAff "Effect.Aff.Class.liftAff"
+[Effect.Aff.Class.MonadAff]: https://pursuit.purescript.org/packages/purescript-aff/4.0.0/docs/Effect.Aff.Class#t:MonadAff "Effect.Aff.Class.MonadAff"
+[Effect.Class.liftEffect]: https://pursuit.purescript.org/packages/purescript-effect/2.0.0/docs/Effect.Class#v:liftEffect "Effect.Class.liftEffect"
+[Effect.Class.MonadEffect]: https://pursuit.purescript.org/packages/purescript-effect/2.0.0/docs/Effect.Class#t:MonadEffect "Effect.Class.MonadEffect"
+[Effect.Random.random]: https://pursuit.purescript.org/packages/purescript-random/4.0.0/docs/Effect.Random#v:random "Effect.Random.random"
 [Halogen.Component.hoist]: https://pursuit.purescript.org/packages/purescript-halogen/docs/Halogen.Component#v:hoist "Halogen.Component.hoist"
 
 [running-components]: 4%20-%20Running%20a%20component.md "Running a component"

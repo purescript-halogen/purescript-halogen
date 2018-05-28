@@ -451,11 +451,11 @@ You've made it to the end of the guide, as it stands... happy Halogen-ing!
 
 [purescript-profunctor-lenses]: https://github.com/purescript-contrib/purescript-profunctor-lenses
 
-[Data.Either.Nested]: https://pursuit.purescript.org/packages/purescript-either/3.0.0/docs/Data.Either.Nested "Data.Either.Nested"
-[Data.Either.Nested.Either2]: https://pursuit.purescript.org/packages/purescript-either/3.0.0/docs/Data.Either.Nested#t:Either2 "Data.Either.Nested.Either2"
-[Data.Functor.Coproduct.Coproduct]: https://pursuit.purescript.org/packages/purescript-functors/2.0.0/docs/Data.Functor.Coproduct#t:Coproduct "Data.Functor.Coproduct.Coproduct"
-[Data.Functor.Coproduct.Nested]: https://pursuit.purescript.org/packages/purescript-functors/2.0.0/docs/Data.Functor.Coproduct.Nested "Data.Functor.Coproduct.Nested"
-[Data.Functor.Coproduct.Nested.Coproduct2]: https://pursuit.purescript.org/packages/purescript-functors/2.0.0/docs/Data.Functor.Coproduct.Nested#t:Coproduct2 "Data.Functor.Coproduct.Nested.Coproduct2"
+[Data.Either.Nested]: https://pursuit.purescript.org/packages/purescript-either/4.0.0/docs/Data.Either.Nested "Data.Either.Nested"
+[Data.Either.Nested.Either2]: https://pursuit.purescript.org/packages/purescript-either/4.0.0/docs/Data.Either.Nested#t:Either2 "Data.Either.Nested.Either2"
+[Data.Functor.Coproduct.Coproduct]: https://pursuit.purescript.org/packages/purescript-functors/3.0.0/docs/Data.Functor.Coproduct#t:Coproduct "Data.Functor.Coproduct.Coproduct"
+[Data.Functor.Coproduct.Nested]: https://pursuit.purescript.org/packages/purescript-functors/3.0.0/docs/Data.Functor.Coproduct.Nested "Data.Functor.Coproduct.Nested"
+[Data.Functor.Coproduct.Nested.Coproduct2]: https://pursuit.purescript.org/packages/purescript-functors/3.0.0/docs/Data.Functor.Coproduct.Nested#t:Coproduct2 "Data.Functor.Coproduct.Nested.Coproduct2"
 [Data.Lens.Prism.prism']: https://pursuit.purescript.org/packages/purescript-profunctor-lenses/3.2.0/docs/Data.Lens.Prism#v:prism' "Data.Lens.Prism.prism'"
 [Data.Lens.Types.Prism']: https://pursuit.purescript.org/packages/purescript-profunctor-lenses/3.2.0/docs/Data.Lens.Types#t:Prism' "Data.Lens.Types.Prism'"
 [Halogen.Component.ChildPath.ChildPath]: https://pursuit.purescript.org/packages/purescript-halogen/docs/Halogen.Component.ChildPath#t:ChildPath "Halogen.Component.ChildPath.ChildPath"
@@ -475,4 +475,4 @@ You've made it to the end of the guide, as it stands... happy Halogen-ing!
 [Halogen.Query.query]: https://pursuit.purescript.org/packages/purescript-halogen/docs/Halogen.Query#v:query "Halogen.Query.query"
 [Halogen.Query.queryAll']: https://pursuit.purescript.org/packages/purescript-halogen/docs/Halogen.Query#v:queryAll' "Halogen.Query.queryAll'"
 [Halogen.Query.queryAll]: https://pursuit.purescript.org/packages/purescript-halogen/docs/Halogen.Query#v:queryAll "Halogen.Query.queryAll"
-[Data.Void.absurd]: https://pursuit.purescript.org/packages/purescript-prelude/3.0.0/docs/Data.Void#v:absurd "Data.Void.absurd"
+[Data.Void.absurd]: https://pursuit.purescript.org/packages/purescript-prelude/4.0.0/docs/Data.Void#v:absurd "Data.Void.absurd"
