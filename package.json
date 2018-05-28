@@ -4,6 +4,7 @@
     "clean": "rimraf output && rimraf .pulp-cache",
     "build": "pulp build -- --censor-lib --strict",
     "test": "pulp build -I test -- --censor-lib --strict",
+    "ide": "purs ide server",
     "example-ace": "pulp browserify --include examples/ace/src --optimise --to examples/ace/dist/example.js",
     "example-basic": "pulp build --include examples/basic/src --to examples/basic/dist/example.js",
     "example-components": "pulp build --include examples/components/src --to examples/components/dist/example.js",

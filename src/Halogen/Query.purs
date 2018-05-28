@@ -28,12 +28,13 @@ import Data.Tuple (Tuple(..))
 import Effect.Aff.Class (liftAff) as Exports
 import Effect.Class (liftEffect) as Exports
 import Halogen.Component.ChildPath (ChildPath, injSlot, prjSlot, injQuery, cpI)
-import Halogen.Query.EventSource (EventSource, SubscribeStatus(..), eventSource, eventSource_)
-import Halogen.Query.HalogenM (HalogenM(..), HalogenF(..), fork, getRef, getSlots, checkSlot, mkQuery)
-import Halogen.Query.HalogenM (subscribe, raise) as Exports
+import Halogen.Query.EventSource (EventSource, affEventSource, effectEventSource)
+import Halogen.Query.HalogenM (HalogenM(..), HalogenF(..), SubscriptionId(..), fork, getRef, getSlots, checkSlot, mkQuery)
+import Halogen.Query.HalogenM (subscribe, unsubscribe, raise) as Exports
 import Halogen.Query.InputF (RefLabel(..))
 import Web.HTML.HTMLElement (HTMLElement)
 import Web.HTML.HTMLElement as HTMLElement
+
 
 -- | Type synonym for an "action" - An action only causes effects and has no
 -- | result value.

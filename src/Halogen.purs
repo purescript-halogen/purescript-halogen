@@ -22,7 +22,7 @@ import Halogen.Component (Component, Component', ComponentDSL, ComponentHTML, Co
 import Halogen.HTML.Core (AttrName(..), ClassName(..), Namespace(..), PropName(..), ElemName(..))
 import Halogen.HTML.Core as C
 import Halogen.HTML.Properties as P
-import Halogen.Query (Action, EventSource, HalogenF(..), HalogenM(..), RefLabel(..), Request, SubscribeStatus(..), action, checkSlot, eventSource, eventSource_, fork, get, getHTMLElementRef, getRef, getSlots, gets, lift, liftAff, liftEffect, mkQuery, modify, modify_, put, query, query', queryAll, queryAll', raise, request, subscribe)
+import Halogen.Query (Action, EventSource, HalogenF(..), HalogenM(..), RefLabel(..), Request, SubscriptionId(..), action, checkSlot, affEventSource, effectEventSource, fork, get, getHTMLElementRef, getRef, getSlots, gets, lift, liftAff, liftEffect, mkQuery, modify, modify_, put, query, query', queryAll, queryAll', raise, request, subscribe, unsubscribe)
 
 -- | A record produced when the root component in a Halogen UI has been run.
 -- | `query` allows external sources to query the root component and `subscribe`

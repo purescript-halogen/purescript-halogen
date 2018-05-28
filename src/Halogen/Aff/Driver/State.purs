@@ -24,6 +24,7 @@ import Effect.Ref (Ref)
 import Effect.Ref as Ref
 import Halogen.Component (Component')
 import Halogen.Data.OrdBox (OrdBox)
+import Halogen.Query.HalogenM (SubscriptionId)
 import Unsafe.Coerce (unsafeCoerce)
 import Web.DOM (Element)
 
@@ -45,7 +46,6 @@ type LifecycleHandlers =
 -- | - `p` is the type of slots for the component.
 -- | - `i` is the invput value type.
 -- | - `o` is the type of output messages from the component.
--- | - `eff` is theect row for the target `Aff`
 newtype DriverState h r s f z g p i o = DriverState (DriverStateRec h r s f z g p i o)
 
 type DriverStateRec h r s f z g p i o =
@@ -62,8 +62,7 @@ type DriverStateRec h r s f z g p i o =
   , pendingHandlers :: Ref (Maybe (List (Aff Unit)))
   , rendering :: Maybe (r s z g p o)
   , prjQuery :: forall x. f x -> Maybe (z x)
-  , fresh :: Ref Int
-  , subscriptions :: Ref (Maybe (M.Map Int (Aff Unit)))
+  , subscriptions :: Ref (Maybe (M.Map SubscriptionId (Aff Unit)))
   , lifecycleHandlers :: Ref LifecycleHandlers
   }
 
@@ -138,7 +137,6 @@ initDriverState component input handler prjQuery lchs = do
   pendingQueries <- Ref.new (component.initializer $> Nil)
   pendingOuts <- Ref.new (Just Nil)
   pendingHandlers <- Ref.new Nothing
-  fresh <- Ref.new 0
   subscriptions <- Ref.new (Just M.empty)
   let
     ds :: DriverStateRec h r s f z g p i o
@@ -156,7 +154,6 @@ initDriverState component input handler prjQuery lchs = do
       , pendingHandlers
       , rendering: Nothing
       , prjQuery
-      , fresh
       , subscriptions
       , lifecycleHandlers: lchs
       }

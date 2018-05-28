@@ -60,7 +60,7 @@ import Prelude
 import Control.Monad.Except (runExcept)
 import Data.Either (either)
 import Data.Maybe (Maybe(..))
-import Foreign (F, Foreign, readBoolean, readInt, readString, unsafeToForeign)
+import Foreign (F, Foreign, readBoolean, readInt, readString, unsafeToForeign, fail, ForeignError(..))
 import Foreign.Index (readProp)
 import Halogen.HTML.Core (Prop)
 import Halogen.HTML.Core as Core
@@ -260,7 +260,11 @@ touchHandler = unsafeCoerce
 -- | argument of `handler`.
 addForeignPropHandler :: forall r i value. EventType -> String -> (Foreign -> F value) -> (value -> Maybe i) -> IProp r i
 addForeignPropHandler key prop reader f =
-  handler key (either (const Nothing) f <<< runExcept <<< (reader <=< readProp prop) <<< unsafeToForeign <<< EE.currentTarget)
+  handler key \e -> either (const Nothing) f $ runExcept $ go e
+  where
+  go e = case EE.currentTarget e of
+    Nothing -> fail $ ForeignError "addForeignPropHandler expects `currentTarget` of the event be presented"
+    Just a -> reader <=< readProp prop $ unsafeToForeign a
 
 -- | Attaches an event handler which will produce an input when the value of an
 -- | input field changes.

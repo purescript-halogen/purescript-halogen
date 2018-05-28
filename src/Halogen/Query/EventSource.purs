@@ -1,186 +1,162 @@
-module Halogen.Query.EventSource
-  ( EventSource(..)
-  , SubscribeStatus(..)
-  , unEventSource
-  , interpret
-  , hoist
-  , eventSource
-  , eventSource'
-  , eventSource_
-  , eventSource_'
-  , catMaybes
-  , produce
-  , produce'
-  , produceAff
-  , produceAff'
-  ) where
+module Halogen.Query.EventSource where
 
 import Prelude
 
 import Control.Coroutine as CR
-import Effect.Aff (Aff, attempt, forkAff, runAff_)
-import Effect.Aff.AVar as AV
-import Effect.Aff.Class (class MonadAff, liftAff)
-import Effect (Effect)
-import Effect.Class (liftEffect)
-import Effect.Exception as Exn
 import Control.Monad.Free.Trans as FT
-import Control.Monad.Rec.Class as Rec
 import Control.Monad.Trans.Class (lift)
 import Data.Bifunctor (lmap)
-import Data.Either (Either(..), either)
-import Data.Foldable (for_)
-import Data.Maybe (Maybe)
+import Data.Either (Either(..))
+import Data.Maybe (Maybe, maybe)
+import Data.Profunctor (dimap)
+import Effect (Effect)
+import Effect.Aff (Aff, attempt, launchAff_)
+import Effect.Aff.AVar as AV
+import Effect.Aff.Class (class MonadAff, liftAff)
+import Effect.Class (liftEffect)
+import Effect.Exception as Exn
+import Web.Event.Event (Event, EventType)
+import Web.Event.EventTarget (EventTarget, addEventListener, removeEventListener, eventListener)
 
-newtype EventSource f m = EventSource (m { producer :: CR.Producer (f SubscribeStatus) m Unit, done :: m Unit })
-
-unEventSource :: forall f m. EventSource f m -> m { producer :: CR.Producer (f SubscribeStatus) m Unit, done :: m Unit }
-unEventSource (EventSource e) = e
-
-interpret :: forall f g m. Functor m => (f ~> g) -> EventSource f m -> EventSource g m
-interpret nat (EventSource es) =
-  EventSource $
-    map
-      (\e -> { producer: FT.interpret (lmap nat) e.producer, done: e.done })
-      es
-
-hoist :: forall f m n. Functor n => (m ~> n) -> EventSource f m -> EventSource f n
-hoist nat (EventSource es) =
-  EventSource $
-    map
-      (\e -> { producer: FT.hoistFreeT nat e.producer, done: nat e.done })
-      (nat es)
-
--- | The status of an `EventSource` subscription. When a query raised by an
--- | `EventSource` evaluates to `Done` the producer will be unsubscribed from.
-data SubscribeStatus
-  = Listening
-  | Done
-
-derive instance eqSubscribeStatus :: Eq SubscribeStatus
-derive instance ordSubscribeStatus :: Ord SubscribeStatus
-
--- | Creates an `EventSource` for a callback that accepts one argument.
+-- | An event source definition - an effect in `m` that when run returns a
+-- | producer coroutine that emits queries of type `f`, and runs in the effect
+-- | monad `m`.
 -- |
--- | - The first argument is the function that attaches the listener.
--- | - The second argument is a handler that optionally produces a value in `f`.
-eventSource
-  :: forall f m a
-   . MonadAff m
-  => ((a -> Effect Unit) -> Effect Unit)
-  -> (a -> Maybe (f SubscribeStatus))
-  -> EventSource f m
-eventSource attach handler =
-  EventSource
-    let producer = produce \emit -> attach (emit <<< Left <<< handler)
-    in pure { producer: FT.hoistFreeT liftAff $ catMaybes producer, done: pure unit }
+-- | It's generally unnecessary to build values of this type directly with this
+-- | constructor, the `affEventSource` and `effEventSource` cover the most
+-- | event source constructions.
+newtype EventSource m f = EventSource (m { producer :: CR.Producer (f Unit) m Unit, finalizer :: Finalizer m })
 
--- | Similar to `eventSource` but allows the attachment function to return an
--- | action to perform when the handler is detached.
-eventSource'
-  :: forall f m a
-   . MonadAff m
-  => ((a -> Effect Unit) -> Effect (Effect Unit))
-  -> (a -> Maybe (f SubscribeStatus))
-  -> EventSource f m
-eventSource' attach handler = do
-  EventSource do
-    { producer, cancel } <- liftAff $ produce' \emit -> attach (emit <<< Left <<< handler)
-    pure
-      { producer: FT.hoistFreeT liftAff $ catMaybes producer
-      , done: liftAff $ void $ cancel unit
-      }
-
--- | Creates an `EventSource` for a callback that accepts no arguments.
+-- | Constructs an event source from a setup function that operates in `Aff`.
 -- |
--- | - The first argument is the function that attaches the listener.
--- | - The second argument is the query to raise whenever the listener is
--- |   triggered.
-eventSource_
-  :: forall f m
+-- | - The `Emitter` that the passed function receives is used to `emit` queries
+-- |   that will be received by the current component, or can be `close`d to
+-- |   shut down the event source and remove the subscription.
+-- | - The `Finalizer` that the passed function produces is there to allow for
+-- |   some clean-up action to be taken when the event source is unsubscribed
+-- |   from. This also runs if the `Emitter` is `close`d. `mempty` can be used
+-- |   here if there is no clean-up to perform.
+affEventSource
+  :: forall m f
    . MonadAff m
-  => (Effect Unit -> Effect Unit)
-  -> f SubscribeStatus
-  -> EventSource f m
-eventSource_ attach query =
-  EventSource
-    let producer = produce \emit -> attach $ emit (Left query)
-    in pure { producer: FT.hoistFreeT liftAff producer, done: pure unit }
-
--- | Similar to `eventSource_` but allows the attachment function to return an
--- | action to perform when the handler is detached.
-eventSource_'
-  :: forall f m
-   . MonadAff m
-  => (Effect Unit -> Effect (Effect Unit))
-  -> f SubscribeStatus
-  -> EventSource f m
-eventSource_' attach query =
-  EventSource do
-    { producer, cancel } <- liftAff $ produce' \emit -> attach $ emit (Left query)
-    pure
-      { producer: FT.hoistFreeT liftAff producer
-      , done: liftAff $ void $ cancel unit
-      }
-
--- | Takes a producer of `Maybe`s and filters out the `Nothings`. Useful for
--- | constructing `EventSource`s for producers that don't need to handle every
--- | event.
-catMaybes
-  :: forall m a r
-   . Rec.MonadRec m
-  => CR.Producer (Maybe a) m r
-  -> CR.Producer a m r
-catMaybes =
-  Rec.tailRecM $ FT.resume >>> lift >=> case _ of
-    Left r -> pure $ Rec.Done r
-    Right (CR.Emit ma next) -> for_ ma CR.emit $> Rec.Loop next
-
-produce
-  :: forall a r
-   . ((Either a r -> Effect Unit) -> Effect Unit)
-  -> CR.Producer a Aff r
-produce recv = produceAff (\send ->
-  liftEffect (recv (void <<< runAff' <<< send)))
-
-produce'
-  :: forall a r
-   . ((Either a r -> Effect Unit) -> Effect (Effect Unit))
-  -> Aff { producer :: CR.Producer a Aff r, cancel :: r -> Aff Boolean }
-produce' recv =
-  produceAff' \send -> do
-    x <- liftEffect $ recv (void <<< runAff' <<< send)
-    pure (liftEffect x)
-
-runAff' :: Aff Unit -> Effect Unit
-runAff' = runAff_ (either (const (pure unit)) pure)
-
-produceAff
-  :: forall a r m
-   . MonadAff m
-  => ((Either a r -> Aff Unit) -> Aff Unit)
-  -> CR.Producer a m r
-produceAff recv = do
-  v <- lift $ liftAff AV.empty
-  void $ lift $ liftAff $ forkAff $ recv $ flip AV.put v
-  CR.producer $ liftAff $ AV.take v
-
-produceAff'
-  :: forall a r
-   . ((Either a r -> Aff Unit) -> Aff (Aff Unit))
-  -> Aff { producer :: CR.Producer a Aff r, cancel :: r -> Aff Boolean }
-produceAff' recv = do
+  => (Emitter Aff f -> Aff (Finalizer Aff))
+  -> EventSource m f
+affEventSource recv = EventSource $ liftAff do
   inputVar <- AV.empty
   finalizeVar <- AV.empty
   let
     producer = do
-      lift $ flip AV.put finalizeVar =<< recv (flip AV.put inputVar)
-      CR.producer (AV.take inputVar)
-    cancel r =
-      attempt (AV.take finalizeVar) >>= case _ of
-        Left _ -> pure false
-        Right finalizer -> do
+      lift $ liftAff $ flip AV.put finalizeVar =<< recv (Emitter (flip AV.put inputVar))
+      CR.producer $ liftAff $ AV.take inputVar
+    finalizer = Finalizer do
+      liftAff (attempt (AV.take finalizeVar)) >>= case _ of
+        Left _ -> pure unit
+        Right z -> liftAff do
           AV.kill (Exn.error "finalized") finalizeVar
-          finalizer
-          pure true
-  pure { producer, cancel }
+          finalize z
+  pure { producer, finalizer }
+
+-- | Constructs an event source from a setup function that operates in `Eff`.
+-- |
+-- | - The `Emitter` that the passed function receives is used to `emit` queries
+-- |   that will be received by the current component, or can be `close`d to
+-- |   shut down the event source and remove the subscription.
+-- | - The `Finalizer` that the passed function produces is there to allow for
+-- |   some clean-up action to be taken when the event source is unsubscribed
+-- |   from. This also runs if the `Emitter` is `close`d. `mempty` can be used
+-- |   here if there is no clean-up to perform.
+effectEventSource
+  :: forall m f
+   . MonadAff m
+  => (Emitter Effect f -> Effect (Finalizer Effect))
+  -> EventSource m f
+effectEventSource =
+  affEventSource <<<
+    dimap (hoistEmitter launchAff_) (liftEffect <<< map (hoistFinalizer liftEffect))
+
+-- | Constructs an event source from an event in the DOM. Accepts a function
+-- | that maps event values to a `Maybe`-wrapped query, allowing it to filter
+-- | events if necessary.
+eventListenerEventSource
+  :: forall m f
+   . MonadAff m
+  => EventType
+  -> EventTarget
+  -> (Event -> Maybe (f Unit))
+  -> EventSource m f
+eventListenerEventSource eventType target f = effectEventSource \emitter -> do
+  listener <- eventListener \ev -> maybe (pure unit) (emit emitter <<< pure) (f ev)
+  addEventListener eventType listener false target
+  pure $ Finalizer (removeEventListener eventType listener false target)
+
+-- | Changes the query component of an event source.
+interpret :: forall m f g. Functor m => (f ~> g) -> EventSource m f -> EventSource m g
+interpret f (EventSource es) =
+  EventSource $
+    map
+      (\e -> { producer: FT.interpret (lmap f) e.producer, finalizer: e.finalizer })
+      es
+
+-- | Changes the effect monad component of an event source.
+hoist :: forall m n f. Functor n => (m ~> n) -> EventSource m f -> EventSource n f
+hoist nat (EventSource es) =
+  EventSource $
+    map
+      (\e -> { producer: FT.hoistFreeT nat e.producer, finalizer: hoistFinalizer nat e.finalizer })
+      (nat es)
+
+-- | Values of this type are created internally by `affEventSource` and
+-- | `effEventSource`, and then passed into the user-provided setup function.
+-- |
+-- | This type is just a wrapper around a callback, used to simplify the type
+-- | signatures for setting up event sources.
+newtype Emitter m f = Emitter (Either (f Unit) Unit -> m Unit)
+
+-- | ``` purescript
+-- | data Query a = Notify String a
+-- |
+-- | myEventSource = EventSource.affEventSource \emitter -> do
+-- |   Aff.delay (Milliseconds 1000.0)
+-- |   EventSource.emit emitter (Notify "hello")
+-- |   pure mempty
+-- | ```
+emit :: forall m f. Emitter m f -> (Unit -> f Unit) -> m Unit
+emit (Emitter f) q = f (Left (q unit))
+
+-- | Closes the emitter, shutting down the event source. This allows an event
+-- | source to stop itself internally, rather than requiring external shutdown
+-- | by unsubscribing from it.
+-- |
+-- | The event source will automatically be unsubscribed from when this is
+-- | called, and the finalizer returned during event source setup will be
+-- | executed.
+-- |
+-- | Any further calls to `emit` after `close` will be ignored.
+close :: forall m a. Emitter m a -> m Unit
+close (Emitter f) = f (Right unit)
+
+-- | Changes the effect monad for an emitter.
+hoistEmitter :: forall m n f. (m Unit -> n Unit) -> Emitter m f -> Emitter n f
+hoistEmitter nat (Emitter f) = Emitter (nat <<< f)
+
+-- | When setting up an event source, values of this type should be returned to
+-- | describe any clean-up operations required. This is just a newtype around
+-- | an effectful operation, but helps with type signature comprehension.
+-- |
+-- | There is a `Monoid` instance provided for finalizers, so `mempty` can be
+-- | used in cases where there are no relevant clean-up actions to take.
+newtype Finalizer m = Finalizer (m Unit)
+
+instance semigroupFinalizer :: Apply m => Semigroup (Finalizer m) where
+  append (Finalizer a) (Finalizer b) = Finalizer (a *> b)
+
+instance monoidFinalizer :: Applicative m => Monoid (Finalizer m) where
+  mempty = Finalizer (pure unit)
+
+-- | Runs a finalizer.
+finalize :: forall m. Finalizer m -> m Unit
+finalize (Finalizer a) = a
+
+-- | Changes the effect monad for a finalizer.
+hoistFinalizer :: forall m n. (m ~> n) -> Finalizer m -> Finalizer n
+hoistFinalizer nat (Finalizer a) = Finalizer (nat a)
