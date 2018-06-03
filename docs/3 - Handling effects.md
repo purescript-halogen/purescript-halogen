@@ -91,13 +91,14 @@ Occasionally it's useful to be able to fetch data from an API, so let's use that
 
 ``` purescript
 import Prelude
-import Effect.Aff (Aff)
 import Data.Maybe (Maybe(..))
+import Effect.Aff (Aff)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
 import Network.HTTP.Affjax as AX
+import Network.HTTP.Affjax.Response as AXResponse
 
 type State =
   { loading :: Boolean
@@ -124,7 +125,7 @@ ui =
 
   render :: State -> H.ComponentHTML Query
   render st =
-    HH.div_ $
+    HH.form_ $
       [ HH.h1_ [ HH.text "Lookup GitHub user" ]
       , HH.label_
           [ HH.div_ [ HH.text "Enter username:" ]
@@ -159,10 +160,9 @@ ui =
     MakeRequest next -> do
       username <- H.gets _.username
       H.modify_ (_ { loading = true })
-      response <- H.liftAff $ AX.get ("https://api.github.com/users/" <> username)
+      response <- H.liftAff $ AX.get AXResponse.string ("https://api.github.com/users/" <> username)
       H.modify_ (_ { loading = false, result = Just response.response })
       pure next
-
 ```
 
 A runnable version of this is available in the [`effects-aff-ajax` example](../examples/effects-aff-ajax/).
@@ -170,12 +170,12 @@ A runnable version of this is available in the [`effects-aff-ajax` example](../e
 As with the `Effect`-based example, we've populated the `m` type variables with `Aff`. This time we're going to rely on the [`MonadAff`][Effect.Aff.Class.MonadAff] instance and use [`liftAff`][Effect.Aff.Class.liftAff]:
 
 ``` purescript
-    MakeRequest next -> do
-      username <- H.gets _.username
-      H.modify_ (_ { loading = true })
-      response <- H.liftAff $ AX.get ("https://api.github.com/users/" <> username)
-      H.modify_ (_ { loading = false, result = Just response.response })
-      pure next
+MakeRequest next -> do
+  username <- H.gets _.username
+  H.modify_ (_ { loading = true })
+  response <- H.liftAff $ AX.get AXResponse.string ("https://api.github.com/users/" <> username)
+  H.modify_ (_ { loading = false, result = Just response.response })
+  pure next
 ```
 
 Note how there was no need to setup callbacks or anything of that nature. Using `liftAff` means we can mix the behaviour of `Aff` with our other component-related operations, giving us seamless async capabilities.
