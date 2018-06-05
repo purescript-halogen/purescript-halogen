@@ -1,15 +1,13 @@
-module AceComponent (AceEffects, AceQuery(..), AceOutput(..), aceComponent) where
+module AceComponent (AceQuery(..), AceOutput(..), aceComponent) where
 
 import Prelude
 
 import Ace as Ace
-import Ace.EditSession as Session
 import Ace.Editor as Editor
-import Ace.Types (ACE, Editor)
-import Control.Monad.Aff (Aff)
-import Control.Monad.Aff.AVar (AVAR)
+import Ace.EditSession as Session
+import Ace.Types (Editor)
 import Data.Maybe (Maybe(..))
-import Data.Monoid (mempty)
+import Effect.Aff (Aff)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Properties as HP
@@ -29,11 +27,8 @@ data AceQuery a
 
 data AceOutput = TextChanged String
 
--- | Effects embedding the Ace editor requires.
-type AceEffects eff = (ace :: ACE, avar :: AVAR | eff)
-
 -- | The Ace component definition.
-aceComponent :: forall eff. H.Component HH.HTML AceQuery Unit AceOutput (Aff (AceEffects eff))
+aceComponent :: H.Component HH.HTML AceQuery Unit AceOutput Aff
 aceComponent =
   H.lifecycleComponent
     { initialState: const initialState
@@ -57,15 +52,15 @@ aceComponent =
   -- The query algebra for the component handles the initialization of the Ace
   -- editor as well as responding to the `ChangeText` action that allows us to
   -- alter the editor's state.
-  eval :: AceQuery ~> H.ComponentDSL AceState AceQuery AceOutput (Aff (AceEffects eff))
+  eval :: AceQuery ~> H.ComponentDSL AceState AceQuery AceOutput Aff
   eval = case _ of
     Initialize next -> do
       H.getHTMLElementRef (H.RefLabel "ace") >>= case _ of
         Nothing -> pure unit
         Just el' -> do
-          editor <- H.liftEff $ Ace.editNode el' Ace.ace
-          session <- H.liftEff $ Editor.getSession editor
-          H.modify (_ { editor = Just editor })
+          editor <- H.liftEffect $ Ace.editNode el' Ace.ace
+          session <- H.liftEffect $ Editor.getSession editor
+          H.modify_ (_ { editor = Just editor })
           H.subscribe changeSubscription $ ES.effEventSource \emitter -> do
             Session.onChange session (ES.emit emitter HandleChange)
             pure mempty
@@ -73,16 +68,16 @@ aceComponent =
     Finalize next -> do
       -- Release the reference to the editor and do any other cleanup that a
       -- real world component might need.
-      H.modify (_ { editor = Nothing })
+      H.modify_ (_ { editor = Nothing })
       pure next
     ChangeText text next -> do
       maybeEditor <- H.gets _.editor
       case maybeEditor of
         Nothing -> pure unit
         Just editor -> do
-          current <- H.liftEff $ Editor.getValue editor
+          current <- H.liftEffect $ Editor.getValue editor
           when (text /= current) do
-            void $ H.liftEff $ Editor.setValue text Nothing editor
+            void $ H.liftEffect $ Editor.setValue text Nothing editor
       H.raise $ TextChanged text
       pure next
     HandleChange next -> do
@@ -90,7 +85,7 @@ aceComponent =
       case maybeEditor of
         Nothing -> pure unit
         Just editor -> do
-          text <- H.liftEff (Editor.getValue editor)
+          text <- H.liftEffect (Editor.getValue editor)
           H.raise $ TextChanged text
       pure next
 

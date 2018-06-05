@@ -52,8 +52,8 @@ component =
   eval :: Query ~> H.ParentDSL State Query Display.Query Slot Void m
   eval = case _ of
     Increment next -> do
-      H.modify (_ + 1)
+      H.modify_ (_ + 1)
       pure next
     Decrement next -> do
-      H.modify (_ - 1)
+      H.modify_ (_ - 1)
       pure next

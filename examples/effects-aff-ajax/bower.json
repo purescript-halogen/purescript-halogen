@@ -2,7 +2,7 @@
   "name": "effects-aff-ajax",
   "private": true,
   "dependencies": {
-    "purescript-affjax": "^3.0.0",
+    "purescript-affjax": "^5.0.0",
     "purescript-halogen": "*"
   }
 }

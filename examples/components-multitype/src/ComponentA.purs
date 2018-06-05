@@ -38,7 +38,7 @@ component =
 
   eval :: Query ~> H.ComponentDSL State Query Void m
   eval (ToggleState next) = do
-    H.modify not
+    H.modify_ not
     pure next
   eval (GetState reply) = do
     reply <$> H.get

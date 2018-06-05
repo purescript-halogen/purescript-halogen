@@ -3,24 +3,21 @@ module Halogen.Query.EventSource where
 import Prelude
 
 import Control.Coroutine as CR
-import Control.Monad.Aff (Aff, attempt, launchAff_)
-import Control.Monad.Aff.AVar (AVAR)
-import Control.Monad.Aff.AVar as AV
-import Control.Monad.Aff.Class (class MonadAff, liftAff)
-import Control.Monad.Eff (Eff)
-import Control.Monad.Eff.Class (liftEff)
-import Control.Monad.Eff.Exception as Exn
 import Control.Monad.Free.Trans as FT
 import Control.Monad.Trans.Class (lift)
-import DOM (DOM)
-import DOM.Classy.Event (class IsEvent)
-import DOM.Classy.Event.EventTarget (class EventTarget, addEventListener, eventListener, removeEventListener)
-import DOM.Event.Types (EventType)
 import Data.Bifunctor (lmap)
 import Data.Either (Either(..))
 import Data.Maybe (Maybe, maybe)
-import Data.Monoid (class Monoid)
+import Data.Newtype (class Newtype)
 import Data.Profunctor (dimap)
+import Effect (Effect)
+import Effect.Aff (Aff, attempt, launchAff_)
+import Effect.Aff.AVar as AV
+import Effect.Aff.Class (class MonadAff, liftAff)
+import Effect.Class (liftEffect)
+import Effect.Exception as Exn
+import Web.Event.Event as E
+import Web.Event.EventTarget as ET
 
 -- | An event source definition - an effect in `m` that when run returns a
 -- | producer coroutine that emits queries of type `f`, and runs in the effect
@@ -29,7 +26,10 @@ import Data.Profunctor (dimap)
 -- | It's generally unnecessary to build values of this type directly with this
 -- | constructor, the `affEventSource` and `effEventSource` cover the most
 -- | event source constructions.
-newtype EventSource m f = EventSource (m { producer :: CR.Producer (f Unit) m Unit, finalizer :: Finalizer m })
+newtype EventSource m f =
+  EventSource (m { producer :: CR.Producer (f Unit) m Unit, finalizer :: Finalizer m })
+
+derive instance newtypeEventSource :: Newtype (EventSource m f) _
 
 -- | Constructs an event source from a setup function that operates in `Aff`.
 -- |
@@ -41,22 +41,22 @@ newtype EventSource m f = EventSource (m { producer :: CR.Producer (f Unit) m Un
 -- |   from. This also runs if the `Emitter` is `close`d. `mempty` can be used
 -- |   here if there is no clean-up to perform.
 affEventSource
-  :: forall m f eff
-   . MonadAff (avar :: AVAR | eff) m
-  => (Emitter (Aff (avar :: AVAR | eff)) f -> Aff (avar :: AVAR | eff) (Finalizer (Aff (avar :: AVAR | eff))))
+  :: forall m f
+   . MonadAff m
+  => (Emitter Aff f -> Aff (Finalizer Aff))
   -> EventSource m f
 affEventSource recv = EventSource $ liftAff do
-  inputVar <- AV.makeEmptyVar
-  finalizeVar <- AV.makeEmptyVar
+  inputVar <- AV.empty
+  finalizeVar <- AV.empty
   let
     producer = do
-      lift $ liftAff $ flip AV.putVar finalizeVar =<< recv (Emitter (flip AV.putVar inputVar))
-      CR.producer $ liftAff $ AV.takeVar inputVar
+      lift $ liftAff $ flip AV.put finalizeVar =<< recv (Emitter (flip AV.put inputVar))
+      CR.producer $ liftAff $ AV.take inputVar
     finalizer = Finalizer do
-      liftAff (attempt (AV.takeVar finalizeVar)) >>= case _ of
+      liftAff (attempt (AV.take finalizeVar)) >>= case _ of
         Left _ -> pure unit
         Right z -> liftAff do
-          AV.killVar (Exn.error "finalized") finalizeVar
+          AV.kill (Exn.error "finalized") finalizeVar
           finalize z
   pure { producer, finalizer }
 
@@ -70,30 +70,30 @@ affEventSource recv = EventSource $ liftAff do
 -- |   from. This also runs if the `Emitter` is `close`d. `mempty` can be used
 -- |   here if there is no clean-up to perform.
 effEventSource
-  :: forall m f eff
-   . MonadAff (avar :: AVAR | eff) m
-  => (Emitter (Eff (avar :: AVAR | eff)) f -> Eff (avar :: AVAR | eff) (Finalizer (Eff (avar :: AVAR | eff))))
+  :: forall m f
+   . MonadAff m
+  => (Emitter Effect f -> Effect (Finalizer Effect))
   -> EventSource m f
 effEventSource =
   affEventSource <<<
-    dimap (hoistEmitter launchAff_) (liftEff <<< map (hoistFinalizer liftEff))
+    dimap
+      (hoistEmitter launchAff_)
+      (liftEffect <<< map (hoistFinalizer liftEffect))
 
 -- | Constructs an event source from an event in the DOM. Accepts a function
 -- | that maps event values to a `Maybe`-wrapped query, allowing it to filter
 -- | events if necessary.
 eventListenerEventSource
-  :: forall m event f eff target
-   . MonadAff (avar :: AVAR, dom :: DOM | eff) m
-  => IsEvent event
-  => EventTarget target
-  => EventType
-  -> target
-  -> (event -> Maybe (f Unit))
+  :: forall m f
+   . MonadAff m
+  => E.EventType
+  -> ET.EventTarget
+  -> (E.Event -> Maybe (f Unit))
   -> EventSource m f
 eventListenerEventSource eventType target f = effEventSource \emitter -> do
-  let listener = eventListener \ev -> maybe (pure unit) (emit emitter <<< pure) (f ev)
-  addEventListener eventType listener false target
-  pure $ Finalizer (removeEventListener eventType listener false target)
+  listener <- ET.eventListener (maybe (pure unit) (emit emitter <<< pure) <<< f)
+  ET.addEventListener eventType listener false target
+  pure $ Finalizer (ET.removeEventListener eventType listener false target)
 
 -- | Changes the query component of an event source.
 interpret :: forall m f g. Functor m => (f ~> g) -> EventSource m f -> EventSource m g

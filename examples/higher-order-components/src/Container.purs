@@ -61,9 +61,9 @@ component =
   eval :: Query ~> H.ParentDSL State Query ChildQuery Slot Void m
   eval = case _ of
     HandleButton (Button.Toggled _) next -> do
-      H.modify (\st -> st { toggleCount = st.toggleCount + 1 })
+      H.modify_ (\st -> st { toggleCount = st.toggleCount + 1 })
       pure next
     CheckButtonState next -> do
       buttonState <- H.query Button $ HOC.liftQuery $ H.request Button.IsOn
-      H.modify (_ { buttonState = buttonState })
+      H.modify_ (_ { buttonState = buttonState })
       pure next

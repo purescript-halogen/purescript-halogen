@@ -40,5 +40,5 @@ component =
   eval :: Query ~> H.ComponentDSL State Query Void m
   eval = case _ of
     ChangeRoute msg next -> do
-      H.modify \st -> { history: st.history `A.snoc` msg }
+      H.modify_ \st -> { history: st.history `A.snoc` msg }
       pure next

@@ -1,13 +1,15 @@
 module Component (State, Query(..), ui) where
 
 import Prelude
-import Control.Monad.Aff (Aff)
+
 import Data.Maybe (Maybe(..))
+import Effect.Aff (Aff)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
 import Network.HTTP.Affjax as AX
+import Network.HTTP.Affjax.Response as AXResponse
 
 type State =
   { loading :: Boolean
@@ -19,7 +21,7 @@ data Query a
   = SetUsername String a
   | MakeRequest a
 
-ui :: forall eff. H.Component HH.HTML Query Unit Void (Aff (ajax :: AX.AJAX | eff))
+ui :: H.Component HH.HTML Query Unit Void Aff
 ui =
   H.component
     { initialState: const initialState
@@ -61,14 +63,14 @@ ui =
               ]
       ]
 
-  eval :: Query ~> H.ComponentDSL State Query Void (Aff (ajax :: AX.AJAX | eff))
+  eval :: Query ~> H.ComponentDSL State Query Void Aff
   eval = case _ of
     SetUsername username next -> do
-      H.modify (_ { username = username, result = Nothing :: Maybe String })
+      H.modify_ (_ { username = username, result = Nothing :: Maybe String })
       pure next
     MakeRequest next -> do
       username <- H.gets _.username
-      H.modify (_ { loading = true })
-      response <- H.liftAff $ AX.get ("https://api.github.com/users/" <> username)
-      H.modify (_ { loading = false, result = Just response.response })
+      H.modify_ (_ { loading = true })
+      response <- H.liftAff $ AX.get AXResponse.string ("https://api.github.com/users/" <> username)
+      H.modify_ (_ { loading = false, result = Just response.response })
       pure next

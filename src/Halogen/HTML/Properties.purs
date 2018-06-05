@@ -66,29 +66,25 @@ module Halogen.HTML.Properties
 
 import Prelude
 
-import Data.Foreign (toForeign)
-import Data.Maybe (Maybe(..))
-import Data.MediaType (MediaType)
-import Data.Newtype (class Newtype, unwrap)
-import Data.String (joinWith)
-
 import DOM.HTML.Indexed (CSSPixel) as I
 import DOM.HTML.Indexed.ButtonType (ButtonType(..)) as I
 import DOM.HTML.Indexed.FormMethod (FormMethod(..)) as I
 import DOM.HTML.Indexed.InputType (InputType(..)) as I
-import DOM.HTML.Indexed.MenuitemType (MenuitemType(..)) as I
 import DOM.HTML.Indexed.MenuType (MenuType(..)) as I
+import DOM.HTML.Indexed.MenuitemType (MenuitemType(..)) as I
 import DOM.HTML.Indexed.OnOff (OnOff(..)) as I
 import DOM.HTML.Indexed.OrderedListType (OrderedListType(..)) as I
 import DOM.HTML.Indexed.PreloadValue (PreloadValue(..)) as I
 import DOM.HTML.Indexed.StepValue (StepValue(..)) as I
-import DOM.Node.Types (Element)
-
+import Data.Maybe (Maybe(..))
+import Data.MediaType (MediaType)
+import Data.Newtype (class Newtype, unwrap)
+import Data.String (joinWith)
 import Halogen.HTML.Core (class IsProp, AttrName(..), ClassName, Namespace, PropName(..), Prop)
 import Halogen.HTML.Core as Core
 import Halogen.Query.InputF (InputF(..), RefLabel)
-
 import Unsafe.Coerce (unsafeCoerce)
+import Web.DOM.Element (Element)
 
 -- | The phantom row `r` can be thought of as a context which is synthesized in
 -- | the course of constructing a refined HTML expression.
@@ -133,7 +129,7 @@ ref :: forall r i. RefLabel -> IProp r i
 ref = (unsafeCoerce :: ((Maybe Element -> Maybe (InputF Unit i)) -> Prop (InputF Unit i)) -> (Maybe Element -> Maybe (InputF Unit i)) -> IProp r i) Core.ref <<< go
   where
   go :: RefLabel -> Maybe Element -> Maybe (InputF Unit i)
-  go p mel = Just $ RefUpdate p (toForeign <$> mel) unit
+  go p mel = Just (RefUpdate p mel unit)
 
 alt :: forall r i. String -> IProp (alt :: String | r) i
 alt = prop (PropName "alt")

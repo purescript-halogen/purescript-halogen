@@ -25,7 +25,7 @@ data Message = Toggled Boolean
 myButton :: forall m. H.Component HH.HTML Query Boolean Message m
 myButton =
   H.component
-    { initialState: id
+    { initialState: identity
     , render
     , eval
     , receiver: const Nothing

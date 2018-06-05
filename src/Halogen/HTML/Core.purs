@@ -19,14 +19,13 @@ module Halogen.HTML.Core
 import Prelude
 
 import Data.Bifunctor (class Bifunctor, bimap, rmap)
-import Data.Generic (class Generic)
 import Data.Maybe (Maybe(..))
 import Data.MediaType (MediaType)
 import Data.Newtype (class Newtype, unwrap)
 import Data.Tuple (Tuple)
 
-import DOM.Node.Types (Element)
-import DOM.Event.Types (Event, EventType)
+import Web.DOM.Element (Element)
+import Web.Event.Event (Event, EventType)
 import DOM.HTML.Indexed.ButtonType (ButtonType, renderButtonType)
 import DOM.HTML.Indexed.CrossOriginValue (CrossOriginValue, renderCrossOriginValue)
 import DOM.HTML.Indexed.DirValue (DirValue, renderDirValue)
@@ -174,7 +173,6 @@ newtype PropName value = PropName String
 derive instance newtypePropName :: Newtype (PropName value) _
 derive newtype instance eqPropName :: Eq (PropName value)
 derive newtype instance ordPropName :: Ord (PropName value)
-derive instance genericPropName :: Generic (PropName value)
 
 -- | A type-safe wrapper for attribute names.
 newtype AttrName = AttrName String
@@ -182,7 +180,6 @@ newtype AttrName = AttrName String
 derive instance newtypeAttrName :: Newtype AttrName _
 derive newtype instance eqAttrName :: Eq AttrName
 derive newtype instance ordAttrName :: Ord AttrName
-derive instance genericAttrName :: Generic AttrName
 
 -- | A wrapper for strings which are used as CSS classes.
 newtype ClassName = ClassName String
@@ -191,4 +188,3 @@ derive instance newtypeClassName :: Newtype ClassName _
 derive newtype instance eqClassName :: Eq ClassName
 derive newtype instance ordClassName :: Ord ClassName
 derive newtype instance semigroupClassName :: Semigroup ClassName
-derive instance genericClassName :: Generic ClassName

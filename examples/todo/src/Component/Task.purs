@@ -3,15 +3,11 @@ module Component.Task where
 import Prelude
 
 import Control.Monad.State as CMS
-
-import Data.Bifunctor (bimap)
 import Data.Maybe (Maybe(..))
-
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
-
 import Model (Task)
 
 -- | The task component query algebra.
@@ -61,10 +57,10 @@ task initialState =
 
   eval :: TaskQuery ~> H.ComponentDSL Task TaskQuery TaskMessage m
   eval (UpdateDescription desc next) = do
-    CMS.modify (_ { description = desc })
+    CMS.modify_ (_ { description = desc })
     pure next
   eval (ToggleCompleted b next) = do
-    CMS.modify (_ { completed = b })
+    CMS.modify_ (_ { completed = b })
     H.raise (Toggled b)
     pure next
   eval (Remove next) = do
