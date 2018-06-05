@@ -26,7 +26,7 @@ import Halogen.Aff.Driver.State (DriverState(..), LifecycleHandlers, unDriverSta
 import Halogen.Data.OrdBox (unOrdBox)
 import Halogen.Query.EventSource as ES
 import Halogen.Query.ForkF as FF
-import Halogen.Query.HalogenM (HalogenAp(..), HalogenF(..), HalogenM(..), SubscriptionId)
+import Halogen.Query.HalogenM (HalogenAp(..), HalogenF(..), HalogenM(..), SubscriptionId(..))
 import Halogen.Query.InputF (InputF(..), RefLabel(..))
 import Unsafe.Reference (unsafeRefEq)
 
@@ -80,8 +80,10 @@ eval render r =
               liftEffect $ Ref.write (DriverState (st { state = state' })) ref
               handleLifecycle lifecycleHandlers (render lifecycleHandlers ref)
               pure a
-    Subscribe sid (ES.EventSource setup) next -> do
-      unsubscribe sid ref
+    Subscribe fes k -> do
+      DriverState { fresh } <- liftEffect (Ref.read ref)
+      sid <- liftEffect $ Ref.modify' (\i -> { state: i + 1, value: SubscriptionId i }) fresh
+      let (ES.EventSource setup) = fes sid
       DriverState ({ subscriptions }) <- liftEffect (Ref.read ref)
       _ ← fork do
         { producer, finalizer } <- setup
@@ -99,7 +101,7 @@ eval render r =
         liftEffect $ Ref.modify_ (map (M.insert sid done)) subscriptions
         CR.runProcess (consumer `CR.pullFrom` producer)
         ES.finalize done
-      pure next
+      pure (k sid)
     Unsubscribe sid next -> do
       unsubscribe sid ref
       pure next

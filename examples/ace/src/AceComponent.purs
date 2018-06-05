@@ -61,7 +61,7 @@ aceComponent =
           editor <- H.liftEffect $ Ace.editNode el' Ace.ace
           session <- H.liftEffect $ Editor.getSession editor
           H.modify_ (_ { editor = Just editor })
-          H.subscribe changeSubscription $ ES.effEventSource \emitter -> do
+          void $ H.subscribe $ ES.effEventSource \emitter -> do
             Session.onChange session (ES.emit emitter HandleChange)
             pure mempty
       pure next
@@ -88,7 +88,3 @@ aceComponent =
           text <- H.liftEffect (Editor.getValue editor)
           H.raise $ TextChanged text
       pure next
-
-  -- | The subscription ID for the editor change listener
-  changeSubscription :: H.SubscriptionId
-  changeSubscription = H.SubscriptionId "change"

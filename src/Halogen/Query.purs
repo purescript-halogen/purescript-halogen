@@ -27,7 +27,7 @@ import Data.Tuple (Tuple(..))
 import Effect.Aff.Class (liftAff) as Exports
 import Effect.Class (liftEffect) as Exports
 import Halogen.Component.ChildPath (ChildPath, injSlot, prjSlot, injQuery, cpI)
-import Halogen.Query.HalogenM (HalogenM(..), HalogenF(..), SubscriptionId(..), fork, getRef, getSlots, checkSlot, mkQuery, subscribe, unsubscribe, raise)
+import Halogen.Query.HalogenM (HalogenM(..), HalogenF(..), SubscriptionId, fork, getRef, getSlots, checkSlot, mkQuery, subscribe, subscribe', unsubscribe, raise)
 import Halogen.Query.InputF (RefLabel(..))
 import Web.HTML.HTMLElement (HTMLElement)
 import Web.HTML.HTMLElement as HTMLElement

@@ -64,6 +64,7 @@ type DriverStateRec h r s f z g p i o =
   , pendingHandlers :: Ref (Maybe (List (Aff Unit)))
   , rendering :: Maybe (r s z g p o)
   , prjQuery :: forall x. f x -> Maybe (z x)
+  , fresh :: Ref Int
   , subscriptions :: Ref (Maybe (M.Map SubscriptionId (Finalizer Aff)))
   , lifecycleHandlers :: Ref LifecycleHandlers
   }
@@ -139,6 +140,7 @@ initDriverState component input handler prjQuery lchs = do
   pendingQueries <- Ref.new (component.initializer $> Nil)
   pendingOuts <- Ref.new (Just Nil)
   pendingHandlers <- Ref.new Nothing
+  fresh <- Ref.new 1
   subscriptions <- Ref.new (Just M.empty)
   let
     ds :: DriverStateRec h r s f z g p i o
@@ -156,6 +158,7 @@ initDriverState component input handler prjQuery lchs = do
       , pendingHandlers
       , rendering: Nothing
       , prjQuery
+      , fresh
       , subscriptions
       , lifecycleHandlers: lchs
       }

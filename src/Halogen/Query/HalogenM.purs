@@ -24,16 +24,15 @@ import Halogen.Query.ForkF as FF
 import Halogen.Query.InputF (RefLabel)
 import Web.DOM (Element)
 
-newtype SubscriptionId = SubscriptionId String
+newtype SubscriptionId = SubscriptionId Int
 
 derive newtype instance eqSubscriptionId :: Eq SubscriptionId
 derive newtype instance ordSubscriptionId :: Ord SubscriptionId
-derive instance newtypeSubscriptionId :: Newtype SubscriptionId _
 
 -- | The Halogen component algebra
 data HalogenF s (f :: Type -> Type) g p o m a
   = State (s -> Tuple a s)
-  | Subscribe SubscriptionId (ES.EventSource m f) a
+  | Subscribe (SubscriptionId -> ES.EventSource m f) (SubscriptionId -> a)
   | Unsubscribe SubscriptionId a
   | Lift (m a)
   | Halt String
@@ -48,7 +47,7 @@ data HalogenF s (f :: Type -> Type) g p o m a
 instance functorHalogenF :: Functor m => Functor (HalogenF s f g p o m) where
   map f = case _ of
     State k -> State (lmap f <<< k)
-    Subscribe sid es a -> Subscribe sid es (f a)
+    Subscribe fes a -> Subscribe fes (map f a)
     Unsubscribe sid a -> Unsubscribe sid (f a)
     Lift q -> Lift (map f q)
     Halt msg -> Halt msg
@@ -131,10 +130,17 @@ checkSlot p = HalogenM $ liftF $ CheckSlot p identity
 getRef :: forall s f g p o m. RefLabel -> HalogenM s f g p o m (Maybe Element)
 getRef p = HalogenM $ liftF $ GetRef p identity
 
--- | Provides a way of having a component subscribe to an `EventSource` from
--- | within an `Eval` function.
-subscribe :: forall s f g p o m. SubscriptionId -> ES.EventSource m f -> HalogenM s f g p o m Unit
-subscribe sid es = HalogenM $ liftF $ Subscribe sid es unit
+-- | Subscribes a component to an `EventSource`.
+subscribe :: forall s f g p o m. ES.EventSource m f -> HalogenM s f g p o m SubscriptionId
+subscribe es = HalogenM $ liftF $ Subscribe (\_ -> es) identity
+
+-- | An alternative to `subscribe`, intended for subscriptions that unsubscribe
+-- | themselves. Instead of returning the `SubscriptionId` from `subscribe'`, it
+-- | is passed into an `EventSource` constructor. This allows emitted queries
+-- | to include the `SubscriptionId`, rather than storing it in the state of the
+-- | component.
+subscribe' :: forall s f g p o m. (SubscriptionId -> ES.EventSource m f) -> HalogenM s f g p o m Unit
+subscribe' esc = HalogenM $ liftF $ Subscribe esc (const unit)
 
 unsubscribe :: forall s f g p o m. SubscriptionId -> HalogenM s f g p o m Unit
 unsubscribe sid = HalogenM $ liftF $ Unsubscribe sid unit
@@ -157,7 +163,7 @@ imapState f f' (HalogenM h) = HalogenM (hoistFree go h)
   go :: HalogenF s f g p o m ~> HalogenF s' f g p o m
   go = case _ of
     State fs -> State (map f <<< fs <<< f')
-    Subscribe sid es a -> Subscribe sid es a
+    Subscribe fes a -> Subscribe fes a
     Unsubscribe sid a -> Unsubscribe sid a
     Lift q -> Lift q
     Halt msg -> Halt msg
@@ -180,7 +186,7 @@ mapQuery nat (HalogenM h) = HalogenM (hoistFree go h)
   go :: HalogenF s f g p o m ~> HalogenF s f' g p o m
   go = case _ of
     State f -> State f
-    Subscribe sid es a -> Subscribe sid (ES.interpret nat es) a
+    Subscribe fes a -> Subscribe (ES.interpret nat <<< fes) a
     Unsubscribe sid a -> Unsubscribe sid a
     Lift q -> Lift q
     Halt msg -> Halt msg
@@ -202,7 +208,7 @@ mapChildQuery nat (HalogenM h) = HalogenM (hoistFree go h)
   go :: HalogenF s f g p o m ~> HalogenF s f g' p o m
   go = case _ of
     State f -> State f
-    Subscribe sid es a -> Subscribe sid es a
+    Subscribe fes a -> Subscribe fes a
     Unsubscribe sid a -> Unsubscribe sid a
     Lift q -> Lift q
     Halt msg -> Halt msg
@@ -225,7 +231,7 @@ imapSlots f f' (HalogenM h) = HalogenM (hoistFree go h)
   go :: HalogenF s f g p o m ~> HalogenF s f g p' o m
   go = case _ of
     State fs -> State fs
-    Subscribe sid es a -> Subscribe sid es a
+    Subscribe fes a -> Subscribe fes a
     Unsubscribe sid a -> Unsubscribe sid a
     Lift q -> Lift q
     Halt msg -> Halt msg
@@ -247,7 +253,7 @@ mapOutput f (HalogenM h) = HalogenM (hoistFree go h)
   go :: HalogenF s f g p o m ~> HalogenF s f g p o' m
   go = case _ of
     State fs -> State fs
-    Subscribe sid es a -> Subscribe sid es a
+    Subscribe fes a -> Subscribe fes a
     Unsubscribe sid a -> Unsubscribe sid a
     Lift q -> Lift q
     Halt msg -> Halt msg
@@ -270,7 +276,7 @@ hoist nat (HalogenM fa) = HalogenM (hoistFree go fa)
   go :: HalogenF s f g p o m ~> HalogenF s f g p o m'
   go = case _ of
     State f -> State f
-    Subscribe sid es a -> Subscribe sid (ES.hoist nat es) a
+    Subscribe fes a -> Subscribe (ES.hoist nat <<< fes) a
     Unsubscribe sid a -> Unsubscribe sid a
     Lift q -> Lift (nat q)
     Halt msg -> Halt msg

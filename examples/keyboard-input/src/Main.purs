@@ -26,7 +26,7 @@ initialState = { chars : "" }
 
 data Query a
   = Init a
-  | HandleKey KeyboardEvent a
+  | HandleKey H.SubscriptionId KeyboardEvent a
 
 type DSL = H.ComponentDSL State Query Void Aff
 
@@ -54,13 +54,13 @@ ui =
   eval = case _ of
     Init next -> do
       document <- H.liftEffect $ DOM.document =<< DOM.window
-      H.subscribe keyboardSubscription $
+      H.subscribe' \sid ->
         ES.eventListenerEventSource
           KET.keyup
           (HTMLDocument.toEventTarget document)
-          (map (H.action <<< HandleKey) <<< KE.fromEvent)
+          (map (H.action <<< HandleKey sid) <<< KE.fromEvent)
       pure next
-    HandleKey ev next
+    HandleKey sid ev next
       | KE.shiftKey ev -> do
           H.liftEffect $ E.preventDefault (KE.toEvent ev)
           let char = KE.key ev
@@ -70,13 +70,10 @@ ui =
       | KE.key ev == "Enter" -> do
           H.liftEffect $ E.preventDefault (KE.toEvent ev)
           H.modify_ (_ { chars = "" })
-          H.unsubscribe keyboardSubscription
+          H.unsubscribe sid
           pure next
       | otherwise ->
           pure next
-
-keyboardSubscription :: H.SubscriptionId
-keyboardSubscription = H.SubscriptionId "keyboard"
 
 main :: Effect Unit
 main = HA.runHalogenAff do
