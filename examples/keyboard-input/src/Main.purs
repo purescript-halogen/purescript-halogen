@@ -9,6 +9,7 @@ import Effect.Aff (Aff)
 import Halogen as H
 import Halogen.Aff as HA
 import Halogen.HTML as HH
+import Halogen.Query.EventSource as ES
 import Halogen.VDom.Driver (runUI)
 import Web.Event.Event as E
 import Web.HTML (window) as DOM
@@ -54,7 +55,7 @@ ui =
     Init next -> do
       document <- H.liftEffect $ DOM.document =<< DOM.window
       H.subscribe keyboardSubscription $
-        H.eventListenerEventSource
+        ES.eventListenerEventSource
           KET.keyup
           (HTMLDocument.toEventTarget document)
           (map (H.action <<< HandleKey) <<< KE.fromEvent)

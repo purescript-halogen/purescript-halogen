@@ -11,7 +11,6 @@ module Halogen.Query
   , queryAll'
   , getHTMLElementRef
   , module Exports
-  , module Halogen.Query.EventSource
   , module Halogen.Query.InputF
   , module Halogen.Query.HalogenM
   ) where
@@ -28,7 +27,6 @@ import Data.Tuple (Tuple(..))
 import Effect.Aff.Class (liftAff) as Exports
 import Effect.Class (liftEffect) as Exports
 import Halogen.Component.ChildPath (ChildPath, injSlot, prjSlot, injQuery, cpI)
-import Halogen.Query.EventSource (EventSource, affEventSource, effEventSource, eventListenerEventSource)
 import Halogen.Query.HalogenM (HalogenM(..), HalogenF(..), SubscriptionId(..), fork, getRef, getSlots, checkSlot, mkQuery, subscribe, unsubscribe, raise)
 import Halogen.Query.InputF (RefLabel(..))
 import Web.HTML.HTMLElement (HTMLElement)
