@@ -17,8 +17,7 @@ import Web.HTML.HTMLDocument as HTMLDocument
 import Web.HTML.Window (document) as Web
 import Web.UIEvent.KeyboardEvent (KeyboardEvent)
 import Web.UIEvent.KeyboardEvent as KE
-import Web.UIEvent.KeyboardEvent as KEV
-import Web.UIEvent.KeyboardEvent.EventTypes as ET
+import Web.UIEvent.KeyboardEvent.EventTypes as KET
 
 type State = { chars :: String }
 
@@ -27,10 +26,7 @@ initialState = { chars : "" }
 
 data Query a
   = Init a
-  | HandleKey KeyboardEvent a
-
-keyboardSubscription :: H.SubscriptionId
-keyboardSubscription = H.SubscriptionId "keyboard"
+  | HandleKey H.SubscriptionId KeyboardEvent a
 
 type DSL = H.HalogenM State Query () Void Aff
 
@@ -57,23 +53,24 @@ ui =
   eval :: Query ~> DSL
   eval = case _ of
     Init next -> do
-      document <- H.liftEffect $ Web.window >>= Web.document
-      H.subscribe keyboardSubscription $ ES.eventListenerEventSource
-        ET.keyup
-        (HTMLDocument.toEventTarget document)
-        (map (flip HandleKey unit) <<< KEV.fromEvent)
+      document <- H.liftEffect $ Web.document =<< Web.window
+      H.subscribe' \sid ->
+        ES.eventListenerEventSource
+          KET.keyup
+          (HTMLDocument.toEventTarget document)
+          (map (H.action <<< HandleKey sid) <<< KE.fromEvent)
       pure next
-    HandleKey ev next
+    HandleKey sid ev next
       | KE.shiftKey ev -> do
-          H.liftEffect $ E.preventDefault $ KEV.toEvent ev
+          H.liftEffect $ E.preventDefault (KE.toEvent ev)
           let char = KE.key ev
           when (String.length char == 1) do
             H.modify_ (\st -> st { chars = st.chars <> char })
           pure next
       | KE.key ev == "Enter" -> do
-          H.liftEffect $ E.preventDefault $ KEV.toEvent ev
+          H.liftEffect $ E.preventDefault (KE.toEvent ev)
           H.modify_ (_ { chars = "" })
-          H.unsubscribe keyboardSubscription
+          H.unsubscribe sid
           pure next
       | otherwise ->
           pure next

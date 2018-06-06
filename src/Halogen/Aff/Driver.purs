@@ -30,6 +30,7 @@ import Halogen.Aff.Driver.Eval (eval, handleLifecycle, queuingHandler)
 import Halogen.Aff.Driver.State (DriverState(..), DriverStateRef(..), DriverStateX, LifecycleHandlers, RenderStateX, initDriverState, renderStateX, renderStateX_, unDriverStateX)
 import Halogen.Component (Component, ComponentSlot, unComponent, unComponentSlot)
 import Halogen.Data.Slot as Slot
+import Halogen.Query.EventSource as ES
 import Halogen.Query.InputF (InputF(..))
 
 -- | `RenderSpec` allows for alternative driver implementations without the need
@@ -223,6 +224,7 @@ runUI renderSpec component i = do
         , pendingQueries: ds'.pendingQueries
         , pendingOuts: ds'.pendingOuts
         , pendingHandlers: ds'.pendingHandlers
+        , fresh: ds'.fresh
         , subscriptions: ds'.subscriptions
         , lifecycleHandlers: ds'.lifecycleHandlers
         }) ds.selfRef
@@ -299,7 +301,7 @@ runUI renderSpec component i = do
      . DriverState h r s' f' ps' i' o'
     -> Effect Unit
   cleanupSubscriptions (DriverState ds) = do
-    traverse_ (handleAff <<< traverse_ fork) =<< Ref.read ds.subscriptions
+    traverse_ (handleAff <<< traverse_ (fork <<< ES.finalize)) =<< Ref.read ds.subscriptions
     Ref.write Nothing ds.subscriptions
 
   finalize

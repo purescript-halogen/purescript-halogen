@@ -8,6 +8,7 @@ import Control.Monad.Trans.Class (lift)
 import Data.Bifunctor (lmap)
 import Data.Either (Either(..))
 import Data.Maybe (Maybe, maybe)
+import Data.Newtype (class Newtype)
 import Data.Profunctor (dimap)
 import Effect (Effect)
 import Effect.Aff (Aff, attempt, launchAff_)
@@ -15,17 +16,20 @@ import Effect.Aff.AVar as AV
 import Effect.Aff.Class (class MonadAff, liftAff)
 import Effect.Class (liftEffect)
 import Effect.Exception as Exn
-import Web.Event.Event (Event, EventType)
-import Web.Event.EventTarget (EventTarget, addEventListener, removeEventListener, eventListener)
+import Web.Event.Event as E
+import Web.Event.EventTarget as ET
 
 -- | An event source definition - an effect in `m` that when run returns a
 -- | producer coroutine that emits queries of type `f`, and runs in the effect
 -- | monad `m`.
 -- |
 -- | It's generally unnecessary to build values of this type directly with this
--- | constructor, the `affEventSource` and `effEventSource` cover the most
--- | event source constructions.
-newtype EventSource m f = EventSource (m { producer :: CR.Producer (f Unit) m Unit, finalizer :: Finalizer m })
+-- | constructor, the `affEventSource`, `effectEventSource`, and
+-- | `eventListenerEventSource` cover most event source constructions.
+newtype EventSource m f =
+  EventSource (m { producer :: CR.Producer (f Unit) m Unit, finalizer :: Finalizer m })
+
+derive instance newtypeEventSource :: Newtype (EventSource m f) _
 
 -- | Constructs an event source from a setup function that operates in `Aff`.
 -- |
@@ -72,7 +76,9 @@ effectEventSource
   -> EventSource m f
 effectEventSource =
   affEventSource <<<
-    dimap (hoistEmitter launchAff_) (liftEffect <<< map (hoistFinalizer liftEffect))
+    dimap
+      (hoistEmitter launchAff_)
+      (liftEffect <<< map (hoistFinalizer liftEffect))
 
 -- | Constructs an event source from an event in the DOM. Accepts a function
 -- | that maps event values to a `Maybe`-wrapped query, allowing it to filter
@@ -80,14 +86,14 @@ effectEventSource =
 eventListenerEventSource
   :: forall m f
    . MonadAff m
-  => EventType
-  -> EventTarget
-  -> (Event -> Maybe (f Unit))
+  => E.EventType
+  -> ET.EventTarget
+  -> (E.Event -> Maybe (f Unit))
   -> EventSource m f
 eventListenerEventSource eventType target f = effectEventSource \emitter -> do
-  listener <- eventListener \ev -> maybe (pure unit) (emit emitter <<< pure) (f ev)
-  addEventListener eventType listener false target
-  pure $ Finalizer (removeEventListener eventType listener false target)
+  listener <- ET.eventListener (maybe (pure unit) (emit emitter <<< pure) <<< f)
+  ET.addEventListener eventType listener false target
+  pure $ Finalizer (ET.removeEventListener eventType listener false target)
 
 -- | Changes the query component of an event source.
 interpret :: forall m f g. Functor m => (f ~> g) -> EventSource m f -> EventSource m g
@@ -106,12 +112,16 @@ hoist nat (EventSource es) =
       (nat es)
 
 -- | Values of this type are created internally by `affEventSource` and
--- | `effEventSource`, and then passed into the user-provided setup function.
+-- | `effectEventSource`, and then passed into the user-provided setup function.
 -- |
 -- | This type is just a wrapper around a callback, used to simplify the type
 -- | signatures for setting up event sources.
 newtype Emitter m f = Emitter (Either (f Unit) Unit -> m Unit)
 
+-- | Emits an "action style" query via the emitter. Accepts a partially applied
+-- | query constructor to save having to use `H.action` or applying `unit` when
+-- | constructing the query, for example:
+-- |
 -- | ``` purescript
 -- | data Query a = Notify String a
 -- |

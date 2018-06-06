@@ -26,6 +26,7 @@ import Effect.Ref as Ref
 import Halogen.Component (ComponentSpec)
 import Halogen.Data.Slot (SlotStorage)
 import Halogen.Data.Slot as SlotStorage
+import Halogen.Query.EventSource (Finalizer)
 import Halogen.Query.HalogenM (SubscriptionId)
 import Unsafe.Coerce (unsafeCoerce)
 import Web.DOM (Element)
@@ -63,7 +64,8 @@ type DriverStateRec h r s f ps i o =
   , pendingOuts :: Ref (Maybe (List (Aff Unit)))
   , pendingHandlers :: Ref (Maybe (List (Aff Unit)))
   , rendering :: Maybe (r s f ps o)
-  , subscriptions :: Ref (Maybe (M.Map SubscriptionId (Aff Unit)))
+  , fresh :: Ref Int
+  , subscriptions :: Ref (Maybe (M.Map SubscriptionId (Finalizer Aff)))
   , lifecycleHandlers :: Ref LifecycleHandlers
   }
 
@@ -136,11 +138,12 @@ initDriverState component input handler lchs = do
   selfRef <- Ref.new (unsafeCoerce {})
   childrenIn <- Ref.new SlotStorage.empty
   childrenOut <- Ref.new SlotStorage.empty
+  handlerRef <- Ref.new handler
   pendingQueries <- Ref.new (component.initializer $> Nil)
   pendingOuts <- Ref.new (Just Nil)
   pendingHandlers <- Ref.new Nothing
+  fresh <- Ref.new 1
   subscriptions <- Ref.new (Just M.empty)
-  handlerRef <- Ref.new handler
   let
     ds :: DriverStateRec h r s f ps i o
     ds =
@@ -156,6 +159,7 @@ initDriverState component input handler lchs = do
       , pendingOuts
       , pendingHandlers
       , rendering: Nothing
+      , fresh
       , subscriptions
       , lifecycleHandlers: lchs
       }

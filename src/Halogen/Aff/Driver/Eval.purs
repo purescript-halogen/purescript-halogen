@@ -9,7 +9,7 @@ import Control.Monad.Fork.Class (fork)
 import Control.Monad.Free (foldFree)
 import Control.Monad.Trans.Class (lift)
 import Control.Parallel (parSequence_, parallel, sequential)
-import Data.Foldable (sequence_, traverse_)
+import Data.Foldable (traverse_)
 import Data.List (List, (:))
 import Data.List as L
 import Data.Map as M
@@ -22,10 +22,9 @@ import Effect.Exception (error)
 import Effect.Ref (Ref)
 import Effect.Ref as Ref
 import Halogen.Aff.Driver.State (DriverState(..), DriverStateRef(..), LifecycleHandlers, unDriverStateX)
-import Halogen.Query.EventSource (finalize)
 import Halogen.Query.EventSource as ES
 import Halogen.Query.ForkF as FF
-import Halogen.Query.HalogenM (HalogenAp(..), HalogenF(..), HalogenM(..), QueryBox, UnpackQuery(..), SubscriptionId, unQuery)
+import Halogen.Query.HalogenM (HalogenAp(..), HalogenF(..), HalogenM(..), QueryBox, UnpackQuery(..), SubscriptionId(..), unQuery)
 import Halogen.Query.InputF (InputF(..), RefLabel(..))
 import Unsafe.Reference (unsafeRefEq)
 
@@ -79,16 +78,18 @@ eval render r =
               liftEffect $ Ref.write (DriverState (st { state = state' })) ref
               handleLifecycle lifecycleHandlers (render lifecycleHandlers ref)
               pure a
-    Subscribe sid (ES.EventSource setup) next -> do
-      unsubscribe sid ref
+    Subscribe fes k -> do
+      DriverState { fresh } <- liftEffect (Ref.read ref)
+      sid <- liftEffect $ Ref.modify' (\i -> { state: i + 1, value: SubscriptionId i }) fresh
+      let (ES.EventSource setup) = fes sid
       DriverState ({ subscriptions }) <- liftEffect (Ref.read ref)
       _ ← fork do
         { producer, finalizer } <- setup
         let
-          done = do
+          done = ES.Finalizer do
             subs <- liftEffect $ Ref.read subscriptions
             liftEffect $ Ref.modify_ (map (M.delete sid)) subscriptions
-            when (maybe false (M.member sid) subs) (finalize finalizer)
+            when (maybe false (M.member sid) subs) (ES.finalize finalizer)
           consumer = do
             q <- CR.await
             subs <- lift $ liftEffect (Ref.read subscriptions)
@@ -97,8 +98,8 @@ eval render r =
               consumer
         liftEffect $ Ref.modify_ (map (M.insert sid done)) subscriptions
         CR.runProcess (consumer `CR.pullFrom` producer)
-        done
-      pure next
+        ES.finalize done
+      pure (k sid)
     Unsubscribe sid next -> do
       unsubscribe sid ref
       pure next
@@ -162,7 +163,7 @@ eval render r =
   unsubscribe sid ref = do
     DriverState ({ subscriptions }) <- liftEffect (Ref.read ref)
     subs <- liftEffect (Ref.read subscriptions)
-    sequence_ (M.lookup sid =<< subs)
+    traverse_ ES.finalize (M.lookup sid =<< subs)
 
 queuingHandler
   :: forall a

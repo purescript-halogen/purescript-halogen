@@ -7,7 +7,6 @@ module Halogen.Query
   , request
   , getHTMLElementRef
   , module Exports
-  , module Halogen.Query.EventSource
   , module Halogen.Query.InputF
   , module Halogen.Query.HalogenM
   ) where
@@ -19,9 +18,7 @@ import Control.Monad.Trans.Class (lift) as Exports
 import Data.Maybe (Maybe)
 import Effect.Aff.Class (liftAff) as Exports
 import Effect.Class (liftEffect) as Exports
-import Halogen.Query.EventSource (EventSource, affEventSource, effectEventSource)
-import Halogen.Query.HalogenM (HalogenM(..), HalogenF(..), SubscriptionId(..), fork, getRef, query, queryAll)
-import Halogen.Query.HalogenM (subscribe, unsubscribe, raise) as Exports
+import Halogen.Query.HalogenM (HalogenM(..), HalogenF(..), SubscriptionId, fork, getRef, query, queryAll, subscribe, subscribe', unsubscribe, raise)
 import Halogen.Query.InputF (RefLabel(..))
 import Web.HTML.HTMLElement (HTMLElement)
 import Web.HTML.HTMLElement as HTMLElement
