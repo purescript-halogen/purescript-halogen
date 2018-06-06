@@ -3,14 +3,15 @@ module AceComponent (AceQuery(..), AceOutput(..), aceComponent) where
 import Prelude
 
 import Ace as Ace
-import Ace.EditSession as Session
 import Ace.Editor as Editor
+import Ace.EditSession as Session
 import Ace.Types (Editor)
 import Data.Maybe (Maybe(..))
 import Effect.Aff (Aff)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Properties as HP
+import Halogen.Query.EventSource as ES
 
 -- | The state for the ace component - we only need a reference to the editor,
 -- | as Ace editor has its own internal state that we can query instead of
@@ -22,7 +23,7 @@ data AceQuery a
   = Initialize a
   | Finalize a
   | ChangeText String a
-  | HandleChange (H.SubscribeStatus -> a)
+  | HandleChange a
 
 data AceOutput = TextChanged String
 
@@ -60,7 +61,9 @@ aceComponent =
           editor <- H.liftEffect $ Ace.editNode el' Ace.ace
           session <- H.liftEffect $ Editor.getSession editor
           H.modify_ (_ { editor = Just editor })
-          H.subscribe $ H.eventSource_ (Session.onChange session) (H.request HandleChange)
+          void $ H.subscribe $ ES.effEventSource \emitter -> do
+            Session.onChange session (ES.emit emitter HandleChange)
+            pure mempty
       pure next
     Finalize next -> do
       -- Release the reference to the editor and do any other cleanup that a
@@ -77,11 +80,11 @@ aceComponent =
             void $ H.liftEffect $ Editor.setValue text Nothing editor
       H.raise $ TextChanged text
       pure next
-    HandleChange reply -> do
+    HandleChange next -> do
       maybeEditor <- H.gets _.editor
       case maybeEditor of
         Nothing -> pure unit
         Just editor -> do
           text <- H.liftEffect (Editor.getValue editor)
           H.raise $ TextChanged text
-      pure (reply H.Listening)
+      pure next

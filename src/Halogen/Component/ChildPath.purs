@@ -9,7 +9,6 @@ import Data.Lens (Prism', review, preview)
 import Data.Lens.Prism.Coproduct as PC
 import Data.Lens.Prism.Either as PE
 import Data.Maybe (Maybe)
-
 import Halogen.Data.Prism (type (<\/>), type (\/), _Coproduct1, _Coproduct10, _Coproduct2, _Coproduct3, _Coproduct4, _Coproduct5, _Coproduct6, _Coproduct7, _Coproduct8, _Coproduct9, _Either1, _Either10, _Either2, _Either3, _Either4, _Either5, _Either6, _Either7, _Either8, _Either9)
 
 -- | Represents a path through `Either` and `Coproduct` types for the state,

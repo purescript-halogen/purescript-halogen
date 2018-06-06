@@ -11,12 +11,13 @@ import Halogen.Aff as HA
 import Halogen.HTML as HH
 import Halogen.Query.EventSource as ES
 import Halogen.VDom.Driver (runUI)
-import Keyboard as K
 import Web.Event.Event as E
 import Web.HTML (window) as DOM
+import Web.HTML.HTMLDocument as HTMLDocument
 import Web.HTML.Window (document) as DOM
 import Web.UIEvent.KeyboardEvent (KeyboardEvent)
 import Web.UIEvent.KeyboardEvent as KE
+import Web.UIEvent.KeyboardEvent.EventTypes as KET
 
 type State = { chars :: String }
 
@@ -25,7 +26,7 @@ initialState = { chars : "" }
 
 data Query a
   = Init a
-  | HandleKey KeyboardEvent (H.SubscribeStatus -> a)
+  | HandleKey H.SubscriptionId KeyboardEvent a
 
 type DSL = H.ComponentDSL State Query Void Aff
 
@@ -50,23 +51,29 @@ ui =
       ]
 
   eval :: Query ~> DSL
-  eval (Init next) = do
-    document <- H.liftEffect $ DOM.document =<< DOM.window
-    H.subscribe $ ES.eventSource' (K.onKeyUp document) (Just <<< H.request <<< HandleKey)
-    pure next
-  eval (HandleKey ev reply)
-    | KE.shiftKey ev = do
-        H.liftEffect $ E.preventDefault (KE.toEvent ev)
-        let char = KE.key ev
-        when (String.length char == 1) do
-          H.modify_ (\st -> st { chars = st.chars <> char })
-        pure (reply H.Listening)
-    | KE.key ev == "Enter" = do
-        H.liftEffect $ E.preventDefault (KE.toEvent ev)
-        H.modify_ (_ { chars = "" })
-        pure (reply H.Done)
-    | otherwise =
-        pure (reply H.Listening)
+  eval = case _ of
+    Init next -> do
+      document <- H.liftEffect $ DOM.document =<< DOM.window
+      H.subscribe' \sid ->
+        ES.eventListenerEventSource
+          KET.keyup
+          (HTMLDocument.toEventTarget document)
+          (map (H.action <<< HandleKey sid) <<< KE.fromEvent)
+      pure next
+    HandleKey sid ev next
+      | KE.shiftKey ev -> do
+          H.liftEffect $ E.preventDefault (KE.toEvent ev)
+          let char = KE.key ev
+          when (String.length char == 1) do
+            H.modify_ (\st -> st { chars = st.chars <> char })
+          pure next
+      | KE.key ev == "Enter" -> do
+          H.liftEffect $ E.preventDefault (KE.toEvent ev)
+          H.modify_ (_ { chars = "" })
+          H.unsubscribe sid
+          pure next
+      | otherwise ->
+          pure next
 
 main :: Effect Unit
 main = HA.runHalogenAff do

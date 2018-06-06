@@ -24,6 +24,8 @@ import Effect.Ref (Ref)
 import Effect.Ref as Ref
 import Halogen.Component (Component')
 import Halogen.Data.OrdBox (OrdBox)
+import Halogen.Query.EventSource (Finalizer)
+import Halogen.Query.HalogenM (SubscriptionId)
 import Unsafe.Coerce (unsafeCoerce)
 import Web.DOM (Element)
 
@@ -63,7 +65,7 @@ type DriverStateRec h r s f z g p i o =
   , rendering :: Maybe (r s z g p o)
   , prjQuery :: forall x. f x -> Maybe (z x)
   , fresh :: Ref Int
-  , subscriptions :: Ref (Maybe (M.Map Int (Aff Unit)))
+  , subscriptions :: Ref (Maybe (M.Map SubscriptionId (Finalizer Aff)))
   , lifecycleHandlers :: Ref LifecycleHandlers
   }
 
@@ -138,7 +140,7 @@ initDriverState component input handler prjQuery lchs = do
   pendingQueries <- Ref.new (component.initializer $> Nil)
   pendingOuts <- Ref.new (Just Nil)
   pendingHandlers <- Ref.new Nothing
-  fresh <- Ref.new 0
+  fresh <- Ref.new 1
   subscriptions <- Ref.new (Just M.empty)
   let
     ds :: DriverStateRec h r s f z g p i o
