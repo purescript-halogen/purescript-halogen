@@ -2,9 +2,10 @@ module Child where
 
 import Prelude
 
+import Data.Maybe (Maybe(..))
+import Data.Symbol (SProxy(..))
 import Effect.Aff (Aff)
 import Effect.Console (log)
-import Data.Maybe (Maybe(..))
 import Halogen as H
 import Halogen.HTML as HH
 
@@ -20,8 +21,14 @@ data Message
 
 type Slot = Unit
 
+type ChildSlots =
+  ( cell :: H.Slot Query Message Int
+  )
+
+_cell = SProxy :: SProxy "cell"
+
 child :: Int -> H.Component HH.HTML Query Unit Message Aff
-child initialState = H.lifecycleParentComponent
+child initialState = H.component
   { initialState: const initialState
   , render
   , eval
@@ -30,19 +37,18 @@ child initialState = H.lifecycleParentComponent
   , receiver: const Nothing
   }
   where
-
-  render :: Int -> H.ParentHTML Query Query Int Aff
+  render :: Int -> H.ComponentHTML Query ChildSlots Aff
   render id =
     HH.div_
       [ HH.text ("Child " <> show id)
       , HH.ul_
-        [ HH.slot 0 (cell 0) unit (listen 0)
-        , HH.slot 1 (cell 1) unit (listen 1)
-        , HH.slot 2 (cell 2) unit (listen 2)
+        [ HH.slot _cell 0 (cell 0) unit (listen 0)
+        , HH.slot _cell 1 (cell 1) unit (listen 1)
+        , HH.slot _cell 2 (cell 2) unit (listen 2)
         ]
       ]
 
-  eval :: Query ~> H.ParentDSL Int Query Query Int Message Aff
+  eval :: Query ~> H.HalogenM Int Query ChildSlots Message Aff
   eval (Initialize next) = do
     id <- H.get
     H.liftEffect $ log ("Initialize Child " <> show id)
@@ -66,7 +72,7 @@ child initialState = H.lifecycleParentComponent
     Reported msg -> H.action $ Report ("Re-reporting from cell" <> show i <> ": " <> msg)
 
 cell :: Int -> H.Component HH.HTML Query Unit Message Aff
-cell initialState = H.lifecycleComponent
+cell initialState = H.component
   { initialState: const initialState
   , render
   , eval
@@ -76,11 +82,11 @@ cell initialState = H.lifecycleComponent
   }
   where
 
-  render :: Int -> H.ComponentHTML Query
+  render :: forall f m. Int -> H.ComponentHTML f () m
   render id =
     HH.li_ [ HH.text ("Cell " <> show id) ]
 
-  eval :: Query ~> H.ComponentDSL Int Query Message Aff
+  eval :: Query ~> H.HalogenM Int Query () Message Aff
   eval (Initialize next) = do
     id <- H.get
     H.liftEffect $ log ("Initialize Cell " <> show id)

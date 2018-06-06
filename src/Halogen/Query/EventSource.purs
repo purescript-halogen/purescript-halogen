@@ -24,8 +24,8 @@ import Web.Event.EventTarget as ET
 -- | monad `m`.
 -- |
 -- | It's generally unnecessary to build values of this type directly with this
--- | constructor, the `affEventSource` and `effEventSource` cover the most
--- | event source constructions.
+-- | constructor, the `affEventSource`, `effectEventSource`, and
+-- | `eventListenerEventSource` cover most event source constructions.
 newtype EventSource m f =
   EventSource (m { producer :: CR.Producer (f Unit) m Unit, finalizer :: Finalizer m })
 
@@ -69,12 +69,12 @@ affEventSource recv = EventSource $ liftAff do
 -- |   some clean-up action to be taken when the event source is unsubscribed
 -- |   from. This also runs if the `Emitter` is `close`d. `mempty` can be used
 -- |   here if there is no clean-up to perform.
-effEventSource
+effectEventSource
   :: forall m f
    . MonadAff m
   => (Emitter Effect f -> Effect (Finalizer Effect))
   -> EventSource m f
-effEventSource =
+effectEventSource =
   affEventSource <<<
     dimap
       (hoistEmitter launchAff_)
@@ -90,7 +90,7 @@ eventListenerEventSource
   -> ET.EventTarget
   -> (E.Event -> Maybe (f Unit))
   -> EventSource m f
-eventListenerEventSource eventType target f = effEventSource \emitter -> do
+eventListenerEventSource eventType target f = effectEventSource \emitter -> do
   listener <- ET.eventListener (maybe (pure unit) (emit emitter <<< pure) <<< f)
   ET.addEventListener eventType listener false target
   pure $ Finalizer (ET.removeEventListener eventType listener false target)
@@ -112,7 +112,7 @@ hoist nat (EventSource es) =
       (nat es)
 
 -- | Values of this type are created internally by `affEventSource` and
--- | `effEventSource`, and then passed into the user-provided setup function.
+-- | `effectEventSource`, and then passed into the user-provided setup function.
 -- |
 -- | This type is just a wrapper around a callback, used to simplify the type
 -- | signatures for setting up event sources.

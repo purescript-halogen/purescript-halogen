@@ -19,13 +19,15 @@ ui =
     , render
     , eval
     , receiver: const Nothing
+    , initializer: Nothing
+    , finalizer: Nothing
     }
   where
 
   initialState :: State
   initialState = Nothing
 
-  render :: State -> H.ComponentHTML Query
+  render :: forall m. State -> H.ComponentHTML Query () m
   render state =
     let
       value = maybe "No number generated yet" show state
@@ -38,7 +40,7 @@ ui =
             [ HH.text "Generate new number" ]
         ]
 
-  eval :: Query ~> H.ComponentDSL State Query Void Aff
+  eval :: Query ~> H.HalogenM State Query () Void Aff
   eval = case _ of
     Regenerate next -> do
       newNumber <- H.liftEffect random

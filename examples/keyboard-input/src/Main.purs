@@ -12,9 +12,9 @@ import Halogen.HTML as HH
 import Halogen.Query.EventSource as ES
 import Halogen.VDom.Driver (runUI)
 import Web.Event.Event as E
-import Web.HTML (window) as DOM
+import Web.HTML (window) as Web
 import Web.HTML.HTMLDocument as HTMLDocument
-import Web.HTML.Window (document) as DOM
+import Web.HTML.Window (document) as Web
 import Web.UIEvent.KeyboardEvent (KeyboardEvent)
 import Web.UIEvent.KeyboardEvent as KE
 import Web.UIEvent.KeyboardEvent.EventTypes as KET
@@ -28,11 +28,11 @@ data Query a
   = Init a
   | HandleKey H.SubscriptionId KeyboardEvent a
 
-type DSL = H.ComponentDSL State Query Void Aff
+type DSL = H.HalogenM State Query () Void Aff
 
 ui :: H.Component HH.HTML Query Unit Void Aff
 ui =
-  H.lifecycleComponent
+  H.component
     { initialState: const initialState
     , render
     , eval
@@ -42,7 +42,7 @@ ui =
     }
   where
 
-  render :: State -> H.ComponentHTML Query
+  render :: forall m. State -> H.ComponentHTML Query () m
   render state =
     HH.div_
       [ HH.p_ [ HH.text "Hold down the shift key and type some characters!" ]
@@ -53,7 +53,7 @@ ui =
   eval :: Query ~> DSL
   eval = case _ of
     Init next -> do
-      document <- H.liftEffect $ DOM.document =<< DOM.window
+      document <- H.liftEffect $ Web.document =<< Web.window
       H.subscribe' \sid ->
         ES.eventListenerEventSource
           KET.keyup

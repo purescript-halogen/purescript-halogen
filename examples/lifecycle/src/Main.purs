@@ -5,6 +5,7 @@ import Prelude
 import Child as Child
 import Data.Array (snoc, filter, reverse)
 import Data.Maybe (Maybe(..))
+import Data.Symbol (SProxy(..))
 import Data.Tuple (Tuple(..))
 import Effect (Effect)
 import Effect.Aff (Aff)
@@ -35,8 +36,14 @@ data Query a
   | Remove Int a
   | ReportRoot String a
 
+type ChildSlots =
+  ( child :: H.Slot Child.Query Child.Message Int
+  )
+
+_child = SProxy :: SProxy "child"
+
 ui :: H.Component HH.HTML Query Unit Void Aff
-ui = H.lifecycleParentComponent
+ui = H.component
   { initialState: const initialState
   , render
   , eval
@@ -45,8 +52,7 @@ ui = H.lifecycleParentComponent
   , receiver: const Nothing
   }
   where
-
-  render :: State -> H.ParentHTML Query Child.Query Int Aff
+  render :: State -> H.ComponentHTML Query ChildSlots Aff
   render state =
     HH.div_
       [ HH.button
@@ -61,11 +67,11 @@ ui = H.lifecycleParentComponent
               [ HH.button
                   [ HE.onClick (HE.input_ $ Remove sid) ]
                   [ HH.text "Remove" ]
-              , HH.slot sid (Child.child sid) unit (listen sid)
+              , HH.slot _child sid (Child.child sid) unit (listen sid)
               ]
       ]
 
-  eval :: Query ~> H.ParentDSL State Query Child.Query Int Void Aff
+  eval :: Query ~> H.HalogenM State Query ChildSlots Void Aff
   eval (Initialize next) = do
     H.liftEffect $ log "Initialize Root"
     pure next

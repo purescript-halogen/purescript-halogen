@@ -14,7 +14,7 @@ import Data.Either (Either(..), either)
 import Data.List ((:))
 import Data.List as L
 import Data.Map as M
-import Data.Maybe (Maybe(..), maybe, isNothing)
+import Data.Maybe (Maybe(..), maybe, isJust, isNothing)
 import Data.Traversable (for_, traverse_, sequence_)
 import Data.Tuple (Tuple(..))
 import Effect (Effect)
@@ -27,9 +27,9 @@ import Effect.Ref (Ref)
 import Effect.Ref as Ref
 import Halogen (HalogenIO)
 import Halogen.Aff.Driver.Eval (eval, handleLifecycle, queuingHandler)
-import Halogen.Aff.Driver.State (LifecycleHandlers, DriverState(..), DriverStateX, RenderStateX, initDriverState, renderStateX, renderStateX_, unDriverStateX)
+import Halogen.Aff.Driver.State (DriverState(..), DriverStateRef(..), DriverStateX, LifecycleHandlers, RenderStateX, initDriverState, renderStateX, renderStateX_, unDriverStateX)
 import Halogen.Component (Component, ComponentSlot, unComponent, unComponentSlot)
-import Halogen.Data.OrdBox (OrdBox)
+import Halogen.Data.Slot as Slot
 import Halogen.Query.EventSource as ES
 import Halogen.Query.InputF (InputF(..))
 
@@ -45,7 +45,6 @@ import Halogen.Query.InputF (InputF(..))
 -- |   state between each rendering of a component. This will differ entirely
 -- |   for each driver. `r` accepts a number of parameters that will be
 -- |   explained below.
--- | - `eff` is the type variable for the openect row.
 -- |
 -- | The "inner" type variables, used by `r` and the other functions are as
 -- | follows:
@@ -93,14 +92,14 @@ import Halogen.Query.InputF (InputF(..))
 -- | `const (pure unit)`.
 type RenderSpec h r =
   { render
-      :: forall s f g p o
+      :: forall s f ps o
        . (forall x. InputF x (f x) -> Effect Unit)
-      -> (ComponentSlot h g Aff p (f Unit) -> Effect (RenderStateX r))
-      -> h (ComponentSlot h g Aff p (f Unit)) (f Unit)
-      -> Maybe (r s f g p o)
-      -> Effect (r s f g p o)
-  , renderChild :: forall s f g p o. r s f g p o -> r s f g p o
-  , removeChild :: forall s f g p o. r s f g p o -> Effect Unit
+      -> (ComponentSlot h ps Aff (f Unit) -> Effect (RenderStateX r))
+      -> h (ComponentSlot h ps Aff (f Unit)) (f Unit)
+      -> Maybe (r s f ps o)
+      -> Effect (r s f ps o)
+  , renderChild :: forall s f ps o. r s f ps o -> r s f ps o
+  , removeChild :: forall s f ps o. r s f ps o -> Effect Unit
   }
 
 newLifecycleHandlers :: Effect (Ref LifecycleHandlers)
@@ -117,31 +116,28 @@ runUI renderSpec component i = do
   fresh <- liftEffect $ Ref.new 0
   handleLifecycle lchs do
     listeners <- Ref.new M.empty
-    runComponent lchs (rootHandler listeners) i Just component
+    runComponent lchs (rootHandler listeners) i component
       >>= Ref.read
       >>= unDriverStateX \st ->
         pure
-          { query: evalDriver st.selfRef st.prjQuery
+          { query: evalDriver st.selfRef
           , subscribe: subscribe fresh listeners
           }
 
   where
 
   evalDriver
-    :: forall s f' z' g p i' o'
-     . Ref (DriverState h r s f' z' g p i' o')
-    -> (forall x. f' x -> Maybe (z' x))
+    :: forall s' f' ps' i' o'
+     . Ref (DriverState h r s' f' ps' i' o')
     -> f'
     ~> Aff
-  evalDriver ref prjQuery q =
-    case prjQuery q of
-      Just q' -> evalF ref (Query q')
-      Nothing -> liftEffect $ throwException (error "Halogen internal error: query projection failed in runUI'")
+  evalDriver ref q =
+    evalF ref (Query q)
 
   evalF
-    :: forall s f' z' g p i' o' a
-     . Ref (DriverState h r s f' z' g p i' o')
-    -> InputF a (z' a)
+    :: forall s' f' ps' i' o' a
+     . Ref (DriverState h r s' f' ps' i' o')
+    -> InputF a (f' a)
     -> Aff a
   evalF ref = eval render ref
 
@@ -172,16 +168,15 @@ runUI renderSpec component i = do
       AV.kill (error "ended") inputVar
 
   runComponent
-    :: forall z f' i' o'
+    :: forall f' i' o'
      . Ref LifecycleHandlers
     -> (o' -> Aff Unit)
     -> i'
-    -> (forall x. f' x -> Maybe (z x))
-    -> Component h z i' o' Aff
-    -> Effect (Ref (DriverStateX h r f'))
-  runComponent lchs handler j prjQuery = unComponent \c -> do
+    -> Component h f' i' o' Aff
+    -> Effect (Ref (DriverStateX h r f' o'))
+  runComponent lchs handler j = unComponent \c -> do
     lchs' <- newLifecycleHandlers
-    var <- initDriverState c j handler prjQuery lchs'
+    var <- initDriverState c j handler lchs'
     pre <- Ref.read lchs
     Ref.write { initializers: L.Nil, finalizers: pre.finalizers } lchs
     unDriverStateX (render lchs <<< _.selfRef) =<< Ref.read var
@@ -189,28 +184,29 @@ runUI renderSpec component i = do
     pure var
 
   render
-    :: forall s f' z' g p i' o'
+    :: forall s' f' ps' i' o'
      . Ref LifecycleHandlers
-    -> Ref (DriverState h r s f' z' g p i' o')
+    -> Ref (DriverState h r s' f' ps' i' o')
     -> Effect Unit
   render lchs var = Ref.read var >>= \(DriverState ds) -> do
     shouldProcessHandlers <- isNothing <$> Ref.read ds.pendingHandlers
     when shouldProcessHandlers $ Ref.write (Just L.Nil) ds.pendingHandlers
-    Ref.write M.empty ds.childrenOut
+    Ref.write Slot.empty ds.childrenOut
     Ref.write ds.children ds.childrenIn
     let
-      handler :: forall x. InputF x (z' x) -> Aff Unit
+      handler :: forall x. InputF x (f' x) -> Aff Unit
       handler = queuingHandler (void <<< evalF ds.selfRef) ds.pendingHandlers
-      childHandler :: forall x. z' x -> Aff Unit
+      childHandler :: forall x. f' x -> Aff Unit
       childHandler = queuingHandler (handler <<< Query) ds.pendingQueries
     rendering <-
       renderSpec.render
         (handleAff <<< handler)
-        (renderChild lchs childHandler ds.component.mkOrdBox ds.childrenIn ds.childrenOut)
+        (renderChild lchs childHandler ds.childrenIn ds.childrenOut)
         (ds.component.render ds.state)
         ds.rendering
     children <- Ref.read ds.childrenOut
-    Ref.read ds.childrenIn >>= traverse_ \childVar -> do
+    childrenIn <- Ref.read ds.childrenIn
+    Slot.foreachSlot childrenIn \(DriverStateRef childVar) -> do
       childDS <- Ref.read childVar
       renderStateX_ renderSpec.removeChild childDS
       finalize lchs childDS
@@ -224,11 +220,10 @@ runUI renderSpec component i = do
         , childrenIn: ds'.childrenIn
         , childrenOut: ds'.childrenOut
         , selfRef: ds'.selfRef
-        , handler: ds'.handler
+        , handlerRef: ds'.handlerRef
         , pendingQueries: ds'.pendingQueries
         , pendingOuts: ds'.pendingOuts
         , pendingHandlers: ds'.pendingHandlers
-        , prjQuery: ds'.prjQuery
         , fresh: ds'.fresh
         , subscriptions: ds'.subscriptions
         , lifecycleHandlers: ds'.lifecycleHandlers
@@ -244,40 +239,41 @@ runUI renderSpec component i = do
           else pure $ Loop unit
 
   renderChild
-    :: forall f' g p
+    :: forall ps' f'
      . Ref LifecycleHandlers
     -> (forall x. f' x -> Aff Unit)
-    -> (p -> OrdBox p)
-    -> Ref (M.Map (OrdBox p) (Ref (DriverStateX h r g)))
-    -> Ref (M.Map (OrdBox p) (Ref (DriverStateX h r g)))
-    -> ComponentSlot h g Aff p (f' Unit)
+    -> Ref (Slot.SlotStorage ps' (DriverStateRef h r))
+    -> Ref (Slot.SlotStorage ps' (DriverStateRef h r))
+    -> ComponentSlot h ps' Aff (f' Unit)
     -> Effect (RenderStateX r)
-  renderChild lchs handler mkOrdBox childrenInRef childrenOutRef =
-    unComponentSlot \p ctor input inputQuery outputQuery prjQuery -> do
-      let ordP = mkOrdBox p
+  renderChild lchs handler childrenInRef childrenOutRef =
+    unComponentSlot \slot -> do
       childrenIn <- Ref.read childrenInRef
-      var <- case M.pop ordP childrenIn of
-        Just (Tuple existing childrenIn') -> do
+      var <- case slot.pop childrenIn of
+        Just (Tuple (DriverStateRef existing) childrenIn') -> do
           Ref.write childrenIn' childrenInRef
-          for_ (inputQuery input) \q -> do
-            dsx <- Ref.read existing
-            unDriverStateX (\st -> for_ (st.prjQuery q) (handleAff <<< evalF st.selfRef <<< Query)) dsx
+          dsx <- Ref.read existing
+          unDriverStateX (\st -> do
+            flip Ref.write st.handlerRef $ maybe (pure unit) handler <<< slot.output
+            let inputQuery = unComponent _.receiver slot.component
+            for_ (inputQuery slot.input) \q ->
+              handleAff $ evalF st.selfRef (Query q)) dsx
           pure existing
         Nothing ->
-          runComponent lchs (maybe (pure unit) handler <<< outputQuery) input prjQuery ctor
-      isDuplicate <- M.member ordP <$> Ref.read childrenOutRef
+          runComponent lchs (maybe (pure unit) handler <<< slot.output) slot.input slot.component
+      isDuplicate <- isJust <<< slot.get <$> Ref.read childrenOutRef
       when isDuplicate
         $ warn "Halogen: Duplicate slot address was detected during rendering, unexpected results may occur"
-      Ref.modify_ (M.insert ordP var) childrenOutRef
+      Ref.modify_ (slot.set $ DriverStateRef var) childrenOutRef
       Ref.read var >>= renderStateX case _ of
         Nothing -> throw "Halogen internal error: child was not initialized in renderChild"
         Just r -> pure (renderSpec.renderChild r)
 
   squashChildInitializers
-    :: forall f'
+    :: forall f' o'
      . Ref LifecycleHandlers
     -> L.List (Aff Unit)
-    -> DriverStateX h r f'
+    -> DriverStateX h r f' o'
     -> Effect Unit
   squashChildInitializers lchs preInits =
     unDriverStateX \st -> do
@@ -301,17 +297,17 @@ runUI renderSpec component i = do
     for_ queue (handleAff <<< traverse_ fork <<< L.reverse)
 
   cleanupSubscriptions
-    :: forall s f' z' g p i' o'
-     . DriverState h r s f' z' g p i' o'
+    :: forall s' f' ps' i' o'
+     . DriverState h r s' f' ps' i' o'
     -> Effect Unit
   cleanupSubscriptions (DriverState ds) = do
     traverse_ (handleAff <<< traverse_ (fork <<< ES.finalize)) =<< Ref.read ds.subscriptions
     Ref.write Nothing ds.subscriptions
 
   finalize
-    :: forall f'
+    :: forall f' o'
      . Ref LifecycleHandlers
-    -> DriverStateX h r f'
+    -> DriverStateX h r f' o'
     -> Effect Unit
   finalize lchs = do
     unDriverStateX \st -> do
@@ -321,7 +317,9 @@ runUI renderSpec component i = do
           { initializers: handlers.initializers
           , finalizers: f : handlers.finalizers
           }) lchs
-      for_ st.children (finalize lchs <=< Ref.read)
+      Slot.foreachSlot st.children \(DriverStateRef ref) -> do
+        dsx <- Ref.read ref
+        finalize lchs dsx
 
 -- | TODO: we could do something more intelligent now this isn't baked into the
 -- | virtual-dom rendering. Perhaps write to an avar when an error occurs...
