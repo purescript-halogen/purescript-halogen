@@ -11,6 +11,7 @@ import Control.Monad.Fork.Class (fork)
 import Control.Monad.Rec.Class (Step(..), tailRecM)
 import Control.Parallel (parSequence_)
 import Data.Either (Either(..), either)
+import Data.Functor.Coproduct (Coproduct, left, right)
 import Data.List ((:))
 import Data.List as L
 import Data.Map as M
@@ -93,14 +94,14 @@ import Halogen.Query.InputF (InputF(..))
 -- | `const (pure unit)`.
 type RenderSpec h r =
   { render
-      :: forall s f ps o
-       . (forall x. InputF x (f x) -> Effect Unit)
-      -> (ComponentSlot h ps Aff (f Unit) -> Effect (RenderStateX r))
-      -> h (ComponentSlot h ps Aff (f Unit)) (f Unit)
-      -> Maybe (r s f ps o)
-      -> Effect (r s f ps o)
-  , renderChild :: forall s f ps o. r s f ps o -> r s f ps o
-  , removeChild :: forall s f ps o. r s f ps o -> Effect Unit
+      :: forall s f g ps o
+       . (forall x. InputF x (Coproduct f g x) -> Effect Unit)
+      -> (ComponentSlot h ps Aff (g Unit) -> Effect (RenderStateX r))
+      -> h (ComponentSlot h ps Aff (g Unit)) (g Unit)
+      -> Maybe (r s g ps o)
+      -> Effect (r s g ps o)
+  , renderChild :: forall s f g ps o. r s g ps o -> r s g ps o
+  , removeChild :: forall s f g ps o. r s g ps o -> Effect Unit
   }
 
 newLifecycleHandlers :: Effect (Ref LifecycleHandlers)
@@ -128,11 +129,11 @@ runUI renderSpec component i = do
   where
 
   evalDriver
-    :: forall s' f' ps' i' o'
-     . Ref (DriverState h r s' f' ps' i' o')
+    :: forall s' f' g' ps' i' o'
+     . Ref (DriverState h r s' f' g' ps' i' o')
     -> f'
     ~> Aff
-  evalDriver ref q = Eval.evalF render ref (Query q)
+  evalDriver ref q = Eval.evalF render ref (Query (left q))
 
   rootHandler
     :: Ref (M.Map Int (AV.AVar o))
@@ -181,9 +182,9 @@ runUI renderSpec component i = do
     pure var
 
   render
-    :: forall s' f' ps' i' o'
+    :: forall s' f' g' ps' i' o'
      . Ref LifecycleHandlers
-    -> Ref (DriverState h r s' f' ps' i' o')
+    -> Ref (DriverState h r s' f' g' ps' i' o')
     -> Effect Unit
   render lchs var = Ref.read var >>= \(DriverState ds) -> do
     shouldProcessHandlers <- isNothing <$> Ref.read ds.pendingHandlers
@@ -191,10 +192,10 @@ runUI renderSpec component i = do
     Ref.write Slot.empty ds.childrenOut
     Ref.write ds.children ds.childrenIn
     let
-      handler :: forall x. InputF x (f' x) -> Aff Unit
+      handler :: forall x. InputF x (Coproduct f' g' x) -> Aff Unit
       handler = Eval.queuingHandler (void <<< Eval.evalF render ds.selfRef) ds.pendingHandlers
-      childHandler :: forall x. f' x -> Aff Unit
-      childHandler = Eval.queuingHandler (handler <<< Query) ds.pendingQueries
+      childHandler :: forall x. g' x -> Aff Unit
+      childHandler = Eval.queuingHandler (handler <<< Query <<< right) ds.pendingQueries
     rendering <-
       renderSpec.render
         (handleAff <<< handler)
@@ -293,8 +294,8 @@ runUI renderSpec component i = do
     for_ queue (handleAff <<< traverse_ fork <<< L.reverse)
 
   cleanupSubscriptions
-    :: forall s' f' ps' i' o'
-     . DriverState h r s' f' ps' i' o'
+    :: forall s' f' g' ps' i' o'
+     . DriverState h r s' f' g' ps' i' o'
     -> Effect Unit
   cleanupSubscriptions (DriverState ds) = do
     traverse_ (handleAff <<< traverse_ (fork <<< ES.finalize)) =<< Ref.read ds.subscriptions

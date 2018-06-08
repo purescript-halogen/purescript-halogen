@@ -47,15 +47,15 @@ data Component (h :: Type -> Type -> Type) (f :: Type -> Type) i o (m :: Type ->
 -- | of the function - the compiler will complain about an escaped skolem.
 unComponent
   :: forall h f i o m r
-   . (forall s ps. ComponentSpec' h s f ps i o m -> r)
+   . (forall s g ps. ComponentSpec' h s f g ps i o m -> r)
   -> Component h f i o m
   -> r
 unComponent = unsafeCoerce
 
-type ComponentSpec' h s f ps i o m =
+type ComponentSpec' h s f g ps i o m =
   { initialState :: i -> s
-  , render :: s -> h (ComponentSlot h ps m (f Unit)) (f Unit)
-  , eval :: HalogenQ f i ~> HalogenM s f ps o m
+  , render :: s -> h (ComponentSlot h ps m (g Unit)) (g Unit)
+  , eval :: HalogenQ f g i ~> HalogenM s g ps o m
   }
 
 -- | The spec for a component.
@@ -80,7 +80,7 @@ type ComponentSpec h s f ps i o m =
 specToSpec
   :: forall h s f ps i o m
    . ComponentSpec h s f ps i o m
-  -> ComponentSpec' h s f ps i o m
+  -> ComponentSpec' h s f f ps i o m
 specToSpec spec =
   { initialState: spec.initialState
   , render: spec.render
@@ -89,6 +89,7 @@ specToSpec spec =
       Finalize a -> traverse_ spec.eval spec.finalizer $> a
       Receive i a -> traverse_ spec.eval (spec.receiver i) $> a
       Internal fa -> spec.eval fa
+      External fa -> spec.eval fa
   }
 
 -- | A convenience synonym for the output type of a `render` function, for a
@@ -96,8 +97,8 @@ specToSpec spec =
 type ComponentHTML f ps m = HTML (ComponentSlot HTML ps m (f Unit)) (f Unit)
 
 component'
-  :: forall h s f ps i o m
-   . ComponentSpec' h s f ps i o m
+  :: forall h s f g ps i o m
+   . ComponentSpec' h s f g ps i o m
   -> Component h f i o m
 component' = unsafeCoerce
 

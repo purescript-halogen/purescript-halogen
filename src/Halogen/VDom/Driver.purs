@@ -6,6 +6,7 @@ module Halogen.VDom.Driver
 import Prelude
 
 import Data.Foldable (traverse_)
+import Data.Functor.Coproduct (Coproduct, right)
 import Data.Maybe (Maybe(..))
 import Effect (Effect)
 import Effect.Aff (Aff)
@@ -31,42 +32,42 @@ import Web.HTML.HTMLElement (HTMLElement) as DOM
 import Web.HTML.HTMLElement as HTMLElement
 import Web.HTML.Window (document) as DOM
 
-type VHTML f ps =
-  V.VDom (Array (Prop (InputF Unit (f Unit)))) (ComponentSlot HTML ps Aff (f Unit))
+type VHTML g ps =
+  V.VDom (Array (Prop (InputF Unit (g Unit)))) (ComponentSlot HTML ps Aff (g Unit))
 
-type ChildRenderer f ps
-  = ComponentSlot HTML ps Aff (f Unit) -> Effect (RenderStateX RenderState)
+type ChildRenderer g ps
+  = ComponentSlot HTML ps Aff (g Unit) -> Effect (RenderStateX RenderState)
 
-newtype RenderState s f ps o =
+newtype RenderState s g ps o =
   RenderState
     { node :: DOM.Node
-    , machine :: V.Step (VHTML f ps) DOM.Node
-    , renderChildRef :: Ref (ChildRenderer f ps)
+    , machine :: V.Step (VHTML g ps) DOM.Node
+    , renderChildRef :: Ref (ChildRenderer g ps)
     }
 
 mkSpec
-  :: forall f ps
-   . (InputF Unit (f Unit) -> Effect Unit)
-  -> Ref (ChildRenderer f ps)
+  :: forall f g ps
+   . (InputF Unit (Coproduct f g Unit) -> Effect Unit)
+  -> Ref (ChildRenderer g ps)
   -> DOM.Document
   -> V.VDomSpec
-      (Array (VP.Prop (InputF Unit (f Unit))))
-      (ComponentSlot HTML ps Aff (f Unit))
+      (Array (VP.Prop (InputF Unit (g Unit))))
+      (ComponentSlot HTML ps Aff (g Unit))
 mkSpec handler renderChildRef document =
   V.VDomSpec { buildWidget, buildAttributes, document }
   where
 
   buildAttributes
     :: DOM.Element
-    -> V.Machine (Array (VP.Prop (InputF Unit (f Unit)))) Unit
-  buildAttributes = VP.buildProp handler
+    -> V.Machine (Array (VP.Prop (InputF Unit (g Unit)))) Unit
+  buildAttributes = VP.buildProp (handler <<< map right)
 
   buildWidget
     :: V.VDomSpec
-          (Array (VP.Prop (InputF Unit (f Unit))))
-          (ComponentSlot HTML ps Aff (f Unit))
+          (Array (VP.Prop (InputF Unit (g Unit))))
+          (ComponentSlot HTML ps Aff (g Unit))
     -> V.Machine
-          (ComponentSlot HTML ps Aff (f Unit))
+          (ComponentSlot HTML ps Aff (g Unit))
           DOM.Node
   buildWidget spec = EFn.mkEffectFn1 \slot -> do
     renderChild <- Ref.read renderChildRef
@@ -76,7 +77,7 @@ mkSpec handler renderChildRef document =
 
   patch
     :: V.Machine
-         (ComponentSlot HTML ps Aff (f Unit))
+         (ComponentSlot HTML ps Aff (g Unit))
          DOM.Node
   patch = EFn.mkEffectFn1 \slot -> do
     renderChild <- Ref.read renderChildRef
@@ -108,12 +109,12 @@ renderSpec document container = { render, renderChild: identity, removeChild }
   where
 
   render
-    :: forall s f ps o
-     . (forall x. InputF x (f x) -> Effect Unit)
-    -> (ComponentSlot HTML ps Aff (f Unit) -> Effect (RenderStateX RenderState))
-    -> HTML (ComponentSlot HTML ps Aff (f Unit)) (f Unit)
-    -> Maybe (RenderState s f ps o)
-    -> Effect (RenderState s f ps o)
+    :: forall s f g ps o
+     . (forall x. InputF x (Coproduct f g x) -> Effect Unit)
+    -> (ComponentSlot HTML ps Aff (g Unit) -> Effect (RenderStateX RenderState))
+    -> HTML (ComponentSlot HTML ps Aff (g Unit)) (g Unit)
+    -> Maybe (RenderState s g ps o)
+    -> Effect (RenderState s g ps o)
   render handler child (HTML vdom) =
     case _ of
       Nothing -> do
@@ -133,7 +134,7 @@ renderSpec document container = { render, renderChild: identity, removeChild }
           substInParent newNode nextSib parent
         pure $ RenderState { machine: machine', node: newNode, renderChildRef }
 
-removeChild :: forall o ps f s. RenderState s f ps o -> Effect Unit
+removeChild :: forall o ps g s. RenderState s g ps o -> Effect Unit
 removeChild (RenderState { node }) = do
   npn <- DOM.parentNode node
   traverse_ (\pn -> DOM.removeChild node pn) npn
