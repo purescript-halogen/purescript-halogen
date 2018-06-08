@@ -25,7 +25,7 @@ import Data.Tuple (Tuple)
 import Halogen.Data.Slot (Slot, SlotStorage)
 import Halogen.Data.Slot as Slot
 import Halogen.HTML.Core (HTML)
-import Halogen.Query.HalogenM (HalogenM)
+import Halogen.Query.HalogenM (HalogenM')
 import Halogen.Query.HalogenM as HM
 import Halogen.Query.HalogenQ (HalogenQ(..))
 import Prim.Row as Row
@@ -52,10 +52,10 @@ unComponent
   -> r
 unComponent = unsafeCoerce
 
-type ComponentSpec' h s f g ps i o m =
+type ComponentSpec' h s f act ps i o m =
   { initialState :: i -> s
-  , render :: s -> h (ComponentSlot h ps m (g Unit)) (g Unit)
-  , eval :: HalogenQ f g i ~> HalogenM s g ps o m
+  , render :: s -> h (ComponentSlot h ps m act) act
+  , eval :: HalogenQ f act i ~> HalogenM' s act ps o m
   }
 
 -- | The spec for a component.
@@ -71,7 +71,7 @@ type ComponentSpec' h s f g ps i o m =
 type ComponentSpec h s f ps i o m =
   { initialState :: i -> s
   , render :: s -> h (ComponentSlot h ps m (f Unit)) (f Unit)
-  , eval :: f ~> HalogenM s f ps o m
+  , eval :: f ~> HalogenM' s (f Unit) ps o m
   , receiver :: i -> Maybe (f Unit)
   , initializer :: Maybe (f Unit)
   , finalizer :: Maybe (f Unit)
@@ -80,7 +80,7 @@ type ComponentSpec h s f ps i o m =
 specToSpec
   :: forall h s f ps i o m
    . ComponentSpec h s f ps i o m
-  -> ComponentSpec' h s f f ps i o m
+  -> ComponentSpec' h s f (f Unit) ps i o m
 specToSpec spec =
   { initialState: spec.initialState
   , render: spec.render
@@ -88,8 +88,8 @@ specToSpec spec =
       Initialize a -> traverse_ spec.eval spec.initializer $> a
       Finalize a -> traverse_ spec.eval spec.finalizer $> a
       Receive i a -> traverse_ spec.eval (spec.receiver i) $> a
-      Internal fa -> spec.eval fa
-      External fa -> spec.eval fa
+      Handle fa a -> spec.eval fa $> a
+      Request fa -> spec.eval fa
   }
 
 -- | A convenience synonym for the output type of a `render` function, for a

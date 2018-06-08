@@ -94,14 +94,14 @@ import Halogen.Query.InputF (InputF(..))
 -- | `const (pure unit)`.
 type RenderSpec h r =
   { render
-      :: forall s f g ps o
-       . (forall x. InputF x (Coproduct f g x) -> Effect Unit)
-      -> (ComponentSlot h ps Aff (g Unit) -> Effect (RenderStateX r))
-      -> h (ComponentSlot h ps Aff (g Unit)) (g Unit)
-      -> Maybe (r s g ps o)
-      -> Effect (r s g ps o)
-  , renderChild :: forall s f g ps o. r s g ps o -> r s g ps o
-  , removeChild :: forall s f g ps o. r s g ps o -> Effect Unit
+      :: forall s f msg ps o
+       . (forall x. InputF x (Coproduct f (Tuple msg) x) -> Effect Unit)
+      -> (ComponentSlot h ps Aff msg -> Effect (RenderStateX r))
+      -> h (ComponentSlot h ps Aff msg) msg
+      -> Maybe (r s msg ps o)
+      -> Effect (r s msg ps o)
+  , renderChild :: forall s f msg ps o. r s msg ps o -> r s msg ps o
+  , removeChild :: forall s f msg ps o. r s msg ps o -> Effect Unit
   }
 
 newLifecycleHandlers :: Effect (Ref LifecycleHandlers)
@@ -129,8 +129,8 @@ runUI renderSpec component i = do
   where
 
   evalDriver
-    :: forall s' f' g' ps' i' o'
-     . Ref (DriverState h r s' f' g' ps' i' o')
+    :: forall s' f' msg' ps' i' o'
+     . Ref (DriverState h r s' f' msg' ps' i' o')
     -> f'
     ~> Aff
   evalDriver ref q = Eval.evalF render ref (Query (left q))
@@ -182,9 +182,9 @@ runUI renderSpec component i = do
     pure var
 
   render
-    :: forall s' f' g' ps' i' o'
+    :: forall s' f' msg' ps' i' o'
      . Ref LifecycleHandlers
-    -> Ref (DriverState h r s' f' g' ps' i' o')
+    -> Ref (DriverState h r s' f' msg' ps' i' o')
     -> Effect Unit
   render lchs var = Ref.read var >>= \(DriverState ds) -> do
     shouldProcessHandlers <- isNothing <$> Ref.read ds.pendingHandlers
@@ -192,10 +192,10 @@ runUI renderSpec component i = do
     Ref.write Slot.empty ds.childrenOut
     Ref.write ds.children ds.childrenIn
     let
-      handler :: forall x. InputF x (Coproduct f' g' x) -> Aff Unit
+      handler :: forall x. InputF x (Coproduct f' (Tuple msg') x) -> Aff Unit
       handler = Eval.queuingHandler (void <<< Eval.evalF render ds.selfRef) ds.pendingHandlers
-      childHandler :: forall x. g' x -> Aff Unit
-      childHandler = Eval.queuingHandler (handler <<< Query <<< right) ds.pendingQueries
+      childHandler :: msg' -> Aff Unit
+      childHandler = Eval.queuingHandler (handler <<< Query <<< right <<< flip Tuple unit) ds.pendingQueries
     rendering <-
       renderSpec.render
         (handleAff <<< handler)
@@ -237,12 +237,12 @@ runUI renderSpec component i = do
           else pure $ Loop unit
 
   renderChild
-    :: forall ps' f'
+    :: forall ps' msg'
      . Ref LifecycleHandlers
-    -> (forall x. f' x -> Aff Unit)
+    -> (msg' -> Aff Unit)
     -> Ref (Slot.SlotStorage ps' (DriverStateRef h r))
     -> Ref (Slot.SlotStorage ps' (DriverStateRef h r))
-    -> ComponentSlot h ps' Aff (f' Unit)
+    -> ComponentSlot h ps' Aff msg'
     -> Effect (RenderStateX r)
   renderChild lchs handler childrenInRef childrenOutRef =
     unComponentSlot \slot -> do
@@ -294,8 +294,8 @@ runUI renderSpec component i = do
     for_ queue (handleAff <<< traverse_ fork <<< L.reverse)
 
   cleanupSubscriptions
-    :: forall s' f' g' ps' i' o'
-     . DriverState h r s' f' g' ps' i' o'
+    :: forall s' f' msg' ps' i' o'
+     . DriverState h r s' f' msg' ps' i' o'
     -> Effect Unit
   cleanupSubscriptions (DriverState ds) = do
     traverse_ (handleAff <<< traverse_ (fork <<< ES.finalize)) =<< Ref.read ds.subscriptions

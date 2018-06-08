@@ -15,7 +15,7 @@ import Data.List (List, (:))
 import Data.List as L
 import Data.Map as M
 import Data.Maybe (Maybe(..), maybe)
-import Data.Tuple (Tuple(..))
+import Data.Tuple (Tuple(..), uncurry)
 import Effect (Effect)
 import Effect.Aff (Aff, killFiber)
 import Effect.Class (liftEffect)
@@ -25,7 +25,7 @@ import Effect.Ref as Ref
 import Halogen.Aff.Driver.State (DriverState(..), DriverStateRef(..), LifecycleHandlers, unDriverStateX)
 import Halogen.Query.EventSource as ES
 import Halogen.Query.ForkF as FF
-import Halogen.Query.HalogenM (HalogenAp(..), HalogenF(..), HalogenM(..), QueryBox, UnpackQuery(..), SubscriptionId(..), unQuery)
+import Halogen.Query.HalogenM (HalogenAp(..), HalogenF(..), HalogenM'(..), QueryBox, UnpackQuery(..), SubscriptionId(..), unQuery)
 import Halogen.Query.HalogenQ (HalogenQ(..))
 import Halogen.Query.InputF (InputF(..), RefLabel(..))
 import Unsafe.Reference (unsafeRefEq)
@@ -44,16 +44,16 @@ handleLifecycle lchs f = do
   pure result
 
 type Renderer h r
-  = forall s f g ps i o
+  = forall s f msg ps i o
    . Ref LifecycleHandlers
-  -> Ref (DriverState h r s f g ps i o)
+  -> Ref (DriverState h r s f msg ps i o)
   -> Effect Unit
 
 evalF
-  :: forall h r s f g ps i o a
+  :: forall h r s f msg ps i o a
    . Renderer h r
-  -> Ref (DriverState h r s f g ps i o)
-  -> InputF a (Coproduct f g a)
+  -> Ref (DriverState h r s f msg ps i o)
+  -> InputF a (Coproduct f (Tuple msg) a)
   -> Aff a
 evalF render ref =
   case _ of
@@ -63,20 +63,20 @@ evalF render ref =
       pure next
     Query q -> do
       DriverState st <- liftEffect (Ref.read ref)
-      evalM render ref (st.component.eval (coproduct External Internal q))
+      evalM render ref (st.component.eval (coproduct Request (uncurry Handle) q))
 
 evalM
-  :: forall h r s f g ps i o
+  :: forall h r s f msg ps i o
    . Renderer h r
-  -> Ref (DriverState h r s f g ps i o)
-  -> HalogenM s g ps o Aff
+  -> Ref (DriverState h r s f msg ps i o)
+  -> HalogenM' s msg ps o Aff
   ~> Aff
 evalM render initRef (HalogenM hm) = foldFree (go initRef) hm
   where
   go
-    :: forall s' f' g' ps' i' o'
-     . Ref (DriverState h r s' f' g' ps' i' o')
-    -> HalogenF s' g' ps' o' Aff
+    :: forall s' f' msg' ps' i' o'
+     . Ref (DriverState h r s' f' msg' ps' i' o')
+    -> HalogenF s' msg' ps' o' Aff
     ~> Aff
   go ref = case _ of
     State f -> do
@@ -104,7 +104,7 @@ evalM render initRef (HalogenM hm) = foldFree (go initRef) hm
             q <- CR.await
             subs <- lift $ liftEffect (Ref.read subscriptions)
             when ((M.member sid <$> subs) == Just true) do
-              _ <- lift $ fork $ evalF render ref (Query (right q))
+              _ <- lift $ fork $ evalF render ref (Query (right (Tuple q unit)))
               consumer
         liftEffect $ Ref.modify_ (map (M.insert sid done)) subscriptions
         CR.runProcess (consumer `CR.pullFrom` producer)
@@ -135,8 +135,8 @@ evalM render initRef (HalogenM hm) = foldFree (go initRef) hm
       pure $ k $ M.lookup p refs
 
   evalChildQuery
-    :: forall s' f' g' ps' i' o' a'
-     . Ref (DriverState h r s' f' g' ps' i' o')
+    :: forall s' f' msg' ps' i' o' a'
+     . Ref (DriverState h r s' f' msg' ps' i' o')
     -> QueryBox ps' a'
     -> Aff a'
   evalChildQuery ref cqb = do
@@ -149,9 +149,9 @@ evalM render initRef (HalogenM hm) = foldFree (go initRef) hm
       reply <$> sequential (unpack evalChild st.children)) cqb
 
   unsubscribe
-    :: forall s' f' g' ps' i' o'
+    :: forall s' f' msg' ps' i' o'
      . SubscriptionId
-    -> Ref (DriverState h r s' f' g' ps' i' o')
+    -> Ref (DriverState h r s' f' msg' ps' i' o')
     -> Aff Unit
   unsubscribe sid ref = do
     DriverState ({ subscriptions }) <- liftEffect (Ref.read ref)

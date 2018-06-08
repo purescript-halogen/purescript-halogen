@@ -4,19 +4,19 @@ import Prelude
 
 import Data.Bifunctor (class Bifunctor)
 
-data HalogenQ f g i a
+data HalogenQ f msg i a
   = Initialize a
   | Finalize a
   | Receive i a
-  | Internal (g a)
-  | External (f a)
+  | Handle msg a
+  | Request (f a)
 
-instance bifunctorHalogenQ :: (Functor f, Functor g) => Bifunctor (HalogenQ f g) where
+instance bifunctorHalogenQ :: Functor f => Bifunctor (HalogenQ f msg) where
   bimap f g = case _ of
     Initialize a -> Initialize (g a)
     Finalize a -> Finalize (g a)
     Receive i a -> Receive (f i) (g a)
-    Internal ga -> Internal (map g ga)
-    External fa -> External (map g fa)
+    Handle msg a -> Handle msg (g a)
+    Request fa -> Request (map g fa)
 
-derive instance functorHalogenQ :: (Functor f, Functor g) => Functor (HalogenQ f g i)
+derive instance functorHalogenQ :: Functor f => Functor (HalogenQ f msg i)

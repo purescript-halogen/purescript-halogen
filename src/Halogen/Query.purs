@@ -19,7 +19,7 @@ import Control.Monad.Trans.Class (lift) as Exports
 import Data.Maybe (Maybe)
 import Effect.Aff.Class (liftAff) as Exports
 import Effect.Class (liftEffect) as Exports
-import Halogen.Query.HalogenM (HalogenM(..), HalogenF(..), SubscriptionId, fork, getRef, query, queryAll, subscribe, subscribe', unsubscribe, raise)
+import Halogen.Query.HalogenM (HalogenM, HalogenM'(..), HalogenF(..), SubscriptionId, fork, getRef, query, queryAll, subscribe, subscribe', unsubscribe, raise)
 import Halogen.Query.HalogenQ (HalogenQ(..))
 import Halogen.Query.InputF (RefLabel(..))
 import Web.HTML.HTMLElement (HTMLElement)

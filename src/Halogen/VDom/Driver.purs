@@ -8,6 +8,7 @@ import Prelude
 import Data.Foldable (traverse_)
 import Data.Functor.Coproduct (Coproduct, right)
 import Data.Maybe (Maybe(..))
+import Data.Tuple (Tuple(..))
 import Effect (Effect)
 import Effect.Aff (Aff)
 import Effect.Class (liftEffect)
@@ -32,42 +33,42 @@ import Web.HTML.HTMLElement (HTMLElement) as DOM
 import Web.HTML.HTMLElement as HTMLElement
 import Web.HTML.Window (document) as DOM
 
-type VHTML g ps =
-  V.VDom (Array (Prop (InputF Unit (g Unit)))) (ComponentSlot HTML ps Aff (g Unit))
+type VHTML msg ps =
+  V.VDom (Array (Prop (InputF Unit msg))) (ComponentSlot HTML ps Aff msg)
 
-type ChildRenderer g ps
-  = ComponentSlot HTML ps Aff (g Unit) -> Effect (RenderStateX RenderState)
+type ChildRenderer msg ps
+  = ComponentSlot HTML ps Aff msg -> Effect (RenderStateX RenderState)
 
-newtype RenderState s g ps o =
+newtype RenderState s msg ps o =
   RenderState
     { node :: DOM.Node
-    , machine :: V.Step (VHTML g ps) DOM.Node
-    , renderChildRef :: Ref (ChildRenderer g ps)
+    , machine :: V.Step (VHTML msg ps) DOM.Node
+    , renderChildRef :: Ref (ChildRenderer msg ps)
     }
 
 mkSpec
-  :: forall f g ps
-   . (InputF Unit (Coproduct f g Unit) -> Effect Unit)
-  -> Ref (ChildRenderer g ps)
+  :: forall f msg ps
+   . (InputF Unit (Coproduct f (Tuple msg) Unit) -> Effect Unit)
+  -> Ref (ChildRenderer msg ps)
   -> DOM.Document
   -> V.VDomSpec
-      (Array (VP.Prop (InputF Unit (g Unit))))
-      (ComponentSlot HTML ps Aff (g Unit))
+      (Array (VP.Prop (InputF Unit msg)))
+      (ComponentSlot HTML ps Aff msg)
 mkSpec handler renderChildRef document =
   V.VDomSpec { buildWidget, buildAttributes, document }
   where
 
   buildAttributes
     :: DOM.Element
-    -> V.Machine (Array (VP.Prop (InputF Unit (g Unit)))) Unit
-  buildAttributes = VP.buildProp (handler <<< map right)
+    -> V.Machine (Array (VP.Prop (InputF Unit msg))) Unit
+  buildAttributes = VP.buildProp (handler <<< map (right <<< flip Tuple unit))
 
   buildWidget
     :: V.VDomSpec
-          (Array (VP.Prop (InputF Unit (g Unit))))
-          (ComponentSlot HTML ps Aff (g Unit))
+          (Array (VP.Prop (InputF Unit msg)))
+          (ComponentSlot HTML ps Aff msg)
     -> V.Machine
-          (ComponentSlot HTML ps Aff (g Unit))
+          (ComponentSlot HTML ps Aff msg)
           DOM.Node
   buildWidget spec = EFn.mkEffectFn1 \slot -> do
     renderChild <- Ref.read renderChildRef
@@ -77,7 +78,7 @@ mkSpec handler renderChildRef document =
 
   patch
     :: V.Machine
-         (ComponentSlot HTML ps Aff (g Unit))
+         (ComponentSlot HTML ps Aff msg)
          DOM.Node
   patch = EFn.mkEffectFn1 \slot -> do
     renderChild <- Ref.read renderChildRef
@@ -109,12 +110,12 @@ renderSpec document container = { render, renderChild: identity, removeChild }
   where
 
   render
-    :: forall s f g ps o
-     . (forall x. InputF x (Coproduct f g x) -> Effect Unit)
-    -> (ComponentSlot HTML ps Aff (g Unit) -> Effect (RenderStateX RenderState))
-    -> HTML (ComponentSlot HTML ps Aff (g Unit)) (g Unit)
-    -> Maybe (RenderState s g ps o)
-    -> Effect (RenderState s g ps o)
+    :: forall s f msg ps o
+     . (forall x. InputF x (Coproduct f (Tuple msg) x) -> Effect Unit)
+    -> (ComponentSlot HTML ps Aff msg -> Effect (RenderStateX RenderState))
+    -> HTML (ComponentSlot HTML ps Aff msg) msg
+    -> Maybe (RenderState s msg ps o)
+    -> Effect (RenderState s msg ps o)
   render handler child (HTML vdom) =
     case _ of
       Nothing -> do
@@ -134,16 +135,12 @@ renderSpec document container = { render, renderChild: identity, removeChild }
           substInParent newNode nextSib parent
         pure $ RenderState { machine: machine', node: newNode, renderChildRef }
 
-removeChild :: forall o ps g s. RenderState s g ps o -> Effect Unit
+removeChild :: forall s msg ps o. RenderState s msg ps o -> Effect Unit
 removeChild (RenderState { node }) = do
   npn <- DOM.parentNode node
   traverse_ (\pn -> DOM.removeChild node pn) npn
 
-substInParent
-  :: DOM.Node
-  -> Maybe DOM.Node
-  -> Maybe DOM.Node
-  -> Effect Unit
+substInParent :: DOM.Node -> Maybe DOM.Node -> Maybe DOM.Node -> Effect Unit
 substInParent newNode (Just sib) (Just pn) = void $ DOM.insertBefore newNode sib pn
 substInParent newNode Nothing (Just pn) = void $ DOM.appendChild newNode pn
 substInParent _ _ _ = pure unit
