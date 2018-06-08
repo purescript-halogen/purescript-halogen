@@ -22,7 +22,7 @@ data Query f i o a
   -- | React to input to the HOC
   | InnerInput i a
 
-type Slot f i o = H.Slot (Query f i o) o
+type Slot f i o = H.Slot (Query f i o) i o
 
 -- | Lift a query from the inner component to a query of the HOC. Useful when
 -- | querying a component thats "inside" this HOC.
@@ -39,8 +39,8 @@ type State i =
 class CanSet f where
   set :: Boolean -> H.Action f
 
-type ChildSlots f o =
-  ( child :: H.Slot f o Unit
+type ChildSlots f i o =
+  ( child :: H.Slot f i o Unit
   )
 
 _child = SProxy :: SProxy "child"
@@ -71,7 +71,7 @@ factory innerComponent =
 
   where
 
-  render :: State i -> H.ComponentHTML (Query f i o) (ChildSlots f o) m
+  render :: State i -> H.ComponentHTML (Query f i o) (ChildSlots f i o) m
   render state =
     HH.div_
       [ HH.hr_
@@ -92,7 +92,7 @@ factory innerComponent =
       , HH.hr_
       ]
 
-  eval :: Query f i o ~> H.HalogenM (State i) (Query f i o) (ChildSlots f o) o m
+  eval :: Query f i o ~> H.HalogenM (State i) (Query f i o) (ChildSlots f i o) o m
   eval (ToggleOn next) = do
     H.modify_ $ \state -> state { on = not state.on }
     pure next

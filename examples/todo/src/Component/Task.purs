@@ -21,7 +21,7 @@ data TaskMessage
   = NotifyRemove
   | Toggled Boolean
 
-type TaskSlot = H.Slot TaskQuery TaskMessage
+type TaskSlot = H.Slot TaskQuery Unit TaskMessage
 
 -- | The task component definition.
 task :: forall m. Task -> H.Component HH.HTML TaskQuery Unit TaskMessage m

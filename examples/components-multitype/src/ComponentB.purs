@@ -14,7 +14,7 @@ data Query a
   = Increment a
   | GetCount (Int -> a)
 
-type Slot = H.Slot Query Void
+type Slot = H.Slot Query Unit Void
 
 component :: forall m. H.Component HH.HTML Query Unit Void m
 component =

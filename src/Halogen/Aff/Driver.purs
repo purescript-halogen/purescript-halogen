@@ -15,7 +15,7 @@ import Data.List ((:))
 import Data.List as L
 import Data.Map as M
 import Data.Maybe (Maybe(..), maybe, isJust, isNothing)
-import Data.Traversable (for_, traverse_, sequence_)
+import Data.Traversable (for_, traverse_)
 import Data.Tuple (Tuple(..))
 import Effect (Effect)
 import Effect.Aff (Aff, runAff_)
@@ -26,11 +26,12 @@ import Effect.Exception (error, throw, throwException)
 import Effect.Ref (Ref)
 import Effect.Ref as Ref
 import Halogen (HalogenIO)
-import Halogen.Aff.Driver.Eval (eval, handleLifecycle, queuingHandler)
+import Halogen.Aff.Driver.Eval as Eval
 import Halogen.Aff.Driver.State (DriverState(..), DriverStateRef(..), DriverStateX, LifecycleHandlers, RenderStateX, initDriverState, renderStateX, renderStateX_, unDriverStateX)
 import Halogen.Component (Component, ComponentSlot, unComponent, unComponentSlot)
 import Halogen.Data.Slot as Slot
 import Halogen.Query.EventSource as ES
+import Halogen.Query.HalogenQ (HalogenQ(..))
 import Halogen.Query.InputF (InputF(..))
 
 -- | `RenderSpec` allows for alternative driver implementations without the need
@@ -114,7 +115,7 @@ runUI
 runUI renderSpec component i = do
   lchs <- liftEffect newLifecycleHandlers
   fresh <- liftEffect $ Ref.new 0
-  handleLifecycle lchs do
+  Eval.handleLifecycle lchs do
     listeners <- Ref.new M.empty
     runComponent lchs (rootHandler listeners) i component
       >>= Ref.read
@@ -131,15 +132,7 @@ runUI renderSpec component i = do
      . Ref (DriverState h r s' f' ps' i' o')
     -> f'
     ~> Aff
-  evalDriver ref q =
-    evalF ref (Query q)
-
-  evalF
-    :: forall s' f' ps' i' o' a
-     . Ref (DriverState h r s' f' ps' i' o')
-    -> InputF a (f' a)
-    -> Aff a
-  evalF ref = eval render ref
+  evalDriver ref q = Eval.evalF render ref (Query q)
 
   rootHandler
     :: Ref (M.Map Int (AV.AVar o))
@@ -173,10 +166,14 @@ runUI renderSpec component i = do
     -> (o' -> Aff Unit)
     -> i'
     -> Component h f' i' o' Aff
-    -> Effect (Ref (DriverStateX h r f' o'))
+    -> Effect (Ref (DriverStateX h r f' i' o'))
   runComponent lchs handler j = unComponent \c -> do
     lchs' <- newLifecycleHandlers
     var <- initDriverState c j handler lchs'
+    dsx <- Ref.read var
+    unDriverStateX (\st -> do
+      let initialize = Eval.evalM render st.selfRef (st.component.eval (Initialize unit))
+      Ref.write (Just (L.singleton initialize)) st.pendingQueries) dsx
     pre <- Ref.read lchs
     Ref.write { initializers: L.Nil, finalizers: pre.finalizers } lchs
     unDriverStateX (render lchs <<< _.selfRef) =<< Ref.read var
@@ -195,9 +192,9 @@ runUI renderSpec component i = do
     Ref.write ds.children ds.childrenIn
     let
       handler :: forall x. InputF x (f' x) -> Aff Unit
-      handler = queuingHandler (void <<< evalF ds.selfRef) ds.pendingHandlers
+      handler = Eval.queuingHandler (void <<< Eval.evalF render ds.selfRef) ds.pendingHandlers
       childHandler :: forall x. f' x -> Aff Unit
-      childHandler = queuingHandler (handler <<< Query) ds.pendingQueries
+      childHandler = Eval.queuingHandler (handler <<< Query) ds.pendingQueries
     rendering <-
       renderSpec.render
         (handleAff <<< handler)
@@ -255,9 +252,7 @@ runUI renderSpec component i = do
           dsx <- Ref.read existing
           unDriverStateX (\st -> do
             flip Ref.write st.handlerRef $ maybe (pure unit) handler <<< slot.output
-            let inputQuery = unComponent _.receiver slot.component
-            for_ (inputQuery slot.input) \q ->
-              handleAff $ evalF st.selfRef (Query q)) dsx
+            handleAff $ Eval.evalM render st.selfRef (st.component.eval (Receive slot.input unit))) dsx
           pure existing
         Nothing ->
           runComponent lchs (maybe (pure unit) handler <<< slot.output) slot.input slot.component
@@ -270,23 +265,24 @@ runUI renderSpec component i = do
         Just r -> pure (renderSpec.renderChild r)
 
   squashChildInitializers
-    :: forall f' o'
+    :: forall f' i' o'
      . Ref LifecycleHandlers
     -> L.List (Aff Unit)
-    -> DriverStateX h r f' o'
+    -> DriverStateX h r f' i' o'
     -> Effect Unit
   squashChildInitializers lchs preInits =
     unDriverStateX \st -> do
-      let parentInitializer = evalF st.selfRef <<< Query <$> st.component.initializer
+      let parentInitializer = Eval.evalM render st.selfRef (st.component.eval (Initialize unit))
       Ref.modify_ (\handlers ->
         { initializers: (do
             parSequence_ (L.reverse handlers.initializers)
-            sequence_ parentInitializer
+            parentInitializer
             liftEffect do
               handlePending st.pendingQueries
               handlePending st.pendingOuts) : preInits
         , finalizers: handlers.finalizers
         }) lchs
+      pure unit
 
   handlePending
     :: Ref (Maybe (L.List (Aff Unit)))
@@ -305,18 +301,18 @@ runUI renderSpec component i = do
     Ref.write Nothing ds.subscriptions
 
   finalize
-    :: forall f' o'
+    :: forall f' i' o'
      . Ref LifecycleHandlers
-    -> DriverStateX h r f' o'
+    -> DriverStateX h r f' i' o'
     -> Effect Unit
   finalize lchs = do
     unDriverStateX \st -> do
       cleanupSubscriptions (DriverState st)
-      for_ (evalF st.selfRef <<< Query <$> st.component.finalizer) \f ->
-        Ref.modify_ (\handlers ->
-          { initializers: handlers.initializers
-          , finalizers: f : handlers.finalizers
-          }) lchs
+      let f = Eval.evalM render st.selfRef (st.component.eval (Finalize unit))
+      Ref.modify_ (\handlers ->
+        { initializers: handlers.initializers
+        , finalizers: f : handlers.finalizers
+        }) lchs
       Slot.foreachSlot st.children \(DriverStateRef ref) -> do
         dsx <- Ref.read ref
         finalize lchs dsx

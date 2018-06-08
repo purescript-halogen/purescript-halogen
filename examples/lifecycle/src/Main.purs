@@ -37,7 +37,7 @@ data Query a
   | ReportRoot String a
 
 type ChildSlots =
-  ( child :: H.Slot Child.Query Child.Message Int
+  ( child :: H.Slot Child.Query Child.Input Child.Message Int
   )
 
 _child = SProxy :: SProxy "child"

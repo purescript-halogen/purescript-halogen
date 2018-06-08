@@ -1,34 +1,37 @@
 module Halogen.Component.Profunctor (ProComponent(..)) where
 
 import Prelude
+
 import Control.Applicative.Free (hoistFreeAp)
 import Control.Monad.Free (hoistFree)
+import Data.Bifunctor (lmap)
 import Data.Newtype (class Newtype, over)
-import Data.Profunctor (class Profunctor, lcmap)
+import Data.Profunctor (class Profunctor, dimap, lcmap)
 import Halogen.Component as HC
-import Halogen.Query.HalogenM as HM
 import Halogen.Query.ForkF as FF
+import Halogen.Query.HalogenM as HM
 
 newtype ProComponent h f m i o = ProComponent (HC.Component h f i o m)
 
 derive instance newtypeProComponent :: Newtype (ProComponent h f m i o) _
 
-instance profunctorProComponent :: Profunctor (ProComponent h f m) where
+instance profunctorProComponent :: Functor f => Profunctor (ProComponent h f m) where
   dimap = dimapProComponent
 
 dimapProComponent
   :: forall h f m i i' o o'
-   . (i' -> i)
+   . Functor f
+  => (i' -> i)
   -> (o -> o')
   -> ProComponent h f m i o
   -> ProComponent h f m i' o'
 dimapProComponent f g (ProComponent c) = ProComponent (HC.unComponent go c)
   where
-  go :: forall s ps. HC.ComponentSpec h s f ps i o m -> HC.Component h f i' o' m
-  go comp = HC.component $ comp
-    { initialState = lcmap f comp.initialState
-    , receiver = lcmap f comp.receiver
-    , eval = mapOutput g <$> comp.eval
+  go :: forall s ps. HC.ComponentSpec' h s f ps i o m -> HC.Component h f i' o' m
+  go comp = HC.component' $
+    { initialState: lcmap f comp.initialState
+    , render: comp.render
+    , eval: dimap (lmap f) (mapOutput g) comp.eval
     }
 
 mapOutput

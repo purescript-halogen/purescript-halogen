@@ -22,7 +22,7 @@ data Message
 type Slot = Unit
 
 type ChildSlots =
-  ( cell :: H.Slot Query Message Int
+  ( cell :: H.Slot Query Unit Message Int
   )
 
 _cell = SProxy :: SProxy "cell"

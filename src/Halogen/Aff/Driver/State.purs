@@ -23,7 +23,7 @@ import Effect (Effect)
 import Effect.Aff (Aff)
 import Effect.Ref (Ref)
 import Effect.Ref as Ref
-import Halogen.Component (ComponentSpec)
+import Halogen.Component (ComponentSpec')
 import Halogen.Data.Slot (SlotStorage)
 import Halogen.Data.Slot as SlotStorage
 import Halogen.Query.EventSource (Finalizer)
@@ -52,7 +52,7 @@ type LifecycleHandlers =
 newtype DriverState h r s f ps i o = DriverState (DriverStateRec h r s f ps i o)
 
 type DriverStateRec h r s f ps i o =
-  { component :: ComponentSpec h s f ps i o Aff
+  { component :: ComponentSpec' h s f ps i o Aff
   , state :: s
   , refs :: M.Map String Element
   , children :: SlotStorage ps (DriverStateRef h r)
@@ -69,7 +69,7 @@ type DriverStateRec h r s f ps i o =
   , lifecycleHandlers :: Ref LifecycleHandlers
   }
 
-newtype DriverStateRef h r f o = DriverStateRef (Ref (DriverStateX h r f o))
+newtype DriverStateRef h r f i o = DriverStateRef (Ref (DriverStateX h r f i o))
 
 -- | A version of `DriverState` with the aspects relating to child components
 -- | existentially hidden.
@@ -77,18 +77,19 @@ data DriverStateX
   (h :: Type -> Type -> Type)
   (r :: Type -> (Type -> Type) -> # Type -> Type -> Type)
   (f :: Type -> Type)
+  (i :: Type)
   (o :: Type)
 
 mkDriverStateXRef
   :: forall h r s f ps i o
    . Ref (DriverState h r s f ps i o)
-  -> Ref (DriverStateX h r f o)
+  -> Ref (DriverStateX h r f i o)
 mkDriverStateXRef = unsafeCoerce
 
 unDriverStateX
-  :: forall h r f o x
-   . (forall s ps i. DriverStateRec h r s f ps i o -> x)
-  -> DriverStateX h r f o
+  :: forall h r f i o x
+   . (forall s ps. DriverStateRec h r s f ps i o -> x)
+  -> DriverStateX h r f i o
   -> x
 unDriverStateX = unsafeCoerce
 
@@ -111,35 +112,35 @@ unRenderStateX
 unRenderStateX = unsafeCoerce
 
 renderStateX
-  :: forall m h r f o
+  :: forall m h r f i o
    . Functor m
   => (forall s ps. Maybe (r s f ps o) -> m (r s f ps o))
-  -> DriverStateX h r f o
+  -> DriverStateX h r f i o
   -> m (RenderStateX r)
 renderStateX f = unDriverStateX \st ->
   mkRenderStateX (f st.rendering)
 
 renderStateX_
-  :: forall m h r f o
+  :: forall m h r f i o
    . Applicative m
   => (forall s ps. r s f ps o -> m Unit)
-  -> DriverStateX h r f o
+  -> DriverStateX h r f i o
   -> m Unit
 renderStateX_ f = unDriverStateX \st -> traverse_ f st.rendering
 
 initDriverState
   :: forall h r s f ps i o
-   . ComponentSpec h s f ps i o Aff
+   . ComponentSpec' h s f ps i o Aff
   -> i
   -> (o -> Aff Unit)
   -> Ref LifecycleHandlers
-  -> Effect (Ref (DriverStateX h r f o))
+  -> Effect (Ref (DriverStateX h r f i o))
 initDriverState component input handler lchs = do
   selfRef <- Ref.new (unsafeCoerce {})
   childrenIn <- Ref.new SlotStorage.empty
   childrenOut <- Ref.new SlotStorage.empty
   handlerRef <- Ref.new handler
-  pendingQueries <- Ref.new (component.initializer $> Nil)
+  pendingQueries <- Ref.new (Just Nil)
   pendingOuts <- Ref.new (Just Nil)
   pendingHandlers <- Ref.new Nothing
   fresh <- Ref.new 1

@@ -34,21 +34,21 @@ newtype SubscriptionId = SubscriptionId Int
 derive newtype instance eqSubscriptionId :: Eq SubscriptionId
 derive newtype instance ordSubscriptionId :: Ord SubscriptionId
 
-newtype UnpackQuery ps g o f b =
-  UnpackQuery (forall slot m . Applicative m => (slot g o -> m b) -> SlotStorage ps slot -> m (f b))
+newtype UnpackQuery ps g i o f b =
+  UnpackQuery (forall slot m. Applicative m => (slot g i o -> m b) -> SlotStorage ps slot -> m (f b))
 
-type QueryBox' ps g o a f b =
-  { unpack :: UnpackQuery ps g o f b
+type QueryBox' ps g i o a f b =
+  { unpack :: UnpackQuery ps g i o f b
   , query :: g b
   , reply :: f b -> a
   }
 
 data QueryBox (ps :: # Type) a
 
-mkQuery' :: forall ps g o a f b. QueryBox' ps g o a f b -> QueryBox ps a
+mkQuery' :: forall ps g i o a f b. QueryBox' ps g i o a f b -> QueryBox ps a
 mkQuery' = unsafeCoerce
 
-unQuery :: forall ps a r. (forall g o f b. QueryBox' ps g o a f b -> r) -> QueryBox ps a -> r
+unQuery :: forall ps a r. (forall g i o f b. QueryBox' ps g i o a f b -> r) -> QueryBox ps a -> r
 unQuery = unsafeCoerce
 
 -- | The Halogen component algebra
@@ -148,8 +148,8 @@ unsubscribe sid = HalogenM $ liftF $ Unsubscribe sid unit
 
 -- | Sends a query to a child of a component at the specified slot.
 query
-  :: forall s f o m sym px ps g o' p a
-   . Row.Cons sym (Slot g o' p) px ps
+  :: forall s f o m sym px ps g i o' p a
+   . Row.Cons sym (Slot g i o' p) px ps
   => IsSymbol sym
   => Ord p
   => SProxy sym
@@ -164,8 +164,8 @@ query sym p q = HalogenM $ liftF $ ChildQuery $ mkQuery'
 
 -- | Sends a query to all children of a component at a given slot label.
 queryAll
-  :: forall s f o m sym px ps g o' p a
-   . Row.Cons sym (Slot g o' p) px ps
+  :: forall s f o m sym px ps g i o' p a
+   . Row.Cons sym (Slot g i o' p) px ps
   => IsSymbol sym
   => Ord p
   => SProxy sym
