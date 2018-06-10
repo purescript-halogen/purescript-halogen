@@ -1,4 +1,4 @@
-module Component (State, Query(..), ui) where
+module Example.Effects.Eff.Random.Component where
 
 import Prelude
 import Effect.Aff (Aff)

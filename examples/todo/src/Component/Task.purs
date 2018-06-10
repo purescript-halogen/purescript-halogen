@@ -1,14 +1,14 @@
-module Component.Task where
+module Example.Todo.Component.Task where
 
 import Prelude
 
 import Control.Monad.State as CMS
 import Data.Maybe (Maybe(..))
+import Example.Todo.Model (Task)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
-import Model (Task)
 
 -- | The task component query algebra.
 data TaskQuery a

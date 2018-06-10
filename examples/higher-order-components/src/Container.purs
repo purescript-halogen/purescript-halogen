@@ -1,11 +1,11 @@
-module Container where
+module Example.HOC.Container where
 
 import Prelude
 
-import Button as Button
 import Data.Maybe (Maybe(..), maybe)
 import Data.Symbol (SProxy(..))
-import HOC as HOC
+import Example.HOC.Button as Button
+import Example.HOC.HOC as HOC
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE

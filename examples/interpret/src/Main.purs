@@ -1,4 +1,4 @@
-module Main where
+module Example.Interpret.Main where
 
 import Prelude
 

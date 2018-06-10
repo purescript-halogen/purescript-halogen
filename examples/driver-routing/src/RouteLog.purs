@@ -1,6 +1,7 @@
-module RouteLog where
+module Example.Driver.Routing.RouteLog where
 
 import Prelude
+
 import Data.Array as A
 import Data.Maybe (Maybe(..))
 import Halogen as H

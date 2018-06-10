@@ -1,4 +1,4 @@
-module HOC where
+module Example.HOC.HOC where
 
 import Prelude
 

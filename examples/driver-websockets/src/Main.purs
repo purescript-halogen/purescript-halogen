@@ -1,4 +1,4 @@
-module Main where
+module Example.Driver.Websockets.Main where
 
 import Prelude
 
@@ -12,11 +12,11 @@ import Data.Maybe (Maybe(..))
 import Effect (Effect)
 import Effect.Aff (Aff)
 import Effect.Class (liftEffect)
+import Example.Driver.Websockets.Log as Log
 import Foreign (F, Foreign, unsafeToForeign, readString)
 import Halogen as H
 import Halogen.Aff as HA
 import Halogen.VDom.Driver (runUI)
-import Log as Log
 import Web.Event.EventTarget as EET
 import Web.Socket.Event.EventTypes as WSET
 import Web.Socket.Event.MessageEvent as ME

@@ -1,12 +1,12 @@
-module Main where
+module Example.Ace.Main where
 
 import Prelude
 
-import AceComponent (AceOutput(..), AceQuery(..), AceSlot, aceComponent)
 import Data.Maybe (Maybe(..))
 import Data.Symbol (SProxy(..))
 import Effect (Effect)
 import Effect.Aff (Aff)
+import Example.Ace.AceComponent (AceOutput(..), AceQuery(..), AceSlot, aceComponent)
 import Halogen as H
 import Halogen.Aff as HA
 import Halogen.HTML as HH

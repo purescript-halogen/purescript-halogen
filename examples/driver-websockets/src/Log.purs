@@ -1,6 +1,7 @@
-module Log where
+module Example.Driver.Websockets.Log where
 
 import Prelude
+
 import Data.Array as A
 import Data.Maybe (Maybe(..))
 import Halogen as H

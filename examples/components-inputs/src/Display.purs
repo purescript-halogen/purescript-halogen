@@ -1,4 +1,4 @@
-module Display where
+module Example.Components.Inputs.Display where
 
 import Prelude
 

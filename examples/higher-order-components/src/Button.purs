@@ -1,14 +1,13 @@
-module Button where
+module Example.HOC.Button where
 
 import Prelude
-import Data.Maybe (Maybe(..))
 
+import Data.Maybe (Maybe(..))
+import Example.HOC.HOC (class CanSet)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
-
-import HOC (class CanSet)
 
 type State = Boolean
 

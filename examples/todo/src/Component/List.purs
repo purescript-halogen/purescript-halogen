@@ -1,16 +1,16 @@
-module Component.List where
+module Example.Todo.Component.List where
 
 import Prelude
 
-import Component.Task (TaskQuery(..), TaskMessage(..), TaskSlot, task)
 import Data.Array (snoc, filter, length)
 import Data.Map as M
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Symbol (SProxy(..))
+import Example.Todo.Component.Task (TaskQuery(..), TaskMessage(..), TaskSlot, task)
+import Example.Todo.Model (List, TaskId, initialList, initialTask)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
-import Model (List, TaskId, initialList, initialTask)
 
 -- | The list component query algebra.
 data ListQuery a

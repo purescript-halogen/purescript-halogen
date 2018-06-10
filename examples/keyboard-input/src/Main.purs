@@ -1,4 +1,4 @@
-module Main where
+module Example.KeyboardInput.Main where
 
 import Prelude
 

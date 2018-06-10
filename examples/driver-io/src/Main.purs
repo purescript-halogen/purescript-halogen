@@ -1,12 +1,12 @@
-module Main where
+module Example.Driver.IO.Main where
 
 import Prelude
 
-import Button as B
 import Control.Coroutine as CR
 import Data.Maybe (Maybe(..))
 import Effect (Effect)
 import Effect.Console (log)
+import Example.Driver.IO.Button as B
 import Halogen (liftEffect)
 import Halogen as H
 import Halogen.Aff as HA

@@ -1,6 +1,7 @@
-module Button where
+module Example.Components.Button where
 
 import Prelude
+
 import Data.Maybe (Maybe(..))
 import Halogen as H
 import Halogen.HTML as HH

@@ -1,4 +1,4 @@
-module AceComponent
+module Example.Ace.AceComponent
   ( AceQuery(..)
   , AceOutput(..)
   , AceSlot

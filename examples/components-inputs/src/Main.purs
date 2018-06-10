@@ -1,10 +1,11 @@
-module Main where
+module Example.Components.Inputs.Main where
 
 import Prelude
+
 import Effect (Effect)
+import Example.Components.Inputs.Container as Container
 import Halogen.Aff as HA
 import Halogen.VDom.Driver (runUI)
-import Container as Container
 
 main :: Effect Unit
 main = HA.runHalogenAff do
