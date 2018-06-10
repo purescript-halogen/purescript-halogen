@@ -2,6 +2,7 @@ module Halogen.Component
   ( Component
   , ComponentSpec'
   , ComponentSpec
+  , ComponentHTML'
   , ComponentHTML
   , component'
   , component
@@ -91,6 +92,8 @@ specToSpec spec =
       Handle fa a -> spec.eval fa $> a
       Request fa -> spec.eval fa
   }
+
+type ComponentHTML' act ps m = HTML (ComponentSlot HTML ps m act) act
 
 -- | A convenience synonym for the output type of a `render` function, for a
 -- | component that renders HTML.
