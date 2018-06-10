@@ -2,32 +2,17 @@ module Example.HOC.HOC where
 
 import Prelude
 
-import Data.Coyoneda (Coyoneda, unCoyoneda, liftCoyoneda)
-import Data.Maybe (Maybe(Nothing, Just))
+import Data.Maybe (Maybe(..))
 import Data.Symbol (SProxy(..))
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.Query.HalogenM as HQ
 
-data Query f i o a
-  -- | Example query for the HOC
-  = ToggleOn a
-  | Set a
-
-  -- | Contains a query of the inner component
-  | Inner (Coyoneda f a)
-  -- | Handle messages of te inner component
-  | HandleInner o a
-  -- | React to input to the HOC
-  | InnerInput i a
-
-type Slot f i o = H.Slot (Query f i o) i o
-
--- | Lift a query from the inner component to a query of the HOC. Useful when
--- | querying a component thats "inside" this HOC.
-liftQuery :: forall f i o a. f a -> Query f i o a
-liftQuery = Inner <<< liftCoyoneda
+data Action o
+  = Toggle
+  | Reset
+  | HandleInner o
 
 type State i =
   -- | State of the HOC itself
@@ -58,56 +43,54 @@ factory
   :: forall f i o m
    . CanSet f
   => H.Component HH.HTML f i o m
-  -> H.Component HH.HTML (Query f i o) i o m
+  -> H.Component HH.HTML f i o m
 factory innerComponent =
-  H.component
+  H.component'
     { initialState: { on: true, input: _ }
     , render
     , eval
-    , receiver: \i -> Just $ InnerInput i unit
-    , initializer: Nothing
-    , finalizer: Nothing
     }
 
   where
 
-  render :: State i -> H.ComponentHTML (Query f i o) (ChildSlots f i o) m
+  render
+    :: State i
+    -> H.ComponentHTML' (Action o) (ChildSlots f i o) m
   render state =
     HH.div_
       [ HH.hr_
       , HH.p_
         [ HH.button
-          [ HE.onClick (HE.input_ ToggleOn) ]
+          [ HE.onClick (\_ -> Just Toggle) ]
           [ HH.text "Toggle wrapper state" ]
         , HH.text $ " Wrapper state: " <> if state.on then "on" else "off"
         ]
       , HH.p_
         [ HH.button
-          [ HE.onClick (HE.input_ Set) ]
+          [ HE.onClick (\_ -> Just Reset) ]
           [ HH.text "Set inner component to off" ]
         ]
       , HH.p_
-        [ HH.slot _child unit innerComponent state.input (HE.input HandleInner)
+        [ HH.slot _child unit innerComponent state.input (Just <<< HandleInner)
         ]
       , HH.hr_
       ]
 
-  eval :: Query f i o ~> H.HalogenM (State i) (Query f i o) (ChildSlots f i o) o m
-  eval (ToggleOn next) = do
-    H.modify_ $ \state -> state { on = not state.on }
-    pure next
-  eval (Set next) = do
-    _ <- H.query _child unit $ H.action (set false)
-    pure next
-  eval (Inner iq) = iq # unCoyoneda \k q -> do
-    result <- H.query _child unit q
-    case result of
-      Nothing ->
-        HQ.halt "HOC inner component query failed (this should be impossible)"
-      Just a -> pure (k a)
-  eval (HandleInner o next) = do
-    H.raise o
-    pure next
-  eval (InnerInput i next) = do
-    H.modify_ $ _{ input = i }
-    pure next
+  eval
+    :: H.HalogenQ f (Action o) i
+    ~> H.HalogenM' (State i) (Action o) (ChildSlots f i o) o m
+  eval = case _ of
+    H.Initialize a -> pure a
+    H.Finalize a -> pure a
+    H.Receive i a -> H.modify_ (_ { input = i }) $> a
+    H.Handle msg a ->
+      a <$ case msg of
+        Toggle -> H.modify_ (\state -> state { on = not state.on })
+        Reset -> void $ H.query _child unit $ H.action (set false)
+        HandleInner o -> H.raise o
+    H.Request q ->
+      H.query _child unit q >>= case _ of
+        Nothing ->
+          HQ.halt "HOC inner component query failed (this should be impossible)"
+        Just a ->
+          pure a
