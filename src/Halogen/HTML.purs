@@ -42,7 +42,7 @@ fromPlainHTML = unsafeCoerce -- ≅ bimap absurd absurd
 -- | - a function mapping outputs from the component to a query in the parent
 slot
   :: forall sym px ps g i o p m act
-   . Row.Cons sym (Slot g i o p) px ps
+   . Row.Cons sym (Slot g o p) px ps
   => IsSymbol sym
   => Ord p
   => SProxy sym

@@ -131,11 +131,11 @@ hoist nat = unComponent \c ->
 --------------------------------------------------------------------------------
 
 type ComponentSlot' h g i o ps m a =
-  { get :: forall slot. SlotStorage ps slot -> Maybe (slot g i o)
-  , pop :: forall slot. SlotStorage ps slot -> Maybe (Tuple (slot g i o) (SlotStorage ps slot))
-  , set :: forall slot. slot g i o -> SlotStorage ps slot -> SlotStorage ps slot
+  { get :: forall slot. SlotStorage ps slot -> Maybe (slot g o)
+  , pop :: forall slot. SlotStorage ps slot -> Maybe (Tuple (slot g o) (SlotStorage ps slot))
+  , set :: forall slot. slot g o -> SlotStorage ps slot -> SlotStorage ps slot
   , component :: Component h g i o m
-  , input :: i
+  , input :: forall f act. HalogenQ f act i Unit
   , output :: o -> Maybe a
   }
 
@@ -146,7 +146,7 @@ instance functorComponentSlot :: Functor (ComponentSlot h ps m) where
 
 mkComponentSlot
   :: forall h sym px ps g i o p m a
-   . Row.Cons sym (Slot g i o p) px ps
+   . Row.Cons sym (Slot g o p) px ps
   => IsSymbol sym
   => Ord p
   => SProxy sym
@@ -156,15 +156,15 @@ mkComponentSlot
   -> (o -> Maybe a)
   -> ComponentSlot h ps m a
 mkComponentSlot sym p comp input output =
-  unsafeCoerce { get, pop, set, component: comp, input, output }
+  mkComponentSlot' { get, pop, set, component: comp, input: Receive input unit, output }
   where
-  get :: forall slot. SlotStorage ps slot -> Maybe (slot g i o)
+  get :: forall slot. SlotStorage ps slot -> Maybe (slot g o)
   get = Slot.lookup sym p
 
-  pop :: forall slot. SlotStorage ps slot -> Maybe (Tuple (slot g i o) (SlotStorage ps slot))
+  pop :: forall slot. SlotStorage ps slot -> Maybe (Tuple (slot g o) (SlotStorage ps slot))
   pop = Slot.pop sym p
 
-  set :: forall slot. slot g i o -> SlotStorage ps slot -> SlotStorage ps slot
+  set :: forall slot. slot g o -> SlotStorage ps slot -> SlotStorage ps slot
   set = Slot.insert sym p
 
 mkComponentSlot'

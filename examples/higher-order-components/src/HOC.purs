@@ -24,8 +24,8 @@ type State i =
 class CanSet f where
   set :: Boolean -> H.Action f
 
-type ChildSlots f i o =
-  ( child :: H.Slot f i o Unit
+type ChildSlots f o =
+  ( child :: H.Slot f o Unit
   )
 
 _child = SProxy :: SProxy "child"
@@ -55,7 +55,7 @@ factory innerComponent =
 
   render
     :: State i
-    -> H.ComponentHTML' (Action o) (ChildSlots f i o) m
+    -> H.ComponentHTML' (Action o) (ChildSlots f o) m
   render state =
     HH.div_
       [ HH.hr_
@@ -78,7 +78,7 @@ factory innerComponent =
 
   eval
     :: H.HalogenQ f (Action o) i
-    ~> H.HalogenM' (State i) (Action o) (ChildSlots f i o) o m
+    ~> H.HalogenM' (State i) (Action o) (ChildSlots f o) o m
   eval = case _ of
     H.Initialize a -> pure a
     H.Finalize a -> pure a

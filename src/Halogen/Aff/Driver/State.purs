@@ -69,7 +69,7 @@ type DriverStateRec h r s f act ps i o =
   , lifecycleHandlers :: Ref LifecycleHandlers
   }
 
-newtype DriverStateRef h r f i o = DriverStateRef (Ref (DriverStateX h r f i o))
+newtype DriverStateRef h r f o = DriverStateRef (Ref (DriverStateX h r f o))
 
 -- | A version of `DriverState` with the aspects relating to child components
 -- | existentially hidden.
@@ -77,19 +77,18 @@ data DriverStateX
   (h :: Type -> Type -> Type)
   (r :: Type -> Type -> # Type -> Type -> Type)
   (f :: Type -> Type)
-  (i :: Type)
   (o :: Type)
 
 mkDriverStateXRef
   :: forall h r s f act ps i o
    . Ref (DriverState h r s f act ps i o)
-  -> Ref (DriverStateX h r f i o)
+  -> Ref (DriverStateX h r f o)
 mkDriverStateXRef = unsafeCoerce
 
 unDriverStateX
   :: forall h r f i o x
    . (forall s act ps. DriverStateRec h r s f act ps i o -> x)
-  -> DriverStateX h r f i o
+  -> DriverStateX h r f o
   -> x
 unDriverStateX = unsafeCoerce
 
@@ -111,19 +110,19 @@ unRenderStateX
 unRenderStateX = unsafeCoerce
 
 renderStateX
-  :: forall m h r f i o
+  :: forall m h r f o
    . Functor m
   => (forall s act ps. Maybe (r s act ps o) -> m (r s act ps o))
-  -> DriverStateX h r f i o
+  -> DriverStateX h r f o
   -> m (RenderStateX r)
 renderStateX f = unDriverStateX \st ->
   mkRenderStateX (f st.rendering)
 
 renderStateX_
-  :: forall m h r f i o
+  :: forall m h r f o
    . Applicative m
   => (forall s act ps. r s act ps o -> m Unit)
-  -> DriverStateX h r f i o
+  -> DriverStateX h r f o
   -> m Unit
 renderStateX_ f = unDriverStateX \st -> traverse_ f st.rendering
 
@@ -133,7 +132,7 @@ initDriverState
   -> i
   -> (o -> Aff Unit)
   -> Ref LifecycleHandlers
-  -> Effect (Ref (DriverStateX h r f i o))
+  -> Effect (Ref (DriverStateX h r f o))
 initDriverState component input handler lchs = do
   selfRef <- Ref.new (unsafeCoerce {})
   childrenIn <- Ref.new SlotStorage.empty

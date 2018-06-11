@@ -13,7 +13,7 @@ type State = Int
 
 data Query a = HandleInput Int a
 
-type Slot = H.Slot Query Input Void
+type Slot = H.Slot Query Void
 
 component :: forall m. H.Component HH.HTML Query Input Void m
 component =

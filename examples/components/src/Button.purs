@@ -16,7 +16,7 @@ data Query a
 
 data Message = Toggled Boolean
 
-type Slot = H.Slot Query Unit Message
+type Slot = H.Slot Query Message
 
 myButton :: forall m. H.Component HH.HTML Query Unit Message m
 myButton =

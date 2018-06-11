@@ -15,7 +15,7 @@ data Query a
   = HandleInput String a
   | GetValue (String -> a)
 
-type Slot = H.Slot Query Unit Void
+type Slot = H.Slot Query Void
 
 component :: forall m. H.Component HH.HTML Query Unit Void m
 component =

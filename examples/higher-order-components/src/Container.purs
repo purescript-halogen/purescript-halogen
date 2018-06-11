@@ -20,7 +20,7 @@ type State =
   }
 
 type ChildSlots =
-  ( button :: H.Slot Button.Query Boolean Button.Message Unit
+  ( button :: H.Slot Button.Query Button.Message Unit
   )
 
 _button = SProxy :: SProxy "button"

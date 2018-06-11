@@ -167,7 +167,7 @@ runUI renderSpec component i = do
     -> (o' -> Aff Unit)
     -> i'
     -> Component h f' i' o' Aff
-    -> Effect (Ref (DriverStateX h r f' i' o'))
+    -> Effect (Ref (DriverStateX h r f' o'))
   runComponent lchs handler j = unComponent \c -> do
     lchs' <- newLifecycleHandlers
     var <- initDriverState c j handler lchs'
@@ -253,10 +253,14 @@ runUI renderSpec component i = do
           dsx <- Ref.read existing
           unDriverStateX (\st -> do
             flip Ref.write st.handlerRef $ maybe (pure unit) handler <<< slot.output
-            handleAff $ Eval.evalM render st.selfRef (st.component.eval (Receive slot.input unit))) dsx
+            handleAff $ Eval.evalM render st.selfRef (st.component.eval slot.input)) dsx
           pure existing
         Nothing ->
-          runComponent lchs (maybe (pure unit) handler <<< slot.output) slot.input slot.component
+          case slot.input of
+            Receive si _ ->
+              runComponent lchs (maybe (pure unit) handler <<< slot.output) si slot.component
+            _ ->
+              throw "Halogen internal error: slot input was not a Receive query"
       isDuplicate <- isJust <<< slot.get <$> Ref.read childrenOutRef
       when isDuplicate
         $ warn "Halogen: Duplicate slot address was detected during rendering, unexpected results may occur"
@@ -266,10 +270,10 @@ runUI renderSpec component i = do
         Just r -> pure (renderSpec.renderChild r)
 
   squashChildInitializers
-    :: forall f' i' o'
+    :: forall f' o'
      . Ref LifecycleHandlers
     -> L.List (Aff Unit)
-    -> DriverStateX h r f' i' o'
+    -> DriverStateX h r f' o'
     -> Effect Unit
   squashChildInitializers lchs preInits =
     unDriverStateX \st -> do
@@ -302,9 +306,9 @@ runUI renderSpec component i = do
     Ref.write Nothing ds.subscriptions
 
   finalize
-    :: forall f' i' o'
+    :: forall f' o'
      . Ref LifecycleHandlers
-    -> DriverStateX h r f' i' o'
+    -> DriverStateX h r f' o'
     -> Effect Unit
   finalize lchs = do
     unDriverStateX \st -> do

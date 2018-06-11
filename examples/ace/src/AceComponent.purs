@@ -23,7 +23,7 @@ import Halogen.Query.EventSource as ES
 -- | replicating it within Halogen.
 type AceState = { editor :: Maybe Editor }
 
-type AceSlot = H.Slot AceQuery Unit AceOutput
+type AceSlot = H.Slot AceQuery AceOutput
 
 -- | A basic query algebra for the Ace component.
 data AceQuery a

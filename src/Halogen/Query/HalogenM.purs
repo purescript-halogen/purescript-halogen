@@ -35,7 +35,7 @@ derive newtype instance eqSubscriptionId :: Eq SubscriptionId
 derive newtype instance ordSubscriptionId :: Ord SubscriptionId
 
 newtype UnpackQuery ps g i o f b =
-  UnpackQuery (forall slot m. Applicative m => (slot g i o -> m b) -> SlotStorage ps slot -> m (f b))
+  UnpackQuery (forall slot m. Applicative m => (slot g o -> m b) -> SlotStorage ps slot -> m (f b))
 
 type QueryBox' ps g i o a f b =
   { unpack :: UnpackQuery ps g i o f b
@@ -150,8 +150,8 @@ unsubscribe sid = HalogenM $ liftF $ Unsubscribe sid unit
 
 -- | Sends a query to a child of a component at the specified slot.
 query
-  :: forall s act o m sym px ps f i o' p a
-   . Row.Cons sym (Slot f i o' p) px ps
+  :: forall s act o m sym px ps f o' p a
+   . Row.Cons sym (Slot f o' p) px ps
   => IsSymbol sym
   => Ord p
   => SProxy sym
@@ -166,8 +166,8 @@ query sym p q = HalogenM $ liftF $ ChildQuery $ mkQuery'
 
 -- | Sends a query to all children of a component at a given slot label.
 queryAll
-  :: forall s act o m sym px ps f i o' p a
-   . Row.Cons sym (Slot f i o' p) px ps
+  :: forall s act o m sym px ps f o' p a
+   . Row.Cons sym (Slot f o' p) px ps
   => IsSymbol sym
   => Ord p
   => SProxy sym

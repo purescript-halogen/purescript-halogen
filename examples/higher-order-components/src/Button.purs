@@ -21,7 +21,7 @@ instance canSetQuery :: CanSet Query where
 
 data Message = Toggled Boolean
 
-type Slot = H.Slot Query Boolean Message
+type Slot = H.Slot Query Message
 
 myButton :: forall m. H.Component HH.HTML Query Boolean Message m
 myButton =

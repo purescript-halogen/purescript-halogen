@@ -23,58 +23,58 @@ import Unsafe.Coerce (unsafeCoerce)
 
 foreign import data Any :: Type
 
-data Slot (g :: Type -> Type) i o p
+data Slot (g :: Type -> Type) o p
 
-newtype SlotStorage (partitions :: # Type) (slot :: (Type -> Type) -> Type -> Type -> Type) =
+newtype SlotStorage (partitions :: # Type) (slot :: (Type -> Type) -> Type -> Type) =
   SlotStorage (Map (Tuple String (OrdBox Any)) Any)
 
 empty :: forall ps slot. SlotStorage ps slot
 empty = SlotStorage Map.empty
 
 lookup
-  :: forall sym px ps slot g i o p
-   . Row.Cons sym (Slot g i o p) px ps
+  :: forall sym px ps slot g o p
+   . Row.Cons sym (Slot g o p) px ps
   => IsSymbol sym
   => Ord p
   => SProxy sym
   -> p
   -> SlotStorage ps slot
-  -> Maybe (slot g i o)
+  -> Maybe (slot g o)
 lookup sym key (SlotStorage m) =
   coerceSlot (Map.lookup (Tuple (reflectSymbol sym) (coerceBox (mkOrdBox key))) m)
   where
-  coerceSlot :: Maybe Any -> Maybe (slot g i o)
+  coerceSlot :: Maybe Any -> Maybe (slot g o)
   coerceSlot = unsafeCoerce
 
   coerceBox :: OrdBox p -> OrdBox Any
   coerceBox = unsafeCoerce
 
 pop
-  :: forall sym px ps slot g i o p
-   . Row.Cons sym (Slot g i o p) px ps
+  :: forall sym px ps slot g o p
+   . Row.Cons sym (Slot g o p) px ps
   => IsSymbol sym
   => Ord p
   => SProxy sym
   -> p
   -> SlotStorage ps slot
-  -> Maybe (Tuple (slot g i o) (SlotStorage ps slot))
+  -> Maybe (Tuple (slot g o) (SlotStorage ps slot))
 pop sym key (SlotStorage m) =
   coercePop (Map.pop (Tuple (reflectSymbol sym) (coerceBox (mkOrdBox key))) m)
   where
-  coercePop :: Maybe (Tuple Any (Map (Tuple String (OrdBox Any)) Any)) -> Maybe (Tuple (slot g i o) (SlotStorage ps slot))
+  coercePop :: Maybe (Tuple Any (Map (Tuple String (OrdBox Any)) Any)) -> Maybe (Tuple (slot g o) (SlotStorage ps slot))
   coercePop = unsafeCoerce
 
   coerceBox :: OrdBox p -> OrdBox Any
   coerceBox = unsafeCoerce
 
 insert
-  :: forall sym px ps slot g i o p
-   . Row.Cons sym (Slot g i o p) px ps
+  :: forall sym px ps slot g o p
+   . Row.Cons sym (Slot g o p) px ps
   => IsSymbol sym
   => Ord p
   => SProxy sym
   -> p
-  -> slot g i o
+  -> slot g o
   -> SlotStorage ps slot
   -> SlotStorage ps slot
 insert sym key val (SlotStorage m) =
@@ -83,17 +83,17 @@ insert sym key val (SlotStorage m) =
   coerceBox :: OrdBox p -> OrdBox Any
   coerceBox = unsafeCoerce
 
-  coerceVal :: slot g i o -> Any
+  coerceVal :: slot g o -> Any
   coerceVal = unsafeCoerce
 
 slots
-  :: forall sym px ps slot g i o p
-   . Row.Cons sym (Slot g i o p) px ps
+  :: forall sym px ps slot g o p
+   . Row.Cons sym (Slot g o p) px ps
   => IsSymbol sym
   => Ord p
   => SProxy sym
   -> SlotStorage ps slot
-  -> Map p (slot g i o)
+  -> Map p (slot g o)
 slots sym (SlotStorage m) = Map.foldSubmap Nothing Nothing go m
   where
   key = reflectSymbol sym
@@ -105,16 +105,16 @@ slots sym (SlotStorage m) = Map.foldSubmap Nothing Nothing go m
   coerceBox :: OrdBox Any -> OrdBox p
   coerceBox = unsafeCoerce
 
-  coerceVal :: Any -> slot g i o
+  coerceVal :: Any -> slot g o
   coerceVal = unsafeCoerce
 
 foreachSlot
   :: forall m ps slot
    . Applicative m
   => SlotStorage ps slot
-  -> (forall g i o. slot g i o -> m Unit)
+  -> (forall g o. slot g o -> m Unit)
   -> m Unit
 foreachSlot (SlotStorage m) k = traverse_ (k <<< coerceVal) m
   where
-  coerceVal :: forall g i o. Any -> slot g i o
+  coerceVal :: forall g o. Any -> slot g o
   coerceVal = unsafeCoerce
