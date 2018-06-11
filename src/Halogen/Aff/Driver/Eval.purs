@@ -115,8 +115,8 @@ evalM render initRef (HalogenM hm) = foldFree (go initRef) hm
       pure next
     Lift aff ->
       aff
-    Halt act ->
-      throwError (error act)
+    Halt msg ->
+      throwError (error msg)
     ChildQuery cq ->
       evalChildQuery ref cq
     Raise o a -> do

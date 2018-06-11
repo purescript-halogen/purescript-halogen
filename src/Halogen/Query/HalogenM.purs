@@ -70,7 +70,7 @@ instance functorHalogenF :: Functor m => Functor (HalogenF s act ps o m) where
     Subscribe fes a -> Subscribe fes (map f a)
     Unsubscribe sid a -> Unsubscribe sid (f a)
     Lift q -> Lift (map f q)
-    Halt act -> Halt act
+    Halt msg -> Halt msg
     ChildQuery cq -> ChildQuery (unQuery (\cq' -> mkQuery' $ cq' { reply = cq'.reply >>> f }) cq)
     Raise o a -> Raise o (f a)
     Par pa -> Par (map f pa)
@@ -131,7 +131,7 @@ instance monadTellHalogenM :: MonadTell w m => MonadTell w (HalogenM' s act ps o
   tell = HalogenM <<< liftF <<< Lift <<< tell
 
 halt :: forall s act ps o m a. String -> HalogenM' s act ps o m a
-halt act = HalogenM $ liftF $ Halt act
+halt msg = HalogenM $ liftF $ Halt msg
 
 -- | Subscribes a component to an `EventSource`.
 subscribe :: forall s act ps o m. ES.EventSource m act -> HalogenM' s act ps o m SubscriptionId
@@ -203,7 +203,7 @@ imapState f f' (HalogenM h) = HalogenM (hoistFree go h)
     Subscribe fes a -> Subscribe fes a
     Unsubscribe sid a -> Unsubscribe sid a
     Lift q -> Lift q
-    Halt act -> Halt act
+    Halt msg -> Halt msg
     ChildQuery cq -> ChildQuery cq
     Raise o a -> Raise o a
     Par p -> Par (over HalogenAp (hoistFreeAp (imapState f f')) p)
@@ -224,7 +224,7 @@ mapMessage f (HalogenM h) = HalogenM (hoistFree go h)
     Subscribe fes a -> Subscribe (map f <<< fes) a
     Unsubscribe sid a -> Unsubscribe sid a
     Lift q -> Lift q
-    Halt act -> Halt act
+    Halt msg -> Halt msg
     ChildQuery cq -> ChildQuery cq
     Raise o a -> Raise o a
     Par p -> Par (over HalogenAp (hoistFreeAp (mapMessage f)) p)
@@ -244,7 +244,7 @@ mapOutput f (HalogenM h) = HalogenM (hoistFree go h)
     Subscribe fes a -> Subscribe fes a
     Unsubscribe sid a -> Unsubscribe sid a
     Lift q -> Lift q
-    Halt act -> Halt act
+    Halt msg -> Halt msg
     ChildQuery cq -> ChildQuery cq
     Raise o a -> Raise (f o) a
     Par p -> Par (over HalogenAp (hoistFreeAp (mapOutput f)) p)
@@ -265,7 +265,7 @@ hoist nat (HalogenM fa) = HalogenM (hoistFree go fa)
     Subscribe fes a -> Subscribe (ES.hoist nat <<< fes) a
     Unsubscribe sid a -> Unsubscribe sid a
     Lift q -> Lift (nat q)
-    Halt act -> Halt act
+    Halt msg -> Halt msg
     ChildQuery cq -> ChildQuery cq
     Raise o a -> Raise o a
     Par p -> Par (over HalogenAp (hoistFreeAp (hoist nat)) p)

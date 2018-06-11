@@ -48,7 +48,7 @@ data Component (h :: Type -> Type -> Type) (f :: Type -> Type) i o (m :: Type ->
 -- | of the function - the compiler will complain about an escaped skolem.
 unComponent
   :: forall h f i o m r
-   . (forall s g ps. ComponentSpec' h s f g ps i o m -> r)
+   . (forall s act ps. ComponentSpec' h s f act ps i o m -> r)
   -> Component h f i o m
   -> r
 unComponent = unsafeCoerce
@@ -97,7 +97,7 @@ type ComponentHTML' act ps m = HTML (ComponentSlot HTML ps m act) act
 
 -- | A convenience synonym for the output type of a `render` function, for a
 -- | component that renders HTML.
-type ComponentHTML f ps m = HTML (ComponentSlot HTML ps m (f Unit)) (f Unit)
+type ComponentHTML f ps m = ComponentHTML' (f Unit) ps m
 
 component'
   :: forall h s f g ps i o m
