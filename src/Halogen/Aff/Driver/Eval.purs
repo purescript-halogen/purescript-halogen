@@ -44,16 +44,16 @@ handleLifecycle lchs f = do
   pure result
 
 type Renderer h r
-  = forall s f msg ps i o
+  = forall s f act ps i o
    . Ref LifecycleHandlers
-  -> Ref (DriverState h r s f msg ps i o)
+  -> Ref (DriverState h r s f act ps i o)
   -> Effect Unit
 
 evalF
-  :: forall h r s f msg ps i o a
+  :: forall h r s f act ps i o a
    . Renderer h r
-  -> Ref (DriverState h r s f msg ps i o)
-  -> InputF a (Coproduct f (Tuple msg) a)
+  -> Ref (DriverState h r s f act ps i o)
+  -> InputF a (Coproduct f (Tuple act) a)
   -> Aff a
 evalF render ref =
   case _ of
@@ -66,17 +66,17 @@ evalF render ref =
       evalM render ref (st.component.eval (coproduct Request (uncurry Handle) q))
 
 evalM
-  :: forall h r s f msg ps i o
+  :: forall h r s f act ps i o
    . Renderer h r
-  -> Ref (DriverState h r s f msg ps i o)
-  -> HalogenM' s msg ps o Aff
+  -> Ref (DriverState h r s f act ps i o)
+  -> HalogenM' s act ps o Aff
   ~> Aff
 evalM render initRef (HalogenM hm) = foldFree (go initRef) hm
   where
   go
-    :: forall s' f' msg' ps' i' o'
-     . Ref (DriverState h r s' f' msg' ps' i' o')
-    -> HalogenF s' msg' ps' o' Aff
+    :: forall s' f' act' ps' i' o'
+     . Ref (DriverState h r s' f' act' ps' i' o')
+    -> HalogenF s' act' ps' o' Aff
     ~> Aff
   go ref = case _ of
     State f -> do
@@ -115,8 +115,8 @@ evalM render initRef (HalogenM hm) = foldFree (go initRef) hm
       pure next
     Lift aff ->
       aff
-    Halt msg ->
-      throwError (error msg)
+    Halt act ->
+      throwError (error act)
     ChildQuery cq ->
       evalChildQuery ref cq
     Raise o a -> do
@@ -135,8 +135,8 @@ evalM render initRef (HalogenM hm) = foldFree (go initRef) hm
       pure $ k $ M.lookup p refs
 
   evalChildQuery
-    :: forall s' f' msg' ps' i' o' a'
-     . Ref (DriverState h r s' f' msg' ps' i' o')
+    :: forall s' f' act' ps' i' o' a'
+     . Ref (DriverState h r s' f' act' ps' i' o')
     -> QueryBox ps' a'
     -> Aff a'
   evalChildQuery ref cqb = do
@@ -149,9 +149,9 @@ evalM render initRef (HalogenM hm) = foldFree (go initRef) hm
       reply <$> sequential (unpack evalChild st.children)) cqb
 
   unsubscribe
-    :: forall s' f' msg' ps' i' o'
+    :: forall s' f' act' ps' i' o'
      . SubscriptionId
-    -> Ref (DriverState h r s' f' msg' ps' i' o')
+    -> Ref (DriverState h r s' f' act' ps' i' o')
     -> Aff Unit
   unsubscribe sid ref = do
     DriverState ({ subscriptions }) <- liftEffect (Ref.read ref)

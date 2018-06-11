@@ -49,21 +49,21 @@ type LifecycleHandlers =
 -- | - `p` is the type of slots for the component.
 -- | - `i` is the invput value type.
 -- | - `o` is the type of output messages from the component.
-newtype DriverState h r s f msg ps i o = DriverState (DriverStateRec h r s f msg ps i o)
+newtype DriverState h r s f act ps i o = DriverState (DriverStateRec h r s f act ps i o)
 
-type DriverStateRec h r s f msg ps i o =
-  { component :: ComponentSpec' h s f msg ps i o Aff
+type DriverStateRec h r s f act ps i o =
+  { component :: ComponentSpec' h s f act ps i o Aff
   , state :: s
   , refs :: M.Map String Element
   , children :: SlotStorage ps (DriverStateRef h r)
   , childrenIn :: Ref (SlotStorage ps (DriverStateRef h r))
   , childrenOut :: Ref (SlotStorage ps (DriverStateRef h r))
-  , selfRef :: Ref (DriverState h r s f msg ps i o)
+  , selfRef :: Ref (DriverState h r s f act ps i o)
   , handlerRef :: Ref (o -> Aff Unit)
   , pendingQueries :: Ref (Maybe (List (Aff Unit)))
   , pendingOuts :: Ref (Maybe (List (Aff Unit)))
   , pendingHandlers :: Ref (Maybe (List (Aff Unit)))
-  , rendering :: Maybe (r s msg ps o)
+  , rendering :: Maybe (r s act ps o)
   , fresh :: Ref Int
   , subscriptions :: Ref (Maybe (M.Map SubscriptionId (Finalizer Aff)))
   , lifecycleHandlers :: Ref LifecycleHandlers
@@ -81,14 +81,14 @@ data DriverStateX
   (o :: Type)
 
 mkDriverStateXRef
-  :: forall h r s f msg ps i o
-   . Ref (DriverState h r s f msg ps i o)
+  :: forall h r s f act ps i o
+   . Ref (DriverState h r s f act ps i o)
   -> Ref (DriverStateX h r f i o)
 mkDriverStateXRef = unsafeCoerce
 
 unDriverStateX
   :: forall h r f i o x
-   . (forall s msg ps. DriverStateRec h r s f msg ps i o -> x)
+   . (forall s act ps. DriverStateRec h r s f act ps i o -> x)
   -> DriverStateX h r f i o
   -> x
 unDriverStateX = unsafeCoerce
@@ -113,7 +113,7 @@ unRenderStateX = unsafeCoerce
 renderStateX
   :: forall m h r f i o
    . Functor m
-  => (forall s msg ps. Maybe (r s msg ps o) -> m (r s msg ps o))
+  => (forall s act ps. Maybe (r s act ps o) -> m (r s act ps o))
   -> DriverStateX h r f i o
   -> m (RenderStateX r)
 renderStateX f = unDriverStateX \st ->
@@ -122,14 +122,14 @@ renderStateX f = unDriverStateX \st ->
 renderStateX_
   :: forall m h r f i o
    . Applicative m
-  => (forall s msg ps. r s msg ps o -> m Unit)
+  => (forall s act ps. r s act ps o -> m Unit)
   -> DriverStateX h r f i o
   -> m Unit
 renderStateX_ f = unDriverStateX \st -> traverse_ f st.rendering
 
 initDriverState
-  :: forall h r s f msg ps i o
-   . ComponentSpec' h s f msg ps i o Aff
+  :: forall h r s f act ps i o
+   . ComponentSpec' h s f act ps i o Aff
   -> i
   -> (o -> Aff Unit)
   -> Ref LifecycleHandlers
@@ -145,7 +145,7 @@ initDriverState component input handler lchs = do
   fresh <- Ref.new 1
   subscriptions <- Ref.new (Just M.empty)
   let
-    ds :: DriverStateRec h r s f msg ps i o
+    ds :: DriverStateRec h r s f act ps i o
     ds =
       { component
       , state: component.initialState input
