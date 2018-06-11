@@ -6,9 +6,7 @@ module Halogen.VDom.Driver
 import Prelude
 
 import Data.Foldable (traverse_)
-import Data.Functor.Coproduct (Coproduct, right)
 import Data.Maybe (Maybe(..))
-import Data.Tuple (Tuple(..))
 import Effect (Effect)
 import Effect.Aff (Aff)
 import Effect.Class (liftEffect)
@@ -34,7 +32,7 @@ import Web.HTML.HTMLElement as HTMLElement
 import Web.HTML.Window (document) as DOM
 
 type VHTML act ps =
-  V.VDom (Array (Prop (InputF Unit act))) (ComponentSlot HTML ps Aff act)
+  V.VDom (Array (Prop (InputF act))) (ComponentSlot HTML ps Aff act)
 
 type ChildRenderer act ps
   = ComponentSlot HTML ps Aff act -> Effect (RenderStateX RenderState)
@@ -47,12 +45,12 @@ newtype RenderState s act ps o =
     }
 
 mkSpec
-  :: forall f act ps
-   . (InputF Unit (Coproduct f (Tuple act) Unit) -> Effect Unit)
+  :: forall act ps
+   . (InputF act -> Effect Unit)
   -> Ref (ChildRenderer act ps)
   -> DOM.Document
   -> V.VDomSpec
-      (Array (VP.Prop (InputF Unit act)))
+      (Array (VP.Prop (InputF act)))
       (ComponentSlot HTML ps Aff act)
 mkSpec handler renderChildRef document =
   V.VDomSpec { buildWidget, buildAttributes, document }
@@ -60,12 +58,12 @@ mkSpec handler renderChildRef document =
 
   buildAttributes
     :: DOM.Element
-    -> V.Machine (Array (VP.Prop (InputF Unit act))) Unit
-  buildAttributes = VP.buildProp (handler <<< map (right <<< flip Tuple unit))
+    -> V.Machine (Array (VP.Prop (InputF act))) Unit
+  buildAttributes = VP.buildProp handler
 
   buildWidget
     :: V.VDomSpec
-          (Array (VP.Prop (InputF Unit act)))
+          (Array (VP.Prop (InputF act)))
           (ComponentSlot HTML ps Aff act)
     -> V.Machine
           (ComponentSlot HTML ps Aff act)
@@ -110,8 +108,8 @@ renderSpec document container = { render, renderChild: identity, removeChild }
   where
 
   render
-    :: forall s f act ps o
-     . (forall x. InputF x (Coproduct f (Tuple act) x) -> Effect Unit)
+    :: forall s act ps o
+     . (InputF act -> Effect Unit)
     -> (ComponentSlot HTML ps Aff act -> Effect (RenderStateX RenderState))
     -> HTML (ComponentSlot HTML ps Aff act) act
     -> Maybe (RenderState s act ps o)

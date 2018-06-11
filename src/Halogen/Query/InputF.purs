@@ -2,7 +2,6 @@ module Halogen.Query.InputF where
 
 import Prelude
 
-import Data.Bifunctor (class Bifunctor, rmap)
 import Data.Maybe (Maybe)
 import Data.Newtype (class Newtype)
 import Web.DOM (Element)
@@ -13,14 +12,8 @@ derive instance newtypeRefLabel :: Newtype RefLabel _
 derive newtype instance eqRefLabel :: Eq RefLabel
 derive newtype instance ordRefLabel :: Ord RefLabel
 
-data InputF a i
-  = RefUpdate RefLabel (Maybe Element) a
-  | Query i
+data InputF act
+  = RefUpdate RefLabel (Maybe Element)
+  | Query act
 
-instance bifunctorInputF :: Bifunctor InputF where
-  bimap f g = case _ of
-    RefUpdate p mf a -> RefUpdate p mf (f a)
-    Query i -> Query (g i)
-
-instance functorInputF :: Functor (InputF a) where
-  map = rmap
+derive instance functorInputF :: Functor InputF

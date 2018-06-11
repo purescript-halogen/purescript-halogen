@@ -116,7 +116,7 @@ module Halogen.HTML.Elements
   , wbr
   ) where
 
-import Prelude (Unit, (#), (>>>), pure)
+import Prelude ((#), (>>>), pure)
 import Data.Maybe (Maybe(Nothing))
 import Data.Tuple (Tuple)
 
@@ -191,7 +191,7 @@ withKeys ctor props children =
     HTML (VDom.Elem spec _) -> HTML (VDom.Keyed spec (coe children))
     h -> h
   where
-  coe :: Array (Tuple String (HTML p i)) -> Array (Tuple String (VDom.VDom (Array (Prop (InputF Unit i))) p))
+  coe :: Array (Tuple String (HTML p i)) -> Array (Tuple String (VDom.VDom (Array (Prop (InputF i))) p))
   coe = unsafeCoerce
 
 withKeys_ :: forall p i. (Array (HTML p i) -> HTML p i) -> Array (Tuple String (HTML p i)) -> HTML p i
@@ -200,7 +200,7 @@ withKeys_ ctor children =
     HTML (VDom.Elem spec _) -> HTML (VDom.Keyed spec (coe children))
     h -> h
   where
-  coe :: Array (Tuple String (HTML p i)) -> Array (Tuple String (VDom.VDom (Array (Prop (InputF Unit i))) p))
+  coe :: Array (Tuple String (HTML p i)) -> Array (Tuple String (VDom.VDom (Array (Prop (InputF i))) p))
   coe = unsafeCoerce
 
 a :: forall p i. Node I.HTMLa p i

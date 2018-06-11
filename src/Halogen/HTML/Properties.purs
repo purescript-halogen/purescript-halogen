@@ -88,7 +88,7 @@ import Web.DOM.Element (Element)
 
 -- | The phantom row `r` can be thought of as a context which is synthesized in
 -- | the course of constructing a refined HTML expression.
-newtype IProp (r :: # Type) i = IProp (Prop (InputF Unit i))
+newtype IProp (r :: # Type) i = IProp (Prop (InputF i))
 
 derive instance newtypeIProp :: Newtype (IProp r i) _
 derive instance functorIProp :: Functor (IProp r)
@@ -100,14 +100,14 @@ prop
   => PropName value
   -> value
   -> IProp r i
-prop = (unsafeCoerce :: (PropName value -> value -> Prop (InputF Unit i)) -> PropName value -> value -> IProp r i) Core.prop
+prop = (unsafeCoerce :: (PropName value -> value -> Prop (InputF i)) -> PropName value -> value -> IProp r i) Core.prop
 
 -- | Creates an indexed HTML attribute.
 attr :: forall r i. AttrName -> String -> IProp r i
 attr =
   Core.attr Nothing #
     (unsafeCoerce
-      :: (AttrName -> String -> Prop (InputF Unit i))
+      :: (AttrName -> String -> Prop (InputF i))
       -> AttrName
       -> String
       -> IProp r i)
@@ -117,7 +117,7 @@ attrNS :: forall r i. Namespace -> AttrName -> String -> IProp r i
 attrNS =
   pure >>> Core.attr >>>
     (unsafeCoerce
-      :: (AttrName -> String -> Prop (InputF Unit i))
+      :: (AttrName -> String -> Prop (InputF i))
       -> AttrName
       -> String
       -> IProp r i)
@@ -126,10 +126,10 @@ attrNS =
 -- | been created or destroyed in the DOM for the element that the property is
 -- | attached to.
 ref :: forall r i. RefLabel -> IProp r i
-ref = (unsafeCoerce :: ((Maybe Element -> Maybe (InputF Unit i)) -> Prop (InputF Unit i)) -> (Maybe Element -> Maybe (InputF Unit i)) -> IProp r i) Core.ref <<< go
+ref = (unsafeCoerce :: ((Maybe Element -> Maybe (InputF i)) -> Prop (InputF i)) -> (Maybe Element -> Maybe (InputF i)) -> IProp r i) Core.ref <<< go
   where
-  go :: RefLabel -> Maybe Element -> Maybe (InputF Unit i)
-  go p mel = Just (RefUpdate p mel unit)
+  go :: RefLabel -> Maybe Element -> Maybe (InputF i)
+  go p mel = Just (RefUpdate p mel)
 
 alt :: forall r i. String -> IProp (alt :: String | r) i
 alt = prop (PropName "alt")

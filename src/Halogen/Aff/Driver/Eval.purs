@@ -10,12 +10,11 @@ import Control.Monad.Free (foldFree)
 import Control.Monad.Trans.Class (lift)
 import Control.Parallel (parSequence_, parallel, sequential)
 import Data.Foldable (traverse_)
-import Data.Functor.Coproduct (Coproduct, coproduct, left, right)
 import Data.List (List, (:))
 import Data.List as L
 import Data.Map as M
 import Data.Maybe (Maybe(..), maybe)
-import Data.Tuple (Tuple(..), uncurry)
+import Data.Tuple (Tuple(..))
 import Effect (Effect)
 import Effect.Aff (Aff, killFiber)
 import Effect.Class (liftEffect)
@@ -50,20 +49,28 @@ type Renderer h r
   -> Effect Unit
 
 evalF
-  :: forall h r s f act ps i o a
+  :: forall h r s f act ps i o
    . Renderer h r
   -> Ref (DriverState h r s f act ps i o)
-  -> InputF a (Coproduct f (Tuple act) a)
-  -> Aff a
-evalF render ref =
-  case _ of
-    RefUpdate (RefLabel p) el next -> do
-      liftEffect $ Ref.modify_ (\(DriverState st) ->
-        DriverState st { refs = M.alter (const el) p st.refs }) ref
-      pure next
-    Query q -> do
-      DriverState st <- liftEffect (Ref.read ref)
-      evalM render ref (st.component.eval (coproduct Request (uncurry Handle) q))
+  -> InputF act
+  -> Aff Unit
+evalF render ref = case _ of
+  RefUpdate (RefLabel p) el -> do
+    liftEffect $ Ref.modify_ (\(DriverState st) ->
+      DriverState st { refs = M.alter (const el) p st.refs }) ref
+  Query q -> do
+    DriverState st <- liftEffect (Ref.read ref)
+    evalM render ref (st.component.eval (Handle q unit))
+
+evalQ
+  :: forall h r s f act ps i o
+   . Renderer h r
+  -> Ref (DriverState h r s f act ps i o)
+  -> f
+  ~> Aff
+evalQ render ref q = do
+  DriverState st <- liftEffect (Ref.read ref)
+  evalM render ref (st.component.eval (Request q))
 
 evalM
   :: forall h r s f act ps i o
@@ -104,7 +111,7 @@ evalM render initRef (HalogenM hm) = foldFree (go initRef) hm
             q <- CR.await
             subs <- lift $ liftEffect (Ref.read subscriptions)
             when ((M.member sid <$> subs) == Just true) do
-              _ <- lift $ fork $ evalF render ref (Query (right (Tuple q unit)))
+              _ <- lift $ fork $ evalF render ref (Query q)
               consumer
         liftEffect $ Ref.modify_ (map (M.insert sid done)) subscriptions
         CR.runProcess (consumer `CR.pullFrom` producer)
@@ -145,7 +152,7 @@ evalM render initRef (HalogenM hm) = foldFree (go initRef) hm
       let
         evalChild (DriverStateRef var) = parallel do
           dsx <- liftEffect (Ref.read var)
-          unDriverStateX (\ds -> evalF render ds.selfRef (Query (left query))) dsx
+          unDriverStateX (\ds -> evalQ render ds.selfRef query) dsx
       reply <$> sequential (unpack evalChild st.children)) cqb
 
   unsubscribe

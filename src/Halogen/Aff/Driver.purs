@@ -11,7 +11,6 @@ import Control.Monad.Fork.Class (fork)
 import Control.Monad.Rec.Class (Step(..), tailRecM)
 import Control.Parallel (parSequence_)
 import Data.Either (Either(..), either)
-import Data.Functor.Coproduct (Coproduct, left, right)
 import Data.List ((:))
 import Data.List as L
 import Data.Map as M
@@ -94,14 +93,14 @@ import Halogen.Query.InputF (InputF(..))
 -- | `const (pure unit)`.
 type RenderSpec h r =
   { render
-      :: forall s f act ps o
-       . (forall x. InputF x (Coproduct f (Tuple act) x) -> Effect Unit)
+      :: forall s act ps o
+       . (InputF act -> Effect Unit)
       -> (ComponentSlot h ps Aff act -> Effect (RenderStateX r))
       -> h (ComponentSlot h ps Aff act) act
       -> Maybe (r s act ps o)
       -> Effect (r s act ps o)
-  , renderChild :: forall s f act ps o. r s act ps o -> r s act ps o
-  , removeChild :: forall s f act ps o. r s act ps o -> Effect Unit
+  , renderChild :: forall s act ps o. r s act ps o -> r s act ps o
+  , removeChild :: forall s act ps o. r s act ps o -> Effect Unit
   }
 
 newLifecycleHandlers :: Effect (Ref LifecycleHandlers)
@@ -133,7 +132,7 @@ runUI renderSpec component i = do
      . Ref (DriverState h r s' f' act' ps' i' o')
     -> f'
     ~> Aff
-  evalDriver ref q = Eval.evalF render ref (Query (left q))
+  evalDriver ref = Eval.evalQ render ref
 
   rootHandler
     :: Ref (M.Map Int (AV.AVar o))
@@ -192,10 +191,10 @@ runUI renderSpec component i = do
     Ref.write Slot.empty ds.childrenOut
     Ref.write ds.children ds.childrenIn
     let
-      handler :: forall x. InputF x (Coproduct f' (Tuple act') x) -> Aff Unit
+      handler :: InputF act' -> Aff Unit
       handler = Eval.queuingHandler (void <<< Eval.evalF render ds.selfRef) ds.pendingHandlers
       childHandler :: act' -> Aff Unit
-      childHandler = Eval.queuingHandler (handler <<< Query <<< right <<< flip Tuple unit) ds.pendingQueries
+      childHandler = Eval.queuingHandler (handler <<< Query) ds.pendingQueries
     rendering <-
       renderSpec.render
         (handleAff <<< handler)
