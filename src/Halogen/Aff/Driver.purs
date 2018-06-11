@@ -32,7 +32,7 @@ import Halogen.Component (Component, ComponentSlot, unComponent, unComponentSlot
 import Halogen.Data.Slot as Slot
 import Halogen.Query.EventSource as ES
 import Halogen.Query.HalogenQ (HalogenQ(..))
-import Halogen.Query.InputF (InputF(..))
+import Halogen.Query.Input (Input(..))
 
 -- | `RenderSpec` allows for alternative driver implementations without the need
 -- | to provide all of the driver machinery again, focusing just on the code
@@ -94,7 +94,7 @@ import Halogen.Query.InputF (InputF(..))
 type RenderSpec h r =
   { render
       :: forall s act ps o
-       . (InputF act -> Effect Unit)
+       . (Input act -> Effect Unit)
       -> (ComponentSlot h ps Aff act -> Effect (RenderStateX r))
       -> h (ComponentSlot h ps Aff act) act
       -> Maybe (r s act ps o)
@@ -191,7 +191,7 @@ runUI renderSpec component i = do
     Ref.write Slot.empty ds.childrenOut
     Ref.write ds.children ds.childrenIn
     let
-      handler :: InputF act' -> Aff Unit
+      handler :: Input act' -> Aff Unit
       handler = Eval.queuingHandler (void <<< Eval.evalF render ds.selfRef) ds.pendingHandlers
       childHandler :: act' -> Aff Unit
       childHandler = Eval.queuingHandler (handler <<< Query) ds.pendingQueries

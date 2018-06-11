@@ -125,7 +125,7 @@ import DOM.HTML.Indexed as I
 import Halogen.HTML.Core (ElemName(..), HTML(..), Namespace, Prop)
 import Halogen.HTML.Core as Core
 import Halogen.HTML.Properties (IProp)
-import Halogen.Query.InputF (InputF)
+import Halogen.Query.Input (Input)
 import Halogen.VDom as VDom
 
 import Unsafe.Coerce (unsafeCoerce)
@@ -191,7 +191,7 @@ withKeys ctor props children =
     HTML (VDom.Elem spec _) -> HTML (VDom.Keyed spec (coe children))
     h -> h
   where
-  coe :: Array (Tuple String (HTML p i)) -> Array (Tuple String (VDom.VDom (Array (Prop (InputF i))) p))
+  coe :: Array (Tuple String (HTML p i)) -> Array (Tuple String (VDom.VDom (Array (Prop (Input i))) p))
   coe = unsafeCoerce
 
 withKeys_ :: forall p i. (Array (HTML p i) -> HTML p i) -> Array (Tuple String (HTML p i)) -> HTML p i
@@ -200,7 +200,7 @@ withKeys_ ctor children =
     HTML (VDom.Elem spec _) -> HTML (VDom.Keyed spec (coe children))
     h -> h
   where
-  coe :: Array (Tuple String (HTML p i)) -> Array (Tuple String (VDom.VDom (Array (Prop (InputF i))) p))
+  coe :: Array (Tuple String (HTML p i)) -> Array (Tuple String (VDom.VDom (Array (Prop (Input i))) p))
   coe = unsafeCoerce
 
 a :: forall p i. Node I.HTMLa p i

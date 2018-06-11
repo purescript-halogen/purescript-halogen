@@ -7,7 +7,7 @@ module Halogen.Query
   , request
   , getHTMLElementRef
   , module Exports
-  , module Halogen.Query.InputF
+  , module Halogen.Query.Input
   , module Halogen.Query.HalogenM
   , module Halogen.Query.HalogenQ
   ) where
@@ -21,7 +21,7 @@ import Effect.Aff.Class (liftAff) as Exports
 import Effect.Class (liftEffect) as Exports
 import Halogen.Query.HalogenM (HalogenM, HalogenM'(..), HalogenF(..), SubscriptionId, fork, getRef, query, queryAll, subscribe, subscribe', unsubscribe, raise)
 import Halogen.Query.HalogenQ (HalogenQ(..))
-import Halogen.Query.InputF (RefLabel(..))
+import Halogen.Query.Input (RefLabel(..))
 import Web.HTML.HTMLElement (HTMLElement)
 import Web.HTML.HTMLElement as HTMLElement
 

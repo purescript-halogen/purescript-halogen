@@ -26,7 +26,7 @@ import Halogen.Query.EventSource as ES
 import Halogen.Query.ForkF as FF
 import Halogen.Query.HalogenM (HalogenAp(..), HalogenF(..), HalogenM'(..), QueryBox, UnpackQuery(..), SubscriptionId(..), unQuery)
 import Halogen.Query.HalogenQ (HalogenQ(..))
-import Halogen.Query.InputF (InputF(..), RefLabel(..))
+import Halogen.Query.Input (Input(..), RefLabel(..))
 import Unsafe.Reference (unsafeRefEq)
 
 handleLifecycle
@@ -52,7 +52,7 @@ evalF
   :: forall h r s f act ps i o
    . Renderer h r
   -> Ref (DriverState h r s f act ps i o)
-  -> InputF act
+  -> Input act
   -> Aff Unit
 evalF render ref = case _ of
   RefUpdate (RefLabel p) el -> do

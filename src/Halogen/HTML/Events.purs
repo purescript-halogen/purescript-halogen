@@ -66,7 +66,7 @@ import Halogen.HTML.Core (Prop)
 import Halogen.HTML.Core as Core
 import Halogen.HTML.Properties (IProp)
 import Halogen.Query (Action, action)
-import Halogen.Query.InputF (InputF(..))
+import Halogen.Query.Input (Input(..))
 import Unsafe.Coerce (unsafeCoerce)
 import Web.Clipboard.ClipboardEvent (ClipboardEvent)
 import Web.Clipboard.ClipboardEvent.EventTypes as CET
@@ -92,7 +92,7 @@ input_ :: forall f a. Action f -> a -> Maybe (f Unit)
 input_ f _ = Just $ action f
 
 handler :: forall r i. EventType -> (Event -> Maybe i) -> IProp r i
-handler et = (unsafeCoerce :: (EventType -> (Event -> Maybe i) -> Prop i) -> EventType -> (Event -> Maybe (InputF i)) -> IProp r i) Core.handler et <<< map (map Query)
+handler et = (unsafeCoerce :: (EventType -> (Event -> Maybe i) -> Prop i) -> EventType -> (Event -> Maybe (Input i)) -> IProp r i) Core.handler et <<< map (map Query)
 
 onAbort :: forall r i. (Event -> Maybe i) -> IProp (onAbort :: Event | r) i
 onAbort = handler (EventType "abort")

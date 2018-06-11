@@ -24,7 +24,7 @@ import Halogen.Data.Slot (Slot, SlotStorage)
 import Halogen.Data.Slot as Slot
 import Halogen.Query.EventSource as ES
 import Halogen.Query.ForkF as FF
-import Halogen.Query.InputF (RefLabel)
+import Halogen.Query.Input (RefLabel)
 import Prim.Row as Row
 import Unsafe.Coerce (unsafeCoerce)
 import Web.DOM (Element)

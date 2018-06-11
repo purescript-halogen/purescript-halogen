@@ -1,4 +1,4 @@
-module Halogen.Query.InputF where
+module Halogen.Query.Input where
 
 import Prelude
 
@@ -12,8 +12,8 @@ derive instance newtypeRefLabel :: Newtype RefLabel _
 derive newtype instance eqRefLabel :: Eq RefLabel
 derive newtype instance ordRefLabel :: Ord RefLabel
 
-data InputF act
+data Input act
   = RefUpdate RefLabel (Maybe Element)
   | Query act
 
-derive instance functorInputF :: Functor InputF
+derive instance functorInput :: Functor Input

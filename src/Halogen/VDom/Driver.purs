@@ -18,7 +18,7 @@ import Halogen.Aff.Driver as AD
 import Halogen.Aff.Driver.State (RenderStateX, unRenderStateX)
 import Halogen.Component (Component, ComponentSlot)
 import Halogen.HTML.Core (HTML(..), Prop)
-import Halogen.Query.InputF (InputF)
+import Halogen.Query.Input (Input)
 import Halogen.VDom as V
 import Halogen.VDom.DOM.Prop as VP
 import Unsafe.Reference (unsafeRefEq)
@@ -32,7 +32,7 @@ import Web.HTML.HTMLElement as HTMLElement
 import Web.HTML.Window (document) as DOM
 
 type VHTML act ps =
-  V.VDom (Array (Prop (InputF act))) (ComponentSlot HTML ps Aff act)
+  V.VDom (Array (Prop (Input act))) (ComponentSlot HTML ps Aff act)
 
 type ChildRenderer act ps
   = ComponentSlot HTML ps Aff act -> Effect (RenderStateX RenderState)
@@ -46,11 +46,11 @@ newtype RenderState s act ps o =
 
 mkSpec
   :: forall act ps
-   . (InputF act -> Effect Unit)
+   . (Input act -> Effect Unit)
   -> Ref (ChildRenderer act ps)
   -> DOM.Document
   -> V.VDomSpec
-      (Array (VP.Prop (InputF act)))
+      (Array (VP.Prop (Input act)))
       (ComponentSlot HTML ps Aff act)
 mkSpec handler renderChildRef document =
   V.VDomSpec { buildWidget, buildAttributes, document }
@@ -58,12 +58,12 @@ mkSpec handler renderChildRef document =
 
   buildAttributes
     :: DOM.Element
-    -> V.Machine (Array (VP.Prop (InputF act))) Unit
+    -> V.Machine (Array (VP.Prop (Input act))) Unit
   buildAttributes = VP.buildProp handler
 
   buildWidget
     :: V.VDomSpec
-          (Array (VP.Prop (InputF act)))
+          (Array (VP.Prop (Input act)))
           (ComponentSlot HTML ps Aff act)
     -> V.Machine
           (ComponentSlot HTML ps Aff act)
@@ -109,7 +109,7 @@ renderSpec document container = { render, renderChild: identity, removeChild }
 
   render
     :: forall s act ps o
-     . (InputF act -> Effect Unit)
+     . (Input act -> Effect Unit)
     -> (ComponentSlot HTML ps Aff act -> Effect (RenderStateX RenderState))
     -> HTML (ComponentSlot HTML ps Aff act) act
     -> Maybe (RenderState s act ps o)
