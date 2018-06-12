@@ -210,13 +210,13 @@ imapState f f' (HalogenM h) = HalogenM (hoistFree go h)
     Fork fo -> Fork (FF.hoistFork (imapState f f') fo)
     GetRef p k -> GetRef p k
 
-mapMessage
+mapAction
   :: forall s act act' ps o m
    . Functor m
   => (act -> act')
   -> HalogenM' s act ps o m
   ~> HalogenM' s act' ps o m
-mapMessage f (HalogenM h) = HalogenM (hoistFree go h)
+mapAction f (HalogenM h) = HalogenM (hoistFree go h)
   where
   go :: HalogenF s act ps o m ~> HalogenF s act' ps o m
   go = case _ of
@@ -227,8 +227,8 @@ mapMessage f (HalogenM h) = HalogenM (hoistFree go h)
     Halt msg -> Halt msg
     ChildQuery cq -> ChildQuery cq
     Raise o a -> Raise o a
-    Par p -> Par (over HalogenAp (hoistFreeAp (mapMessage f)) p)
-    Fork fo -> Fork (FF.hoistFork (mapMessage f) fo)
+    Par p -> Par (over HalogenAp (hoistFreeAp (mapAction f)) p)
+    Fork fo -> Fork (FF.hoistFork (mapAction f) fo)
     GetRef p k -> GetRef p k
 
 mapOutput
