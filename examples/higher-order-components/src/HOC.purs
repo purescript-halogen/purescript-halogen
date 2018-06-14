@@ -2,12 +2,13 @@ module Example.HOC.HOC where
 
 import Prelude
 
+import Control.Monad.Error.Class (class MonadError, throwError)
 import Data.Maybe (Maybe(..))
 import Data.Symbol (SProxy(..))
+import Effect.Exception as Exn
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
-import Halogen.Query.HalogenM as HQ
 
 data Action o
   = Toggle
@@ -42,6 +43,7 @@ _child = SProxy :: SProxy "child"
 factory
   :: forall f i o m
    . CanSet f
+  => MonadError Exn.Error m
   => H.Component HH.HTML f i o m
   -> H.Component HH.HTML f i o m
 factory innerComponent =
@@ -91,6 +93,6 @@ factory innerComponent =
     H.Request q ->
       H.query _child unit q >>= case _ of
         Nothing ->
-          HQ.halt "HOC inner component query failed (this should be impossible)"
+          throwError (Exn.error "HOC inner component query failed (this should be impossible)")
         Just a ->
           pure a
