@@ -22,7 +22,7 @@ import Effect.Ref as Ref
 import Halogen.Aff.Driver.State (DriverState(..), DriverStateRef(..), LifecycleHandlers, unDriverStateX)
 import Halogen.Query.EventSource as ES
 import Halogen.Query.ForkF as FF
-import Halogen.Query.HalogenM (HalogenAp(..), HalogenF(..), HalogenM'(..), QueryBox, UnpackQuery(..), SubscriptionId(..), unQuery)
+import Halogen.Query.HalogenM (HalogenAp(..), HalogenF(..), HalogenM'(..), ChildQuery, UnpackQuery(..), SubscriptionId(..), unChildQuery)
 import Halogen.Query.HalogenQ (HalogenQ(..))
 import Halogen.Query.Input (Input(..), RefLabel(..))
 import Unsafe.Reference (unsafeRefEq)
@@ -140,11 +140,11 @@ evalM render initRef (HalogenM hm) = foldFree (go initRef) hm
   evalChildQuery
     :: forall s' f' act' ps' i' o' a'
      . Ref (DriverState h r s' f' act' ps' i' o')
-    -> QueryBox ps' a'
+    -> ChildQuery ps' a'
     -> Aff a'
   evalChildQuery ref cqb = do
     DriverState st <- liftEffect (Ref.read ref)
-    unQuery (\{ unpack: UnpackQuery unpack, query, reply } -> do
+    unChildQuery (\{ unpack: UnpackQuery unpack, query, reply } -> do
       let
         evalChild (DriverStateRef var) = parallel do
           dsx <- liftEffect (Ref.read var)
