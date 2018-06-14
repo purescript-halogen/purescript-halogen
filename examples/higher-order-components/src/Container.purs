@@ -2,8 +2,10 @@ module Example.HOC.Container where
 
 import Prelude
 
+import Control.Monad.Error.Class (class MonadError)
 import Data.Maybe (Maybe(..), maybe)
 import Data.Symbol (SProxy(..))
+import Effect.Exception as Exn
 import Example.HOC.Button as Button
 import Example.HOC.HOC as HOC
 import Halogen as H
@@ -25,7 +27,7 @@ type ChildSlots =
 
 _button = SProxy :: SProxy "button"
 
-component :: forall m. H.Component HH.HTML Query Unit Void m
+component :: forall m. MonadError Exn.Error m => H.Component HH.HTML Query Unit Void m
 component =
   H.component
     { initialState: const initialState
