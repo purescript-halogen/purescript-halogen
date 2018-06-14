@@ -87,19 +87,11 @@ newtype HalogenM' s act ps o m a = HalogenM (Free (HalogenF s act ps o m) a)
 
 type HalogenM s act = HalogenM' s (act Unit)
 
-instance functorHalogenM :: Functor (HalogenM' s act ps o m) where
-  map f (HalogenM fa) = HalogenM (map f fa)
-
-instance applyHalogenM :: Apply (HalogenM' s act ps o m) where
-  apply (HalogenM fa) (HalogenM fb) = HalogenM (apply fa fb)
-
-instance applicativeHalogenM :: Applicative (HalogenM' s act ps o m) where
-  pure a = HalogenM (pure a)
-
-instance bindHalogenM :: Bind (HalogenM' s act ps o m) where
-  bind (HalogenM fa) f = HalogenM (fa >>= \x -> case f x of HalogenM fb -> fb)
-
-instance monadHalogenM :: Monad (HalogenM' s act ps o m)
+derive newtype instance functorHalogenM :: Functor (HalogenM' s act ps o m)
+derive newtype instance applyHalogenM :: Apply (HalogenM' s act ps o m)
+derive newtype instance applicativeHalogenM :: Applicative (HalogenM' s act ps o m)
+derive newtype instance bindHalogenM :: Bind (HalogenM' s act ps o m)
+derive newtype instance monadHalogenM :: Monad (HalogenM' s act ps o m)
 
 instance monadEffectHalogenM :: MonadEffect m => MonadEffect (HalogenM' s act ps o m) where
   liftEffect eff = HalogenM $ liftF $ Lift $ liftEffect eff
