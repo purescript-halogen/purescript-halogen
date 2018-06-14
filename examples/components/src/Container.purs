@@ -1,10 +1,10 @@
-module Container where
+module Example.Components.Container where
 
 import Prelude
 
-import Button as Button
 import Data.Maybe (Maybe(..), maybe)
 import Data.Symbol (SProxy(..))
+import Example.Components.Button as Button
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE

@@ -1,8 +1,7 @@
-module Main where
+module Example.Lifecycle.Main where
 
 import Prelude
 
-import Child as Child
 import Data.Array (snoc, filter, reverse)
 import Data.Maybe (Maybe(..))
 import Data.Symbol (SProxy(..))
@@ -10,6 +9,7 @@ import Data.Tuple (Tuple(..))
 import Effect (Effect)
 import Effect.Aff (Aff)
 import Effect.Console (log)
+import Example.Lifecycle.Child as Child
 import Halogen as H
 import Halogen.Aff as HA
 import Halogen.HTML as HH

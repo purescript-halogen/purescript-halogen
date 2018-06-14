@@ -26,10 +26,25 @@ import Web.Event.EventTarget as ET
 -- | It's generally unnecessary to build values of this type directly with this
 -- | constructor, the `affEventSource`, `effectEventSource`, and
 -- | `eventListenerEventSource` cover most event source constructions.
-newtype EventSource m f =
-  EventSource (m { producer :: CR.Producer (f Unit) m Unit, finalizer :: Finalizer m })
+newtype EventSource m a =
+  EventSource (m { producer :: CR.Producer a m Unit, finalizer :: Finalizer m })
 
-derive instance newtypeEventSource :: Newtype (EventSource m f) _
+derive instance newtypeEventSource :: Newtype (EventSource m a) _
+
+instance functorEventSource :: Functor m => Functor (EventSource m) where
+  map f (EventSource es) =
+    EventSource $
+      map
+        (\e -> { producer: FT.interpret (lmap f) e.producer, finalizer: e.finalizer })
+        es
+
+-- | Changes the effect monad component of an event source.
+hoist :: forall m n f. Functor n => (m ~> n) -> EventSource m f -> EventSource n f
+hoist nat (EventSource es) =
+  EventSource $
+    map
+      (\e -> { producer: FT.hoistFreeT nat e.producer, finalizer: hoistFinalizer nat e.finalizer })
+      (nat es)
 
 -- | Constructs an event source from a setup function that operates in `Aff`.
 -- |
@@ -41,10 +56,10 @@ derive instance newtypeEventSource :: Newtype (EventSource m f) _
 -- |   from. This also runs if the `Emitter` is `close`d. `mempty` can be used
 -- |   here if there is no clean-up to perform.
 affEventSource
-  :: forall m f
+  :: forall m a
    . MonadAff m
-  => (Emitter Aff f -> Aff (Finalizer Aff))
-  -> EventSource m f
+  => (Emitter Aff a -> Aff (Finalizer Aff))
+  -> EventSource m a
 affEventSource recv = EventSource $ liftAff do
   inputVar <- AV.empty
   finalizeVar <- AV.empty
@@ -70,10 +85,10 @@ affEventSource recv = EventSource $ liftAff do
 -- |   from. This also runs if the `Emitter` is `close`d. `mempty` can be used
 -- |   here if there is no clean-up to perform.
 effectEventSource
-  :: forall m f
+  :: forall m a
    . MonadAff m
-  => (Emitter Effect f -> Effect (Finalizer Effect))
-  -> EventSource m f
+  => (Emitter Effect a -> Effect (Finalizer Effect))
+  -> EventSource m a
 effectEventSource =
   affEventSource <<<
     dimap
@@ -84,39 +99,23 @@ effectEventSource =
 -- | that maps event values to a `Maybe`-wrapped query, allowing it to filter
 -- | events if necessary.
 eventListenerEventSource
-  :: forall m f
+  :: forall m a
    . MonadAff m
   => E.EventType
   -> ET.EventTarget
-  -> (E.Event -> Maybe (f Unit))
-  -> EventSource m f
+  -> (E.Event -> Maybe a)
+  -> EventSource m a
 eventListenerEventSource eventType target f = effectEventSource \emitter -> do
   listener <- ET.eventListener (maybe (pure unit) (emit emitter <<< pure) <<< f)
   ET.addEventListener eventType listener false target
   pure $ Finalizer (ET.removeEventListener eventType listener false target)
-
--- | Changes the query component of an event source.
-interpret :: forall m f g. Functor m => (f ~> g) -> EventSource m f -> EventSource m g
-interpret f (EventSource es) =
-  EventSource $
-    map
-      (\e -> { producer: FT.interpret (lmap f) e.producer, finalizer: e.finalizer })
-      es
-
--- | Changes the effect monad component of an event source.
-hoist :: forall m n f. Functor n => (m ~> n) -> EventSource m f -> EventSource n f
-hoist nat (EventSource es) =
-  EventSource $
-    map
-      (\e -> { producer: FT.hoistFreeT nat e.producer, finalizer: hoistFinalizer nat e.finalizer })
-      (nat es)
 
 -- | Values of this type are created internally by `affEventSource` and
 -- | `effectEventSource`, and then passed into the user-provided setup function.
 -- |
 -- | This type is just a wrapper around a callback, used to simplify the type
 -- | signatures for setting up event sources.
-newtype Emitter m f = Emitter (Either (f Unit) Unit -> m Unit)
+newtype Emitter m a = Emitter (Either a Unit -> m Unit)
 
 -- | Emits an "action style" query via the emitter. Accepts a partially applied
 -- | query constructor to save having to use `H.action` or applying `unit` when
@@ -130,7 +129,7 @@ newtype Emitter m f = Emitter (Either (f Unit) Unit -> m Unit)
 -- |   EventSource.emit emitter (Notify "hello")
 -- |   pure mempty
 -- | ```
-emit :: forall m f. Emitter m f -> (Unit -> f Unit) -> m Unit
+emit :: forall m a. Emitter m a -> (Unit -> a) -> m Unit
 emit (Emitter f) q = f (Left (q unit))
 
 -- | Closes the emitter, shutting down the event source. This allows an event
@@ -146,7 +145,7 @@ close :: forall m a. Emitter m a -> m Unit
 close (Emitter f) = f (Right unit)
 
 -- | Changes the effect monad for an emitter.
-hoistEmitter :: forall m n f. (m Unit -> n Unit) -> Emitter m f -> Emitter n f
+hoistEmitter :: forall m n a. (m Unit -> n Unit) -> Emitter m a -> Emitter n a
 hoistEmitter nat (Emitter f) = Emitter (nat <<< f)
 
 -- | When setting up an event source, values of this type should be returned to

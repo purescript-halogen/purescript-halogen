@@ -1,10 +1,11 @@
-module Main where
+module Example.Effects.Aff.Ajax.Main where
 
 import Prelude
+
 import Effect (Effect)
+import Example.Effects.Aff.Ajax.Component (ui)
 import Halogen.Aff as HA
 import Halogen.VDom.Driver (runUI)
-import Component (ui)
 
 -- | Run the app.
 main :: Effect Unit

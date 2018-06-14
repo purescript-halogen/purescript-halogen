@@ -18,7 +18,7 @@ import Halogen.Aff.Driver as AD
 import Halogen.Aff.Driver.State (RenderStateX, unRenderStateX)
 import Halogen.Component (Component, ComponentSlot)
 import Halogen.HTML.Core (HTML(..), Prop)
-import Halogen.Query.InputF (InputF)
+import Halogen.Query.Input (Input)
 import Halogen.VDom as V
 import Halogen.VDom.DOM.Prop as VP
 import Unsafe.Reference (unsafeRefEq)
@@ -31,42 +31,42 @@ import Web.HTML.HTMLElement (HTMLElement) as DOM
 import Web.HTML.HTMLElement as HTMLElement
 import Web.HTML.Window (document) as DOM
 
-type VHTML f ps =
-  V.VDom (Array (Prop (InputF Unit (f Unit)))) (ComponentSlot HTML ps Aff (f Unit))
+type VHTML act ps =
+  V.VDom (Array (Prop (Input act))) (ComponentSlot HTML ps Aff act)
 
-type ChildRenderer f ps
-  = ComponentSlot HTML ps Aff (f Unit) -> Effect (RenderStateX RenderState)
+type ChildRenderer act ps
+  = ComponentSlot HTML ps Aff act -> Effect (RenderStateX RenderState)
 
-newtype RenderState s f ps o =
+newtype RenderState s act ps o =
   RenderState
     { node :: DOM.Node
-    , machine :: V.Step (VHTML f ps) DOM.Node
-    , renderChildRef :: Ref (ChildRenderer f ps)
+    , machine :: V.Step (VHTML act ps) DOM.Node
+    , renderChildRef :: Ref (ChildRenderer act ps)
     }
 
 mkSpec
-  :: forall f ps
-   . (InputF Unit (f Unit) -> Effect Unit)
-  -> Ref (ChildRenderer f ps)
+  :: forall act ps
+   . (Input act -> Effect Unit)
+  -> Ref (ChildRenderer act ps)
   -> DOM.Document
   -> V.VDomSpec
-      (Array (VP.Prop (InputF Unit (f Unit))))
-      (ComponentSlot HTML ps Aff (f Unit))
+      (Array (VP.Prop (Input act)))
+      (ComponentSlot HTML ps Aff act)
 mkSpec handler renderChildRef document =
   V.VDomSpec { buildWidget, buildAttributes, document }
   where
 
   buildAttributes
     :: DOM.Element
-    -> V.Machine (Array (VP.Prop (InputF Unit (f Unit)))) Unit
+    -> V.Machine (Array (VP.Prop (Input act))) Unit
   buildAttributes = VP.buildProp handler
 
   buildWidget
     :: V.VDomSpec
-          (Array (VP.Prop (InputF Unit (f Unit))))
-          (ComponentSlot HTML ps Aff (f Unit))
+          (Array (VP.Prop (Input act)))
+          (ComponentSlot HTML ps Aff act)
     -> V.Machine
-          (ComponentSlot HTML ps Aff (f Unit))
+          (ComponentSlot HTML ps Aff act)
           DOM.Node
   buildWidget spec = EFn.mkEffectFn1 \slot -> do
     renderChild <- Ref.read renderChildRef
@@ -76,7 +76,7 @@ mkSpec handler renderChildRef document =
 
   patch
     :: V.Machine
-         (ComponentSlot HTML ps Aff (f Unit))
+         (ComponentSlot HTML ps Aff act)
          DOM.Node
   patch = EFn.mkEffectFn1 \slot -> do
     renderChild <- Ref.read renderChildRef
@@ -108,12 +108,12 @@ renderSpec document container = { render, renderChild: identity, removeChild }
   where
 
   render
-    :: forall s f ps o
-     . (forall x. InputF x (f x) -> Effect Unit)
-    -> (ComponentSlot HTML ps Aff (f Unit) -> Effect (RenderStateX RenderState))
-    -> HTML (ComponentSlot HTML ps Aff (f Unit)) (f Unit)
-    -> Maybe (RenderState s f ps o)
-    -> Effect (RenderState s f ps o)
+    :: forall s act ps o
+     . (Input act -> Effect Unit)
+    -> (ComponentSlot HTML ps Aff act -> Effect (RenderStateX RenderState))
+    -> HTML (ComponentSlot HTML ps Aff act) act
+    -> Maybe (RenderState s act ps o)
+    -> Effect (RenderState s act ps o)
   render handler child (HTML vdom) =
     case _ of
       Nothing -> do
@@ -133,16 +133,12 @@ renderSpec document container = { render, renderChild: identity, removeChild }
           substInParent newNode nextSib parent
         pure $ RenderState { machine: machine', node: newNode, renderChildRef }
 
-removeChild :: forall o ps f s. RenderState s f ps o -> Effect Unit
+removeChild :: forall s act ps o. RenderState s act ps o -> Effect Unit
 removeChild (RenderState { node }) = do
   npn <- DOM.parentNode node
   traverse_ (\pn -> DOM.removeChild node pn) npn
 
-substInParent
-  :: DOM.Node
-  -> Maybe DOM.Node
-  -> Maybe DOM.Node
-  -> Effect Unit
+substInParent :: DOM.Node -> Maybe DOM.Node -> Maybe DOM.Node -> Effect Unit
 substInParent newNode (Just sib) (Just pn) = void $ DOM.insertBefore newNode sib pn
 substInParent newNode Nothing (Just pn) = void $ DOM.appendChild newNode pn
 substInParent _ _ _ = pure unit

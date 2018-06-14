@@ -1,7 +1,10 @@
 module Halogen.Component
   ( Component
+  , ComponentSpec'
   , ComponentSpec
+  , ComponentHTML'
   , ComponentHTML
+  , component'
   , component
   , unComponent
   , hoist
@@ -16,14 +19,16 @@ module Halogen.Component
 import Prelude
 
 import Data.Bifunctor (class Bifunctor, lmap)
+import Data.Foldable (traverse_)
 import Data.Maybe (Maybe)
 import Data.Symbol (class IsSymbol, SProxy)
 import Data.Tuple (Tuple)
 import Halogen.Data.Slot (Slot, SlotStorage)
 import Halogen.Data.Slot as Slot
 import Halogen.HTML.Core (HTML)
-import Halogen.Query.HalogenM (HalogenM)
+import Halogen.Query.HalogenM (HalogenM')
 import Halogen.Query.HalogenM as HM
+import Halogen.Query.HalogenQ (HalogenQ(..))
 import Prim.Row as Row
 import Unsafe.Coerce (unsafeCoerce)
 
@@ -43,10 +48,16 @@ data Component (h :: Type -> Type -> Type) (f :: Type -> Type) i o (m :: Type ->
 -- | of the function - the compiler will complain about an escaped skolem.
 unComponent
   :: forall h f i o m r
-   . (forall s ps. ComponentSpec h s f ps i o m -> r)
+   . (forall s act ps. ComponentSpec' h s f act ps i o m -> r)
   -> Component h f i o m
   -> r
 unComponent = unsafeCoerce
+
+type ComponentSpec' h s f act ps i o m =
+  { initialState :: i -> s
+  , render :: s -> h (ComponentSlot h ps m act) act
+  , eval :: HalogenQ f act i ~> HalogenM' s act ps o m
+  }
 
 -- | The spec for a component.
 -- |
@@ -61,22 +72,45 @@ unComponent = unsafeCoerce
 type ComponentSpec h s f ps i o m =
   { initialState :: i -> s
   , render :: s -> h (ComponentSlot h ps m (f Unit)) (f Unit)
-  , eval :: f ~> HalogenM s f ps o m
+  , eval :: f ~> HalogenM' s (f Unit) ps o m
   , receiver :: i -> Maybe (f Unit)
   , initializer :: Maybe (f Unit)
   , finalizer :: Maybe (f Unit)
   }
 
+specToSpec
+  :: forall h s f ps i o m
+   . ComponentSpec h s f ps i o m
+  -> ComponentSpec' h s f (f Unit) ps i o m
+specToSpec spec =
+  { initialState: spec.initialState
+  , render: spec.render
+  , eval: case _ of
+      Initialize a -> traverse_ spec.eval spec.initializer $> a
+      Finalize a -> traverse_ spec.eval spec.finalizer $> a
+      Receive i a -> traverse_ spec.eval (spec.receiver i) $> a
+      Handle fa a -> spec.eval fa $> a
+      Request fa -> spec.eval fa
+  }
+
+type ComponentHTML' act ps m = HTML (ComponentSlot HTML ps m act) act
+
 -- | A convenience synonym for the output type of a `render` function, for a
 -- | component that renders HTML.
-type ComponentHTML f ps m = HTML (ComponentSlot HTML ps m (f Unit)) (f Unit)
+type ComponentHTML f ps m = ComponentHTML' (f Unit) ps m
+
+component'
+  :: forall h s f g ps i o m
+   . ComponentSpec' h s f g ps i o m
+  -> Component h f i o m
+component' = unsafeCoerce
 
 -- | Builds a component that allows for children.
 component
   :: forall h s f ps i o m
    . ComponentSpec h s f ps i o m
   -> Component h f i o m
-component = unsafeCoerce
+component = component' <<< specToSpec
 
 -- | Changes the component's `m` type. A use case for this would be to interpret
 -- | some `Free` monad as `Aff` so the component can be used with `runUI`.
@@ -88,13 +122,10 @@ hoist
   -> Component h f i o m
   -> Component h f i o m'
 hoist nat = unComponent \c ->
-  component
+  component'
     { initialState: c.initialState
     , render: lmap (hoistSlot nat) <<< c.render
     , eval: HM.hoist nat <<< c.eval
-    , receiver: c.receiver
-    , initializer: c.initializer
-    , finalizer: c.finalizer
     }
 
 --------------------------------------------------------------------------------
@@ -104,7 +135,7 @@ type ComponentSlot' h g i o ps m a =
   , pop :: forall slot. SlotStorage ps slot -> Maybe (Tuple (slot g o) (SlotStorage ps slot))
   , set :: forall slot. slot g o -> SlotStorage ps slot -> SlotStorage ps slot
   , component :: Component h g i o m
-  , input :: i
+  , input :: forall f act. HalogenQ f act i Unit
   , output :: o -> Maybe a
   }
 
@@ -125,7 +156,7 @@ mkComponentSlot
   -> (o -> Maybe a)
   -> ComponentSlot h ps m a
 mkComponentSlot sym p comp input output =
-  unsafeCoerce { get, pop, set, component: comp, input, output }
+  mkComponentSlot' { get, pop, set, component: comp, input: Receive input unit, output }
   where
   get :: forall slot. SlotStorage ps slot -> Maybe (slot g o)
   get = Slot.lookup sym p

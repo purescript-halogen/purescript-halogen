@@ -1,7 +1,7 @@
 {
   "private": true,
   "scripts": {
-    "build": "pulp build --to dist/example.js"
+    "build": "pulp build --main Example.Todo.Main --to dist/example.js"
   },
   "devDependencies": {
     "pulp": "^11.0.0",

@@ -1,11 +1,11 @@
-module Container where
+module Example.HOC.Container where
 
 import Prelude
 
-import Button as Button
 import Data.Maybe (Maybe(..), maybe)
 import Data.Symbol (SProxy(..))
-import HOC as HOC
+import Example.HOC.Button as Button
+import Example.HOC.HOC as HOC
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
@@ -20,7 +20,7 @@ type State =
   }
 
 type ChildSlots =
-  ( button :: HOC.Slot Button.Query Boolean Button.Message Unit
+  ( button :: H.Slot Button.Query Button.Message Unit
   )
 
 _button = SProxy :: SProxy "button"
@@ -66,6 +66,6 @@ component =
       H.modify_ (\st -> st { toggleCount = st.toggleCount + 1 })
       pure next
     CheckButtonState next -> do
-      buttonState <- H.query _button unit $ HOC.liftQuery $ H.request Button.IsOn
+      buttonState <- H.query _button unit $ H.request Button.IsOn
       H.modify_ (_ { buttonState = buttonState })
       pure next

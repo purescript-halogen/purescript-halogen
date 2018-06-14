@@ -1,4 +1,4 @@
-module Component (State, Query(..), ui) where
+module Example.Effects.Aff.Ajax.Component where
 
 import Prelude
 

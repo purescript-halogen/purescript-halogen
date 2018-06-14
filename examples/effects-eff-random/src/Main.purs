@@ -1,10 +1,11 @@
-module Main where
+module Example.Effects.Eff.Random.Main where
 
 import Prelude
+
 import Effect (Effect)
+import Example.Effects.Eff.Random.Component (ui)
 import Halogen.Aff as HA
 import Halogen.VDom.Driver (runUI)
-import Component (ui)
 
 main :: Effect Unit
 main = HA.runHalogenAff do

@@ -1,4 +1,4 @@
-module Child where
+module Example.Lifecycle.Child where
 
 import Prelude
 

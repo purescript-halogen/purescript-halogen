@@ -1,52 +1,30 @@
 module Halogen.Component.Profunctor (ProComponent(..)) where
 
 import Prelude
-import Control.Applicative.Free (hoistFreeAp)
-import Control.Monad.Free (hoistFree)
-import Data.Newtype (class Newtype, over)
-import Data.Profunctor (class Profunctor, lcmap)
-import Halogen.Component as HC
-import Halogen.Query.HalogenM as HM
-import Halogen.Query.ForkF as FF
 
-newtype ProComponent h f m i o = ProComponent (HC.Component h f i o m)
+import Data.Bifunctor (lmap)
+import Data.Newtype (class Newtype)
+import Data.Profunctor (class Profunctor, dimap)
+import Halogen.Component (Component, ComponentSpec', component', unComponent)
+import Halogen.Query.HalogenM as HM
+
+newtype ProComponent h f m i o = ProComponent (Component h f i o m)
 
 derive instance newtypeProComponent :: Newtype (ProComponent h f m i o) _
 
-instance profunctorProComponent :: Profunctor (ProComponent h f m) where
-  dimap = dimapProComponent
+instance profunctorProComponent :: Functor f => Profunctor (ProComponent h f m) where
+  dimap f g (ProComponent c) =
+    ProComponent (unComponent (component' <<< dimapSpec f g) c)
 
-dimapProComponent
-  :: forall h f m i i' o o'
-   . (i' -> i)
-  -> (o -> o')
-  -> ProComponent h f m i o
-  -> ProComponent h f m i' o'
-dimapProComponent f g (ProComponent c) = ProComponent (HC.unComponent go c)
-  where
-  go :: forall s ps. HC.ComponentSpec h s f ps i o m -> HC.Component h f i' o' m
-  go comp = HC.component $ comp
-    { initialState = lcmap f comp.initialState
-    , receiver = lcmap f comp.receiver
-    , eval = mapOutput g <$> comp.eval
-    }
-
-mapOutput
-  :: forall s f ps o o' m
-   . (o -> o')
-  -> HM.HalogenM s f ps o m
-  ~> HM.HalogenM s f ps o' m
-mapOutput f (HM.HalogenM h) = HM.HalogenM (hoistFree go h)
-  where
-  go :: HM.HalogenF s f ps o m ~> HM.HalogenF s f ps o' m
-  go = case _ of
-    HM.State s -> HM.State s
-    HM.Subscribe fes next -> HM.Subscribe fes next
-    HM.Unsubscribe sid next -> HM.Unsubscribe sid next
-    HM.Lift q -> HM.Lift q
-    HM.Halt msg -> HM.Halt msg
-    HM.ChildQuery cq -> HM.ChildQuery cq
-    HM.Raise o a -> HM.Raise (f o) a
-    HM.Par p -> HM.Par (over HM.HalogenAp (hoistFreeAp (mapOutput f)) p)
-    HM.Fork p -> HM.Fork (FF.hoistFork (mapOutput f) p)
-    HM.GetRef p k -> HM.GetRef p k
+dimapSpec
+  :: forall h s f act ps i j o p m
+   . Functor f
+  => (j -> i)
+  -> (o -> p)
+  -> ComponentSpec' h s f act ps i o m
+  -> ComponentSpec' h s f act ps j p m
+dimapSpec f g spec =
+  { initialState: spec.initialState <<< f
+  , render: spec.render
+  , eval: dimap (lmap f) (HM.mapOutput g) spec.eval
+  }

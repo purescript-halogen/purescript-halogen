@@ -1,13 +1,13 @@
-module Container where
+module Example.Components.Inputs.Container where
 
 import Prelude
 
 import Data.Maybe (Maybe(..))
 import Data.Symbol (SProxy(..))
+import Example.Components.Inputs.Display as Display
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
-import Display as Display
 
 data Query a
   = Increment a

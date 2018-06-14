@@ -1,4 +1,4 @@
-module Model where
+module Example.Todo.Model where
 
 type TaskId = Int
 

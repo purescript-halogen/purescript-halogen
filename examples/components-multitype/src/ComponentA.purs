@@ -1,4 +1,4 @@
-module ComponentA where
+module Example.Components.Multitype.ComponentA where
 
 import Prelude
 

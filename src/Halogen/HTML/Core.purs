@@ -41,7 +41,7 @@ import DOM.HTML.Indexed.ScopeValue (ScopeValue, renderScopeValue)
 import DOM.HTML.Indexed.StepValue (StepValue, renderStepValue)
 import DOM.HTML.Indexed.WrapValue (WrapValue, renderWrapValue)
 
-import Halogen.Query.InputF (InputF)
+import Halogen.Query.Input (Input)
 import Halogen.VDom as VDom
 import Halogen.VDom.DOM.Prop (ElemRef(..), Prop(..), PropValue, propFromBoolean, propFromInt, propFromNumber, propFromString)
 
@@ -50,7 +50,7 @@ import Unsafe.Coerce (unsafeCoerce)
 import Halogen.VDom (ElemName(..), Namespace(..)) as Exports
 import Halogen.VDom.DOM.Prop (Prop(..), PropValue) as Exports
 
-newtype HTML p i = HTML (VDom.VDom (Array (Prop (InputF Unit i))) p)
+newtype HTML p i = HTML (VDom.VDom (Array (Prop (Input i))) p)
 
 derive instance newtypeHTML :: Newtype (HTML p i) _
 

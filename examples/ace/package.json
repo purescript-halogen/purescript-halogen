@@ -1,7 +1,7 @@
 {
   "private": true,
   "scripts": {
-    "build": "pulp browserify --optimise --to dist/example.js"
+    "build": "pulp browserify --main Example.Ace.Main --optimise --to dist/example.js"
   },
   "devDependencies": {
     "pulp": "^11.0.0",

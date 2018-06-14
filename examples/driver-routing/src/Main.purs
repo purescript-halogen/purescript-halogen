@@ -1,4 +1,4 @@
-module Main where
+module Example.Driver.Routing.Main where
 
 import Prelude
 
@@ -11,10 +11,10 @@ import Data.String.CodeUnits as Str
 import Effect (Effect)
 import Effect.Aff (Aff)
 import Effect.Class (liftEffect)
+import Example.Driver.Routing.RouteLog as RouteLog
 import Halogen as H
 import Halogen.Aff as HA
 import Halogen.VDom.Driver (runUI)
-import RouteLog as RouteLog
 import Web.Event.EventTarget (eventListener, addEventListener) as DOM
 import Web.HTML (window) as DOM
 import Web.HTML.Event.HashChangeEvent as HCE

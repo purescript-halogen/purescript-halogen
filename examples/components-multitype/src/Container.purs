@@ -1,12 +1,12 @@
-module Container where
+module Example.Components.Multitype.Container where
 
 import Prelude
 
-import ComponentA as CA
-import ComponentB as CB
-import ComponentC as CC
 import Data.Maybe (Maybe(..))
 import Data.Symbol (SProxy(..))
+import Example.Components.Multitype.ComponentA as CA
+import Example.Components.Multitype.ComponentB as CB
+import Example.Components.Multitype.ComponentC as CC
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
