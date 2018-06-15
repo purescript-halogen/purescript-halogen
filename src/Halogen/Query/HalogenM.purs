@@ -3,6 +3,7 @@ module Halogen.Query.HalogenM where
 import Prelude
 
 import Control.Applicative.Free (FreeAp, liftFreeAp, hoistFreeAp)
+import Control.Monad.Error.Class (class MonadThrow, throwError)
 import Control.Monad.Free (Free, hoistFree, liftF)
 import Control.Monad.Reader.Class (class MonadAsk, ask)
 import Control.Monad.Rec.Class (class MonadRec, tailRecM, Step(..))
@@ -37,19 +38,19 @@ derive newtype instance ordSubscriptionId :: Ord SubscriptionId
 newtype UnpackQuery ps g o f b =
   UnpackQuery (forall slot m. Applicative m => (slot g o -> m b) -> SlotStorage ps slot -> m (f b))
 
-type QueryBox' ps g o a f b =
+type ChildQuery' ps g o a f b =
   { unpack :: UnpackQuery ps g o f b
   , query :: g b
   , reply :: f b -> a
   }
 
-data QueryBox (ps :: # Type) a
+data ChildQuery (ps :: # Type) a
 
-mkQuery' :: forall ps g o a f b. QueryBox' ps g o a f b -> QueryBox ps a
-mkQuery' = unsafeCoerce
+mkChildQuery :: forall ps g o a f b. ChildQuery' ps g o a f b -> ChildQuery ps a
+mkChildQuery = unsafeCoerce
 
-unQuery :: forall ps a r. (forall g o f b. QueryBox' ps g o a f b -> r) -> QueryBox ps a -> r
-unQuery = unsafeCoerce
+unChildQuery :: forall ps a r. (forall g o f b. ChildQuery' ps g o a f b -> r) -> ChildQuery ps a -> r
+unChildQuery = unsafeCoerce
 
 -- | The Halogen component algebra
 data HalogenF s act ps o m a
@@ -57,8 +58,7 @@ data HalogenF s act ps o m a
   | Subscribe (SubscriptionId -> ES.EventSource m act) (SubscriptionId -> a)
   | Unsubscribe SubscriptionId a
   | Lift (m a)
-  | Halt String
-  | ChildQuery (QueryBox ps a)
+  | ChildQuery (ChildQuery ps a)
   | Raise o a
   | Par (HalogenAp s act ps o m a)
   | Fork (FF.Fork (HalogenM' s act ps o m) a)
@@ -70,8 +70,7 @@ instance functorHalogenF :: Functor m => Functor (HalogenF s act ps o m) where
     Subscribe fes a -> Subscribe fes (map f a)
     Unsubscribe sid a -> Unsubscribe sid (f a)
     Lift q -> Lift (map f q)
-    Halt msg -> Halt msg
-    ChildQuery cq -> ChildQuery (unQuery (\cq' -> mkQuery' $ cq' { reply = cq'.reply >>> f }) cq)
+    ChildQuery cq -> ChildQuery (unChildQuery (\cq' -> mkChildQuery $ cq' { reply = cq'.reply >>> f }) cq)
     Raise o a -> Raise o (f a)
     Par pa -> Par (map f pa)
     Fork fa -> Fork (map f fa)
@@ -88,19 +87,11 @@ newtype HalogenM' s act ps o m a = HalogenM (Free (HalogenF s act ps o m) a)
 
 type HalogenM s act = HalogenM' s (act Unit)
 
-instance functorHalogenM :: Functor (HalogenM' s act ps o m) where
-  map f (HalogenM fa) = HalogenM (map f fa)
-
-instance applyHalogenM :: Apply (HalogenM' s act ps o m) where
-  apply (HalogenM fa) (HalogenM fb) = HalogenM (apply fa fb)
-
-instance applicativeHalogenM :: Applicative (HalogenM' s act ps o m) where
-  pure a = HalogenM (pure a)
-
-instance bindHalogenM :: Bind (HalogenM' s act ps o m) where
-  bind (HalogenM fa) f = HalogenM (fa >>= \x -> case f x of HalogenM fb -> fb)
-
-instance monadHalogenM :: Monad (HalogenM' s act ps o m)
+derive newtype instance functorHalogenM :: Functor (HalogenM' s act ps o m)
+derive newtype instance applyHalogenM :: Apply (HalogenM' s act ps o m)
+derive newtype instance applicativeHalogenM :: Applicative (HalogenM' s act ps o m)
+derive newtype instance bindHalogenM :: Bind (HalogenM' s act ps o m)
+derive newtype instance monadHalogenM :: Monad (HalogenM' s act ps o m)
 
 instance monadEffectHalogenM :: MonadEffect m => MonadEffect (HalogenM' s act ps o m) where
   liftEffect eff = HalogenM $ liftF $ Lift $ liftEffect eff
@@ -130,8 +121,8 @@ instance monadAskHalogenM :: MonadAsk r m => MonadAsk r (HalogenM' s act ps o m)
 instance monadTellHalogenM :: MonadTell w m => MonadTell w (HalogenM' s act ps o m) where
   tell = HalogenM <<< liftF <<< Lift <<< tell
 
-halt :: forall s act ps o m a. String -> HalogenM' s act ps o m a
-halt msg = HalogenM $ liftF $ Halt msg
+instance monadThrowHalogenM :: MonadThrow e m => MonadThrow e (HalogenM' s act ps o m) where
+  throwError = HalogenM <<< liftF <<< Lift <<< throwError
 
 -- | Subscribes a component to an `EventSource`.
 subscribe :: forall s act ps o m. ES.EventSource m act -> HalogenM' s act ps o m SubscriptionId
@@ -158,7 +149,7 @@ query
   -> p
   -> f a
   -> HalogenM' s act ps o m (Maybe a)
-query sym p q = HalogenM $ liftF $ ChildQuery $ mkQuery'
+query sym p q = HalogenM $ liftF $ ChildQuery $ mkChildQuery
   { unpack: UnpackQuery \k -> Slot.lookup sym p >>> traverse k
   , query: q
   , reply: identity
@@ -173,7 +164,7 @@ queryAll
   => SProxy sym
   -> f a
   -> HalogenM' s act ps o m (Map p a)
-queryAll sym q = HalogenM $ liftF $ ChildQuery $ mkQuery'
+queryAll sym q = HalogenM $ liftF $ ChildQuery $ mkChildQuery
   { unpack: UnpackQuery \k -> Slot.slots sym >>> traverse k
   , query: q
   , reply: identity
@@ -203,7 +194,6 @@ imapState f f' (HalogenM h) = HalogenM (hoistFree go h)
     Subscribe fes a -> Subscribe fes a
     Unsubscribe sid a -> Unsubscribe sid a
     Lift q -> Lift q
-    Halt msg -> Halt msg
     ChildQuery cq -> ChildQuery cq
     Raise o a -> Raise o a
     Par p -> Par (over HalogenAp (hoistFreeAp (imapState f f')) p)
@@ -224,7 +214,6 @@ mapAction f (HalogenM h) = HalogenM (hoistFree go h)
     Subscribe fes a -> Subscribe (map f <<< fes) a
     Unsubscribe sid a -> Unsubscribe sid a
     Lift q -> Lift q
-    Halt msg -> Halt msg
     ChildQuery cq -> ChildQuery cq
     Raise o a -> Raise o a
     Par p -> Par (over HalogenAp (hoistFreeAp (mapAction f)) p)
@@ -244,7 +233,6 @@ mapOutput f (HalogenM h) = HalogenM (hoistFree go h)
     Subscribe fes a -> Subscribe fes a
     Unsubscribe sid a -> Unsubscribe sid a
     Lift q -> Lift q
-    Halt msg -> Halt msg
     ChildQuery cq -> ChildQuery cq
     Raise o a -> Raise (f o) a
     Par p -> Par (over HalogenAp (hoistFreeAp (mapOutput f)) p)
@@ -265,7 +253,6 @@ hoist nat (HalogenM fa) = HalogenM (hoistFree go fa)
     Subscribe fes a -> Subscribe (ES.hoist nat <<< fes) a
     Unsubscribe sid a -> Unsubscribe sid a
     Lift q -> Lift (nat q)
-    Halt msg -> Halt msg
     ChildQuery cq -> ChildQuery cq
     Raise o a -> Raise o a
     Par p -> Par (over HalogenAp (hoistFreeAp (hoist nat)) p)
