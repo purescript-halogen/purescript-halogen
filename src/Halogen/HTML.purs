@@ -1,7 +1,9 @@
 -- | This module re-exports the types for the `HTML` DSL, and values for all
 -- | supported HTML elements.
 module Halogen.HTML
-  ( PlainHTML
+  ( ComponentHTML'
+  , ComponentHTML
+  , PlainHTML
   , fromPlainHTML
   , slot
   , module Halogen.HTML.Core
@@ -13,14 +15,20 @@ import Halogen.HTML.Elements
 
 import Data.Maybe (Maybe)
 import Data.Symbol (class IsSymbol, SProxy)
-import Halogen.Component (Component, ComponentHTML', mkComponentSlot)
+import Halogen.Component (Component, ComponentSlot, mkComponentSlot)
 import Halogen.Data.Slot (Slot)
 import Halogen.HTML.Core (class IsProp, AttrName(..), ClassName(..), HTML(..), Namespace(..), PropName(..), ElemName(..), text, handler)
 import Halogen.HTML.Core as Core
 import Halogen.HTML.Properties (IProp, attr, attrNS, prop)
-import Prelude (class Ord, Void)
+import Prelude (class Ord, Unit, Void)
 import Prim.Row as Row
 import Unsafe.Coerce (unsafeCoerce)
+
+type ComponentHTML' act ps m = HTML (ComponentSlot HTML ps m act) act
+
+-- | A convenience synonym for the output type of a `render` function, for a
+-- | component that renders HTML.
+type ComponentHTML f ps m = ComponentHTML' (f Unit) ps m
 
 -- | A type useful for a chunk of HTML with no slot-embedding or query-raising.
 -- |

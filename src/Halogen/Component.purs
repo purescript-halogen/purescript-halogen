@@ -2,8 +2,6 @@ module Halogen.Component
   ( Component
   , ComponentSpec'
   , ComponentSpec
-  , ComponentHTML'
-  , ComponentHTML
   , component'
   , component
   , unComponent
@@ -25,7 +23,6 @@ import Data.Symbol (class IsSymbol, SProxy)
 import Data.Tuple (Tuple)
 import Halogen.Data.Slot (Slot, SlotStorage)
 import Halogen.Data.Slot as Slot
-import Halogen.HTML.Core (HTML)
 import Halogen.Query.HalogenM (HalogenM')
 import Halogen.Query.HalogenM as HM
 import Halogen.Query.HalogenQ (HalogenQ(..))
@@ -92,12 +89,6 @@ specToSpec spec =
       Handle fa a -> spec.eval fa $> a
       Request fa -> spec.eval fa
   }
-
-type ComponentHTML' act ps m = HTML (ComponentSlot HTML ps m act) act
-
--- | A convenience synonym for the output type of a `render` function, for a
--- | component that renders HTML.
-type ComponentHTML f ps m = ComponentHTML' (f Unit) ps m
 
 component'
   :: forall h s f g ps i o m
