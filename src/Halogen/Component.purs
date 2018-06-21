@@ -1,9 +1,9 @@
 module Halogen.Component
   ( Component
-  , ComponentSpec'
   , ComponentSpec
-  , component'
   , component
+  , ComponentSpec'
+  , component'
   , unComponent
   , hoist
   , ComponentSlot'
@@ -33,39 +33,23 @@ import Unsafe.Coerce (unsafeCoerce)
 -- | existentially hidden.
 -- |
 -- | - `h` is the type that will be rendered by the component, usually `HTML`
--- | - `f` is the query algebra
--- | - `i` is the input value type that will be mapped to an `f` whenever the
--- |       parent of this component renders
--- | - `o` is the type for the component's output messages
--- | - `m` is the monad used for non-component-state effects
+-- | - `f` is the query algebra; the requests that can be made of the component
+-- | - `i` is the input value that will be received when the parent of
+-- |       this component renders
+-- | - `o` is the type of messages the component can raise
+-- | - `m` is the effect monad used during evaluation
 data Component (h :: Type -> Type -> Type) (f :: Type -> Type) i o (m :: Type -> Type)
-
--- | Exposes the inner details of a component to a function to produce a new
--- | result. The inner details will not be allowed to be revealed in the result
--- | of the function - the compiler will complain about an escaped skolem.
-unComponent
-  :: forall h f i o m r
-   . (forall s act ps. ComponentSpec' h s f act ps i o m -> r)
-  -> Component h f i o m
-  -> r
-unComponent = unsafeCoerce
-
-type ComponentSpec' h s f act ps i o m =
-  { initialState :: i -> s
-  , render :: s -> h (ComponentSlot h ps m act) act
-  , eval :: HalogenQ f act i ~> HalogenM' s act ps o m
-  }
 
 -- | The spec for a component.
 -- |
 -- | - `h` is the type that will be rendered by the component, usually `HTML`
 -- | - `s` is the component's state
--- | - `f` is the query algebra for the component itself
+-- | - `f` is the query algebra; the requests that can be made of the component
 -- | - `ps` is the set of slots for addressing child components
--- | - `i` is the input value type that will be mapped to an `f` whenever the
--- |       parent of this component renders
--- | - `o` is the type for the component's output messages
--- | - `m` is the monad used for non-component-state effects
+-- | - `i` is the input value that will be received when the parent of
+-- |       this component renders
+-- | - `o` is the type of messages the component can raise
+-- | - `m` is the effect monad used during evaluation
 type ComponentSpec h s f ps i o m =
   { initialState :: i -> s
   , render :: s -> h (ComponentSlot h ps m (f Unit)) (f Unit)
@@ -75,33 +59,70 @@ type ComponentSpec h s f ps i o m =
   , finalizer :: Maybe (f Unit)
   }
 
-specToSpec
+-- | Builds a component from a `ComponentSpec`.
+component
   :: forall h s f ps i o m
    . ComponentSpec h s f ps i o m
-  -> ComponentSpec' h s f (f Unit) ps i o m
-specToSpec spec =
-  { initialState: spec.initialState
-  , render: spec.render
-  , eval: case _ of
-      Initialize a -> traverse_ spec.eval spec.initializer $> a
-      Finalize a -> traverse_ spec.eval spec.finalizer $> a
-      Receive i a -> traverse_ spec.eval (spec.receiver i) $> a
-      Handle fa a -> spec.eval fa $> a
-      Request fa -> spec.eval fa
+  -> Component h f i o m
+component = component' <<< go
+  where
+    go :: ComponentSpec h s f ps i o m -> ComponentSpec' h s f (f Unit) ps i o m
+    go spec =
+      { initialState: spec.initialState
+      , render: spec.render
+      , eval: case _ of
+          Initialize a -> traverse_ spec.eval spec.initializer $> a
+          Finalize a -> traverse_ spec.eval spec.finalizer $> a
+          Receive i a -> traverse_ spec.eval (spec.receiver i) $> a
+          Handle fa a -> spec.eval fa $> a
+          Request fa -> spec.eval fa
+      }
+
+-- | An alternative formulation of the spec for a component.
+-- |
+-- | Instead of accepting a number of properties that map things to queries,
+-- | these cases are instead handled by pattern matching on a `HalogenQ` algebra
+-- | that `eval` takes as an argument.
+-- |
+-- | Components defined with this spec can also separate the public query
+-- | algebra for requests from actions that can be handled internally. The other
+-- | spec formulation requires these actions to be of type `f Unit`, so in that
+-- | case the query algebra must also contain the actions the component can
+-- | raise internally.
+-- |
+-- | - `h` is the type that will be rendered by the component, usually `HTML`
+-- | - `s` is the component's state
+-- | - `f` is the query algebra; the requests that can be made of the component
+-- | - `act` is the type of actions; messages internal to the component that
+-- |         can be evaluated
+-- | - `ps` is the set of slots for addressing child components
+-- | - `i` is the input value that will be received when the parent of
+-- |       this component renders
+-- | - `o` is the type of messages the component can raise
+-- | - `m` is the effect monad used during evaluation
+type ComponentSpec' h s f act ps i o m =
+  { initialState :: i -> s
+  , render :: s -> h (ComponentSlot h ps m act) act
+  , eval :: HalogenQ f act i ~> HalogenM' s act ps o m
   }
 
+-- | Builds a component from a `ComponentSpec'`.
 component'
   :: forall h s f g ps i o m
    . ComponentSpec' h s f g ps i o m
   -> Component h f i o m
 component' = unsafeCoerce
 
--- | Builds a component that allows for children.
-component
-  :: forall h s f ps i o m
-   . ComponentSpec h s f ps i o m
+-- | Exposes the inner details of a component to a function to produce a new
+-- | result. The hidden details will not be allowed to be revealed in the result
+-- | of the function - the compiler will complain about an escaped skolem if
+-- | this is attempted.
+unComponent
+  :: forall h f i o m r
+   . (forall s act ps. ComponentSpec' h s f act ps i o m -> r)
   -> Component h f i o m
-component = component' <<< specToSpec
+  -> r
+unComponent = unsafeCoerce
 
 -- | Changes the component's `m` type. A use case for this would be to interpret
 -- | some `Free` monad as `Aff` so the component can be used with `runUI`.
