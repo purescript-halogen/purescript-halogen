@@ -49,13 +49,13 @@ fromPlainHTML = unsafeCoerce -- ≅ bimap absurd absurd
 -- | - the input value to pass to the component
 -- | - a function mapping outputs from the component to a query in the parent
 slot
-  :: forall sym px ps g i o p m act
-   . Row.Cons sym (Slot g o p) px ps
+  :: forall sym px ps f i o p m act
+   . Row.Cons sym (Slot f o p) px ps
   => IsSymbol sym
   => Ord p
   => SProxy sym
   -> p
-  -> Component HTML g i o m
+  -> Component HTML f i o m
   -> i
   -> (o -> Maybe act)
   -> ComponentHTML' act ps m

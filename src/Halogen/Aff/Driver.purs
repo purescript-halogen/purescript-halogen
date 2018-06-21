@@ -128,8 +128,8 @@ runUI renderSpec component i = do
   where
 
   evalDriver
-    :: forall s' f' act' ps' i' o'
-     . Ref (DriverState h r s' f' act' ps' i' o')
+    :: forall s f' act ps i' o'
+     . Ref (DriverState h r s f' act ps i' o')
     -> f'
     ~> Aff
   evalDriver ref = Eval.evalQ render ref
@@ -181,9 +181,9 @@ runUI renderSpec component i = do
     pure var
 
   render
-    :: forall s' f' act' ps' i' o'
+    :: forall s f' act ps i' o'
      . Ref LifecycleHandlers
-    -> Ref (DriverState h r s' f' act' ps' i' o')
+    -> Ref (DriverState h r s f' act ps i' o')
     -> Effect Unit
   render lchs var = Ref.read var >>= \(DriverState ds) -> do
     shouldProcessHandlers <- isNothing <$> Ref.read ds.pendingHandlers
@@ -191,9 +191,9 @@ runUI renderSpec component i = do
     Ref.write Slot.empty ds.childrenOut
     Ref.write ds.children ds.childrenIn
     let
-      handler :: Input act' -> Aff Unit
+      handler :: Input act -> Aff Unit
       handler = Eval.queuingHandler (void <<< Eval.evalF render ds.selfRef) ds.pendingHandlers
-      childHandler :: act' -> Aff Unit
+      childHandler :: act -> Aff Unit
       childHandler = Eval.queuingHandler (handler <<< Query) ds.pendingQueries
     rendering <-
       renderSpec.render
@@ -208,22 +208,9 @@ runUI renderSpec component i = do
       renderStateX_ renderSpec.removeChild childDS
       finalize lchs childDS
     Ref.modify_ (\(DriverState ds') ->
-      DriverState
-        { rendering: Just rendering
-        , children
-        , component: ds'.component
-        , state: ds'.state
-        , refs: ds'.refs
-        , childrenIn: ds'.childrenIn
-        , childrenOut: ds'.childrenOut
-        , selfRef: ds'.selfRef
-        , handlerRef: ds'.handlerRef
-        , pendingQueries: ds'.pendingQueries
-        , pendingOuts: ds'.pendingOuts
-        , pendingHandlers: ds'.pendingHandlers
-        , fresh: ds'.fresh
-        , subscriptions: ds'.subscriptions
-        , lifecycleHandlers: ds'.lifecycleHandlers
+      DriverState ds'
+        { rendering = Just rendering
+        , children = children
         }) ds.selfRef
     when shouldProcessHandlers do
       flip tailRecM unit \_ -> do
@@ -236,12 +223,12 @@ runUI renderSpec component i = do
           else pure $ Loop unit
 
   renderChild
-    :: forall ps' act'
+    :: forall ps act
      . Ref LifecycleHandlers
-    -> (act' -> Aff Unit)
-    -> Ref (Slot.SlotStorage ps' (DriverStateRef h r))
-    -> Ref (Slot.SlotStorage ps' (DriverStateRef h r))
-    -> ComponentSlot h ps' Aff act'
+    -> (act -> Aff Unit)
+    -> Ref (Slot.SlotStorage ps (DriverStateRef h r))
+    -> Ref (Slot.SlotStorage ps (DriverStateRef h r))
+    -> ComponentSlot h ps Aff act
     -> Effect (RenderStateX r)
   renderChild lchs handler childrenInRef childrenOutRef =
     unComponentSlot \slot -> do
@@ -297,8 +284,8 @@ runUI renderSpec component i = do
     for_ queue (handleAff <<< traverse_ fork <<< L.reverse)
 
   cleanupSubscriptions
-    :: forall s' f' act' ps' i' o'
-     . DriverState h r s' f' act' ps' i' o'
+    :: forall s f' act ps i' o'
+     . DriverState h r s f' act ps i' o'
     -> Effect Unit
   cleanupSubscriptions (DriverState ds) = do
     traverse_ (handleAff <<< traverse_ (fork <<< ES.finalize)) =<< Ref.read ds.subscriptions
