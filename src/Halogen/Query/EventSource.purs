@@ -20,12 +20,12 @@ import Web.Event.Event as E
 import Web.Event.EventTarget as ET
 
 -- | An event source definition - an effect in `m` that when run returns a
--- | producer coroutine that emits queries of type `f`, and runs in the effect
+-- | producer coroutine that emits actions of type `a`, and runs in the effect
 -- | monad `m`.
 -- |
--- | It's generally unnecessary to build values of this type directly with this
--- | constructor, the `affEventSource`, `effectEventSource`, and
--- | `eventListenerEventSource` cover most event source constructions.
+-- | It's generally unnecessary to build values of this type directly, the
+-- | `affEventSource`, `effectEventSource`, and `eventListenerEventSource`
+-- | cover most common event source constructions.
 newtype EventSource m a =
   EventSource (m { producer :: CR.Producer a m Unit, finalizer :: Finalizer m })
 
@@ -38,8 +38,8 @@ instance functorEventSource :: Functor m => Functor (EventSource m) where
         (\e -> { producer: FT.interpret (lmap f) e.producer, finalizer: e.finalizer })
         es
 
--- | Changes the effect monad component of an event source.
-hoist :: forall m n f. Functor n => (m ~> n) -> EventSource m f -> EventSource n f
+-- | Changes the effect monad of an event source.
+hoist :: forall m n. Functor n => (m ~> n) -> EventSource m ~> EventSource n
 hoist nat (EventSource es) =
   EventSource $
     map
@@ -48,7 +48,7 @@ hoist nat (EventSource es) =
 
 -- | Constructs an event source from a setup function that operates in `Aff`.
 -- |
--- | - The `Emitter` that the passed function receives is used to `emit` queries
+-- | - The `Emitter` that the passed function receives is used to `emit` actions
 -- |   that will be received by the current component, or can be `close`d to
 -- |   shut down the event source and remove the subscription.
 -- | - The `Finalizer` that the passed function produces is there to allow for
@@ -77,7 +77,7 @@ affEventSource recv = EventSource $ liftAff do
 
 -- | Constructs an event source from a setup function that operates in `Eff`.
 -- |
--- | - The `Emitter` that the passed function receives is used to `emit` queries
+-- | - The `Emitter` that the passed function receives is used to `emit` actions
 -- |   that will be received by the current component, or can be `close`d to
 -- |   shut down the event source and remove the subscription.
 -- | - The `Finalizer` that the passed function produces is there to allow for
@@ -96,7 +96,7 @@ effectEventSource =
       (liftEffect <<< map (hoistFinalizer liftEffect))
 
 -- | Constructs an event source from an event in the DOM. Accepts a function
--- | that maps event values to a `Maybe`-wrapped query, allowing it to filter
+-- | that maps event values to a `Maybe`-wrapped action, allowing it to filter
 -- | events if necessary.
 eventListenerEventSource
   :: forall m a
@@ -130,7 +130,11 @@ newtype Emitter m a = Emitter (Either a Unit -> m Unit)
 -- |   pure mempty
 -- | ```
 emit :: forall m a. Emitter m a -> (Unit -> a) -> m Unit
-emit (Emitter f) q = f (Left (q unit))
+emit emitter q = emit' emitter (q unit)
+
+-- | Emits an action via the emitter.
+emit' :: forall m a. Emitter m a -> a -> m Unit
+emit' (Emitter f) a = f (Left a)
 
 -- | Closes the emitter, shutting down the event source. This allows an event
 -- | source to stop itself internally, rather than requiring external shutdown
@@ -144,8 +148,8 @@ emit (Emitter f) q = f (Left (q unit))
 close :: forall m a. Emitter m a -> m Unit
 close (Emitter f) = f (Right unit)
 
--- | Changes the effect monad for an emitter.
-hoistEmitter :: forall m n a. (m Unit -> n Unit) -> Emitter m a -> Emitter n a
+-- | Changes the effect monad of an emitter.
+hoistEmitter :: forall m n. (m Unit -> n Unit) -> Emitter m ~> Emitter n
 hoistEmitter nat (Emitter f) = Emitter (nat <<< f)
 
 -- | When setting up an event source, values of this type should be returned to
