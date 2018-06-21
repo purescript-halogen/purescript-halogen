@@ -121,12 +121,12 @@ hoist nat = unComponent \c ->
 
 --------------------------------------------------------------------------------
 
-type ComponentSlot' h g i o ps m a =
-  { get :: forall slot. SlotStorage ps slot -> Maybe (slot g o)
-  , pop :: forall slot. SlotStorage ps slot -> Maybe (Tuple (slot g o) (SlotStorage ps slot))
-  , set :: forall slot. slot g o -> SlotStorage ps slot -> SlotStorage ps slot
-  , component :: Component h g i o m
-  , input :: forall f act. HalogenQ f act i Unit
+type ComponentSlot' h f i o ps m a =
+  { get :: forall slot. SlotStorage ps slot -> Maybe (slot f o)
+  , pop :: forall slot. SlotStorage ps slot -> Maybe (Tuple (slot f o) (SlotStorage ps slot))
+  , set :: forall slot. slot f o -> SlotStorage ps slot -> SlotStorage ps slot
+  , component :: Component h f i o m
+  , input :: forall act. HalogenQ f act i Unit
   , output :: o -> Maybe a
   }
 
@@ -136,37 +136,37 @@ instance functorComponentSlot :: Functor (ComponentSlot h ps m) where
   map f = unComponentSlot \slot -> mkComponentSlot' $ slot { output = map f <$> slot.output }
 
 mkComponentSlot
-  :: forall h sym px ps g i o p m a
-   . Row.Cons sym (Slot g o p) px ps
+  :: forall h sym px ps f i o p m a
+   . Row.Cons sym (Slot f o p) px ps
   => IsSymbol sym
   => Ord p
   => SProxy sym
   -> p
-  -> Component h g i o m
+  -> Component h f i o m
   -> i
   -> (o -> Maybe a)
   -> ComponentSlot h ps m a
 mkComponentSlot sym p comp input output =
   mkComponentSlot' { get, pop, set, component: comp, input: Receive input unit, output }
   where
-  get :: forall slot. SlotStorage ps slot -> Maybe (slot g o)
+  get :: forall slot. SlotStorage ps slot -> Maybe (slot f o)
   get = Slot.lookup sym p
 
-  pop :: forall slot. SlotStorage ps slot -> Maybe (Tuple (slot g o) (SlotStorage ps slot))
+  pop :: forall slot. SlotStorage ps slot -> Maybe (Tuple (slot f o) (SlotStorage ps slot))
   pop = Slot.pop sym p
 
-  set :: forall slot. slot g o -> SlotStorage ps slot -> SlotStorage ps slot
+  set :: forall slot. slot f o -> SlotStorage ps slot -> SlotStorage ps slot
   set = Slot.insert sym p
 
 mkComponentSlot'
-  :: forall h g i o ps m a
-   . ComponentSlot' h g i o ps m a
+  :: forall h f i o ps m a
+   . ComponentSlot' h f i o ps m a
   -> ComponentSlot h ps m a
 mkComponentSlot' = unsafeCoerce
 
 unComponentSlot
   :: forall h ps m a r
-   . (forall g i o. ComponentSlot' h g i o ps m a -> r)
+   . (forall f i o. ComponentSlot' h f i o ps m a -> r)
   -> ComponentSlot h ps m a
   -> r
 unComponentSlot = unsafeCoerce
