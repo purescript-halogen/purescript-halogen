@@ -24,11 +24,18 @@ import Prelude (class Ord, Unit, Void)
 import Prim.Row as Row
 import Unsafe.Coerce (unsafeCoerce)
 
-type ComponentHTML' act ps m = HTML (ComponentSlot HTML ps m act) act
+-- | A convenience synonym for the output type of a `render` function, for a
+-- | component that renders HTML, for a component constructed with the
+-- | `component` smart constructor.
+type ComponentHTML f ps m = ComponentHTML' (f Unit) ps m
 
 -- | A convenience synonym for the output type of a `render` function, for a
 -- | component that renders HTML.
-type ComponentHTML f ps m = ComponentHTML' (f Unit) ps m
+-- |
+-- | This type is more flexible than `ComponentHTML` as it allows for
+-- | non-query-algebra actions to be raised from the HTML (kind `Type` rather
+-- | than `Type -> Type`).
+type ComponentHTML' act ps m = HTML (ComponentSlot HTML ps m act) act
 
 -- | A type useful for a chunk of HTML with no slot-embedding or query-raising.
 -- |

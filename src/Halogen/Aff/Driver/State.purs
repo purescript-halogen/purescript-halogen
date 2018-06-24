@@ -37,19 +37,6 @@ type LifecycleHandlers =
   , finalizers :: List (Aff Unit)
   }
 
--- | The type used to track a driver's persistent state.
--- |
--- | - `h` is the type of value the components produce for rendering.
--- | - `r` is the type for the render state for the driver.
--- | - `s` is the component state type.
--- | - `f` is the projected component query algebra - used for multi-child-type
--- |       components, by projecting to `z` we can avoid the need to remap the
--- |       entire component.
--- | - `z` is the unprojected component query algebra.
--- | - `g` is the component child query algebra.
--- | - `p` is the type of slots for the component.
--- | - `i` is the invput value type.
--- | - `o` is the type of output messages from the component.
 newtype DriverState h r s f act ps i o = DriverState (DriverStateRec h r s f act ps i o)
 
 type DriverStateRec h r s f act ps i o =
