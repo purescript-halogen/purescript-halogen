@@ -1,4 +1,11 @@
-module Halogen.Aff.Driver.Eval where
+module Halogen.Aff.Driver.Eval
+  ( Renderer
+  , evalF
+  , evalQ
+  , evalM
+  , handleLifecycle
+  , queueOrRun
+  ) where
 
 import Prelude
 
@@ -19,26 +26,13 @@ import Effect.Aff (Aff, killFiber)
 import Effect.Class (liftEffect)
 import Effect.Ref (Ref)
 import Effect.Ref as Ref
-import Halogen.Aff.Driver.State (DriverState(..), DriverStateRef(..), LifecycleHandlers, unDriverStateX)
+import Halogen.Aff.Driver.State (DriverState(..), DriverStateRef(..), LifecycleHandlers, mapDriverState, unDriverStateX)
 import Halogen.Query.EventSource as ES
 import Halogen.Query.ForkF as FF
 import Halogen.Query.HalogenM (HalogenAp(..), HalogenF(..), HalogenM'(..), ChildQuery, UnpackQuery(..), SubscriptionId(..), unChildQuery)
 import Halogen.Query.HalogenQ (HalogenQ(..))
 import Halogen.Query.Input (Input(..), RefLabel(..))
 import Unsafe.Reference (unsafeRefEq)
-
-handleLifecycle
-  :: forall a
-   . Ref LifecycleHandlers
-  -> Effect a
-  -> Aff a
-handleLifecycle lchs f = do
-  liftEffect $ Ref.write { initializers: L.Nil, finalizers: L.Nil } lchs
-  result <- liftEffect f
-  { initializers, finalizers } <- liftEffect $ Ref.read lchs
-  traverse_ fork finalizers
-  parSequence_ initializers
-  pure result
 
 type Renderer h r
   = forall s f act ps i o
@@ -54,11 +48,11 @@ evalF
   -> Aff Unit
 evalF render ref = case _ of
   RefUpdate (RefLabel p) el -> do
-    liftEffect $ Ref.modify_ (\(DriverState st) ->
-      DriverState st { refs = M.alter (const el) p st.refs }) ref
-  Query q -> do
+    liftEffect $ flip Ref.modify_ ref $ mapDriverState \st ->
+      st { refs = M.alter (const el) p st.refs }
+  Query act -> do
     DriverState st <- liftEffect (Ref.read ref)
-    evalM render ref (st.component.eval (Handle q unit))
+    evalM render ref (st.component.eval (Handle act unit))
 
 evalQ
   :: forall h r s f act ps i o
@@ -106,10 +100,10 @@ evalM render initRef (HalogenM hm) = foldFree (go initRef) hm
             liftEffect $ Ref.modify_ (map (M.delete sid)) subscriptions
             when (maybe false (M.member sid) subs) (ES.finalize finalizer)
           consumer = do
-            q <- CR.await
+            act <- CR.await
             subs <- lift $ liftEffect (Ref.read subscriptions)
             when ((M.member sid <$> subs) == Just true) do
-              _ <- lift $ fork $ evalF render ref (Query q)
+              _ <- lift $ fork $ evalF render ref (Query act)
               consumer
         liftEffect $ Ref.modify_ (map (M.insert sid done)) subscriptions
         CR.runProcess (consumer `CR.pullFrom` producer)
@@ -125,7 +119,7 @@ evalM render initRef (HalogenM hm) = foldFree (go initRef) hm
     Raise o a -> do
       DriverState { handlerRef, pendingOuts } <- liftEffect (Ref.read ref)
       handler <- liftEffect (Ref.read handlerRef)
-      queuingHandler handler pendingOuts o
+      queueOrRun pendingOuts (handler o)
       pure a
     Par (HalogenAp p) ->
       sequential $ retractFreeAp $ hoistFreeAp (parallel <<< evalM render ref) p
@@ -151,26 +145,30 @@ evalM render initRef (HalogenM hm) = foldFree (go initRef) hm
           unDriverStateX (\ds -> evalQ render ds.selfRef query) dsx
       reply <$> sequential (unpack evalChild st.children)) cqb
 
-  unsubscribe
-    :: forall s' f' act' ps' i' o'
-     . SubscriptionId
-    -> Ref (DriverState h r s' f' act' ps' i' o')
-    -> Aff Unit
-  unsubscribe sid ref = do
-    DriverState ({ subscriptions }) <- liftEffect (Ref.read ref)
-    subs <- liftEffect (Ref.read subscriptions)
-    traverse_ ES.finalize (M.lookup sid =<< subs)
-
-queuingHandler
-  :: forall a
-   . (a -> Aff Unit)
-  -> Ref (Maybe (List (Aff Unit)))
-  -> a
+unsubscribe
+  :: forall h r s' f' act' ps' i' o'
+   . SubscriptionId
+  -> Ref (DriverState h r s' f' act' ps' i' o')
   -> Aff Unit
-queuingHandler handler ref message = do
-  queue <- liftEffect (Ref.read ref)
-  case queue of
-    Nothing ->
-      handler message
-    Just p ->
-      liftEffect $ Ref.write (Just (handler message : p)) ref
+unsubscribe sid ref = do
+  DriverState ({ subscriptions }) <- liftEffect (Ref.read ref)
+  subs <- liftEffect (Ref.read subscriptions)
+  traverse_ ES.finalize (M.lookup sid =<< subs)
+
+handleLifecycle :: Ref LifecycleHandlers -> Effect ~> Aff
+handleLifecycle lchs f = do
+  liftEffect $ Ref.write { initializers: L.Nil, finalizers: L.Nil } lchs
+  result <- liftEffect f
+  { initializers, finalizers } <- liftEffect $ Ref.read lchs
+  traverse_ fork finalizers
+  parSequence_ initializers
+  pure result
+
+queueOrRun
+  :: Ref (Maybe (List (Aff Unit)))
+  -> Aff Unit
+  -> Aff Unit
+queueOrRun ref au =
+  liftEffect (Ref.read ref) >>= case _ of
+    Nothing -> au
+    Just p -> liftEffect $ Ref.write (Just (au : p)) ref

@@ -1,6 +1,7 @@
 module Halogen.Aff.Driver.State
   ( LifecycleHandlers
   , DriverState(..)
+  , mapDriverState
   , DriverStateRef(..)
   , DriverStateRec
   , DriverStateX
@@ -68,6 +69,13 @@ type DriverStateRec h r s f act ps i o =
   , subscriptions :: Ref (Maybe (M.Map SubscriptionId (Finalizer Aff)))
   , lifecycleHandlers :: Ref LifecycleHandlers
   }
+
+mapDriverState
+  :: forall h r s f act ps i o
+  . (DriverStateRec h r s f act ps i o -> DriverStateRec h r s f act ps i o)
+  -> DriverState h r s f act ps i o
+  -> DriverState h r s f act ps i o
+mapDriverState f (DriverState ds) = DriverState (f ds)
 
 newtype DriverStateRef h r f o = DriverStateRef (Ref (DriverStateX h r f o))
 
