@@ -15,7 +15,7 @@ import Halogen.HTML.Elements
 
 import Data.Maybe (Maybe)
 import Data.Symbol (class IsSymbol, SProxy)
-import Halogen.Component (Component, ComponentSlot, mkComponentSlot)
+import Halogen.Component (Component, ComponentSlot, componentSlot)
 import Halogen.Data.Slot (Slot)
 import Halogen.HTML.Core (class IsProp, AttrName(..), ClassName(..), HTML(..), Namespace(..), PropName(..), ElemName(..), text, handler)
 import Halogen.HTML.Core as Core
@@ -60,4 +60,4 @@ slot
   -> (o -> Maybe act)
   -> ComponentHTML' act ps m
 slot sym p component input outputQuery =
-  Core.slot (mkComponentSlot sym p component input outputQuery)
+  Core.slot (componentSlot sym p component input outputQuery)

@@ -24,7 +24,7 @@ import Effect (Effect)
 import Effect.Aff (Aff)
 import Effect.Ref (Ref)
 import Effect.Ref as Ref
-import Halogen.Component (ComponentSpec')
+import Halogen.Component (ComponentSpec)
 import Halogen.Data.Slot (SlotStorage)
 import Halogen.Data.Slot as SlotStorage
 import Halogen.Query.EventSource (Finalizer)
@@ -53,7 +53,7 @@ type LifecycleHandlers =
 newtype DriverState h r s f act ps i o = DriverState (DriverStateRec h r s f act ps i o)
 
 type DriverStateRec h r s f act ps i o =
-  { component :: ComponentSpec' h s f act ps i o Aff
+  { component :: ComponentSpec h s f act ps i o Aff
   , state :: s
   , refs :: M.Map String Element
   , children :: SlotStorage ps (DriverStateRef h r)
@@ -136,7 +136,7 @@ renderStateX_ f = unDriverStateX \st -> traverse_ f st.rendering
 
 initDriverState
   :: forall h r s f act ps i o
-   . ComponentSpec' h s f act ps i o Aff
+   . ComponentSpec h s f act ps i o Aff
   -> i
   -> (o -> Aff Unit)
   -> Ref LifecycleHandlers
