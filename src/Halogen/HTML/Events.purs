@@ -92,7 +92,7 @@ input_ :: forall f a. Action f -> a -> Maybe (f Unit)
 input_ f _ = Just $ action f
 
 handler :: forall r i. EventType -> (Event -> Maybe i) -> IProp r i
-handler et = (unsafeCoerce :: (EventType -> (Event -> Maybe i) -> Prop i) -> EventType -> (Event -> Maybe (Input i)) -> IProp r i) Core.handler et <<< map (map Query)
+handler et = (unsafeCoerce :: (EventType -> (Event -> Maybe i) -> Prop i) -> EventType -> (Event -> Maybe (Input i)) -> IProp r i) Core.handler et <<< map (map Action)
 
 onAbort :: forall r i. (Event -> Maybe i) -> IProp (onAbort :: Event | r) i
 onAbort = handler (EventType "abort")

@@ -50,7 +50,7 @@ evalF render ref = case _ of
   RefUpdate (RefLabel p) el -> do
     liftEffect $ flip Ref.modify_ ref $ mapDriverState \st ->
       st { refs = M.alter (const el) p st.refs }
-  Query act -> do
+  Action act -> do
     DriverState st <- liftEffect (Ref.read ref)
     evalM render ref (st.component.eval (Handle act unit))
 
@@ -103,7 +103,7 @@ evalM render initRef (HalogenM hm) = foldFree (go initRef) hm
             act <- CR.await
             subs <- lift $ liftEffect (Ref.read subscriptions)
             when ((M.member sid <$> subs) == Just true) do
-              _ <- lift $ fork $ evalF render ref (Query act)
+              _ <- lift $ fork $ evalF render ref (Action act)
               consumer
         liftEffect $ Ref.modify_ (map (M.insert sid done)) subscriptions
         CR.runProcess (consumer `CR.pullFrom` producer)

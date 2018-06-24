@@ -187,7 +187,7 @@ runUI renderSpec component i = do
       handler :: Input act -> Aff Unit
       handler = Eval.queueOrRun ds.pendingHandlers <<< void <<< Eval.evalF render ds.selfRef
       childHandler :: act -> Aff Unit
-      childHandler = Eval.queueOrRun ds.pendingQueries <<< handler <<< Query
+      childHandler = Eval.queueOrRun ds.pendingQueries <<< handler <<< Action
     rendering <-
       renderSpec.render
         (handleAff <<< handler)
