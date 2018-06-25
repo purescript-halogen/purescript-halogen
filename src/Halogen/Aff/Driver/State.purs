@@ -1,6 +1,7 @@
 module Halogen.Aff.Driver.State
   ( LifecycleHandlers
   , DriverState(..)
+  , mapDriverState
   , DriverStateRef(..)
   , DriverStateRec
   , DriverStateX
@@ -23,7 +24,7 @@ import Effect (Effect)
 import Effect.Aff (Aff)
 import Effect.Ref (Ref)
 import Effect.Ref as Ref
-import Halogen.Component (ComponentSpec')
+import Halogen.Component (ComponentSpec)
 import Halogen.Data.Slot (SlotStorage)
 import Halogen.Data.Slot as SlotStorage
 import Halogen.Query.EventSource (Finalizer)
@@ -36,23 +37,10 @@ type LifecycleHandlers =
   , finalizers :: List (Aff Unit)
   }
 
--- | The type used to track a driver's persistent state.
--- |
--- | - `h` is the type of value the components produce for rendering.
--- | - `r` is the type for the render state for the driver.
--- | - `s` is the component state type.
--- | - `f` is the projected component query algebra - used for multi-child-type
--- |       components, by projecting to `z` we can avoid the need to remap the
--- |       entire component.
--- | - `z` is the unprojected component query algebra.
--- | - `g` is the component child query algebra.
--- | - `p` is the type of slots for the component.
--- | - `i` is the invput value type.
--- | - `o` is the type of output messages from the component.
 newtype DriverState h r s f act ps i o = DriverState (DriverStateRec h r s f act ps i o)
 
 type DriverStateRec h r s f act ps i o =
-  { component :: ComponentSpec' h s f act ps i o Aff
+  { component :: ComponentSpec h s f act ps i o Aff
   , state :: s
   , refs :: M.Map String Element
   , children :: SlotStorage ps (DriverStateRef h r)
@@ -68,6 +56,13 @@ type DriverStateRec h r s f act ps i o =
   , subscriptions :: Ref (Maybe (M.Map SubscriptionId (Finalizer Aff)))
   , lifecycleHandlers :: Ref LifecycleHandlers
   }
+
+mapDriverState
+  :: forall h r s f act ps i o
+  . (DriverStateRec h r s f act ps i o -> DriverStateRec h r s f act ps i o)
+  -> DriverState h r s f act ps i o
+  -> DriverState h r s f act ps i o
+mapDriverState f (DriverState ds) = DriverState (f ds)
 
 newtype DriverStateRef h r f o = DriverStateRef (Ref (DriverStateX h r f o))
 
@@ -128,7 +123,7 @@ renderStateX_ f = unDriverStateX \st -> traverse_ f st.rendering
 
 initDriverState
   :: forall h r s f act ps i o
-   . ComponentSpec' h s f act ps i o Aff
+   . ComponentSpec h s f act ps i o Aff
   -> i
   -> (o -> Aff Unit)
   -> Ref LifecycleHandlers

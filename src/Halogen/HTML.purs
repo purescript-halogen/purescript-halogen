@@ -1,7 +1,9 @@
 -- | This module re-exports the types for the `HTML` DSL, and values for all
 -- | supported HTML elements.
 module Halogen.HTML
-  ( PlainHTML
+  ( ComponentHTML'
+  , ComponentHTML
+  , PlainHTML
   , fromPlainHTML
   , slot
   , module Halogen.HTML.Core
@@ -13,14 +15,27 @@ import Halogen.HTML.Elements
 
 import Data.Maybe (Maybe)
 import Data.Symbol (class IsSymbol, SProxy)
-import Halogen.Component (Component, ComponentHTML', mkComponentSlot)
+import Halogen.Component (Component, ComponentSlot, componentSlot)
 import Halogen.Data.Slot (Slot)
 import Halogen.HTML.Core (class IsProp, AttrName(..), ClassName(..), HTML(..), Namespace(..), PropName(..), ElemName(..), text, handler)
 import Halogen.HTML.Core as Core
 import Halogen.HTML.Properties (IProp, attr, attrNS, prop)
-import Prelude (class Ord, Void)
+import Prelude (class Ord, Unit, Void)
 import Prim.Row as Row
 import Unsafe.Coerce (unsafeCoerce)
+
+-- | A convenience synonym for the output type of a `render` function, for a
+-- | component that renders HTML, for a component constructed with the
+-- | `component` smart constructor.
+type ComponentHTML f ps m = ComponentHTML' (f Unit) ps m
+
+-- | A convenience synonym for the output type of a `render` function, for a
+-- | component that renders HTML.
+-- |
+-- | This type is more flexible than `ComponentHTML` as it allows for
+-- | non-query-algebra actions to be raised from the HTML (kind `Type` rather
+-- | than `Type -> Type`).
+type ComponentHTML' act ps m = HTML (ComponentSlot HTML ps m act) act
 
 -- | A type useful for a chunk of HTML with no slot-embedding or query-raising.
 -- |
@@ -41,15 +56,15 @@ fromPlainHTML = unsafeCoerce -- ≅ bimap absurd absurd
 -- | - the input value to pass to the component
 -- | - a function mapping outputs from the component to a query in the parent
 slot
-  :: forall sym px ps g i o p m act
-   . Row.Cons sym (Slot g o p) px ps
+  :: forall sym px ps f i o p m act
+   . Row.Cons sym (Slot f o p) px ps
   => IsSymbol sym
   => Ord p
   => SProxy sym
   -> p
-  -> Component HTML g i o m
+  -> Component HTML f i o m
   -> i
   -> (o -> Maybe act)
   -> ComponentHTML' act ps m
 slot sym p component input outputQuery =
-  Core.slot (mkComponentSlot sym p component input outputQuery)
+  Core.slot (componentSlot sym p component input outputQuery)

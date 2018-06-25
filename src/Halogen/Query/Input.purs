@@ -14,6 +14,6 @@ derive newtype instance ordRefLabel :: Ord RefLabel
 
 data Input act
   = RefUpdate RefLabel (Maybe Element)
-  | Query act
+  | Action act
 
 derive instance functorInput :: Functor Input

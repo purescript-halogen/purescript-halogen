@@ -47,7 +47,7 @@ factory
   => H.Component HH.HTML f i o m
   -> H.Component HH.HTML f i o m
 factory innerComponent =
-  H.component'
+  H.mkComponent
     { initialState: { on: true, input: _ }
     , render
     , eval
@@ -55,9 +55,7 @@ factory innerComponent =
 
   where
 
-  render
-    :: State i
-    -> H.ComponentHTML' (Action o) (ChildSlots f o) m
+  render :: State i -> H.ComponentHTML' (Action o) (ChildSlots f o) m
   render state =
     HH.div_
       [ HH.hr_

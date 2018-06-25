@@ -21,44 +21,22 @@ import Data.Tuple (Tuple)
 import Effect.Aff.Class (class MonadAff, liftAff)
 import Effect.Class (class MonadEffect, liftEffect)
 import Effect.Exception (Error)
-import Halogen.Data.Slot (Slot, SlotStorage)
+import Halogen.Data.Slot (Slot)
 import Halogen.Data.Slot as Slot
+import Halogen.Query.ChildQuery as CQ
 import Halogen.Query.EventSource as ES
 import Halogen.Query.ForkF as FF
 import Halogen.Query.Input (RefLabel)
 import Prim.Row as Row
-import Unsafe.Coerce (unsafeCoerce)
 import Web.DOM (Element)
 
-newtype SubscriptionId = SubscriptionId Int
-
-derive newtype instance eqSubscriptionId :: Eq SubscriptionId
-derive newtype instance ordSubscriptionId :: Ord SubscriptionId
-
-newtype UnpackQuery ps g o f b =
-  UnpackQuery (forall slot m. Applicative m => (slot g o -> m b) -> SlotStorage ps slot -> m (f b))
-
-type ChildQuery' ps g o a f b =
-  { unpack :: UnpackQuery ps g o f b
-  , query :: g b
-  , reply :: f b -> a
-  }
-
-data ChildQuery (ps :: # Type) a
-
-mkChildQuery :: forall ps g o a f b. ChildQuery' ps g o a f b -> ChildQuery ps a
-mkChildQuery = unsafeCoerce
-
-unChildQuery :: forall ps a r. (forall g o f b. ChildQuery' ps g o a f b -> r) -> ChildQuery ps a -> r
-unChildQuery = unsafeCoerce
-
--- | The Halogen component algebra
+-- | The Halogen component eval algebra.
 data HalogenF s act ps o m a
   = State (s -> Tuple a s)
   | Subscribe (SubscriptionId -> ES.EventSource m act) (SubscriptionId -> a)
   | Unsubscribe SubscriptionId a
   | Lift (m a)
-  | ChildQuery (ChildQuery ps a)
+  | ChildQuery (CQ.ChildQueryBox ps a)
   | Raise o a
   | Par (HalogenAp s act ps o m a)
   | Fork (FF.Fork (HalogenM' s act ps o m) a)
@@ -70,21 +48,19 @@ instance functorHalogenF :: Functor m => Functor (HalogenF s act ps o m) where
     Subscribe fes a -> Subscribe fes (map f a)
     Unsubscribe sid a -> Unsubscribe sid (f a)
     Lift q -> Lift (map f q)
-    ChildQuery cq -> ChildQuery (unChildQuery (\cq' -> mkChildQuery $ cq' { reply = cq'.reply >>> f }) cq)
+    ChildQuery cq -> ChildQuery (map f cq)
     Raise o a -> Raise o (f a)
     Par pa -> Par (map f pa)
     Fork fa -> Fork (map f fa)
     GetRef p k -> GetRef p (map f k)
 
-newtype HalogenAp s act ps o m a = HalogenAp (FreeAp (HalogenM' s act ps o m) a)
-
-derive instance newtypeHalogenAp :: Newtype (HalogenAp s f ps o m a) _
-derive newtype instance functorHalogenAp :: Functor (HalogenAp s f ps o m)
-derive newtype instance applyHalogenAp :: Apply (HalogenAp s f ps o m)
-derive newtype instance applicativeHalogenAp :: Applicative (HalogenAp s f ps o m)
-
+-- | The Halogen component eval effect monad.
 newtype HalogenM' s act ps o m a = HalogenM (Free (HalogenF s act ps o m) a)
 
+-- | The Halogen component eval effect monad, for components constructed with
+-- | the `component` smart constructor. This is more constrained than
+-- | `HalogenM'` as it only allows for query algebra actions (kind
+-- | `Type -> Type` rather than `Type`).
 type HalogenM s act = HalogenM' s (act Unit)
 
 derive newtype instance functorHalogenM :: Functor (HalogenM' s act ps o m)
@@ -94,35 +70,49 @@ derive newtype instance bindHalogenM :: Bind (HalogenM' s act ps o m)
 derive newtype instance monadHalogenM :: Monad (HalogenM' s act ps o m)
 
 instance monadEffectHalogenM :: MonadEffect m => MonadEffect (HalogenM' s act ps o m) where
-  liftEffect eff = HalogenM $ liftF $ Lift $ liftEffect eff
+  liftEffect = HalogenM <<< liftF <<< Lift <<< liftEffect
 
 instance monadAffHalogenM :: MonadAff m => MonadAff (HalogenM' s act ps o m) where
-  liftAff aff = HalogenM $ liftF $ Lift $ liftAff aff
+  liftAff = HalogenM <<< liftF <<< Lift <<< liftAff
 
 instance parallelHalogenM :: Parallel (HalogenAp s act ps o m) (HalogenM' s act ps o m) where
   parallel = HalogenAp <<< liftFreeAp
   sequential = HalogenM <<< liftF <<< Par
 
 instance monadTransHalogenM :: MonadTrans (HalogenM' s act ps o) where
-  lift m = HalogenM $ liftF $ Lift m
+  lift = HalogenM <<< liftF <<< Lift
 
 instance monadRecHalogenM :: MonadRec (HalogenM' s act ps o m) where
-  tailRecM k a = k a >>= go
-    where
-    go (Loop x) = tailRecM k x
-    go (Done y) = pure y
+  tailRecM k a = k a >>= case _ of
+    Loop x -> tailRecM k x
+    Done y -> pure y
 
 instance monadStateHalogenM :: MonadState s (HalogenM' s act ps o m) where
   state = HalogenM <<< liftF <<< State
 
 instance monadAskHalogenM :: MonadAsk r m => MonadAsk r (HalogenM' s act ps o m) where
-  ask = HalogenM $ liftF $ Lift $ ask
+  ask = HalogenM $ liftF $ Lift ask
 
 instance monadTellHalogenM :: MonadTell w m => MonadTell w (HalogenM' s act ps o m) where
   tell = HalogenM <<< liftF <<< Lift <<< tell
 
 instance monadThrowHalogenM :: MonadThrow e m => MonadThrow e (HalogenM' s act ps o m) where
   throwError = HalogenM <<< liftF <<< Lift <<< throwError
+
+-- | An applicative-only version of `HalogenM` to allow for parallel evaluation.
+newtype HalogenAp s act ps o m a = HalogenAp (FreeAp (HalogenM' s act ps o m) a)
+
+derive instance newtypeHalogenAp :: Newtype (HalogenAp s f ps o m a) _
+derive newtype instance functorHalogenAp :: Functor (HalogenAp s f ps o m)
+derive newtype instance applyHalogenAp :: Apply (HalogenAp s f ps o m)
+derive newtype instance applicativeHalogenAp :: Applicative (HalogenAp s f ps o m)
+
+-- | The ID value associated with a subscription. Allows the subscription to be
+-- | stopped at a later time.
+newtype SubscriptionId = SubscriptionId Int
+
+derive newtype instance eqSubscriptionId :: Eq SubscriptionId
+derive newtype instance ordSubscriptionId :: Ord SubscriptionId
 
 -- | Subscribes a component to an `EventSource`.
 subscribe :: forall s act ps o m. ES.EventSource m act -> HalogenM' s act ps o m SubscriptionId
@@ -136,6 +126,8 @@ subscribe es = HalogenM $ liftF $ Subscribe (\_ -> es) identity
 subscribe' :: forall s act ps o m. (SubscriptionId -> ES.EventSource m act) -> HalogenM' s act ps o m Unit
 subscribe' esc = HalogenM $ liftF $ Subscribe esc (const unit)
 
+-- | Unsubscribes a component from an `EventSource`. If the subscription
+-- | associated with the ID has already ended this will have no effect.
 unsubscribe :: forall s act ps o m. SubscriptionId -> HalogenM' s act ps o m Unit
 unsubscribe sid = HalogenM $ liftF $ Unsubscribe sid unit
 
@@ -149,11 +141,8 @@ query
   -> p
   -> f a
   -> HalogenM' s act ps o m (Maybe a)
-query sym p q = HalogenM $ liftF $ ChildQuery $ mkChildQuery
-  { unpack: UnpackQuery \k -> Slot.lookup sym p >>> traverse k
-  , query: q
-  , reply: identity
-  }
+query sym p q = HalogenM $ liftF $ ChildQuery $ CQ.mkChildQueryBox $
+  CQ.ChildQuery (\k -> traverse k <<< Slot.lookup sym p) q identity
 
 -- | Sends a query to all children of a component at a given slot label.
 queryAll
@@ -164,11 +153,8 @@ queryAll
   => SProxy sym
   -> f a
   -> HalogenM' s act ps o m (Map p a)
-queryAll sym q = HalogenM $ liftF $ ChildQuery $ mkChildQuery
-  { unpack: UnpackQuery \k -> Slot.slots sym >>> traverse k
-  , query: q
-  , reply: identity
-  }
+queryAll sym q = HalogenM $ liftF $ ChildQuery $ CQ.mkChildQueryBox $
+  CQ.ChildQuery (\k -> traverse k <<< Slot.slots sym) q identity
 
 getRef :: forall s act ps o m. RefLabel -> HalogenM' s act ps o m (Maybe Element)
 getRef p = HalogenM $ liftF $ GetRef p identity
@@ -223,7 +209,7 @@ mapAction f (HalogenM h) = HalogenM (hoistFree go h)
 mapOutput
   :: forall s act ps o o' m
    . (o -> o')
-  -> HalogenM' s act ps o  m
+  -> HalogenM' s act ps o m
   ~> HalogenM' s act ps o' m
 mapOutput f (HalogenM h) = HalogenM (hoistFree go h)
   where

@@ -25,8 +25,8 @@ import Halogen.Query.Input (RefLabel(..))
 import Web.HTML.HTMLElement (HTMLElement)
 import Web.HTML.HTMLElement as HTMLElement
 
--- | Type synonym for an "action" - An action only causes effects and has no
--- | result value.
+-- | Type synonym for an "action-style" query - An action only causes effects
+-- | and has no result value.
 -- |
 -- | In a query algebra, an action is any constructor that carries the algebra's
 -- | type variable as a value. For example:
@@ -56,8 +56,8 @@ type Action f = Unit -> f Unit
 action :: forall f. Action f -> f Unit
 action act = act unit
 
--- | Type synonym for an "request" - a request can cause effects as well as
--- | fetching some information from a component.
+-- | Type synonym for an "request-style" query - a request can cause effects as
+-- | well as fetching some information from a component.
 -- |
 -- | In a query algebra, an action is any constructor that carries the algebra's
 -- | type variable as the return value of a function. For example:
