@@ -20,12 +20,10 @@ import Data.Traversable (traverse)
 import Data.Tuple (Tuple)
 import Effect.Aff.Class (class MonadAff, liftAff)
 import Effect.Class (class MonadEffect, liftEffect)
-import Effect.Exception (Error)
 import Halogen.Data.Slot (Slot)
 import Halogen.Data.Slot as Slot
 import Halogen.Query.ChildQuery as CQ
 import Halogen.Query.EventSource as ES
-import Halogen.Query.ForkF as FF
 import Halogen.Query.Input (RefLabel)
 import Prim.Row as Row
 import Web.DOM (Element)
@@ -39,20 +37,22 @@ data HalogenF s act ps o m a
   | ChildQuery (CQ.ChildQueryBox ps a)
   | Raise o a
   | Par (HalogenAp s act ps o m a)
-  | Fork (FF.Fork (HalogenM' s act ps o m) a)
+  | Fork (HalogenM' s act ps o m Unit) (ForkId -> a)
+  | Kill ForkId a
   | GetRef RefLabel (Maybe Element -> a)
 
 instance functorHalogenF :: Functor m => Functor (HalogenF s act ps o m) where
   map f = case _ of
     State k -> State (lmap f <<< k)
-    Subscribe fes a -> Subscribe fes (map f a)
+    Subscribe fes k -> Subscribe fes (f <<< k)
     Unsubscribe sid a -> Unsubscribe sid (f a)
     Lift q -> Lift (map f q)
     ChildQuery cq -> ChildQuery (map f cq)
     Raise o a -> Raise o (f a)
     Par pa -> Par (map f pa)
-    Fork fa -> Fork (map f fa)
-    GetRef p k -> GetRef p (map f k)
+    Fork hmu k -> Fork hmu (f <<< k)
+    Kill fid a -> Kill fid (f a)
+    GetRef p k -> GetRef p (f <<< k)
 
 -- | The Halogen component eval effect monad.
 newtype HalogenM' s act ps o m a = HalogenM (Free (HalogenF s act ps o m) a)
@@ -163,8 +163,16 @@ getRef p = HalogenM $ liftF $ GetRef p identity
 raise :: forall s act ps o m. o -> HalogenM' s act ps o m Unit
 raise o = HalogenM $ liftF $ Raise o unit
 
-fork :: forall s act ps o m a. MonadAff m => HalogenM' s act ps o m a -> HalogenM' s act ps o m (Error -> m Unit)
-fork a = map liftAff <$> HalogenM (liftF $ Fork $ FF.fork a)
+newtype ForkId = ForkId Int
+
+derive newtype instance eqForkId :: Eq ForkId
+derive newtype instance ordForkId :: Ord ForkId
+
+fork :: forall s act ps o m. MonadAff m => HalogenM' s act ps o m Unit -> HalogenM' s act ps o m ForkId
+fork hmu = HalogenM $ liftF $ Fork hmu identity
+
+kill :: forall s act ps o m. MonadAff m => ForkId -> HalogenM' s act ps o m Unit
+kill fid = HalogenM $ liftF $ Kill fid unit
 
 imapState
   :: forall s s' act ps o m
@@ -177,13 +185,14 @@ imapState f f' (HalogenM h) = HalogenM (hoistFree go h)
   go :: HalogenF s act ps o m ~> HalogenF s' act ps o m
   go = case _ of
     State fs -> State (map f <<< fs <<< f')
-    Subscribe fes a -> Subscribe fes a
+    Subscribe fes k -> Subscribe fes k
     Unsubscribe sid a -> Unsubscribe sid a
     Lift q -> Lift q
     ChildQuery cq -> ChildQuery cq
     Raise o a -> Raise o a
     Par p -> Par (over HalogenAp (hoistFreeAp (imapState f f')) p)
-    Fork fo -> Fork (FF.hoistFork (imapState f f') fo)
+    Fork hmu k -> Fork (imapState f f' hmu) k
+    Kill fid a -> Kill fid a
     GetRef p k -> GetRef p k
 
 mapAction
@@ -197,13 +206,14 @@ mapAction f (HalogenM h) = HalogenM (hoistFree go h)
   go :: HalogenF s act ps o m ~> HalogenF s act' ps o m
   go = case _ of
     State fs -> State fs
-    Subscribe fes a -> Subscribe (map f <<< fes) a
+    Subscribe fes k -> Subscribe (map f <<< fes) k
     Unsubscribe sid a -> Unsubscribe sid a
     Lift q -> Lift q
     ChildQuery cq -> ChildQuery cq
     Raise o a -> Raise o a
     Par p -> Par (over HalogenAp (hoistFreeAp (mapAction f)) p)
-    Fork fo -> Fork (FF.hoistFork (mapAction f) fo)
+    Fork hmu k -> Fork (mapAction f hmu) k
+    Kill fid a -> Kill fid a
     GetRef p k -> GetRef p k
 
 mapOutput
@@ -216,13 +226,14 @@ mapOutput f (HalogenM h) = HalogenM (hoistFree go h)
   go :: HalogenF s act ps o m ~> HalogenF s act ps o' m
   go = case _ of
     State fs -> State fs
-    Subscribe fes a -> Subscribe fes a
+    Subscribe fes k -> Subscribe fes k
     Unsubscribe sid a -> Unsubscribe sid a
     Lift q -> Lift q
     ChildQuery cq -> ChildQuery cq
     Raise o a -> Raise (f o) a
     Par p -> Par (over HalogenAp (hoistFreeAp (mapOutput f)) p)
-    Fork fo -> Fork (FF.hoistFork (mapOutput f) fo)
+    Fork hmu k -> Fork (mapOutput f hmu) k
+    Kill fid a -> Kill fid a
     GetRef p k -> GetRef p k
 
 hoist
@@ -236,11 +247,12 @@ hoist nat (HalogenM fa) = HalogenM (hoistFree go fa)
   go :: HalogenF s act ps o m ~> HalogenF s act ps o m'
   go = case _ of
     State f -> State f
-    Subscribe fes a -> Subscribe (ES.hoist nat <<< fes) a
+    Subscribe fes k -> Subscribe (ES.hoist nat <<< fes) k
     Unsubscribe sid a -> Unsubscribe sid a
     Lift q -> Lift (nat q)
     ChildQuery cq -> ChildQuery cq
     Raise o a -> Raise o a
     Par p -> Par (over HalogenAp (hoistFreeAp (hoist nat)) p)
-    Fork fo -> Fork (FF.hoistFork (hoist nat) fo)
+    Fork hmu k -> Fork (hoist nat hmu) k
+    Kill fid a -> Kill fid a
     GetRef p k -> GetRef p k
