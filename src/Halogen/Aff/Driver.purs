@@ -163,10 +163,6 @@ runUI renderSpec component i = do
   runComponent lchs handler j = unComponent \c -> do
     lchs' <- newLifecycleHandlers
     var <- initDriverState c j handler lchs'
-    dsx <- Ref.read var
-    unDriverStateX (\st -> do
-      let initialize = Eval.evalM render st.selfRef (st.component.eval (Initialize unit))
-      Ref.write (Just (L.singleton initialize)) st.pendingQueries) dsx
     pre <- Ref.read lchs
     Ref.write { initializers: L.Nil, finalizers: pre.finalizers } lchs
     unDriverStateX (render lchs <<< _.selfRef) =<< Ref.read var
@@ -263,7 +259,6 @@ runUI renderSpec component i = do
               handlePending st.pendingOuts) : preInits
         , finalizers: handlers.finalizers
         }) lchs
-      pure unit
 
   finalize
     :: forall f' o'
