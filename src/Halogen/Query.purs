@@ -80,5 +80,8 @@ type Request f a = (a -> a) -> f a
 request :: forall f a. Request f a -> f a
 request req = req identity
 
+-- | Retrieves a `HTMLElement` value that is associated with a `Ref` in the
+-- | rendered output of a component. If there is no currently rendered value (or
+-- | it is not an `HTMLElement`) for the request will return `Nothing`.
 getHTMLElementRef :: forall s f ps o m. RefLabel -> HalogenM s f ps o m (Maybe HTMLElement)
 getHTMLElementRef = map (HTMLElement.fromElement =<< _) <<< getRef
