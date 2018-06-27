@@ -168,10 +168,10 @@ newtype ForkId = ForkId Int
 derive newtype instance eqForkId :: Eq ForkId
 derive newtype instance ordForkId :: Ord ForkId
 
-fork :: forall s act ps o m. MonadAff m => HalogenM' s act ps o m Unit -> HalogenM' s act ps o m ForkId
+fork :: forall s act ps o m. HalogenM' s act ps o m Unit -> HalogenM' s act ps o m ForkId
 fork hmu = HalogenM $ liftF $ Fork hmu identity
 
-kill :: forall s act ps o m. MonadAff m => ForkId -> HalogenM' s act ps o m Unit
+kill :: forall s act ps o m. ForkId -> HalogenM' s act ps o m Unit
 kill fid = HalogenM $ liftF $ Kill fid unit
 
 imapState
