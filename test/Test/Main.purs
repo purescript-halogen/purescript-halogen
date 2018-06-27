@@ -1,11 +1,11 @@
 module Test.Main where
 
 import Prelude
-import Effect (Effect)
-import Effect.Console (log)
 
--- This isn't a real test suite, we're just checking that the examples used in
--- the documentation compile.
+import Effect (Effect)
+import Effect.Aff (launchAff_)
+import Test.Component.ForkTest as ForkTest
 
 main :: Effect Unit
-main = log "Nothing to see here"
+main = launchAff_ do
+  ForkTest.test

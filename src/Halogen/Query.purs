@@ -19,7 +19,7 @@ import Control.Monad.Trans.Class (lift) as Exports
 import Data.Maybe (Maybe)
 import Effect.Aff.Class (liftAff) as Exports
 import Effect.Class (liftEffect) as Exports
-import Halogen.Query.HalogenM (HalogenM, HalogenM'(..), HalogenF(..), SubscriptionId, fork, getRef, query, queryAll, subscribe, subscribe', unsubscribe, raise)
+import Halogen.Query.HalogenM (HalogenM, HalogenM'(..), HalogenF(..), SubscriptionId, ForkId, fork, kill, getRef, query, queryAll, subscribe, subscribe', unsubscribe, raise)
 import Halogen.Query.HalogenQ (HalogenQ(..))
 import Halogen.Query.Input (RefLabel(..))
 import Web.HTML.HTMLElement (HTMLElement)
@@ -80,5 +80,8 @@ type Request f a = (a -> a) -> f a
 request :: forall f a. Request f a -> f a
 request req = req identity
 
+-- | Retrieves a `HTMLElement` value that is associated with a `Ref` in the
+-- | rendered output of a component. If there is no currently rendered value (or
+-- | it is not an `HTMLElement`) for the request will return `Nothing`.
 getHTMLElementRef :: forall s f ps o m. RefLabel -> HalogenM s f ps o m (Maybe HTMLElement)
 getHTMLElementRef = map (HTMLElement.fromElement =<< _) <<< getRef

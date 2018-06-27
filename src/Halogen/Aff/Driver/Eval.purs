@@ -22,15 +22,14 @@ import Data.Map as M
 import Data.Maybe (Maybe(..), maybe)
 import Data.Tuple (Tuple(..))
 import Effect (Effect)
-import Effect.Aff (Aff, killFiber)
+import Effect.Aff (Aff, error, finally, killFiber)
 import Effect.Class (liftEffect)
 import Effect.Ref (Ref)
 import Effect.Ref as Ref
 import Halogen.Aff.Driver.State (DriverState(..), DriverStateRef(..), LifecycleHandlers, mapDriverState, unDriverStateX)
 import Halogen.Query.ChildQuery as CQ
 import Halogen.Query.EventSource as ES
-import Halogen.Query.ForkF as FF
-import Halogen.Query.HalogenM (HalogenAp(..), HalogenF(..), HalogenM'(..), SubscriptionId(..))
+import Halogen.Query.HalogenM (ForkId(..), HalogenAp(..), HalogenF(..), HalogenM'(..), SubscriptionId(..))
 import Halogen.Query.HalogenQ (HalogenQ(..))
 import Halogen.Query.Input (Input(..), RefLabel(..))
 import Unsafe.Reference (unsafeRefEq)
@@ -89,8 +88,7 @@ evalM render initRef (HalogenM hm) = foldFree (go initRef) hm
               handleLifecycle lifecycleHandlers (render lifecycleHandlers ref)
               pure a
     Subscribe fes k -> do
-      DriverState { fresh } <- liftEffect (Ref.read ref)
-      sid <- liftEffect $ Ref.modify' (\i -> { state: i + 1, value: SubscriptionId i }) fresh
+      sid <- fresh SubscriptionId ref
       let (ES.EventSource setup) = fes sid
       DriverState ({ subscriptions }) <- liftEffect (Ref.read ref)
       _ ← fork do
@@ -124,10 +122,23 @@ evalM render initRef (HalogenM hm) = foldFree (go initRef) hm
       pure a
     Par (HalogenAp p) ->
       sequential $ retractFreeAp $ hoistFreeAp (parallel <<< evalM render ref) p
-    Fork f ->
-      FF.unFork (\(FF.ForkF fx k) -> do
-        fiber <- fork (evalM render ref fx)
-        pure $ k (flip killFiber fiber)) f
+    Fork hmu k -> do
+      fid <- fresh ForkId ref
+      DriverState ({ forks }) <- liftEffect (Ref.read ref)
+      doneRef <- liftEffect (Ref.new false)
+      fiber <- fork $ finally
+        (liftEffect do
+          Ref.modify_ (M.delete fid) forks
+          Ref.write true doneRef)
+        (evalM render ref hmu)
+      liftEffect $ unlessM (Ref.read doneRef) do
+        Ref.modify_ (M.insert fid fiber) forks
+      pure (k fid)
+    Kill fid a -> do
+      DriverState ({ forks }) <- liftEffect (Ref.read ref)
+      forkMap <- liftEffect (Ref.read forks)
+      traverse_ (killFiber (error "Cancelled")) (M.lookup fid forkMap)
+      pure a
     GetRef (RefLabel p) k -> do
       DriverState { component, refs } <- liftEffect (Ref.read ref)
       pure $ k $ M.lookup p refs
@@ -164,6 +175,15 @@ handleLifecycle lchs f = do
   traverse_ fork finalizers
   parSequence_ initializers
   pure result
+
+fresh
+  :: forall h r s f act ps i o a
+   . (Int -> a)
+  -> Ref (DriverState h r s f act ps i o)
+  -> Aff a
+fresh f ref = do
+  DriverState st <- liftEffect (Ref.read ref)
+  liftEffect $ Ref.modify' (\i -> { state: i + 1, value: f i }) st.fresh
 
 queueOrRun
   :: Ref (Maybe (List (Aff Unit)))

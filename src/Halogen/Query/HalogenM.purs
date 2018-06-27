@@ -20,12 +20,10 @@ import Data.Traversable (traverse)
 import Data.Tuple (Tuple)
 import Effect.Aff.Class (class MonadAff, liftAff)
 import Effect.Class (class MonadEffect, liftEffect)
-import Effect.Exception (Error)
 import Halogen.Data.Slot (Slot)
 import Halogen.Data.Slot as Slot
 import Halogen.Query.ChildQuery as CQ
 import Halogen.Query.EventSource as ES
-import Halogen.Query.ForkF as FF
 import Halogen.Query.Input (RefLabel)
 import Prim.Row as Row
 import Web.DOM (Element)
@@ -39,20 +37,22 @@ data HalogenF s act ps o m a
   | ChildQuery (CQ.ChildQueryBox ps a)
   | Raise o a
   | Par (HalogenAp s act ps o m a)
-  | Fork (FF.Fork (HalogenM' s act ps o m) a)
+  | Fork (HalogenM' s act ps o m Unit) (ForkId -> a)
+  | Kill ForkId a
   | GetRef RefLabel (Maybe Element -> a)
 
 instance functorHalogenF :: Functor m => Functor (HalogenF s act ps o m) where
   map f = case _ of
     State k -> State (lmap f <<< k)
-    Subscribe fes a -> Subscribe fes (map f a)
+    Subscribe fes k -> Subscribe fes (f <<< k)
     Unsubscribe sid a -> Unsubscribe sid (f a)
     Lift q -> Lift (map f q)
     ChildQuery cq -> ChildQuery (map f cq)
     Raise o a -> Raise o (f a)
     Par pa -> Par (map f pa)
-    Fork fa -> Fork (map f fa)
-    GetRef p k -> GetRef p (map f k)
+    Fork hmu k -> Fork hmu (f <<< k)
+    Kill fid a -> Kill fid (f a)
+    GetRef p k -> GetRef p (f <<< k)
 
 -- | The Halogen component eval effect monad.
 newtype HalogenM' s act ps o m a = HalogenM (Free (HalogenF s act ps o m) a)
@@ -107,29 +107,9 @@ derive newtype instance functorHalogenAp :: Functor (HalogenAp s f ps o m)
 derive newtype instance applyHalogenAp :: Apply (HalogenAp s f ps o m)
 derive newtype instance applicativeHalogenAp :: Applicative (HalogenAp s f ps o m)
 
--- | The ID value associated with a subscription. Allows the subscription to be
--- | stopped at a later time.
-newtype SubscriptionId = SubscriptionId Int
-
-derive newtype instance eqSubscriptionId :: Eq SubscriptionId
-derive newtype instance ordSubscriptionId :: Ord SubscriptionId
-
--- | Subscribes a component to an `EventSource`.
-subscribe :: forall s act ps o m. ES.EventSource m act -> HalogenM' s act ps o m SubscriptionId
-subscribe es = HalogenM $ liftF $ Subscribe (\_ -> es) identity
-
--- | An alternative to `subscribe`, intended for subscriptions that unsubscribe
--- | themselves. Instead of returning the `SubscriptionId` from `subscribe'`, it
--- | is passed into an `EventSource` constructor. This allows emitted queries
--- | to include the `SubscriptionId`, rather than storing it in the state of the
--- | component.
-subscribe' :: forall s act ps o m. (SubscriptionId -> ES.EventSource m act) -> HalogenM' s act ps o m Unit
-subscribe' esc = HalogenM $ liftF $ Subscribe esc (const unit)
-
--- | Unsubscribes a component from an `EventSource`. If the subscription
--- | associated with the ID has already ended this will have no effect.
-unsubscribe :: forall s act ps o m. SubscriptionId -> HalogenM' s act ps o m Unit
-unsubscribe sid = HalogenM $ liftF $ Unsubscribe sid unit
+-- | Raises an output message for the component.
+raise :: forall s act ps o m. o -> HalogenM' s act ps o m Unit
+raise o = HalogenM $ liftF $ Raise o unit
 
 -- | Sends a query to a child of a component at the specified slot.
 query
@@ -156,15 +136,62 @@ queryAll
 queryAll sym q = HalogenM $ liftF $ ChildQuery $ CQ.mkChildQueryBox $
   CQ.ChildQuery (\k -> traverse k <<< Slot.slots sym) q identity
 
+-- | The ID value associated with a subscription. Allows the subscription to be
+-- | stopped at a later time.
+newtype SubscriptionId = SubscriptionId Int
+
+derive newtype instance eqSubscriptionId :: Eq SubscriptionId
+derive newtype instance ordSubscriptionId :: Ord SubscriptionId
+
+-- | Subscribes a component to an `EventSource`.
+subscribe :: forall s act ps o m. ES.EventSource m act -> HalogenM' s act ps o m SubscriptionId
+subscribe es = HalogenM $ liftF $ Subscribe (\_ -> es) identity
+
+-- | An alternative to `subscribe`, intended for subscriptions that unsubscribe
+-- | themselves. Instead of returning the `SubscriptionId` from `subscribe'`, it
+-- | is passed into an `EventSource` constructor. This allows emitted queries
+-- | to include the `SubscriptionId`, rather than storing it in the state of the
+-- | component.
+subscribe' :: forall s act ps o m. (SubscriptionId -> ES.EventSource m act) -> HalogenM' s act ps o m Unit
+subscribe' esc = HalogenM $ liftF $ Subscribe esc (const unit)
+
+-- | Unsubscribes a component from an `EventSource`. If the subscription
+-- | associated with the ID has already ended this will have no effect.
+unsubscribe :: forall s act ps o m. SubscriptionId -> HalogenM' s act ps o m Unit
+unsubscribe sid = HalogenM $ liftF $ Unsubscribe sid unit
+
+-- | The ID value associated with a forked process. Allows the fork to be killed
+-- | at a later time.
+newtype ForkId = ForkId Int
+
+derive newtype instance eqForkId :: Eq ForkId
+derive newtype instance ordForkId :: Ord ForkId
+
+-- | Starts a `HalogenM` process running independent from the current `eval`
+-- | "thread".
+-- |
+-- | A commonly use case for `fork` is in component initializers where some
+-- | async action is started. Normally all interaction with the component will
+-- | be blocked until the initializer completes, but if the async action is
+-- | `fork`ed instead, the initializer can complete synchronously while the
+-- | async action continues.
+-- |
+-- | Some care needs to be taken when using a `fork` that can modify the
+-- | component state, as it's easy for the forked process to "clobber" the state
+-- | (overwrite some or all of it with an old value) by mistake.
+fork :: forall s act ps o m. HalogenM' s act ps o m Unit -> HalogenM' s act ps o m ForkId
+fork hmu = HalogenM $ liftF $ Fork hmu identity
+
+-- | Kills a forked process if it is still running. Attempting to kill a forked
+-- | process that has already ended will have no effect.
+kill :: forall s act ps o m. ForkId -> HalogenM' s act ps o m Unit
+kill fid = HalogenM $ liftF $ Kill fid unit
+
+-- | Retrieves an `Element` value that is associated with a `Ref` in the
+-- | rendered output of a component. If there is no currently rendered value for
+-- | the requested ref this will return `Nothing`.
 getRef :: forall s act ps o m. RefLabel -> HalogenM' s act ps o m (Maybe Element)
 getRef p = HalogenM $ liftF $ GetRef p identity
-
--- | Raises an output message for the component.
-raise :: forall s act ps o m. o -> HalogenM' s act ps o m Unit
-raise o = HalogenM $ liftF $ Raise o unit
-
-fork :: forall s act ps o m a. MonadAff m => HalogenM' s act ps o m a -> HalogenM' s act ps o m (Error -> m Unit)
-fork a = map liftAff <$> HalogenM (liftF $ Fork $ FF.fork a)
 
 imapState
   :: forall s s' act ps o m
@@ -177,13 +204,14 @@ imapState f f' (HalogenM h) = HalogenM (hoistFree go h)
   go :: HalogenF s act ps o m ~> HalogenF s' act ps o m
   go = case _ of
     State fs -> State (map f <<< fs <<< f')
-    Subscribe fes a -> Subscribe fes a
+    Subscribe fes k -> Subscribe fes k
     Unsubscribe sid a -> Unsubscribe sid a
     Lift q -> Lift q
     ChildQuery cq -> ChildQuery cq
     Raise o a -> Raise o a
     Par p -> Par (over HalogenAp (hoistFreeAp (imapState f f')) p)
-    Fork fo -> Fork (FF.hoistFork (imapState f f') fo)
+    Fork hmu k -> Fork (imapState f f' hmu) k
+    Kill fid a -> Kill fid a
     GetRef p k -> GetRef p k
 
 mapAction
@@ -197,13 +225,14 @@ mapAction f (HalogenM h) = HalogenM (hoistFree go h)
   go :: HalogenF s act ps o m ~> HalogenF s act' ps o m
   go = case _ of
     State fs -> State fs
-    Subscribe fes a -> Subscribe (map f <<< fes) a
+    Subscribe fes k -> Subscribe (map f <<< fes) k
     Unsubscribe sid a -> Unsubscribe sid a
     Lift q -> Lift q
     ChildQuery cq -> ChildQuery cq
     Raise o a -> Raise o a
     Par p -> Par (over HalogenAp (hoistFreeAp (mapAction f)) p)
-    Fork fo -> Fork (FF.hoistFork (mapAction f) fo)
+    Fork hmu k -> Fork (mapAction f hmu) k
+    Kill fid a -> Kill fid a
     GetRef p k -> GetRef p k
 
 mapOutput
@@ -216,13 +245,14 @@ mapOutput f (HalogenM h) = HalogenM (hoistFree go h)
   go :: HalogenF s act ps o m ~> HalogenF s act ps o' m
   go = case _ of
     State fs -> State fs
-    Subscribe fes a -> Subscribe fes a
+    Subscribe fes k -> Subscribe fes k
     Unsubscribe sid a -> Unsubscribe sid a
     Lift q -> Lift q
     ChildQuery cq -> ChildQuery cq
     Raise o a -> Raise (f o) a
     Par p -> Par (over HalogenAp (hoistFreeAp (mapOutput f)) p)
-    Fork fo -> Fork (FF.hoistFork (mapOutput f) fo)
+    Fork hmu k -> Fork (mapOutput f hmu) k
+    Kill fid a -> Kill fid a
     GetRef p k -> GetRef p k
 
 hoist
@@ -236,11 +266,12 @@ hoist nat (HalogenM fa) = HalogenM (hoistFree go fa)
   go :: HalogenF s act ps o m ~> HalogenF s act ps o m'
   go = case _ of
     State f -> State f
-    Subscribe fes a -> Subscribe (ES.hoist nat <<< fes) a
+    Subscribe fes k -> Subscribe (ES.hoist nat <<< fes) k
     Unsubscribe sid a -> Unsubscribe sid a
     Lift q -> Lift (nat q)
     ChildQuery cq -> ChildQuery cq
     Raise o a -> Raise o a
     Par p -> Par (over HalogenAp (hoistFreeAp (hoist nat)) p)
-    Fork fo -> Fork (FF.hoistFork (hoist nat) fo)
+    Fork hmu k -> Fork (hoist nat hmu) k
+    Kill fid a -> Kill fid a
     GetRef p k -> GetRef p k

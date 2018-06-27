@@ -21,14 +21,14 @@ import Data.Map as M
 import Data.Maybe (Maybe(..))
 import Data.Traversable (traverse_)
 import Effect (Effect)
-import Effect.Aff (Aff)
+import Effect.Aff (Aff, Fiber)
 import Effect.Ref (Ref)
 import Effect.Ref as Ref
 import Halogen.Component (ComponentSpec)
 import Halogen.Data.Slot (SlotStorage)
 import Halogen.Data.Slot as SlotStorage
 import Halogen.Query.EventSource (Finalizer)
-import Halogen.Query.HalogenM (SubscriptionId)
+import Halogen.Query.HalogenM (ForkId, SubscriptionId)
 import Unsafe.Coerce (unsafeCoerce)
 import Web.DOM (Element)
 
@@ -54,6 +54,7 @@ type DriverStateRec h r s f act ps i o =
   , rendering :: Maybe (r s act ps o)
   , fresh :: Ref Int
   , subscriptions :: Ref (Maybe (M.Map SubscriptionId (Finalizer Aff)))
+  , forks :: Ref (M.Map ForkId (Fiber Unit))
   , lifecycleHandlers :: Ref LifecycleHandlers
   }
 
@@ -138,6 +139,7 @@ initDriverState component input handler lchs = do
   pendingHandlers <- Ref.new Nothing
   fresh <- Ref.new 1
   subscriptions <- Ref.new (Just M.empty)
+  forks <- Ref.new M.empty
   let
     ds :: DriverStateRec h r s f act ps i o
     ds =
@@ -155,6 +157,7 @@ initDriverState component input handler lchs = do
       , rendering: Nothing
       , fresh
       , subscriptions
+      , forks
       , lifecycleHandlers: lchs
       }
   Ref.write (DriverState ds) selfRef
