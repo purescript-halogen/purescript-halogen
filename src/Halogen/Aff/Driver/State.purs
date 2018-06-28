@@ -37,16 +37,16 @@ type LifecycleHandlers =
   , finalizers :: List (Aff Unit)
   }
 
-newtype DriverState h r s f act ps i o = DriverState (DriverStateRec h r s f act ps i o)
+newtype DriverState h r s f act ps i o m = DriverState (DriverStateRec h r s f act ps i o m)
 
-type DriverStateRec h r s f act ps i o =
-  { component :: ComponentSpec h s f act ps i o Aff
+type DriverStateRec h r s f act ps i o m =
+  { component :: ComponentSpec h s f act ps i o m Aff
   , state :: s
   , refs :: M.Map String Element
   , children :: SlotStorage ps (DriverStateRef h r)
   , childrenIn :: Ref (SlotStorage ps (DriverStateRef h r))
   , childrenOut :: Ref (SlotStorage ps (DriverStateRef h r))
-  , selfRef :: Ref (DriverState h r s f act ps i o)
+  , selfRef :: Ref (DriverState h r s f act ps i o m)
   , handlerRef :: Ref (o -> Aff Unit)
   , pendingQueries :: Ref (Maybe (List (Aff Unit)))
   , pendingOuts :: Ref (Maybe (List (Aff Unit)))
@@ -59,10 +59,10 @@ type DriverStateRec h r s f act ps i o =
   }
 
 mapDriverState
-  :: forall h r s f act ps i o
-  . (DriverStateRec h r s f act ps i o -> DriverStateRec h r s f act ps i o)
-  -> DriverState h r s f act ps i o
-  -> DriverState h r s f act ps i o
+  :: forall h r s f act ps i o m
+  . (DriverStateRec h r s f act ps i o m -> DriverStateRec h r s f act ps i o m)
+  -> DriverState h r s f act ps i o m
+  -> DriverState h r s f act ps i o m
 mapDriverState f (DriverState ds) = DriverState (f ds)
 
 newtype DriverStateRef h r f o = DriverStateRef (Ref (DriverStateX h r f o))
@@ -76,14 +76,14 @@ data DriverStateX
   (o :: Type)
 
 mkDriverStateXRef
-  :: forall h r s f act ps i o
-   . Ref (DriverState h r s f act ps i o)
+  :: forall h r s f act ps i o m
+   . Ref (DriverState h r s f act ps i o m)
   -> Ref (DriverStateX h r f o)
 mkDriverStateXRef = unsafeCoerce
 
 unDriverStateX
   :: forall h r f i o x
-   . (forall s act ps. DriverStateRec h r s f act ps i o -> x)
+   . (forall s act ps m. DriverStateRec h r s f act ps i o m -> x)
   -> DriverStateX h r f o
   -> x
 unDriverStateX = unsafeCoerce
@@ -123,8 +123,8 @@ renderStateX_
 renderStateX_ f = unDriverStateX \st -> traverse_ f st.rendering
 
 initDriverState
-  :: forall h r s f act ps i o
-   . ComponentSpec h s f act ps i o Aff
+  :: forall h r s f act ps i o m
+   . ComponentSpec h s f act ps i o m Aff
   -> i
   -> (o -> Aff Unit)
   -> Ref LifecycleHandlers
@@ -141,7 +141,7 @@ initDriverState component input handler lchs = do
   subscriptions <- Ref.new (Just M.empty)
   forks <- Ref.new M.empty
   let
-    ds :: DriverStateRec h r s f act ps i o
+    ds :: DriverStateRec h r s f act ps i o m
     ds =
       { component
       , state: component.initialState input

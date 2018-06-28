@@ -16,7 +16,6 @@ module Halogen.Component
 
 import Prelude
 
-import Data.Bifunctor (class Bifunctor, lmap)
 import Data.Foldable (traverse_)
 import Data.Maybe (Maybe)
 import Data.Symbol (class IsSymbol, SProxy)
@@ -24,7 +23,6 @@ import Data.Tuple (Tuple)
 import Halogen.Data.Slot (Slot, SlotStorage)
 import Halogen.Data.Slot as Slot
 import Halogen.Query.HalogenM (HalogenM')
-import Halogen.Query.HalogenM as HM
 import Halogen.Query.HalogenQ (HalogenQ(..))
 import Prim.Row as Row
 import Unsafe.Coerce (unsafeCoerce)
@@ -92,7 +90,7 @@ component
   -> Component h f i o m
 component = mkComponent <<< go
   where
-    go :: ComponentArgs h s f ps i o m -> ComponentSpec h s f (f Unit) ps i o m
+    go :: ComponentArgs h s f ps i o m -> ComponentSpec h s f (f Unit) ps i o m m
     go spec =
       { initialState: spec.initialState
       , render: spec.render
@@ -102,6 +100,7 @@ component = mkComponent <<< go
           Receive i a -> traverse_ spec.eval (spec.receiver i) $> a
           Handle fa a -> spec.eval fa $> a
           Request fa -> spec.eval fa
+      , hoist: identity
       }
 
 -- | The spec for a component. This differs from [`ComponentArgs`](#t:ComponentArgs)
@@ -141,16 +140,17 @@ component = mkComponent <<< go
 -- |   raise actions that will be handled in `eval`.
 -- | - `eval` is a function that handles the `HalogenQ` algebra that deals with
 -- |   component lifecycle, handling actions, and responding to requests.
-type ComponentSpec h s f act ps i o m =
+type ComponentSpec h s f act ps i o n m =
   { initialState :: i -> s
-  , render :: s -> h (ComponentSlot h ps m act) act
-  , eval :: HalogenQ f act i ~> HalogenM' s act ps o m
+  , render :: s -> h (ComponentSlot h ps n act) act
+  , eval :: HalogenQ f act i ~> HalogenM' s act ps o n
+  , hoist :: n ~> m
   }
 
 -- | Constructs a [`Component`](#t:Component) from a [`ComponentSpec`](#t:ComponentSpec).
 mkComponent
-  :: forall h s f act ps i o m
-   . ComponentSpec h s f act ps i o m
+  :: forall h s f act ps i o n m
+   . ComponentSpec h s f act ps i o n m
   -> Component h f i o m
 mkComponent = unsafeCoerce
 
@@ -162,7 +162,7 @@ mkComponent = unsafeCoerce
 -- | appear in the result, the compiler will complain about an escaped skolem.
 unComponent
   :: forall h f i o m r
-   . (forall s act ps. ComponentSpec h s f act ps i o m -> r)
+   . (forall s act ps n. ComponentSpec h s f act ps i o n m -> r)
   -> Component h f i o m
   -> r
 unComponent = unsafeCoerce
@@ -171,17 +171,16 @@ unComponent = unsafeCoerce
 -- | might be to interpret some `Free` monad as `Aff` so the component can be
 -- | used with `runUI`.
 hoist
-  :: forall h f i o m m'
-   . Bifunctor h
-  => Functor m'
-  => (m ~> m')
+  :: forall h f i o n m
+   . (m ~> n)
   -> Component h f i o m
-  -> Component h f i o m'
+  -> Component h f i o n
 hoist nat = unComponent \c ->
   mkComponent
     { initialState: c.initialState
-    , render: lmap (hoistSlot nat) <<< c.render
-    , eval: HM.hoist nat <<< c.eval
+    , render: c.render
+    , eval: c.eval
+    , hoist: nat <<< c.hoist
     }
 
 -- | A slot for a child component in a component's rendered content.
@@ -252,11 +251,9 @@ unComponentSlot = unsafeCoerce
 
 -- | Changes the [`ComponentSlot`](#t:ComponentSlot)'s `m` type.
 hoistSlot
-  :: forall h m m' ps act
-   . Bifunctor h
-  => Functor m'
-  => (m ~> m')
+  :: forall h m n ps act
+   . (m ~> n)
   -> ComponentSlot h ps m act
-  -> ComponentSlot h ps m' act
+  -> ComponentSlot h ps n act
 hoistSlot nat = unComponentSlot \slot ->
   mkComponentSlot $ slot { component = hoist nat slot.component }
