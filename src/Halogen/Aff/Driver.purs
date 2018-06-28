@@ -31,6 +31,7 @@ import Halogen.Aff.Driver.State (DriverState(..), DriverStateRef(..), DriverStat
 import Halogen.Component (Component, ComponentSlot, unComponent, unComponentSlot)
 import Halogen.Data.Slot as Slot
 import Halogen.Query.EventSource as ES
+import Halogen.Query.HalogenM as HM
 import Halogen.Query.HalogenQ (HalogenQ(..))
 import Halogen.Query.Input (Input(..))
 
@@ -92,10 +93,10 @@ import Halogen.Query.Input (Input(..))
 -- | `const (pure unit)`.
 type RenderSpec h r =
   { render
-      :: forall s act ps o
+      :: forall s act ps o m
        . (Input act -> Effect Unit)
-      -> (ComponentSlot h ps Aff act -> Effect (RenderStateX r))
-      -> h (ComponentSlot h ps Aff act) act
+      -> (ComponentSlot h ps m act -> Effect (RenderStateX r))
+      -> h (ComponentSlot h ps m act) act
       -> Maybe (r s act ps o)
       -> Effect (r s act ps o)
   , renderChild :: forall s act ps o. r s act ps o -> r s act ps o
@@ -124,8 +125,8 @@ runUI renderSpec component i = do
   where
 
   evalDriver
-    :: forall s f' act ps i' o'
-     . Ref (DriverState h r s f' act ps i' o')
+    :: forall s f' act ps i' o' m'
+     . Ref (DriverState h r s f' act ps i' o' m')
     -> f'
     ~> Aff
   evalDriver ref = Eval.evalQ render ref
@@ -170,9 +171,9 @@ runUI renderSpec component i = do
     pure var
 
   render
-    :: forall s f' act ps i' o'
+    :: forall s f' act ps i' o' m'
      . Ref LifecycleHandlers
-    -> Ref (DriverState h r s f' act ps i' o')
+    -> Ref (DriverState h r s f' act ps i' o' m')
     -> Effect Unit
   render lchs var = Ref.read var >>= \(DriverState ds) -> do
     shouldProcessHandlers <- isNothing <$> Ref.read ds.pendingHandlers
@@ -187,7 +188,7 @@ runUI renderSpec component i = do
     rendering <-
       renderSpec.render
         (handleAff <<< handler)
-        (renderChild lchs childHandler ds.childrenIn ds.childrenOut)
+        (?renderChild (renderChild lchs childHandler ds.childrenIn ds.childrenOut))
         (ds.component.render ds.state)
         ds.rendering
     children <- Ref.read ds.childrenOut
@@ -225,7 +226,7 @@ runUI renderSpec component i = do
           dsx <- Ref.read existing
           unDriverStateX (\st -> do
             flip Ref.write st.handlerRef $ maybe (pure unit) handler <<< slot.output
-            handleAff $ Eval.evalM render st.selfRef (st.component.eval slot.input)) dsx
+            handleAff $ Eval.evalM render st.selfRef $ HM.hoist st.component.hoist (st.component.eval slot.input)) dsx
           pure existing
         Nothing ->
           case slot.input of
@@ -249,7 +250,7 @@ runUI renderSpec component i = do
     -> Effect Unit
   squashChildInitializers lchs preInits =
     unDriverStateX \st -> do
-      let parentInitializer = Eval.evalM render st.selfRef (st.component.eval (Initialize unit))
+      let parentInitializer = Eval.evalM render st.selfRef $ HM.hoist st.component.hoist (st.component.eval (Initialize unit))
       Ref.modify_ (\handlers ->
         { initializers: (do
             parSequence_ (L.reverse handlers.initializers)
@@ -268,7 +269,7 @@ runUI renderSpec component i = do
   finalize lchs = do
     unDriverStateX \st -> do
       cleanupSubscriptions (DriverState st)
-      let f = Eval.evalM render st.selfRef (st.component.eval (Finalize unit))
+      let f = Eval.evalM render st.selfRef $ HM.hoist st.component.hoist (st.component.eval (Finalize unit))
       Ref.modify_ (\handlers ->
         { initializers: handlers.initializers
         , finalizers: f : handlers.finalizers
@@ -287,8 +288,8 @@ handlePending ref = do
   for_ queue (handleAff <<< traverse_ fork <<< L.reverse)
 
 cleanupSubscriptions
-  :: forall h r s f act ps i o
-   . DriverState h r s f act ps i o
+  :: forall h r s f act ps i o m
+   . DriverState h r s f act ps i o m
   -> Effect Unit
 cleanupSubscriptions (DriverState ds) = do
   traverse_ (handleAff <<< traverse_ (fork <<< ES.finalize)) =<< Ref.read ds.subscriptions

@@ -17,14 +17,14 @@ instance profunctorProComponent :: Functor f => Profunctor (ProComponent h f m) 
     ProComponent (unComponent (mkComponent <<< dimapSpec f g) c)
 
 dimapSpec
-  :: forall h s f act ps i j o p m
+  :: forall h s f act ps i j o p m n
    . Functor f
   => (j -> i)
   -> (o -> p)
-  -> ComponentSpec h s f act ps i o m
-  -> ComponentSpec h s f act ps j p m
+  -> ComponentSpec h s f act ps i o m n
+  -> ComponentSpec h s f act ps j p m n
 dimapSpec f g spec =
-  { initialState: spec.initialState <<< f
-  , render: spec.render
-  , eval: dimap (lmap f) (HM.mapOutput g) spec.eval
-  }
+  spec
+    { initialState = spec.initialState <<< f
+    , eval = dimap (lmap f) (HM.mapOutput g) spec.eval
+    }
