@@ -71,7 +71,7 @@ text = HTML <<< VDom.Text
 -- | A smart constructor for HTML elements.
 element :: forall p i. Maybe VDom.Namespace -> VDom.ElemName -> Array (Prop i) -> Array (HTML p i) -> HTML p i
 element ns =
-  coe (\name props children -> VDom.Elem (VDom.ElemSpec ns name props) children)
+  coe (\name props children -> VDom.Elem ns name props children)
   where
   coe
     :: (VDom.ElemName -> Array (Prop i) -> Array (VDom.VDom (Array (Prop i)) p) -> VDom.VDom (Array (Prop i)) p)
@@ -80,7 +80,7 @@ element ns =
 
 -- | A smart constructor for HTML elements with keyed children.
 keyed :: forall p i. Maybe VDom.Namespace -> VDom.ElemName -> Array (Prop i) -> Array (Tuple String (HTML p i)) -> HTML p i
-keyed ns = coe (\name props children -> VDom.Keyed (VDom.ElemSpec ns name props) children)
+keyed ns = coe (\name props children -> VDom.Keyed ns name props children)
   where
   coe
     :: (VDom.ElemName -> Array (Prop i) -> Array (Tuple String (VDom.VDom (Array (Prop i)) p)) -> VDom.VDom (Array (Prop i)) p)

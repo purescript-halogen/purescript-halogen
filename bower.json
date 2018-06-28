@@ -35,7 +35,7 @@
     "purescript-fork": "^4.0.0",
     "purescript-free": "^5.0.0",
     "purescript-freeap": "^5.0.0",
-    "purescript-halogen-vdom": "^3.0.0",
+    "purescript-halogen-vdom": "^4.0.0",
     "purescript-media-types": "^4.0.0",
     "purescript-nullable": "^4.0.0",
     "purescript-ordered-collections": "^1.0.0",

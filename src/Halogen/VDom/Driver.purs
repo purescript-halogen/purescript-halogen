@@ -72,20 +72,20 @@ mkSpec handler renderChildRef document =
     renderChild <- Ref.read renderChildRef
     rsx <- renderChild slot
     let node = getNode rsx
-    pure (V.Step node patch done)
+    pure $ V.mkStep $ V.Step node unit patch done
 
   patch
-    :: V.Machine
-         (ComponentSlot HTML ps Aff act)
-         DOM.Node
-  patch = EFn.mkEffectFn1 \slot -> do
+    :: EFn.EffectFn2 Unit
+          (ComponentSlot HTML ps Aff act)
+          (V.Step (ComponentSlot HTML ps Aff act) DOM.Node)
+  patch = EFn.mkEffectFn2 \_ slot -> do
     renderChild <- Ref.read renderChildRef
     rsx <- renderChild slot
     let node = getNode rsx
-    pure (V.Step node patch done)
+    pure $ V.mkStep $ V.Step node unit patch done
 
-  done :: Effect Unit
-  done = pure unit
+  done :: EFn.EffectFn1 Unit Unit
+  done = EFn.mkEffectFn1 \_ -> pure unit
 
   getNode :: RenderStateX RenderState -> DOM.Node
   getNode = unRenderStateX (\(RenderState { node }) -> node)
@@ -127,7 +127,7 @@ renderSpec document container = { render, renderChild: identity, removeChild }
         Ref.write child renderChildRef
         parent <- DOM.parentNode node
         nextSib <- DOM.nextSibling node
-        machine' <- EFn.runEffectFn1 (V.step machine) vdom
+        machine' <- EFn.runEffectFn2 V.step machine vdom
         let newNode = V.extract machine'
         when (not unsafeRefEq node newNode) do
           substInParent newNode nextSib parent
