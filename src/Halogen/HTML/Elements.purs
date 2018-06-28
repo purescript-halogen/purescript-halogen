@@ -188,7 +188,7 @@ keyedNS =
 withKeys :: forall r p i. (Array (IProp r i) -> Array (HTML p i) -> HTML p i) -> Array (IProp r i) -> Array (Tuple String (HTML p i)) -> HTML p i
 withKeys ctor props children =
   case ctor props [] of
-    HTML (VDom.Elem spec _) -> HTML (VDom.Keyed spec (coe children))
+    HTML (VDom.Elem x y z _) -> HTML (VDom.Keyed x y z (coe children))
     h -> h
   where
   coe :: Array (Tuple String (HTML p i)) -> Array (Tuple String (VDom.VDom (Array (Prop (Input i))) p))
@@ -197,7 +197,7 @@ withKeys ctor props children =
 withKeys_ :: forall p i. (Array (HTML p i) -> HTML p i) -> Array (Tuple String (HTML p i)) -> HTML p i
 withKeys_ ctor children =
   case ctor [] of
-    HTML (VDom.Elem spec _) -> HTML (VDom.Keyed spec (coe children))
+    HTML (VDom.Elem x y z _) -> HTML (VDom.Keyed x y z (coe children))
     h -> h
   where
   coe :: Array (Tuple String (HTML p i)) -> Array (Tuple String (VDom.VDom (Array (Prop (Input i))) p))
