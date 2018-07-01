@@ -35,11 +35,11 @@ hashChangeProducer = CRA.produce \emitter -> do
 -- record and sends `ChangeRoute` queries in when it receives inputs from the
 -- producer.
 hashChangeConsumer
-  :: (RouteLog.Query ~> Aff)
+  :: (forall a. RouteLog.Query a -> Aff (Maybe a))
   -> CR.Consumer HCE.HashChangeEvent Aff Unit
 hashChangeConsumer query = CR.consumer \event -> do
   let hash = Str.drop 1 $ Str.dropWhile (_ /= '#') $ HCE.newURL event
-  query $ H.action $ RouteLog.ChangeRoute hash
+  void $ query $ H.action $ RouteLog.ChangeRoute hash
   pure Nothing
 
 main :: Effect Unit

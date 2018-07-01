@@ -21,6 +21,6 @@ main = HA.runHalogenAff do
     liftEffect $ log $ "Button was toggled to: " <> show newState
     pure Nothing
 
-  io.query $ H.action $ B.Toggle
-  io.query $ H.action $ B.Toggle
-  io.query $ H.action $ B.Toggle
+  void $ io.query $ H.action $ B.Toggle
+  void $ io.query $ H.action $ B.Toggle
+  void $ io.query $ H.action $ B.Toggle
