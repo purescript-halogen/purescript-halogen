@@ -50,7 +50,7 @@ type Action f = Unit -> f Unit
 -- | ```purescript
 -- | data Query a = Tick a
 -- |
--- | sendTick :: forall o. HalogenIO Query o Aff -> Aff Unit
+-- | sendTick :: forall o. HalogenIO Query o Aff -> Aff (Maybe Unit)
 -- | sendTick app = app.query (action Tick)
 -- | ```
 action :: forall f. Action f -> f Unit
@@ -74,7 +74,7 @@ type Request f a = (a -> a) -> f a
 -- | ```purescript
 -- | data Query a = GetTickCount (Int -> a)
 -- |
--- | getTickCount :: forall o. HalogenIO Query o Aff -> Aff Int
+-- | getTickCount :: forall o. HalogenIO Query o Aff -> Aff (Maybe Int)
 -- | getTickCount app = app.query (request GetTickCount)
 -- | ```
 request :: forall f a. Request f a -> f a

@@ -22,4 +22,5 @@ runUI = AD.runUI
   { render: \_ _ _ _ -> pure (TestRenderState unit)
   , renderChild: identity
   , removeChild: const (pure unit)
+  , dispose: const (pure unit)
   }

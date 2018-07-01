@@ -9,7 +9,6 @@ import Data.List as L
 import Data.Maybe (Maybe(..))
 import Effect.Aff (Aff)
 import Effect.Aff as Aff
-import Effect.Class.Console (log)
 import Effect.Ref as Ref
 import Halogen as H
 import Test.Assert (assertEqual)
@@ -56,20 +55,19 @@ component =
       H.raise (Message "Killed")
       pure a
 
-test :: Aff Unit
-test = do
+testForkKill :: Aff Unit
+testForkKill = do
   io <- TD.runUI component unit
 
   logRef <- H.liftEffect $ Ref.new L.Nil
 
   io.subscribe $ CR.consumer \msg -> do
-    log (show msg)
     H.liftEffect $ Ref.modify_ (msg : _) logRef
     pure Nothing
 
-  io.query (H.action StartFork)
+  _ <- io.query (H.action StartFork)
   Aff.delay (Aff.Milliseconds 350.0)
-  io.query (H.action KillFork)
+  _ <- io.query (H.action KillFork)
 
   -- TODO: revisit this: why do we need to wait to receive `raise`d messages
   -- from the component, if the `raise` occurs after any bind?
@@ -86,5 +84,26 @@ test = do
             : "Progress"
             : "Killed"
             : L.Nil
+    , actual: logOut
+    }
+
+testFinalize :: Aff Unit
+testFinalize = do
+  io <- TD.runUI component unit
+
+  logRef <- H.liftEffect $ Ref.new L.Nil
+
+  io.subscribe $ CR.consumer \msg -> do
+    H.liftEffect $ Ref.modify_ (msg : _) logRef
+    pure Nothing
+
+  _ <- io.query (H.action StartFork)
+  io.dispose
+  Aff.delay (Aff.Milliseconds 350.0)
+
+  logOut <- L.reverse <$> H.liftEffect (Ref.read logRef)
+
+  H.liftEffect $ assertEqual
+    { expected: Message <$> "Starting" : L.Nil
     , actual: logOut
     }

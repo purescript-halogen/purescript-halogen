@@ -18,7 +18,7 @@ import Data.Maybe (Maybe(..), maybe, isJust, isNothing)
 import Data.Traversable (for_, traverse_)
 import Data.Tuple (Tuple(..))
 import Effect (Effect)
-import Effect.Aff (Aff, runAff_)
+import Effect.Aff (Aff, killFiber, launchAff_, runAff_, try)
 import Effect.Aff.AVar as AV
 import Effect.Class (liftEffect)
 import Effect.Console (warn)
@@ -90,6 +90,9 @@ import Halogen.Query.Input (Input(..))
 -- | driver this actually performs the `removeChild` from the DOM. For the
 -- | `virtual-dom` driver nothing needs to happen here, so it is
 -- | `const (pure unit)`.
+-- |
+-- | The `dispose` function is called when the top level component is disposed of
+-- | via `HalogenIO`.
 type RenderSpec h r =
   { render
       :: forall s act ps o
@@ -100,6 +103,7 @@ type RenderSpec h r =
       -> Effect (r s act ps o)
   , renderChild :: forall s act ps o. r s act ps o -> r s act ps o
   , removeChild :: forall s act ps o. r s act ps o -> Effect Unit
+  , dispose :: forall s act ps o. r s act ps o -> Effect Unit
   }
 
 runUI
@@ -111,24 +115,29 @@ runUI
 runUI renderSpec component i = do
   lchs <- liftEffect newLifecycleHandlers
   fresh <- liftEffect $ Ref.new 0
+  disposed <- liftEffect $ Ref.new false
   Eval.handleLifecycle lchs do
     listeners <- Ref.new M.empty
-    runComponent lchs (rootHandler listeners) i component
-      >>= Ref.read
-      >>= unDriverStateX \st ->
-        pure
-          { query: evalDriver st.selfRef
-          , subscribe: subscribe fresh listeners
-          }
+    dsx <- Ref.read =<< runComponent lchs (rootHandler listeners) i component
+    unDriverStateX (\st ->
+      pure
+        { query: evalDriver disposed st.selfRef
+        , subscribe: subscribe fresh listeners
+        , dispose: dispose disposed lchs dsx listeners
+        }) dsx
 
   where
 
   evalDriver
     :: forall s f' act ps i' o'
-     . Ref (DriverState h r s f' act ps i' o')
-    -> f'
-    ~> Aff
-  evalDriver ref = Eval.evalQ render ref
+     . Ref Boolean
+    -> Ref (DriverState h r s f' act ps i' o')
+    -> forall a. (f' a -> Aff (Maybe a))
+  evalDriver disposed ref q =
+    liftEffect (Ref.read disposed) >>=
+      if _
+        then pure Nothing
+        else Just <$> Eval.evalQ render ref q
 
   rootHandler :: Ref (M.Map Int (AV.AVar o)) -> o -> Aff Unit
   rootHandler ref message = do
@@ -147,7 +156,7 @@ runUI renderSpec component i = do
       Ref.modify_ (_ + 1) fresh
       Ref.modify_ (M.insert listenerId inputVar) ref
       pure listenerId
-    let producer = CR.producer (Left <$> AV.take inputVar)
+    let producer = CR.producer $ either (const (Right unit)) Left <$> try (AV.take inputVar)
     void $ fork do
       CR.runProcess (CR.connect producer consumer)
       liftEffect $ Ref.modify_ (M.delete listenerId) ref
@@ -267,7 +276,7 @@ runUI renderSpec component i = do
     -> Effect Unit
   finalize lchs = do
     unDriverStateX \st -> do
-      cleanupSubscriptions (DriverState st)
+      cleanupSubscriptionsAndForks (DriverState st)
       let f = Eval.evalM render st.selfRef (st.component.eval (Finalize unit))
       Ref.modify_ (\handlers ->
         { initializers: handlers.initializers
@@ -276,6 +285,22 @@ runUI renderSpec component i = do
       Slot.foreachSlot st.children \(DriverStateRef ref) -> do
         dsx <- Ref.read ref
         finalize lchs dsx
+
+  dispose :: forall f' o'
+     . Ref Boolean
+    -> Ref LifecycleHandlers
+    -> DriverStateX h r f' o'
+    -> Ref (M.Map Int (AV.AVar o'))
+    -> Aff Unit
+  dispose disposed lchs dsx subsRef = liftEffect $
+    Ref.read disposed >>=
+      if _
+        then pure unit
+        else do
+          Ref.write true disposed
+          traverse_ (launchAff_ <<< AV.kill (error "disposed")) =<< Ref.read subsRef
+          finalize lchs dsx
+          unDriverStateX (traverse_ renderSpec.dispose <<< _.rendering) dsx
 
 newLifecycleHandlers :: Effect (Ref LifecycleHandlers)
 newLifecycleHandlers = Ref.new { initializers: L.Nil, finalizers: L.Nil }
@@ -286,13 +311,15 @@ handlePending ref = do
   Ref.write Nothing ref
   for_ queue (handleAff <<< traverse_ fork <<< L.reverse)
 
-cleanupSubscriptions
+cleanupSubscriptionsAndForks
   :: forall h r s f act ps i o
    . DriverState h r s f act ps i o
   -> Effect Unit
-cleanupSubscriptions (DriverState ds) = do
+cleanupSubscriptionsAndForks (DriverState ds) = do
   traverse_ (handleAff <<< traverse_ (fork <<< ES.finalize)) =<< Ref.read ds.subscriptions
   Ref.write Nothing ds.subscriptions
+  traverse_ (handleAff <<< killFiber (error "finalized")) =<< Ref.read ds.forks
+  Ref.write M.empty ds.forks
 
 -- We could perhaps do something more intelligent now this isn't baked into
 -- the virtual-dom rendering. It hasn't really been a problem so far though.
