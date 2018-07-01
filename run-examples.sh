@@ -1,3 +1,4 @@
+set -e
 npm run -s example-ace
 npm run -s example-basic
 npm run -s example-components
