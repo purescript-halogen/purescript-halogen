@@ -42,9 +42,9 @@ wsProducer socket = CRA.produce \emitter -> do
 -- A consumer coroutine that takes the `query` function from our component IO
 -- record and sends `AddMessage` queries in when it receives inputs from the
 -- producer.
-wsConsumer :: (Log.Query ~> Aff) -> CR.Consumer String Aff Unit
+wsConsumer :: (forall a. Log.Query a -> Aff (Maybe a)) -> CR.Consumer String Aff Unit
 wsConsumer query = CR.consumer \msg -> do
-  query $ H.action $ Log.AddMessage msg
+  void $ query $ H.action $ Log.AddMessage msg
   pure Nothing
 
 -- A consumer coroutine that takes output messages from our component IO
