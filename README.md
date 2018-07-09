@@ -15,6 +15,7 @@ A declarative, type-safe UI library for PureScript.
   - [TODO list](examples/todo/)
   - [Ace editor](examples/ace/) (external component integration)
 - Clone the [template project](https://github.com/slamdata/purescript-halogen-template) and give it a try!
+- For related projects, take a look at the [ecosystem page in the Wiki](https://github.com/slamdata/purescript-halogen/wiki/Halogen-Ecosystem).
 
 ## Installation
 
