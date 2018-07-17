@@ -3,7 +3,6 @@ module Example.Components.Container where
 import Prelude
 
 import Data.Maybe (Maybe(..), maybe)
-import Data.Symbol (SProxy(..))
 import Example.Components.Button as Button
 import Halogen as H
 import Halogen.HTML as HH
@@ -18,22 +17,17 @@ type State =
   , buttonState :: Maybe Boolean
   }
 
-type ChildSlots =
-  ( button :: Button.Slot Unit
-  )
-
-_button :: SProxy "button"
-_button = SProxy
+data Slot = ButtonSlot
+derive instance eqButtonSlot :: Eq Slot
+derive instance ordButtonSlot :: Ord Slot
 
 component :: forall m. H.Component HH.HTML Query Unit Void m
 component =
-  H.component
+  H.parentComponent
     { initialState: const initialState
     , render
     , eval
     , receiver: const Nothing
-    , initializer: Nothing
-    , finalizer: Nothing
     }
   where
 
@@ -43,10 +37,10 @@ component =
     , buttonState: Nothing
     }
 
-  render :: State -> H.ComponentHTML Query ChildSlots m
+  render :: State -> H.ParentHTML Query Button.Query Slot m
   render state =
     HH.div_
-      [ HH.slot _button unit Button.myButton unit (HE.input HandleButton)
+      [ HH.slot ButtonSlot Button.myButton unit (HE.input HandleButton)
       , HH.p_
           [ HH.text ("Button has been toggled " <> show state.toggleCount <> " time(s)") ]
       , HH.p_
@@ -60,12 +54,12 @@ component =
           ]
       ]
 
-  eval :: Query ~> H.HalogenM State Query ChildSlots Void m
+  eval :: Query ~> H.ParentDSL State Query Button.Query Slot Void m
   eval = case _ of
     HandleButton (Button.Toggled _) next -> do
       H.modify_ (\st -> st { toggleCount = st.toggleCount + 1 })
       pure next
     CheckButtonState next -> do
-      buttonState <- H.query _button unit $ H.request Button.IsOn
+      buttonState <- H.query ButtonSlot $ H.request Button.IsOn
       H.modify_ (_ { buttonState = buttonState })
       pure next
