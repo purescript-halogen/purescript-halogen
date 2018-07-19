@@ -1,7 +1,0 @@
-{
-  "name": "keyboard-input",
-  "private": true,
-  "dependencies": {
-    "purescript-halogen": "*"
-  }
-}

@@ -1,8 +1,0 @@
-{
-  "name": "effects-aff-ajax",
-  "private": true,
-  "dependencies": {
-    "purescript-affjax": "^5.0.0",
-    "purescript-halogen": "*"
-  }
-}
