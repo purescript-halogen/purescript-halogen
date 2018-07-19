@@ -1,7 +1,0 @@
-{
-  "name": "lifecycle",
-  "private": true,
-  "dependencies": {
-    "purescript-halogen": "*"
-  }
-}

@@ -1,8 +1,0 @@
-{
-  "name": "driver-websockets",
-  "private": true,
-  "dependencies": {
-    "purescript-halogen": "*",
-    "purescript-aff-coroutines": "^6.0.0"
-  }
-}
