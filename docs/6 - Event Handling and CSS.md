@@ -204,7 +204,7 @@ myButton =
 
 This is boilerplatey, but that's how it works. However, what if one wants to do something with the event after using one of these functions (e.g. `e.preventDefault()`)?
 
-[This solution proposed by thomashoneyman](https://github.com/slamdata/purescript-halogen/issues/426#issuecomment-320390523) has been slightly adapted and updated here:
+[This solution proposed by cryogenian](https://github.com/slamdata/purescript-halogen/issues/426#issuecomment-284743053) and [made somewhat easier/clearer by thomashoneyman](https://github.com/slamdata/purescript-halogen/issues/426#issuecomment-320390523) has been slightly adapted and updated here:
 ```purescript
 -- imports already mentioned
 
