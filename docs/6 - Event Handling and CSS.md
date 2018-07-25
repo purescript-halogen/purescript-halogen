@@ -129,11 +129,111 @@ so this is described just in case. -}
 
 The `input` and `input_` functions work for all the `onEvent` functions.
 
-### Manipulating events
+### Using `stopPropagation` and `preventDefault`
 
 This brings us to the next topic. Some events are not always desired as they may interfere with other event handlers. So, how does one use other Event API, such as `stopPropagation` and `preventDefault`?
 
-TODO
+If we look at the type signature of these two methods, we can see where they will need to go:
+```purescript
+stopPropagation          :: Event -> Effect Unit
+stopImmediatePropagation :: Event -> Effect Unit
+preventDefault           :: Event -> Effect Unit
+```
+Since each type signature is an `Event -> Effect Unit`, we cannot handle them in the `render` function. Instead, we need to put them in the `eval` function and use `liftEffect`. Recall from "Handling effects" page that when we handle such effects, we need to change the `m` parameter to an either `Effect` or `Aff`. Although `Effect` would work, `Aff` allows us to add additional power later on. So, for this example, we'll use `Aff`.
+```purescript
+-- from "purescript-web-events"
+import Web.Event.Internal.Types (Event)
+import Web.Event.Event (stopPropagation, stopImmediatePropagation, preventDefault)
+
+-- from "purescript-web-uievents"
+import Web.UIEvent.MouseEvent (MouseEvent, toEvent)
+import Web.UIEvent.WheelEvent (WheelEvent, toEvent)
+
+-- from "purescript-aff"
+import Effect.Aff (Aff)
+
+-- other Halogen imports
+
+data Query a
+  = StopPropagation Event a
+  | StopImmediatePropagation Event a
+  | PreventDefault Event a
+  | DoAllThree Event a
+
+myButton :: {- forall m. -- no longer needed since "m" is now Aff -}
+            H.Component HH.HTML Query Input Message {- m -} Aff
+myButton =
+  H.component
+    { initialState: const initialState
+    , render
+    , eval
+    , receiver: const Nothing
+    }
+  where
+
+  initialState :: State
+  initialState = false
+
+  render :: State -> H.ComponentHTML Query
+  render _ =
+    HH.button
+      [ HE.onClick (HE.input (\e -> StopPropagation $ toEvent e))
+      , HE.onMouseEnter (HE.input (\e -> StopImmediatePropagation $ toEvent e))
+      , HE.onMouseLeave (HE.input (\e -> PreventDefault $ toEvent e))
+      , HE.onWheel (HE.input (\e -> DoAllThree $ toEvent e))
+      ]
+      [ HH.text "This is the button's text" ]
+
+  eval :: Query ~> H.ComponentDSL State Query Message {- m -} Aff
+  eval = case _ of
+    StopPropagation e next -> do
+      liftEffect $ stopPropagation e
+      pure next
+    StopPropagation e next -> do
+      liftEffect $ stopImmediatePropagation e
+      pure next
+    StopPropagation e next -> do
+      liftEffect $ preventDefault e
+      pure next
+    DoAllThree e next -> do
+      liftEffect $ stopPropagation e
+      liftEffect $ stopImmediatePropagation e
+      liftEffect $ preventDefault e
+      pure next
+```
+
+This is boilerplatey, but that's how it works. However, what if one wants to do something with the event after using one of these functions (e.g. `e.preventDefault()`)?
+
+[This solution proposed by thomashoneyman](https://github.com/slamdata/purescript-halogen/issues/426#issuecomment-320390523) has been slightly adapted and updated here:
+```purescript
+-- imports already mentioned
+
+data Query a
+  = DoAction a
+  | DoActionWithMouse MouseEvent a
+  | PreventDefault Event (Query a)
+
+render :: H.ComponentHTML Query
+render =
+  HH.button
+    [ preventClick (\e -> DoActionWithMouseEvent e) ]
+    [ HH.text "Do something" ]
+
+-- where q has a type signature like (MouseEvent -> Query a)
+preventClick q =
+  HE.onClick \e -> Just $ PreventDefault (toEvent e) $ H.action $ q e
+
+eval = case _ of
+  DoAction next -> pure next
+  DoActionWithMouse e a ->
+    -- do stuff here
+    pure next
+  PreventDefault ev q -> do
+    liftEff $ preventDefault ev
+    -- "eval q" will block until the query finishes its evaluation
+    -- So, no need to worry about concurrency issues by doing this
+    eval q
+```
 
 ## CSS
 

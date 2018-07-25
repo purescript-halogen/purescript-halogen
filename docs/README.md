@@ -33,7 +33,7 @@
     - [The original basic button example](6%20-%20Event%20Handling%20and%20CSS.md#the-original-basic-button-example)
     - [Event Handling](6%20-%20Event%20Handling%20and%20CSS.md#event-handling)
         - [Breaking down the `onEvent` and `input_` functions](6%20-%20Event%20Handling%20and%20CSS.md#breaking-down-the-onevent-and-input_-functions)
-        - [Manipulating Events](6%20-%20Event%20Handling%20and%20CSS.md#manipulating-events)
+        - [Using `stopPropagation` and `preventDefault`](6%20-%20Event%20Handling%20and%20CSS.md#using-stoppropagation-and-preventdefault)
     - [CSS](6%20-%20Event%20Handling%20and%20CSS.md#css)
 7. Component lifecycle hooks*
 8. Event sources**
