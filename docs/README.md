@@ -29,9 +29,15 @@
         - [Rendering](5%20-%20Parent%20and%20child%20components.md#rendering-1)
         - [Querying](5%20-%20Parent%20and%20child%20components.md#querying-1)
         - [Custom `ChildPath` definitions](5%20-%20Parent%20and%20child%20components.md#custom-childpath-definitions)
-5. Component lifecycle hooks*
-6. Event sources**
-7. Non-`Aff` effect monads**
+6. [Event Handling and CSS](6%20-%20Event%20Handling%20and%20CSS.md)
+    - [The original basic button example](6%20-%20Event%20Handling%20and%20CSS.md#the-original-basic-button-example)
+    - [Event Handling](6%20-%20Event%20Handling%20and%20CSS.md#event-handling)
+        - [Breaking down the `onEvent` and `input_` functions](6%20-%20Event%20Handling%20and%20CSS.md#breaking-down-the-onevent-and-input_-functions)
+        - [Manipulating Events](6%20-%20Event%20Handling%20and%20CSS.md#manipulating-events)
+    - [CSS](6%20-%20Event%20Handling%20and%20CSS.md#css)
+7. Component lifecycle hooks*
+8. Event sources**
+9. Non-`Aff` effect monads**
 
 \* Coming soon...
 \** ...ish
