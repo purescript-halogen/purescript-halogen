@@ -307,7 +307,7 @@ This section will introduce four new concepts:
 - The `HE.onEventName (HE.input_ QueryConstructor)` syntax
 - The `data Query a` type
 - The `eval` function
-- The `H.get`, `H.put`, and `H.modify` syntax
+- The `H.get`, `H.put`, and `H.modify_` syntax
 
 The `HE.onEventName (HE.input_ QueryConstructor)` is what we put into an element's array of properties: `button [ HE.onClick (HE.input HandleClick) ] [HH.text "text" ]`. It defines how to map the `Event` type (e.g. `MouseEvent`, `KeyEvent`, etc.) to the `Query a` type
 The `Query a` type stores all the information needed to handle the event. In this example, we do not need information from the `MouseEvent`. Rather, we only need to be notified when the mouse is clicked so that we can run some code.
@@ -353,9 +353,9 @@ eval HandleMouseClick next = do
    pure next        -- the last line must always be 'pure next'
 ```
 
-In the `eval` function, we are setting a new state that is based on the old one. Rather than use the `do notation` of `H.get >>= \state -> H.put $ not state`, we could just have used `H.modify (\state -> not state)` instead.
+In the `eval` function, we are setting a new state that is based on the old one. Rather than use the `do notation` of `H.get >>= \state -> H.put $ not state`, we could just have used `H.modify_ (\state -> not state)` instead.
 
-Be cautious about using `H.modify`/`H.put`. Every time one of them is called, it will re-render the state. If the state has not been changed, this leads to needless CPU cycles. In short, avoid needless `H.put`/`H.modify` calls.
+Be cautious about using `H.modify_`/`H.put`. Every time one of them is called, it will re-render the state. If the state has not been changed, this leads to needless CPU cycles. In short, avoid needless `H.put`/`H.modify_` calls.
 
 ### Using Information From Events
 
@@ -458,7 +458,7 @@ myButton =
   eval :: Query ~> H.ComponentDSL State Query Message m
   eval = case _ of
     ToggleState next -> do
-      H.modify (\state -> not state)
+      H.modify_ (\state -> not state)
       pure next
 
 -- Main method that makes the code work:
