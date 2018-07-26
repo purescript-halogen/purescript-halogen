@@ -1,15 +1,20 @@
 # Defining a component
 
 We'll use a bottom-up approach to explain how to build a Halogen component. Rather than giving you a complete working example immediately and explaining all of the types, we will start with the smaller parts to teach concepts and then tie them together as time goes on into a full working example. Here's the outline we'll be using:
-- [Static Rendering](#static-rendering) - Start by showing how to render static HTML using Halogen's HTML DSL (domain specific language) that guarantees correctly-written HTML
-- [Rendering Properties](#rendering-properties) - Add properties (i.e. attributes) to the static HTML
-- [Rendering CSS](#rendering-css) - Add properties (i.e. CSS) to the static HTML
-- [Adding State](#adding-state) - Add `State` to our component and make our HTML more dynamic
-- [Adding Event Handling](#adding-event-handling) - Add event handling, so that our state gets updated and re-renders the dynamic HTML
-- Explain the imports (e.g. `H`, `HH`, `HE`, `HP`, `CSS`) and other Halogen-y stuff
+- [Rendering Static HTML](#rendering-static-html)
+    - [Rendering HTML](#rendering-html)
+    - [Rendering Properties](#rendering-properties)
+    - [Rendering CSS](#rendering-css)
+- [Adding State - Rendering Dynamic HTML](#adding-state---rendering-dynamic-html)
+- [Handling Events](#handling-events)
+    - [Basic concepts](#basic-concepts)
+    - [Using Information From Events](#using-information-from-events)
+- [Our First Halogen Component](#our-first-halogen-component)
 
 
-## Static Rendering
+# Rendering Static HTML
+
+### Rendering HTML
 
 We'll begin by first showing how to build a static HTML using Halogen's HTML DSL (domain specific language).
 
@@ -37,7 +42,7 @@ render =
     ]
 ```
 
-## Rendering Properties
+### Rendering Properties
 
 Now, we will add properties to our static HTML. We'll convert the following HTML into purescript:
 ```html
@@ -84,7 +89,7 @@ render =
     ]
 ```
 
-## Rendering CSS
+### Rendering CSS
 
 Now, we'll render the following HTML that includes CSS in Halogen:
 ```html
@@ -185,7 +190,7 @@ render =
       -- and any other additional inline CSS here...
 ```
 
-## Adding State
+## Adding State - Rendering Dynamic HTML
 
 Hopefully, you feel comfortable working with Halogen's HTML DSL now. Next, we'll add state to the `render` function and use it to render dynamic HTML. To reduce the "code noise," we will not be using the code from previous examples. Rather, we'll be starting with a fresh example.
 
@@ -292,7 +297,9 @@ render { divId: topDiv, spans: sInfo } =
         backgroundColor orange
 ```
 
-## Adding Event Handling
+## Event Handling
+
+### Basic Concepts
 
 We'll return back to our basic button example to show how to add event handling.
 
@@ -300,14 +307,16 @@ This section will introduce four new concepts:
 - The `HE.onEventName (HE.input_ QueryConstructor)` syntax
 - The `data Query a` type
 - The `eval` function
+- The `H.get`, `H.put`, and `H.modify` syntax
 
 The `HE.onEventName (HE.input_ QueryConstructor)` is what we put into an element's array of properties: `button [ HE.onClick (HE.input HandleClick) ] [HH.text "text" ]`. It defines how to map the `Event` type (e.g. `MouseEvent`, `KeyEvent`, etc.) to the `Query a` type
 The `Query a` type stores all the information needed to handle the event. In this example, we do not need information from the `MouseEvent`. Rather, we only need to be notified when the mouse is clicked so that we can run some code.
 Once the required information has been stored in a type of `Query a`, the `eval` function evaluates the `Query a` type. It's where the actual event handling occurs and enables one to do a number of things:
+- State manipulation (e.g. getting/setting/modifying the state)
 - Effects (e.g. print to the console, send ajax, etc.)
-- State manipulation (e.g. getting/setting/modifying the state).
+- Evaluate other `Query a` types
 
-Whenever we update the state in the `eval` function, it will re-render the component using the `render` function.
+We'll talk about Effects and recursively evaluating Queries in a later section. Fow now, we'll explain how to manipulate the state in the `eval` function. We use the `state <- H.get` syntax to get the state and the `H.put newState` syntax to update it. Whenever we update the state in this way, Halogen will re-render the component using the `render` function.
 
 Here's an example:
 ```purescript
@@ -332,11 +341,11 @@ render isOn =
     [ HE.onClick (HE.input_ HandleMouseClick) ] -- handler syntax
     [ HH.text label ]
 
-{-
-Note: Ignore the 'm' type for now. This will be explained later.
+{- Note: Ignore the 'm' type for now as it will be explained
+     in a later page.
 
-eval :: forall m. Query a -> H.ComponentDSL State Query a m -}
-eval :: forall m. Query   ~> H.ComponentDSL State Query   m
+eval :: forall m a. Query a -> H.ComponentDSL State Query m a-}
+eval :: forall m.   Query   ~> H.ComponentDSL State Query m
 eval HandleMouseClick next = do
    state <- H.get
    let newState = not state
@@ -344,10 +353,218 @@ eval HandleMouseClick next = do
    pure next        -- the last line must always be 'pure next'
 ```
 
+In the `eval` function, we are setting a new state that is based on the old one. Rather than use the `do notation` of `H.get >>= \state -> H.put $ not state`, we could just have used `H.modify (\state -> not state)` instead.
 
+Be cautious about using `H.modify`/`H.put`. Every time one of them is called, it will re-render the state. If the state has not been changed, this leads to needless CPU cycles. In short, avoid needless `H.put`/`H.modify` calls.
+
+### Using Information From Events
 
 There's a few rules to follow when defining the `Query a` type:
-- Each data constructor must end with the `a` (`data Query a = First a | Second a | Third a | Fourth -- This last one is wrong, there is no 'a'`)
-- Any
+- Each data constructor for `Query a` must always include the `a` somewhere (the convention is to have it at the end): `data Query a = First a | Second a | Third a | Fourth -- This last one is wrong, there is no 'a'`
+- When one needs to store additional information, they must include those type(s) somewhere in the data constructor (the convention is to place them between the data constructor and the `a`): `data Query a = One Int a | Two Int Int a | Three Int Int Int a`
 
-So, what's going on here? We've defined a new type called `Query a`. The `a` is always `Unit` but it must remained generic for the types to align and work.
+Thus, if we wanted to store the mouse event itself in our `Query a` type, we would write:
+```purescript
+data Query a
+  = HandleClick MouseEvent a
+```
+
+However, this raises a new problem. We originally wrote `HE.onClick (HE.input_ HandleClick)`. How can we get the actual event, so we can pass it into the `HandleClick` constructor?
+
+The problem lays with `HE.input_`, or more specifically the `_` suffix. Similar to how `HH.div_` omits the element's properties array, `HE.input_` ignores the event and simple creates the `Query a` type. If we want access to that event, we'll need a function of `Event -> Query a`. That's the type that `HE.input` accepts as an argument:
+```purescript
+data Query a
+  = HandleClick MouseEvent a
+
+render :: State -> H.ComponentHTML Query
+render isOn =
+  let label = if isOn then "On" else "Off"
+  in HH.button
+    [ HE.onClick (HE.input (\mouseEvent -> HandleMouseClick mouseEvent) ]
+    [ HH.text label ]
+
+eval :: forall m. Query ~> H.ComponentDSL State Query m
+eval HandleMouseClick mouseEvent next = do
+   -- extract information from mouse event and do something with it
+   --   (e.g. `let offset = offsetX mouseEvent`)
+   pure next
+```
+
+## Our First Halogen Component
+
+### The Example
+
+We've introduced Halogen's HTML DSL, the `render` and `eval` functions, and the `State` and `Query a` types. We now have enough understanding to build a basic child component. Parent components, components that can send and receive information to and from child components, will be covered in a later section. In the below example, the term, `P-C`, will indicate something that relates to a parent-child concept. These can be ignored for now:
+- `type Input`
+- `type Message`
+
+In addition to the above, the `main` function will include other Halogen code that has not yet been explained. It's needed to make this code run. It will produce a single button whose label indicates its state: on or off.
+
+Here's the example:
+```purescript
+module Main where
+
+import Prelude
+
+-- Imports needed for our main function:
+import Effect (Effect)
+import Halogen.Aff as HA
+import Halogen.VDom.Driver (runUI)
+
+-- Imports needed for our component:
+import Data.Maybe (Maybe(..))
+import Halogen as H
+import Halogen.HTML as HH
+import Halogen.HTML.Events as HE
+import Halogen.HTML.Properties as HP
+
+type State = Boolean
+
+data Query a = ToggleState a
+
+-- P-C  {
+type Input = Unit
+data Message = Void
+-- }
+
+-- This is the function that builds our Halogen component
+--
+-- Notice how the 'm' type from our `eval` function has been moved
+-- to this type's definition
+myButton :: forall m. H.Component HH.HTML Query Input Message m
+myButton =
+  H.component   -- defines a child component
+    { initialState: const initialState   -- P-C
+    , render
+    , eval
+    , receiver: const Nothing            -- P-C
+    }
+  where
+
+  initialState :: State
+  initialState = false
+
+  render :: State -> H.ComponentHTML Query
+  render state =
+    let
+      label = if state then "On" else "Off"
+    in
+      HH.button
+        [ HP.title label
+        , HE.onClick (HE.input_ ToggleState)
+        ]
+        [ HH.text label ]
+
+  eval :: Query ~> H.ComponentDSL State Query Message m
+  eval = case _ of
+    ToggleState next -> do
+      H.modify (\state -> not state)
+      pure next
+
+-- Main method that makes the code work:
+main :: Effect Unit
+main = HA.runHalogenAff do
+  body <- HA.awaitBody
+  runUI myButton unit body
+```
+
+### Example Using Meta-Language
+
+```purescript
+module Main where
+
+import Prelude
+
+-- Imports needed for our main function:
+import Effect (Effect)
+import Halogen.Aff as HA
+import Halogen.VDom.Driver (runUI)
+
+-- Imports needed for our child component:
+import Data.Maybe (Maybe(..))
+
+-- purescript-halogen
+import Halogen as H
+import Halogen.HTML as HH
+import Halogen.HTML.Events as HE
+import Halogen.HTML.Properties as HP
+import Halogen.HTML.Core (ClassName)
+
+-- purescript-halogen-css
+import Halogen.HTML.CSS (style)
+
+-- purescript-css
+import CSS.Background (backgroundColor)
+import CSS.Color (red)
+
+
+-- P-C  {
+type Input = Unit
+data Message = Void
+-- }
+
+type State = Boolean
+{- or as more commonly seen
+type State = { field1 :: Type1
+             , field2 :: Type2
+             , filed3 :: Type3
+             }
+-}
+
+data Query a
+  = DoSomething a
+  | DoSomethingWithTheseArguments Type1 Type2 {- TypeN ... -} a
+
+childComponent :: forall m. H.Component HH.HTML Query Input Message m
+childComponent =
+  H.component
+    { initialState: const initialState   -- P-C
+    , render
+    , eval
+    , receiver: const Nothing            -- P-C
+    }
+  where
+
+  initialState :: State
+  initialState = -- initial state value
+
+  render :: State -> H.ComponentHTML Query
+  render state =
+    let
+      label = if state then "On" else "Off"
+    in
+      HH.button
+        -- attributes
+        [ HP.title "title"
+        , HP.class_ $ ClassName "class"
+        , HP.id_ "id"
+
+        -- CSS
+        , CSS.style $ backgroundColor red
+
+        -- Events
+        , HE.onClick (HE.input_ DoSomething)
+        , HE.onMouseMove (HE.input (\e -> DoSomethingWithTheseArguments e))
+        , HE.onMouseEnter (HE.input_ $ DoSomethingWithTheseArguments true 3 2)
+        , HE.onMouseLeave (HE.input_ $ DoSomethingWithTheseArguments false 2 3)
+        ]
+        [ HH.text label ]
+
+  eval :: Query ~> H.ComponentDSL State Query Message m
+  eval = case _ of
+    DoSomething next -> do
+      -- do something here: state manipulation; effects; etc.
+      pure next
+    DoSomethingWithTheseArguments n1 n2 next -> do
+      -- do something with the two ints
+      -- note this code will run when
+      --   mouse enters, mouse leaves, and mouse is moving
+      --   over the button
+      pure next
+
+-- Main method that makes the code work:
+main :: Effect Unit
+main = HA.runHalogenAff do
+  body <- HA.awaitBody
+  runUI childComponent unit body
+```
