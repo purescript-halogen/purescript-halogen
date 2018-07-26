@@ -296,9 +296,20 @@ render { divId: topDiv, spans: sInfo } =
 
 We'll return back to our basic button example to show how to add event handling.
 
-To add event handling to an HTML element, use the syntax pattern: `HE.onEventName (HE.input QueryConstructor)` and place it in the element's array of properties. `button [ HE.onClick (HE.input HandleClick) ] [HH.text "text" ]`.
+This section will introduce four new concepts:
+- The `HE.onEventName (HE.input_ QueryConstructor)` syntax
+- The `data Query a` type
+- The `eval` function
 
-But what is `QueryConstructor`?
+The `HE.onEventName (HE.input_ QueryConstructor)` is what we put into an element's array of properties: `button [ HE.onClick (HE.input HandleClick) ] [HH.text "text" ]`. It defines how to map the `Event` type (e.g. `MouseEvent`, `KeyEvent`, etc.) to the `Query a` type
+The `Query a` type stores all the information needed to handle the event. In this example, we do not need information from the `MouseEvent`. Rather, we only need to be notified when the mouse is clicked so that we can run some code.
+Once the required information has been stored in a type of `Query a`, the `eval` function evaluates the `Query a` type. It's where the actual event handling occurs and enables one to do a number of things:
+- Effects (e.g. print to the console, send ajax, etc.)
+- State manipulation (e.g. getting/setting/modifying the state).
+
+Whenever we update the state in the `eval` function, it will re-render the component using the `render` function.
+
+Here's an example:
 ```purescript
 -- purescript-halogen
 import Halogen as H
@@ -310,31 +321,33 @@ type State = Boolean
 initialState :: State
 initialState = true
 
--- new code - Start
-data Query a
-  = DoSomethingWhenMouseIsClicked a
-
-{-
-eval :: Query a -> H.ComponentDSL State Query a -}
-eval :: Query   ~> H.ComponentDSL State Query
-eval Query next = do {-
-   do any kind of effects here
-     print messages to the console
-     send ajax requests
-     etc.
-   get/set/modify the state of the component -}
-
-   -- the last line must always be
-   pure next
-
--- new code - End
+data Query a            -- Stores any required info about event
+  = HandleMouseClick a  -- In this case, we don't need any info
 
 -- Now the Query type is needed in our render function
 render :: State -> H.ComponentHTML Query
 render isOn =
   let label = if isOn then "On" else "Off"
   in HH.button
-    [ HE.onClick (HE.input DoSomethingWhenMouseIsClicked) ]
+    [ HE.onClick (HE.input_ HandleMouseClick) ] -- handler syntax
     [ HH.text label ]
+
+{-
+Note: Ignore the 'm' type for now. This will be explained later.
+
+eval :: forall m. Query a -> H.ComponentDSL State Query a m -}
+eval :: forall m. Query   ~> H.ComponentDSL State Query   m
+eval HandleMouseClick next = do
+   state <- H.get
+   let newState = not state
+   H.put newState   -- causes component to be re-rendered
+   pure next        -- the last line must always be 'pure next'
 ```
+
+
+
+There's a few rules to follow when defining the `Query a` type:
+- Each data constructor must end with the `a` (`data Query a = First a | Second a | Third a | Fourth -- This last one is wrong, there is no 'a'`)
+- Any
+
 So, what's going on here? We've defined a new type called `Query a`. The `a` is always `Unit` but it must remained generic for the types to align and work.
