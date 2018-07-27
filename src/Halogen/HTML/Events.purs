@@ -1,6 +1,8 @@
 module Halogen.HTML.Events
   ( input
   , input_
+  , inputR
+  , inputR_
   , handler
   , onAbort
   , onError
@@ -90,6 +92,65 @@ input f x = Just $ action (f x)
 
 input_ :: forall f a. Action f -> a -> Maybe (f Unit)
 input_ f _ = Just $ action f
+
+-- | Used to recursively evalute query algebra until reaching a
+-- | terminating query using the following syntax:
+-- | ```purescript
+-- | HH.div
+-- |   [ HE.onEvent (HE.inputR (\e ->
+-- |       DoFirstAction $
+-- |       DoSeconAction $
+-- |       -- ... DoNAction $ ...
+-- |       H.action $ DoTerminatingAction
+-- |   ] []
+-- |
+-- | For example:
+-- | ```purescript
+-- | data Query a
+-- |   = NoOp a -- terminates evaluation and does nothing
+-- |   | LogToConsole String (Query Unit)
+-- |   | StopPropagation Event (Query Unit)
+-- |
+-- | render :: State -> H.ComponentHTML Query
+-- | render _ =
+-- |   HH.div
+-- |     [ HE.onClick (HE.inputR \_ ->  -- this is synonmous with "inputR_"
+-- |         LogToConsole "You will never see me when you click the button" $
+-- |         H.action NoOp
+-- |       )
+-- |     ]
+-- |     [ HH.div
+-- |       [ HE.onClick (HE.inputR \e ->
+-- |           LogToConsole "Button click detected. Stopping button click from propagating" $
+-- |           StopPropagation (toEvent e) $
+-- |           LogToConsole "Event's propagation has now been stopped" $
+-- |           H.action NoOp
+-- |         )
+-- |       ]
+-- |       [ HH.button
+-- |           [ HE.onClick (HE.inputR \e ->
+-- |               LogToConsole "Button was clicked! Propagating event." $
+-- |               H.action NoOp
+-- |             )
+-- |           ]
+-- |           [ HH.text "Click me and check the console." ]
+-- |       ]
+-- |     ]
+-- | eval ::
+-- | eval = case _ of
+-- |   NoOp a -> pure next
+-- |   LogToConsole message query -> do
+-- |     liftEffect $ log message
+-- |     eval query
+-- |   StopPropagation e query -> do
+-- |     liftEffect $ stopPropagation e
+-- |     eval query
+-- | ```
+inputR :: forall f a. (a -> f Unit) -> a -> Maybe (f Unit)
+inputR f x = Just (f x)
+
+inputR_ :: forall f a. f Unit -> a -> Maybe (f Unit)
+inputR_ f _ = Just f
 
 handler :: forall r i. EventType -> (Event -> Maybe i) -> IProp r i
 handler et = (unsafeCoerce :: (EventType -> (Event -> Maybe i) -> Prop i) -> EventType -> (Event -> Maybe (Input i)) -> IProp r i) Core.handler et <<< map (map Action)
