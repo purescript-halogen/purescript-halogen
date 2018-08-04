@@ -6,6 +6,7 @@ module Halogen.HTML
   , PlainHTML
   , fromPlainHTML
   , slot
+  , memoized
   , module Halogen.HTML.Core
   , module Halogen.HTML.Elements
   , module Halogen.HTML.Properties
@@ -13,13 +14,15 @@ module Halogen.HTML
 
 import Halogen.HTML.Elements
 
+import Data.Function.Uncurried as Fn
 import Data.Maybe (Maybe)
 import Data.Symbol (class IsSymbol, SProxy)
-import Halogen.Component (Component, ComponentSlot, componentSlot)
+import Halogen.Component (Component, ComponentSlot(..), componentSlot)
 import Halogen.Data.Slot (Slot)
 import Halogen.HTML.Core (class IsProp, AttrName(..), ClassName(..), HTML(..), Namespace(..), PropName(..), ElemName(..), text, handler)
 import Halogen.HTML.Core as Core
 import Halogen.HTML.Properties (IProp, attr, attrNS, prop)
+import Halogen.VDom.Thunk (thunk1, thunk2, thunk3, thunked)
 import Prelude (class Ord, Unit, Void)
 import Prim.Row as Row
 import Unsafe.Coerce (unsafeCoerce)
@@ -67,4 +70,53 @@ slot
   -> (o -> Maybe act)
   -> ComponentHTML' act ps m
 slot sym p component input outputQuery =
-  Core.slot (componentSlot sym p component input outputQuery)
+  Core.slot (ComponentSlot (componentSlot sym p component input outputQuery))
+
+-- | Optimizes rendering of a subtree given an equality predicate. If an argument
+-- | is deemed equivalent to the previous value, rendering and diffing will be
+-- | skipped. You should not use this function fully saturated, but instead
+-- | partially apply it for use within a Component's scope. For example, to skip
+-- | rendering for equal states, just wrap your `render` function.
+-- |
+-- | ```purescript
+-- | myComponent = component
+-- |  { render: memoized eq render
+-- |  , ...
+-- |  }
+-- | ```
+memoized
+  :: forall a act ps m
+   . (a -> a -> Boolean)
+  -> (a -> ComponentHTML' act ps m)
+  -> a
+  -> ComponentHTML' act ps m
+memoized eqFn f a = Core.slot (ThunkSlot (thunked eqFn f a))
+
+-- | Skips rendering for referentially equal arguments. You should not use this
+-- | function fully saturated, but instead partially apply it for use within a
+-- | Component's scope.
+lazy
+  :: forall a act ps m
+   . (a -> ComponentHTML' act ps m)
+  -> a
+  -> ComponentHTML' act ps m
+lazy f a = Core.slot (ThunkSlot (Fn.runFn2 thunk1 f a))
+
+-- | Like `lazy`, but for a rendering function which takes 2 arguments.
+lazy2
+  :: forall a b act ps m
+   . (a -> b -> ComponentHTML' act ps m)
+  -> a
+  -> b
+  -> ComponentHTML' act ps m
+lazy2 f a b = Core.slot (ThunkSlot (Fn.runFn3 thunk2 f a b))
+
+-- | Like `lazy`, but for a rendering function which takes 3 arguments.
+lazy3
+  :: forall a b c act ps m
+   . (a -> b -> c -> ComponentHTML' act ps m)
+  -> a
+  -> b
+  -> c
+  -> ComponentHTML' act ps m
+lazy3 f a b c = Core.slot (ThunkSlot (Fn.runFn4 thunk3 f a b c))

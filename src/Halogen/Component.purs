@@ -6,7 +6,8 @@ module Halogen.Component
   , mkComponent
   , unComponent
   , hoist
-  , ComponentSlot
+  , ComponentSlotBox
+  , ComponentSlot(..)
   , componentSlot
   , ComponentSlotSpec
   , mkComponentSlot
@@ -26,6 +27,8 @@ import Halogen.Data.Slot as Slot
 import Halogen.Query.HalogenM (HalogenM')
 import Halogen.Query.HalogenM as HM
 import Halogen.Query.HalogenQ (HalogenQ(..))
+import Halogen.VDom.Thunk (Thunk)
+import Halogen.VDom.Thunk as Thunk
 import Prim.Row as Row
 import Unsafe.Coerce (unsafeCoerce)
 
@@ -185,11 +188,15 @@ hoist nat = unComponent \c ->
     }
 
 -- | A slot for a child component in a component's rendered content.
-data ComponentSlot (h :: Type -> Type -> Type) (ps :: # Type) (m :: Type -> Type) a
+data ComponentSlotBox (h :: Type -> Type -> Type) (ps :: # Type) (m :: Type -> Type) a
 
-instance functorComponentSlot :: Functor (ComponentSlot h ps m) where
+instance functorComponentSlot :: Functor (ComponentSlotBox h ps m) where
   map f = unComponentSlot \slot ->
     mkComponentSlot $ slot { output = map f <$> slot.output }
+
+data ComponentSlot h ps m a
+  = ComponentSlot (ComponentSlotBox h ps m a)
+  | ThunkSlot (Thunk (h (ComponentSlot h ps m a)) a)
 
 -- | Constructs a [`ComponentSlot`](#t:ComponentSlot).
 -- |
@@ -209,7 +216,7 @@ componentSlot
   -> Component h f i o m
   -> i
   -> (o -> Maybe act)
-  -> ComponentSlot h ps m act
+  -> ComponentSlotBox h ps m act
 componentSlot sym p comp input output =
   mkComponentSlot
     { get: Slot.lookup sym p
@@ -230,11 +237,11 @@ type ComponentSlotSpec h f i o ps m act =
   , output :: o -> Maybe act
   }
 
--- | Constructs [`ComponentSlot`](#t:ComponentSlot) from a [`ComponentSlotSpec`](#t:ComponentSlotSpec).
+-- | Constructs [`ComponentSlotBox`](#t:ComponentSlot) from a [`ComponentSlotSpec`](#t:ComponentSlotSpec).
 mkComponentSlot
   :: forall h f i o ps m act
    . ComponentSlotSpec h f i o ps m act
-  -> ComponentSlot h ps m act
+  -> ComponentSlotBox h ps m act
 mkComponentSlot = unsafeCoerce
 
 -- | Exposes the inner details of a [`ComponentSlot`](#t:ComponentSlot) to a
@@ -246,7 +253,7 @@ mkComponentSlot = unsafeCoerce
 unComponentSlot
   :: forall h ps m act r
    . (forall f i o. ComponentSlotSpec h f i o ps m act -> r)
-  -> ComponentSlot h ps m act
+  -> ComponentSlotBox h ps m act
   -> r
 unComponentSlot = unsafeCoerce
 
@@ -258,5 +265,9 @@ hoistSlot
   => (m ~> m')
   -> ComponentSlot h ps m act
   -> ComponentSlot h ps m' act
-hoistSlot nat = unComponentSlot \slot ->
-  mkComponentSlot $ slot { component = hoist nat slot.component }
+hoistSlot nat = case _ of
+  ComponentSlot cs ->
+    cs # unComponentSlot \slot ->
+      ComponentSlot $ mkComponentSlot $ slot { component = hoist nat slot.component }
+  ThunkSlot t ->
+    ThunkSlot $ Thunk.hoist (lmap (hoistSlot nat)) t

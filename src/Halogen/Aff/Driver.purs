@@ -28,7 +28,7 @@ import Effect.Ref as Ref
 import Halogen (HalogenIO)
 import Halogen.Aff.Driver.Eval as Eval
 import Halogen.Aff.Driver.State (DriverState(..), DriverStateRef(..), DriverStateX, LifecycleHandlers, RenderStateX, initDriverState, mapDriverState, renderStateX, renderStateX_, unDriverStateX)
-import Halogen.Component (Component, ComponentSlot, unComponent, unComponentSlot)
+import Halogen.Component (Component, ComponentSlot, ComponentSlotBox, unComponent, unComponentSlot)
 import Halogen.Data.Slot as Slot
 import Halogen.Query.EventSource as ES
 import Halogen.Query.HalogenQ (HalogenQ(..))
@@ -97,7 +97,7 @@ type RenderSpec h r =
   { render
       :: forall s act ps o
        . (Input act -> Effect Unit)
-      -> (ComponentSlot h ps Aff act -> Effect (RenderStateX r))
+      -> (ComponentSlotBox h ps Aff act -> Effect (RenderStateX r))
       -> h (ComponentSlot h ps Aff act) act
       -> Maybe (r s act ps o)
       -> Effect (r s act ps o)
@@ -223,7 +223,7 @@ runUI renderSpec component i = do
     -> (act -> Aff Unit)
     -> Ref (Slot.SlotStorage ps (DriverStateRef h r))
     -> Ref (Slot.SlotStorage ps (DriverStateRef h r))
-    -> ComponentSlot h ps Aff act
+    -> ComponentSlotBox h ps Aff act
     -> Effect (RenderStateX r)
   renderChild lchs handler childrenInRef childrenOutRef =
     unComponentSlot \slot -> do
