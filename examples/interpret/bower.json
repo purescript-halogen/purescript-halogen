@@ -1,7 +1,0 @@
-{
-  "name": "interpret",
-  "private": true,
-  "dependencies": {
-    "purescript-halogen": "*"
-  }
-}

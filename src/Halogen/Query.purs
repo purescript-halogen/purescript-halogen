@@ -50,7 +50,7 @@ type Action f = Unit -> f Unit
 -- | ```purescript
 -- | data Query a = Tick a
 -- |
--- | sendTick :: forall o. HalogenIO Query o Aff -> Aff Unit
+-- | sendTick :: forall o. HalogenIO Query o Aff -> Aff (Maybe Unit)
 -- | sendTick app = app.query (action Tick)
 -- | ```
 action :: forall f. Action f -> f Unit
@@ -74,7 +74,7 @@ type Request f a = (a -> a) -> f a
 -- | ```purescript
 -- | data Query a = GetTickCount (Int -> a)
 -- |
--- | getTickCount :: forall o. HalogenIO Query o Aff -> Aff Int
+-- | getTickCount :: forall o. HalogenIO Query o Aff -> Aff (Maybe Int)
 -- | getTickCount app = app.query (request GetTickCount)
 -- | ```
 request :: forall f a. Request f a -> f a
@@ -83,5 +83,5 @@ request req = req identity
 -- | Retrieves a `HTMLElement` value that is associated with a `Ref` in the
 -- | rendered output of a component. If there is no currently rendered value (or
 -- | it is not an `HTMLElement`) for the request will return `Nothing`.
-getHTMLElementRef :: forall s f ps o m. RefLabel -> HalogenM s f ps o m (Maybe HTMLElement)
+getHTMLElementRef :: forall s act ps o m. RefLabel -> HalogenM' s act ps o m (Maybe HTMLElement)
 getHTMLElementRef = map (HTMLElement.fromElement =<< _) <<< getRef

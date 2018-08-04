@@ -140,7 +140,12 @@ renderSpec
   :: DOM.Document
   -> DOM.HTMLElement
   -> AD.RenderSpec HTML RenderState
-renderSpec document container = { render: render, renderChild: identity, removeChild }
+renderSpec document container =
+    { render
+    , renderChild: identity
+    , removeChild
+    , dispose: removeChild
+    }
   where
 
   render

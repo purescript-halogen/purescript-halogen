@@ -1,7 +1,0 @@
-{
-  "name": "todo",
-  "private": true,
-  "dependencies": {
-    "purescript-halogen": "*"
-  }
-}

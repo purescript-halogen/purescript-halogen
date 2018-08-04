@@ -144,6 +144,10 @@ derive newtype instance eqSubscriptionId :: Eq SubscriptionId
 derive newtype instance ordSubscriptionId :: Ord SubscriptionId
 
 -- | Subscribes a component to an `EventSource`.
+-- |
+-- | When a component is disposed of any active subscriptions will automatically
+-- | be stopped and no further subscriptions will be possible during
+-- | finalization.
 subscribe :: forall s act ps o m. ES.EventSource m act -> HalogenM' s act ps o m SubscriptionId
 subscribe es = HalogenM $ liftF $ Subscribe (\_ -> es) identity
 
@@ -152,6 +156,10 @@ subscribe es = HalogenM $ liftF $ Subscribe (\_ -> es) identity
 -- | is passed into an `EventSource` constructor. This allows emitted queries
 -- | to include the `SubscriptionId`, rather than storing it in the state of the
 -- | component.
+-- |
+-- | When a component is disposed of any active subscriptions will automatically
+-- | be stopped and no further subscriptions will be possible during
+-- | finalization.
 subscribe' :: forall s act ps o m. (SubscriptionId -> ES.EventSource m act) -> HalogenM' s act ps o m Unit
 subscribe' esc = HalogenM $ liftF $ Subscribe esc (const unit)
 
@@ -179,6 +187,10 @@ derive newtype instance ordForkId :: Ord ForkId
 -- | Some care needs to be taken when using a `fork` that can modify the
 -- | component state, as it's easy for the forked process to "clobber" the state
 -- | (overwrite some or all of it with an old value) by mistake.
+-- |
+-- | When a component is disposed of any active forks will automatically
+-- | be killed. New forks can be started during finalization but there will be
+-- | no means of killing them.
 fork :: forall s act ps o m. HalogenM' s act ps o m Unit -> HalogenM' s act ps o m ForkId
 fork hmu = HalogenM $ liftF $ Fork hmu identity
 
