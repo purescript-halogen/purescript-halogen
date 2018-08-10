@@ -6,6 +6,13 @@ These example can be compiled from the root of the project. First, make sure Hal
 $ npm install
 ```
 
+Install bower and purescript dependencies:
+
+```
+npm install -g bower
+bower install --production
+```
+
 Then each project can be built using `npm run example-<name>`:
 
 ```text
