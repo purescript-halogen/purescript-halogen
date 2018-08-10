@@ -10,7 +10,7 @@ Install bower and purescript dependencies:
 
 ```
 npm install -g bower
-bower install --production
+bower install
 ```
 
 Then each project can be built using `npm run example-<name>`:
