@@ -7,13 +7,13 @@ A declarative, type-safe UI library for PureScript.
 
 ## Getting Started
 
-- Read the [guide](docs/)
+- Read the [guide](https://github.com/slamdata/purescript-halogen/tree/v4.0.0/docs/)
 - Take a look at some of the examples:
-  - [A basic button](examples/basic/)
-  - [AJAX requests](examples/effects-aff-ajax/)
-  - [Rudimentary routing](examples/driver-routing/)
-  - [TODO list](examples/todo/)
-  - [Ace editor](examples/ace/) (external component integration)
+  - [A basic button](https://github.com/slamdata/purescript-halogen/tree/v4.0.0/examples/basic/)
+  - [AJAX requests](https://github.com/slamdata/purescript-halogen/tree/v4.0.0/examples/effects-aff-ajax/)
+  - [Rudimentary routing](https://github.com/slamdata/purescript-halogen/tree/v4.0.0/examples/driver-routing/)
+  - [TODO list](https://github.com/slamdata/purescript-halogen/tree/v4.0.0/examples/todo/)
+  - [Ace editor](https://github.com/slamdata/purescript-halogen/tree/v4.0.0/examples/ace/) (external component integration)
 - Clone the [template project](https://github.com/slamdata/purescript-halogen-template) and give it a try!
 - For related projects, take a look at the [ecosystem page in the Wiki](https://github.com/slamdata/purescript-halogen/wiki/Halogen-Ecosystem).
 
