@@ -324,7 +324,7 @@ HH.ul_
   ]
 ```
 
-This gives us a variety of displays, each with a different permutations of the parent component's state, and all of which update in tandem with changes in the parent component's state.
+This gives us a variety of displays, each with a different permutation of the parent component's state, and all of which update in tandem with changes in the parent component's state.
 
 ## Multiple types of child component
 
