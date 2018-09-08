@@ -45,7 +45,7 @@ component =
   initialState :: State
   initialState = { a: Nothing, b: Nothing, c: Nothing }
 
-  render :: State -> H.ComponentHTML Query ChildSlots m
+  render :: State -> H.ComponentHTML (Query Unit) ChildSlots m
   render state = HH.div_
     [ HH.div
         [ HP.class_ (H.ClassName "box")]
@@ -74,7 +74,7 @@ component =
         [ HH.text "Check states now" ]
     ]
 
-  eval :: Query ~> H.HalogenM State Query ChildSlots Void m
+  eval :: Query ~> H.HalogenM State (Query Unit) ChildSlots Void m
   eval (ReadStates next) = do
     a <- H.query _a unit (H.request CA.GetState)
     b <- H.query _b unit (H.request CB.GetCount)

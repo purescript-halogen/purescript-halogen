@@ -31,7 +31,7 @@ myButton =
   initialState :: State
   initialState = false
 
-  render :: State -> H.ComponentHTML Query () m
+  render :: State -> H.ComponentHTML (Query Unit) () m
   render state =
     let
       label = if state then "On" else "Off"
@@ -42,7 +42,7 @@ myButton =
         ]
         [ HH.text label ]
 
-  eval :: Query ~> H.HalogenM State Query () Message m
+  eval :: Query ~> H.HalogenM State (Query Unit) () Message m
   eval = case _ of
     Toggle next -> do
       state <- H.get

@@ -32,7 +32,7 @@ component =
   initialState :: State
   initialState = "Hello"
 
-  render :: State -> H.ComponentHTML Query () m
+  render :: State -> H.ComponentHTML (Query Unit) () m
   render state =
     HH.label_
       [ HH.p_ [ HH.text "What do you have to say?" ]
@@ -42,7 +42,7 @@ component =
           ]
       ]
 
-  eval :: Query ~> H.HalogenM State Query () Void m
+  eval :: Query ~> H.HalogenM State (Query Unit) () Void m
   eval (HandleInput value next) = do
     H.put value
     pure next

@@ -29,7 +29,7 @@ import Effect.Ref as Ref
 import Halogen.Aff.Driver.State (DriverState(..), DriverStateRef(..), LifecycleHandlers, mapDriverState, unDriverStateX)
 import Halogen.Query.ChildQuery as CQ
 import Halogen.Query.EventSource as ES
-import Halogen.Query.HalogenM (ForkId(..), HalogenAp(..), HalogenF(..), HalogenM'(..), SubscriptionId(..))
+import Halogen.Query.HalogenM (ForkId(..), HalogenAp(..), HalogenF(..), HalogenM(..), SubscriptionId(..))
 import Halogen.Query.HalogenQ (HalogenQ(..))
 import Halogen.Query.Input (Input(..), RefLabel(..))
 import Unsafe.Reference (unsafeRefEq)
@@ -68,7 +68,7 @@ evalM
   :: forall h r s f act ps i o
    . Renderer h r
   -> Ref (DriverState h r s f act ps i o)
-  -> HalogenM' s act ps o Aff
+  -> HalogenM s act ps o Aff
   ~> Aff
 evalM render initRef (HalogenM hm) = foldFree (go initRef) hm
   where

@@ -43,7 +43,7 @@ component =
     , buttonState: Nothing
     }
 
-  render :: State -> H.ComponentHTML Query ChildSlots m
+  render :: State -> H.ComponentHTML (Query Unit) ChildSlots m
   render state =
     HH.div_
       [ HH.slot _button unit Button.myButton unit (HE.input HandleButton)
@@ -60,7 +60,7 @@ component =
           ]
       ]
 
-  eval :: Query ~> H.HalogenM State Query ChildSlots Void m
+  eval :: Query ~> H.HalogenM State (Query Unit) ChildSlots Void m
   eval = case _ of
     HandleButton (Button.Toggled _) next -> do
       H.modify_ (\st -> st { toggleCount = st.toggleCount + 1 })

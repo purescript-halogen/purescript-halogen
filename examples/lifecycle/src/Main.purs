@@ -52,7 +52,7 @@ ui = H.component
   , receiver: const Nothing
   }
   where
-  render :: State -> H.ComponentHTML Query ChildSlots Aff
+  render :: State -> H.ComponentHTML (Query Unit) ChildSlots Aff
   render state =
     HH.div_
       [ HH.button
@@ -71,7 +71,7 @@ ui = H.component
               ]
       ]
 
-  eval :: Query ~> H.HalogenM State Query ChildSlots Void Aff
+  eval :: Query ~> H.HalogenM State (Query Unit) ChildSlots Void Aff
   eval (Initialize next) = do
     H.liftEffect $ log "Initialize Root"
     pure next

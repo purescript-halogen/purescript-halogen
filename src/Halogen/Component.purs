@@ -24,7 +24,7 @@ import Data.Symbol (class IsSymbol, SProxy)
 import Data.Tuple (Tuple)
 import Halogen.Data.Slot (Slot, SlotStorage)
 import Halogen.Data.Slot as Slot
-import Halogen.Query.HalogenM (HalogenM')
+import Halogen.Query.HalogenM (HalogenM)
 import Halogen.Query.HalogenM as HM
 import Halogen.Query.HalogenQ (HalogenQ(..))
 import Halogen.VDom.Thunk (Thunk)
@@ -81,7 +81,7 @@ data Component (h :: Type -> Type -> Type) (f :: Type -> Type) i o (m :: Type ->
 type ComponentArgs h s f ps i o m =
   { initialState :: i -> s
   , render :: s -> h (ComponentSlot h ps m (f Unit)) (f Unit)
-  , eval :: f ~> HalogenM' s (f Unit) ps o m
+  , eval :: f ~> HalogenM s (f Unit) ps o m
   , receiver :: i -> Maybe (f Unit)
   , initializer :: Maybe (f Unit)
   , finalizer :: Maybe (f Unit)
@@ -147,7 +147,7 @@ component = mkComponent <<< go
 type ComponentSpec h s f act ps i o m =
   { initialState :: i -> s
   , render :: s -> h (ComponentSlot h ps m act) act
-  , eval :: HalogenQ f act i ~> HalogenM' s act ps o m
+  , eval :: HalogenQ f act i ~> HalogenM s act ps o m
   }
 
 -- | Constructs a [`Component`](#t:Component) from a [`ComponentSpec`](#t:ComponentSpec).

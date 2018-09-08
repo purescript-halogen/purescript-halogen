@@ -37,7 +37,7 @@ list =
     }
   where
 
-  render :: List -> H.ComponentHTML ListQuery ChildSlots m
+  render :: List -> H.ComponentHTML (ListQuery Unit) ChildSlots m
   render st =
     HH.div_
       [ HH.h1_ [ HH.text "Todo list" ]
@@ -53,14 +53,14 @@ list =
           [ HH.text "All Done" ]
       ]
 
-  renderTask :: TaskId -> H.ComponentHTML ListQuery ChildSlots m
+  renderTask :: TaskId -> H.ComponentHTML (ListQuery Unit) ChildSlots m
   renderTask taskId =
     HH.slot _task taskId
       (task initialTask)
       unit
       (HE.input (HandleTaskMessage taskId))
 
-  eval :: ListQuery ~> H.HalogenM List ListQuery ChildSlots Void m
+  eval :: ListQuery ~> H.HalogenM List (ListQuery Unit) ChildSlots Void m
   eval (NewTask next) = do
     H.modify_ addTask
     pure next

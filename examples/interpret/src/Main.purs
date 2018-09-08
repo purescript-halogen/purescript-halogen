@@ -39,7 +39,7 @@ ui =
   initialState :: State
   initialState = { on: false }
 
-  render :: forall m. State -> H.ComponentHTML Query () m
+  render :: forall m. State -> H.ComponentHTML (Query Unit) () m
   render state =
     HH.div_
       [ HH.h1_
@@ -49,7 +49,7 @@ ui =
           [ HH.text (if state.on then "On" else "Off") ]
       ]
 
-  eval :: Query ~> H.HalogenM State Query () Void MyMonad
+  eval :: Query ~> H.HalogenM State (Query Unit) () Void MyMonad
   eval (ToggleState next) = do
     H.modify_ (\state -> { on: not state.on })
     H.lift $ output "State was toggled"

@@ -43,7 +43,7 @@ ui =
   initialState :: State
   initialState = { text: "" }
 
-  render :: State -> H.ComponentHTML Query ChildSlots Aff
+  render :: State -> H.ComponentHTML (Query Unit) ChildSlots Aff
   render { text: text } =
     HH.div_
       [ HH.h1_
@@ -60,7 +60,7 @@ ui =
       , HH.p_
           [ HH.text ("Current text: " <> text) ]
       ]
-  eval :: Query ~> H.HalogenM State Query ChildSlots Void Aff
+  eval :: Query ~> H.HalogenM State (Query Unit) ChildSlots Void Aff
   eval (ClearText next) = do
     _ <- H.query _ace unit $ H.action (ChangeText "")
     pure next

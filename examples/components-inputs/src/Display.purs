@@ -27,14 +27,14 @@ component =
     }
   where
 
-  render :: State -> H.ComponentHTML Query () m
+  render :: State -> H.ComponentHTML (Query Unit) () m
   render state =
     HH.div_
       [ HH.text "My input value is:"
       , HH.strong_ [ HH.text (show state) ]
       ]
 
-  eval :: Query ~> H.HalogenM State Query () Void m
+  eval :: Query ~> H.HalogenM State (Query Unit) () Void m
   eval = case _ of
     HandleInput n next -> do
       oldN <- H.get

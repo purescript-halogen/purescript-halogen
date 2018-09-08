@@ -28,7 +28,7 @@ data Query a
   = Init a
   | HandleKey H.SubscriptionId KeyboardEvent a
 
-type DSL = H.HalogenM State Query () Void Aff
+type DSL = H.HalogenM State (Query Unit) () Void Aff
 
 ui :: H.Component HH.HTML Query Unit Void Aff
 ui =
@@ -42,7 +42,7 @@ ui =
     }
   where
 
-  render :: forall m. State -> H.ComponentHTML Query () m
+  render :: forall m. State -> H.ComponentHTML (Query Unit) () m
   render state =
     HH.div_
       [ HH.p_ [ HH.text "Hold down the shift key and type some characters!" ]

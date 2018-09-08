@@ -36,7 +36,7 @@ component =
     , finalizer: Nothing
     }
   where
-  eval :: Query ~> H.HalogenM State Query () Message Aff
+  eval :: Query ~> H.HalogenM State (Query Unit) () Message Aff
   eval = case _ of
     StartFork a -> do
       let

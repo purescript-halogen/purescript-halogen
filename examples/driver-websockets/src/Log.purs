@@ -37,7 +37,7 @@ component =
   initialState :: State
   initialState = { messages: [] , inputText: "" }
 
-  render :: State -> H.ComponentHTML Query () m
+  render :: State -> H.ComponentHTML (Query Unit) () m
   render state =
     HH.div_
       [ HH.ol_ $ map (\msg -> HH.li_ [ HH.text msg ]) state.messages
@@ -51,7 +51,7 @@ component =
           [ HH.text "Send Message" ]
       ]
 
-  eval :: Query ~> H.HalogenM State Query () Message m
+  eval :: Query ~> H.HalogenM State (Query Unit) () Message m
   eval (AddMessage msg next) = do
     let incomingMessage = "Received: " <> msg
     H.modify_ \st -> st { messages = st.messages `A.snoc` incomingMessage }

@@ -53,13 +53,13 @@ aceComponent =
   -- As we're embedding a 3rd party component we only need to create a
   -- placeholder div here and attach the ref property which will let us reference
   -- the element in eval.
-  render :: forall m. AceState -> H.ComponentHTML AceQuery () m
+  render :: forall m. AceState -> H.ComponentHTML (AceQuery Unit) () m
   render = const $ HH.div [ HP.ref (H.RefLabel "ace") ] []
 
   -- The query algebra for the component handles the initialization of the Ace
   -- editor as well as responding to the `ChangeText` action that allows us to
   -- alter the editor's state.
-  eval :: AceQuery ~> H.HalogenM AceState AceQuery () AceOutput Aff
+  eval :: AceQuery ~> H.HalogenM AceState (AceQuery Unit) () AceOutput Aff
   eval = case _ of
     Initialize next -> do
       H.getHTMLElementRef (H.RefLabel "ace") >>= case _ of

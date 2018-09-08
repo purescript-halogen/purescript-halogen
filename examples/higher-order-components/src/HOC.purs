@@ -55,7 +55,7 @@ factory innerComponent =
 
   where
 
-  render :: State i -> H.ComponentHTML' (Action o) (ChildSlots f o) m
+  render :: State i -> H.ComponentHTML (Action o) (ChildSlots f o) m
   render state =
     HH.div_
       [ HH.hr_
@@ -78,7 +78,7 @@ factory innerComponent =
 
   eval
     :: H.HalogenQ f (Action o) i
-    ~> H.HalogenM' (State i) (Action o) (ChildSlots f o) o m
+    ~> H.HalogenM (State i) (Action o) (ChildSlots f o) o m
   eval = case _ of
     H.Initialize a -> pure a
     H.Finalize a -> pure a

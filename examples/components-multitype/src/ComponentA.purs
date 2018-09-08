@@ -31,7 +31,7 @@ component =
   initialState :: State
   initialState = false
 
-  render :: State -> H.ComponentHTML Query () m
+  render :: State -> H.ComponentHTML (Query Unit) () m
   render state =
     HH.div_
       [ HH.p_ [ HH.text "Toggle me!" ]
@@ -40,7 +40,7 @@ component =
           [ HH.text (if state then "On" else "Off") ]
       ]
 
-  eval :: Query ~> H.HalogenM State Query () Void m
+  eval :: Query ~> H.HalogenM State (Query Unit) () Void m
   eval (ToggleState next) = do
     H.modify_ not
     pure next

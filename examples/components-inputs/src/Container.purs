@@ -35,7 +35,7 @@ component =
   initialState :: State
   initialState = 1
 
-  render :: State -> H.ComponentHTML Query ChildSlots m
+  render :: State -> H.ComponentHTML (Query Unit) ChildSlots m
   render state =
     HH.div_
       [ HH.ul_
@@ -53,7 +53,7 @@ component =
           [ HH.text "-1"]
       ]
 
-  eval :: Query ~> H.HalogenM State Query ChildSlots Void m
+  eval :: Query ~> H.HalogenM State (Query Unit) ChildSlots Void m
   eval = case _ of
     Increment next -> do
       H.modify_ (_ + 1)

@@ -37,7 +37,7 @@ child initialState = H.component
   , receiver: const Nothing
   }
   where
-  render :: Int -> H.ComponentHTML Query ChildSlots Aff
+  render :: Int -> H.ComponentHTML (Query Unit) ChildSlots Aff
   render id =
     HH.div_
       [ HH.text ("Child " <> show id)
@@ -48,7 +48,7 @@ child initialState = H.component
         ]
       ]
 
-  eval :: Query ~> H.HalogenM Int Query ChildSlots Message Aff
+  eval :: Query ~> H.HalogenM Int (Query Unit) ChildSlots Message Aff
   eval (Initialize next) = do
     id <- H.get
     H.liftEffect $ log ("Initialize Child " <> show id)
@@ -86,7 +86,7 @@ cell initialState = H.component
   render id =
     HH.li_ [ HH.text ("Cell " <> show id) ]
 
-  eval :: Query ~> H.HalogenM Int Query () Message Aff
+  eval :: Query ~> H.HalogenM Int (Query Unit) () Message Aff
   eval (Initialize next) = do
     id <- H.get
     H.liftEffect $ log ("Initialize Cell " <> show id)

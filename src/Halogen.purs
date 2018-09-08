@@ -19,9 +19,9 @@ import Data.Lazy (defer)
 import Data.Maybe (Maybe)
 import Halogen.Component (Component, ComponentSpec, ComponentSlot, ComponentSlotSpec, component, mkComponent, hoist, componentSlot, unComponent, unComponentSlot)
 import Halogen.Data.Slot (Slot)
-import Halogen.HTML (ComponentHTML, ComponentHTML')
+import Halogen.HTML (ComponentHTML)
 import Halogen.HTML.Core (AttrName(..), ClassName(..), Namespace(..), PropName(..), ElemName(..))
-import Halogen.Query (Action, HalogenF(..), HalogenM, HalogenM'(..), HalogenQ(..), RefLabel(..), Request, SubscriptionId, ForkId, action, fork, kill, get, getHTMLElementRef, getRef, gets, lift, liftAff, liftEffect, modify, modify_, put, query, queryAll, raise, request, subscribe, subscribe', unsubscribe)
+import Halogen.Query (Action, HalogenF(..), HalogenM(..), HalogenQ(..), RefLabel(..), Request, SubscriptionId, ForkId, action, fork, kill, get, getHTMLElementRef, getRef, gets, lift, liftAff, liftEffect, modify, modify_, put, query, queryAll, raise, request, subscribe, subscribe', unsubscribe)
 
 -- | A record produced when the root component in a Halogen UI has been run.
 -- |

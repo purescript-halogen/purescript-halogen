@@ -36,7 +36,7 @@ task initialState =
     }
   where
 
-  render :: Task -> H.ComponentHTML TaskQuery () m
+  render :: Task -> H.ComponentHTML (TaskQuery Unit) () m
   render t =
     HH.li_
       [ HH.input
@@ -59,7 +59,7 @@ task initialState =
           [ HH.text "✖" ]
       ]
 
-  eval :: TaskQuery ~> H.HalogenM Task TaskQuery () TaskMessage m
+  eval :: TaskQuery ~> H.HalogenM Task (TaskQuery Unit) () TaskMessage m
   eval (UpdateDescription desc next) = do
     CMS.modify_ (_ { description = desc })
     pure next
