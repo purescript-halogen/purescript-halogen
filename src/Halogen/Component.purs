@@ -1,8 +1,9 @@
 module Halogen.Component
   ( Component
-  , ComponentArgs
-  , component
   , ComponentSpec
+  , EvalSpec
+  , mkEval
+  , defaultEval
   , mkComponent
   , unComponent
   , hoist
@@ -18,8 +19,9 @@ module Halogen.Component
 import Prelude
 
 import Data.Bifunctor (class Bifunctor, lmap)
+import Data.Coyoneda (unCoyoneda)
 import Data.Foldable (traverse_)
-import Data.Maybe (Maybe)
+import Data.Maybe (Maybe(..), maybe)
 import Data.Symbol (class IsSymbol, SProxy)
 import Data.Tuple (Tuple)
 import Halogen.Data.Slot (Slot, SlotStorage)
@@ -43,84 +45,7 @@ import Unsafe.Coerce (unsafeCoerce)
 -- | - `m` is the effect monad used during evaluation
 data Component (h :: Type -> Type -> Type) (f :: Type -> Type) i o (m :: Type -> Type)
 
--- | The argument record for the `component` function.
--- |
--- | The type variables involved:
--- | - `h` is the type that will be rendered by the component, usually `HTML`
--- | - `s` is the component's state
--- | - `f` is the query algebra; the requests that can be made of the component
--- | - `ps` is the set of slots for addressing child components
--- | - `i` is the input value that will be received when the parent of
--- |    this component renders
--- | - `o` is the type of messages the component can raise
--- | - `m` is the effect monad used during evaluation
--- |
--- | The values in the record:
--- | - `initialState` is a function that accepts an input value and produces the
--- |   state the component will start with. If the input value is unused
--- |   (`Unit`), or irrelevant to the state construction, this will often be
--- |   `const ?someInitialStateValue`.
--- | - `render` is a function that accepts the component's current state and
--- |   produces a value to render (`HTML` usually). The rendered output can
--- |   raise `f Unit` queries that the component will evaluate.
--- | - `eval` handles runing queries to change the state of the component, or
--- |   perform some effect, or return some information about the component's
--- |   state.
--- | - `receiever` is a function that maps an input value to a query. Every time
--- |   the input value changes this query will be passed through to `eval`.
--- |   `const Nothing` can be used here if no action needs to be taken.
--- | - `initializer` specifies an optional action-style query to raise on the
--- |   component when it is first constructed. This allows the component to
--- |   perfom effects that may be necessary to set up the component.
--- | - `finalizer` specifies an optional action-style query to raise on the
--- |   component when it is being removed. This allows the component to perfom
--- |   effects that may be necessary to clean up after the component. This is
--- |   not commonly necessary - subscriptions are automatically ended internally
--- |   by Halogen, it's only required for components that manipulate resources
--- |   outside of Halogen's reach.
-type ComponentArgs h s f ps i o m =
-  { initialState :: i -> s
-  , render :: s -> h (ComponentSlot h ps m (f Unit)) (f Unit)
-  , eval :: f ~> HalogenM s (f Unit) ps o m
-  , receiver :: i -> Maybe (f Unit)
-  , initializer :: Maybe (f Unit)
-  , finalizer :: Maybe (f Unit)
-  }
-
--- | Builds a [`Component`](#t:Component) from a [`ComponentArgs`](#t:ComponentArgs)
--- | record.
-component
-  :: forall h s f ps i o m
-   . ComponentArgs h s f ps i o m
-  -> Component h f i o m
-component = mkComponent <<< go
-  where
-    go :: ComponentArgs h s f ps i o m -> ComponentSpec h s f (f Unit) ps i o m
-    go spec =
-      { initialState: spec.initialState
-      , render: spec.render
-      , eval: case _ of
-          Initialize a -> traverse_ spec.eval spec.initializer $> a
-          Finalize a -> traverse_ spec.eval spec.finalizer $> a
-          Receive i a -> traverse_ spec.eval (spec.receiver i) $> a
-          Handle fa a -> spec.eval fa $> a
-          Request fa -> spec.eval fa
-      }
-
--- | The spec for a component. This differs from [`ComponentArgs`](#t:ComponentArgs)
--- | as it is the representation used by Halogen - the [`component`](#v:component)
--- | function translates a [`ComponentArgs`](#t:ComponentArgs) record into a
--- | `ComponentSpec`.
--- |
--- | Instead of accepting a number of properties that map things to queries,
--- | these cases are instead handled by pattern matching on a `HalogenQ` algebra
--- | that `eval` takes as an argument.
--- |
--- | Components defined with this spec can also separate the public query
--- | algebra for requests from actions that can be handled internally. The other
--- | spec formulation requires these actions to be of type `f Unit`, so in that
--- | case the query algebra must also contain the actions the component can
--- | raise internally.
+-- | The spec for a component.
 -- |
 -- | The type variables involved:
 -- | - `h` is the type that will be rendered by the component, usually `HTML`
@@ -148,6 +73,40 @@ type ComponentSpec h s f act ps i o m =
   { initialState :: i -> s
   , render :: s -> h (ComponentSlot h ps m act) act
   , eval :: HalogenQ f act i ~> HalogenM s act ps o m
+  }
+
+type EvalSpec s f act ps i o m =
+  { handleAction :: act -> HalogenM s act ps o m Unit
+  , handleQuery :: forall a. f a -> HalogenM s act ps o m (Maybe a)
+  , receive :: i -> Maybe act
+  , initialize :: Maybe act
+  , finalize :: Maybe act
+  }
+
+mkEval
+  :: forall s f act ps i o m
+   . EvalSpec s f act ps i o m
+  -> HalogenQ f act i
+  ~> HalogenM s act ps o m
+mkEval args = case _ of
+  Initialize a ->
+    traverse_ args.handleAction args.initialize $> a
+  Finalize a ->
+    traverse_ args.handleAction args.finalize $> a
+  Receive i a ->
+    traverse_ args.handleAction (args.receive i) $> a
+  Handle act a ->
+    args.handleAction act $> a
+  Request req f ->
+    unCoyoneda (\g → map (maybe (f unit) g) <<< args.handleQuery) req
+
+defaultEval :: forall s f act ps i o m. EvalSpec s f act ps i o m
+defaultEval =
+  { handleAction: const (pure unit)
+  , handleQuery: const (pure Nothing)
+  , receive: const Nothing
+  , initialize: Nothing
+  , finalize: Nothing
   }
 
 -- | Constructs a [`Component`](#t:Component) from a [`ComponentSpec`](#t:ComponentSpec).

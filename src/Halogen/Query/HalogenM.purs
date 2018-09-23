@@ -12,8 +12,10 @@ import Control.Monad.Trans.Class (class MonadTrans)
 import Control.Monad.Writer.Class (class MonadTell, tell)
 import Control.Parallel.Class (class Parallel)
 import Data.Bifunctor (lmap)
+import Data.FoldableWithIndex (foldrWithIndex)
 import Data.Map (Map)
-import Data.Maybe (Maybe)
+import Data.Map as Map
+import Data.Maybe (Maybe(..), maybe)
 import Data.Newtype (class Newtype, over)
 import Data.Symbol (class IsSymbol, SProxy)
 import Data.Traversable (traverse)
@@ -116,7 +118,7 @@ query
   -> f a
   -> HalogenM s act ps o m (Maybe a)
 query sym p q = HalogenM $ liftF $ ChildQuery $ CQ.mkChildQueryBox $
-  CQ.ChildQuery (\k -> traverse k <<< Slot.lookup sym p) q identity
+  CQ.ChildQuery (\k → maybe (pure Nothing) k <<< Slot.lookup sym p) q identity
 
 -- | Sends a query to all children of a component at a given slot label.
 queryAll
@@ -128,7 +130,10 @@ queryAll
   -> f a
   -> HalogenM s act ps o m (Map p a)
 queryAll sym q = HalogenM $ liftF $ ChildQuery $ CQ.mkChildQueryBox $
-  CQ.ChildQuery (\k -> traverse k <<< Slot.slots sym) q identity
+  CQ.ChildQuery (\k -> map catMapMaybes <<< traverse k <<< Slot.slots sym) q identity
+
+catMapMaybes ∷ forall k v. Ord k ⇒ Map k (Maybe v) -> Map k v
+catMapMaybes = foldrWithIndex (\k v acc → maybe acc (flip (Map.insert k) acc) v) Map.empty
 
 -- | The ID value associated with a subscription. Allows the subscription to be
 -- | stopped at a later time.

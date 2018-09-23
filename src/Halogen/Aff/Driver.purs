@@ -137,7 +137,7 @@ runUI renderSpec component i = do
     liftEffect (Ref.read disposed) >>=
       if _
         then pure Nothing
-        else Just <$> Eval.evalQ render ref q
+        else Eval.evalQ render ref q
 
   rootHandler :: Ref (M.Map Int (AV.AVar o)) -> o -> Aff Unit
   rootHandler ref message = do

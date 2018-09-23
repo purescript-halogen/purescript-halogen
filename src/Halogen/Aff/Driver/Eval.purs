@@ -15,6 +15,7 @@ import Control.Monad.Fork.Class (fork)
 import Control.Monad.Free (foldFree)
 import Control.Monad.Trans.Class (lift)
 import Control.Parallel (parSequence_, parallel, sequential)
+import Data.Coyoneda (liftCoyoneda)
 import Data.Foldable (traverse_)
 import Data.List (List, (:))
 import Data.List as L
@@ -52,17 +53,17 @@ evalF render ref = case _ of
       st { refs = M.alter (const el) p st.refs }
   Action act -> do
     DriverState st <- liftEffect (Ref.read ref)
-    evalM render ref (st.component.eval (Handle act unit))
+    void $ evalM render ref (st.component.eval (Handle act unit))
 
 evalQ
-  :: forall h r s f act ps i o
+  :: forall h r s f act ps i o a
    . Renderer h r
   -> Ref (DriverState h r s f act ps i o)
-  -> f
-  ~> Aff
+  -> f a
+  -> Aff (Maybe a)
 evalQ render ref q = do
   DriverState st <- liftEffect (Ref.read ref)
-  evalM render ref (st.component.eval (Request q))
+  evalM render ref (st.component.eval (Request (Just <$> liftCoyoneda q) (const Nothing)))
 
 evalM
   :: forall h r s f act ps i o

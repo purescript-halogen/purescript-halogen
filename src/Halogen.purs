@@ -17,7 +17,7 @@ import Prelude
 import Control.Coroutine as CR
 import Data.Lazy (defer)
 import Data.Maybe (Maybe)
-import Halogen.Component (Component, ComponentSpec, ComponentSlot, ComponentSlotSpec, component, mkComponent, hoist, componentSlot, unComponent, unComponentSlot)
+import Halogen.Component (Component, ComponentSpec, ComponentSlot, ComponentSlotSpec, mkEval, defaultEval, mkComponent, hoist, componentSlot, unComponent, unComponentSlot)
 import Halogen.Data.Slot (Slot)
 import Halogen.HTML (ComponentHTML)
 import Halogen.HTML.Core (AttrName(..), ClassName(..), Namespace(..), PropName(..), ElemName(..))

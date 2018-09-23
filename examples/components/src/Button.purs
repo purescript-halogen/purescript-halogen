@@ -1,4 +1,4 @@
-module Example.Components.Button where
+module Example.Components.Button (Slot, Query(..), Message(..), component) where
 
 import Prelude
 
@@ -8,50 +8,49 @@ import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
 
-type State = Boolean
+type Slot = H.Slot Query Message
 
-data Query a
-  = Toggle a
-  | IsOn (Boolean -> a)
+data Query a = IsOn (Boolean -> a)
 
 data Message = Toggled Boolean
 
-type Slot = H.Slot Query Message
+type State = { enabled :: Boolean }
 
-myButton :: forall m. H.Component HH.HTML Query Unit Message m
-myButton =
-  H.component
-    { initialState: const initialState
+data Action = Toggle
+
+component :: forall i m. H.Component HH.HTML Query i Message m
+component =
+  H.mkComponent
+    { initialState
     , render
-    , eval
-    , receiver: const Nothing
-    , initializer: Nothing
-    , finalizer: Nothing
+    , eval: H.mkEval $ H.defaultEval
+        { handleAction = handleAction
+        , handleQuery = handleQuery
+        }
     }
-  where
 
-  initialState :: State
-  initialState = false
+initialState :: forall i. i -> State
+initialState _ = { enabled: false }
 
-  render :: State -> H.ComponentHTML (Query Unit) () m
-  render state =
-    let
-      label = if state then "On" else "Off"
-    in
-      HH.button
-        [ HP.title label
-        , HE.onClick (HE.input_ Toggle)
-        ]
-        [ HH.text label ]
+render :: forall m. State -> H.ComponentHTML Action () m
+render state =
+  let
+    label = if state.enabled then "On" else "Off"
+  in
+    HH.button
+      [ HP.title label
+      , HE.onClick \_ -> Just Toggle
+      ]
+      [ HH.text label ]
 
-  eval :: Query ~> H.HalogenM State (Query Unit) () Message m
-  eval = case _ of
-    Toggle next -> do
-      state <- H.get
-      let nextState = not state
-      H.put nextState
-      H.raise $ Toggled nextState
-      pure next
-    IsOn reply -> do
-      state <- H.get
-      pure (reply state)
+handleAction :: forall m. Action → H.HalogenM State Action () Message m Unit
+handleAction = case _ of
+  Toggle -> do
+    newState <- H.modify \st -> st { enabled = not st.enabled }
+    H.raise (Toggled newState.enabled)
+
+handleQuery :: forall m a. Query a → H.HalogenM State Action () Message m (Maybe a)
+handleQuery = case _ of
+  IsOn k → do
+    enabled ← H.gets _.enabled
+    pure (Just (k enabled))
