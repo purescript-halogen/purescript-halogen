@@ -95,9 +95,9 @@ mkEval args = case _ of
     traverse_ args.handleAction args.finalize $> a
   Receive i a ->
     traverse_ args.handleAction (args.receive i) $> a
-  Handle act a ->
+  Action act a ->
     args.handleAction act $> a
-  Request req f ->
+  Query req f ->
     unCoyoneda (\g → map (maybe (f unit) g) <<< args.handleQuery) req
 
 defaultEval :: forall s f act ps i o m. EvalSpec s f act ps i o m

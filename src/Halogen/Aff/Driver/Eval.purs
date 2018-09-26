@@ -31,8 +31,9 @@ import Halogen.Aff.Driver.State (DriverState(..), DriverStateRef(..), LifecycleH
 import Halogen.Query.ChildQuery as CQ
 import Halogen.Query.EventSource as ES
 import Halogen.Query.HalogenM (ForkId(..), HalogenAp(..), HalogenF(..), HalogenM(..), SubscriptionId(..))
-import Halogen.Query.HalogenQ (HalogenQ(..))
-import Halogen.Query.Input (Input(..), RefLabel(..))
+import Halogen.Query.HalogenQ as HQ
+import Halogen.Query.Input (Input)
+import Halogen.Query.Input as Input
 import Unsafe.Reference (unsafeRefEq)
 
 type Renderer h r
@@ -48,12 +49,12 @@ evalF
   -> Input act
   -> Aff Unit
 evalF render ref = case _ of
-  RefUpdate (RefLabel p) el -> do
+  Input.RefUpdate (Input.RefLabel p) el -> do
     liftEffect $ flip Ref.modify_ ref $ mapDriverState \st ->
       st { refs = M.alter (const el) p st.refs }
-  Action act -> do
+  Input.Action act -> do
     DriverState st <- liftEffect (Ref.read ref)
-    void $ evalM render ref (st.component.eval (Handle act unit))
+    evalM render ref (st.component.eval (HQ.Action act unit))
 
 evalQ
   :: forall h r s f act ps i o a
@@ -63,7 +64,7 @@ evalQ
   -> Aff (Maybe a)
 evalQ render ref q = do
   DriverState st <- liftEffect (Ref.read ref)
-  evalM render ref (st.component.eval (Request (Just <$> liftCoyoneda q) (const Nothing)))
+  evalM render ref (st.component.eval (HQ.Query (Just <$> liftCoyoneda q) (const Nothing)))
 
 evalM
   :: forall h r s f act ps i o
@@ -103,7 +104,7 @@ evalM render initRef (HalogenM hm) = foldFree (go initRef) hm
             act <- CR.await
             subs <- lift $ liftEffect (Ref.read subscriptions)
             when ((M.member sid <$> subs) == Just true) do
-              _ <- lift $ fork $ evalF render ref (Action act)
+              _ <- lift $ fork $ evalF render ref (Input.Action act)
               consumer
         liftEffect $ Ref.modify_ (map (M.insert sid done)) subscriptions
         CR.runProcess (consumer `CR.pullFrom` producer)
@@ -140,7 +141,7 @@ evalM render initRef (HalogenM hm) = foldFree (go initRef) hm
       forkMap <- liftEffect (Ref.read forks)
       traverse_ (killFiber (error "Cancelled")) (M.lookup fid forkMap)
       pure a
-    GetRef (RefLabel p) k -> do
+    GetRef (Input.RefLabel p) k -> do
       DriverState { component, refs } <- liftEffect (Ref.read ref)
       pure $ k $ M.lookup p refs
 
