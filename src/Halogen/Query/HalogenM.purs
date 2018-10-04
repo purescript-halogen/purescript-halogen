@@ -68,6 +68,8 @@ derive newtype instance applyHalogenM :: Apply (HalogenM' s act ps o m)
 derive newtype instance applicativeHalogenM :: Applicative (HalogenM' s act ps o m)
 derive newtype instance bindHalogenM :: Bind (HalogenM' s act ps o m)
 derive newtype instance monadHalogenM :: Monad (HalogenM' s act ps o m)
+derive newtype instance SemigroupHalogenM :: Semigroup a => Semigroup (HalogenM' s act ps o m a)
+derive newtype instance MonoidHalogenM :: Monoid a => Monoid (HalogenM' s act ps o m a)
 
 instance monadEffectHalogenM :: MonadEffect m => MonadEffect (HalogenM' s act ps o m) where
   liftEffect = HalogenM <<< liftF <<< Lift <<< liftEffect
