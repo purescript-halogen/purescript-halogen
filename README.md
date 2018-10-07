@@ -5,6 +5,8 @@
 
 A declarative, type-safe UI library for PureScript.
 
+> Note: This repository uses tagged releases. For that reason, the master branch does not necessarily represent the current release. To ensure you are viewing the correct documentation and examples, consider browsing the repository at the tag of the release you have specified in your bower or psc-package file.
+
 ## Getting Started
 
 - Read the [guide](https://github.com/slamdata/purescript-halogen/tree/v4.0.0/docs/)
