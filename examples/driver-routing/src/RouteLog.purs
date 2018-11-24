@@ -8,40 +8,38 @@ import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Properties as HP
 
-type State = { history :: Array String }
+type Slot = H.Slot Query Void
 
 data Query a = ChangeRoute String a
 
-component :: forall m. H.Component HH.HTML Query Unit Void m
+type State = { history :: Array String }
+
+component :: forall i o m. H.Component HH.HTML Query i o m
 component =
-  H.component
-    { initialState: const initialState
+  H.mkComponent
+    { initialState
     , render
-    , eval
-    , receiver: const Nothing
-    , initializer: Nothing
-    , finalizer: Nothing
+    , eval: H.mkEval $ H.defaultEval { handleQuery = handleQuery }
     }
-  where
 
-  initialState :: State
-  initialState = { history: [] }
+initialState :: forall i. i -> State
+initialState _ = { history: [] }
 
-  render :: State -> H.ComponentHTML (Query Unit) () m
-  render state =
-    HH.div_
-      [ HH.p_ [ HH.text "Change the URL hash or choose an anchor link..." ]
-      , HH.ul_
-          [ HH.li_ [ HH.a [ HP.href "#link-a" ] [ HH.text "Link A" ] ]
-          , HH.li_ [ HH.a [ HP.href "#link-b" ] [ HH.text "Link B" ] ]
-          , HH.li_ [ HH.a [ HP.href "#link-c" ] [ HH.text "Link C" ] ]
-          ]
-      , HH.p_ [ HH.text "...to see it logged below:" ]
-      , HH.ol_ $ map (\msg -> HH.li_ [ HH.text msg ]) state.history
-      ]
+render :: forall act m. State -> H.ComponentHTML act () m
+render state =
+  HH.div_
+    [ HH.p_ [ HH.text "Change the URL hash or choose an anchor link..." ]
+    , HH.ul_
+        [ HH.li_ [ HH.a [ HP.href "#link-a" ] [ HH.text "Link A" ] ]
+        , HH.li_ [ HH.a [ HP.href "#link-b" ] [ HH.text "Link B" ] ]
+        , HH.li_ [ HH.a [ HP.href "#link-c" ] [ HH.text "Link C" ] ]
+        ]
+    , HH.p_ [ HH.text "...to see it logged below:" ]
+    , HH.ol_ $ map (\msg -> HH.li_ [ HH.text msg ]) state.history
+    ]
 
-  eval :: Query ~> H.HalogenM State (Query Unit) () Void m
-  eval = case _ of
-    ChangeRoute msg next -> do
-      H.modify_ \st -> { history: st.history `A.snoc` msg }
-      pure next
+handleQuery :: forall act o m a. Query a -> H.HalogenM State act () o m (Maybe a)
+handleQuery = case _ of
+  ChangeRoute msg a -> do
+    H.modify_ \st -> { history: st.history `A.snoc` msg }
+    pure (Just a)
