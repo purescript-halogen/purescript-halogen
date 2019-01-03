@@ -40,7 +40,6 @@
     "purescript-nullable": "^4.0.0",
     "purescript-ordered-collections": "^1.0.0",
     "purescript-parallel": "^4.0.0",
-    "purescript-profunctor-lenses": "^4.0.0",
     "purescript-profunctor": "^4.0.0",
     "purescript-transformers": "^4.1.0",
     "purescript-unsafe-coerce": "^4.0.0",
