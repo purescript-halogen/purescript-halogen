@@ -16,6 +16,7 @@ A declarative, type-safe UI library for PureScript.
   - [Rudimentary routing](https://github.com/slamdata/purescript-halogen/tree/v4.0.0/examples/driver-routing/)
   - [TODO list](https://github.com/slamdata/purescript-halogen/tree/v4.0.0/examples/todo/)
   - [Ace editor](https://github.com/slamdata/purescript-halogen/tree/v4.0.0/examples/ace/) (external component integration)
+- Walk through the [Real World Halogen](https://github.com/thomashoneyman/purescript-halogen-realworld) project, which demonstrates real-world patterns like authentication, routing, and resource management in Halogen
 - Clone the [template project](https://github.com/slamdata/purescript-halogen-template) and give it a try!
 - For related projects, take a look at the [ecosystem page in the Wiki](https://github.com/slamdata/purescript-halogen/wiki/Halogen-Ecosystem).
 
