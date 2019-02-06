@@ -50,6 +50,7 @@
     "purescript-ace": "^7.0.0",
     "purescript-aff-coroutines": "^7.0.0",
     "purescript-affjax": "^9.0.0",
+    "purescript-numbers": "^6.0.0",
     "purescript-random": "^4.0.0",
     "purescript-web-socket": "^2.0.0",
     "purescript-assert": "^4.0.0"
