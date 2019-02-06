@@ -1,6 +1,6 @@
 ## Profunctor example
 
-This example uses a [```ProComponent```](https://github.com/therealnicksaunders/purescript-halogen/blob/master/src/Halogen/Component/Profunctor.purs#L11) wrapper to map the input and output of a component to different types.
+This example uses a [```ProComponent```](https://github.com/slamdata/purescript-halogen/blob/master/src/Halogen/Component/Profunctor.purs#L11) wrapper to map the input and output of a component to different types.
 
 ### Building
 
