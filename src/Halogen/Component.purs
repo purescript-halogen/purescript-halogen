@@ -1,12 +1,12 @@
 module Halogen.Component
   ( Component
   , ComponentSpec
-  , EvalSpec
-  , mkEval
-  , defaultEval
   , mkComponent
   , unComponent
   , hoist
+  , EvalSpec
+  , mkEval
+  , defaultEval
   , ComponentSlotBox
   , ComponentSlot(..)
   , componentSlot
@@ -84,42 +84,6 @@ type ComponentSpec surface state query action slots input output m =
   , eval :: HalogenQ query action input ~> HalogenM state action slots output m
   }
 
-type EvalSpec state query action slots input output m =
-  { handleAction :: action -> HalogenM state action slots output m Unit
-  , handleQuery :: forall a. query a -> HalogenM state action slots output m (Maybe a)
-  , receive :: input -> Maybe action
-  , initialize :: Maybe action
-  , finalize :: Maybe action
-  }
-
-mkEval
-  :: forall state query action slots input output m
-   . EvalSpec state query action slots input output m
-  -> HalogenQ query action input
-  ~> HalogenM state action slots output m
-mkEval args = case _ of
-  Initialize a ->
-    traverse_ args.handleAction args.initialize $> a
-  Finalize a ->
-    traverse_ args.handleAction args.finalize $> a
-  Receive i a ->
-    traverse_ args.handleAction (args.receive i) $> a
-  Action action a ->
-    args.handleAction action $> a
-  Query req f ->
-    unCoyoneda (\g → map (maybe (f unit) g) <<< args.handleQuery) req
-
-defaultEval
-  :: forall state query action slots input output m
-   . EvalSpec state query action slots input output m
-defaultEval =
-  { handleAction: const (pure unit)
-  , handleQuery: const (pure Nothing)
-  , receive: const Nothing
-  , initialize: Nothing
-  , finalize: Nothing
-  }
-
 -- | Constructs a [`Component`](#t:Component) from a [`ComponentSpec`](#t:ComponentSpec).
 mkComponent
   :: forall surface state query action slots input output m
@@ -156,6 +120,64 @@ hoist nat = unComponent \c ->
     , render: lmap (hoistSlot nat) <<< c.render
     , eval: HM.hoist nat <<< c.eval
     }
+
+-- | The spec record that `mkEval` accepts to construct a component `eval`
+-- | function.
+-- |
+-- | It's not a requirement to use `mkEval`, and sometimes it's preferrable
+-- | to write a component `eval` function from scratch, but often `mkEval` is
+-- | more convenient for common cases.
+-- |
+-- | See below for more details about `mkEval` and `defaultEval`.
+type EvalSpec state query action slots input output m =
+  { handleAction :: action -> HalogenM state action slots output m Unit
+  , handleQuery :: forall a. query a -> HalogenM state action slots output m (Maybe a)
+  , receive :: input -> Maybe action
+  , initialize :: Maybe action
+  , finalize :: Maybe action
+  }
+
+-- | A default value for `mkEval` that will result in an `eval` that nothing at
+-- | all - all incoming actions and queries will be ignored, and no receiver,
+-- | initializer, or finalizer will be specified.
+-- |
+-- | Usually this will be used with record update syntax to override fields to
+-- | specify things as needed. If a component only needs to handle actions,
+-- | for instance, a usage might be something like this:
+-- |
+-- | ``` purescript
+-- | H.mkComponent
+-- |   { initialState
+-- |   , render
+-- |   , eval: H.mkEval (H.defaultEval { handleAction = ?handleAction })
+-- |   }
+-- | ```
+defaultEval :: forall state query action slots input output m. EvalSpec state query action slots input output m
+defaultEval =
+  { handleAction: const (pure unit)
+  , handleQuery: const (pure Nothing)
+  , receive: const Nothing
+  , initialize: Nothing
+  , finalize: Nothing
+  }
+
+-- | Accepts an `EvalSpec` to produce an `eval` function for a component.
+mkEval
+  :: forall state query action slots input output m
+   . EvalSpec state query action slots input output m
+  -> HalogenQ query action input
+  ~> HalogenM state action slots output m
+mkEval args = case _ of
+  Initialize a ->
+    traverse_ args.handleAction args.initialize $> a
+  Finalize a ->
+    traverse_ args.handleAction args.finalize $> a
+  Receive i a ->
+    traverse_ args.handleAction (args.receive i) $> a
+  Action action a ->
+    args.handleAction action $> a
+  Query req f ->
+    unCoyoneda (\g → map (maybe (f unit) g) <<< args.handleQuery) req
 
 -- | A slot for a child component in a component's rendered content.
 data ComponentSlotBox
