@@ -27,33 +27,30 @@ derive newtype instance showMessage :: Show Message
 
 component :: H.Component TD.TestRenderProduct Query Unit Message Aff
 component =
-  H.component
+  H.mkComponent
     { initialState: const Nothing
     , render: TD.render
-    , eval
-    , receiver: const Nothing
-    , initializer: Nothing
-    , finalizer: Nothing
+    , eval: H.mkEval $ H.defaultEval { handleQuery = handleQuery }
     }
-  where
-  eval :: Query ~> H.HalogenM State (Query Unit) () Message Aff
-  eval = case _ of
-    StartFork a -> do
-      let
-        loop = do
-          H.liftAff $ Aff.delay (Aff.Milliseconds 100.0)
-          H.raise (Message "Progress")
-          loop
-      H.raise (Message "Starting")
-      fid <- H.fork loop
-      H.put (Just fid)
-      pure a
-    KillFork a -> do
-      H.get >>= traverse_ \fid -> do
-        H.put Nothing
-        H.kill fid
-      H.raise (Message "Killed")
-      pure a
+
+handleQuery :: forall a. Query a -> H.HalogenM State (Query Unit) () Message Aff (Maybe a)
+handleQuery = case _ of
+  StartFork a -> do
+    let
+      loop = do
+        H.liftAff $ Aff.delay (Aff.Milliseconds 100.0)
+        H.raise (Message "Progress")
+        loop
+    H.raise (Message "Starting")
+    fid <- H.fork loop
+    H.put (Just fid)
+    pure (Just a)
+  KillFork a -> do
+    H.get >>= traverse_ \fid -> do
+      H.put Nothing
+      H.kill fid
+    H.raise (Message "Killed")
+    pure (Just a)
 
 testForkKill :: Aff Unit
 testForkKill = do
