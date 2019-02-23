@@ -29,8 +29,8 @@ import Halogen.Query (Action, HalogenF(..), HalogenM(..), HalogenQ(..), RefLabel
 -- | - `subscribe` allows external consumers to receive messages raised by the
 -- |   root component
 -- | - `dispose` stops running the UI and finalizes the root component
-type HalogenIO f o m =
-  { query :: forall a. f a -> m (Maybe a)
-  , subscribe :: CR.Consumer o m Unit -> m Unit
+type HalogenIO query output m =
+  { query :: forall a. query a -> m (Maybe a)
+  , subscribe :: CR.Consumer output m Unit -> m Unit
   , dispose :: m Unit
   }

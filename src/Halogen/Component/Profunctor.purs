@@ -8,21 +8,21 @@ import Data.Profunctor (class Profunctor, dimap)
 import Halogen.Component (Component, ComponentSpec, mkComponent, unComponent)
 import Halogen.Query.HalogenM as HM
 
-newtype ProComponent h f m i o = ProComponent (Component h f i o m)
+newtype ProComponent surface query m input output = ProComponent (Component surface query input output m)
 
-derive instance newtypeProComponent :: Newtype (ProComponent h f m i o) _
+derive instance newtypeProComponent :: Newtype (ProComponent surface query m input output) _
 
-instance profunctorProComponent :: Functor f => Profunctor (ProComponent h f m) where
+instance profunctorProComponent :: Functor query => Profunctor (ProComponent surface query m) where
   dimap f g (ProComponent c) =
     ProComponent (unComponent (mkComponent <<< dimapSpec f g) c)
 
 dimapSpec
-  :: forall h s f act ps i j o p m
-   . Functor f
-  => (j -> i)
-  -> (o -> p)
-  -> ComponentSpec h s f act ps i o m
-  -> ComponentSpec h s f act ps j p m
+  :: forall surface state query action slots input input' output output' m
+   . Functor query
+  => (input' -> input)
+  -> (output -> output')
+  -> ComponentSpec surface state query action slots input output m
+  -> ComponentSpec surface state query action slots input' output' m
 dimapSpec f g spec =
   { initialState: spec.initialState <<< f
   , render: spec.render
