@@ -1,8 +1,8 @@
 -- | Functions and types used to describe the `HalogenF` algebra used in a
 -- | component's `eval` function.
 module Halogen.Query
-  ( Action
-  , action
+  ( Tell
+  , tell
   , Request
   , request
   , getHTMLElementRef
@@ -25,57 +25,58 @@ import Halogen.Query.Input (RefLabel(..))
 import Web.HTML.HTMLElement (HTMLElement)
 import Web.HTML.HTMLElement as HTMLElement
 
--- | Type synonym for an "action-style" query - An action only causes effects
--- | and has no result value.
+-- | Type synonym for a "tell-style" query - queries that only cause effects,
+-- | but that cannot receive a return value.
 -- |
--- | In a query algebra, an action is any constructor that carries the algebra's
--- | type variable as a value. For example:
+-- | In a query algebra, a tell constructor carries the algebra's type variable
+-- | as its last argument. For example:
 -- |
 -- | ``` purescript
 -- | data Query a
--- |   = SomeAction a
--- |   | SomeOtherAction String a
--- |   | NotAnAction (Boolean -> a)
+-- |   = SomeTell a
+-- |   | SomeOtherTell String a
+-- |   | NotATell (Boolean -> a)
 -- | ```
 -- |
--- | Both `SomeAction` and `SomeOtherAction` have `a` as a value so they are
--- | considered actions, whereas `NotAnAction` has `a` as the result of a
--- | function so is considered to be a "request" ([see below](#Request)).
-type Action f = Unit -> f Unit
+-- | Both `SomeTell` and `SomeOtherTell` carry a plain `a` as a value, whereas
+-- | `NotATell` has `a` as the result of a function so is considered to be a
+-- | "request" ([see below](#Request)).
+type Tell f = Unit -> f Unit
 
--- | Takes a data constructor of query algebra `f` and creates an action.
+-- | Takes a data constructor of query algebra `f` and creates a tell query.
 -- |
 -- | For example:
 -- |
 -- | ```purescript
 -- | data Query a = Tick a
 -- |
--- | sendTick :: forall o. HalogenIO Query o Aff -> Aff (Maybe Unit)
--- | sendTick app = app.query (action Tick)
+-- | sendTick :: forall o. H.HalogenIO Query o Aff -> Aff (Maybe Unit)
+-- | sendTick app = app.query (H.tell Tick)
 -- | ```
-action :: forall f. Action f -> f Unit
-action act = act unit
+tell :: forall f. Tell f -> f Unit
+tell act = act unit
 
--- | Type synonym for an "request-style" query - a request can cause effects as
--- | well as fetching some information from a component.
+-- | Type synonym for an "request-style" query - queries that can cause effects
+-- | as well as fetching some information from a component.
 -- |
--- | In a query algebra, an action is any constructor that carries the algebra's
--- | type variable as the return value of a function. For example:
+-- | In a query algebra, a request constructor carries the algebra's type
+-- | variable as the return value of a function as its last argument. For
+-- | example:
 -- |
 -- | ``` purescript
 -- | data Query a = SomeRequest (Boolean -> a)
 -- | ```
 type Request f a = (a -> a) -> f a
 
--- | Takes a data constructor of query algebra `f` and creates a request.
+-- | Takes a data constructor of query algebra `f` and creates a request query.
 -- |
 -- | For example:
 -- |
 -- | ```purescript
 -- | data Query a = GetTickCount (Int -> a)
 -- |
--- | getTickCount :: forall o. HalogenIO Query o Aff -> Aff (Maybe Int)
--- | getTickCount app = app.query (request GetTickCount)
+-- | getTickCount :: forall o. H.HalogenIO Query o Aff -> Aff (Maybe Int)
+-- | getTickCount app = app.query (H.request GetTickCount)
 -- | ```
 request :: forall f a. Request f a -> f a
 request req = req identity

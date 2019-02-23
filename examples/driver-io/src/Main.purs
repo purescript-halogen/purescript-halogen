@@ -24,7 +24,7 @@ main = HA.runHalogenAff do
   state0 ← io.query $ H.request B.IsOn
   liftEffect $ log $ "The button state is currently: " <> show state0
 
-  void $ io.query $ H.action (B.SetState true)
+  void $ io.query $ H.tell (B.SetState true)
 
   state1 ← io.query $ H.request B.IsOn
   liftEffect $ log $ "The button state is now: " <> show state1

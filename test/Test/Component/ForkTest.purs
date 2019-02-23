@@ -62,9 +62,9 @@ testForkKill = do
     H.liftEffect $ Ref.modify_ (msg : _) logRef
     pure Nothing
 
-  _ <- io.query (H.action StartFork)
+  _ <- io.query (H.tell StartFork)
   Aff.delay (Aff.Milliseconds 350.0)
-  _ <- io.query (H.action KillFork)
+  _ <- io.query (H.tell KillFork)
 
   -- TODO: revisit this: why do we need to wait to receive `raise`d messages
   -- from the component, if the `raise` occurs after any bind?
@@ -94,7 +94,7 @@ testFinalize = do
     H.liftEffect $ Ref.modify_ (msg : _) logRef
     pure Nothing
 
-  _ <- io.query (H.action StartFork)
+  _ <- io.query (H.tell StartFork)
   io.dispose
   Aff.delay (Aff.Milliseconds 350.0)
 

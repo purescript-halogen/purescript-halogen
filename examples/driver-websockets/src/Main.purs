@@ -44,7 +44,7 @@ wsProducer socket = CRA.produce \emitter -> do
 -- producer.
 wsConsumer :: (forall a. Log.Query a -> Aff (Maybe a)) -> CR.Consumer String Aff Unit
 wsConsumer query = CR.consumer \msg -> do
-  void $ query $ H.action $ Log.ReceiveMessage msg
+  void $ query $ H.tell $ Log.ReceiveMessage msg
   pure Nothing
 
 -- A consumer coroutine that takes output messages from our component IO
