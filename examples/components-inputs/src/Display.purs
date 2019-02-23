@@ -5,38 +5,35 @@ import Prelude
 import Data.Maybe (Maybe(..))
 import Halogen as H
 import Halogen.HTML as HH
-import Halogen.HTML.Events as HE
+
+type Slot p = forall q. H.Slot q Void p
 
 type Input = Int
 
 type State = Int
 
-data Query a = HandleInput Int a
+data Action = HandleInput Int
 
-type Slot = H.Slot Query Void
-
-component :: forall m. H.Component HH.HTML Query Input Void m
+component :: forall q o m. H.Component HH.HTML q Input o m
 component =
-  H.component
+  H.mkComponent
     { initialState: identity
     , render
-    , eval
-    , receiver: HE.input HandleInput
-    , initializer: Nothing
-    , finalizer: Nothing
+    , eval: H.mkEval $ H.defaultEval
+        { handleAction = handleAction
+        , receive = Just <<< HandleInput
+        }
     }
-  where
 
-  render :: State -> H.ComponentHTML Query () m
-  render state =
-    HH.div_
-      [ HH.text "My input value is:"
-      , HH.strong_ [ HH.text (show state) ]
-      ]
+render :: forall m. State -> H.ComponentHTML Action () m
+render state =
+  HH.div_
+    [ HH.text "My input value is:"
+    , HH.strong_ [ HH.text (show state) ]
+    ]
 
-  eval :: Query ~> H.HalogenM State Query () Void m
-  eval = case _ of
-    HandleInput n next -> do
-      oldN <- H.get
-      when (oldN /= n) $ H.put n
-      pure next
+handleAction :: forall o m. Action -> H.HalogenM State Action () o m Unit
+handleAction = case _ of
+  HandleInput n -> do
+    oldN <- H.get
+    when (oldN /= n) $ H.put n

@@ -40,11 +40,11 @@ wsProducer socket = CRA.produce \emitter -> do
       either (const Nothing) Just <<< runExcept <<< read <<< unsafeToForeign
 
 -- A consumer coroutine that takes the `query` function from our component IO
--- record and sends `AddMessage` queries in when it receives inputs from the
+-- record and sends `ReceiveMessage` queries in when it receives inputs from the
 -- producer.
 wsConsumer :: (forall a. Log.Query a -> Aff (Maybe a)) -> CR.Consumer String Aff Unit
 wsConsumer query = CR.consumer \msg -> do
-  void $ query $ H.action $ Log.AddMessage msg
+  void $ query $ H.action $ Log.ReceiveMessage msg
   pure Nothing
 
 -- A consumer coroutine that takes output messages from our component IO

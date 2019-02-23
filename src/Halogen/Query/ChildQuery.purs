@@ -2,6 +2,7 @@ module Halogen.Query.ChildQuery where
 
 import Prelude
 
+import Data.Maybe (Maybe)
 import Halogen.Data.Slot (SlotStorage)
 import Unsafe.Coerce (unsafeCoerce)
 
@@ -9,7 +10,7 @@ data ChildQueryBox (ps :: # Type) a
 
 data ChildQuery ps g o a f b =
   ChildQuery
-    (forall slot m. Applicative m => (slot g o -> m b) -> SlotStorage ps slot -> m (f b))
+    (forall slot m. Applicative m => (slot g o -> m (Maybe b)) -> SlotStorage ps slot -> m (f b))
     (g b)
     (f b -> a)
 

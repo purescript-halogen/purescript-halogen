@@ -2,66 +2,67 @@ module Example.Interpret.Main where
 
 import Prelude
 
-import Control.Monad.Free (Free, liftF, foldFree)
-import Data.Maybe (Maybe(..))
+import Control.Monad.Reader (ReaderT, ask, runReaderT)
+import Control.Monad.Trans.Class (lift)
+import Data.Maybe (Maybe(..), fromMaybe)
 import Effect (Effect)
 import Effect.Aff (Aff)
-import Effect.Console (log)
-import Halogen (liftEffect)
 import Halogen as H
 import Halogen.Aff as HA
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.VDom.Driver (runUI)
+import Network.HTTP.Affjax as AX
+import Network.HTTP.Affjax.Response as AXResponse
 
-type State = { on :: Boolean }
+type Config = { githubToken :: Maybe String }
 
-data Query a = ToggleState a
+type State = { userData :: Maybe String }
 
-data MyAlgebra a = Log String a
-type MyMonad = Free MyAlgebra
+data Action = FetchData
 
-output :: String -> MyMonad Unit
-output msg = liftF (Log msg unit)
-
-ui :: H.Component HH.HTML Query Unit Void MyMonad
+ui :: forall f i o. H.Component HH.HTML f i o (ReaderT Config Aff)
 ui =
-  H.component
+  H.mkComponent
     { initialState: const initialState
     , render
-    , eval
-    , receiver: const Nothing
-    , initializer: Nothing
-    , finalizer: Nothing
+    , eval: H.mkEval (H.defaultEval { handleAction = handleAction })
     }
   where
 
   initialState :: State
-  initialState = { on: false }
+  initialState = { userData: Nothing }
 
-  render :: forall m. State -> H.ComponentHTML Query () m
+  render :: forall m. State -> H.ComponentHTML Action () m
   render state =
     HH.div_
       [ HH.h1_
-          [ HH.text "Toggle Button" ]
+          [ HH.text "Fetch user data" ]
       , HH.button
-          [ HE.onClick (HE.input_ ToggleState) ]
-          [ HH.text (if state.on then "On" else "Off") ]
+          [ HE.onClick \_ -> Just FetchData ]
+          [ HH.text "Fetch" ]
+      , HH.p_
+          [ HH.text (fromMaybe "No user data" state.userData) ]
       ]
 
-  eval :: Query ~> H.HalogenM State Query () Void MyMonad
-  eval (ToggleState next) = do
-    H.modify_ (\state -> { on: not state.on })
-    H.lift $ output "State was toggled"
-    pure next
+searchUser :: String -> ReaderT Config Aff String
+searchUser q = do
+  { githubToken } <- ask
+  { response } <- case githubToken of
+    Nothing ->
+      lift (AX.get AXResponse.string ("https://api.github.com/users/" <> q))
+    Just token ->
+      lift (AX.get AXResponse.string ("https://api.github.com/users/" <> q <> "?access_token=" <> token))
+  pure response
 
-ui' :: H.Component HH.HTML Query Unit Void Aff
-ui' = H.hoist (foldFree evalMyAlgebra) ui
-  where
-  evalMyAlgebra :: MyAlgebra ~> Aff
-  evalMyAlgebra (Log msg next) = do
-    liftEffect $ log msg
-    pure next
+handleAction :: forall o. Action -> H.HalogenM State Action () o (ReaderT Config Aff) Unit
+handleAction = case _ of
+  FetchData -> do
+    userData <- lift (searchUser "kRITZCREEK")
+    H.put { userData: Just userData }
+
+ui' :: forall f i o. H.Component HH.HTML f i o Aff
+ui' = H.hoist (\app -> runReaderT app { githubToken: Nothing }) ui
 
 main :: Effect Unit
 main = HA.runHalogenAff do

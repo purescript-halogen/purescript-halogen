@@ -12,8 +12,10 @@ import Control.Monad.Trans.Class (class MonadTrans)
 import Control.Monad.Writer.Class (class MonadTell, tell)
 import Control.Parallel.Class (class Parallel)
 import Data.Bifunctor (lmap)
+import Data.FoldableWithIndex (foldrWithIndex)
 import Data.Map (Map)
-import Data.Maybe (Maybe)
+import Data.Map as Map
+import Data.Maybe (Maybe(..), maybe)
 import Data.Newtype (class Newtype, over)
 import Data.Symbol (class IsSymbol, SProxy)
 import Data.Traversable (traverse)
@@ -37,7 +39,7 @@ data HalogenF s act ps o m a
   | ChildQuery (CQ.ChildQueryBox ps a)
   | Raise o a
   | Par (HalogenAp s act ps o m a)
-  | Fork (HalogenM' s act ps o m Unit) (ForkId -> a)
+  | Fork (HalogenM s act ps o m Unit) (ForkId -> a)
   | Kill ForkId a
   | GetRef RefLabel (Maybe Element -> a)
 
@@ -55,52 +57,46 @@ instance functorHalogenF :: Functor m => Functor (HalogenF s act ps o m) where
     GetRef p k -> GetRef p (f <<< k)
 
 -- | The Halogen component eval effect monad.
-newtype HalogenM' s act ps o m a = HalogenM (Free (HalogenF s act ps o m) a)
+newtype HalogenM s act ps o m a = HalogenM (Free (HalogenF s act ps o m) a)
 
--- | The Halogen component eval effect monad, for components constructed with
--- | the `component` smart constructor. This is more constrained than
--- | `HalogenM'` as it only allows for query algebra actions (kind
--- | `Type -> Type` rather than `Type`).
-type HalogenM s act = HalogenM' s (act Unit)
+derive newtype instance functorHalogenM :: Functor (HalogenM s act ps o m)
+derive newtype instance applyHalogenM :: Apply (HalogenM s act ps o m)
+derive newtype instance applicativeHalogenM :: Applicative (HalogenM s act ps o m)
+derive newtype instance bindHalogenM :: Bind (HalogenM s act ps o m)
+derive newtype instance monadHalogenM :: Monad (HalogenM s act ps o m)
 
-derive newtype instance functorHalogenM :: Functor (HalogenM' s act ps o m)
-derive newtype instance applyHalogenM :: Apply (HalogenM' s act ps o m)
-derive newtype instance applicativeHalogenM :: Applicative (HalogenM' s act ps o m)
-derive newtype instance bindHalogenM :: Bind (HalogenM' s act ps o m)
-derive newtype instance monadHalogenM :: Monad (HalogenM' s act ps o m)
-
-instance monadEffectHalogenM :: MonadEffect m => MonadEffect (HalogenM' s act ps o m) where
+instance monadEffectHalogenM :: MonadEffect m => MonadEffect (HalogenM s act ps o m) where
   liftEffect = HalogenM <<< liftF <<< Lift <<< liftEffect
 
-instance monadAffHalogenM :: MonadAff m => MonadAff (HalogenM' s act ps o m) where
+instance monadAffHalogenM :: MonadAff m => MonadAff (HalogenM s act ps o m) where
   liftAff = HalogenM <<< liftF <<< Lift <<< liftAff
 
-instance parallelHalogenM :: Parallel (HalogenAp s act ps o m) (HalogenM' s act ps o m) where
+instance parallelHalogenM :: Parallel (HalogenAp s act ps o m) (HalogenM s act ps o m) where
   parallel = HalogenAp <<< liftFreeAp
   sequential = HalogenM <<< liftF <<< Par
 
-instance monadTransHalogenM :: MonadTrans (HalogenM' s act ps o) where
+instance monadTransHalogenM :: MonadTrans (HalogenM s act ps o) where
   lift = HalogenM <<< liftF <<< Lift
 
-instance monadRecHalogenM :: MonadRec (HalogenM' s act ps o m) where
+instance monadRecHalogenM :: MonadRec (HalogenM s act ps o m) where
   tailRecM k a = k a >>= case _ of
     Loop x -> tailRecM k x
     Done y -> pure y
 
-instance monadStateHalogenM :: MonadState s (HalogenM' s act ps o m) where
+instance monadStateHalogenM :: MonadState s (HalogenM s act ps o m) where
   state = HalogenM <<< liftF <<< State
 
-instance monadAskHalogenM :: MonadAsk r m => MonadAsk r (HalogenM' s act ps o m) where
+instance monadAskHalogenM :: MonadAsk r m => MonadAsk r (HalogenM s act ps o m) where
   ask = HalogenM $ liftF $ Lift ask
 
-instance monadTellHalogenM :: MonadTell w m => MonadTell w (HalogenM' s act ps o m) where
+instance monadTellHalogenM :: MonadTell w m => MonadTell w (HalogenM s act ps o m) where
   tell = HalogenM <<< liftF <<< Lift <<< tell
 
-instance monadThrowHalogenM :: MonadThrow e m => MonadThrow e (HalogenM' s act ps o m) where
+instance monadThrowHalogenM :: MonadThrow e m => MonadThrow e (HalogenM s act ps o m) where
   throwError = HalogenM <<< liftF <<< Lift <<< throwError
 
 -- | An applicative-only version of `HalogenM` to allow for parallel evaluation.
-newtype HalogenAp s act ps o m a = HalogenAp (FreeAp (HalogenM' s act ps o m) a)
+newtype HalogenAp s act ps o m a = HalogenAp (FreeAp (HalogenM s act ps o m) a)
 
 derive instance newtypeHalogenAp :: Newtype (HalogenAp s f ps o m a) _
 derive newtype instance functorHalogenAp :: Functor (HalogenAp s f ps o m)
@@ -108,7 +104,7 @@ derive newtype instance applyHalogenAp :: Apply (HalogenAp s f ps o m)
 derive newtype instance applicativeHalogenAp :: Applicative (HalogenAp s f ps o m)
 
 -- | Raises an output message for the component.
-raise :: forall s act ps o m. o -> HalogenM' s act ps o m Unit
+raise :: forall s act ps o m. o -> HalogenM s act ps o m Unit
 raise o = HalogenM $ liftF $ Raise o unit
 
 -- | Sends a query to a child of a component at the specified slot.
@@ -120,9 +116,9 @@ query
   => SProxy sym
   -> p
   -> f a
-  -> HalogenM' s act ps o m (Maybe a)
+  -> HalogenM s act ps o m (Maybe a)
 query sym p q = HalogenM $ liftF $ ChildQuery $ CQ.mkChildQueryBox $
-  CQ.ChildQuery (\k -> traverse k <<< Slot.lookup sym p) q identity
+  CQ.ChildQuery (\k → maybe (pure Nothing) k <<< Slot.lookup sym p) q identity
 
 -- | Sends a query to all children of a component at a given slot label.
 queryAll
@@ -132,9 +128,12 @@ queryAll
   => Ord p
   => SProxy sym
   -> f a
-  -> HalogenM' s act ps o m (Map p a)
+  -> HalogenM s act ps o m (Map p a)
 queryAll sym q = HalogenM $ liftF $ ChildQuery $ CQ.mkChildQueryBox $
-  CQ.ChildQuery (\k -> traverse k <<< Slot.slots sym) q identity
+  CQ.ChildQuery (\k -> map catMapMaybes <<< traverse k <<< Slot.slots sym) q identity
+
+catMapMaybes ∷ forall k v. Ord k ⇒ Map k (Maybe v) -> Map k v
+catMapMaybes = foldrWithIndex (\k v acc → maybe acc (flip (Map.insert k) acc) v) Map.empty
 
 -- | The ID value associated with a subscription. Allows the subscription to be
 -- | stopped at a later time.
@@ -148,7 +147,7 @@ derive newtype instance ordSubscriptionId :: Ord SubscriptionId
 -- | When a component is disposed of any active subscriptions will automatically
 -- | be stopped and no further subscriptions will be possible during
 -- | finalization.
-subscribe :: forall s act ps o m. ES.EventSource m act -> HalogenM' s act ps o m SubscriptionId
+subscribe :: forall s act ps o m. ES.EventSource m act -> HalogenM s act ps o m SubscriptionId
 subscribe es = HalogenM $ liftF $ Subscribe (\_ -> es) identity
 
 -- | An alternative to `subscribe`, intended for subscriptions that unsubscribe
@@ -160,12 +159,12 @@ subscribe es = HalogenM $ liftF $ Subscribe (\_ -> es) identity
 -- | When a component is disposed of any active subscriptions will automatically
 -- | be stopped and no further subscriptions will be possible during
 -- | finalization.
-subscribe' :: forall s act ps o m. (SubscriptionId -> ES.EventSource m act) -> HalogenM' s act ps o m Unit
+subscribe' :: forall s act ps o m. (SubscriptionId -> ES.EventSource m act) -> HalogenM s act ps o m Unit
 subscribe' esc = HalogenM $ liftF $ Subscribe esc (const unit)
 
 -- | Unsubscribes a component from an `EventSource`. If the subscription
 -- | associated with the ID has already ended this will have no effect.
-unsubscribe :: forall s act ps o m. SubscriptionId -> HalogenM' s act ps o m Unit
+unsubscribe :: forall s act ps o m. SubscriptionId -> HalogenM s act ps o m Unit
 unsubscribe sid = HalogenM $ liftF $ Unsubscribe sid unit
 
 -- | The ID value associated with a forked process. Allows the fork to be killed
@@ -191,26 +190,26 @@ derive newtype instance ordForkId :: Ord ForkId
 -- | When a component is disposed of any active forks will automatically
 -- | be killed. New forks can be started during finalization but there will be
 -- | no means of killing them.
-fork :: forall s act ps o m. HalogenM' s act ps o m Unit -> HalogenM' s act ps o m ForkId
+fork :: forall s act ps o m. HalogenM s act ps o m Unit -> HalogenM s act ps o m ForkId
 fork hmu = HalogenM $ liftF $ Fork hmu identity
 
 -- | Kills a forked process if it is still running. Attempting to kill a forked
 -- | process that has already ended will have no effect.
-kill :: forall s act ps o m. ForkId -> HalogenM' s act ps o m Unit
+kill :: forall s act ps o m. ForkId -> HalogenM s act ps o m Unit
 kill fid = HalogenM $ liftF $ Kill fid unit
 
 -- | Retrieves an `Element` value that is associated with a `Ref` in the
 -- | rendered output of a component. If there is no currently rendered value for
 -- | the requested ref this will return `Nothing`.
-getRef :: forall s act ps o m. RefLabel -> HalogenM' s act ps o m (Maybe Element)
+getRef :: forall s act ps o m. RefLabel -> HalogenM s act ps o m (Maybe Element)
 getRef p = HalogenM $ liftF $ GetRef p identity
 
 imapState
   :: forall s s' act ps o m
    . (s -> s')
   -> (s' -> s)
-  -> HalogenM' s act ps o m
-  ~> HalogenM' s' act ps o m
+  -> HalogenM s act ps o m
+  ~> HalogenM s' act ps o m
 imapState f f' (HalogenM h) = HalogenM (hoistFree go h)
   where
   go :: HalogenF s act ps o m ~> HalogenF s' act ps o m
@@ -230,8 +229,8 @@ mapAction
   :: forall s act act' ps o m
    . Functor m
   => (act -> act')
-  -> HalogenM' s act ps o m
-  ~> HalogenM' s act' ps o m
+  -> HalogenM s act ps o m
+  ~> HalogenM s act' ps o m
 mapAction f (HalogenM h) = HalogenM (hoistFree go h)
   where
   go :: HalogenF s act ps o m ~> HalogenF s act' ps o m
@@ -250,8 +249,8 @@ mapAction f (HalogenM h) = HalogenM (hoistFree go h)
 mapOutput
   :: forall s act ps o o' m
    . (o -> o')
-  -> HalogenM' s act ps o m
-  ~> HalogenM' s act ps o' m
+  -> HalogenM s act ps o m
+  ~> HalogenM s act ps o' m
 mapOutput f (HalogenM h) = HalogenM (hoistFree go h)
   where
   go :: HalogenF s act ps o m ~> HalogenF s act ps o' m
@@ -271,8 +270,8 @@ hoist
   :: forall s act ps o m m'
    . Functor m'
   => (m ~> m')
-  -> HalogenM' s act ps o m
-  ~> HalogenM' s act ps o m'
+  -> HalogenM s act ps o m
+  ~> HalogenM s act ps o m'
 hoist nat (HalogenM fa) = HalogenM (hoistFree go fa)
   where
   go :: HalogenF s act ps o m ~> HalogenF s act ps o m'
