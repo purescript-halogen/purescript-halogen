@@ -25,6 +25,7 @@ module Halogen.HTML.Properties
   , src
   , target
   , title
+  , download
 
   , method
   , action
@@ -185,6 +186,9 @@ target = prop (PropName "target")
 
 title :: forall r i. String -> IProp (title :: String | r) i
 title = prop (PropName "title")
+
+download :: ∀ r i. String -> IProp (download :: String | r) i
+download = prop (PropName "download")
 
 method :: forall r i. I.FormMethod -> IProp (method :: I.FormMethod | r) i
 method = prop (PropName "method")
