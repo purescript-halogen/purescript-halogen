@@ -2,8 +2,11 @@ module Example.Interpret.Main where
 
 import Prelude
 
+import Affjax as AX
+import Affjax.ResponseFormat as AXRF
 import Control.Monad.Reader (ReaderT, ask, runReaderT)
 import Control.Monad.Trans.Class (lift)
+import Data.Either (either)
 import Data.Maybe (Maybe(..), fromMaybe)
 import Effect (Effect)
 import Effect.Aff (Aff)
@@ -12,8 +15,6 @@ import Halogen.Aff as HA
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.VDom.Driver (runUI)
-import Network.HTTP.Affjax as AX
-import Network.HTTP.Affjax.Response as AXResponse
 
 type Config = { githubToken :: Maybe String }
 
@@ -48,12 +49,12 @@ ui =
 searchUser :: String -> ReaderT Config Aff String
 searchUser q = do
   { githubToken } <- ask
-  { response } <- case githubToken of
+  { body } <- case githubToken of
     Nothing ->
-      lift (AX.get AXResponse.string ("https://api.github.com/users/" <> q))
+      lift (AX.get AXRF.string ("https://api.github.com/users/" <> q))
     Just token ->
-      lift (AX.get AXResponse.string ("https://api.github.com/users/" <> q <> "?access_token=" <> token))
-  pure response
+      lift (AX.get AXRF.string ("https://api.github.com/users/" <> q <> "?access_token=" <> token))
+  pure (either (const "") identity body)
 
 handleAction :: forall o. Action -> H.HalogenM State Action () o (ReaderT Config Aff) Unit
 handleAction = case _ of

@@ -1,7 +1,5 @@
 module Halogen.HTML.Events
-  ( input
-  , input_
-  , handler
+  ( handler
   , onAbort
   , onError
   , onLoad
@@ -65,7 +63,6 @@ import Foreign.Index (readProp)
 import Halogen.HTML.Core (Prop)
 import Halogen.HTML.Core as Core
 import Halogen.HTML.Properties (IProp)
-import Halogen.Query (Action, action)
 import Halogen.Query.Input (Input(..))
 import Unsafe.Coerce (unsafeCoerce)
 import Web.Clipboard.ClipboardEvent (ClipboardEvent)
@@ -84,12 +81,6 @@ import Web.UIEvent.MouseEvent (MouseEvent)
 import Web.UIEvent.MouseEvent.EventTypes as MET
 import Web.UIEvent.WheelEvent (WheelEvent)
 import Web.UIEvent.WheelEvent.EventTypes as WET
-
-input :: forall f a. (a -> Action f) -> a -> Maybe (f Unit)
-input f x = Just $ action (f x)
-
-input_ :: forall f a. Action f -> a -> Maybe (f Unit)
-input_ f _ = Just $ action f
 
 handler :: forall r i. EventType -> (Event -> Maybe i) -> IProp r i
 handler et = (unsafeCoerce :: (EventType -> (Event -> Maybe i) -> Prop i) -> EventType -> (Event -> Maybe (Input i)) -> IProp r i) Core.handler et <<< map (map Action)

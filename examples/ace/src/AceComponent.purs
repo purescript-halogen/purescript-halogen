@@ -61,7 +61,7 @@ handleAction = case _ of
       session <- H.liftEffect $ Editor.getSession editor
       H.modify_ (_ { editor = Just editor })
       void $ H.subscribe $ ES.effectEventSource \emitter -> do
-        Session.onChange session (ES.emit' emitter HandleChange)
+        Session.onChange session (\_ -> ES.emit emitter HandleChange)
         pure mempty
   Finalize -> do
     -- Release the reference to the editor and do any other cleanup that a

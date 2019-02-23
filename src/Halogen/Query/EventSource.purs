@@ -106,7 +106,7 @@ eventListenerEventSource
   -> (E.Event -> Maybe a)
   -> EventSource m a
 eventListenerEventSource eventType target f = effectEventSource \emitter -> do
-  listener <- ET.eventListener (maybe (pure unit) (emit emitter <<< pure) <<< f)
+  listener <- ET.eventListener (maybe (pure unit) (emit emitter) <<< f)
   ET.addEventListener eventType listener false target
   pure $ Finalizer (ET.removeEventListener eventType listener false target)
 
@@ -117,24 +117,18 @@ eventListenerEventSource eventType target f = effectEventSource \emitter -> do
 -- | signatures for setting up event sources.
 newtype Emitter m a = Emitter (Either a Unit -> m Unit)
 
--- | Emits an "action style" query via the emitter. Accepts a partially applied
--- | query constructor to save having to use `H.action` or applying `unit` when
--- | constructing the query, for example:
+-- | Emits an action via the emitter. For example:
 -- |
 -- | ``` purescript
--- | data Query a = Notify String a
+-- | data Action = Notify String
 -- |
 -- | myEventSource = EventSource.affEventSource \emitter -> do
 -- |   Aff.delay (Milliseconds 1000.0)
 -- |   EventSource.emit emitter (Notify "hello")
 -- |   pure mempty
 -- | ```
-emit :: forall m a. Emitter m a -> (Unit -> a) -> m Unit
-emit emitter q = emit' emitter (q unit)
-
--- | Emits an action via the emitter.
-emit' :: forall m a. Emitter m a -> a -> m Unit
-emit' (Emitter f) a = f (Left a)
+emit :: forall m a. Emitter m a -> a -> m Unit
+emit (Emitter f) a = f (Left a)
 
 -- | Closes the emitter, shutting down the event source. This allows an event
 -- | source to stop itself internally, rather than requiring external shutdown

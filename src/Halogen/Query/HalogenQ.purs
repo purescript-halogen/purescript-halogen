@@ -5,19 +5,19 @@ import Prelude
 import Data.Bifunctor (class Bifunctor)
 import Data.Coyoneda (Coyoneda)
 
-data HalogenQ f act i a
+data HalogenQ query action input a
   = Initialize a
   | Finalize a
-  | Receive i a
-  | Action act a
-  | Query (Coyoneda f a) (Unit → a)
+  | Receive input a
+  | Action action a
+  | Query (Coyoneda query a) (Unit → a)
 
-instance bifunctorHalogenQ :: Functor f => Bifunctor (HalogenQ f act) where
+instance bifunctorHalogenQ :: Functor query => Bifunctor (HalogenQ query action) where
   bimap f g = case _ of
     Initialize a -> Initialize (g a)
     Finalize a -> Finalize (g a)
     Receive i a -> Receive (f i) (g a)
-    Action act a -> Action act (g a)
+    Action action a -> Action action (g a)
     Query fa k -> Query (map g fa) (map g k)
 
-derive instance functorHalogenQ :: Functor f => Functor (HalogenQ f act i)
+derive instance functorHalogenQ :: Functor query => Functor (HalogenQ query action input)

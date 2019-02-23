@@ -28,7 +28,7 @@ import Unsafe.Coerce (unsafeCoerce)
 
 -- | A convenience synonym for the output type of a `render` function, for a
 -- | component that renders HTML.
-type ComponentHTML act ps m = HTML (ComponentSlot HTML ps m act) act
+type ComponentHTML action slots m = HTML (ComponentSlot HTML slots m action) action
 
 -- | A type useful for a chunk of HTML with no slot-embedding or query-raising.
 -- |
@@ -49,18 +49,18 @@ fromPlainHTML = unsafeCoerce -- ≅ bimap absurd absurd
 -- | - the input value to pass to the component
 -- | - a function mapping outputs from the component to a query in the parent
 slot
-  :: forall sym px ps f i o p m act
-   . Row.Cons sym (Slot f o p) px ps
-  => IsSymbol sym
-  => Ord p
-  => SProxy sym
-  -> p
-  -> Component HTML f i o m
-  -> i
-  -> (o -> Maybe act)
-  -> ComponentHTML act ps m
-slot sym p component input outputQuery =
-  Core.slot (ComponentSlot (componentSlot sym p component input outputQuery))
+  :: forall query action input output slots m label slot _1
+   . Row.Cons label (Slot query output slot) _1 slots
+  => IsSymbol label
+  => Ord slot
+  => SProxy label
+  -> slot
+  -> Component HTML query input output m
+  -> input
+  -> (output -> Maybe action)
+  -> ComponentHTML action slots m
+slot label p component input outputQuery =
+  Core.slot (ComponentSlot (componentSlot label p component input outputQuery))
 
 -- | Optimizes rendering of a subtree given an equality predicate. If an argument
 -- | is deemed equivalent to the previous value, rendering and diffing will be
@@ -75,38 +75,38 @@ slot sym p component input outputQuery =
 -- |  }
 -- | ```
 memoized
-  :: forall a act ps m
+  :: forall a action slots m
    . (a -> a -> Boolean)
-  -> (a -> ComponentHTML act ps m)
+  -> (a -> ComponentHTML action slots m)
   -> a
-  -> ComponentHTML act ps m
+  -> ComponentHTML action slots m
 memoized eqFn f a = Core.slot (ThunkSlot (thunked eqFn f a))
 
 -- | Skips rendering for referentially equal arguments. You should not use this
 -- | function fully saturated, but instead partially apply it for use within a
 -- | Component's scope.
 lazy
-  :: forall a act ps m
-   . (a -> ComponentHTML act ps m)
+  :: forall a action slots m
+   . (a -> ComponentHTML action slots m)
   -> a
-  -> ComponentHTML act ps m
+  -> ComponentHTML action slots m
 lazy f a = Core.slot (ThunkSlot (Fn.runFn2 thunk1 f a))
 
 -- | Like `lazy`, but for a rendering function which takes 2 arguments.
 lazy2
-  :: forall a b act ps m
-   . (a -> b -> ComponentHTML act ps m)
+  :: forall a b action slots m
+   . (a -> b -> ComponentHTML action slots m)
   -> a
   -> b
-  -> ComponentHTML act ps m
+  -> ComponentHTML action slots m
 lazy2 f a b = Core.slot (ThunkSlot (Fn.runFn3 thunk2 f a b))
 
 -- | Like `lazy`, but for a rendering function which takes 3 arguments.
 lazy3
-  :: forall a b c act ps m
-   . (a -> b -> c -> ComponentHTML act ps m)
+  :: forall a b c action slots m
+   . (a -> b -> c -> ComponentHTML action slots m)
   -> a
   -> b
   -> c
-  -> ComponentHTML act ps m
+  -> ComponentHTML action slots m
 lazy3 f a b c = Core.slot (ThunkSlot (Fn.runFn4 thunk3 f a b c))

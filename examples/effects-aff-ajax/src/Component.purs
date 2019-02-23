@@ -2,14 +2,15 @@ module Example.Effects.Aff.Ajax.Component where
 
 import Prelude
 
+import Affjax as AX
+import Affjax.ResponseFormat as AXRF
+import Data.Either (hush)
 import Data.Maybe (Maybe(..))
 import Effect.Aff.Class (class MonadAff)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
-import Network.HTTP.Affjax as AX
-import Network.HTTP.Affjax.Response as AXResponse
 import Web.Event.Event (Event)
 import Web.Event.Event as Event
 
@@ -72,5 +73,5 @@ handleAction = case _ of
     H.liftEffect $ Event.preventDefault event
     username <- H.gets _.username
     H.modify_ (_ { loading = true })
-    response <- H.liftAff $ AX.get AXResponse.string ("https://api.github.com/users/" <> username)
-    H.modify_ (_ { loading = false, result = Just response.response })
+    response <- H.liftAff $ AX.get AXRF.string ("https://api.github.com/users/" <> username)
+    H.modify_ (_ { loading = false, result = hush response.body })

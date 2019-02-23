@@ -23,77 +23,77 @@ import Unsafe.Coerce (unsafeCoerce)
 
 foreign import data Any :: Type
 
-data Slot (f :: Type -> Type) o p
+data Slot (query :: Type -> Type) output slot
 
-newtype SlotStorage (ps :: # Type) (slot :: (Type -> Type) -> Type -> Type) =
+newtype SlotStorage (slots :: # Type) (slot :: (Type -> Type) -> Type -> Type) =
   SlotStorage (Map (Tuple String (OrdBox Any)) Any)
 
-empty :: forall ps slot. SlotStorage ps slot
+empty :: forall slots slot. SlotStorage slots slot
 empty = SlotStorage Map.empty
 
 lookup
-  :: forall sym px ps slot f o p
-   . Row.Cons sym (Slot f o p) px ps
+  :: forall sym px slots slot query output s
+   . Row.Cons sym (Slot query output s) px slots
   => IsSymbol sym
-  => Ord p
+  => Ord s
   => SProxy sym
-  -> p
-  -> SlotStorage ps slot
-  -> Maybe (slot f o)
+  -> s
+  -> SlotStorage slots slot
+  -> Maybe (slot query output)
 lookup sym key (SlotStorage m) =
   coerceSlot (Map.lookup (Tuple (reflectSymbol sym) (coerceBox (mkOrdBox key))) m)
   where
-  coerceSlot :: Maybe Any -> Maybe (slot f o)
+  coerceSlot :: Maybe Any -> Maybe (slot query output)
   coerceSlot = unsafeCoerce
 
-  coerceBox :: OrdBox p -> OrdBox Any
+  coerceBox :: OrdBox s -> OrdBox Any
   coerceBox = unsafeCoerce
 
 pop
-  :: forall sym px ps slot f o p
-   . Row.Cons sym (Slot f o p) px ps
+  :: forall sym px slots slot query output s
+   . Row.Cons sym (Slot query output s) px slots
   => IsSymbol sym
-  => Ord p
+  => Ord s
   => SProxy sym
-  -> p
-  -> SlotStorage ps slot
-  -> Maybe (Tuple (slot f o) (SlotStorage ps slot))
+  -> s
+  -> SlotStorage slots slot
+  -> Maybe (Tuple (slot query output) (SlotStorage slots slot))
 pop sym key (SlotStorage m) =
   coercePop (Map.pop (Tuple (reflectSymbol sym) (coerceBox (mkOrdBox key))) m)
   where
-  coercePop :: Maybe (Tuple Any (Map (Tuple String (OrdBox Any)) Any)) -> Maybe (Tuple (slot f o) (SlotStorage ps slot))
+  coercePop :: Maybe (Tuple Any (Map (Tuple String (OrdBox Any)) Any)) -> Maybe (Tuple (slot query output) (SlotStorage slots slot))
   coercePop = unsafeCoerce
 
-  coerceBox :: OrdBox p -> OrdBox Any
+  coerceBox :: OrdBox s -> OrdBox Any
   coerceBox = unsafeCoerce
 
 insert
-  :: forall sym px ps slot f o p
-   . Row.Cons sym (Slot f o p) px ps
+  :: forall sym px slots slot query output s
+   . Row.Cons sym (Slot query output s) px slots
   => IsSymbol sym
-  => Ord p
+  => Ord s
   => SProxy sym
-  -> p
-  -> slot f o
-  -> SlotStorage ps slot
-  -> SlotStorage ps slot
+  -> s
+  -> slot query output
+  -> SlotStorage slots slot
+  -> SlotStorage slots slot
 insert sym key val (SlotStorage m) =
   SlotStorage (Map.insert (Tuple (reflectSymbol sym) (coerceBox (mkOrdBox key))) (coerceVal val) m)
   where
-  coerceBox :: OrdBox p -> OrdBox Any
+  coerceBox :: OrdBox s -> OrdBox Any
   coerceBox = unsafeCoerce
 
-  coerceVal :: slot f o -> Any
+  coerceVal :: slot query output -> Any
   coerceVal = unsafeCoerce
 
 slots
-  :: forall sym px ps slot f o p
-   . Row.Cons sym (Slot f o p) px ps
+  :: forall sym px slots slot query output s
+   . Row.Cons sym (Slot query output s) px slots
   => IsSymbol sym
-  => Ord p
+  => Ord s
   => SProxy sym
-  -> SlotStorage ps slot
-  -> Map p (slot f o)
+  -> SlotStorage slots slot
+  -> Map s (slot query output)
 slots sym (SlotStorage m) = Map.foldSubmap Nothing Nothing go m
   where
   key = reflectSymbol sym
@@ -102,19 +102,19 @@ slots sym (SlotStorage m) = Map.foldSubmap Nothing Nothing go m
     | key == key' = Map.singleton (unOrdBox (coerceBox ob)) (coerceVal val)
     | otherwise = mempty
 
-  coerceBox :: OrdBox Any -> OrdBox p
+  coerceBox :: OrdBox Any -> OrdBox s
   coerceBox = unsafeCoerce
 
-  coerceVal :: Any -> slot f o
+  coerceVal :: Any -> slot query output
   coerceVal = unsafeCoerce
 
 foreachSlot
-  :: forall m ps slot
+  :: forall m slots slot
    . Applicative m
-  => SlotStorage ps slot
-  -> (forall f o. slot f o -> m Unit)
+  => SlotStorage slots slot
+  -> (forall query output. slot query output -> m Unit)
   -> m Unit
 foreachSlot (SlotStorage m) k = traverse_ (k <<< coerceVal) m
   where
-  coerceVal :: forall f o. Any -> slot f o
+  coerceVal :: forall query output. Any -> slot query output
   coerceVal = unsafeCoerce
