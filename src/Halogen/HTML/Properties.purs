@@ -69,6 +69,7 @@ import Prelude
 import DOM.HTML.Indexed (CSSPixel) as I
 import DOM.HTML.Indexed.ButtonType (ButtonType(..)) as I
 import DOM.HTML.Indexed.FormMethod (FormMethod(..)) as I
+import DOM.HTML.Indexed.InputAcceptType (InputAcceptType(..)) as I
 import DOM.HTML.Indexed.InputType (InputType(..)) as I
 import DOM.HTML.Indexed.MenuType (MenuType(..)) as I
 import DOM.HTML.Indexed.MenuitemType (MenuitemType(..)) as I
@@ -248,7 +249,7 @@ autofocus = prop (PropName "autofocus")
 multiple :: forall r i. Boolean -> IProp (multiple :: Boolean | r) i
 multiple = prop (PropName "multiple")
 
-accept :: forall r i. MediaType -> IProp (accept :: MediaType | r) i
+accept :: forall r i. I.InputAcceptType -> IProp (accept :: I.InputAcceptType | r) i
 accept = prop (PropName "accept")
 
 pattern :: forall r i. String -> IProp (pattern :: String | r) i
