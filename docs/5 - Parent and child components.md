@@ -1,5 +1,11 @@
 # Parent and child components
 
+:warning: Please note, this is the guide for Halogen 4 :warning:
+
+If you're interested in the new stuff, take a look at the [changes in v5](Changes%20in%20v5.md) document. If v4 is what you want, switch to browsing the [repository at that tag](https://github.com/slamdata/purescript-halogen/releases/tag/v4.0.0) to ensure you're seeing the right code and examples.
+
+---
+
 So far the examples have only concerned a single component, however this will only take us so far before the state and query algebra becomes unmanageable. The answer is to break our app into components that can be composed.
 
 Let's take a look at a component that uses our button component as a child:
