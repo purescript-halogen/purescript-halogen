@@ -13,7 +13,7 @@ Switch to [the tag for v4](https://github.com/slamdata/purescript-halogen/tree/v
 
 Halogen 5 is fully usable in its current state and is actively being used in production, but the documentation is lacking, so it will remain in pre-release until the guide is updated. For now the main resources are:
 
-- The [changes in v5](docs/Changes in v5.md) document
+- The [changes in v5](docs/Changes%20in%20v5.md) document
 - The [examples](examples/)
 - Reading doc comments in the source
 
