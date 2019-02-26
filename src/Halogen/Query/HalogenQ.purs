@@ -12,7 +12,7 @@ data HalogenQ query action input a
   | Action action a
   | Query (Coyoneda query a) (Unit → a)
 
-instance bifunctorHalogenQ :: Functor query => Bifunctor (HalogenQ query action) where
+instance bifunctorHalogenQ :: Bifunctor (HalogenQ query action) where
   bimap f g = case _ of
     Initialize a -> Initialize (g a)
     Finalize a -> Finalize (g a)
@@ -20,4 +20,4 @@ instance bifunctorHalogenQ :: Functor query => Bifunctor (HalogenQ query action)
     Action action a -> Action action (g a)
     Query fa k -> Query (map g fa) (map g k)
 
-derive instance functorHalogenQ :: Functor query => Functor (HalogenQ query action input)
+derive instance functorHalogenQ :: Functor (HalogenQ query action input)
