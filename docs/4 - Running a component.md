@@ -1,5 +1,11 @@
 # Running a component
 
+:warning: Please note, this is the guide for Halogen 4 :warning:
+
+If you're interested in the new stuff, take a look at the [changes in v5](Changes in v5.md) document. If v4 is what you want, switch to browsing the [repository at that tag](https://github.com/slamdata/purescript-halogen/releases/tag/v4.0.0) to ensure you're seeing the right code and examples.
+
+---
+
 So far we've learned how to define a component, and to use `Aff` for effect handling. For this information to be of any use we're going to want to see something in the browser!
 
 Halogen provides a driver for a PureScript implementation of a virtual DOM for efficient patching of the actual DOM. This functionality is provided by the [`Halogen.VDom.Driver`][Halogen.VDom.Driver] module.

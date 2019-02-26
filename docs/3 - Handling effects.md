@@ -1,5 +1,11 @@
 # Handling effects
 
+:warning: Please note, this is the guide for Halogen 4 :warning:
+
+If you're interested in the new stuff, take a look at the [changes in v5](Changes in v5.md) document. If v4 is what you want, switch to browsing the [repository at that tag](https://github.com/slamdata/purescript-halogen/releases/tag/v4.0.0) to ensure you're seeing the right code and examples.
+
+---
+
 Halogen components have no built-in mechanisms for dealing with effects during query evaluation. That doesn't mean that they _can't_ have effects, only that there is no implicit mechanism for them. They're made explicit in the usual way: via the type signature.
 
 Let's take another look at the type of the button component from the last chapter:

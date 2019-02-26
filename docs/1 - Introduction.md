@@ -1,5 +1,11 @@
 # Introduction
 
+:warning: Please note, this is the guide for Halogen 4 :warning:
+
+If you're interested in the new stuff, take a look at the [changes in v5](Changes in v5.md) document. If v4 is what you want, switch to browsing the [repository at that tag](https://github.com/slamdata/purescript-halogen/releases/tag/v4.0.0) to ensure you're seeing the right code and examples.
+
+---
+
 A Halogen application consists of a tree of components. Each component is a self contained unit that has its own state, and re-renders when the state changes.
 
 A component modifies its state by evaluating inputs known as queries. Each component defines a type that describes all the possible queries it will expect. We use the term "query" rather than something like "input" as they can return details about the component state as well as being able to update it.
