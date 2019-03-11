@@ -35,7 +35,7 @@
     "purescript-fork": "^4.0.0",
     "purescript-free": "^5.0.0",
     "purescript-freeap": "^5.0.0",
-    "purescript-halogen-vdom": "^5.1.0",
+    "purescript-halogen-vdom": "^6.0.0",
     "purescript-media-types": "^4.0.0",
     "purescript-nullable": "^4.0.0",
     "purescript-ordered-collections": "^1.0.0",
@@ -49,7 +49,7 @@
   "devDependencies": {
     "purescript-ace": "^7.0.0",
     "purescript-aff-coroutines": "^7.0.0",
-    "purescript-affjax": "^8.0.0",
+    "purescript-affjax": "^9.0.0",
     "purescript-random": "^4.0.0",
     "purescript-web-socket": "^2.0.0",
     "purescript-assert": "^4.0.0"

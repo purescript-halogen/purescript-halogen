@@ -7,6 +7,7 @@ module Halogen.HTML.Properties
   , attr
   , attrNS
   , ref
+  , expand
 
   , alt
   , charset
@@ -85,6 +86,7 @@ import Data.String (joinWith)
 import Halogen.HTML.Core (class IsProp, AttrName(..), ClassName, Namespace, PropName(..), Prop)
 import Halogen.HTML.Core as Core
 import Halogen.Query.Input (Input(..), RefLabel)
+import Prim.Row as Row
 import Unsafe.Coerce (unsafeCoerce)
 import Web.DOM.Element (Element)
 
@@ -132,6 +134,11 @@ ref = (unsafeCoerce :: ((Maybe Element -> Maybe (Input i)) -> Prop (Input i)) ->
   where
   go :: RefLabel -> Maybe Element -> Maybe (Input i)
   go p mel = Just (RefUpdate p mel)
+
+-- | Every `IProp lt i` can be cast to some `IProp gt i` as long as `lt` is a
+-- | subset of `gt`.
+expand ∷ ∀ lt gt a i. Row.Union lt a gt ⇒ IProp lt i → IProp gt i
+expand = unsafeCoerce
 
 alt :: forall r i. String -> IProp (alt :: String | r) i
 alt = prop (PropName "alt")
