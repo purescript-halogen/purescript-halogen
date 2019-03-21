@@ -1,5 +1,6 @@
 module Halogen.HTML.Core
   ( HTML(..)
+  , renderWidget
   , slot
   , text
   , element
@@ -36,13 +37,13 @@ import DOM.HTML.Indexed.WrapValue (WrapValue, renderWrapValue)
 import Data.Bifunctor (class Bifunctor, bimap, rmap)
 import Data.Maybe (Maybe(..))
 import Data.MediaType (MediaType)
-import Data.Newtype (class Newtype, unwrap)
+import Data.Newtype (class Newtype, un, unwrap)
 import Data.Tuple (Tuple)
 import Halogen.Query.Input (Input)
 import Halogen.VDom (ElemName(..), Namespace(..)) as Exports
-import Halogen.VDom as VDom
 import Halogen.VDom.DOM.Prop (ElemRef(..), Prop(..), PropValue, propFromBoolean, propFromInt, propFromNumber, propFromString)
 import Halogen.VDom.DOM.Prop (Prop(..), PropValue) as Exports
+import Halogen.VDom.Types as VDom
 import Unsafe.Coerce (unsafeCoerce)
 import Web.DOM.Element (Element)
 import Web.Event.Event (Event, EventType)
@@ -56,6 +57,10 @@ instance bifunctorHTML :: Bifunctor HTML where
 
 instance functorHTML :: Functor (HTML p) where
   map = rmap
+
+renderWidget ∷ ∀ p q i j. (i → j) → (p → HTML q j) → HTML p i → HTML q j
+renderWidget f g (HTML vdom) =
+  HTML (VDom.renderWidget (map (map (map f))) (un HTML <<< g) vdom)
 
 -- | A smart constructor for widget slots in the HTML.
 slot :: forall p q. p -> HTML p q
