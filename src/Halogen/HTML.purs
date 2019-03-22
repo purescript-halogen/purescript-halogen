@@ -39,7 +39,7 @@ type ComponentHTML action slots m = HTML (ComponentSlot HTML slots m action) act
 type PlainHTML = HTML Void Void
 
 -- | Relaxes the type of `PlainHTML` to make it compatible with all `HTML`.
-fromPlainHTML :: forall p i. PlainHTML -> HTML p i
+fromPlainHTML :: forall w i. PlainHTML -> HTML w i
 fromPlainHTML = unsafeCoerce -- ≅ bimap absurd absurd
 
 -- | Defines a slot for a child component. Takes:
@@ -60,7 +60,7 @@ slot
   -> (output -> Maybe action)
   -> ComponentHTML action slots m
 slot label p component input outputQuery =
-  Core.slot (ComponentSlot (componentSlot label p component input outputQuery))
+  Core.widget (ComponentSlot (componentSlot label p component input outputQuery))
 
 -- | Optimizes rendering of a subtree given an equality predicate. If an argument
 -- | is deemed equivalent to the previous value, rendering and diffing will be
@@ -80,7 +80,7 @@ memoized
   -> (a -> ComponentHTML action slots m)
   -> a
   -> ComponentHTML action slots m
-memoized eqFn f a = Core.slot (ThunkSlot (thunked eqFn f a))
+memoized eqFn f a = Core.widget (ThunkSlot (thunked eqFn f a))
 
 -- | Skips rendering for referentially equal arguments. You should not use this
 -- | function fully saturated, but instead partially apply it for use within a
@@ -90,7 +90,7 @@ lazy
    . (a -> ComponentHTML action slots m)
   -> a
   -> ComponentHTML action slots m
-lazy f a = Core.slot (ThunkSlot (Fn.runFn2 thunk1 f a))
+lazy f a = Core.widget (ThunkSlot (Fn.runFn2 thunk1 f a))
 
 -- | Like `lazy`, but for a rendering function which takes 2 arguments.
 lazy2
@@ -99,7 +99,7 @@ lazy2
   -> a
   -> b
   -> ComponentHTML action slots m
-lazy2 f a b = Core.slot (ThunkSlot (Fn.runFn3 thunk2 f a b))
+lazy2 f a b = Core.widget (ThunkSlot (Fn.runFn3 thunk2 f a b))
 
 -- | Like `lazy`, but for a rendering function which takes 3 arguments.
 lazy3
@@ -109,4 +109,4 @@ lazy3
   -> b
   -> c
   -> ComponentHTML action slots m
-lazy3 f a b c = Core.slot (ThunkSlot (Fn.runFn4 thunk3 f a b c))
+lazy3 f a b c = Core.widget (ThunkSlot (Fn.runFn4 thunk3 f a b c))
