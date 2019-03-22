@@ -1,7 +1,7 @@
 module Halogen.HTML.Core
   ( HTML(..)
   , renderWidget
-  , slot
+  , widget
   , text
   , element
   , keyed
@@ -48,9 +48,9 @@ import Unsafe.Coerce (unsafeCoerce)
 import Web.DOM.Element (Element)
 import Web.Event.Event (Event, EventType)
 
-newtype HTML p i = HTML (VDom.VDom (Array (Prop (Input i))) p)
+newtype HTML w i = HTML (VDom.VDom (Array (Prop (Input i))) w)
 
-derive instance newtypeHTML :: Newtype (HTML p i) _
+derive instance newtypeHTML :: Newtype (HTML w i) _
 
 instance bifunctorHTML :: Bifunctor HTML where
   bimap f g (HTML vdom) = HTML (bimap (map (map (map g))) f vdom)
@@ -58,35 +58,34 @@ instance bifunctorHTML :: Bifunctor HTML where
 instance functorHTML :: Functor (HTML p) where
   map = rmap
 
-renderWidget ∷ ∀ p q i j. (i → j) → (p → HTML q j) → HTML p i → HTML q j
+renderWidget ∷ ∀ w x i j. (i → j) → (w → HTML x j) → HTML w i → HTML x j
 renderWidget f g (HTML vdom) =
   HTML (VDom.renderWidget (map (map (map f))) (un HTML <<< g) vdom)
 
--- | A smart constructor for widget slots in the HTML.
-slot :: forall p q. p -> HTML p q
-slot = HTML <<< VDom.Widget
+widget :: forall p q. p -> HTML p q
+widget = HTML <<< VDom.Widget
 
 -- | Constructs a text node `HTML` value.
-text :: forall p i. String -> HTML p i
+text :: forall w i. String -> HTML w i
 text = HTML <<< VDom.Text
 
 -- | A smart constructor for HTML elements.
-element :: forall p i. Maybe VDom.Namespace -> VDom.ElemName -> Array (Prop i) -> Array (HTML p i) -> HTML p i
+element :: forall w i. Maybe VDom.Namespace -> VDom.ElemName -> Array (Prop i) -> Array (HTML w i) -> HTML w i
 element ns =
   coe (\name props children -> VDom.Elem ns name props children)
   where
   coe
-    :: (VDom.ElemName -> Array (Prop i) -> Array (VDom.VDom (Array (Prop i)) p) -> VDom.VDom (Array (Prop i)) p)
-    -> VDom.ElemName -> Array (Prop i) -> Array (HTML p i) -> HTML p i
+    :: (VDom.ElemName -> Array (Prop i) -> Array (VDom.VDom (Array (Prop i)) w) -> VDom.VDom (Array (Prop i)) w)
+    -> VDom.ElemName -> Array (Prop i) -> Array (HTML w i) -> HTML w i
   coe = unsafeCoerce
 
 -- | A smart constructor for HTML elements with keyed children.
-keyed :: forall p i. Maybe VDom.Namespace -> VDom.ElemName -> Array (Prop i) -> Array (Tuple String (HTML p i)) -> HTML p i
+keyed :: forall w i. Maybe VDom.Namespace -> VDom.ElemName -> Array (Prop i) -> Array (Tuple String (HTML w i)) -> HTML w i
 keyed ns = coe (\name props children -> VDom.Keyed ns name props children)
   where
   coe
-    :: (VDom.ElemName -> Array (Prop i) -> Array (Tuple String (VDom.VDom (Array (Prop i)) p)) -> VDom.VDom (Array (Prop i)) p)
-    -> VDom.ElemName -> Array (Prop i) -> Array (Tuple String (HTML p i)) -> HTML p i
+    :: (VDom.ElemName -> Array (Prop i) -> Array (Tuple String (VDom.VDom (Array (Prop i)) w)) -> VDom.VDom (Array (Prop i)) w)
+    -> VDom.ElemName -> Array (Prop i) -> Array (Tuple String (HTML w i)) -> HTML w i
   coe = unsafeCoerce
 
 -- | Create a HTML property.
