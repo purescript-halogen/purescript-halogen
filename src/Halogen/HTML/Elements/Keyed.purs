@@ -26,109 +26,109 @@ import Halogen.HTML.Core (ElemName(..), HTML)
 import Halogen.HTML.Elements (keyed)
 import Halogen.HTML.Properties (IProp)
 
-type KeyedNode r p i
+type KeyedNode r w i
    = Array (IProp r i)
-  -> Array (Tuple String (HTML p i))
-  -> HTML p i
+  -> Array (Tuple String (HTML w i))
+  -> HTML w i
 
-article :: forall p i. KeyedNode I.HTMLarticle p i
+article :: forall w i. KeyedNode I.HTMLarticle w i
 article = keyed (ElemName "article")
 
-article_ :: forall p i. Array (Tuple String (HTML p i)) -> HTML p i
+article_ :: forall w i. Array (Tuple String (HTML w i)) -> HTML w i
 article_ = article []
 
-colgroup :: forall p i. KeyedNode I.HTMLcolgroup p i
+colgroup :: forall w i. KeyedNode I.HTMLcolgroup w i
 colgroup = keyed (ElemName "colgroup")
 
-colgroup_ :: forall p i. Array (Tuple String (HTML p i)) -> HTML p i
+colgroup_ :: forall w i. Array (Tuple String (HTML w i)) -> HTML w i
 colgroup_ = colgroup []
 
-dialog :: forall p i. KeyedNode I.HTMLdialog p i
+dialog :: forall w i. KeyedNode I.HTMLdialog w i
 dialog = keyed (ElemName "dialog")
 
-dialog_ :: forall p i. Array (Tuple String (HTML p i)) -> HTML p i
+dialog_ :: forall w i. Array (Tuple String (HTML w i)) -> HTML w i
 dialog_ = dialog []
 
-div :: forall p i. KeyedNode I.HTMLdiv p i
+div :: forall w i. KeyedNode I.HTMLdiv w i
 div = keyed (ElemName "div")
 
-div_ :: forall p i. Array (Tuple String (HTML p i)) -> HTML p i
+div_ :: forall w i. Array (Tuple String (HTML w i)) -> HTML w i
 div_ = div []
 
-dl :: forall p i. KeyedNode I.HTMLdl p i
+dl :: forall w i. KeyedNode I.HTMLdl w i
 dl = keyed (ElemName "dl")
 
-dl_ :: forall p i. Array (Tuple String (HTML p i)) -> HTML p i
+dl_ :: forall w i. Array (Tuple String (HTML w i)) -> HTML w i
 dl_ = dl []
 
-fieldset :: forall p i. KeyedNode I.HTMLfieldset p i
+fieldset :: forall w i. KeyedNode I.HTMLfieldset w i
 fieldset = keyed (ElemName "fieldset")
 
-fieldset_ :: forall p i. Array (Tuple String (HTML p i)) -> HTML p i
+fieldset_ :: forall w i. Array (Tuple String (HTML w i)) -> HTML w i
 fieldset_ = fieldset []
 
-footer :: forall p i. KeyedNode I.HTMLfooter p i
+footer :: forall w i. KeyedNode I.HTMLfooter w i
 footer = keyed (ElemName "footer")
 
-footer_ :: forall p i. Array (Tuple String (HTML p i)) -> HTML p i
+footer_ :: forall w i. Array (Tuple String (HTML w i)) -> HTML w i
 footer_ = footer []
 
-form :: forall p i. KeyedNode I.HTMLform p i
+form :: forall w i. KeyedNode I.HTMLform w i
 form = keyed (ElemName "form")
 
-form_ :: forall p i. Array (Tuple String (HTML p i)) -> HTML p i
+form_ :: forall w i. Array (Tuple String (HTML w i)) -> HTML w i
 form_ = form []
 
-header :: forall p i. KeyedNode I.HTMLheader p i
+header :: forall w i. KeyedNode I.HTMLheader w i
 header = keyed (ElemName "header")
 
-header_ :: forall p i. Array (Tuple String (HTML p i)) -> HTML p i
+header_ :: forall w i. Array (Tuple String (HTML w i)) -> HTML w i
 header_ = header []
 
-menu :: forall p i. KeyedNode I.HTMLmenu p i
+menu :: forall w i. KeyedNode I.HTMLmenu w i
 menu = keyed (ElemName "menu")
 
-menu_ :: forall p i. Array (Tuple String (HTML p i)) -> HTML p i
+menu_ :: forall w i. Array (Tuple String (HTML w i)) -> HTML w i
 menu_ = menu []
 
-ol :: forall p i. KeyedNode I.HTMLol p i
+ol :: forall w i. KeyedNode I.HTMLol w i
 ol = keyed (ElemName "ol")
 
-ol_ :: forall p i. Array (Tuple String (HTML p i)) -> HTML p i
+ol_ :: forall w i. Array (Tuple String (HTML w i)) -> HTML w i
 ol_ = ol []
 
-table :: forall p i. KeyedNode I.HTMLtable p i
+table :: forall w i. KeyedNode I.HTMLtable w i
 table = keyed (ElemName "table")
 
-table_ :: forall p i. Array (Tuple String (HTML p i)) -> HTML p i
+table_ :: forall w i. Array (Tuple String (HTML w i)) -> HTML w i
 table_ = table []
 
-tbody :: forall p i. KeyedNode I.HTMLtbody p i
+tbody :: forall w i. KeyedNode I.HTMLtbody w i
 tbody = keyed (ElemName "tbody")
 
-tbody_ :: forall p i. Array (Tuple String (HTML p i)) -> HTML p i
+tbody_ :: forall w i. Array (Tuple String (HTML w i)) -> HTML w i
 tbody_ = tbody []
 
-tfoot :: forall p i. KeyedNode I.HTMLtfoot p i
+tfoot :: forall w i. KeyedNode I.HTMLtfoot w i
 tfoot = keyed (ElemName "tfoot")
 
-tfoot_ :: forall p i. Array (Tuple String (HTML p i)) -> HTML p i
+tfoot_ :: forall w i. Array (Tuple String (HTML w i)) -> HTML w i
 tfoot_ = tfoot []
 
-thead :: forall p i. KeyedNode I.HTMLthead p i
+thead :: forall w i. KeyedNode I.HTMLthead w i
 thead = keyed (ElemName "thead")
 
-thead_ :: forall p i. Array (Tuple String (HTML p i)) -> HTML p i
+thead_ :: forall w i. Array (Tuple String (HTML w i)) -> HTML w i
 thead_ = thead []
 
-tr :: forall p i. KeyedNode I.HTMLtr p i
+tr :: forall w i. KeyedNode I.HTMLtr w i
 tr = keyed (ElemName "tr")
 
-tr_ :: forall p i. Array (Tuple String (HTML p i)) -> HTML p i
+tr_ :: forall w i. Array (Tuple String (HTML w i)) -> HTML w i
 tr_ = tr []
 
-ul :: forall p i. KeyedNode I.HTMLul p i
+ul :: forall w i. KeyedNode I.HTMLul w i
 ul = keyed (ElemName "ul")
 
-ul_ :: forall p i. Array (Tuple String (HTML p i)) -> HTML p i
+ul_ :: forall w i. Array (Tuple String (HTML w i)) -> HTML w i
 ul_ = ul []

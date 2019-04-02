@@ -131,677 +131,677 @@ import Halogen.VDom as VDom
 import Unsafe.Coerce (unsafeCoerce)
 
 -- | An HTML element that admits children.
-type Node r p i
+type Node r w i
    = Array (IProp r i)
-  -> Array (HTML p i)
-  -> HTML p i
+  -> Array (HTML w i)
+  -> HTML w i
 
 -- | An HTML element that does not admit children.
-type Leaf r p i
+type Leaf r w i
    = Array (IProp r i)
-  -> HTML p i
+  -> HTML w i
 
 -- | Creates an HTML element that expects indexed properties.
-element :: forall r p i. ElemName -> Array (IProp r i) -> Array (HTML p i) -> HTML p i
+element :: forall r w i. ElemName -> Array (IProp r i) -> Array (HTML w i) -> HTML w i
 element =
   Core.element Nothing #
     (unsafeCoerce
-      :: (ElemName -> Array (Prop i) -> Array (HTML p i) -> HTML p i) -> ElemName -> Array (IProp r i)
-      -> Array (HTML p i)
-      -> HTML p i)
+      :: (ElemName -> Array (Prop i) -> Array (HTML w i) -> HTML w i) -> ElemName -> Array (IProp r i)
+      -> Array (HTML w i)
+      -> HTML w i)
 
 -- | Creates a Namespaced HTML element that expects indexed properties.
-elementNS :: forall r p i. Namespace -> ElemName -> Array (IProp r i) -> Array (HTML p i) -> HTML p i
+elementNS :: forall r w i. Namespace -> ElemName -> Array (IProp r i) -> Array (HTML w i) -> HTML w i
 elementNS =
   pure >>> Core.element >>>
     (unsafeCoerce
-      :: (ElemName -> Array (Prop i) -> Array (HTML p i) -> HTML p i)
+      :: (ElemName -> Array (Prop i) -> Array (HTML w i) -> HTML w i)
       -> ElemName
       -> Array (IProp r i)
-      -> Array (HTML p i)
-      -> HTML p i)
+      -> Array (HTML w i)
+      -> HTML w i)
 
 -- | Creates an HTML element that expects indexed properties, with keyed
 -- | children.
-keyed :: forall r p i. ElemName -> Array (IProp r i) -> Array (Tuple String (HTML p i)) -> HTML p i
+keyed :: forall r w i. ElemName -> Array (IProp r i) -> Array (Tuple String (HTML w i)) -> HTML w i
 keyed =
   Core.keyed Nothing #
     (unsafeCoerce
-      :: (ElemName -> Array (Prop i) -> Array (Tuple String (HTML p i)) -> HTML p i)
+      :: (ElemName -> Array (Prop i) -> Array (Tuple String (HTML w i)) -> HTML w i)
       -> ElemName
       -> Array (IProp r i)
-      -> Array (Tuple String (HTML p i))
-      -> HTML p i)
+      -> Array (Tuple String (HTML w i))
+      -> HTML w i)
 
 -- | Creates a Namespaced HTML element that expects indexed properties, with
 -- | keyed children.
-keyedNS :: forall r p i. Namespace -> ElemName -> Array (IProp r i) -> Array (Tuple String (HTML p i)) -> HTML p i
+keyedNS :: forall r w i. Namespace -> ElemName -> Array (IProp r i) -> Array (Tuple String (HTML w i)) -> HTML w i
 keyedNS =
   pure >>> Core.keyed >>>
     (unsafeCoerce
-      :: (ElemName -> Array (Prop i) -> Array (Tuple String (HTML p i)) -> HTML p i)
+      :: (ElemName -> Array (Prop i) -> Array (Tuple String (HTML w i)) -> HTML w i)
       -> ElemName
       -> Array (IProp r i)
-      -> Array (Tuple String (HTML p i))
-      -> HTML p i)
+      -> Array (Tuple String (HTML w i))
+      -> HTML w i)
 
-withKeys :: forall r p i. (Array (IProp r i) -> Array (HTML p i) -> HTML p i) -> Array (IProp r i) -> Array (Tuple String (HTML p i)) -> HTML p i
+withKeys :: forall r w i. (Array (IProp r i) -> Array (HTML w i) -> HTML w i) -> Array (IProp r i) -> Array (Tuple String (HTML w i)) -> HTML w i
 withKeys ctor props children =
   case ctor props [] of
     HTML (VDom.Elem x y z _) -> HTML (VDom.Keyed x y z (coe children))
     h -> h
   where
-  coe :: Array (Tuple String (HTML p i)) -> Array (Tuple String (VDom.VDom (Array (Prop (Input i))) p))
+  coe :: Array (Tuple String (HTML w i)) -> Array (Tuple String (VDom.VDom (Array (Prop (Input i))) w))
   coe = unsafeCoerce
 
-withKeys_ :: forall p i. (Array (HTML p i) -> HTML p i) -> Array (Tuple String (HTML p i)) -> HTML p i
+withKeys_ :: forall w i. (Array (HTML w i) -> HTML w i) -> Array (Tuple String (HTML w i)) -> HTML w i
 withKeys_ ctor children =
   case ctor [] of
     HTML (VDom.Elem x y z _) -> HTML (VDom.Keyed x y z (coe children))
     h -> h
   where
-  coe :: Array (Tuple String (HTML p i)) -> Array (Tuple String (VDom.VDom (Array (Prop (Input i))) p))
+  coe :: Array (Tuple String (HTML w i)) -> Array (Tuple String (VDom.VDom (Array (Prop (Input i))) w))
   coe = unsafeCoerce
 
-a :: forall p i. Node I.HTMLa p i
+a :: forall w i. Node I.HTMLa w i
 a = element (ElemName "a")
 
-a_ :: forall p i. Array (HTML p i) -> HTML p i
+a_ :: forall w i. Array (HTML w i) -> HTML w i
 a_ = a []
 
-abbr :: forall p i. Node I.HTMLabbr p i
+abbr :: forall w i. Node I.HTMLabbr w i
 abbr = element (ElemName "abbr")
 
-abbr_ :: forall p i. Array (HTML p i) -> HTML p i
+abbr_ :: forall w i. Array (HTML w i) -> HTML w i
 abbr_ = abbr []
 
-address :: forall p i. Node I.HTMLaddress p i
+address :: forall w i. Node I.HTMLaddress w i
 address = element (ElemName "address")
 
-address_ :: forall p i. Array (HTML p i) -> HTML p i
+address_ :: forall w i. Array (HTML w i) -> HTML w i
 address_ = address []
 
-area :: forall p i. Leaf I.HTMLarea p i
+area :: forall w i. Leaf I.HTMLarea w i
 area props = element (ElemName "area") props []
 
-article :: forall p i. Node I.HTMLarticle p i
+article :: forall w i. Node I.HTMLarticle w i
 article = element (ElemName "article")
 
-article_ :: forall p i. Array (HTML p i) -> HTML p i
+article_ :: forall w i. Array (HTML w i) -> HTML w i
 article_ = article []
 
-aside :: forall p i. Node I.HTMLaside p i
+aside :: forall w i. Node I.HTMLaside w i
 aside = element (ElemName "aside")
 
-aside_ :: forall p i. Array (HTML p i) -> HTML p i
+aside_ :: forall w i. Array (HTML w i) -> HTML w i
 aside_ = aside []
 
-audio :: forall p i. Node I.HTMLaudio p i
+audio :: forall w i. Node I.HTMLaudio w i
 audio = element (ElemName "audio")
 
-audio_ :: forall p i. Array (HTML p i) -> HTML p i
+audio_ :: forall w i. Array (HTML w i) -> HTML w i
 audio_ = audio []
 
-b :: forall p i. Node I.HTMLb p i
+b :: forall w i. Node I.HTMLb w i
 b = element (ElemName "b")
 
-b_ :: forall p i. Array (HTML p i) -> HTML p i
+b_ :: forall w i. Array (HTML w i) -> HTML w i
 b_ = b []
 
-base :: forall p i. Leaf I.HTMLbase p i
+base :: forall w i. Leaf I.HTMLbase w i
 base props = element (ElemName "base") props []
 
-bdi :: forall p i. Node I.HTMLbdi p i
+bdi :: forall w i. Node I.HTMLbdi w i
 bdi = element (ElemName "bdi")
 
-bdi_ :: forall p i. Array (HTML p i) -> HTML p i
+bdi_ :: forall w i. Array (HTML w i) -> HTML w i
 bdi_ = bdi []
 
-bdo :: forall p i. Node I.HTMLbdo p i
+bdo :: forall w i. Node I.HTMLbdo w i
 bdo = element (ElemName "bdo")
 
-bdo_ :: forall p i. Array (HTML p i) -> HTML p i
+bdo_ :: forall w i. Array (HTML w i) -> HTML w i
 bdo_ = bdo []
 
-blockquote :: forall p i. Node I.HTMLblockquote p i
+blockquote :: forall w i. Node I.HTMLblockquote w i
 blockquote = element (ElemName "blockquote")
 
-blockquote_ :: forall p i. Array (HTML p i) -> HTML p i
+blockquote_ :: forall w i. Array (HTML w i) -> HTML w i
 blockquote_ = blockquote []
 
-body :: forall p i. Node I.HTMLbody p i
+body :: forall w i. Node I.HTMLbody w i
 body = element (ElemName "body")
 
-body_ :: forall p i. Array (HTML p i) -> HTML p i
+body_ :: forall w i. Array (HTML w i) -> HTML w i
 body_ = body []
 
-br :: forall p i. Leaf I.HTMLbr p i
+br :: forall w i. Leaf I.HTMLbr w i
 br props = element (ElemName "br") props []
 
-br_ :: forall p i. HTML p i
+br_ :: forall w i. HTML w i
 br_ = br []
 
-button :: forall p i. Node I.HTMLbutton p i
+button :: forall w i. Node I.HTMLbutton w i
 button = element (ElemName "button")
 
-button_ :: forall p i. Array (HTML p i) -> HTML p i
+button_ :: forall w i. Array (HTML w i) -> HTML w i
 button_ = button []
 
-canvas :: forall p i. Leaf I.HTMLcanvas p i
+canvas :: forall w i. Leaf I.HTMLcanvas w i
 canvas props = element (ElemName "canvas") props []
 
-caption :: forall p i. Node I.HTMLcaption p i
+caption :: forall w i. Node I.HTMLcaption w i
 caption = element (ElemName "caption")
 
-caption_ :: forall p i. Array (HTML p i) -> HTML p i
+caption_ :: forall w i. Array (HTML w i) -> HTML w i
 caption_ = caption []
 
-cite :: forall p i. Node I.HTMLcite p i
+cite :: forall w i. Node I.HTMLcite w i
 cite = element (ElemName "cite")
 
-cite_ :: forall p i. Array (HTML p i) -> HTML p i
+cite_ :: forall w i. Array (HTML w i) -> HTML w i
 cite_ = cite []
 
-code :: forall p i. Node I.HTMLcode p i
+code :: forall w i. Node I.HTMLcode w i
 code = element (ElemName "code")
 
-code_ :: forall p i. Array (HTML p i) -> HTML p i
+code_ :: forall w i. Array (HTML w i) -> HTML w i
 code_ = code []
 
-col :: forall p i. Leaf I.HTMLcol p i
+col :: forall w i. Leaf I.HTMLcol w i
 col props = element (ElemName "col") props []
 
-colgroup :: forall p i. Node I.HTMLcolgroup p i
+colgroup :: forall w i. Node I.HTMLcolgroup w i
 colgroup = element (ElemName "colgroup")
 
-colgroup_ :: forall p i. Array (HTML p i) -> HTML p i
+colgroup_ :: forall w i. Array (HTML w i) -> HTML w i
 colgroup_ = colgroup []
 
-command :: forall p i. Leaf I.HTMLcommand p i
+command :: forall w i. Leaf I.HTMLcommand w i
 command props = element (ElemName "command") props []
 
-datalist :: forall p i. Node I.HTMLdatalist p i
+datalist :: forall w i. Node I.HTMLdatalist w i
 datalist = element (ElemName "datalist")
 
-datalist_ :: forall p i. Array (HTML p i) -> HTML p i
+datalist_ :: forall w i. Array (HTML w i) -> HTML w i
 datalist_ = datalist []
 
-dd :: forall p i. Node I.HTMLdd p i
+dd :: forall w i. Node I.HTMLdd w i
 dd = element (ElemName "dd")
 
-dd_ :: forall p i. Array (HTML p i) -> HTML p i
+dd_ :: forall w i. Array (HTML w i) -> HTML w i
 dd_ = dd []
 
-del :: forall p i. Node I.HTMLdel p i
+del :: forall w i. Node I.HTMLdel w i
 del = element (ElemName "del")
 
-del_ :: forall p i. Array (HTML p i) -> HTML p i
+del_ :: forall w i. Array (HTML w i) -> HTML w i
 del_ = del []
 
-details :: forall p i. Node I.HTMLdetails p i
+details :: forall w i. Node I.HTMLdetails w i
 details = element (ElemName "details")
 
-details_ :: forall p i. Array (HTML p i) -> HTML p i
+details_ :: forall w i. Array (HTML w i) -> HTML w i
 details_ = details []
 
-dfn :: forall p i. Node I.HTMLdfn p i
+dfn :: forall w i. Node I.HTMLdfn w i
 dfn = element (ElemName "dfn")
 
-dfn_ :: forall p i. Array (HTML p i) -> HTML p i
+dfn_ :: forall w i. Array (HTML w i) -> HTML w i
 dfn_ = dfn []
 
-dialog :: forall p i. Node I.HTMLdialog p i
+dialog :: forall w i. Node I.HTMLdialog w i
 dialog = element (ElemName "dialog")
 
-dialog_ :: forall p i. Array (HTML p i) -> HTML p i
+dialog_ :: forall w i. Array (HTML w i) -> HTML w i
 dialog_ = dialog []
 
-div :: forall p i. Node I.HTMLdiv p i
+div :: forall w i. Node I.HTMLdiv w i
 div = element (ElemName "div")
 
-div_ :: forall p i. Array (HTML p i) -> HTML p i
+div_ :: forall w i. Array (HTML w i) -> HTML w i
 div_ = div []
 
-dl :: forall p i. Node I.HTMLdl p i
+dl :: forall w i. Node I.HTMLdl w i
 dl = element (ElemName "dl")
 
-dl_ :: forall p i. Array (HTML p i) -> HTML p i
+dl_ :: forall w i. Array (HTML w i) -> HTML w i
 dl_ = dl []
 
-dt :: forall p i. Node (I.HTMLdt) p i
+dt :: forall w i. Node (I.HTMLdt) w i
 dt = element (ElemName "dt")
 
-dt_ :: forall p i. Array (HTML p i) -> HTML p i
+dt_ :: forall w i. Array (HTML w i) -> HTML w i
 dt_ = dt []
 
-em :: forall p i. Node I.HTMLem p i
+em :: forall w i. Node I.HTMLem w i
 em = element (ElemName "em")
 
-em_ :: forall p i. Array (HTML p i) -> HTML p i
+em_ :: forall w i. Array (HTML w i) -> HTML w i
 em_ = em []
 
-embed :: forall p i. Node I.HTMLembed p i
+embed :: forall w i. Node I.HTMLembed w i
 embed = element (ElemName "embed")
 
-embed_ :: forall p i. Array (HTML p i) -> HTML p i
+embed_ :: forall w i. Array (HTML w i) -> HTML w i
 embed_ = embed []
 
-fieldset :: forall p i. Node I.HTMLfieldset p i
+fieldset :: forall w i. Node I.HTMLfieldset w i
 fieldset = element (ElemName "fieldset")
 
-fieldset_ :: forall p i. Array (HTML p i) -> HTML p i
+fieldset_ :: forall w i. Array (HTML w i) -> HTML w i
 fieldset_ = fieldset []
 
-figcaption :: forall p i. Node I.HTMLfigcaption p i
+figcaption :: forall w i. Node I.HTMLfigcaption w i
 figcaption = element (ElemName "figcaption")
 
-figcaption_ :: forall p i. Array (HTML p i) -> HTML p i
+figcaption_ :: forall w i. Array (HTML w i) -> HTML w i
 figcaption_ = figcaption []
 
-figure :: forall p i. Node I.HTMLfigure p i
+figure :: forall w i. Node I.HTMLfigure w i
 figure = element (ElemName "figure")
 
-figure_ :: forall p i. Array (HTML p i) -> HTML p i
+figure_ :: forall w i. Array (HTML w i) -> HTML w i
 figure_ = figure []
 
-footer :: forall p i. Node I.HTMLfooter p i
+footer :: forall w i. Node I.HTMLfooter w i
 footer = element (ElemName "footer")
 
-footer_ :: forall p i. Array (HTML p i) -> HTML p i
+footer_ :: forall w i. Array (HTML w i) -> HTML w i
 footer_ = footer []
 
-form :: forall p i. Node I.HTMLform p i
+form :: forall w i. Node I.HTMLform w i
 form = element (ElemName "form")
 
-form_ :: forall p i. Array (HTML p i) -> HTML p i
+form_ :: forall w i. Array (HTML w i) -> HTML w i
 form_ = form []
 
-h1 :: forall p i. Node I.HTMLh1 p i
+h1 :: forall w i. Node I.HTMLh1 w i
 h1 = element (ElemName "h1")
 
-h1_ :: forall p i. Array (HTML p i) -> HTML p i
+h1_ :: forall w i. Array (HTML w i) -> HTML w i
 h1_ = h1 []
 
-h2 :: forall p i. Node I.HTMLh2 p i
+h2 :: forall w i. Node I.HTMLh2 w i
 h2 = element (ElemName "h2")
 
-h2_ :: forall p i. Array (HTML p i) -> HTML p i
+h2_ :: forall w i. Array (HTML w i) -> HTML w i
 h2_ = h2 []
 
-h3 :: forall p i. Node I.HTMLh3 p i
+h3 :: forall w i. Node I.HTMLh3 w i
 h3 = element (ElemName "h3")
 
-h3_ :: forall p i. Array (HTML p i) -> HTML p i
+h3_ :: forall w i. Array (HTML w i) -> HTML w i
 h3_ = h3 []
 
-h4 :: forall p i. Node I.HTMLh4 p i
+h4 :: forall w i. Node I.HTMLh4 w i
 h4 = element (ElemName "h4")
 
-h4_ :: forall p i. Array (HTML p i) -> HTML p i
+h4_ :: forall w i. Array (HTML w i) -> HTML w i
 h4_ = h4 []
 
-h5 :: forall p i. Node I.HTMLh5 p i
+h5 :: forall w i. Node I.HTMLh5 w i
 h5 = element (ElemName "h5")
 
-h5_ :: forall p i. Array (HTML p i) -> HTML p i
+h5_ :: forall w i. Array (HTML w i) -> HTML w i
 h5_ = h5 []
 
-h6 :: forall p i. Node I.HTMLh6 p i
+h6 :: forall w i. Node I.HTMLh6 w i
 h6 = element (ElemName "h6")
 
-h6_ :: forall p i. Array (HTML p i) -> HTML p i
+h6_ :: forall w i. Array (HTML w i) -> HTML w i
 h6_ = h6 []
 
-head :: forall p i. Node I.HTMLhead p i
+head :: forall w i. Node I.HTMLhead w i
 head = element (ElemName "head")
 
-head_ :: forall p i. Array (HTML p i) -> HTML p i
+head_ :: forall w i. Array (HTML w i) -> HTML w i
 head_ = head []
 
-header :: forall p i. Node I.HTMLheader p i
+header :: forall w i. Node I.HTMLheader w i
 header = element (ElemName "header")
 
-header_ :: forall p i. Array (HTML p i) -> HTML p i
+header_ :: forall w i. Array (HTML w i) -> HTML w i
 header_ = header []
 
-hr :: forall p i. Leaf I.HTMLhr p i
+hr :: forall w i. Leaf I.HTMLhr w i
 hr props = element (ElemName "hr") props []
 
-hr_ :: forall p i. HTML p i
+hr_ :: forall w i. HTML w i
 hr_ = hr []
 
-html :: forall p i. Node I.HTMLhtml p i
+html :: forall w i. Node I.HTMLhtml w i
 html = element (ElemName "html")
 
-html_ :: forall p i. Array (HTML p i) -> HTML p i
+html_ :: forall w i. Array (HTML w i) -> HTML w i
 html_ = html []
 
-i :: forall p i. Node I.HTMLi p i
+i :: forall w i. Node I.HTMLi w i
 i = element (ElemName "i")
 
-i_ :: forall p i. Array (HTML p i) -> HTML p i
+i_ :: forall w i. Array (HTML w i) -> HTML w i
 i_ = i []
 
-iframe :: forall p i. Leaf I.HTMLiframe p i
+iframe :: forall w i. Leaf I.HTMLiframe w i
 iframe props = element (ElemName "iframe") props []
 
-img :: forall p i. Leaf I.HTMLimg p i
+img :: forall w i. Leaf I.HTMLimg w i
 img props = element (ElemName "img") props []
 
-input :: forall p i. Leaf I.HTMLinput p i
+input :: forall w i. Leaf I.HTMLinput w i
 input props = element (ElemName "input") props []
 
-ins :: forall p i. Node I.HTMLins p i
+ins :: forall w i. Node I.HTMLins w i
 ins = element (ElemName "ins")
 
-ins_ :: forall p i. Array (HTML p i) -> HTML p i
+ins_ :: forall w i. Array (HTML w i) -> HTML w i
 ins_ = ins []
 
-kbd :: forall p i. Node I.HTMLkbd p i
+kbd :: forall w i. Node I.HTMLkbd w i
 kbd = element (ElemName "kbd")
 
-kbd_ :: forall p i. Array (HTML p i) -> HTML p i
+kbd_ :: forall w i. Array (HTML w i) -> HTML w i
 kbd_ = kbd []
 
-label :: forall p i. Node I.HTMLlabel p i
+label :: forall w i. Node I.HTMLlabel w i
 label = element (ElemName "label")
 
-label_ :: forall p i. Array (HTML p i) -> HTML p i
+label_ :: forall w i. Array (HTML w i) -> HTML w i
 label_ = label []
 
-legend :: forall p i. Node I.HTMLlegend p i
+legend :: forall w i. Node I.HTMLlegend w i
 legend = element (ElemName "legend")
 
-legend_ :: forall p i. Array (HTML p i) -> HTML p i
+legend_ :: forall w i. Array (HTML w i) -> HTML w i
 legend_ = legend []
 
-li :: forall p i. Node I.HTMLli p i
+li :: forall w i. Node I.HTMLli w i
 li = element (ElemName "li")
 
-li_ :: forall p i. Array (HTML p i) -> HTML p i
+li_ :: forall w i. Array (HTML w i) -> HTML w i
 li_ = li []
 
-link :: forall p i. Leaf I.HTMLlink p i
+link :: forall w i. Leaf I.HTMLlink w i
 link props = element (ElemName "link") props []
 
-main :: forall p i. Node I.HTMLmain p i
+main :: forall w i. Node I.HTMLmain w i
 main = element (ElemName "main")
 
-main_ :: forall p i. Array (HTML p i) -> HTML p i
+main_ :: forall w i. Array (HTML w i) -> HTML w i
 main_ = main []
 
-map :: forall p i. Node I.HTMLmap p i
+map :: forall w i. Node I.HTMLmap w i
 map = element (ElemName "map")
 
-map_ :: forall p i. Array (HTML p i) -> HTML p i
+map_ :: forall w i. Array (HTML w i) -> HTML w i
 map_ = map []
 
-mark :: forall p i. Node I.HTMLmark p i
+mark :: forall w i. Node I.HTMLmark w i
 mark = element (ElemName "mark")
 
-mark_ :: forall p i. Array (HTML p i) -> HTML p i
+mark_ :: forall w i. Array (HTML w i) -> HTML w i
 mark_ = mark []
 
-menu :: forall p i. Node I.HTMLmenu p i
+menu :: forall w i. Node I.HTMLmenu w i
 menu = element (ElemName "menu")
 
-menu_ :: forall p i. Array (HTML p i) -> HTML p i
+menu_ :: forall w i. Array (HTML w i) -> HTML w i
 menu_ = menu []
 
-menuitem :: forall p i. Node I.HTMLmenuitem p i
+menuitem :: forall w i. Node I.HTMLmenuitem w i
 menuitem = element (ElemName "menuitem")
 
-menuitem_ :: forall p i. Array (HTML p i) -> HTML p i
+menuitem_ :: forall w i. Array (HTML w i) -> HTML w i
 menuitem_ = menuitem []
 
-meta :: forall p i. Leaf I.HTMLmeta p i
+meta :: forall w i. Leaf I.HTMLmeta w i
 meta props = element (ElemName "meta") props []
 
-meter :: forall p i. Node I.HTMLmeter p i
+meter :: forall w i. Node I.HTMLmeter w i
 meter = element (ElemName "meter")
 
-meter_ :: forall p i. Array (HTML p i) -> HTML p i
+meter_ :: forall w i. Array (HTML w i) -> HTML w i
 meter_ = meter []
 
-nav :: forall p i. Node I.HTMLnav p i
+nav :: forall w i. Node I.HTMLnav w i
 nav = element (ElemName "nav")
 
-nav_ :: forall p i. Array (HTML p i) -> HTML p i
+nav_ :: forall w i. Array (HTML w i) -> HTML w i
 nav_ = nav []
 
-noscript :: forall p i. Node I.HTMLnoscript p i
+noscript :: forall w i. Node I.HTMLnoscript w i
 noscript = element (ElemName "noscript")
 
-noscript_ :: forall p i. Array (HTML p i) -> HTML p i
+noscript_ :: forall w i. Array (HTML w i) -> HTML w i
 noscript_ = noscript []
 
-object :: forall p i. Node I.HTMLobject p i
+object :: forall w i. Node I.HTMLobject w i
 object = element (ElemName "object")
 
-object_ :: forall p i. Array (HTML p i) -> HTML p i
+object_ :: forall w i. Array (HTML w i) -> HTML w i
 object_ = object []
 
-ol :: forall p i. Node I.HTMLol p i
+ol :: forall w i. Node I.HTMLol w i
 ol = element (ElemName "ol")
 
-ol_ :: forall p i. Array (HTML p i) -> HTML p i
+ol_ :: forall w i. Array (HTML w i) -> HTML w i
 ol_ = ol []
 
-optgroup :: forall p i. Node I.HTMLoptgroup p i
+optgroup :: forall w i. Node I.HTMLoptgroup w i
 optgroup = element (ElemName "optgroup")
 
-optgroup_ :: forall p i. Array (HTML p i) -> HTML p i
+optgroup_ :: forall w i. Array (HTML w i) -> HTML w i
 optgroup_ = optgroup []
 
-option :: forall p i. Node I.HTMLoption p i
+option :: forall w i. Node I.HTMLoption w i
 option = element (ElemName "option")
 
-option_ :: forall p i. Array (HTML p i) -> HTML p i
+option_ :: forall w i. Array (HTML w i) -> HTML w i
 option_ = option []
 
-output :: forall p i. Node I.HTMLoutput p i
+output :: forall w i. Node I.HTMLoutput w i
 output = element (ElemName "output")
 
-output_ :: forall p i. Array (HTML p i) -> HTML p i
+output_ :: forall w i. Array (HTML w i) -> HTML w i
 output_ = output []
 
-p :: forall p i. Node I.HTMLp p i
+p :: forall w i. Node I.HTMLp w i
 p = element (ElemName "p")
 
-p_ :: forall p i. Array (HTML p i) -> HTML p i
+p_ :: forall w i. Array (HTML w i) -> HTML w i
 p_ = p []
 
-param :: forall p i. Leaf I.HTMLparam p i
+param :: forall w i. Leaf I.HTMLparam w i
 param props = element (ElemName "param") props []
 
-pre :: forall p i. Node I.HTMLpre p i
+pre :: forall w i. Node I.HTMLpre w i
 pre = element (ElemName "pre")
 
-pre_ :: forall p i. Array (HTML p i) -> HTML p i
+pre_ :: forall w i. Array (HTML w i) -> HTML w i
 pre_ = pre []
 
-progress :: forall p i. Node I.HTMLprogress p i
+progress :: forall w i. Node I.HTMLprogress w i
 progress = element (ElemName "progress")
 
-progress_ :: forall p i. Array (HTML p i) -> HTML p i
+progress_ :: forall w i. Array (HTML w i) -> HTML w i
 progress_ = progress []
 
-q :: forall p i. Node I.HTMLq p i
+q :: forall w i. Node I.HTMLq w i
 q = element (ElemName "q")
 
-q_ :: forall p i. Array (HTML p i) -> HTML p i
+q_ :: forall w i. Array (HTML w i) -> HTML w i
 q_ = q []
 
-rp :: forall p i. Node I.HTMLrp p i
+rp :: forall w i. Node I.HTMLrp w i
 rp = element (ElemName "rp")
 
-rp_ :: forall p i. Array (HTML p i) -> HTML p i
+rp_ :: forall w i. Array (HTML w i) -> HTML w i
 rp_ = rp []
 
-rt :: forall p i. Node I.HTMLrt p i
+rt :: forall w i. Node I.HTMLrt w i
 rt = element (ElemName "rt")
 
-rt_ :: forall p i. Array (HTML p i) -> HTML p i
+rt_ :: forall w i. Array (HTML w i) -> HTML w i
 rt_ = rt []
 
-ruby :: forall p i. Node I.HTMLruby p i
+ruby :: forall w i. Node I.HTMLruby w i
 ruby = element (ElemName "ruby")
 
-ruby_ :: forall p i. Array (HTML p i) -> HTML p i
+ruby_ :: forall w i. Array (HTML w i) -> HTML w i
 ruby_ = ruby []
 
-samp :: forall p i. Node I.HTMLsamp p i
+samp :: forall w i. Node I.HTMLsamp w i
 samp = element (ElemName "samp")
 
-samp_ :: forall p i. Array (HTML p i) -> HTML p i
+samp_ :: forall w i. Array (HTML w i) -> HTML w i
 samp_ = samp []
 
-script :: forall p i. Node I.HTMLscript p i
+script :: forall w i. Node I.HTMLscript w i
 script = element (ElemName "script")
 
-script_ :: forall p i. Array (HTML p i) -> HTML p i
+script_ :: forall w i. Array (HTML w i) -> HTML w i
 script_ = script []
 
-section :: forall p i. Node I.HTMLsection p i
+section :: forall w i. Node I.HTMLsection w i
 section = element (ElemName "section")
 
-section_ :: forall p i. Array (HTML p i) -> HTML p i
+section_ :: forall w i. Array (HTML w i) -> HTML w i
 section_ = section []
 
-select :: forall p i. Node I.HTMLselect p i
+select :: forall w i. Node I.HTMLselect w i
 select = element (ElemName "select")
 
-select_ :: forall p i. Array (HTML p i) -> HTML p i
+select_ :: forall w i. Array (HTML w i) -> HTML w i
 select_ = select []
 
-small :: forall p i. Node I.HTMLsmall p i
+small :: forall w i. Node I.HTMLsmall w i
 small = element (ElemName "small")
 
-small_ :: forall p i. Array (HTML p i) -> HTML p i
+small_ :: forall w i. Array (HTML w i) -> HTML w i
 small_ = small []
 
-source :: forall p i. Leaf I.HTMLsource p i
+source :: forall w i. Leaf I.HTMLsource w i
 source props = element (ElemName "source") props []
 
-span :: forall p i. Node I.HTMLspan p i
+span :: forall w i. Node I.HTMLspan w i
 span = element (ElemName "span")
 
-span_ :: forall p i. Array (HTML p i) -> HTML p i
+span_ :: forall w i. Array (HTML w i) -> HTML w i
 span_ = span []
 
-strong :: forall p i. Node I.HTMLstrong p i
+strong :: forall w i. Node I.HTMLstrong w i
 strong = element (ElemName "strong")
 
-strong_ :: forall p i. Array (HTML p i) -> HTML p i
+strong_ :: forall w i. Array (HTML w i) -> HTML w i
 strong_ = strong []
 
-style :: forall p i. Node I.HTMLstyle p i
+style :: forall w i. Node I.HTMLstyle w i
 style = element (ElemName "style")
 
-style_ :: forall p i. Array (HTML p i) -> HTML p i
+style_ :: forall w i. Array (HTML w i) -> HTML w i
 style_ = style []
 
-sub :: forall p i. Node I.HTMLsub p i
+sub :: forall w i. Node I.HTMLsub w i
 sub = element (ElemName "sub")
 
-sub_ :: forall p i. Array (HTML p i) -> HTML p i
+sub_ :: forall w i. Array (HTML w i) -> HTML w i
 sub_ = sub []
 
-summary :: forall p i. Node I.HTMLsummary p i
+summary :: forall w i. Node I.HTMLsummary w i
 summary = element (ElemName "summary")
 
-summary_ :: forall p i. Array (HTML p i) -> HTML p i
+summary_ :: forall w i. Array (HTML w i) -> HTML w i
 summary_ = summary []
 
-sup :: forall p i. Node I.HTMLsup p i
+sup :: forall w i. Node I.HTMLsup w i
 sup = element (ElemName "sup")
 
-sup_ :: forall p i. Array (HTML p i) -> HTML p i
+sup_ :: forall w i. Array (HTML w i) -> HTML w i
 sup_ = sup []
 
-table :: forall p i. Node I.HTMLtable p i
+table :: forall w i. Node I.HTMLtable w i
 table = element (ElemName "table")
 
-table_ :: forall p i. Array (HTML p i) -> HTML p i
+table_ :: forall w i. Array (HTML w i) -> HTML w i
 table_ = table []
 
-tbody :: forall p i. Node I.HTMLtbody p i
+tbody :: forall w i. Node I.HTMLtbody w i
 tbody = element (ElemName "tbody")
 
-tbody_ :: forall p i. Array (HTML p i) -> HTML p i
+tbody_ :: forall w i. Array (HTML w i) -> HTML w i
 tbody_ = tbody []
 
-td :: forall p i. Node I.HTMLtd p i
+td :: forall w i. Node I.HTMLtd w i
 td = element (ElemName "td")
 
-td_ :: forall p i. Array (HTML p i) -> HTML p i
+td_ :: forall w i. Array (HTML w i) -> HTML w i
 td_ = td []
 
-textarea :: forall p i. Leaf I.HTMLtextarea p i
+textarea :: forall w i. Leaf I.HTMLtextarea w i
 textarea es = element (ElemName "textarea") es []
 
-tfoot :: forall p i. Node I.HTMLtfoot p i
+tfoot :: forall w i. Node I.HTMLtfoot w i
 tfoot = element (ElemName "tfoot")
 
-tfoot_ :: forall p i. Array (HTML p i) -> HTML p i
+tfoot_ :: forall w i. Array (HTML w i) -> HTML w i
 tfoot_ = tfoot []
 
-th :: forall p i. Node I.HTMLth p i
+th :: forall w i. Node I.HTMLth w i
 th = element (ElemName "th")
 
-th_ :: forall p i. Array (HTML p i) -> HTML p i
+th_ :: forall w i. Array (HTML w i) -> HTML w i
 th_ = th []
 
-thead :: forall p i. Node I.HTMLthead p i
+thead :: forall w i. Node I.HTMLthead w i
 thead = element (ElemName "thead")
 
-thead_ :: forall p i. Array (HTML p i) -> HTML p i
+thead_ :: forall w i. Array (HTML w i) -> HTML w i
 thead_ = thead []
 
-time :: forall p i. Node I.HTMLtime p i
+time :: forall w i. Node I.HTMLtime w i
 time = element (ElemName "time")
 
-time_ :: forall p i. Array (HTML p i) -> HTML p i
+time_ :: forall w i. Array (HTML w i) -> HTML w i
 time_ = time []
 
-title :: forall p i. Node I.HTMLtitle p i
+title :: forall w i. Node I.HTMLtitle w i
 title = element (ElemName "title")
 
-title_ :: forall p i. Array (HTML p i) -> HTML p i
+title_ :: forall w i. Array (HTML w i) -> HTML w i
 title_ = title []
 
-tr :: forall p i. Node I.HTMLtr p i
+tr :: forall w i. Node I.HTMLtr w i
 tr = element (ElemName "tr")
 
-tr_ :: forall p i. Array (HTML p i) -> HTML p i
+tr_ :: forall w i. Array (HTML w i) -> HTML w i
 tr_ = tr []
 
-track :: forall p i. Leaf I.HTMLtrack p i
+track :: forall w i. Leaf I.HTMLtrack w i
 track props = element (ElemName "track") props []
 
-u :: forall p i. Node I.HTMLu p i
+u :: forall w i. Node I.HTMLu w i
 u = element (ElemName "u")
 
-u_ :: forall p i. Array (HTML p i) -> HTML p i
+u_ :: forall w i. Array (HTML w i) -> HTML w i
 u_ = u []
 
-ul :: forall p i. Node I.HTMLul p i
+ul :: forall w i. Node I.HTMLul w i
 ul = element (ElemName "ul")
 
-ul_ :: forall p i. Array (HTML p i) -> HTML p i
+ul_ :: forall w i. Array (HTML w i) -> HTML w i
 ul_ = ul []
 
-var :: forall p i. Node I.HTMLvar p i
+var :: forall w i. Node I.HTMLvar w i
 var = element (ElemName "var")
 
-var_ :: forall p i. Array (HTML p i) -> HTML p i
+var_ :: forall w i. Array (HTML w i) -> HTML w i
 var_ = var []
 
-video :: forall p i. Node I.HTMLvideo p i
+video :: forall w i. Node I.HTMLvideo w i
 video = element (ElemName "video")
 
-video_ :: forall p i. Array (HTML p i) -> HTML p i
+video_ :: forall w i. Array (HTML w i) -> HTML w i
 video_ = video []
 
-wbr :: forall p i. Leaf I.HTMLwbr p i
+wbr :: forall w i. Leaf I.HTMLwbr w i
 wbr props = element (ElemName "wbr") props []

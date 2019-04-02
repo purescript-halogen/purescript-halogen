@@ -1,6 +1,7 @@
 module Halogen.HTML.Core
   ( HTML(..)
-  , slot
+  , renderWidget
+  , widget
   , text
   , element
   , keyed
@@ -18,41 +19,38 @@ module Halogen.HTML.Core
 
 import Prelude
 
-import Data.Bifunctor (class Bifunctor, bimap, rmap)
-import Data.Maybe (Maybe(..))
-import Data.MediaType (MediaType)
-import Data.Newtype (class Newtype, unwrap)
-import Data.Tuple (Tuple)
-
-import Web.DOM.Element (Element)
-import Web.Event.Event (Event, EventType)
 import DOM.HTML.Indexed.ButtonType (ButtonType, renderButtonType)
 import DOM.HTML.Indexed.CrossOriginValue (CrossOriginValue, renderCrossOriginValue)
 import DOM.HTML.Indexed.DirValue (DirValue, renderDirValue)
 import DOM.HTML.Indexed.FormMethod (FormMethod, renderFormMethod)
+import DOM.HTML.Indexed.InputAcceptType (InputAcceptType, renderInputAcceptType)
 import DOM.HTML.Indexed.InputType (InputType, renderInputType)
 import DOM.HTML.Indexed.KindValue (KindValue, renderKindValue)
-import DOM.HTML.Indexed.MenuitemType (MenuitemType, renderMenuitemType)
 import DOM.HTML.Indexed.MenuType (MenuType, renderMenuType)
+import DOM.HTML.Indexed.MenuitemType (MenuitemType, renderMenuitemType)
 import DOM.HTML.Indexed.OnOff (OnOff, renderOnOff)
 import DOM.HTML.Indexed.OrderedListType (OrderedListType, renderOrderedListType)
 import DOM.HTML.Indexed.PreloadValue (PreloadValue, renderPreloadValue)
 import DOM.HTML.Indexed.ScopeValue (ScopeValue, renderScopeValue)
 import DOM.HTML.Indexed.StepValue (StepValue, renderStepValue)
 import DOM.HTML.Indexed.WrapValue (WrapValue, renderWrapValue)
-
+import Data.Bifunctor (class Bifunctor, bimap, rmap)
+import Data.Maybe (Maybe(..))
+import Data.MediaType (MediaType)
+import Data.Newtype (class Newtype, un, unwrap)
+import Data.Tuple (Tuple)
 import Halogen.Query.Input (Input)
-import Halogen.VDom as VDom
-import Halogen.VDom.DOM.Prop (ElemRef(..), Prop(..), PropValue, propFromBoolean, propFromInt, propFromNumber, propFromString)
-
-import Unsafe.Coerce (unsafeCoerce)
-
 import Halogen.VDom (ElemName(..), Namespace(..)) as Exports
+import Halogen.VDom.DOM.Prop (ElemRef(..), Prop(..), PropValue, propFromBoolean, propFromInt, propFromNumber, propFromString)
 import Halogen.VDom.DOM.Prop (Prop(..), PropValue) as Exports
+import Halogen.VDom.Types as VDom
+import Unsafe.Coerce (unsafeCoerce)
+import Web.DOM.Element (Element)
+import Web.Event.Event (Event, EventType)
 
-newtype HTML p i = HTML (VDom.VDom (Array (Prop (Input i))) p)
+newtype HTML w i = HTML (VDom.VDom (Array (Prop (Input i))) w)
 
-derive instance newtypeHTML :: Newtype (HTML p i) _
+derive instance newtypeHTML :: Newtype (HTML w i) _
 
 instance bifunctorHTML :: Bifunctor HTML where
   bimap f g (HTML vdom) = HTML (bimap (map (map (map g))) f vdom)
@@ -60,31 +58,34 @@ instance bifunctorHTML :: Bifunctor HTML where
 instance functorHTML :: Functor (HTML p) where
   map = rmap
 
--- | A smart constructor for widget slots in the HTML.
-slot :: forall p q. p -> HTML p q
-slot = HTML <<< VDom.Widget
+renderWidget ∷ ∀ w x i j. (i → j) → (w → HTML x j) → HTML w i → HTML x j
+renderWidget f g (HTML vdom) =
+  HTML (VDom.renderWidget (map (map (map f))) (un HTML <<< g) vdom)
+
+widget :: forall p q. p -> HTML p q
+widget = HTML <<< VDom.Widget
 
 -- | Constructs a text node `HTML` value.
-text :: forall p i. String -> HTML p i
+text :: forall w i. String -> HTML w i
 text = HTML <<< VDom.Text
 
 -- | A smart constructor for HTML elements.
-element :: forall p i. Maybe VDom.Namespace -> VDom.ElemName -> Array (Prop i) -> Array (HTML p i) -> HTML p i
+element :: forall w i. Maybe VDom.Namespace -> VDom.ElemName -> Array (Prop i) -> Array (HTML w i) -> HTML w i
 element ns =
   coe (\name props children -> VDom.Elem ns name props children)
   where
   coe
-    :: (VDom.ElemName -> Array (Prop i) -> Array (VDom.VDom (Array (Prop i)) p) -> VDom.VDom (Array (Prop i)) p)
-    -> VDom.ElemName -> Array (Prop i) -> Array (HTML p i) -> HTML p i
+    :: (VDom.ElemName -> Array (Prop i) -> Array (VDom.VDom (Array (Prop i)) w) -> VDom.VDom (Array (Prop i)) w)
+    -> VDom.ElemName -> Array (Prop i) -> Array (HTML w i) -> HTML w i
   coe = unsafeCoerce
 
 -- | A smart constructor for HTML elements with keyed children.
-keyed :: forall p i. Maybe VDom.Namespace -> VDom.ElemName -> Array (Prop i) -> Array (Tuple String (HTML p i)) -> HTML p i
+keyed :: forall w i. Maybe VDom.Namespace -> VDom.ElemName -> Array (Prop i) -> Array (Tuple String (HTML w i)) -> HTML w i
 keyed ns = coe (\name props children -> VDom.Keyed ns name props children)
   where
   coe
-    :: (VDom.ElemName -> Array (Prop i) -> Array (Tuple String (VDom.VDom (Array (Prop i)) p)) -> VDom.VDom (Array (Prop i)) p)
-    -> VDom.ElemName -> Array (Prop i) -> Array (Tuple String (HTML p i)) -> HTML p i
+    :: (VDom.ElemName -> Array (Prop i) -> Array (Tuple String (VDom.VDom (Array (Prop i)) w)) -> VDom.VDom (Array (Prop i)) w)
+    -> VDom.ElemName -> Array (Prop i) -> Array (Tuple String (HTML w i)) -> HTML w i
   coe = unsafeCoerce
 
 -- | Create a HTML property.
@@ -107,62 +108,65 @@ ref f = Ref $ f <<< case _ of
 class IsProp a where
   toPropValue :: a -> PropValue
 
-instance stringIsProp :: IsProp String where
+instance isPropString :: IsProp String where
   toPropValue = propFromString
 
-instance intIsProp :: IsProp Int where
+instance isPropInt :: IsProp Int where
   toPropValue = propFromInt
 
-instance numberIsProp :: IsProp Number where
+instance isPropNumber :: IsProp Number where
   toPropValue = propFromNumber
 
-instance booleanIsProp :: IsProp Boolean where
+instance isPropBoolean :: IsProp Boolean where
   toPropValue = propFromBoolean
 
-instance mediaTypeIsProp :: IsProp MediaType where
+instance isPropMediaType :: IsProp MediaType where
   toPropValue = propFromString <<< unwrap
 
-instance buttonTypeIsProp :: IsProp ButtonType where
+instance isPropButtonType :: IsProp ButtonType where
   toPropValue = propFromString <<< renderButtonType
 
-instance crossOriginValueIsProp :: IsProp CrossOriginValue where
+instance isPropCrossOriginValue :: IsProp CrossOriginValue where
   toPropValue = propFromString <<< renderCrossOriginValue
 
-instance dirValueIsProp :: IsProp DirValue where
+instance isPropDirValue :: IsProp DirValue where
   toPropValue = propFromString <<< renderDirValue
 
-instance formMethodIsProp :: IsProp FormMethod where
+instance isPropFormMethod :: IsProp FormMethod where
   toPropValue = propFromString <<< renderFormMethod
 
-instance inputTypeIsProp :: IsProp InputType where
+instance isPropInputType :: IsProp InputType where
   toPropValue = propFromString <<< renderInputType
 
-instance kindValueIsProp :: IsProp KindValue where
+instance isPropKindValue :: IsProp KindValue where
   toPropValue = propFromString <<< renderKindValue
 
-instance menuitemTypeIsProp :: IsProp MenuitemType where
+instance isPropMenuitemType :: IsProp MenuitemType where
   toPropValue = propFromString <<< renderMenuitemType
 
-instance menuTypeIsProp :: IsProp MenuType where
+instance isPropMenuType :: IsProp MenuType where
   toPropValue = propFromString <<< renderMenuType
 
-instance onOffIsProp :: IsProp OnOff where
+instance isPropOnOff :: IsProp OnOff where
   toPropValue = propFromString <<< renderOnOff
 
-instance orderedListTypeIsProp :: IsProp OrderedListType where
+instance isPropOrderedListType :: IsProp OrderedListType where
   toPropValue = propFromString <<< renderOrderedListType
 
-instance preloadValueIsProp :: IsProp PreloadValue where
+instance isPropPreloadValue :: IsProp PreloadValue where
   toPropValue = propFromString <<< renderPreloadValue
 
-instance scopeValueIsProp :: IsProp ScopeValue where
+instance isPropScopeValue :: IsProp ScopeValue where
   toPropValue = propFromString <<< renderScopeValue
 
-instance stepValueIsProp :: IsProp StepValue where
+instance isPropStepValue :: IsProp StepValue where
   toPropValue = propFromString <<< renderStepValue
 
-instance wrapValueIsProp :: IsProp WrapValue where
+instance isPropWrapValue :: IsProp WrapValue where
   toPropValue = propFromString <<< renderWrapValue
+
+instance isPropInputAcceptType :: IsProp InputAcceptType where
+  toPropValue = propFromString <<< renderInputAcceptType
 
 -- | A type-safe wrapper for property names.
 -- |

@@ -34,53 +34,53 @@ import Web.HTML.HTMLElement (HTMLElement) as DOM
 import Web.HTML.HTMLElement as HTMLElement
 import Web.HTML.Window (document) as DOM
 
-type VHTML act ps =
-  V.VDom (Array (Prop (Input act))) (ComponentSlot HTML ps Aff act)
+type VHTML action slots =
+  V.VDom (Array (Prop (Input action))) (ComponentSlot HTML slots Aff action)
 
-type ChildRenderer act ps
-  = ComponentSlotBox HTML ps Aff act -> Effect (RenderStateX RenderState)
+type ChildRenderer action slots
+  = ComponentSlotBox HTML slots Aff action -> Effect (RenderStateX RenderState)
 
-newtype RenderState s act ps o =
+newtype RenderState state action slots output =
   RenderState
     { node :: DOM.Node
-    , machine :: V.Step (VHTML act ps) DOM.Node
-    , renderChildRef :: Ref (ChildRenderer act ps)
+    , machine :: V.Step (VHTML action slots) DOM.Node
+    , renderChildRef :: Ref (ChildRenderer action slots)
     }
 
-type HTMLThunk ps act =
-  Thunk (HTML (ComponentSlot HTML ps Aff act)) act
+type HTMLThunk slots action =
+  Thunk (HTML (ComponentSlot HTML slots Aff action)) action
 
-type WidgetState ps act =
-  Maybe (V.Step (HTMLThunk ps act) DOM.Node)
+type WidgetState slots action =
+  Maybe (V.Step (HTMLThunk slots action) DOM.Node)
 
 mkSpec
-  :: forall act ps
-   . (Input act -> Effect Unit)
-  -> Ref (ChildRenderer act ps)
+  :: forall action slots
+   . (Input action -> Effect Unit)
+  -> Ref (ChildRenderer action slots)
   -> DOM.Document
   -> V.VDomSpec
-      (Array (VP.Prop (Input act)))
-      (ComponentSlot HTML ps Aff act)
+      (Array (VP.Prop (Input action)))
+      (ComponentSlot HTML slots Aff action)
 mkSpec handler renderChildRef document =
   V.VDomSpec { buildWidget, buildAttributes, document }
   where
 
   buildAttributes
     :: DOM.Element
-    -> V.Machine (Array (VP.Prop (Input act))) Unit
+    -> V.Machine (Array (VP.Prop (Input action))) Unit
   buildAttributes = VP.buildProp handler
 
   buildWidget
     :: V.VDomSpec
-          (Array (VP.Prop (Input act)))
-          (ComponentSlot HTML ps Aff act)
+          (Array (VP.Prop (Input action)))
+          (ComponentSlot HTML slots Aff action)
     -> V.Machine
-          (ComponentSlot HTML ps Aff act)
+          (ComponentSlot HTML slots Aff action)
           DOM.Node
   buildWidget spec = render
     where
 
-    render :: V.Machine (ComponentSlot HTML ps Aff act) DOM.Node
+    render :: V.Machine (ComponentSlot HTML slots Aff action) DOM.Node
     render = EFn.mkEffectFn1 \slot ->
       case slot of
         ComponentSlot cs ->
@@ -90,9 +90,9 @@ mkSpec handler renderChildRef document =
           pure $ V.mkStep $ V.Step (V.extract step) (Just step) patch done
 
     patch
-      :: EFn.EffectFn2 (WidgetState ps act)
-            (ComponentSlot HTML ps Aff act)
-            (V.Step (ComponentSlot HTML ps Aff act) DOM.Node)
+      :: EFn.EffectFn2 (WidgetState slots action)
+            (ComponentSlot HTML slots Aff action)
+            (V.Step (ComponentSlot HTML slots Aff action) DOM.Node)
     patch = EFn.mkEffectFn2 \st slot ->
       case st of
         Just step -> case slot of
@@ -104,20 +104,20 @@ mkSpec handler renderChildRef document =
             pure $ V.mkStep $ V.Step (V.extract step') (Just step') patch done
         _ -> EFn.runEffectFn1 render slot
 
-    buildThunk :: V.Machine (HTMLThunk ps act) DOM.Node
+    buildThunk :: V.Machine (HTMLThunk slots action) DOM.Node
     buildThunk = Thunk.buildThunk unwrap spec
 
     renderComponentSlot
       :: EFn.EffectFn1
-            (ComponentSlotBox HTML ps Aff act)
-            (V.Step (ComponentSlot HTML ps Aff act) DOM.Node)
+            (ComponentSlotBox HTML slots Aff action)
+            (V.Step (ComponentSlot HTML slots Aff action) DOM.Node)
     renderComponentSlot = EFn.mkEffectFn1 \cs -> do
       renderChild <- Ref.read renderChildRef
       rsx <- renderChild cs
       let node = getNode rsx
       pure $ V.mkStep $ V.Step node Nothing patch done
 
-  done :: EFn.EffectFn1 (WidgetState ps act) Unit
+  done :: EFn.EffectFn1 (WidgetState slots action) Unit
   done = EFn.mkEffectFn1 \st ->
     case st of
       Just step -> EFn.runEffectFn1 V.halt step
@@ -127,11 +127,11 @@ mkSpec handler renderChildRef document =
   getNode = unRenderStateX (\(RenderState { node }) -> node)
 
 runUI
-  :: forall f i o
-   . Component HTML f i o Aff
-  -> i
+  :: forall query input output
+   . Component HTML query input output Aff
+  -> input
   -> DOM.HTMLElement
-  -> Aff (HalogenIO f o Aff)
+  -> Aff (HalogenIO query output Aff)
 runUI component i element = do
   document <- liftEffect $ HTMLDocument.toDocument <$> (DOM.document =<< DOM.window)
   AD.runUI (renderSpec document element) component i
@@ -149,12 +149,12 @@ renderSpec document container =
   where
 
   render
-    :: forall s act ps o
-     . (Input act -> Effect Unit)
-    -> (ComponentSlotBox HTML ps Aff act -> Effect (RenderStateX RenderState))
-    -> HTML (ComponentSlot HTML ps Aff act) act
-    -> Maybe (RenderState s act ps o)
-    -> Effect (RenderState s act ps o)
+    :: forall state action slots output
+     . (Input action -> Effect Unit)
+    -> (ComponentSlotBox HTML slots Aff action -> Effect (RenderStateX RenderState))
+    -> HTML (ComponentSlot HTML slots Aff action) action
+    -> Maybe (RenderState state action slots output)
+    -> Effect (RenderState state action slots output)
   render handler child (HTML vdom) =
     case _ of
       Nothing -> do
@@ -174,7 +174,7 @@ renderSpec document container =
           substInParent newNode nextSib parent
         pure $ RenderState { machine: machine', node: newNode, renderChildRef }
 
-removeChild :: forall s act ps o. RenderState s act ps o -> Effect Unit
+removeChild :: forall state action slots output. RenderState state action slots output -> Effect Unit
 removeChild (RenderState { node }) = do
   npn <- DOM.parentNode node
   traverse_ (\pn -> DOM.removeChild node pn) npn

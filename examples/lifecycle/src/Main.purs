@@ -3,6 +3,7 @@ module Example.Lifecycle.Main where
 import Prelude
 
 import Data.Array (snoc, filter, reverse)
+import Data.Const (Const)
 import Data.Maybe (Maybe(..))
 import Data.Symbol (SProxy(..))
 import Data.Tuple (Tuple(..))
@@ -28,76 +29,73 @@ initialState =
   , slots: []
   }
 
-data Query a
-  = Initialize a
-  | Finalize a
-  | Add a
-  | Reverse a
-  | Remove Int a
-  | ReportRoot String a
+data Action
+  = Initialize
+  | Finalize
+  | Add
+  | Reverse
+  | Remove Int
+  | ReportRoot String
 
 type ChildSlots =
-  ( child :: H.Slot Child.Query Child.Message Int
+  ( child :: H.Slot (Const Void) Child.Message Int
   )
 
 _child = SProxy :: SProxy "child"
 
-ui :: H.Component HH.HTML Query Unit Void Aff
-ui = H.component
-  { initialState: const initialState
-  , render
-  , eval
-  , initializer: Just (H.action Initialize)
-  , finalizer: Just (H.action Finalize)
-  , receiver: const Nothing
-  }
+ui :: forall f. H.Component HH.HTML f Unit Void Aff
+ui =
+  H.mkComponent
+    { initialState: const initialState
+    , render
+    , eval: H.mkEval (H.defaultEval
+        { handleAction = handleAction
+        , initialize = Just Initialize
+        , finalize = Just Finalize
+        })
+    }
   where
-  render :: State -> H.ComponentHTML Query ChildSlots Aff
+  render :: State -> H.ComponentHTML Action ChildSlots Aff
   render state =
     HH.div_
       [ HH.button
-          [ HE.onClick (HE.input_ Add) ]
+          [ HE.onClick \_ -> Just Add ]
           [ HH.text "Add" ]
       , HH.button
-          [ HE.onClick (HE.input_ Reverse) ]
+          [ HE.onClick \_ -> Just Reverse ]
           [ HH.text "Reverse" ]
       , HK.ul_ $ flip map state.slots \sid ->
           Tuple (show sid) $
             HH.li_
               [ HH.button
-                  [ HE.onClick (HE.input_ $ Remove sid) ]
+                  [ HE.onClick \_ -> Just (Remove sid) ]
                   [ HH.text "Remove" ]
               , HH.slot _child sid (Child.child sid) unit (listen sid)
               ]
       ]
 
-  eval :: Query ~> H.HalogenM State Query ChildSlots Void Aff
-  eval (Initialize next) = do
+  handleAction :: forall o. Action -> H.HalogenM State Action ChildSlots o Aff Unit
+  handleAction Initialize =
     H.liftEffect $ log "Initialize Root"
-    pure next
-  eval (Finalize next) = do
-    pure next
-  eval (Add next) = do
+  handleAction Finalize =
+    pure unit
+  handleAction Add =
     H.modify_ \s ->
       { currentId: s.currentId + 1
       , slots: snoc s.slots s.currentId
       }
-    pure next
-  eval (Remove id next) = do
+  handleAction (Remove id) =
     H.modify_ \s -> s { slots = filter (not <<< eq id) s.slots }
-    pure next
-  eval (Reverse next) = do
+  handleAction Reverse =
     H.modify_ \s -> s { slots = reverse s.slots }
-    pure next
-  eval (ReportRoot msg next) = do
+  handleAction (ReportRoot msg) =
     H.liftEffect $ log ("Root >>> " <> msg)
-    pure next
 
-  listen :: Int -> Child.Message -> Maybe (Query Unit)
+  listen :: Int -> Child.Message -> Maybe Action
   listen i = Just <<< case _ of
-    Child.Initialized -> H.action $ ReportRoot ("Heard Initialized from child" <> show i)
-    Child.Finalized -> H.action $ ReportRoot ("Heard Finalized from child" <> show i)
-    Child.Reported msg -> H.action $ ReportRoot ("Re-reporting from child" <> show i <> ": " <> msg)
+    Child.Initialized -> ReportRoot ("Heard Initialized from child" <> show i)
+    Child.Finalized -> ReportRoot ("Heard Finalized from child" <> show i)
+    Child.Reported msg -> ReportRoot ("Re-reporting from child" <> show i <> ": " <> msg)
 
 main :: Effect Unit
 main = HA.runHalogenAff do

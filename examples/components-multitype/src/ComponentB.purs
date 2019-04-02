@@ -8,44 +8,46 @@ import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 
-type State = Int
-
-data Query a
-  = Increment a
-  | GetCount (Int -> a)
-
 type Slot = H.Slot Query Void
 
-component :: forall m. H.Component HH.HTML Query Unit Void m
+data Query a = GetCount (Int -> a)
+
+data Action = Increment
+
+type State = Int
+
+component :: forall i o m. H.Component HH.HTML Query i o m
 component =
-  H.component
-    { initialState: const initialState
+  H.mkComponent
+    { initialState
     , render
-    , eval
-    , receiver: const Nothing
-    , initializer: Nothing
-    , finalizer: Nothing
+    , eval: H.mkEval $ H.defaultEval
+        { handleAction = handleAction
+        , handleQuery = handleQuery
+        }
     }
-  where
 
-  initialState :: State
-  initialState = 0
+initialState :: forall i. i -> State
+initialState _ = 0
 
-  render :: State -> H.ComponentHTML Query () m
-  render state =
-    HH.div_
-      [ HH.p_
-          [ HH.text "Current value:"
-          , HH.strong_ [ HH.text (show state) ]
-          ]
-      , HH.button
-          [ HE.onClick (HE.input_ Increment) ]
-          [ HH.text ("Increment") ]
-      ]
+render :: forall m. State -> H.ComponentHTML Action () m
+render state =
+  HH.div_
+    [ HH.p_
+        [ HH.text "Current value:"
+        , HH.strong_ [ HH.text (show state) ]
+        ]
+    , HH.button
+        [ HE.onClick \_ -> Just Increment ]
+        [ HH.text ("Increment") ]
+    ]
 
-  eval :: Query ~> H.HalogenM State Query () Void m
-  eval (Increment next) = do
+handleAction :: forall o m. Action -> H.HalogenM State Action () o m Unit
+handleAction = case _ of
+  Increment ->
     H.modify_ (_ + 1)
-    pure next
-  eval (GetCount reply) = do
-    reply <$> H.get
+
+handleQuery :: forall o m a. Query a -> H.HalogenM State Action () o m (Maybe a)
+handleQuery = case _ of
+  GetCount k ->
+    Just <<< k <$> H.get

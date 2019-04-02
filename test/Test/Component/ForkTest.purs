@@ -27,33 +27,30 @@ derive newtype instance showMessage :: Show Message
 
 component :: H.Component TD.TestRenderProduct Query Unit Message Aff
 component =
-  H.component
+  H.mkComponent
     { initialState: const Nothing
     , render: TD.render
-    , eval
-    , receiver: const Nothing
-    , initializer: Nothing
-    , finalizer: Nothing
+    , eval: H.mkEval $ H.defaultEval { handleQuery = handleQuery }
     }
-  where
-  eval :: Query ~> H.HalogenM State Query () Message Aff
-  eval = case _ of
-    StartFork a -> do
-      let
-        loop = do
-          H.liftAff $ Aff.delay (Aff.Milliseconds 100.0)
-          H.raise (Message "Progress")
-          loop
-      H.raise (Message "Starting")
-      fid <- H.fork loop
-      H.put (Just fid)
-      pure a
-    KillFork a -> do
-      H.get >>= traverse_ \fid -> do
-        H.put Nothing
-        H.kill fid
-      H.raise (Message "Killed")
-      pure a
+
+handleQuery :: forall a. Query a -> H.HalogenM State (Query Unit) () Message Aff (Maybe a)
+handleQuery = case _ of
+  StartFork a -> do
+    let
+      loop = do
+        H.liftAff $ Aff.delay (Aff.Milliseconds 100.0)
+        H.raise (Message "Progress")
+        loop
+    H.raise (Message "Starting")
+    fid <- H.fork loop
+    H.put (Just fid)
+    pure (Just a)
+  KillFork a -> do
+    H.get >>= traverse_ \fid -> do
+      H.put Nothing
+      H.kill fid
+    H.raise (Message "Killed")
+    pure (Just a)
 
 testForkKill :: Aff Unit
 testForkKill = do
@@ -65,9 +62,9 @@ testForkKill = do
     H.liftEffect $ Ref.modify_ (msg : _) logRef
     pure Nothing
 
-  _ <- io.query (H.action StartFork)
+  _ <- io.query (H.tell StartFork)
   Aff.delay (Aff.Milliseconds 350.0)
-  _ <- io.query (H.action KillFork)
+  _ <- io.query (H.tell KillFork)
 
   -- TODO: revisit this: why do we need to wait to receive `raise`d messages
   -- from the component, if the `raise` occurs after any bind?
@@ -97,7 +94,7 @@ testFinalize = do
     H.liftEffect $ Ref.modify_ (msg : _) logRef
     pure Nothing
 
-  _ <- io.query (H.action StartFork)
+  _ <- io.query (H.tell StartFork)
   io.dispose
   Aff.delay (Aff.Milliseconds 350.0)
 

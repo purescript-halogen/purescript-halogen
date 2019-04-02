@@ -1,5 +1,11 @@
 # The Halogen guide
 
+:warning: Please note, this is the guide for Halogen 4 :warning:
+
+If you're interested in the new stuff, take a look at the [changes in v5](Changes%20in%20v5.md) document. If v4 is what you want, switch to browsing the [repository at that tag](https://github.com/slamdata/purescript-halogen/releases/tag/v4.0.0) to ensure you're seeing the right code and examples.
+
+---
+
 1. [Introduction](1%20-%20Introduction.md)
 2. [Defining a component](2%20-%20Defining%20a%20component.md)
     - [State](2%20-%20Defining%20a%20component.md#state)

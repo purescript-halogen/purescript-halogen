@@ -31,8 +31,9 @@ import Halogen.Aff.Driver.State (DriverState(..), DriverStateRef(..), DriverStat
 import Halogen.Component (Component, ComponentSlot, ComponentSlotBox, unComponent, unComponentSlot)
 import Halogen.Data.Slot as Slot
 import Halogen.Query.EventSource as ES
-import Halogen.Query.HalogenQ (HalogenQ(..))
-import Halogen.Query.Input (Input(..))
+import Halogen.Query.HalogenQ as HQ
+import Halogen.Query.Input (Input)
+import Halogen.Query.Input as Input
 
 -- | `RenderSpec` allows for alternative driver implementations without the need
 -- | to provide all of the driver machinery again, focusing just on the code
@@ -137,7 +138,7 @@ runUI renderSpec component i = do
     liftEffect (Ref.read disposed) >>=
       if _
         then pure Nothing
-        else Just <$> Eval.evalQ render ref q
+        else Eval.evalQ render ref q
 
   rootHandler :: Ref (M.Map Int (AV.AVar o)) -> o -> Aff Unit
   rootHandler ref message = do
@@ -192,7 +193,7 @@ runUI renderSpec component i = do
       handler :: Input act -> Aff Unit
       handler = Eval.queueOrRun ds.pendingHandlers <<< void <<< Eval.evalF render ds.selfRef
       childHandler :: act -> Aff Unit
-      childHandler = Eval.queueOrRun ds.pendingQueries <<< handler <<< Action
+      childHandler = Eval.queueOrRun ds.pendingQueries <<< handler <<< Input.Action
     rendering <-
       renderSpec.render
         (handleAff <<< handler)
@@ -238,7 +239,7 @@ runUI renderSpec component i = do
           pure existing
         Nothing ->
           case slot.input of
-            Receive si _ ->
+            HQ.Receive si _ ->
               runComponent lchs (maybe (pure unit) handler <<< slot.output) si slot.component
             _ ->
               throw "Halogen internal error: slot input was not a Receive query"
@@ -258,7 +259,7 @@ runUI renderSpec component i = do
     -> Effect Unit
   squashChildInitializers lchs preInits =
     unDriverStateX \st -> do
-      let parentInitializer = Eval.evalM render st.selfRef (st.component.eval (Initialize unit))
+      let parentInitializer = Eval.evalM render st.selfRef (st.component.eval (HQ.Initialize unit))
       Ref.modify_ (\handlers ->
         { initializers: (do
             parSequence_ (L.reverse handlers.initializers)
@@ -277,7 +278,7 @@ runUI renderSpec component i = do
   finalize lchs = do
     unDriverStateX \st -> do
       cleanupSubscriptionsAndForks (DriverState st)
-      let f = Eval.evalM render st.selfRef (st.component.eval (Finalize unit))
+      let f = Eval.evalM render st.selfRef (st.component.eval (HQ.Finalize unit))
       Ref.modify_ (\handlers ->
         { initializers: handlers.initializers
         , finalizers: f : handlers.finalizers

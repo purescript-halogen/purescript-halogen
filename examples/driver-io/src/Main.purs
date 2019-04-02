@@ -15,12 +15,16 @@ import Halogen.VDom.Driver (runUI)
 main :: Effect Unit
 main = HA.runHalogenAff do
   body <- HA.awaitBody
-  io <- runUI B.myButton unit body
+  io <- runUI B.component unit body
 
   io.subscribe $ CR.consumer \(B.Toggled newState) -> do
-    liftEffect $ log $ "Button was toggled to: " <> show newState
+    liftEffect $ log $ "Button was internally toggled to: " <> show newState
     pure Nothing
 
-  void $ io.query $ H.action $ B.Toggle
-  void $ io.query $ H.action $ B.Toggle
-  void $ io.query $ H.action $ B.Toggle
+  state0 ← io.query $ H.request B.IsOn
+  liftEffect $ log $ "The button state is currently: " <> show state0
+
+  void $ io.query $ H.tell (B.SetState true)
+
+  state1 ← io.query $ H.request B.IsOn
+  liftEffect $ log $ "The button state is now: " <> show state1

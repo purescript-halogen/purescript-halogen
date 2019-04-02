@@ -1,6 +1,6 @@
 ## Interpreter example
 
-This example illustrates using a free monad as the component's `g` value and then later interpreting that into an `Aff` value before running the component.
+This example illustrates using `ReaderT` with `Aff` as the effect type for a component, and then interpreting this back down to `Aff` so it can be run as a normal component.
 
 ### Building
 
@@ -8,6 +8,7 @@ From the root of the Halogen project:
 
 ```
 $ npm install
+$ bower install
 $ npm run example-interpret
 ```
 

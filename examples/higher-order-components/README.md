@@ -21,6 +21,7 @@ From the root of the Halogen project:
 
 ```
 $ npm install
+$ bower install
 $ npm run example-higher-order-components
 ```
 
