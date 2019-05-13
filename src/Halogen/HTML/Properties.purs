@@ -45,6 +45,7 @@ module Halogen.HTML.Properties
   , spellcheck
   , checked
   , selected
+  , selectedIndex
   , placeholder
   , autocomplete
   , list
@@ -244,6 +245,9 @@ checked = prop (PropName "checked")
 
 selected :: forall r i. Boolean -> IProp (selected :: Boolean | r) i
 selected = prop (PropName "selected")
+
+selectedIndex :: forall r i. Int -> IProp (selectedIndex :: Int | r) i
+selectedIndex = prop (PropName "selectedIndex")
 
 placeholder :: forall r i. String -> IProp (placeholder :: String | r) i
 placeholder = prop (PropName "placeholder")
