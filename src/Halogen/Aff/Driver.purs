@@ -293,7 +293,7 @@ runUI renderSpec component i = do
     -> DriverStateX h r f' o'
     -> Ref (M.Map Int (AV.AVar o'))
     -> Aff Unit
-  dispose disposed lchs dsx subsRef = liftEffect $
+  dispose disposed lchs dsx subsRef = Eval.handleLifecycle lchs do
     Ref.read disposed >>=
       if _
         then pure unit
