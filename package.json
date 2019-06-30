@@ -20,9 +20,9 @@
     "example-lifecycle": "pulp build --main Example.Lifecycle.Main --include examples/lifecycle/src --to examples/lifecycle/dist/example.js"
   },
   "devDependencies": {
-    "pulp": "^12.2.0",
-    "purescript": "^0.12.0",
-    "purescript-psa": "^0.6.0",
-    "rimraf": "^2.6.2"
+    "pulp": "^13.0.0",
+    "purescript": "^0.13.0",
+    "purescript-psa": "^0.7.3",
+    "rimraf": "^2.6.3"
   }
 }

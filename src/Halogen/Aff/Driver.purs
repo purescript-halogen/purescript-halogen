@@ -190,10 +190,14 @@ runUI renderSpec component i = do
     Ref.write Slot.empty ds.childrenOut
     Ref.write ds.children ds.childrenIn
     let
+      -- The following 3 defs are working around a capture bug, see #586
+      pendingHandlers = identity ds.pendingHandlers
+      pendingQueries = identity ds.pendingQueries
+      selfRef = identity ds.selfRef
       handler :: Input act -> Aff Unit
-      handler = Eval.queueOrRun ds.pendingHandlers <<< void <<< Eval.evalF render ds.selfRef
+      handler = Eval.queueOrRun pendingHandlers <<< void <<< Eval.evalF render selfRef
       childHandler :: act -> Aff Unit
-      childHandler = Eval.queueOrRun ds.pendingQueries <<< handler <<< Input.Action
+      childHandler = Eval.queueOrRun pendingQueries <<< handler <<< Input.Action
     rendering <-
       renderSpec.render
         (handleAff <<< handler)
@@ -293,7 +297,7 @@ runUI renderSpec component i = do
     -> DriverStateX h r f' o'
     -> Ref (M.Map Int (AV.AVar o'))
     -> Aff Unit
-  dispose disposed lchs dsx subsRef = liftEffect $
+  dispose disposed lchs dsx subsRef = Eval.handleLifecycle lchs do
     Ref.read disposed >>=
       if _
         then pure unit
