@@ -214,12 +214,12 @@ runUI renderSpec component i = do
       ds' { rendering = Just rendering, children = children }
     when shouldProcessHandlers do
       flip tailRecM unit \_ -> do
-        handlers <- Ref.read ds.pendingHandlers
-        Ref.write (Just L.Nil) ds.pendingHandlers
+        handlers <- Ref.read pendingHandlers
+        Ref.write (Just L.Nil) pendingHandlers
         traverse_ (handleAff <<< traverse_ fork <<< L.reverse) handlers
-        mmore <- Ref.read ds.pendingHandlers
+        mmore <- Ref.read pendingHandlers
         if maybe false L.null mmore
-          then Ref.write Nothing ds.pendingHandlers $> Done unit
+          then Ref.write Nothing pendingHandlers $> Done unit
           else pure $ Loop unit
 
   renderChild
@@ -232,8 +232,8 @@ runUI renderSpec component i = do
     -> Effect (RenderStateX r)
   renderChild lchs handler childrenInRef childrenOutRef =
     unComponentSlot \slot -> do
-      childrenIn <- Ref.read childrenInRef
-      var <- case slot.pop childrenIn of
+      childrenIn <- slot.pop <$> Ref.read childrenInRef
+      var <- case childrenIn of
         Just (Tuple (DriverStateRef existing) childrenIn') -> do
           Ref.write childrenIn' childrenInRef
           dsx <- Ref.read existing
