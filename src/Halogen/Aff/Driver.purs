@@ -15,14 +15,14 @@ import Data.List ((:))
 import Data.List as L
 import Data.Map as M
 import Data.Maybe (Maybe(..), maybe, isJust, isNothing)
-import Data.Traversable (for_, traverse_)
+import Data.Traversable (for_, sequence_, traverse_)
 import Data.Tuple (Tuple(..))
 import Effect (Effect)
-import Effect.Aff (Aff, killFiber, launchAff_, runAff_, try)
+import Effect.Aff (Aff, killFiber, launchAff_, try)
 import Effect.Aff.AVar as AV
 import Effect.Class (liftEffect)
 import Effect.Console (warn)
-import Effect.Exception (error, throw, throwException)
+import Effect.Exception (error, throw)
 import Effect.Ref (Ref)
 import Effect.Ref as Ref
 import Halogen (HalogenIO)
@@ -31,7 +31,6 @@ import Halogen.Aff.Driver.State (DriverState(..), DriverStateRef(..), DriverStat
 import Halogen.Component (Component, ComponentSlot, ComponentSlotBox, unComponent, unComponentSlot)
 import Halogen.Data.Slot as Slot
 import Halogen.HTML.Core as HC
-import Halogen.Query.EventSource as ES
 import Halogen.Query.HalogenQ as HQ
 import Halogen.Query.Input (Input)
 import Halogen.Query.Input as Input
@@ -201,7 +200,7 @@ runUI renderSpec component i = do
       childHandler = Eval.queueOrRun pendingQueries <<< handler <<< Input.Action
     rendering <-
       renderSpec.render
-        (handleAff <<< handler)
+        (Eval.handleAff <<< handler)
         (renderChild lchs childHandler ds.childrenIn ds.childrenOut)
         (ds.component.render ds.state)
         ds.rendering
@@ -217,7 +216,7 @@ runUI renderSpec component i = do
       flip tailRecM unit \_ -> do
         handlers <- Ref.read pendingHandlers
         Ref.write (Just L.Nil) pendingHandlers
-        traverse_ (handleAff <<< traverse_ fork <<< L.reverse) handlers
+        traverse_ (Eval.handleAff <<< traverse_ fork <<< L.reverse) handlers
         mmore <- Ref.read pendingHandlers
         if maybe false L.null mmore
           then Ref.write Nothing pendingHandlers $> Done unit
@@ -240,7 +239,7 @@ runUI renderSpec component i = do
           dsx <- Ref.read existing
           unDriverStateX (\st -> do
             flip Ref.write st.handlerRef $ maybe (pure unit) handler <<< slot.output
-            handleAff $ Eval.evalM render st.selfRef (st.component.eval (HQ.Receive slot.input unit))) dsx
+            Eval.handleAff $ Eval.evalM render st.selfRef (st.component.eval (HQ.Receive slot.input unit))) dsx
           pure existing
         Nothing ->
           runComponent lchs (maybe (pure unit) handler <<< slot.output) slot.input slot.component
@@ -311,19 +310,14 @@ handlePending :: Ref (Maybe (L.List (Aff Unit))) -> Effect Unit
 handlePending ref = do
   queue <- Ref.read ref
   Ref.write Nothing ref
-  for_ queue (handleAff <<< traverse_ fork <<< L.reverse)
+  for_ queue (Eval.handleAff <<< traverse_ fork <<< L.reverse)
 
 cleanupSubscriptionsAndForks
   :: forall r s f act ps i o
    . DriverState r s f act ps i o
   -> Effect Unit
 cleanupSubscriptionsAndForks (DriverState ds) = do
-  traverse_ (handleAff <<< traverse_ (fork <<< ES.finalize)) =<< Ref.read ds.subscriptions
+  traverse_ sequence_ =<< Ref.read ds.subscriptions
   Ref.write Nothing ds.subscriptions
-  traverse_ (handleAff <<< killFiber (error "finalized")) =<< Ref.read ds.forks
+  traverse_ (Eval.handleAff <<< killFiber (error "finalized")) =<< Ref.read ds.forks
   Ref.write M.empty ds.forks
-
--- We could perhaps do something more intelligent now this isn't baked into
--- the virtual-dom rendering. It hasn't really been a problem so far though.
-handleAff :: forall a. Aff a -> Effect Unit
-handleAff = runAff_ (either throwException (const (pure unit)))

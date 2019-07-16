@@ -1,40 +1,33 @@
 {
-    "name": "purescript-halogen",
-    "license": [
-        "Apache-2.0"
-    ],
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/purescript-halogen/purescript-halogen"
-    },
-    "ignore": [
-        "**/.*",
-        "node_modules",
-        "bower_components",
-        "output"
-    ],
-    "dependencies": {
-        "purescript-aff": "^v5.1.2",
-        "purescript-avar": "^v3.0.0",
-        "purescript-console": "^v4.4.0",
-        "purescript-const": "^v4.1.0",
-        "purescript-coroutines": "^v5.0.1",
-        "purescript-dom-indexed": "^v7.0.0",
-        "purescript-effect": "^v2.0.1",
-        "purescript-foreign": "^v5.0.0",
-        "purescript-fork": "^v4.0.0",
-        "purescript-free": "^v5.2.0",
-        "purescript-freeap": "^v5.0.1",
-        "purescript-halogen-vdom": "^v6.1.3",
-        "purescript-media-types": "^v4.0.1",
-        "purescript-nullable": "^v4.1.1",
-        "purescript-ordered-collections": "^v1.6.1",
-        "purescript-parallel": "^v4.0.0",
-        "purescript-profunctor": "^v4.1.0",
-        "purescript-transformers": "^v4.2.0",
-        "purescript-unsafe-coerce": "^v4.0.0",
-        "purescript-unsafe-reference": "^v3.0.1",
-        "purescript-web-file": "^v2.3.0",
-        "purescript-web-uievents": "^v2.0.0"
-    }
+  "name": "purescript-halogen",
+  "license": ["Apache-2.0"],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/purescript-halogen/purescript-halogen"
+  },
+  "ignore": ["**/.*", "node_modules", "bower_components", "output"],
+  "dependencies": {
+    "purescript-aff": "^v5.1.2",
+    "purescript-avar": "^v3.0.0",
+    "purescript-console": "^v4.4.0",
+    "purescript-const": "^v4.1.0",
+    "purescript-dom-indexed": "^v7.0.0",
+    "purescript-effect": "^v2.0.1",
+    "purescript-event": "^v1.2.4",
+    "purescript-foreign": "^v5.0.0",
+    "purescript-fork": "^v4.0.0",
+    "purescript-free": "^v5.2.0",
+    "purescript-freeap": "^v5.0.1",
+    "purescript-halogen-vdom": "^v6.1.3",
+    "purescript-media-types": "^v4.0.1",
+    "purescript-nullable": "^v4.1.1",
+    "purescript-ordered-collections": "^v1.6.1",
+    "purescript-parallel": "^v4.0.0",
+    "purescript-profunctor": "^v4.1.0",
+    "purescript-transformers": "^v4.2.0",
+    "purescript-unsafe-coerce": "^v4.0.0",
+    "purescript-unsafe-reference": "^v3.0.1",
+    "purescript-web-file": "^v2.3.0",
+    "purescript-web-uievents": "^v2.0.0"
+  }
 }
