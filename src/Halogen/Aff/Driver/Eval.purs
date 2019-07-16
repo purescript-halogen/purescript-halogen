@@ -5,31 +5,32 @@ module Halogen.Aff.Driver.Eval
   , evalM
   , handleLifecycle
   , queueOrRun
+  , handleAff
   ) where
 
 import Prelude
 
 import Control.Applicative.Free (hoistFreeAp, retractFreeAp)
-import Control.Coroutine as CR
 import Control.Monad.Fork.Class (fork)
 import Control.Monad.Free (foldFree)
-import Control.Monad.Trans.Class (lift)
 import Control.Parallel (parSequence_, parallel, sequential)
 import Data.Coyoneda (liftCoyoneda)
-import Data.Foldable (traverse_)
+import Data.Either (either)
+import Data.Foldable (sequence_, traverse_)
 import Data.List (List, (:))
 import Data.List as L
 import Data.Map as M
-import Data.Maybe (Maybe(..), maybe)
+import Data.Maybe (Maybe(..))
 import Data.Tuple (Tuple(..))
 import Effect (Effect)
-import Effect.Aff (Aff, error, finally, killFiber)
+import Effect.Aff (Aff, error, finally, killFiber, runAff_)
 import Effect.Class (liftEffect)
+import Effect.Exception (throwException)
 import Effect.Ref (Ref)
 import Effect.Ref as Ref
+import FRP.Event as Event
 import Halogen.Aff.Driver.State (DriverState(..), DriverStateRef(..), LifecycleHandlers, mapDriverState, unDriverStateX)
 import Halogen.Query.ChildQuery as CQ
-import Halogen.Query.EventSource as ES
 import Halogen.Query.HalogenM (ForkId(..), HalogenAp(..), HalogenF(..), HalogenM(..), SubscriptionId(..))
 import Halogen.Query.HalogenQ as HQ
 import Halogen.Query.Input (Input)
@@ -91,27 +92,13 @@ evalM render initRef (HalogenM hm) = foldFree (go initRef) hm
               pure a
     Subscribe fes k -> do
       sid <- fresh SubscriptionId ref
-      let (ES.EventSource setup) = fes sid
+      finalize <- liftEffect $ Event.subscribe (fes sid) \act →
+        handleAff $ evalF render ref (Input.Action act)
       DriverState ({ subscriptions }) <- liftEffect (Ref.read ref)
-      _ ← fork do
-        { producer, finalizer } <- setup
-        let
-          done = ES.Finalizer do
-            subs <- liftEffect $ Ref.read subscriptions
-            liftEffect $ Ref.modify_ (map (M.delete sid)) subscriptions
-            when (maybe false (M.member sid) subs) (ES.finalize finalizer)
-          consumer = do
-            act <- CR.await
-            subs <- lift $ liftEffect (Ref.read subscriptions)
-            when ((M.member sid <$> subs) == Just true) do
-              _ <- lift $ fork $ evalF render ref (Input.Action act)
-              consumer
-        liftEffect $ Ref.modify_ (map (M.insert sid done)) subscriptions
-        CR.runProcess (consumer `CR.pullFrom` producer)
-        ES.finalize done
+      liftEffect $ Ref.modify_ (map (M.insert sid finalize)) subscriptions
       pure (k sid)
     Unsubscribe sid next -> do
-      unsubscribe sid ref
+      liftEffect $ unsubscribe sid ref
       pure next
     Lift aff ->
       aff
@@ -163,11 +150,11 @@ unsubscribe
   :: forall r s' f' act' ps' i' o'
    . SubscriptionId
   -> Ref (DriverState r s' f' act' ps' i' o')
-  -> Aff Unit
+  -> Effect Unit
 unsubscribe sid ref = do
-  DriverState ({ subscriptions }) <- liftEffect (Ref.read ref)
-  subs <- liftEffect (Ref.read subscriptions)
-  traverse_ ES.finalize (M.lookup sid =<< subs)
+  DriverState ({ subscriptions }) <- Ref.read ref
+  subs <- Ref.read subscriptions
+  sequence_ (M.lookup sid =<< subs)
 
 handleLifecycle :: Ref LifecycleHandlers -> Effect ~> Aff
 handleLifecycle lchs f = do
@@ -195,3 +182,8 @@ queueOrRun ref au =
   liftEffect (Ref.read ref) >>= case _ of
     Nothing -> au
     Just p -> liftEffect $ Ref.write (Just (au : p)) ref
+
+-- We could perhaps do something more intelligent now this isn't baked into
+-- the virtual-dom rendering. It hasn't really been a problem so far though.
+handleAff :: forall a. Aff a -> Effect Unit
+handleAff = runAff_ (either throwException (const (pure unit)))
