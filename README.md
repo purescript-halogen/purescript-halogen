@@ -1,6 +1,7 @@
 # purescript-halogen
 
 [![Latest release](http://img.shields.io/github/release/slamdata/purescript-halogen.svg)](https://github.com/slamdata/purescript-halogen/releases)
+[![halogen in package-sets](https://img.shields.io/endpoint.svg?url=https://package-sets-badge-0lf69kxs4fbd.runkit.sh/halogen)](https://github.com/purescript/package-sets)
 [![Build status](https://travis-ci.org/slamdata/purescript-halogen.svg?branch=master)](https://travis-ci.org/slamdata/purescript-halogen)
 
 A declarative, type-safe UI library for PureScript.
@@ -25,4 +26,4 @@ Halogen 5 is fully usable in its current state and is actively being used in pro
 bower install purescript-halogen#v5.0.0-rc.1
 ```
 
-Also available via [package-sets](https://github.com/purescript/package-sets). (`psc-0.13.0-20190626` at the time of writing)
+Also available via [package-sets](https://github.com/purescript/package-sets)
