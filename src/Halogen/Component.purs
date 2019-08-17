@@ -83,7 +83,7 @@ data Component
 type ComponentSpec surface state query action slots input output m =
   { initialState :: input -> state
   , render :: state -> surface (ComponentSlot surface slots m action) action
-  , eval :: HalogenQ query action input ~> HalogenM state action slots output m
+  , eval :: HalogenQ query action input ~> HalogenM surface state action slots output m
   }
 
 -- | Constructs a [`Component`](#t:Component) from a [`ComponentSpec`](#t:ComponentSpec).
@@ -131,9 +131,9 @@ hoist nat = unComponent \c ->
 -- | more convenient for common cases.
 -- |
 -- | See below for more details about `mkEval` and `defaultEval`.
-type EvalSpec state query action slots input output m =
-  { handleAction :: action -> HalogenM state action slots output m Unit
-  , handleQuery :: forall a. query a -> HalogenM state action slots output m (Maybe a)
+type EvalSpec surface state query action slots input output m =
+  { handleAction :: action -> HalogenM surface state action slots output m Unit
+  , handleQuery :: forall a. query a -> HalogenM surface state action slots output m (Maybe a)
   , receive :: input -> Maybe action
   , initialize :: Maybe action
   , finalize :: Maybe action
@@ -154,7 +154,7 @@ type EvalSpec state query action slots input output m =
 -- |   , eval: H.mkEval (H.defaultEval { handleAction = ?handleAction })
 -- |   }
 -- | ```
-defaultEval :: forall state query action slots input output m. EvalSpec state query action slots input output m
+defaultEval :: forall surface state query action slots input output m. EvalSpec surface state query action slots input output m
 defaultEval =
   { handleAction: const (pure unit)
   , handleQuery: const (pure Nothing)
@@ -165,10 +165,10 @@ defaultEval =
 
 -- | Accepts an `EvalSpec` to produce an `eval` function for a component.
 mkEval
-  :: forall state query action slots input output m
-   . EvalSpec state query action slots input output m
+  :: forall surface state query action slots input output m
+   . EvalSpec surface state query action slots input output m
   -> HalogenQ query action input
-  ~> HalogenM state action slots output m
+  ~> HalogenM surface state action slots output m
 mkEval args = case _ of
   Initialize a ->
     traverse_ args.handleAction args.initialize $> a

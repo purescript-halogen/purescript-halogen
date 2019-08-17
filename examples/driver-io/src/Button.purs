@@ -45,13 +45,13 @@ render state =
       ]
       [ HH.text label ]
 
-handleAction :: forall m. Action -> H.HalogenM State Action () Message m Unit
+handleAction :: forall m. Action -> H.HalogenM HH.HTML State Action () Message m Unit
 handleAction = case _ of
   Toggle -> do
     newState <- H.modify \st -> st { enabled = not st.enabled }
     H.raise (Toggled newState.enabled)
 
-handleQuery :: forall m a. Query a -> H.HalogenM State Action () Message m (Maybe a)
+handleQuery :: forall m a. Query a -> H.HalogenM HH.HTML State Action () Message m (Maybe a)
 handleQuery = case _ of
   IsOn k -> do
     enabled <- H.gets _.enabled

@@ -56,7 +56,7 @@ render state =
         [ HH.text "Send Message" ]
     ]
 
-handleAction :: forall m. MonadEffect m => Action -> H.HalogenM State Action () Message m Unit
+handleAction :: forall m. MonadEffect m => Action -> H.HalogenM HH.HTML State Action () Message m Unit
 handleAction = case _ of
   HandleInput text -> do
     H.modify_ (_ { inputText = text })
@@ -70,7 +70,7 @@ handleAction = case _ of
       , inputText = ""
       }
 
-handleQuery :: forall m a. Query a -> H.HalogenM State Action () Message m (Maybe a)
+handleQuery :: forall m a. Query a -> H.HalogenM HH.HTML State Action () Message m (Maybe a)
 handleQuery = case _ of
   ReceiveMessage msg a -> do
     let incomingMessage = "Received: " <> msg

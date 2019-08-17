@@ -90,7 +90,7 @@ render innerComponent state
 handleAction
   :: forall f i o m
    . Action o
-  -> H.HalogenM (State i) (Action o) (ChildSlots f o) (Message o) m Unit
+  -> H.HalogenM HH.HTML (State i) (Action o) (ChildSlots f o) (Message o) m Unit
 handleAction = case _ of
   Toggle -> do
     st' <- H.modify \st -> st { open = not st.open }
@@ -101,7 +101,7 @@ handleAction = case _ of
 handleQuery
   :: forall f i o m a
    . Query f a
-  -> H.HalogenM (State i) (Action o) (ChildSlots f o) (Message o) m (Maybe a)
+  -> H.HalogenM HH.HTML (State i) (Action o) (ChildSlots f o) (Message o) m (Maybe a)
 handleQuery = case _ of
   SetOpen b a -> do
     H.modify_ (_ { open = b })

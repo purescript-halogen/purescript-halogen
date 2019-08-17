@@ -65,7 +65,7 @@ render st =
             ]
     ]
 
-handleAction :: forall o m. MonadAff m => Action -> H.HalogenM State Action () o m Unit
+handleAction :: forall o m. MonadAff m => Action -> H.HalogenM HH.HTML State Action () o m Unit
 handleAction = case _ of
   SetUsername username -> do
     H.modify_ (_ { username = username, result = Nothing :: Maybe String })

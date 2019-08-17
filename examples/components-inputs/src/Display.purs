@@ -32,7 +32,7 @@ render state =
     , HH.strong_ [ HH.text (show state) ]
     ]
 
-handleAction :: forall o m. Action -> H.HalogenM State Action () o m Unit
+handleAction :: forall o m. Action -> H.HalogenM HH.HTML State Action () o m Unit
 handleAction = case _ of
   HandleInput n -> do
     oldN <- H.get

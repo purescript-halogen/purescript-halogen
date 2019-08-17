@@ -74,7 +74,7 @@ ui =
               ]
       ]
 
-  handleAction :: forall o. Action -> H.HalogenM State Action ChildSlots o Aff Unit
+  handleAction :: forall o. Action -> H.HalogenM HH.HTML State Action ChildSlots o Aff Unit
   handleAction Initialize =
     H.liftEffect $ log "Initialize Root"
   handleAction Finalize =

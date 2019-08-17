@@ -19,6 +19,7 @@ import Control.Monad.Trans.Class (lift) as Exports
 import Data.Maybe (Maybe)
 import Effect.Aff.Class (liftAff) as Exports
 import Effect.Class (liftEffect) as Exports
+import Halogen.HTML as HH
 import Halogen.Query.HalogenM (HalogenM(..), HalogenF(..), SubscriptionId, ForkId, fork, kill, getRef, query, queryAll, subscribe, subscribe', unsubscribe, raise)
 import Halogen.Query.HalogenQ (HalogenQ(..))
 import Halogen.Query.Input (RefLabel(..))
@@ -85,7 +86,7 @@ request req = req identity
 -- | rendered output of a component. If there is no currently rendered value (or
 -- | it is not an `HTMLElement`) for the request will return `Nothing`.
 getHTMLElementRef
-  :: forall surface action slots output m
+  :: forall state action slots output m
    . RefLabel
-  -> HalogenM surface action slots output m (Maybe HTMLElement)
+  -> HalogenM HH.HTML state action slots output m (Maybe HTMLElement)
 getHTMLElementRef = map (HTMLElement.fromElement =<< _) <<< getRef

@@ -191,7 +191,7 @@ withKeys ctor props children =
     HTML (VDom.Elem x y z _) -> HTML (VDom.Keyed x y z (coe children))
     h -> h
   where
-  coe :: Array (Tuple String (HTML w i)) -> Array (Tuple String (VDom.VDom (Array (Prop (Input i))) w))
+  coe :: Array (Tuple String (HTML w i)) -> Array (Tuple String (VDom.VDom (Array (Prop (Input HTML i))) w))
   coe = unsafeCoerce
 
 withKeys_ :: forall w i. (Array (HTML w i) -> HTML w i) -> Array (Tuple String (HTML w i)) -> HTML w i
@@ -200,7 +200,7 @@ withKeys_ ctor children =
     HTML (VDom.Elem x y z _) -> HTML (VDom.Keyed x y z (coe children))
     h -> h
   where
-  coe :: Array (Tuple String (HTML w i)) -> Array (Tuple String (VDom.VDom (Array (Prop (Input i))) w))
+  coe :: Array (Tuple String (HTML w i)) -> Array (Tuple String (VDom.VDom (Array (Prop (Input HTML i))) w))
   coe = unsafeCoerce
 
 a :: forall w i. Node I.HTMLa w i

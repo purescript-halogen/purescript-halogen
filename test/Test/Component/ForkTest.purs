@@ -33,7 +33,7 @@ component =
     , eval: H.mkEval $ H.defaultEval { handleQuery = handleQuery }
     }
 
-handleQuery :: forall a. Query a -> H.HalogenM State (Query Unit) () Message Aff (Maybe a)
+handleQuery :: forall a. Query a -> H.HalogenM TD.TestRenderProduct State (Query Unit) () Message Aff (Maybe a)
 handleQuery = case _ of
   StartFork a -> do
     let

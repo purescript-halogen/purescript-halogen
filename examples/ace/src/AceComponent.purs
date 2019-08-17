@@ -53,7 +53,7 @@ initialState _ = { editor: Nothing }
 render :: forall m. State -> H.ComponentHTML Action () m
 render = const $ HH.div [ HP.ref (H.RefLabel "ace") ] []
 
-handleAction :: forall m. MonadAff m => Action -> H.HalogenM State Action () Output m Unit
+handleAction :: forall m. MonadAff m => Action -> H.HalogenM HH.HTML State Action () Output m Unit
 handleAction = case _ of
   Initialize -> do
     H.getHTMLElementRef (H.RefLabel "ace") >>= traverse_ \element -> do
@@ -72,7 +72,7 @@ handleAction = case _ of
       text <- H.liftEffect (Editor.getValue editor)
       H.raise $ TextChanged text
 
-handleQuery :: forall m a. MonadAff m => Query a -> H.HalogenM State Action () Output m (Maybe a)
+handleQuery :: forall m a. MonadAff m => Query a -> H.HalogenM HH.HTML State Action () Output m (Maybe a)
 handleQuery = case _ of
   ChangeText text next -> do
     maybeEditor <- H.gets _.editor

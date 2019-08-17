@@ -97,7 +97,7 @@ import Halogen.Query.Input as Input
 type RenderSpec h r =
   { render
       :: forall s act ps o
-       . (Input act -> Effect Unit)
+       . (Input h act -> Effect Unit)
       -> (ComponentSlotBox h ps Aff act -> Effect (RenderStateX r))
       -> h (ComponentSlot h ps Aff act) act
       -> Maybe (r s act ps o)
@@ -194,7 +194,7 @@ runUI renderSpec component i = do
       pendingHandlers = identity ds.pendingHandlers
       pendingQueries = identity ds.pendingQueries
       selfRef = identity ds.selfRef
-      handler :: Input act -> Aff Unit
+      handler :: Input h act -> Aff Unit
       handler = Eval.queueOrRun pendingHandlers <<< void <<< Eval.evalF render selfRef
       childHandler :: act -> Aff Unit
       childHandler = Eval.queueOrRun pendingQueries <<< handler <<< Input.Action

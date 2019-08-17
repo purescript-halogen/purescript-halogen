@@ -42,12 +42,12 @@ render state =
         [ HH.text ("Increment") ]
     ]
 
-handleAction :: forall o m. Action -> H.HalogenM State Action () o m Unit
+handleAction :: forall o m. Action -> H.HalogenM HH.HTML State Action () o m Unit
 handleAction = case _ of
   Increment ->
     H.modify_ (_ + 1)
 
-handleQuery :: forall o m a. Query a -> H.HalogenM State Action () o m (Maybe a)
+handleQuery :: forall o m a. Query a -> H.HalogenM HH.HTML State Action () o m (Maybe a)
 handleQuery = case _ of
   GetCount k ->
     Just <<< k <$> H.get

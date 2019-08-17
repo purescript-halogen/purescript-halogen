@@ -61,7 +61,7 @@ printButtonState = case _ of
 panelComponent :: forall m. H.Component HH.HTML (Panel.Query Button.Query) Unit (Panel.Message Button.Message) m
 panelComponent = Panel.component Button.component
 
-handleAction :: forall o m. Action -> H.HalogenM State Action ChildSlots o m Unit
+handleAction :: forall o m. Action -> H.HalogenM HH.HTML State Action ChildSlots o m Unit
 handleAction = case _ of
   CheckButtonState -> do
     buttonCheckState <- H.query _panel unit $ H.request (Panel.QueryInner <<< Button.IsOn)
@@ -69,7 +69,7 @@ handleAction = case _ of
   HandlePanelMessage msg ->
     handlePanelMessage msg
 
-handlePanelMessage :: forall o m. Panel.Message Button.Message -> H.HalogenM State Action ChildSlots o m Unit
+handlePanelMessage :: forall o m. Panel.Message Button.Message -> H.HalogenM HH.HTML State Action ChildSlots o m Unit
 handlePanelMessage = case _ of
   Panel.Opened ->
     pure unit
@@ -78,7 +78,7 @@ handlePanelMessage = case _ of
   Panel.Bubble msg ->
     handleButtonMessage msg
 
-handleButtonMessage  :: forall o m. Button.Message -> H.HalogenM State Action ChildSlots o m Unit
+handleButtonMessage  :: forall o m. Button.Message -> H.HalogenM HH.HTML State Action ChildSlots o m Unit
 handleButtonMessage = case _ of
   Button.Toggled b ->
     H.modify_ (_ { buttonMessageState = Just b })

@@ -60,7 +60,7 @@ import Data.Either (either)
 import Data.Maybe (Maybe(..))
 import Foreign (F, Foreign, readBoolean, readInt, readString, unsafeToForeign)
 import Foreign.Index (readProp)
-import Halogen.HTML.Core (Prop)
+import Halogen.HTML.Core (HTML, Prop)
 import Halogen.HTML.Core as Core
 import Halogen.HTML.Properties (IProp)
 import Halogen.Query.Input (Input(..))
@@ -83,7 +83,7 @@ import Web.UIEvent.WheelEvent (WheelEvent)
 import Web.UIEvent.WheelEvent.EventTypes as WET
 
 handler :: forall r i. EventType -> (Event -> Maybe i) -> IProp r i
-handler et = (unsafeCoerce :: (EventType -> (Event -> Maybe i) -> Prop i) -> EventType -> (Event -> Maybe (Input i)) -> IProp r i) Core.handler et <<< map (map Action)
+handler et = (unsafeCoerce :: (EventType -> (Event -> Maybe i) -> Prop i) -> EventType -> (Event -> Maybe (Input HTML i)) -> IProp r i) Core.handler et <<< map (map Action)
 
 onAbort :: forall r i. (Event -> Maybe i) -> IProp (onAbort :: Event | r) i
 onAbort = handler (EventType "abort")

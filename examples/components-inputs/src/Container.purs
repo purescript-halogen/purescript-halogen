@@ -50,7 +50,7 @@ render state =
         [ HH.text "-1"]
     ]
 
-handleAction :: forall o m. Action -> H.HalogenM State Action ChildSlots o m Unit
+handleAction :: forall o m. Action -> H.HalogenM HH.HTML State Action ChildSlots o m Unit
 handleAction = case _ of
   Increment ->
     H.modify_ (_ + 1)

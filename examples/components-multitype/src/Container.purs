@@ -70,7 +70,7 @@ render state = HH.div_
       [ HH.text "Check states now" ]
   ]
 
-handleAction :: forall o m. Action -> H.HalogenM State Action ChildSlots o m Unit
+handleAction :: forall o m. Action -> H.HalogenM HH.HTML State Action ChildSlots o m Unit
 handleAction = case _ of
   ReadStates -> do
     a <- H.query _a unit (H.request CA.IsOn)

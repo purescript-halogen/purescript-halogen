@@ -38,7 +38,7 @@ render state =
     , HH.ol_ $ map (\msg -> HH.li_ [ HH.text msg ]) state.history
     ]
 
-handleQuery :: forall act o m a. Query a -> H.HalogenM State act () o m (Maybe a)
+handleQuery :: forall act o m a. Query a -> H.HalogenM HH.HTML State act () o m (Maybe a)
 handleQuery = case _ of
   ChangeRoute msg a -> do
     H.modify_ \st -> { history: st.history `A.snoc` msg }

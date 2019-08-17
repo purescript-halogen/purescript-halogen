@@ -51,7 +51,7 @@ child initialState =
         ]
       ]
 
-  handleAction :: Action -> H.HalogenM Int Action ChildSlots Message Aff Unit
+  handleAction :: Action -> H.HalogenM HH.HTML Int Action ChildSlots Message Aff Unit
   handleAction Initialize = do
     id <- H.get
     H.liftEffect $ log ("Initialize Child " <> show id)
@@ -88,7 +88,7 @@ cell initialState =
   render id =
     HH.li_ [ HH.text ("Cell " <> show id) ]
 
-  handleAction :: Action -> H.HalogenM Int Action () Message Aff Unit
+  handleAction :: Action -> H.HalogenM HH.HTML Int Action () Message Aff Unit
   handleAction Initialize = do
     id <- H.get
     H.liftEffect $ log ("Initialize Cell " <> show id)

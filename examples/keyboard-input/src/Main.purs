@@ -45,7 +45,7 @@ ui =
       , HH.p_ [ HH.text state.chars ]
       ]
 
-handleAction :: forall o. Action -> H.HalogenM State Action () o Aff Unit
+handleAction :: forall o. Action -> H.HalogenM HH.HTML State Action () o Aff Unit
 handleAction = case _ of
   Init -> do
     document <- H.liftEffect $ Web.document =<< Web.window

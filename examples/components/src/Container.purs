@@ -56,7 +56,7 @@ render state =
         ]
     ]
 
-handleAction ::forall o m. Action -> H.HalogenM State Action ChildSlots o m Unit
+handleAction ::forall o m. Action -> H.HalogenM HH.HTML State Action ChildSlots o m Unit
 handleAction = case _ of
   HandleButton (Button.Toggled _) -> do
     H.modify_ (\st -> st { toggleCount = st.toggleCount + 1 })

@@ -40,6 +40,7 @@ import Data.MediaType (MediaType)
 import Data.Newtype (class Newtype, un, unwrap)
 import Data.Tuple (Tuple)
 import Halogen.Query.Input (Input)
+import Halogen.Surface (class Surface)
 import Halogen.VDom (ElemName(..), Namespace(..)) as Exports
 import Halogen.VDom.DOM.Prop (ElemRef(..), Prop(..), PropValue, propFromBoolean, propFromInt, propFromNumber, propFromString)
 import Halogen.VDom.DOM.Prop (Prop(..), PropValue) as Exports
@@ -48,7 +49,7 @@ import Unsafe.Coerce (unsafeCoerce)
 import Web.DOM.Element (Element)
 import Web.Event.Event (Event, EventType)
 
-newtype HTML w i = HTML (VDom.VDom (Array (Prop (Input i))) w)
+newtype HTML w i = HTML (VDom.VDom (Array (Prop (Input HTML i))) w)
 
 derive instance newtypeHTML :: Newtype (HTML w i) _
 
@@ -57,6 +58,8 @@ instance bifunctorHTML :: Bifunctor HTML where
 
 instance functorHTML :: Functor (HTML p) where
   map = rmap
+
+instance surfaceHTML :: Surface HTML Element
 
 renderWidget ∷ ∀ w x i j. (i → j) → (w → HTML x j) → HTML w i → HTML x j
 renderWidget f g (HTML vdom) =

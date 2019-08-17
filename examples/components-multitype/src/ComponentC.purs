@@ -41,12 +41,12 @@ render state =
         ]
     ]
 
-handleAction :: forall o m. Action -> H.HalogenM State Action () o m Unit
+handleAction :: forall o m. Action -> H.HalogenM HH.HTML State Action () o m Unit
 handleAction = case _ of
   HandleInput value ->
     H.put value
 
-handleQuery :: forall o m a. Query a -> H.HalogenM State Action () o m (Maybe a)
+handleQuery :: forall o m a. Query a -> H.HalogenM HH.HTML State Action () o m (Maybe a)
 handleQuery = case _ of
   GetValue k ->
     Just <<< k <$> H.get

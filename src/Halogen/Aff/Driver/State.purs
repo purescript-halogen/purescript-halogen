@@ -29,8 +29,8 @@ import Halogen.Data.Slot (SlotStorage)
 import Halogen.Data.Slot as SlotStorage
 import Halogen.Query.EventSource (Finalizer)
 import Halogen.Query.HalogenM (ForkId, SubscriptionId)
+import Halogen.Surface (SurfaceElement)
 import Unsafe.Coerce (unsafeCoerce)
-import Web.DOM (Element)
 
 type LifecycleHandlers =
   { initializers :: List (Aff Unit)
@@ -42,7 +42,7 @@ newtype DriverState h r s f act ps i o = DriverState (DriverStateRec h r s f act
 type DriverStateRec h r s f act ps i o =
   { component :: ComponentSpec h s f act ps i o Aff
   , state :: s
-  , refs :: M.Map String Element
+  , refs :: M.Map String (SurfaceElement h)
   , children :: SlotStorage ps (DriverStateRef h r)
   , childrenIn :: Ref (SlotStorage ps (DriverStateRef h r))
   , childrenOut :: Ref (SlotStorage ps (DriverStateRef h r))

@@ -84,16 +84,17 @@ import Data.Maybe (Maybe(..))
 import Data.MediaType (MediaType)
 import Data.Newtype (class Newtype, unwrap)
 import Data.String (joinWith)
-import Halogen.HTML.Core (class IsProp, AttrName(..), ClassName, Namespace, PropName(..), Prop)
+import Halogen.HTML.Core (class IsProp, AttrName(..), ClassName, HTML, Namespace, PropName(..), Prop)
 import Halogen.HTML.Core as Core
 import Halogen.Query.Input (Input(..), RefLabel)
+import Halogen.Surface as Surface
 import Prim.Row as Row
 import Unsafe.Coerce (unsafeCoerce)
 import Web.DOM.Element (Element)
 
 -- | The phantom row `r` can be thought of as a context which is synthesized in
 -- | the course of constructing a refined HTML expression.
-newtype IProp (r :: # Type) i = IProp (Prop (Input i))
+newtype IProp (r :: # Type) i = IProp (Prop (Input HTML i))
 
 derive instance newtypeIProp :: Newtype (IProp r i) _
 derive instance functorIProp :: Functor (IProp r)
@@ -105,14 +106,14 @@ prop
   => PropName value
   -> value
   -> IProp r i
-prop = (unsafeCoerce :: (PropName value -> value -> Prop (Input i)) -> PropName value -> value -> IProp r i) Core.prop
+prop = (unsafeCoerce :: (PropName value -> value -> Prop (Input HTML i)) -> PropName value -> value -> IProp r i) Core.prop
 
 -- | Creates an indexed HTML attribute.
 attr :: forall r i. AttrName -> String -> IProp r i
 attr =
   Core.attr Nothing #
     (unsafeCoerce
-      :: (AttrName -> String -> Prop (Input i))
+      :: (AttrName -> String -> Prop (Input HTML i))
       -> AttrName
       -> String
       -> IProp r i)
@@ -122,7 +123,7 @@ attrNS :: forall r i. Namespace -> AttrName -> String -> IProp r i
 attrNS =
   pure >>> Core.attr >>>
     (unsafeCoerce
-      :: (AttrName -> String -> Prop (Input i))
+      :: (AttrName -> String -> Prop (Input HTML i))
       -> AttrName
       -> String
       -> IProp r i)
@@ -131,10 +132,10 @@ attrNS =
 -- | been created or destroyed in the DOM for the element that the property is
 -- | attached to.
 ref :: forall r i. RefLabel -> IProp r i
-ref = (unsafeCoerce :: ((Maybe Element -> Maybe (Input i)) -> Prop (Input i)) -> (Maybe Element -> Maybe (Input i)) -> IProp r i) Core.ref <<< go
+ref = (unsafeCoerce :: ((Maybe Element -> Maybe (Input HTML i)) -> Prop (Input HTML i)) -> (Maybe Element -> Maybe (Input HTML i)) -> IProp r i) Core.ref <<< go
   where
-  go :: RefLabel -> Maybe Element -> Maybe (Input i)
-  go p mel = Just (RefUpdate p mel)
+  go :: RefLabel -> Maybe Element -> Maybe (Input HTML i)
+  go p mel = Just (RefUpdate p (Surface.box <$> mel))
 
 -- | Every `IProp lt i` can be cast to some `IProp gt i` as long as `lt` is a
 -- | subset of `gt`.

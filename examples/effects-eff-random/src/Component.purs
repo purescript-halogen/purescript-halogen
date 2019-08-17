@@ -37,7 +37,7 @@ render state =
           [ HH.text "Generate new number" ]
       ]
 
-handleAction :: forall o m. MonadEffect m => Action -> H.HalogenM State Action () o m Unit
+handleAction :: forall o m. MonadEffect m => Action -> H.HalogenM HH.HTML State Action () o m Unit
 handleAction = case _ of
   Regenerate -> do
     newNumber <- H.liftEffect random

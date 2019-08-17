@@ -56,7 +56,7 @@ searchUser q = do
       lift (AX.get AXRF.string ("https://api.github.com/users/" <> q <> "?access_token=" <> token))
   pure (either (const "") identity body)
 
-handleAction :: forall o. Action -> H.HalogenM State Action () o (ReaderT Config Aff) Unit
+handleAction :: forall o. Action -> H.HalogenM HH.HTML State Action () o (ReaderT Config Aff) Unit
 handleAction = case _ of
   FetchData -> do
     userData <- lift (searchUser "kRITZCREEK")

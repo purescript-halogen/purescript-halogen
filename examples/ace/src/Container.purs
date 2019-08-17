@@ -55,14 +55,14 @@ render { text: text } =
         [ HH.text ("Current text: " <> text) ]
     ]
 
-handleAction :: forall o m. MonadAff m => Action -> H.HalogenM State Action ChildSlots o m Unit
+handleAction :: forall o m. MonadAff m => Action -> H.HalogenM HH.HTML State Action ChildSlots o m Unit
 handleAction = case _ of
   ClearText ->
     void $ H.query _ace unit $ H.tell (AceComponent.ChangeText "")
   HandleAceUpdate msg ->
     handleAceOuput msg
 
-handleAceOuput :: forall o m. MonadAff m => AceComponent.Output -> H.HalogenM State Action ChildSlots o m Unit
+handleAceOuput :: forall o m. MonadAff m => AceComponent.Output -> H.HalogenM HH.HTML State Action ChildSlots o m Unit
 handleAceOuput = case _ of
   AceComponent.TextChanged text ->
     H.modify_ (_ { text = text })

@@ -46,7 +46,7 @@ evalF
   :: forall h r s f act ps i o
    . Renderer h r
   -> Ref (DriverState h r s f act ps i o)
-  -> Input act
+  -> Input h act
   -> Aff Unit
 evalF render ref = case _ of
   Input.RefUpdate (Input.RefLabel p) el -> do
@@ -70,14 +70,14 @@ evalM
   :: forall h r s f act ps i o
    . Renderer h r
   -> Ref (DriverState h r s f act ps i o)
-  -> HalogenM s act ps o Aff
+  -> HalogenM h s act ps o Aff
   ~> Aff
 evalM render initRef (HalogenM hm) = foldFree (go initRef) hm
   where
   go
     :: forall s' f' act' ps' i' o'
      . Ref (DriverState h r s' f' act' ps' i' o')
-    -> HalogenF s' act' ps' o' Aff
+    -> HalogenF h s' act' ps' o' Aff
     ~> Aff
   go ref = case _ of
     State f -> do

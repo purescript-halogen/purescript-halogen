@@ -35,7 +35,7 @@ import Web.HTML.HTMLElement as HTMLElement
 import Web.HTML.Window (document) as DOM
 
 type VHTML action slots =
-  V.VDom (Array (Prop (Input action))) (ComponentSlot HTML slots Aff action)
+  V.VDom (Array (Prop (Input HTML action))) (ComponentSlot HTML slots Aff action)
 
 type ChildRenderer action slots
   = ComponentSlotBox HTML slots Aff action -> Effect (RenderStateX RenderState)
@@ -55,11 +55,11 @@ type WidgetState slots action =
 
 mkSpec
   :: forall action slots
-   . (Input action -> Effect Unit)
+   . (Input HTML action -> Effect Unit)
   -> Ref (ChildRenderer action slots)
   -> DOM.Document
   -> V.VDomSpec
-      (Array (VP.Prop (Input action)))
+      (Array (VP.Prop (Input HTML action)))
       (ComponentSlot HTML slots Aff action)
 mkSpec handler renderChildRef document =
   V.VDomSpec { buildWidget, buildAttributes, document }
@@ -67,12 +67,12 @@ mkSpec handler renderChildRef document =
 
   buildAttributes
     :: DOM.Element
-    -> V.Machine (Array (VP.Prop (Input action))) Unit
+    -> V.Machine (Array (VP.Prop (Input HTML action))) Unit
   buildAttributes = VP.buildProp handler
 
   buildWidget
     :: V.VDomSpec
-          (Array (VP.Prop (Input action)))
+          (Array (VP.Prop (Input HTML action)))
           (ComponentSlot HTML slots Aff action)
     -> V.Machine
           (ComponentSlot HTML slots Aff action)
@@ -150,7 +150,7 @@ renderSpec document container =
 
   render
     :: forall state action slots output
-     . (Input action -> Effect Unit)
+     . (Input HTML action -> Effect Unit)
     -> (ComponentSlotBox HTML slots Aff action -> Effect (RenderStateX RenderState))
     -> HTML (ComponentSlot HTML slots Aff action) action
     -> Maybe (RenderState state action slots output)
