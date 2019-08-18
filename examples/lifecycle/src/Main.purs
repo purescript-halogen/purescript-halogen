@@ -43,7 +43,7 @@ type ChildSlots =
 
 _child = SProxy :: SProxy "child"
 
-ui :: forall f. H.Component HH.HTML f Unit Void Aff
+ui :: forall f. H.Component f Unit Void Aff
 ui =
   H.mkComponent
     { initialState: const initialState

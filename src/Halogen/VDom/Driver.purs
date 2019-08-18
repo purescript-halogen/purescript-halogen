@@ -35,10 +35,10 @@ import Web.HTML.HTMLElement as HTMLElement
 import Web.HTML.Window (document) as DOM
 
 type VHTML action slots =
-  V.VDom (Array (Prop (Input action))) (ComponentSlot HTML slots Aff action)
+  V.VDom (Array (Prop (Input action))) (ComponentSlot slots Aff action)
 
 type ChildRenderer action slots
-  = ComponentSlotBox HTML slots Aff action -> Effect (RenderStateX RenderState)
+  = ComponentSlotBox slots Aff action -> Effect (RenderStateX RenderState)
 
 newtype RenderState state action slots output =
   RenderState
@@ -48,7 +48,7 @@ newtype RenderState state action slots output =
     }
 
 type HTMLThunk slots action =
-  Thunk (HTML (ComponentSlot HTML slots Aff action)) action
+  Thunk (HTML (ComponentSlot slots Aff action)) action
 
 type WidgetState slots action =
   Maybe (V.Step (HTMLThunk slots action) DOM.Node)
@@ -60,7 +60,7 @@ mkSpec
   -> DOM.Document
   -> V.VDomSpec
       (Array (VP.Prop (Input action)))
-      (ComponentSlot HTML slots Aff action)
+      (ComponentSlot slots Aff action)
 mkSpec handler renderChildRef document =
   V.VDomSpec { buildWidget, buildAttributes, document }
   where
@@ -73,14 +73,14 @@ mkSpec handler renderChildRef document =
   buildWidget
     :: V.VDomSpec
           (Array (VP.Prop (Input action)))
-          (ComponentSlot HTML slots Aff action)
+          (ComponentSlot slots Aff action)
     -> V.Machine
-          (ComponentSlot HTML slots Aff action)
+          (ComponentSlot slots Aff action)
           DOM.Node
   buildWidget spec = render
     where
 
-    render :: V.Machine (ComponentSlot HTML slots Aff action) DOM.Node
+    render :: V.Machine (ComponentSlot slots Aff action) DOM.Node
     render = EFn.mkEffectFn1 \slot ->
       case slot of
         ComponentSlot cs ->
@@ -91,8 +91,8 @@ mkSpec handler renderChildRef document =
 
     patch
       :: EFn.EffectFn2 (WidgetState slots action)
-            (ComponentSlot HTML slots Aff action)
-            (V.Step (ComponentSlot HTML slots Aff action) DOM.Node)
+            (ComponentSlot slots Aff action)
+            (V.Step (ComponentSlot slots Aff action) DOM.Node)
     patch = EFn.mkEffectFn2 \st slot ->
       case st of
         Just step -> case slot of
@@ -109,8 +109,8 @@ mkSpec handler renderChildRef document =
 
     renderComponentSlot
       :: EFn.EffectFn1
-            (ComponentSlotBox HTML slots Aff action)
-            (V.Step (ComponentSlot HTML slots Aff action) DOM.Node)
+            (ComponentSlotBox slots Aff action)
+            (V.Step (ComponentSlot slots Aff action) DOM.Node)
     renderComponentSlot = EFn.mkEffectFn1 \cs -> do
       renderChild <- Ref.read renderChildRef
       rsx <- renderChild cs
@@ -128,7 +128,7 @@ mkSpec handler renderChildRef document =
 
 runUI
   :: forall query input output
-   . Component HTML query input output Aff
+   . Component query input output Aff
   -> input
   -> DOM.HTMLElement
   -> Aff (HalogenIO query output Aff)
@@ -139,7 +139,7 @@ runUI component i element = do
 renderSpec
   :: DOM.Document
   -> DOM.HTMLElement
-  -> AD.RenderSpec HTML RenderState
+  -> AD.RenderSpec RenderState
 renderSpec document container =
     { render
     , renderChild: identity
@@ -151,8 +151,8 @@ renderSpec document container =
   render
     :: forall state action slots output
      . (Input action -> Effect Unit)
-    -> (ComponentSlotBox HTML slots Aff action -> Effect (RenderStateX RenderState))
-    -> HTML (ComponentSlot HTML slots Aff action) action
+    -> (ComponentSlotBox slots Aff action -> Effect (RenderStateX RenderState))
+    -> HTML (ComponentSlot slots Aff action) action
     -> Maybe (RenderState state action slots output)
     -> Effect (RenderState state action slots output)
   render handler child (HTML vdom) =

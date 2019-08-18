@@ -14,7 +14,7 @@ type State = Int
 
 data Action = HandleInput Int
 
-component :: forall q o m. H.Component HH.HTML q Input o m
+component :: forall q o m. H.Component q Input o m
 component =
   H.mkComponent
     { initialState: identity

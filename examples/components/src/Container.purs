@@ -25,7 +25,7 @@ type ChildSlots =
 _button :: SProxy "button"
 _button = SProxy
 
-component :: forall q i o m. H.Component HH.HTML q i o m
+component :: forall q i o m. H.Component q i o m
 component =
   H.mkComponent
     { initialState

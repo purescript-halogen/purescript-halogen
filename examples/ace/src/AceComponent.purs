@@ -31,7 +31,7 @@ data Action
 type State = { editor :: Maybe Editor }
 
 -- | The Ace component definition.
-component :: forall i m. MonadAff m => H.Component HH.HTML Query i Output m
+component :: forall i m. MonadAff m => H.Component Query i Output m
 component =
   H.mkComponent
     { initialState
