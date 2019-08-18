@@ -26,7 +26,7 @@ type ChildSlots =
 _ace = SProxy :: SProxy "ace"
 
 -- | The main UI component definition.
-component :: forall f i o m. MonadAff m => H.Component HH.HTML f i o m
+component :: forall f i o m. MonadAff m => H.Component f i o m
 component =
   H.mkComponent
     { initialState

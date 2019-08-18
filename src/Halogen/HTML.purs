@@ -36,7 +36,7 @@ import Unsafe.Coerce (unsafeCoerce)
 -- |   be evaluated with the `handleAction` function
 -- | - `slots` is the set of child component types that can be used in the HTML
 -- | - `m` is the monad used by the child component during evaluation
-type ComponentHTML action slots m = HTML (ComponentSlot HTML slots m action) action
+type ComponentHTML action slots m = HTML (ComponentSlot slots m action) action
 
 -- | A type useful for a chunk of HTML with no slot-embedding or query-raising.
 -- |
@@ -63,7 +63,7 @@ slot
   => Ord slot
   => SProxy label
   -> slot
-  -> Component HTML query input output m
+  -> Component query input output m
   -> input
   -> (output -> Maybe action)
   -> ComponentHTML action slots m

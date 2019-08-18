@@ -18,7 +18,7 @@ data Action = Toggle
 
 type State = { enabled :: Boolean }
 
-component :: forall i m. H.Component HH.HTML Query i Message m
+component :: forall i m. H.Component Query i Message m
 component =
   H.mkComponent
     { initialState
