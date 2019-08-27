@@ -25,7 +25,7 @@ newtype Message = Message String
 derive newtype instance eqMessage :: Eq Message
 derive newtype instance showMessage :: Show Message
 
-component :: H.Component TD.TestRenderProduct Query Unit Message Aff
+component :: H.Component Query Unit Message Aff
 component =
   H.mkComponent
     { initialState: const Nothing
