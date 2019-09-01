@@ -17,7 +17,7 @@ Halogen 5 is fully usable in its current state and is actively being used in pro
 - The [examples](examples/)
 - Reading doc comments in the source
 - Jordan Martinez's [Learn Halogen](https://github.com/jordanmartinez/learn-halogen)
-- Thomas Honeyman's [Real World Halogen (branch/PR for v5)](https://github.com/thomashoneyman/purescript-halogen-realworld/pull/26)
+- Thomas Honeyman's [Real World Halogen](https://github.com/thomashoneyman/purescript-halogen-realworld)
 
 ## Installation
 
