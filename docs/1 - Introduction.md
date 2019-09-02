@@ -1,18 +1,21 @@
 # Introduction
 
-:warning: Please note, this is the guide for Halogen 4 :warning:
-
-If you're interested in the new stuff, take a look at the [changes in v5](Changes%20in%20v5.md) document. If v4 is what you want, switch to browsing the [repository at that tag](https://github.com/slamdata/purescript-halogen/releases/tag/v4.0.0) to ensure you're seeing the right code and examples.
-
----
 
 A Halogen application consists of a tree of components. Each component is a self contained unit that has its own state, and re-renders when the state changes.
 
-A component modifies its state by evaluating inputs known as queries. Each component defines a type that describes all the possible queries it will expect. We use the term "query" rather than something like "input" as they can return details about the component state as well as being able to update it.
+A component modifies its state by evaluating inputs known as queries, or actions which may arise Internally. Each component defines four types which govern how it operates:
 
-A component can also emit messages during query evaluation. As with queries, these messages have a type specified by the component. Messages are used to notify listeners of activity within the component. The motivating example for this is to allow a parent component to observe activity within a child.
+1. `State` - Defines the data types which will drive the behaviour of the component.
 
-Component definitions are pure. Running the root component to actually produce the UI is the place effects occur. As UIs tend to be asynchronous, this generally means running in `Aff`.
+2. `Query` - Defines the external messages which may be passed to the component. We use the term "query" rather than something like "input" as they can return details about the component state as well as being able to update it.
+
+3. `Action` - Defines the events that arise internally to the component. Typically, these arise from user interaction, such as a button click. However actions can also be triggered as a result of a query. 
+
+4. `Message` - Defines the outbound events that the component can broadcast. A component can also emit messages during query evaluation. As with queries, these messages have a type specified by the component. Messages are used to notify external listeners of activity within the component. The motivating example for this is to allow a parent component to observe activity within a child.
+
+5. `input` - Defines inputs provided to the component directly from its parent or the mount point for a root component.
+
+Component definitions are pure. Running the root component to actually produce the UI is the place effects occur. As UIs tend to be asynchronous, this generally means running in the `Aff` monad.
 
 Halogen's types do allow for more than just HTML based UIs, but the guide will focus on this primary use case.
 

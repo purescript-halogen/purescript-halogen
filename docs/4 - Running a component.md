@@ -1,10 +1,5 @@
 # Running a component
 
-:warning: Please note, this is the guide for Halogen 4 :warning:
-
-If you're interested in the new stuff, take a look at the [changes in v5](Changes%20in%20v5.md) document. If v4 is what you want, switch to browsing the [repository at that tag](https://github.com/slamdata/purescript-halogen/releases/tag/v4.0.0) to ensure you're seeing the right code and examples.
-
----
 
 So far we've learned how to define a component, and to use `Aff` for effect handling. For this information to be of any use we're going to want to see something in the browser!
 
@@ -13,16 +8,19 @@ Halogen provides a driver for a PureScript implementation of a virtual DOM for e
 The most basic possible `main` function for a Halogen app will look something like this:
 
 ``` purescript
+module Example.Basic.Main where
+
 import Prelude
+
 import Effect (Effect)
+import Example.Basic.Button as Button
 import Halogen.Aff as HA
 import Halogen.VDom.Driver (runUI)
-import Button (myButton)
 
 main :: Effect Unit
 main = HA.runHalogenAff do
   body <- HA.awaitBody
-  runUI myButton unit body
+  runUI Button.component unit body
 ```
 
 This assumes our component is pure, has no meaningful input value, we don't care about any messages it might emit, and have no need to send queries into it.
@@ -33,25 +31,39 @@ The main function involved here is [`runUI`][Halogen.VDom.Driver.runUI]. It take
 
 ``` purescript
 runUI
-  :: forall f i o
-   . Component HTML f i o Aff
-  -> i
+  :: forall query input output
+   . Component HTML query input output Aff
+  -> input
   -> DOM.HTMLElement
-  -> Aff (HalogenIO f o Aff)
+  -> Aff (HalogenIO query output Aff)
 ```
 
-The `i` argument is the input type for the component - since we're creating the root component here this will never change. We still need to provide a value though, as the component's initial state might be based on it. All the examples we've covered so far don't make use of this, so for those cases we'd be passing `unit`.
+The `input` argument is the input type for the component - since we're creating the root component here this will never change. We still need to provide a value though, as the component's initial state might be based on it. All the examples we've covered so far don't make use of this, so for those cases we'd be passing `unit`.
 
-The element we pass in should already be present in the DOM, and should be empty. If either of these conditions are not met then strange things may occur - the behaviour is unspecified.
+The element we pass in should already be present in the DOM, and should be empty. If either of these conditions are not met then strange things may occur - the behaviour is unspecified. We use `awaitBody` to ensure that the `body` element is on the DOM, and to select the element, binding it to a variable.
 
-We expect the component's `m` type variable to be `Aff` at this point, and this is also what `runUI` returns in. This is why in the previous chapter the recommendation was made to use `Aff` for components even if you only need `Effect`. If the component is pure, this type will work out since the `m` type should be a type variable and we can substitute `Aff` in. If we have something else in here, then the component will have to be [`hoist`][Halogen.Component.hoist]ed into `Aff`.
+We expect the component's `m` type variable to be `Aff` at this point, and this is also what `runUI` returns in. The `runHalogenAff` function allows us to launch asynchronous effects from within the `Effect` monad. This is why in the previous chapter the recommendation was made to use `Aff` for components even if you only need `Effect`. If the component is pure, this type will work out since the `m` type should be a type variable and we can substitute `Aff` in. If we have something else in here, then the component will have to be [`hoist`][Halogen.Component.hoist]ed into `Aff`.
+
+The `hoist` function allows us run a component in an alternative monad, here's an example:
+
+``` purescript
+main :: Effect Unit
+main = HA.runHalogenAff do
+  body <- HA.awaitBody
+  let
+    rootComponent :: H.Component HH.HTML Router.Query {} Void Aff
+    rootComponent = H.hoist (runAppM environment) Router.component
+  io <- runUI rootComponent {} body
+
+```
 
 The last thing to look at here is the resulting `HalogenIO` value. It's a record that gives us some options for communicating with the component we just ran:
 
 ``` purescript
 type HalogenIO f o m =
-  { query :: f ~> m
+  { query :: forall a. query a -> m (Maybe a)
   , subscribe :: Consumer o m Unit -> m Unit
+  , dispose :: m Unit
   }
 ```
 
@@ -60,31 +72,111 @@ Note that `m` is polymorphic in the synonym. It's populated with `Aff` once agai
 - `query` allows us to send queries into the component, using its query algebra (`f`). This is useful for things like [routing][example-driver-routing], or driving an app from an external source - [WebSockets][example-driver-websockets], for example.
 - `subscribe` allows us to receive the messages the component emits by providing a [`coroutine`][purescript-coroutines] `Consumer`.
 
-If we go back to our basic button example from [chapter 2][defining-components], we can demonstrate both of the above with something like this:
+- `dispose` allows us to unmount our component tree.
+
+## Output and Subscribers
+
+If we go back to our basic button example from [chapter 2][defining-components], we can adjust our component to accept input and output as below:
 
 ``` purescript
+module Example.Driver.IO.Button where
+
 import Prelude
-import Control.Coroutine as CR
-import Effect.Class.Console (log)
-import Effect (Effect)
+
 import Data.Maybe (Maybe(..))
+import Halogen as H
+import Halogen.HTML as HH
+import Halogen.HTML.Events as HE
+import Halogen.HTML.Properties as HP
+
+type Slot = H.Slot Query Message
+
+data Query a
+  = IsOn (Boolean -> a)
+  | SetState Boolean a
+
+data Message = Toggled Boolean
+
+data Action = Toggle
+
+type State = { enabled :: Boolean }
+
+component :: forall i m. H.Component HH.HTML Query i Message m
+component =
+  H.mkComponent
+    { initialState
+    , render
+    , eval: H.mkEval $ H.defaultEval
+        { handleAction = handleAction
+        , handleQuery = handleQuery
+        }
+    }
+
+initialState :: forall i. i -> State
+initialState _ = { enabled: false }
+
+render :: forall m. State -> H.ComponentHTML Action () m
+render state =
+  let
+    label = if state.enabled then "On" else "Off"
+  in
+    HH.button
+      [ HP.title label
+      , HE.onClick \_ -> Just Toggle
+      ]
+      [ HH.text label ]
+
+handleAction :: forall m. Action -> H.HalogenM State Action () Message m Unit
+handleAction = case _ of
+  Toggle -> do
+    newState <- H.modify \st -> st { enabled = not st.enabled }
+    H.raise (Toggled newState.enabled)
+
+handleQuery :: forall m a. Query a -> H.HalogenM State Action () Message m (Maybe a)
+handleQuery = case _ of
+  IsOn k -> do
+    enabled <- H.gets _.enabled
+    pure (Just (k enabled))
+  SetState enabled a -> do
+    H.modify_ (_ { enabled = enabled })
+    pure (Just a)
+```
+(a runnable version of this is available at [`Examples.Driver-IO.src.Button.purs`][Examples.Driver-IO.src.Button.purs])
+
+In this version of the button component, we've added the `handleQuery` function, the `Query` type and the `Message` type, and substituted the types accordingly such that we accept queries as input and messages as output. Also note that we have the ability modify state and perform effects within `handleQuery`
+
+Now in our Main.purs:
+```purescript
+module Example.Driver.IO.Main where
+
+import Prelude
+
+import Control.Coroutine as CR
+import Data.Maybe (Maybe(..))
+import Effect (Effect)
+import Effect.Console (log)
+import Example.Driver.IO.Button as B
+import Halogen (liftEffect)
 import Halogen as H
 import Halogen.Aff as HA
 import Halogen.VDom.Driver (runUI)
-import Button as B
 
 main :: Effect Unit
 main = HA.runHalogenAff do
   body <- HA.awaitBody
-  io <- runUI B.myButton unit body
+  io <- runUI B.component unit body
 
   io.subscribe $ CR.consumer \(B.Toggled newState) -> do
-    log $ "Button was toggled to: " <> show newState
+    liftEffect $ log $ "Button was internally toggled to: " <> show newState
     pure Nothing
 
-  io.query $ H.action $ B.Toggle
-  io.query $ H.action $ B.Toggle
-  io.query $ H.action $ B.Toggle
+  state0 ← io.query $ H.request B.IsOn
+  liftEffect $ log $ "The button state is currently: " <> show state0
+
+  void $ io.query $ H.tell (B.SetState true)
+
+  state1 ← io.query $ H.request B.IsOn
+  liftEffect $ log $ "The button state is now: " <> show state1
 ```
 
 Here we're setting up a consumer that will listen to the component forever (as it returns `pure Nothing` - see the docs for [`consumer`][Control.Coroutine.consumer] for an explanation), and immediately toggling the button several times on start up. Checking the browser console should reveal the corresponding logged "Button was toggled" messages.
@@ -105,6 +197,7 @@ Now we know how to build simple components and run them, we can take a look at [
 
 [example-driver-routing]: ../examples/driver-routing "Routing example"
 [example-driver-websockets]: ../examples/driver-websockets "WebSockets example"
+[Examples.Driver-IO.src.Button.purs]: ../examples/driver-io "Driver IO example"
 [purescript-aff]: https://pursuit.purescript.org/packages/purescript-aff "purescript-aff"
 [purescript-coroutines]: https://pursuit.purescript.org/packages/purescript-coroutines "purescript-coroutines"
 
