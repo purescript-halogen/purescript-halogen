@@ -9,6 +9,7 @@ import Data.List as L
 import Data.Maybe (Maybe(..))
 import Effect.Aff (Aff)
 import Effect.Aff as Aff
+import Effect.Class.Console as Console
 import Effect.Ref as Ref
 import Halogen as H
 import Test.Assert (assertEqual)
@@ -93,6 +94,9 @@ testFinalize = do
   io.subscribe $ CR.consumer \msg -> do
     H.liftEffect $ Ref.modify_ (msg : _) logRef
     pure Nothing
+
+  -- Yield so the subscriber can ready to read the underlying AVar.
+  Aff.delay (Aff.Milliseconds 1.0)
 
   _ <- io.query (H.tell StartFork)
   io.dispose

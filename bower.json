@@ -25,14 +25,13 @@
     "test"
   ],
   "dependencies": {
-    "purescript-aff": "^5.0.0",
-    "purescript-avar": "^3.0.0",
+    "purescript-aff": "git@github.com:eric-corumdigital/purescript-aff.git#general_errors",
+    "purescript-avar": "git@github.com:eric-corumdigital/purescript-avar.git#general_errors",
     "purescript-console": "^4.1.0",
     "purescript-const": "^4.0.0",
     "purescript-coroutines": "^5.0.0",
     "purescript-dom-indexed": "^7.0.0",
     "purescript-foreign": "^5.0.0",
-    "purescript-fork": "^4.0.0",
     "purescript-free": "^5.0.0",
     "purescript-freeap": "^5.0.0",
     "purescript-halogen-vdom": "^6.1.0",
@@ -49,9 +48,13 @@
   "devDependencies": {
     "purescript-ace": "^7.0.0",
     "purescript-aff-coroutines": "^7.0.0",
-    "purescript-affjax": "^9.0.0",
+    "purescript-affjax": "git@github.com:eric-corumdigital/purescript-affjax.git#general_errors",
     "purescript-random": "^4.0.0",
     "purescript-web-socket": "^2.0.0",
     "purescript-assert": "^4.0.0"
+  },
+  "resolutions": {
+    "purescript-aff": "general_errors",
+    "purescript-avar": "general_errors"
   }
 }

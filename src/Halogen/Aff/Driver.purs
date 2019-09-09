@@ -7,7 +7,6 @@ module Halogen.Aff.Driver
 import Prelude
 
 import Control.Coroutine as CR
-import Control.Monad.Fork.Class (fork)
 import Control.Monad.Rec.Class (Step(..), tailRecM)
 import Control.Parallel (parSequence_)
 import Data.Either (Either(..), either)
@@ -18,7 +17,8 @@ import Data.Maybe (Maybe(..), maybe, isJust, isNothing)
 import Data.Traversable (for_, traverse_)
 import Data.Tuple (Tuple(..))
 import Effect (Effect)
-import Effect.Aff (Aff, killFiber, launchAff_, runAff_, try)
+import Effect.AVar as AVE
+import Effect.Aff (Aff, forkAff, killFiber, launchAff_, runAff_, try)
 import Effect.Aff.AVar as AV
 import Effect.Class (liftEffect)
 import Effect.Console (warn)
@@ -141,9 +141,9 @@ runUI renderSpec component i = do
         else Eval.evalQ render ref q
 
   rootHandler :: Ref (M.Map Int (AV.AVar o)) -> o -> Aff Unit
-  rootHandler ref message = do
-    listeners <- liftEffect $ Ref.read ref
-    traverse_ fork $ map (AV.put message) listeners
+  rootHandler ref message = liftEffect do
+    listeners <- Ref.read ref
+    traverse_ (\v -> AVE.put message v mempty) listeners
 
   subscribe
     :: Ref Int
@@ -158,7 +158,7 @@ runUI renderSpec component i = do
       Ref.modify_ (M.insert listenerId inputVar) ref
       pure listenerId
     let producer = CR.producer $ either (const (Right unit)) Left <$> try (AV.take inputVar)
-    void $ fork do
+    void $ forkAff do
       CR.runProcess (CR.connect producer consumer)
       liftEffect $ Ref.modify_ (M.delete listenerId) ref
       AV.kill (error "ended") inputVar
@@ -216,7 +216,7 @@ runUI renderSpec component i = do
       flip tailRecM unit \_ -> do
         handlers <- Ref.read pendingHandlers
         Ref.write (Just L.Nil) pendingHandlers
-        traverse_ (handleAff <<< traverse_ fork <<< L.reverse) handlers
+        traverse_ (handleAff <<< traverse_ forkAff <<< L.reverse) handlers
         mmore <- Ref.read pendingHandlers
         if maybe false L.null mmore
           then Ref.write Nothing pendingHandlers $> Done unit
@@ -314,14 +314,14 @@ handlePending :: Ref (Maybe (L.List (Aff Unit))) -> Effect Unit
 handlePending ref = do
   queue <- Ref.read ref
   Ref.write Nothing ref
-  for_ queue (handleAff <<< traverse_ fork <<< L.reverse)
+  for_ queue (handleAff <<< traverse_ forkAff <<< L.reverse)
 
 cleanupSubscriptionsAndForks
   :: forall h r s f act ps i o
    . DriverState h r s f act ps i o
   -> Effect Unit
 cleanupSubscriptionsAndForks (DriverState ds) = do
-  traverse_ (handleAff <<< traverse_ (fork <<< ES.finalize)) =<< Ref.read ds.subscriptions
+  traverse_ (handleAff <<< traverse_ (forkAff <<< ES.finalize)) =<< Ref.read ds.subscriptions
   Ref.write Nothing ds.subscriptions
   traverse_ (handleAff <<< killFiber (error "finalized")) =<< Ref.read ds.forks
   Ref.write M.empty ds.forks

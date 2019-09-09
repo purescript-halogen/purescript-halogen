@@ -11,7 +11,6 @@ import Prelude
 
 import Control.Applicative.Free (hoistFreeAp, retractFreeAp)
 import Control.Coroutine as CR
-import Control.Monad.Fork.Class (fork)
 import Control.Monad.Free (foldFree)
 import Control.Monad.Trans.Class (lift)
 import Control.Parallel (parSequence_, parallel, sequential)
@@ -23,7 +22,7 @@ import Data.Map as M
 import Data.Maybe (Maybe(..), maybe)
 import Data.Tuple (Tuple(..))
 import Effect (Effect)
-import Effect.Aff (Aff, error, finally, killFiber)
+import Effect.Aff (Aff, error, finally, forkAff, killFiber)
 import Effect.Class (liftEffect)
 import Effect.Ref (Ref)
 import Effect.Ref as Ref
@@ -93,7 +92,7 @@ evalM render initRef (HalogenM hm) = foldFree (go initRef) hm
       sid <- fresh SubscriptionId ref
       let (ES.EventSource setup) = fes sid
       DriverState ({ subscriptions }) <- liftEffect (Ref.read ref)
-      _ ← fork do
+      _ ← forkAff do
         { producer, finalizer } <- setup
         let
           done = ES.Finalizer do
@@ -104,7 +103,7 @@ evalM render initRef (HalogenM hm) = foldFree (go initRef) hm
             act <- CR.await
             subs <- lift $ liftEffect (Ref.read subscriptions)
             when ((M.member sid <$> subs) == Just true) do
-              _ <- lift $ fork $ evalF render ref (Input.Action act)
+              _ <- lift $ forkAff $ evalF render ref (Input.Action act)
               consumer
         liftEffect $ Ref.modify_ (map (M.insert sid done)) subscriptions
         CR.runProcess (consumer `CR.pullFrom` producer)
@@ -128,7 +127,7 @@ evalM render initRef (HalogenM hm) = foldFree (go initRef) hm
       fid <- fresh ForkId ref
       DriverState ({ forks }) <- liftEffect (Ref.read ref)
       doneRef <- liftEffect (Ref.new false)
-      fiber <- fork $ finally
+      fiber <- forkAff $ finally
         (liftEffect do
           Ref.modify_ (M.delete fid) forks
           Ref.write true doneRef)
@@ -174,7 +173,7 @@ handleLifecycle lchs f = do
   liftEffect $ Ref.write { initializers: L.Nil, finalizers: L.Nil } lchs
   result <- liftEffect f
   { initializers, finalizers } <- liftEffect $ Ref.read lchs
-  traverse_ fork finalizers
+  traverse_ forkAff finalizers
   parSequence_ initializers
   pure result
 
