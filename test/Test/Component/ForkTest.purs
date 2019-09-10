@@ -9,7 +9,6 @@ import Data.List as L
 import Data.Maybe (Maybe(..))
 import Effect.Aff (Aff)
 import Effect.Aff as Aff
-import Effect.Class.Console as Console
 import Effect.Ref as Ref
 import Halogen as H
 import Test.Assert (assertEqual)
