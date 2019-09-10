@@ -24,7 +24,7 @@ data Action
   = SetUsername String
   | MakeRequest Event
 
-component :: forall f i o m. MonadAff m => H.Component f i o m
+component :: forall q i o m. MonadAff m => H.Component q i o m
 component =
   H.mkComponent
     { initialState
