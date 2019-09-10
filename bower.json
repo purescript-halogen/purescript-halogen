@@ -44,7 +44,8 @@
     "purescript-transformers": "^4.1.0",
     "purescript-unsafe-coerce": "^4.0.0",
     "purescript-unsafe-reference": "^3.0.0",
-    "purescript-web-uievents": "^2.0.0"
+    "purescript-web-uievents": "^2.0.0",
+    "purescript-event": "^1.2.4"
   },
   "devDependencies": {
     "purescript-ace": "^7.0.0",

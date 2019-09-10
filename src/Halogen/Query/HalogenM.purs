@@ -22,10 +22,10 @@ import Data.Traversable (traverse)
 import Data.Tuple (Tuple)
 import Effect.Aff.Class (class MonadAff, liftAff)
 import Effect.Class (class MonadEffect, liftEffect)
+import FRP.Event as Event
 import Halogen.Data.Slot (Slot)
 import Halogen.Data.Slot as Slot
 import Halogen.Query.ChildQuery as CQ
-import Halogen.Query.EventSource as ES
 import Halogen.Query.Input (RefLabel)
 import Prim.Row as Row
 import Web.DOM (Element)
@@ -33,7 +33,7 @@ import Web.DOM (Element)
 -- | The Halogen component eval algebra.
 data HalogenF state action slots output m a
   = State (state -> Tuple a state)
-  | Subscribe (SubscriptionId -> ES.EventSource m action) (SubscriptionId -> a)
+  | Subscribe (SubscriptionId -> Event.Event action) (SubscriptionId -> a)
   | Unsubscribe SubscriptionId a
   | Lift (m a)
   | ChildQuery (CQ.ChildQueryBox slots a)
@@ -148,7 +148,7 @@ derive newtype instance ordSubscriptionId :: Ord SubscriptionId
 -- | When a component is disposed of any active subscriptions will automatically
 -- | be stopped and no further subscriptions will be possible during
 -- | finalization.
-subscribe :: forall state action slots output m. ES.EventSource m action -> HalogenM state action slots output m SubscriptionId
+subscribe :: forall state action slots output m. Event.Event action -> HalogenM state action slots output m SubscriptionId
 subscribe es = HalogenM $ liftF $ Subscribe (\_ -> es) identity
 
 -- | An alternative to `subscribe`, intended for subscriptions that unsubscribe
@@ -160,7 +160,7 @@ subscribe es = HalogenM $ liftF $ Subscribe (\_ -> es) identity
 -- | When a component is disposed of any active subscriptions will automatically
 -- | be stopped and no further subscriptions will be possible during
 -- | finalization.
-subscribe' :: forall state action slots output m. (SubscriptionId -> ES.EventSource m action) -> HalogenM state action slots output m Unit
+subscribe' :: forall state action slots output m. (SubscriptionId -> Event.Event action) -> HalogenM state action slots output m Unit
 subscribe' esc = HalogenM $ liftF $ Subscribe esc (const unit)
 
 -- | Unsubscribes a component from an `EventSource`. If the subscription
@@ -278,7 +278,7 @@ hoist nat (HalogenM fa) = HalogenM (hoistFree go fa)
   go :: HalogenF state action slots output m ~> HalogenF state action slots output m'
   go = case _ of
     State f -> State f
-    Subscribe fes k -> Subscribe (ES.hoist nat <<< fes) k
+    Subscribe fes k -> Subscribe fes k
     Unsubscribe sid a -> Unsubscribe sid a
     Lift q -> Lift (nat q)
     ChildQuery cq -> ChildQuery cq
