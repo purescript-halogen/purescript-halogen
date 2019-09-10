@@ -30,7 +30,7 @@ _a = SProxy :: SProxy "a"
 _b = SProxy :: SProxy "b"
 _c = SProxy :: SProxy "c"
 
-component :: forall f i o m. H.Component HH.HTML f i o m
+component :: forall q i o m. H.Component q i o m
 component =
   H.mkComponent
     { initialState

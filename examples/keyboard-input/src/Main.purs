@@ -28,7 +28,7 @@ data Action
   = Init
   | HandleKey H.SubscriptionId KeyboardEvent
 
-ui :: forall f i o. H.Component HH.HTML f i o Aff
+ui :: forall f i o. H.Component f i o Aff
 ui =
   H.mkComponent
     { initialState: const initialState

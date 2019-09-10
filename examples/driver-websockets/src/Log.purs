@@ -27,7 +27,7 @@ type State =
   , inputText :: String
   }
 
-component :: forall i m. MonadEffect m => H.Component HH.HTML Query i Message m
+component :: forall i m. MonadEffect m => H.Component Query i Message m
 component =
   H.mkComponent
     { initialState

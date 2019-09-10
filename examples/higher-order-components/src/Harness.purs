@@ -26,7 +26,7 @@ type ChildSlots =
 _panel :: SProxy "panel"
 _panel = SProxy
 
-component :: forall f i o m. H.Component HH.HTML f i o m
+component :: forall q i o m. H.Component q i o m
 component =
   H.mkComponent
     { initialState
@@ -58,7 +58,7 @@ printButtonState = case _ of
   Nothing -> "Unknown"
   Just b -> if b then "On" else "Off"
 
-panelComponent :: forall m. H.Component HH.HTML (Panel.Query Button.Query) Unit (Panel.Message Button.Message) m
+panelComponent :: forall m. H.Component (Panel.Query Button.Query) Unit (Panel.Message Button.Message) m
 panelComponent = Panel.component Button.component
 
 handleAction :: forall o m. Action -> H.HalogenM State Action ChildSlots o m Unit

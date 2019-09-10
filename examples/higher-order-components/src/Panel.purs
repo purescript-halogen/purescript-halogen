@@ -37,9 +37,9 @@ _inner :: SProxy "inner"
 _inner = SProxy
 
 component
-  :: forall f i o m
-   . H.Component HH.HTML f i o m
-  -> H.Component HH.HTML (Query f) i (Message o) m
+  :: forall q i o m
+   . H.Component q i o m
+  -> H.Component (Query q) i (Message o) m
 component innerComponent =
   H.mkComponent
     { initialState
@@ -54,10 +54,10 @@ initialState :: forall i. i -> State i
 initialState = { input: _, open: false }
 
 render
-  :: forall f i o m
-   . H.Component HH.HTML f i o m
+  :: forall q i o m
+   . H.Component q i o m
   -> State i
-  -> H.ComponentHTML (Action o) (ChildSlots f o) m
+  -> H.ComponentHTML (Action o) (ChildSlots q o) m
 render innerComponent state
   | state.open =
       HH.div
@@ -88,9 +88,9 @@ render innerComponent state
         ]
 
 handleAction
-  :: forall f i o m
+  :: forall q i o m
    . Action o
-  -> H.HalogenM (State i) (Action o) (ChildSlots f o) (Message o) m Unit
+  -> H.HalogenM (State i) (Action o) (ChildSlots q o) (Message o) m Unit
 handleAction = case _ of
   Toggle -> do
     st' <- H.modify \st -> st { open = not st.open }
@@ -99,9 +99,9 @@ handleAction = case _ of
     H.raise (Bubble msg)
 
 handleQuery
-  :: forall f i o m a
-   . Query f a
-  -> H.HalogenM (State i) (Action o) (ChildSlots f o) (Message o) m (Maybe a)
+  :: forall q i o m a
+   . Query q a
+  -> H.HalogenM (State i) (Action o) (ChildSlots q o) (Message o) m (Maybe a)
 handleQuery = case _ of
   SetOpen b a -> do
     H.modify_ (_ { open = b })

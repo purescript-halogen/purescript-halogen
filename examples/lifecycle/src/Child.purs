@@ -28,7 +28,7 @@ type ChildSlots =
 
 _cell = SProxy :: SProxy "cell"
 
-child :: forall f. Int -> H.Component HH.HTML f Unit Message Aff
+child :: forall f. Int -> H.Component f Unit Message Aff
 child initialState =
   H.mkComponent
     { initialState: const initialState
@@ -71,7 +71,7 @@ child initialState =
     Finalized -> Report ("Heard Finalized from cell" <> show i)
     Reported msg -> Report ("Re-reporting from cell" <> show i <> ": " <> msg)
 
-cell :: forall f. Int -> H.Component HH.HTML f Unit Message Aff
+cell :: forall f. Int -> H.Component f Unit Message Aff
 cell initialState =
   H.mkComponent
     { initialState: const initialState

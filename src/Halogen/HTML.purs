@@ -28,7 +28,7 @@ import Unsafe.Coerce (unsafeCoerce)
 
 -- | A convenience synonym for the output type of a `render` function, for a
 -- | component that renders HTML.
-type ComponentHTML action slots m = HTML (ComponentSlot HTML slots m action) action
+type ComponentHTML action slots m = HTML (ComponentSlot slots m action) action
 
 -- | A type useful for a chunk of HTML with no slot-embedding or query-raising.
 -- |
@@ -55,7 +55,7 @@ slot
   => Ord slot
   => SProxy label
   -> slot
-  -> Component HTML query input output m
+  -> Component query input output m
   -> input
   -> (output -> Maybe action)
   -> ComponentHTML action slots m

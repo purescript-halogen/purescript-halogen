@@ -22,7 +22,7 @@ type State = { userData :: Maybe String }
 
 data Action = FetchData
 
-ui :: forall f i o. H.Component HH.HTML f i o (ReaderT Config Aff)
+ui :: forall f i o. H.Component f i o (ReaderT Config Aff)
 ui =
   H.mkComponent
     { initialState: const initialState
@@ -62,7 +62,7 @@ handleAction = case _ of
     userData <- lift (searchUser "kRITZCREEK")
     H.put { userData: Just userData }
 
-ui' :: forall f i o. H.Component HH.HTML f i o Aff
+ui' :: forall f i o. H.Component f i o Aff
 ui' = H.hoist (\app -> runReaderT app { githubToken: Nothing }) ui
 
 main :: Effect Unit
