@@ -2,8 +2,10 @@
 -- | component's `eval` function.
 module Halogen.Query
   ( Tell
+  , mkTell
   , tell
   , Request
+  , mkRequest
   , request
   , getHTMLElementRef
   , module Exports
@@ -17,11 +19,14 @@ import Prelude
 import Control.Monad.State.Class (get, gets, modify, modify_, put) as Exports
 import Control.Monad.Trans.Class (lift) as Exports
 import Data.Maybe (Maybe)
+import Data.Symbol (class IsSymbol, SProxy)
 import Effect.Aff.Class (liftAff) as Exports
 import Effect.Class (liftEffect) as Exports
+import Halogen.Data.Slot (Slot)
 import Halogen.Query.HalogenM (HalogenM(..), HalogenF(..), SubscriptionId, ForkId, fork, kill, getRef, query, queryAll, subscribe, subscribe', unsubscribe, raise)
 import Halogen.Query.HalogenQ (HalogenQ(..))
 import Halogen.Query.Input (RefLabel(..))
+import Prim.Row as Row
 import Web.HTML.HTMLElement (HTMLElement)
 import Web.HTML.HTMLElement as HTMLElement
 
@@ -51,10 +56,21 @@ type Tell f = Unit -> f Unit
 -- | data Query a = Tick a
 -- |
 -- | sendTick :: forall o. H.HalogenIO Query o Aff -> Aff (Maybe Unit)
--- | sendTick app = app.query (H.tell Tick)
+-- | sendTick app = app.query (H.mkTell Tick)
 -- | ```
-tell :: forall f. Tell f -> f Unit
-tell act = act unit
+mkTell :: forall f. Tell f -> f Unit
+mkTell act = act unit
+
+tell
+  :: forall state action output m label slots query output' slot _1
+   . Row.Cons label (Slot query output' slot) _1 slots
+  => IsSymbol label
+  => Ord slot
+  => SProxy label
+  -> slot
+  -> Tell query
+  -> HalogenM state action slots output m Unit
+tell slot id req = void $ query slot id (req unit)
 
 -- | Type synonym for an "request-style" query - queries that can cause effects
 -- | as well as fetching some information from a component.
@@ -76,10 +92,21 @@ type Request f a = (a -> a) -> f a
 -- | data Query a = GetTickCount (Int -> a)
 -- |
 -- | getTickCount :: forall o. H.HalogenIO Query o Aff -> Aff (Maybe Int)
--- | getTickCount app = app.query (H.request GetTickCount)
+-- | getTickCount app = app.query (H.mkRequest GetTickCount)
 -- | ```
-request :: forall f a. Request f a -> f a
-request req = req identity
+mkRequest :: forall f a. Request f a -> f a
+mkRequest req = req identity
+
+request
+  :: forall state action output m label slots query output' slot a _1
+   . Row.Cons label (Slot query output' slot) _1 slots
+  => IsSymbol label
+  => Ord slot
+  => SProxy label
+  -> slot
+  -> Request query a
+  -> HalogenM state action slots output m (Maybe a)
+request slot id req = query slot id (req identity)
 
 -- | Retrieves a `HTMLElement` value that is associated with a `Ref` in the
 -- | rendered output of a component. If there is no currently rendered value (or

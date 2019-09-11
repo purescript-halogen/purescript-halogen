@@ -64,7 +64,7 @@ panelComponent = Panel.component Button.component
 handleAction :: forall o m. Action -> H.HalogenM State Action ChildSlots o m Unit
 handleAction = case _ of
   CheckButtonState -> do
-    buttonCheckState <- H.query _panel unit $ H.request (Panel.QueryInner <<< Button.IsOn)
+    buttonCheckState <- H.request _panel unit (Panel.QueryInner <<< Button.IsOn)
     H.modify_ (_ { buttonCheckState = buttonCheckState })
   HandlePanelMessage msg ->
     handlePanelMessage msg
