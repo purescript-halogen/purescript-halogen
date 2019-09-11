@@ -6,11 +6,9 @@ module Halogen.Aff.Driver
 
 import Prelude
 
-import Control.Coroutine as CR
 import Control.Monad.Fork.Class (fork)
 import Control.Monad.Rec.Class (Step(..), tailRecM)
 import Control.Parallel (parSequence_)
-import Data.Either (Either(..), either)
 import Data.List ((:))
 import Data.List as L
 import Data.Map as M
@@ -18,13 +16,13 @@ import Data.Maybe (Maybe(..), maybe, isJust, isNothing)
 import Data.Traversable (for_, sequence_, traverse_)
 import Data.Tuple (Tuple(..))
 import Effect (Effect)
-import Effect.Aff (Aff, killFiber, launchAff_, try)
-import Effect.Aff.AVar as AV
+import Effect.Aff (Aff, killFiber)
 import Effect.Class (liftEffect)
 import Effect.Console (warn)
 import Effect.Exception (error, throw)
 import Effect.Ref (Ref)
 import Effect.Ref as Ref
+import FRP.Event as Event
 import Halogen (HalogenIO)
 import Halogen.Aff.Driver.Eval as Eval
 import Halogen.Aff.Driver.State (DriverState(..), DriverStateRef(..), DriverStateX, LifecycleHandlers, RenderStateX, initDriverState, mapDriverState, renderStateX, renderStateX_, unDriverStateX)
@@ -118,13 +116,13 @@ runUI renderSpec component i = do
   fresh <- liftEffect $ Ref.new 0
   disposed <- liftEffect $ Ref.new false
   Eval.handleLifecycle lchs do
-    listeners <- Ref.new M.empty
-    dsx <- Ref.read =<< runComponent lchs (rootHandler listeners) i component
+    eio <- Event.create
+    dsx <- Ref.read =<< runComponent lchs (liftEffect <<< eio.push) i component
     unDriverStateX (\st ->
       pure
         { query: evalDriver disposed st.selfRef
-        , subscribe: subscribe fresh listeners
-        , dispose: dispose disposed lchs dsx listeners
+        , messages: eio.event
+        , dispose: dispose disposed lchs dsx
         }) dsx
 
   where
@@ -139,29 +137,6 @@ runUI renderSpec component i = do
       if _
         then pure Nothing
         else Eval.evalQ render ref q
-
-  rootHandler :: Ref (M.Map Int (AV.AVar o)) -> o -> Aff Unit
-  rootHandler ref message = do
-    listeners <- liftEffect $ Ref.read ref
-    traverse_ fork $ map (AV.put message) listeners
-
-  subscribe
-    :: Ref Int
-    -> Ref (M.Map Int (AV.AVar o))
-    -> CR.Consumer o Aff Unit
-    -> Aff Unit
-  subscribe fresh ref consumer = do
-    inputVar <- AV.empty
-    listenerId <- liftEffect do
-      listenerId <- Ref.read fresh
-      Ref.modify_ (_ + 1) fresh
-      Ref.modify_ (M.insert listenerId inputVar) ref
-      pure listenerId
-    let producer = CR.producer $ either (const (Right unit)) Left <$> try (AV.take inputVar)
-    void $ fork do
-      CR.runProcess (CR.connect producer consumer)
-      liftEffect $ Ref.modify_ (M.delete listenerId) ref
-      AV.kill (error "ended") inputVar
 
   runComponent
     :: forall f' i' o'
@@ -291,15 +266,13 @@ runUI renderSpec component i = do
      . Ref Boolean
     -> Ref LifecycleHandlers
     -> DriverStateX r f' o'
-    -> Ref (M.Map Int (AV.AVar o'))
     -> Aff Unit
-  dispose disposed lchs dsx subsRef = Eval.handleLifecycle lchs do
+  dispose disposed lchs dsx = Eval.handleLifecycle lchs do
     Ref.read disposed >>=
       if _
         then pure unit
         else do
           Ref.write true disposed
-          traverse_ (launchAff_ <<< AV.kill (error "disposed")) =<< Ref.read subsRef
           finalize lchs dsx
           unDriverStateX (traverse_ renderSpec.dispose <<< _.rendering) dsx
 
