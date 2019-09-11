@@ -29,7 +29,6 @@
     "purescript-avar": "^3.0.0",
     "purescript-console": "^4.1.0",
     "purescript-const": "^4.0.0",
-    "purescript-coroutines": "^5.0.0",
     "purescript-dom-indexed": "^7.0.0",
     "purescript-foreign": "^5.0.0",
     "purescript-fork": "^4.0.0",

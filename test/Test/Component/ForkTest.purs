@@ -2,7 +2,6 @@ module Test.Component.ForkTest where
 
 import Prelude
 
-import Control.Coroutine as CR
 import Data.Foldable (traverse_)
 import Data.List ((:))
 import Data.List as L
@@ -10,6 +9,7 @@ import Data.Maybe (Maybe(..))
 import Effect.Aff (Aff)
 import Effect.Aff as Aff
 import Effect.Ref as Ref
+import FRP.Event as Event
 import Halogen as H
 import Test.Assert (assertEqual)
 import Test.TestDriver as TD
@@ -58,7 +58,7 @@ testForkKill = do
 
   logRef <- H.liftEffect $ Ref.new L.Nil
 
-  io.subscribe $ CR.consumer \msg -> do
+  _ ← H.liftEffect $ Event.subscribe io.messages \msg -> do
     H.liftEffect $ Ref.modify_ (msg : _) logRef
     pure Nothing
 
@@ -90,7 +90,7 @@ testFinalize = do
 
   logRef <- H.liftEffect $ Ref.new L.Nil
 
-  io.subscribe $ CR.consumer \msg -> do
+  _ ← H.liftEffect $ Event.subscribe io.messages \msg -> do
     H.liftEffect $ Ref.modify_ (msg : _) logRef
     pure Nothing
 
