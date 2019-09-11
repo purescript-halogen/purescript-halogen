@@ -73,7 +73,7 @@ render state = HH.div_
 handleAction :: forall o m. Action -> H.HalogenM State Action ChildSlots o m Unit
 handleAction = case _ of
   ReadStates -> do
-    a <- H.query _a unit (H.request CA.IsOn)
-    b <- H.query _b unit (H.request CB.GetCount)
-    c <- H.query _c unit (H.request CC.GetValue)
+    a <- H.request _a unit CA.IsOn
+    b <- H.request _b unit CB.GetCount
+    c <- H.request _c unit CC.GetValue
     H.put { a, b, c }

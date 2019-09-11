@@ -61,5 +61,5 @@ handleAction = case _ of
   HandleButton (Button.Toggled _) -> do
     H.modify_ (\st -> st { toggleCount = st.toggleCount + 1 })
   CheckButtonState -> do
-    buttonState <- H.query _button unit $ H.request Button.IsOn
+    buttonState <- H.request _button unit Button.IsOn
     H.modify_ (_ { buttonState = buttonState })

@@ -58,7 +58,7 @@ render { text: text } =
 handleAction :: forall o m. MonadAff m => Action -> H.HalogenM State Action ChildSlots o m Unit
 handleAction = case _ of
   ClearText ->
-    void $ H.query _ace unit $ H.tell (AceComponent.ChangeText "")
+    H.tell _ace unit (AceComponent.ChangeText "")
   HandleAceUpdate msg ->
     handleAceOuput msg
 
