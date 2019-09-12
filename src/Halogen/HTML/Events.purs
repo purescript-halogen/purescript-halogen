@@ -5,6 +5,7 @@ module Halogen.HTML.Events
   , onLoad
   , onScroll
   , onChange
+  , onFileUpload
   , onInput
   , onInvalid
   , onReset
@@ -57,7 +58,10 @@ import Prelude
 
 import Control.Monad.Except (runExcept)
 import Data.Either (either)
-import Data.Maybe (Maybe(..))
+import Data.Maybe (Maybe(..), maybe)
+import Data.Tuple (Tuple(..))
+import Data.Unfoldable (class Unfoldable, unfoldr)
+import Effect (Effect)
 import Foreign (F, Foreign, readBoolean, readInt, readString, unsafeToForeign)
 import Foreign.Index (readProp)
 import Halogen.HTML.Core (Prop)
@@ -69,9 +73,13 @@ import Web.Clipboard.ClipboardEvent (ClipboardEvent)
 import Web.Clipboard.ClipboardEvent.EventTypes as CET
 import Web.Event.Event (Event, EventType(..))
 import Web.Event.Event as EE
+import Web.Event.Event as Event
+import Web.File.File (File)
+import Web.File.FileList (item)
 import Web.HTML.Event.DragEvent (DragEvent)
 import Web.HTML.Event.DragEvent.EventTypes as DET
 import Web.HTML.Event.EventTypes as ET
+import Web.HTML.HTMLInputElement as HTMLInputElement
 import Web.TouchEvent.TouchEvent (TouchEvent)
 import Web.UIEvent.FocusEvent (FocusEvent)
 import Web.UIEvent.FocusEvent.EventTypes as FET
@@ -99,6 +107,17 @@ onScroll = handler (EventType "scroll")
 
 onChange :: forall r i. (Event -> Maybe i) -> IProp (onChange :: Event | r) i
 onChange = handler ET.change
+
+onFileUpload :: forall r i t. Unfoldable t => Monoid (t File)
+             => (Effect (t File) -> Maybe i) -> IProp (onFileUpload :: Event | r) i
+onFileUpload f = handler ET.change $
+  ( Event.target >=>
+    HTMLInputElement.fromEventTarget >=>
+    ((HTMLInputElement.files >=> (maybe mempty items >>> pure)) >>> pure) ) >=>
+  f
+  where -- Should be removed with https://github.com/purescript-web/purescript-web-file/pull/8
+        -- items :: forall t. Unfoldable t => FileList -> t File
+        items fl = unfoldr (\i -> (flip Tuple (i + 1)) <$> item i fl) 0
 
 onInput :: forall r i. (Event -> Maybe i) -> IProp (onInput :: Event | r) i
 onInput = handler ET.input
@@ -273,3 +292,4 @@ onValueInput = addForeignPropHandler ET.input "value" readString
 -- | unchecked.
 onChecked :: forall r i. (Boolean -> Maybe i) -> IProp (checked :: Boolean, onChange :: Event | r) i
 onChecked = addForeignPropHandler ET.change "checked" readBoolean
+
