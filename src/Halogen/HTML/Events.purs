@@ -109,7 +109,7 @@ onChange :: forall r i. (Event -> Maybe i) -> IProp (onChange :: Event | r) i
 onChange = handler ET.change
 
 onFileUpload :: forall r i t. Unfoldable t
-             => (t File -> Maybe i) -> IProp (onFileUpload :: Event | r) i
+             => (t File -> Maybe i) -> IProp (onChange :: Event | r) i
 onFileUpload f = handler ET.change $
   Event.target >=>
   HTMLInputElement.fromEventTarget >=>
@@ -295,4 +295,3 @@ onValueInput = addForeignPropHandler ET.input "value" readString
 -- | unchecked.
 onChecked :: forall r i. (Boolean -> Maybe i) -> IProp (checked :: Boolean, onChange :: Event | r) i
 onChecked = addForeignPropHandler ET.change "checked" readBoolean
-
