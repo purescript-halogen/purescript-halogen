@@ -59,7 +59,7 @@ import Prelude
 import Control.Monad.Except (runExcept)
 import Data.Either (either)
 import Data.Maybe (Maybe(..))
-import Data.Unfoldable (class Unfoldable, unfoldr)
+import Data.Unfoldable (class Unfoldable)
 import Foreign (F, Foreign, readBoolean, readInt, readString, unsafeToForeign)
 import Foreign.Index (readProp)
 import Halogen.HTML.Core (Prop)
