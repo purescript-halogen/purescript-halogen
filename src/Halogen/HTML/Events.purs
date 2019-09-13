@@ -58,10 +58,9 @@ import Prelude
 
 import Control.Monad.Except (runExcept)
 import Data.Either (either)
-import Data.Maybe (Maybe(..), maybe)
+import Data.Maybe (Maybe(..))
 import Data.Tuple (Tuple(..))
 import Data.Unfoldable (class Unfoldable, unfoldr)
-import Effect (Effect)
 import Foreign (F, Foreign, readBoolean, readInt, readString, unsafeToForeign)
 import Foreign.Index (readProp)
 import Halogen.HTML.Core (Prop)
@@ -75,7 +74,7 @@ import Web.Event.Event (Event, EventType(..))
 import Web.Event.Event as EE
 import Web.Event.Event as Event
 import Web.File.File (File)
-import Web.File.FileList (item)
+import Web.File.FileList (FileList, item)
 import Web.HTML.Event.DragEvent (DragEvent)
 import Web.HTML.Event.DragEvent.EventTypes as DET
 import Web.HTML.Event.EventTypes as ET
@@ -89,6 +88,7 @@ import Web.UIEvent.MouseEvent (MouseEvent)
 import Web.UIEvent.MouseEvent.EventTypes as MET
 import Web.UIEvent.WheelEvent (WheelEvent)
 import Web.UIEvent.WheelEvent.EventTypes as WET
+import Effect.Unsafe (unsafePerformEffect)
 
 handler :: forall r i. EventType -> (Event -> Maybe i) -> IProp r i
 handler et = (unsafeCoerce :: (EventType -> (Event -> Maybe i) -> Prop i) -> EventType -> (Event -> Maybe (Input i)) -> IProp r i) Core.handler et <<< map (map Action)
@@ -108,16 +108,19 @@ onScroll = handler (EventType "scroll")
 onChange :: forall r i. (Event -> Maybe i) -> IProp (onChange :: Event | r) i
 onChange = handler ET.change
 
-onFileUpload :: forall r i t. Unfoldable t => Monoid (t File)
-             => (Effect (t File) -> Maybe i) -> IProp (onFileUpload :: Event | r) i
+onFileUpload :: forall r i t. Unfoldable t
+             => (t File -> Maybe i) -> IProp (onFileUpload :: Event | r) i
 onFileUpload f = handler ET.change $
-  ( Event.target >=>
-    HTMLInputElement.fromEventTarget >=>
-    ((HTMLInputElement.files >=> (maybe mempty items >>> pure)) >>> pure) ) >=>
+  Event.target >=>
+  HTMLInputElement.fromEventTarget >=>
+  (HTMLInputElement.files >>> unsafePerformEffect) >=>
+  (items >>> pure) >=>
   f
   where -- Should be removed with https://github.com/purescript-web/purescript-web-file/pull/8
-        -- items :: forall t. Unfoldable t => FileList -> t File
+        items :: forall f. Unfoldable f => FileList -> f File
         items fl = unfoldr (\i -> (flip Tuple (i + 1)) <$> item i fl) 0
+        unfoldEmpty :: forall f a. Unfoldable f => f a
+        unfoldEmpty = unfoldr (const Nothing) Nothing
 
 onInput :: forall r i. (Event -> Maybe i) -> IProp (onInput :: Event | r) i
 onInput = handler ET.input
