@@ -115,8 +115,6 @@ onFileUpload f = handler ET.change $
   (HTMLInputElement.files >>> unsafePerformEffect) >=>
   (items >>> pure) >=>
   f
-  where unfoldEmpty :: forall f a. Unfoldable f => f a
-        unfoldEmpty = unfoldr (const Nothing) Nothing
 
 onInput :: forall r i. (Event -> Maybe i) -> IProp (onInput :: Event | r) i
 onInput = handler ET.input
