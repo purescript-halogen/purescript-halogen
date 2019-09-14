@@ -64,6 +64,8 @@ derive newtype instance applyHalogenM :: Apply (HalogenM state action slots outp
 derive newtype instance applicativeHalogenM :: Applicative (HalogenM state action slots output m)
 derive newtype instance bindHalogenM :: Bind (HalogenM state action slots output m)
 derive newtype instance monadHalogenM :: Monad (HalogenM state action slots output m)
+derive newtype instance semigroupHalogenM :: Semigroup a => Semigroup (HalogenM state action slots output m a)
+derive newtype instance monoidHalogenM :: Monoid a => Monoid (HalogenM state action slots output m a)
 
 instance monadEffectHalogenM :: MonadEffect m => MonadEffect (HalogenM state action slots output m) where
   liftEffect = HalogenM <<< liftF <<< Lift <<< liftEffect
