@@ -23,7 +23,7 @@ Halogen 5 is fully usable in its current state and is actively being used in pro
 ## Installation
 
 ```
-bower install purescript-halogen#v5.0.0-rc.1
+bower install purescript-halogen#v5.0.0-rc.7
 ```
 
 Also available via [package-sets](https://github.com/purescript/package-sets)
