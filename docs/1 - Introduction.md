@@ -11,9 +11,9 @@ A component modifies its state by evaluating inputs known as queries, or actions
 
 3. `Action` - Defines the events that arise internally to the component. Typically, these arise from user interaction, such as a button click. However actions can also be triggered as a result of a query. 
 
-4. `Message` - Defines the outbound events that the component can broadcast. A component can also emit messages during query evaluation. As with queries, these messages have a type specified by the component. Messages are used to notify external listeners of activity within the component. The motivating example for this is to allow a parent component to observe activity within a child.
+4. `Output Message` - Defines the outbound events (or messages) that a child component can broadcast up to the parent. A component can also emit output messages during query evaluation. As with queries, these output messages have a type specified by the component. Output messages are used to notify external listeners of activity within the component. The motivating example for this is to allow a parent component to observe activity within a child component. 
 
-5. `input` - Defines inputs provided to the component directly from its parent or the mount point for a root component.
+5. `Input` - Defines inputs provided to the component directly from its parent or the mount point for a root component.
 
 Component definitions are pure. Running the root component to actually produce the UI is the place effects occur. As UIs tend to be asynchronous, this generally means running in the `Aff` monad.
 

@@ -85,7 +85,6 @@ The first new element we see defined for this component is the `ChildSlots` type
 we also supply a function which uses `SProxy` to access the button component itself.
 
 ## Rendering
-HH.slot ButtonSlot Button.myButton unit (HE.input HandleButton)u
 The render function for a parent component must define the childSlots type it will be rendering, in contrast, previously we have supplied the empty row `()` in this position
 
 ``` purescript
@@ -93,20 +92,19 @@ The render function for a parent component must define the childSlots type it wi
 state -> s a c m
 
 -- Render for a standalone component
-render :: s -> H.ComponentHTML Action () m
+render :: forall m. State -> H.ComponentHTML Action () m
 
--- Render for a parent component
 render :: forall m. State -> H.ComponentHTML Action ChildSlots m
 ```
 
 - `s` is the surface or way that we'll be rendering the component (typically HTML)
 - `a` is the action type that can be launched from the rendered component
-- `c` is the child slot address type
-- `m` is the effect monad the component will run in.
+- `c` is the child slot address type, (`()` in the case where a component has no children).
+- `m` is the effect monad the component will run in (Generally this will be polymorphic).
 
 It may seem a little odd that we have to include `m` here when rendering, since no side effects can occur here. We do need evidence that both parent and child components share the same effect monad type for things to work out though.
 
-When we want to render a child component in the HTML we use the [`slot`][Halogen.HTML.slot] function:
+When we want to render a child component in the HTML DSL we use the [`slot`][Halogen.HTML.slot] function:
 
 ``` purescript
 slot
@@ -152,7 +150,6 @@ After a component is initialized in a slot, providing a different value for any 
 
 ``` purescript
 HH.slot _button unit Button.component unit (Just <<< HandleButton)
-
 ```
 
 And then on the next render:
@@ -161,7 +158,7 @@ And then on the next render:
 HH.slot _button unit SomeOtherButton.component unit (Just <<< HandleButton2)
 ```
 
-The change in component and handler would have no effect. The child component that was initialized in that slot will be preserved, and the original handler setup will be used when it emits messages.
+The change in component and handler would have **no effect**. The child component that was initialized in that slot will be preserved, and the original handler setup will be used when it emits messages.
 
 Changing the slot address value will cause the original component to be destroyed and a new one will be initialized in its place with a fresh state.
 

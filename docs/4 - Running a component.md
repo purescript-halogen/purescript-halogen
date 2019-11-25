@@ -57,6 +57,8 @@ main = HA.runHalogenAff do
 
 ```
 
+In this case, we have created an `AppM` custom monad for the application which is a common architecture. The `AppM` monad might be something like a newtype over `ReaderT Aff`, or perhaps some other effect system. However, since the default behaviour is to run in `Effect`, the `hoist` function is used to run our component tree in whatever context we require
+
 The last thing to look at here is the resulting `HalogenIO` value. It's a record that gives us some options for communicating with the component we just ran:
 
 ``` purescript
