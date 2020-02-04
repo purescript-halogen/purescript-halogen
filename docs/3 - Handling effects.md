@@ -74,7 +74,7 @@ handleAction :: forall o m. MonadEffect m => Action -> H.HalogenM State Action (
 
 Why are we using a constraint of `MonadEffect` rather than `Effect` or `Aff`? For convenience - this component is now polymorphic over any monad that supports effects. So our component is easily re-used across multiple applications that might be using different monads to run Halogen. It is possible to [`hoist`][Halogen.Component.hoist] a component, allowing us to change the `m` type, and this polymorphic constraint allows us to keep our options open as our application design changes.
 
-for a detailed explanation of `hoist`, please refer to the chapter on running Halogen components on the DOM.
+For a detailed explanation of `hoist`, please refer to the chapter on running Halogen components on the DOM.
 
 We can now use the [`liftEffect`][Effect.Class.liftEffect] function in `handleAction`:
 

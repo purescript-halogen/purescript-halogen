@@ -57,7 +57,7 @@ main = HA.runHalogenAff do
 
 ```
 
-In this case, we have created an `AppM` custom monad for the application which is a common architecture. The `AppM` monad might be something like a newtype over `ReaderT Aff`, or perhaps some other effect system. However, since the default behaviour is to run in `Effect`, the `hoist` function is used to run our component tree in whatever context we require
+In this case, we have created an `AppM` custom monad for the application which is a common architecture. The `AppM` monad might be something like a newtype over `ReaderT Aff`, or perhaps some other effect system. However, since the default behaviour is to run in `Effect`, the `hoist` function is used to run our component tree in whatever context we require.
 
 The last thing to look at here is the resulting `HalogenIO` value. It's a record that gives us some options for communicating with the component we just ran:
 
@@ -145,7 +145,7 @@ handleQuery = case _ of
 ```
 (a runnable version of this is available at [`Examples.Driver-IO.src.Button.purs`][Examples.Driver-IO.src.Button.purs])
 
-In this version of the button component, we've added the `handleQuery` function, the `Query` type and the `Message` type, and substituted the types accordingly such that we accept queries as input and messages as output. Also note that we have the ability modify state and perform effects within `handleQuery`
+In this version of the button component, we've added the `handleQuery` function, the `Query` type and the `Message` type, and substituted the types accordingly such that we accept queries as input and messages as output. Also note that we have the ability modify state and perform effects within `handleQuery`.
 
 Now in our Main.purs:
 ```purescript
