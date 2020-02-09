@@ -2,7 +2,6 @@ module Example.Components.Inputs.Container where
 
 import Prelude
 
-import Data.Maybe (Maybe(..))
 import Data.Symbol (SProxy(..))
 import Example.Components.Inputs.Display as Display
 import Halogen as H
@@ -43,10 +42,10 @@ render state =
         , HH.slot _display 5 Display.component (state * state) absurd
         ]
     , HH.button
-        [ HE.onClick (\_ -> Just Increment) ]
+        [ HE.onClick \_ -> Increment ]
         [ HH.text "+1"]
     , HH.button
-        [ HE.onClick (\_ -> Just Decrement) ]
+        [ HE.onClick \_ -> Decrement ]
         [ HH.text "-1"]
     ]
 

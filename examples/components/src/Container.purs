@@ -42,7 +42,7 @@ initialState _ =
 render :: forall m. State -> H.ComponentHTML Action ChildSlots m
 render state =
   HH.div_
-    [ HH.slot _button unit Button.component unit (Just <<< HandleButton)
+    [ HH.slot _button unit Button.component unit HandleButton
     , HH.p_
         [ HH.text ("Button has been toggled " <> show state.toggleCount <> " time(s)") ]
     , HH.p_
@@ -51,7 +51,7 @@ render state =
             <> (maybe "(not checked yet)" (if _ then "on" else "off") state.buttonState)
             <> ". "
         , HH.button
-            [ HE.onClick (\_ -> Just CheckButtonState) ]
+            [ HE.onClick \_ -> CheckButtonState ]
             [ HH.text "Check now" ]
         ]
     ]

@@ -66,13 +66,13 @@ render innerComponent state
             [ HP.classes [ H.ClassName "Panel-header" ] ]
             [ HH.button
                 [ HP.classes [ H.ClassName "Panel-toggleButton" ]
-                , HE.onClick \_ -> Just Toggle
+                , HE.onClick \_ -> Toggle
                 ]
                 [ HH.text "Close" ]
             ]
         , HH.div
             [ HP.classes [ H.ClassName "Panel-content" ] ]
-            [ HH.slot _inner unit innerComponent state.input (Just <<< HandleInner) ]
+            [ HH.slot _inner unit innerComponent state.input HandleInner ]
         ]
   | otherwise =
       HH.div
@@ -81,7 +81,7 @@ render innerComponent state
             [ HP.classes [ H.ClassName "Panel-header" ] ]
             [ HH.button
                 [ HP.classes [ H.ClassName "Panel-toggleButton" ]
-                , HE.onClick \_ -> Just Toggle
+                , HE.onClick \_ -> Toggle
                 ]
                 [ HH.text "Open" ]
             ]

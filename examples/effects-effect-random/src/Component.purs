@@ -33,7 +33,7 @@ render state =
       [ HH.h1_ [ HH.text "Random number" ]
       , HH.p_ [ HH.text ("Current value: " <> value) ]
       , HH.button
-          [ HE.onClick \_ -> Just Regenerate ]
+          [ HE.onClick \_ -> Regenerate ]
           [ HH.text "Generate new number" ]
       ]
 

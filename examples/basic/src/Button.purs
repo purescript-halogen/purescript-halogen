@@ -2,7 +2,6 @@ module Example.Basic.Button (component) where
 
 import Prelude
 
-import Data.Maybe (Maybe(..))
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
@@ -30,7 +29,7 @@ render state =
   in
     HH.button
       [ HP.title label
-      , HE.onClick \_ -> Just Toggle
+      , HE.onClick \_ -> Toggle
       ]
       [ HH.text label ]
 

@@ -38,7 +38,7 @@ render state =
         , HH.strong_ [ HH.text (show state) ]
         ]
     , HH.button
-        [ HE.onClick \_ -> Just Increment ]
+        [ HE.onClick \_ -> Increment ]
         [ HH.text ("Increment") ]
     ]
 

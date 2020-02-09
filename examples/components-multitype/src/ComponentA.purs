@@ -35,7 +35,7 @@ render state =
   HH.div_
     [ HH.p_ [ HH.text "Toggle me!" ]
     , HH.button
-        [ HE.onClick \_ -> Just Toggle ]
+        [ HE.onClick \_ -> Toggle ]
         [ HH.text (if state then "On" else "Off") ]
     ]
 

@@ -38,13 +38,13 @@ initialState _ = { loading: false, username: "", result: Nothing }
 render :: forall m. State -> H.ComponentHTML Action () m
 render st =
   HH.form
-    [ HE.onSubmit (Just <<< MakeRequest) ]
+    [ HE.onSubmit MakeRequest ]
     [ HH.h1_ [ HH.text "Lookup GitHub user" ]
     , HH.label_
         [ HH.div_ [ HH.text "Enter username:" ]
         , HH.input
             [ HP.value st.username
-            , HE.onValueInput (Just <<< SetUsername)
+            , HE.onValueInput SetUsername
             ]
         ]
     , HH.button
