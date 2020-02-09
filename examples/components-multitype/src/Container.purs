@@ -66,7 +66,7 @@ render state = HH.div_
       , HH.li_ [ HH.text ("Component C: " <> show state.c) ]
       ]
   , HH.button
-      [ HE.onClick (\_ -> Just ReadStates) ]
+      [ HE.onClick \_ -> ReadStates ]
       [ HH.text "Check states now" ]
   ]
 

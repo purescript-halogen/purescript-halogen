@@ -40,7 +40,7 @@ ui =
       [ HH.h1_
           [ HH.text "Fetch user data" ]
       , HH.button
-          [ HE.onClick \_ -> Just FetchData ]
+          [ HE.onClick \_ -> FetchData ]
           [ HH.text "Fetch" ]
       , HH.p_
           [ HH.text (fromMaybe "No user data" state.userData) ]

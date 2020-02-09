@@ -40,10 +40,10 @@ initialState _ = { buttonCheckState: Nothing, buttonMessageState: Nothing }
 render :: forall m. State -> H.ComponentHTML Action ChildSlots m
 render state =
   HH.div_
-    [ HH.slot _panel unit panelComponent unit (Just <<< HandlePanelMessage)
+    [ HH.slot _panel unit panelComponent unit HandlePanelMessage
     , HH.div_
         [ HH.button
-            [ HE.onClick \_ -> Just CheckButtonState ]
+            [ HE.onClick \_ -> CheckButtonState ]
             [ HH.text "Check button state" ]
         , HH.p_
             [ HH.text ("Last result: " <> printButtonState state.buttonCheckState) ]

@@ -14,7 +14,7 @@ module Halogen.HTML
 import Halogen.HTML.Elements
 
 import Data.Function.Uncurried as Fn
-import Data.Maybe (Maybe)
+import Data.Maybe (Maybe(..))
 import Data.Symbol (class IsSymbol, SProxy)
 import Halogen.Component (Component, ComponentSlot(..), componentSlot)
 import Halogen.Data.Slot (Slot)
@@ -22,7 +22,7 @@ import Halogen.HTML.Core (class IsProp, AttrName(..), ClassName(..), HTML(..), N
 import Halogen.HTML.Core as Core
 import Halogen.HTML.Properties (IProp, attr, attrNS, prop)
 import Halogen.VDom.Thunk (thunk1, thunk2, thunk3, thunked)
-import Prelude (class Ord, Void)
+import Prelude (class Ord, Void, (<<<))
 import Prim.Row as Row
 import Unsafe.Coerce (unsafeCoerce)
 
@@ -57,10 +57,10 @@ slot
   -> slot
   -> Component query input output m
   -> input
-  -> (output -> Maybe action)
+  -> (output -> action)
   -> ComponentHTML action slots m
 slot label p component input outputQuery =
-  Core.widget (ComponentSlot (componentSlot label p component input outputQuery))
+  Core.widget (ComponentSlot (componentSlot label p component input (Just <<< outputQuery)))
 
 -- | Optimizes rendering of a subtree given an equality predicate. If an argument
 -- | is deemed equivalent to the previous value, rendering and diffing will be
