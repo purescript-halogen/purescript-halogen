@@ -1,10 +1,5 @@
 # The Halogen guide
 
-:warning: Please note, this is the guide for Halogen 4 :warning:
-
-If you're interested in the new stuff, take a look at the [changes in v5](Changes%20in%20v5.md) document. If v4 is what you want, switch to browsing the [repository at that tag](https://github.com/slamdata/purescript-halogen/releases/tag/v4.0.0) to ensure you're seeing the right code and examples.
-
----
 
 1. [Introduction](1%20-%20Introduction.md)
 2. [Defining a component](2%20-%20Defining%20a%20component.md)
@@ -25,6 +20,7 @@ If you're interested in the new stuff, take a look at the [changes in v5](Change
 4. [Running a component](4%20-%20Running%20a%20component.md)
     - [`runUI`](4%20-%20Running%20a%20component.md#runui)
     - [`Aff`-based utility functions](4%20-%20Running%20a%20component.md#aff-based-utility-functions)
+    - [Output and subscribers](4%20-%20Running%20a%20component.md#output-and-subscribers)
 5. [Parent and child components](5%20-%20Parent%20and%20child%20components.md)
     - [Slot address](5%20-%20Parent%20and%20child%20components.md#slot-address)
     - [Rendering](5%20-%20Parent%20and%20child%20components.md#rendering)
@@ -34,10 +30,12 @@ If you're interested in the new stuff, take a look at the [changes in v5](Change
     - [Multiple types of child component](5%20-%20Parent%20and%20child%20components.md#multiple-types-of-child-component)
         - [Rendering](5%20-%20Parent%20and%20child%20components.md#rendering-1)
         - [Querying](5%20-%20Parent%20and%20child%20components.md#querying-1)
-        - [Custom `ChildPath` definitions](5%20-%20Parent%20and%20child%20components.md#custom-childpath-definitions)
-5. Component lifecycle hooks*
-6. Event sources**
-7. Non-`Aff` effect monads**
+5. Stateless Custom Elements
+6. Styling
+7. Accessible form behaviours and event handling
+8. Component lifecycle hooks*
+9. Event sources**
+10. Non-`Aff` effect monads**
 
 \* Coming soon...
 \** ...ish
