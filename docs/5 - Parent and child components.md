@@ -78,14 +78,14 @@ This is a somewhat silly example of a container wrapping a button. It counts how
 
 As you can see, things are much the same as with a standalone component, only there are some new types involved.
 
-## Child Slots 
+## Child Slots
 
 The first new element we see defined for this component is the `ChildSlots` type. We use values of this type as the IDs for child components in the rendered HTML. "Slot", "slot address", "slot id" are all used interchangeably to refer to these values.
 
-we also supply a function which uses `SProxy` to access the button component itself.
+We also supply a function which uses `SProxy` to access the button component itself.
 
 ## Rendering
-The render function for a parent component must define the childSlots type it will be rendering, in contrast, previously we have supplied the empty row `()` in this position
+The render function for a parent component must define the childSlots type it will be rendering, in contrast, previously we have supplied the empty row `()` in this position:
 
 ``` purescript
 -- Render in general
@@ -97,8 +97,8 @@ render :: forall m. State -> H.ComponentHTML Action () m
 render :: forall m. State -> H.ComponentHTML Action ChildSlots m
 ```
 
-- `s` is the surface or way that we'll be rendering the component (typically HTML)
-- `a` is the action type that can be launched from the rendered component
+- `s` is the surface or way that we'll be rendering the component (typically HTML).
+- `a` is the action type that can be launched from the rendered component.
 - `c` is the child slot address type, (`()` in the case where a component has no children).
 - `m` is the effect monad the component will run in (Generally this will be polymorphic).
 
@@ -123,10 +123,10 @@ slot
 We pass it:
 
 - `SProxy label` - the accessor function that uses `SProxy` to get the desired child component by the string name we have given it in the `ChildSlots` type.
-- `slot` if the same component needs to be displayed multiple times,  this is a unique ID or index value used to track the individual  components and their relative positions.   In cases where the same component is not being rendered as siblings within the component try, you can supply `unit` to this argument
-- the component being rendered
-- the input value for that component (or `unit`)
-- a handler function for output messages
+- `slot` - a unique ID or index value used to track the individual components and their relative positions. This is useful when the same component needs to be replicated and displayed multiple times. In cases where the same component is not being rendered as siblings within the component, you can supply `unit` to this parameter.
+- `Component HTML query input output m` - the component being rendered.
+- `input` - the input value for that component (or `unit`).
+- `(output -> Maybe action)` - a handler function for output messages.
 
 So for our example, that was:
 
@@ -136,13 +136,13 @@ HH.slot _button unit Button.component unit (Just <<< HandleButton)
 
 We're using:
 
-- the `_button` function value we created using `SProxy`
-- `unit`, since we're only rendering this component once
-- the button component
-- `unit` for the input value (that's all the button component expects)
+- the `_button` function value we created using `SProxy`.
+- `unit`, since we're only rendering this component once.
+- the button component.
+- `unit` for the input value (that's all the button component expects).
 - a mapping to the `HandleButton` action for our parent component as the message handler.
 
-The handler function takes a message value from the child component's and translates it into an action on the parent component. We can filter the messages by using the `Maybe` return type, so if we're not interested in what the child has to say we can just use `const Nothing`. If the child outputs no messages, using `Void` as its message type, we can use [`absurd`][Data.Void.absurd].
+The handler function takes a message value from the child component and translates it into an action on the parent component. We can filter the messages by using the `Maybe` return type, so if we're not interested in what the child has to say we can just use `const Nothing`. If the child outputs no messages, using `Void` as its message type, we can use [`absurd`][Data.Void.absurd].
 
 Care should be taken to avoid using the same slot address for multiple child components. The resulting behaviour is undefined... but almost certainly won't be good. If duplicate slot values are detected a warning message will be logged in the browser console.
 
@@ -166,9 +166,9 @@ Changing input values will be covered later in this chapter.
 
 ## Querying
 
-the `mkEval` function allows you to supply several functions for each of the possible ways to interact with the component, including thee evaluation of actions, initialization, finalization (unmounting the component), receiving new input, andhandling queries. Here we will discuss `handleQuery`, which allows the component to evaluate queries. 
+The `mkEval` function allows you to supply several functions for each of the possible ways to interact with the component, including thee evaluation of actions, initialization, finalization (unmounting the component), receiving new input, and handling queries. Here we will discuss `handleQuery`, which allows the component to evaluate queries.
 
-An excellent reference can be found in the [`router` example](../examples/router/):
+An excellent reference can be found in the [`router` example](../examples/driver-routing/):
 
 ``` purescript
 module Example.Driver.Routing.RouteLog where
@@ -220,7 +220,7 @@ handleQuery = case _ of
 
 Here we have a router component,  it receives a Query whenever the browser route changes - in this case the query is always `ChangeRoute`. However we could also add a query which does not modify the component state, but simply returns the route information. In this way, code outside the component can both modify and retreive the information local to the component.
 
-In this example, the `ChangeRoute` query is called from the `main` function within a continuation, or callback. which then executes when the route changes.
+In this example, the `ChangeRoute` query is called from the `main` function within a continuation, or callback, which then executes when the route changes.
 
 ``` purescript
 module Example.Driver.Routing.Main where
@@ -278,9 +278,9 @@ main = HA.runHalogenAff do
   CR.runProcess (hashChangeProducer CR.$$ hashChangeConsumer io.query)
 ```
 
-Here we're using the Coroutine module to create an event producer and consumer, allowing us to run the query with the `tell`function and the `query` function on the `HalogenIO` record (`io.query`).
+Here we're using the Coroutine module to create an event producer and consumer, allowing us to run the query with the `tell` function and the `query` function on the `HalogenIO` record (`io.query`).
 
-Lets examine these functions at a closer level. First, `handleQuery`:
+Let's examine these functions at a closer level. First, `handleQuery`:
 
 ``` purescript
 handleQuery :: forall act o m a. Query a -> H.HalogenM State act () o m (Maybe a)
@@ -288,17 +288,16 @@ handleQuery :: forall act o m a. Query a -> H.HalogenM State act () o m (Maybe a
 
 `handleQuery` accepts some `Query a`, which refers to the component's Query type. It returns a `HalogenM` with the new `State` value (which may or may not have been modified), along with the other `HalogenM` parameters, the last parameter is `(Maybe a)`, `a` here should always be `unit`, however since we cannot prove that, we leave it as a type variable.
 
-The `tell` function is used to build a query which does not expect a meaningful response, lets examine its type:
+The `tell` function is used to build a query which does not expect a meaningful response, let's examine its type:
 
 ``` purescript
-
 type Tell f = Unit -> f Unit
 
 tell :: forall f. Tell f -> f Unit
 ```
 
 `tell` takes the data constructor of a query type `f` and creates a query.
-the query is then passed to the `query` function, which runs the query.
+The query is then passed to the `query` function, which runs the query:
 
 ``` purescript
 query :: forall a. query a -> m (Maybe a)
@@ -306,7 +305,7 @@ query :: forall a. query a -> m (Maybe a)
 
 This function will take a well formed query (assembled by the `tell` function for example), and runs it through the component tree.
 
-In the case of `tell`, we do not expect a meaningful response (we can see in the type that `tell` will hold a `Unit` value). However,  there are other queries which can return meaningful values. The `request` function is used for queries which return useful information.
+In the case of `tell`, we do not expect a meaningful response (we can see in the type that `tell` will hold a `Unit` value). However,  there are other queries which can return meaningful values. The `request` function is used for queries which return useful information:
 
 ``` purescript
 type Request f a = (a -> a) -> f a
@@ -330,7 +329,7 @@ getTickCount app = app.query (H.request GetTickCount)
 ```
 
 
-Returning to our simple parent and child example in the [`components` example](../examples/components/). we can also run queries against individual components by ChildSlot. using the `query` function available in the `Halogen` module.
+Returning to our simple parent and child example in the [`components` example](../examples/components/), we can also run queries against individual components by ChildSlot using the `query` function available in the `Halogen` module.
 
 In our example we use `query` to check what the current button state is when evaluating `CheckButtonState` for the parent:
 
@@ -340,11 +339,11 @@ CheckButtonState -> do
   H.modify_ (_ { buttonState = buttonState })
 ```
 
-we can see that here, it takes the `SProxy` function that accesses the correct child component, the slot (in the case where the same component is mounted multiple times this might be an integer), and a well-formed query either using `tell` or `request`.
+We can see that here, it takes the `SProxy` function that accesses the correct child component, the slot (in the case where the same component is mounted multiple times this might be an integer), and a well-formed query either using `tell` or `request`.
 
 In this function, we're setting the container component state once we have successfully queried the button component.
 
-As it happens the `buttonState` we're storing in the container component is `Maybe Boolean`, so we didn't have to do anything before storing it here. Often we'll need to handle the `Maybe` first however. A common pattern is to use the `Foldable` instance of `Maybe`, allowing us to write handlers like:
+As it happens, the `buttonState` we're storing in the container component is `Maybe Boolean`, so we didn't have to do anything before storing it here. Often we'll need to handle the `Maybe` first however. A common pattern is to use the `Foldable` instance of `Maybe`, allowing us to write handlers like:
 
 ``` purescript
 CheckButtonState next -> do
@@ -367,15 +366,15 @@ queryAll
   -> HalogenM state action slots output m (Map slot a)
 ```
 
-This sends the same query to every child that fiths the `Sproxy label`, regardless of the slot, and then gives us the result back as a map where the keys are slot addresses and the values are the query result for that child.
+This sends the same query to every child that fits the `Sproxy label`, regardless of the slot, and then gives us the result back as a map where the keys are slot addresses and the values are the query result for that child.
 
 That covers it for basic parent/child setups: the only differences between standalone and parent components are the need to define a slot type and the ability to query children.
 
 ## Input values
 
-So far whenever input values have been mentioned they've been glossed over. Now we know how to embed a child component within a parent we can get into it.
+So far, whenever `input` values have been mentioned, they've been glossed over. Now that we know how to embed a child component within a parent, we can get into it.
 
-Input values are a means of passing values into a child component every time a parent re-renders. It is also possible to do this by querying the children whenever a parent modifies its state, but as this mechanism is declarative it's less error prone and often more convenient.
+Input values are a means of passing values into a child component every time a parent re-renders. It is also possible to do this by querying the children whenever a parent modifies its state, but as the `input` mechanism is declarative, it's less error prone and often more convenient.
 
 First we'll need to set up a component that expects an input:
 
@@ -427,7 +426,7 @@ The next part that needs providing is the `receive` provided to `mkEval`. This f
 
 Finally, we evaluate the action raised by the `receive` function, just as we would  any other action.  Since `receive` is triggered on every render the parent component makes, we may want to have some logic either in the `receive` function or in `handleAction` which determines whether any change is necessary.
 
-``` purescript 
+``` purescript
 handleAction :: forall o m. Action -> H.HalogenM State Action () o m Unit
 handleAction = case _ of
   HandleInput n -> do
@@ -485,7 +484,7 @@ This and most of the following code snippets are based on the [`components-multi
 
 ### Rendering
 
-Rendering is much the same as before: 
+Rendering is much the same as before:
 
 ``` purescript
 render :: forall m. State -> H.ComponentHTML Action ChildSlots m
