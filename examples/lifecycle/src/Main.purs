@@ -59,16 +59,16 @@ ui =
   render state =
     HH.div_
       [ HH.button
-          [ HE.onClick \_ -> Just Add ]
+          [ HE.onClick \_ -> Add ]
           [ HH.text "Add" ]
       , HH.button
-          [ HE.onClick \_ -> Just Reverse ]
+          [ HE.onClick \_ -> Reverse ]
           [ HH.text "Reverse" ]
       , HK.ul_ $ flip map state.slots \sid ->
           Tuple (show sid) $
             HH.li_
               [ HH.button
-                  [ HE.onClick \_ -> Just (Remove sid) ]
+                  [ HE.onClick \_ -> Remove sid ]
                   [ HH.text "Remove" ]
               , HH.slot _child sid (Child.child sid) unit (listen sid)
               ]
@@ -91,8 +91,8 @@ ui =
   handleAction (ReportRoot msg) =
     H.liftEffect $ log ("Root >>> " <> msg)
 
-  listen :: Int -> Child.Message -> Maybe Action
-  listen i = Just <<< case _ of
+  listen :: Int -> Child.Message -> Action
+  listen i = case _ of
     Child.Initialized -> ReportRoot ("Heard Initialized from child" <> show i)
     Child.Finalized -> ReportRoot ("Heard Finalized from child" <> show i)
     Child.Reported msg -> ReportRoot ("Re-reporting from child" <> show i <> ": " <> msg)

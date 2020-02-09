@@ -2,7 +2,6 @@ module Example.Ace.Container where
 
 import Prelude
 
-import Data.Maybe (Maybe(..))
 import Data.Symbol (SProxy(..))
 import Effect.Aff.Class (class MonadAff)
 import Example.Ace.AceComponent as AceComponent
@@ -45,12 +44,12 @@ render { text: text } =
     , HH.div_
         [ HH.p_
             [ HH.button
-                [ HE.onClick \_ -> Just ClearText ]
+                [ HE.onClick \_ -> ClearText ]
                 [ HH.text "Clear" ]
             ]
         ]
     , HH.div_
-        [ HH.slot _ace unit AceComponent.component unit (Just <<< HandleAceUpdate) ]
+        [ HH.slot _ace unit AceComponent.component unit HandleAceUpdate ]
     , HH.p_
         [ HH.text ("Current text: " <> text) ]
     ]
