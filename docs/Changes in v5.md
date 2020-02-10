@@ -16,7 +16,7 @@ This is a crash-course guide to things that have changed between v4 and v5. Plea
 
   Being "raised internally" means they arise from event listeners in the HTML and from `EventSource`s.
 
-- Queries still as exist as a means of a parent component interacting with a child. They are not required to be used however - many components can be self contained and only need actions.
+- Queries still exist as a means of a parent component interacting with a child. They are not required to be used however - many components can be self contained and only need actions.
 
 - Previously there was a concept of "action-style" queries that did not receive a return value (as opposed to "request-style" queries). These still exist, but are now termed "tell-style", and are constructed with `H.tell` rather than `H.action` to avoid overloading the "action" terminology.
 
