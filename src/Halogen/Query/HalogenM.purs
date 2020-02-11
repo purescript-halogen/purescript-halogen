@@ -31,6 +31,14 @@ import Prim.Row as Row
 import Web.DOM (Element)
 
 -- | The Halogen component eval algebra.
+-- |
+-- | - `state` is the component's state
+-- | - `action` is the type of actions; messages internal to the component that
+-- |   can be evaluated
+-- | - `slots` is the set of slots for addressing child components
+-- | - `output` is the type of messages the component can raise
+-- | - `m` is the effect monad used during evaluation
+-- | - `a` is "an underlying value of unit". Just populate with `Unit` ?
 data HalogenF state action slots output m a
   = State (state -> Tuple a state)
   | Subscribe (SubscriptionId -> ES.EventSource m action) (SubscriptionId -> a)
@@ -57,6 +65,14 @@ instance functorHalogenF :: Functor m => Functor (HalogenF state action slots ou
     GetRef p k -> GetRef p (f <<< k)
 
 -- | The Halogen component eval effect monad.
+
+-- | - `state` is the component's state
+-- | - `action` is the type of actions; messages internal to the component that
+-- |   can be evaluated
+-- | - `slots` is the set of slots for addressing child components
+-- | - `output` is the type of messages the component can raise
+-- | - `m` is the effect monad used during evaluation
+-- | - `a` is "an underlying value of unit". Just populate with `Unit` ?
 newtype HalogenM state action slots output m a = HalogenM (Free (HalogenF state action slots output m) a)
 
 derive newtype instance functorHalogenM :: Functor (HalogenM state action slots output m)
