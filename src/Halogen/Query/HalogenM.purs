@@ -38,7 +38,7 @@ import Web.DOM (Element)
 -- | - `slots` is the set of slots for addressing child components
 -- | - `output` is the type of messages the component can raise
 -- | - `m` is the effect monad used during evaluation
--- | - `a` is "an underlying value of unit". Just populate with `Unit` ?
+-- | - `a` is the result of the HalogenF expression. See HalogenM for usage example.
 data HalogenF state action slots output m a
   = State (state -> Tuple a state)
   | Subscribe (SubscriptionId -> ES.EventSource m action) (SubscriptionId -> a)
@@ -65,14 +65,16 @@ instance functorHalogenF :: Functor m => Functor (HalogenF state action slots ou
     GetRef p k -> GetRef p (f <<< k)
 
 -- | The Halogen component eval effect monad.
-
+-- |
 -- | - `state` is the component's state
 -- | - `action` is the type of actions; messages internal to the component that
 -- |   can be evaluated
 -- | - `slots` is the set of slots for addressing child components
 -- | - `output` is the type of messages the component can raise
 -- | - `m` is the effect monad used during evaluation
--- | - `a` is "an underlying value of unit". Just populate with `Unit` ?
+-- | - `a` is the result of the HalogenM expression. Use the following pattern:
+-- |     `handleAction :: forall st ac sl o m. ac -> H.halogenM st ac sl o m Unit
+-- |     `handleQuery  :: forall st ac sl o m a. YourQuery a -> H.halogenM st ac sl o m (Maybe a)
 newtype HalogenM state action slots output m a = HalogenM (Free (HalogenF state action slots output m) a)
 
 derive newtype instance functorHalogenM :: Functor (HalogenM state action slots output m)
