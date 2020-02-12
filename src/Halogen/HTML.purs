@@ -5,6 +5,7 @@ module Halogen.HTML
   , PlainHTML
   , fromPlainHTML
   , slot
+  , slot_
   , memoized
   , module Halogen.HTML.Core
   , module Halogen.HTML.Elements
@@ -13,6 +14,7 @@ module Halogen.HTML
 
 import Halogen.HTML.Elements
 
+import Data.Function (const)
 import Data.Function.Uncurried as Fn
 import Data.Maybe (Maybe(..))
 import Data.Symbol (class IsSymbol, SProxy)
@@ -61,6 +63,30 @@ slot
   -> ComponentHTML action slots m
 slot label p component input outputQuery =
   Core.widget (ComponentSlot (componentSlot label p component input (Just <<< outputQuery)))
+
+-- | Defines a slot for a child component, ignoring its output.
+-- |
+-- | This variant may be used when the component produces output, but it is not
+-- | needed in the current context, or instead of passing `absurd` to `slot`
+-- | when the output type is `Void`.
+-- |
+-- | Takes:
+-- | - the slot address label
+-- | - the slot address index
+-- | - the component for the slot
+-- | - the input value to pass to the component
+slot_
+  :: forall query action input output slots m label slot _1
+   . Row.Cons label (Slot query output slot) _1 slots
+  => IsSymbol label
+  => Ord slot
+  => SProxy label
+  -> slot
+  -> Component query input output m
+  -> input
+  -> ComponentHTML action slots m
+slot_ label p component input =
+  Core.widget (ComponentSlot (componentSlot label p component input (const Nothing)))
 
 -- | Optimizes rendering of a subtree given an equality predicate. If an argument
 -- | is deemed equivalent to the previous value, rendering and diffing will be
