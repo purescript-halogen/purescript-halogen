@@ -93,7 +93,7 @@ import Web.DOM.Element (Element)
 
 -- | The phantom row `r` can be thought of as a context which is synthesized in
 -- | the course of constructing a refined HTML expression.
-newtype IProp (r :: # Type) i = IProp (Prop (Input i))
+newtype IProp (r :: Row Type) i = IProp (Prop (Input i))
 
 derive instance newtypeIProp :: Newtype (IProp r i) _
 derive instance functorIProp :: Functor (IProp r)

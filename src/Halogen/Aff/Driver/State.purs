@@ -69,11 +69,12 @@ newtype DriverStateRef h r f o = DriverStateRef (Ref (DriverStateX h r f o))
 
 -- | A version of `DriverState` with the aspects relating to child components
 -- | existentially hidden.
-data DriverStateX
-  (h :: Type -> Type -> Type)
-  (r :: Type -> Type -> # Type -> Type -> Type)
-  (f :: Type -> Type)
-  (o :: Type)
+foreign import data DriverStateX :: (Type -> Type -> Type) -> (Type -> Type -> Row Type -> Type -> Type) -> (Type -> Type) -> Type -> Type
+-- data DriverStateX
+--   (h :: Type -> Type -> Type)
+--   (r :: Type -> Type -> # Type -> Type -> Type)
+--   (f :: Type -> Type)
+--   (o :: Type)
 
 mkDriverStateXRef
   :: forall h r s f act ps i o
@@ -90,7 +91,8 @@ unDriverStateX = unsafeCoerce
 
 -- | A wrapper of `r` from `DriverState` with the aspects relating to child
 -- | components existentially hidden.
-data RenderStateX (r :: Type -> Type -> # Type -> Type -> Type)
+foreign import data RenderStateX :: (Type -> Type -> Row Type -> Type -> Type) -> Type
+-- data RenderStateX (r :: Type -> Type -> # Type -> Type -> Type)
 
 mkRenderStateX
   :: forall r s f ps o m

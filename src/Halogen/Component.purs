@@ -182,11 +182,7 @@ mkEval args = case _ of
     unCoyoneda (\g → map (maybe (f unit) g) <<< args.handleQuery) req
 
 -- | A slot for a child component in a component's rendered content.
-data ComponentSlotBox
-  (surface :: Type -> Type -> Type)
-  (slots :: # Type)
-  (m :: Type -> Type)
-  (action :: Type)
+foreign import data ComponentSlotBox :: (Type -> Type -> Type) -> Row Type -> (Type -> Type) -> Type -> Type
 
 instance functorComponentSlotBox :: Functor (ComponentSlotBox surface slots m) where
   map f = unComponentSlot \slot ->
