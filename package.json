@@ -17,7 +17,8 @@
     "example-higher-order-components": "pulp build --main Example.HOC.Main --include examples/higher-order-components/src --to examples/higher-order-components/dist/example.js",
     "example-interpret": "pulp build --main Example.Interpret.Main --include examples/interpret/src --to examples/interpret/dist/example.js",
     "example-keyboard-input": "pulp build --main Example.KeyboardInput.Main --include examples/keyboard-input/src --to examples/keyboard-input/dist/example.js",
-    "example-lifecycle": "pulp build --main Example.Lifecycle.Main --include examples/lifecycle/src --to examples/lifecycle/dist/example.js"
+    "example-lifecycle": "pulp build --main Example.Lifecycle.Main --include examples/lifecycle/src --to examples/lifecycle/dist/example.js",
+    "example-todo": "pulp build --main Example.Todo.Main --include examples/todo/src --to examples/todo/dist/example.js"
   },
   "devDependencies": {
     "pulp": "^13.0.0",

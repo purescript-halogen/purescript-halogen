@@ -1,10 +1,10 @@
-module Main where
+module Example.Todo.Main where
 
 import Prelude
 import Effect (Effect)
+import Example.Todo.Component.List (list)
 import Halogen.Aff as HA
 import Halogen.VDom.Driver (runUI)
-import Component.List (list)
 
 main :: Effect Unit
 main = HA.runHalogenAff do

@@ -1,79 +1,84 @@
-module Component.List where
+module Example.Todo.Component.List where
 
 import Prelude
 
 import Data.Array (snoc, filter, length)
 import Data.Map as M
 import Data.Maybe (Maybe(..), fromMaybe)
+import Data.Symbol (SProxy(..))
+import Example.Todo.Model (List, TaskId, initialList, initialTask)
+import Example.Todo.Component.Task (TaskQuery(..), TaskMessage(..), TaskSlot, task)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
-import Model (List, TaskId, initialList, initialTask)
-import Component.Task (TaskQuery(..), TaskMessage(..), task)
 
--- | The list component query algebra.
-data ListQuery a
-  = NewTask a
-  | AllDone a
-  | HandleTaskMessage TaskId TaskMessage a
+-- | The list component query algebra (queried from the outside).
+type ListQuery a = Unit
 
--- | The slot value that is filled by tasks during the install process.
-newtype TaskSlot = TaskSlot TaskId
-derive instance eqTaskSlot :: Eq TaskSlot
-derive instance ordTaskSlot :: Ord TaskSlot
+-- | The list component actions (arising from the rendered HTML).
+data ListAction
+  = NewTask
+  | AllDone
+  | HandleTaskMessage TaskId TaskMessage
+
+-- | The slots for child components.
+type ListSlots = ( task :: TaskSlot TaskId )
+
+-- | The slot entry for tasks.
+_task :: SProxy "task"
+_task = SProxy
 
 -- | The list component definition.
-list :: forall m. Applicative m => H.Component HH.HTML ListQuery Unit Void m
+list :: forall query input m. Applicative m => H.Component HH.HTML query input Void m
 list =
-  H.parentComponent
+  H.mkComponent
     { initialState: const initialList
     , render
-    , eval
-    , receiver: const Nothing
+    , eval: H.mkEval $ H.defaultEval { handleAction = handleAction }
     }
   where
 
-  render :: List -> H.ParentHTML ListQuery TaskQuery TaskSlot m
-  render st =
+  -- Render the todo list component.
+  render :: List -> H.ComponentHTML ListAction ListSlots m
+  render l =
     HH.div_
-      [ HH.h1_ [ HH.text "Todo list" ]
+      [ HH.h1_ [ HH.text "Todo List" ]
       , HH.p_
-          [ HH.button
-              [ HE.onClick (HE.input_ NewTask) ]
-              [ HH.text "New Task" ]
-          ]
-      , HH.ul_ (map renderTask st.tasks)
-      , HH.p_ [ HH.text $ show st.numCompleted <> " / " <> show (length st.tasks) <> " complete" ]
+        [ HH.button
+          [ HE.onClick $ const $ Just NewTask ]
+          [ HH.text "New Task" ]
+        ]
+      , HH.ul_ (map renderTask l.tasks)
+      , HH.p_ [ HH.text $ show l.numCompleted <> " / " <> show (length l.tasks) <> " complete" ]
       , HH.button
-          [ HE.onClick (HE.input_ AllDone) ]
-          [ HH.text "All Done" ]
+        [ HE.onClick $ const $ Just AllDone ]
+        [ HH.text "All Done" ]
       ]
 
-  renderTask :: TaskId -> H.ParentHTML ListQuery TaskQuery TaskSlot m
+  -- Render an individual task, using the slot mechanism.
+  renderTask :: TaskId -> H.ComponentHTML ListAction ListSlots m
   renderTask taskId =
     HH.slot
-      (TaskSlot taskId)
+      _task
+      taskId
       (task initialTask)
       unit
-      (HE.input (HandleTaskMessage taskId))
+      (Just <<< (HandleTaskMessage taskId))
 
-  eval :: ListQuery ~> H.ParentDSL List ListQuery TaskQuery TaskSlot Void m
-  eval (NewTask next) = do
-    H.modify_ addTask
-    pure next
-  eval (AllDone next) = do
-    toggled <- H.queryAll (H.action (ToggleCompleted true))
-    H.modify_ $ updateNumCompleted (const (M.size toggled))
-    pure next
-  eval (HandleTaskMessage p msg next) = do
-    case msg of
-      NotifyRemove -> do
-        wasComplete <- H.query (TaskSlot p) (H.request IsCompleted)
-        when (fromMaybe false wasComplete) $ H.modify_ $ updateNumCompleted (_ `sub` 1)
-        H.modify_ (removeTask p)
-      Toggled b ->
-        H.modify_ $ updateNumCompleted (if b then (_ + 1) else (_ `sub` 1))
-    pure next
+  -- Handle list actions. These actions arise from direct interaction with the rendered HTML.
+  handleAction :: ListAction -> H.HalogenM List ListAction ListSlots Void m Unit
+  handleAction = case _ of
+    NewTask -> H.modify_ addTask
+    AllDone -> do
+      tasks <- H.queryAll _task $ H.tell $ SetCompleted true
+      H.modify_ $ updateNumCompleted $ const $ M.size tasks
+    HandleTaskMessage taskId taskMessage -> do
+      case taskMessage of
+        NotifyRemove -> do
+          wasComplete <- H.query _task taskId $ H.request IsCompleted
+          when (fromMaybe false wasComplete) $ H.modify_ $ updateNumCompleted (_ `sub` 1)
+          H.modify_ (removeTask taskId)
+        Toggled b -> H.modify_ $ updateNumCompleted (if b then (_ + 1) else (_ `sub` 1))
 
 -- | Adds a task to the current state.
 addTask :: List -> List

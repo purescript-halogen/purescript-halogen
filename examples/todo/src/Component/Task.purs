@@ -1,71 +1,82 @@
-module Component.Task where
+module Example.Todo.Component.Task where
 
 import Prelude
 
-import Control.Monad.State as CMS
 import Data.Maybe (Maybe(..))
+import Example.Todo.Model (Task, initialTask)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
-import Model (Task)
 
 -- | The task component query algebra.
 data TaskQuery a
-  = UpdateDescription String a
-  | ToggleCompleted Boolean a
-  | Remove a
-  | IsCompleted (Boolean -> a)
+  = IsCompleted (Boolean -> a)
+  | SetCompleted Boolean a
 
+-- | The messages the task component might send to a parent component.
 data TaskMessage
   = NotifyRemove
   | Toggled Boolean
 
--- | The task component definition.
+-- | The task component actions (arising from the rendered HTML).
+data TaskAction
+  = UpdateDescription String
+  | SetCompleted' Boolean
+  | Remove
+
+-- | The task slot for use of this component in parent components.
+type TaskSlot = H.Slot TaskQuery TaskMessage
+
+-- | Child slots of the task component itself (none).
+type ChildSlots = ()
+
+-- | The task component definition
 task :: forall m. Task -> H.Component HH.HTML TaskQuery Unit TaskMessage m
 task initialState =
-  H.component
-    { initialState: const initialState
+  H.mkComponent
+    { initialState: const initialTask
     , render
-    , eval
-    , receiver: const Nothing
+    , eval: H.mkEval $ H.defaultEval { handleAction = handleAction, handleQuery = handleQuery }
     }
   where
 
-  render :: Task -> H.ComponentHTML TaskQuery
-  render t =
-    HH.li_
-      [ HH.input
-          [ HP.type_ HP.InputCheckbox
-          , HP.title "Mark as completed"
-          , HP.checked t.completed
-          , HE.onChecked (HE.input ToggleCompleted)
-          ]
-      , HH.input
-          [ HP.type_ HP.InputText
-          , HP.placeholder "Task description"
-          , HP.autofocus true
-          , HP.value t.description
-          , HE.onValueChange (HE.input UpdateDescription)
-          ]
-      , HH.button
-          [ HP.title "Remove task"
-          , HE.onClick (HE.input_ Remove)
-          ]
-          [ HH.text "✖" ]
+  render :: Task -> H.ComponentHTML TaskAction ChildSlots m
+  render t = HH.li_
+    [ HH.input
+      [ HP.type_ HP.InputCheckbox
+      , HP.title "Mark as Completed"
+      , HP.checked t.completed
+      , HE.onChecked (Just <<< SetCompleted')
       ]
+    , HH.input
+      [ HP.type_ HP.InputText
+      , HP.placeholder "Task description"
+      , HP.autofocus true
+      , HP.value t.description
+      , HE.onValueChange (Just <<< UpdateDescription)
+      ]
+    , HH.button
+      [ HP.title "Remove Task"
+      , HE.onClick $ const $ Just Remove
+      ]
+      [ HH.text "✖" ]
+    ]
 
-  eval :: TaskQuery ~> H.ComponentDSL Task TaskQuery TaskMessage m
-  eval (UpdateDescription desc next) = do
-    CMS.modify_ (_ { description = desc })
-    pure next
-  eval (ToggleCompleted b next) = do
-    CMS.modify_ (_ { completed = b })
-    H.raise (Toggled b)
-    pure next
-  eval (Remove next) = do
+handleAction :: forall m. TaskAction -> H.HalogenM Task TaskAction ChildSlots TaskMessage m Unit
+handleAction = case _ of
+  UpdateDescription desc -> H.modify_ $ _ { description = desc }
+  SetCompleted' b -> do
+    H.modify_ $ _ { completed = b }
+    H.raise $ Toggled b
+  Remove -> do
     H.raise NotifyRemove
-    pure next
-  eval (IsCompleted reply) = do
-    b <- CMS.gets (_.completed)
-    pure (reply b)
+
+handleQuery :: forall a m. TaskQuery a -> H.HalogenM Task TaskAction ChildSlots TaskMessage m (Maybe a)
+handleQuery = case _ of
+  IsCompleted f -> do
+    t <- H.get
+    pure $ Just $ f t.completed
+  SetCompleted b next -> do
+    H.modify_ $ _ { completed = b }
+    pure $ Just next
