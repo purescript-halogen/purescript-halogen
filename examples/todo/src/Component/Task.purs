@@ -12,7 +12,7 @@ import Halogen.HTML.Properties as HP
 -- | The task component query algebra.
 data TaskQuery a
   = IsCompleted (Boolean -> a)
-  | SetCompleted Boolean a
+  | QueryAction TaskAction a
 
 -- | The messages the task component might send to a parent component.
 data TaskMessage
@@ -22,7 +22,7 @@ data TaskMessage
 -- | The task component actions (arising from the rendered HTML).
 data TaskAction
   = UpdateDescription String
-  | SetCompleted' Boolean
+  | SetCompleted Boolean
   | Remove
 
 -- | The task slot for use of this component in parent components.
@@ -47,7 +47,7 @@ task initialState =
       [ HP.type_ HP.InputCheckbox
       , HP.title "Mark as Completed"
       , HP.checked t.completed
-      , HE.onChecked (Just <<< SetCompleted')
+      , HE.onChecked (Just <<< SetCompleted)
       ]
     , HH.input
       [ HP.type_ HP.InputText
@@ -66,9 +66,13 @@ task initialState =
 handleAction :: forall m. TaskAction -> H.HalogenM Task TaskAction ChildSlots TaskMessage m Unit
 handleAction = case _ of
   UpdateDescription desc -> H.modify_ $ _ { description = desc }
-  SetCompleted' b -> do
-    H.modify_ $ _ { completed = b }
-    H.raise $ Toggled b
+  SetCompleted b -> do
+    currentValue <- H.get
+    if currentValue.completed == b
+      then pure unit
+      else do
+        H.modify_ $ _ { completed = b }
+        H.raise $ Toggled b
   Remove -> do
     H.raise NotifyRemove
 
@@ -77,6 +81,6 @@ handleQuery = case _ of
   IsCompleted f -> do
     t <- H.get
     pure $ Just $ f t.completed
-  SetCompleted b next -> do
-    H.modify_ $ _ { completed = b }
+  QueryAction a next -> do
+    handleAction a
     pure $ Just next

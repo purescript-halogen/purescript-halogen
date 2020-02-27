@@ -3,17 +3,13 @@ module Example.Todo.Component.List where
 import Prelude
 
 import Data.Array (snoc, filter, length)
-import Data.Map as M
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Symbol (SProxy(..))
 import Example.Todo.Model (List, TaskId, initialList, initialTask)
-import Example.Todo.Component.Task (TaskQuery(..), TaskMessage(..), TaskSlot, task)
+import Example.Todo.Component.Task (TaskAction(..), TaskQuery(..), TaskMessage(..), TaskSlot, task)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
-
--- | The list component query algebra (queried from the outside).
-type ListQuery a = Unit
 
 -- | The list component actions (arising from the rendered HTML).
 data ListAction
@@ -69,9 +65,7 @@ list =
   handleAction :: ListAction -> H.HalogenM List ListAction ListSlots Void m Unit
   handleAction = case _ of
     NewTask -> H.modify_ addTask
-    AllDone -> do
-      tasks <- H.queryAll _task $ H.tell $ SetCompleted true
-      H.modify_ $ updateNumCompleted $ const $ M.size tasks
+    AllDone -> void $ H.queryAll _task $ H.tell (QueryAction (SetCompleted true))
     HandleTaskMessage taskId taskMessage -> do
       case taskMessage of
         NotifyRemove -> do
