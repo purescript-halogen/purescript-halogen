@@ -6,6 +6,9 @@ module Halogen.HTML
   , fromPlainHTML
   , slot
   , memoized
+  , lazy
+  , lazy2
+  , lazy3
   , module Halogen.HTML.Core
   , module Halogen.HTML.Elements
   , module Halogen.HTML.Properties
