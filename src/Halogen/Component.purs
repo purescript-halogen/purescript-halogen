@@ -226,7 +226,7 @@ componentSlot label p comp input output =
     , pop: Slot.pop label p
     , set: Slot.insert label p
     , component: comp
-    , input: Receive input unit
+    , input: input
     , output
     }
 
@@ -236,7 +236,7 @@ type ComponentSlotSpec surface query input output slots m action =
   , pop :: forall slot. SlotStorage slots slot -> Maybe (Tuple (slot query output) (SlotStorage slots slot))
   , set :: forall slot. slot query output -> SlotStorage slots slot -> SlotStorage slots slot
   , component :: Component surface query input output m
-  , input :: forall a. HalogenQ query a input Unit
+  , input :: input
   , output :: output -> Maybe action
   }
 
