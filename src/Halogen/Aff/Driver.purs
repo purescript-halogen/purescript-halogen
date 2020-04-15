@@ -239,14 +239,10 @@ runUI renderSpec component i = do
           dsx <- Ref.read existing
           unDriverStateX (\st -> do
             flip Ref.write st.handlerRef $ maybe (pure unit) handler <<< slot.output
-            handleAff $ Eval.evalM render st.selfRef (st.component.eval slot.input)) dsx
+            handleAff $ Eval.evalM render st.selfRef (st.component.eval (HQ.Receive slot.input unit))) dsx
           pure existing
         Nothing ->
-          case slot.input of
-            HQ.Receive si _ ->
-              runComponent lchs (maybe (pure unit) handler <<< slot.output) si slot.component
-            _ ->
-              throw "Halogen internal error: slot input was not a Receive query"
+          runComponent lchs (maybe (pure unit) handler <<< slot.output) slot.input slot.component
       isDuplicate <- isJust <<< slot.get <$> Ref.read childrenOutRef
       when isDuplicate
         $ warn "Halogen: Duplicate slot address was detected during rendering, unexpected results may occur"
