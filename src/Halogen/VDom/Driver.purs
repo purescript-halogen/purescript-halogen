@@ -24,6 +24,7 @@ import Halogen.VDom as V
 import Halogen.VDom.DOM.Prop as VP
 import Halogen.VDom.Thunk (Thunk)
 import Halogen.VDom.Thunk as Thunk
+import Unsafe.Coerce (unsafeCoerce)
 import Unsafe.Reference (unsafeRefEq)
 import Web.DOM.Document (Document) as DOM
 import Web.DOM.Element (Element) as DOM
@@ -64,22 +65,16 @@ mkSpec
 mkSpec handler renderChildRef document =
   V.VDomSpec { buildWidget, buildAttributes, document }
   where
-
   buildAttributes
     :: DOM.Element
     -> V.Machine (Array (VP.Prop (Input action))) Unit
   buildAttributes = VP.buildProp handler
 
   buildWidget
-    :: V.VDomSpec
-          (Array (VP.Prop (Input action)))
-          (ComponentSlot slots Aff action)
-    -> V.Machine
-          (ComponentSlot slots Aff action)
-          DOM.Node
+    :: V.VDomSpec (Array (VP.Prop (Input action))) (ComponentSlot slots Aff action)
+    -> V.Machine (ComponentSlot slots Aff action) DOM.Node
   buildWidget spec = render
     where
-
     render :: V.Machine (ComponentSlot slots Aff action) DOM.Node
     render = EFn.mkEffectFn1 \slot ->
       case slot of
@@ -88,6 +83,8 @@ mkSpec handler renderChildRef document =
         ThunkSlot t -> do
           step <- EFn.runEffectFn1 buildThunk t
           pure $ V.mkStep $ V.Step (V.extract step) (Just step) patch done
+        PortalSlot el inner -> do
+          unsafeCoerce unit -- TODO
 
     patch
       :: EFn.EffectFn2 (WidgetState slots action)
@@ -102,6 +99,8 @@ mkSpec handler renderChildRef document =
           ThunkSlot t -> do
             step' <- EFn.runEffectFn2 V.step step t
             pure $ V.mkStep $ V.Step (V.extract step') (Just step') patch done
+          PortalSlot _ _ -> do
+            unsafeCoerce unit -- TODO
         _ -> EFn.runEffectFn1 render slot
 
     buildThunk :: V.Machine (HTMLThunk slots action) DOM.Node
