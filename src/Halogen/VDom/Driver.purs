@@ -24,7 +24,7 @@ import Halogen.VDom as V
 import Halogen.VDom.DOM.Prop as VP
 import Halogen.VDom.Thunk (Thunk)
 import Halogen.VDom.Thunk as Thunk
-import Unsafe.Coerce (unsafeCoerce)
+import Halogen.VDom.Util as Util
 import Unsafe.Reference (unsafeRefEq)
 import Web.DOM.Document (Document) as DOM
 import Web.DOM.Element (Element) as DOM
@@ -83,8 +83,8 @@ mkSpec handler renderChildRef document =
         ThunkSlot t -> do
           step <- EFn.runEffectFn1 buildThunk t
           pure $ V.mkStep $ V.Step (V.extract step) (Just step) patch done
-        PortalSlot el inner -> do
-          unsafeCoerce unit -- TODO
+        PortalSlot elem inner ->
+          EFn.runEffectFn2 renderPortalSlot elem inner
 
     patch
       :: EFn.EffectFn2 (WidgetState slots action)
@@ -99,8 +99,9 @@ mkSpec handler renderChildRef document =
           ThunkSlot t -> do
             step' <- EFn.runEffectFn2 V.step step t
             pure $ V.mkStep $ V.Step (V.extract step') (Just step') patch done
-          PortalSlot _ _ -> do
-            unsafeCoerce unit -- TODO
+          PortalSlot elem inner -> do
+            EFn.runEffectFn1 V.halt step
+            EFn.runEffectFn2 renderPortalSlot elem inner
         _ -> EFn.runEffectFn1 render slot
 
     buildThunk :: V.Machine (HTMLThunk slots action) DOM.Node
@@ -115,6 +116,18 @@ mkSpec handler renderChildRef document =
       rsx <- renderChild cs
       let node = getNode rsx
       pure $ V.mkStep $ V.Step node Nothing patch done
+
+    renderPortalSlot
+      :: EFn.EffectFn2
+            DOM.HTMLElement
+            (HTML (ComponentSlot slots Aff action) action)
+            (V.Step (ComponentSlot slots Aff action) DOM.Node)
+    renderPortalSlot = EFn.mkEffectFn2 \elem (HTML vdom) -> do
+      machine <- EFn.runEffectFn1 (V.buildVDom spec) vdom
+      let node = V.extract machine
+      void $ DOM.appendChild node (HTMLElement.toNode elem)
+      emptyNode <- EFn.runEffectFn2 Util.createTextNode "" document
+      pure $ V.mkStep $ V.Step emptyNode Nothing patch done
 
   done :: EFn.EffectFn1 (WidgetState slots action) Unit
   done = EFn.mkEffectFn1 \st ->

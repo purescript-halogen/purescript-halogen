@@ -4,6 +4,7 @@ module Halogen.HTML
   ( ComponentHTML
   , PlainHTML
   , fromPlainHTML
+  , portal
   , slot
   , slot_
   , memoized
