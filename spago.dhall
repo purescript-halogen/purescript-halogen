@@ -19,7 +19,6 @@
   , "ordered-collections"
   , "parallel"
   , "profunctor"
-  , "psci-support"
   , "transformers"
   , "unsafe-coerce"
   , "unsafe-reference"
