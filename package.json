@@ -2,6 +2,7 @@
   "private": true,
   "scripts": {
     "clean": "rimraf output && rimraf .spago",
+    "postinstall": "spago install",
     "build": "spago build --purs-args '--censor-lib --strict'",
     "test": "spago --config test/test.dhall test --purs-args '--censor-lib --strict'",
     "example-all": "./build-examples.sh",

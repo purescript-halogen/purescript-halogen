@@ -6,17 +6,16 @@ This folder contains a variety of examples demonstrating different Halogen featu
 
 Each of the Halogen examples are self-contained in a directory containing the source code and an `index.html` file that you can open in your browser once the source is compiled.
 
-First, make sure you have `spago`, `bower`, and `purescript` installed (if you don't have them already):
+First, make sure you have `purescript` installed (if you don't already):
 
 ```sh
-npm install -g spago bower purescript
+npm install -g purescript
 ```
 
 Then, make sure Halogen's dependencies are installed:
 
 ```sh
 npm install
-bower install
 ```
 
 Now you can build any of the examples from the root of the repository using the command `npm run example-<name>`:
