@@ -1,17 +1,16 @@
-## Driver IO example
+# Driver IO
 
-This example illustrates a button component that we listen to and send queries into from the driver.
+This example demonstrates running a Halogen application and communicating with its root-level component via the driver that Halogen returns to you. We can listen to the application and send queries via the driver.
 
 Open up the browser console for evidence that anything is happening!
 
-### Building
+## Building
 
-From the root of the Halogen project:
+You can build this example from the root of the Halogen project:
 
+```sh
+npm install
+npm run example-driver-io
 ```
-$ npm install
-$ bower install
-$ npm run example-driver-io
-```
 
-The code will be built as `example.js` in the `examples/driver-io/dist` directory within the example, runnable by opening the corresponding `index.html`.
+This will bundle a runnable JS file, `example.js`, in the `examples/driver-io/dist` directory. You can view the running application by opening the corresponding `index.html` file.

@@ -1,15 +1,14 @@
-## Ace editor example
+# Ace Editor
 
-This example illustrates a basic 3rd party component integration and use of a component output message to observe changes within the Ace editor.
+This example demonstrates integrating a third-party component. It uses queries to control behavior in Ace editor and output messages to observe changes within the editor.
 
-### Building
+## Building
 
-From the root of the Halogen project:
+You can build this example from the root of the Halogen project:
 
+```sh
+npm install
+npm run example-ace
 ```
-$ npm install
-$ bower install
-$ npm run example-ace
-```
 
-The code will be built as `example.js` in the `examples/ace/dist` directory within the example, runnable by opening the corresponding `index.html`.
+This will bundle a runnable JS file, `example.js`, in the `examples/ace/dist` directory. You can view the running application by opening the corresponding `index.html` file.

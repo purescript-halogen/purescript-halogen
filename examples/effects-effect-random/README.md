@@ -1,15 +1,14 @@
-## Random number via Eff
+# `Effect` and Random
 
-This example illustrates an `Effect` function being used in a component's `eval` function.
+This example demonstrates how to use an `Effect` function in a component `eval` function.
 
-### Building
+## Building
 
-From the root of the Halogen project:
+You can build this example from the root of the Halogen project:
 
+```sh
+npm install
+npm run example-effects-effect-random
 ```
-$ npm install
-$ bower install
-$ npm run example-eff-random
-```
 
-The code will be built as `example.js` in the `examples/eff-random/dist` directory within the example, runnable by opening the corresponding `index.html`.
+This will bundle a runnable JS file, `example.js`, in the `examples/effects-effect-random/dist` directory. You can view the running application by opening the corresponding `index.html` file.
