@@ -1,4 +1,4 @@
-module Example.Effects.Eff.Random.Component where
+module Example.Effects.Effect.Random.Component where
 
 import Prelude
 

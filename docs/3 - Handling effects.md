@@ -4,7 +4,7 @@ Halogen components have no built-in mechanisms for dealing with effects during q
 
 Let's take another look at the type of the button component from the last chapter:
 
-``` purescript
+```purescript
 myButton :: forall m. H.Component HH.HTML Query Input Message m
 ```
 
@@ -14,8 +14,8 @@ The `m` parameter we left polymorphic here is our means of introducing effect ha
 
 Here's a component that generates a random number on demand and displays it to the user:
 
-``` purescript
-module Example.Effects.Eff.Random.Component where
+```purescript
+module Example.Effects.Effect.Random.Component where
 
 import Prelude
 
@@ -62,23 +62,23 @@ handleAction = case _ of
 
 ```
 
-A runnable version of this is available in the [`effects-eff-random` example](../examples/effects-eff-random/).
+A runnable version of this is available in the [`effects-effect-random` example](../examples/effects-effect-random/).
 
-To be able to use [`random`][Effect.Random.random], we've constrained `m` to have an instance of `MonadEffect`, so we can now run this component in `Effect`, or `Aff` or any other monad which implements `MonadEffect`.
+To be able to use [`random`][effect.random.random], we've constrained `m` to have an instance of `MonadEffect`, so we can now run this component in `Effect`, or `Aff` or any other monad which implements `MonadEffect`.
 
-``` purescript
+```purescript
 component :: forall f i o m. MonadEffect m => H.Component HH.HTML f i o m
 
 handleAction :: forall o m. MonadEffect m => Action -> H.HalogenM State Action () o m Unit
 ```
 
-Why are we using a constraint of `MonadEffect` rather than `Effect` or `Aff`? For convenience - this component is now polymorphic over any monad that supports effects. So our component is easily re-used across multiple applications that might be using different monads to run Halogen. It is possible to [`hoist`][Halogen.Component.hoist] a component, allowing us to change the `m` type, and this polymorphic constraint allows us to keep our options open as our application design changes.
+Why are we using a constraint of `MonadEffect` rather than `Effect` or `Aff`? For convenience - this component is now polymorphic over any monad that supports effects. So our component is easily re-used across multiple applications that might be using different monads to run Halogen. It is possible to [`hoist`][halogen.component.hoist] a component, allowing us to change the `m` type, and this polymorphic constraint allows us to keep our options open as our application design changes.
 
 For a detailed explanation of `hoist`, please refer to the chapter on running Halogen components on the DOM.
 
-We can now use the [`liftEffect`][Effect.Class.liftEffect] function in `handleAction`:
+We can now use the [`liftEffect`][effect.class.lifteffect] function in `handleAction`:
 
-``` purescript
+```purescript
 handleAction :: forall o m. MonadEffect m => Action -> H.HalogenM State Action () o m Unit
 handleAction = case _ of
   Regenerate -> do
@@ -86,13 +86,13 @@ handleAction = case _ of
     H.put (Just newNumber)
 ```
 
-This works as there's a [`MonadEffect`][Effect.Class.MonadEffect] instance for `HalogenM` for any `m` that also has a `MonadEffect` instance.
+This works as there's a [`MonadEffect`][effect.class.monadeffect] instance for `HalogenM` for any `m` that also has a `MonadEffect` instance.
 
 ## Using `Aff` during `eval`
 
 Occasionally it's useful to be able to fetch data from an API, so let's use that for the next example. We're going to make use of the [`affjax`][purescript-affjax] library as it provides a nice `Aff`-based interface for AJAX requests. Our data source will be GitHub's user API.
 
-``` purescript
+```purescript
 module Example.Effects.Aff.Ajax.Component where
 
 import Prelude
@@ -174,9 +174,9 @@ handleAction = case _ of
 
 A runnable version of this is available in the [`effects-aff-ajax` example](../examples/effects-aff-ajax/).
 
-As with the `Effect`-based example, we have constrained our component to use `MonadAff`, which subsumes synchronous effects while permitting asynchronous effects. `HalogenM` also has a [`MonadAff`][Effect.Aff.Class.MonadAff] instance where `m` has a `MonadAff` instance, and so we can now use [`liftAff`][Effect.Aff.Class.liftAff] in our `handleAff`:
+As with the `Effect`-based example, we have constrained our component to use `MonadAff`, which subsumes synchronous effects while permitting asynchronous effects. `HalogenM` also has a [`MonadAff`][effect.aff.class.monadaff] instance where `m` has a `MonadAff` instance, and so we can now use [`liftAff`][effect.aff.class.liftaff] in our `handleAff`:
 
-``` purescript
+```purescript
   MakeRequest event -> do
     H.liftEffect $ Event.preventDefault event
     username <- H.gets _.username
@@ -194,12 +194,10 @@ Any type that satisfies a `MonadAff` constraint also satisfies `MonadEffect`, so
 Let's take a look at [running a component][running-components] to produce a UI next, where we'll also cover how to mount a component in `Effect` or `Aff`.
 
 [purescript-affjax]: https://pursuit.purescript.org/packages/purescript-affjax "purescript-affjax"
-
-[Effect.Aff.Class.liftAff]: https://pursuit.purescript.org/packages/purescript-aff/4.0.0/docs/Effect.Aff.Class#v:liftAff "Effect.Aff.Class.liftAff"
-[Effect.Aff.Class.MonadAff]: https://pursuit.purescript.org/packages/purescript-aff/4.0.0/docs/Effect.Aff.Class#t:MonadAff "Effect.Aff.Class.MonadAff"
-[Effect.Class.liftEffect]: https://pursuit.purescript.org/packages/purescript-effect/2.0.0/docs/Effect.Class#v:liftEffect "Effect.Class.liftEffect"
-[Effect.Class.MonadEffect]: https://pursuit.purescript.org/packages/purescript-effect/2.0.0/docs/Effect.Class#t:MonadEffect "Effect.Class.MonadEffect"
-[Effect.Random.random]: https://pursuit.purescript.org/packages/purescript-random/4.0.0/docs/Effect.Random#v:random "Effect.Random.random"
-[Halogen.Component.hoist]: https://pursuit.purescript.org/packages/purescript-halogen/docs/Halogen.Component#v:hoist "Halogen.Component.hoist"
-
+[effect.aff.class.liftaff]: https://pursuit.purescript.org/packages/purescript-aff/4.0.0/docs/Effect.Aff.Class#v:liftAff "Effect.Aff.Class.liftAff"
+[effect.aff.class.monadaff]: https://pursuit.purescript.org/packages/purescript-aff/4.0.0/docs/Effect.Aff.Class#t:MonadAff "Effect.Aff.Class.MonadAff"
+[effect.class.lifteffect]: https://pursuit.purescript.org/packages/purescript-effect/2.0.0/docs/Effect.Class#v:liftEffect "Effect.Class.liftEffect"
+[effect.class.monadeffect]: https://pursuit.purescript.org/packages/purescript-effect/2.0.0/docs/Effect.Class#t:MonadEffect "Effect.Class.MonadEffect"
+[effect.random.random]: https://pursuit.purescript.org/packages/purescript-random/4.0.0/docs/Effect.Random#v:random "Effect.Random.random"
+[halogen.component.hoist]: https://pursuit.purescript.org/packages/purescript-halogen/docs/Halogen.Component#v:hoist "Halogen.Component.hoist"
 [running-components]: 4%20-%20Running%20a%20component.md "Running a component"

@@ -1,25 +1,30 @@
-## Halogen Examples
+# Halogen Examples
 
-These example can be compiled from the root of the project. 
+This folder contains a variety of examples demonstrating different Halogen features. You can compile these examples from the root of the project.
 
-First, install `bower` and `purescript` globally, if you don't already have them:
+## Building & Running Examples
 
-```
-npm install -g bower
-npm install -g purescript
-```
+Each of the Halogen examples are self-contained in a directory containing the source code and an `index.html` file that you can open in your browser once the source is compiled.
 
-Then make sure Halogen's `npm` and `bower` dependencies are installed locally:
+First, make sure you have `spago`, `bower`, and `purescript` installed (if you don't have them already):
 
-```
-$ npm install
-$ bower install
+```sh
+npm install -g spago bower purescript
 ```
 
-Then each project can be built using `npm run example-<name>`:
+Then, make sure Halogen's dependencies are installed:
+
+```sh
+npm install
+bower install
+```
+
+Now you can build any of the examples from the root of the repository using the command `npm run example-<name>`:
 
 ```text
-$ npm run example-basic
+npm run example-ace
+npm run example-basic
+# ...
 ```
 
-If everything is successful the example will be built as `example.js` in the `dist` directory within the example, runnable by opening the corresponding `index.html`.
+This will compile the example source code into a file named `example.js` in the `dist` directory for the example. You can now open the corresponding `index.html` file from the same directory.
