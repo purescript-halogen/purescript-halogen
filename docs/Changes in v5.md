@@ -187,14 +187,12 @@ render =
     , HE.onMouseOver (HE.input Hover)
     ]
     [ HH.text "Click me" ]
-
 ```
 
 This is how you'd write the same code in Halogen 5:
 
 ```purs
 -- Halogen 5
-
 data Action
   = Toggle
   | Hover MouseEvent
@@ -470,7 +468,7 @@ eventListenerEventSource
 For example, we can subscribe to changes in the browser window width:
 
 ```purs
-data Action = Handler Window
+data Action = Initialize | Handler Window
 
 handleAction = case _ of
   Initialize ->
