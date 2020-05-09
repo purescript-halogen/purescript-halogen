@@ -239,7 +239,9 @@ eval
   ~> HalogenM state action slots output m
 ```
 
-In a moment we'll examine the `eval` function in-depth, but in most cases you'll construct it with the `mkEval` helper function paired with `defaultEval`, which provides default values for handling each of these cases. Here are a few different eval functions which handle various cases:
+In a moment we'll examine the `eval` function in-depth, but in most cases you'll construct it with the `mkEval` helper function paired with `defaultEval`, which provides default values for handling each of these cases. If `defaultEval` is used with no overrides the component will do nothing for any action raised internally, and any queries made of it will fail.
+
+Here are a few different eval functions which handle various cases:
 
 ```purs
 -- This eval function does nothing
