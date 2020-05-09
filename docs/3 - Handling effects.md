@@ -86,7 +86,7 @@ handleAction = case _ of
     H.put (Just newNumber)
 ```
 
-This works as there's a [`MonadEffect`][Effect.Class.monadEffect] instance for `HalogenM` for any `m` that also has a `MonadEffect` instance.
+This works as there's a [`MonadEffect`][Effect.Class.MonadEffect] instance for `HalogenM` for any `m` that also has a `MonadEffect` instance.
 
 ## Using `Aff` during `eval`
 
@@ -174,7 +174,7 @@ handleAction = case _ of
 
 A runnable version of this is available in the [`effects-aff-ajax` example](../examples/effects-aff-ajax/).
 
-As with the `Effect`-based example, we have constrained our component to use `MonadAff`, which subsumes synchronous effects while permitting asynchronous effects. `HalogenM` also has a [`MonadAff`][effect.aff.class.monadaff] instance where `m` has a `MonadAff` instance, and so we can now use [`liftAff`][effect.aff.class.liftaff] in our `handleAff`:
+As with the `Effect`-based example, we have constrained our component to use `MonadAff`, which subsumes synchronous effects while permitting asynchronous effects. `HalogenM` also has a [`MonadAff`][Effect.Aff.Class.MonadAff] instance where `m` has a `MonadAff` instance, and so we can now use [`liftAff`][Effect.Aff.Class.liftAff] in our `handleAff`:
 
 ```purescript
   MakeRequest event -> do
