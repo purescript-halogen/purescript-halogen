@@ -4,15 +4,7 @@ sudo: required
 node_js: stable
 install:
   - npm install
-  - npm install -g bower
-  - bower install --production
 script:
   - npm run -s build
-  - bower install
   - npm run -s test
-  - ./run-examples.sh
-after_success:
-- >-
-  test $TRAVIS_TAG &&
-  echo $GITHUB_TOKEN | pulp login &&
-  echo y | pulp publish --no-push
+  - npm run -s example-all

@@ -49,12 +49,12 @@ ui =
 searchUser :: String -> ReaderT Config Aff String
 searchUser q = do
   { githubToken } <- ask
-  { body } <- case githubToken of
+  result <- case githubToken of
     Nothing ->
       lift (AX.get AXRF.string ("https://api.github.com/users/" <> q))
     Just token ->
       lift (AX.get AXRF.string ("https://api.github.com/users/" <> q <> "?access_token=" <> token))
-  pure (either (const "") identity body)
+  pure (either (const "") _.body result)
 
 handleAction :: forall o. Action -> H.HalogenM State Action () o (ReaderT Config Aff) Unit
 handleAction = case _ of

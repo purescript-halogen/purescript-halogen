@@ -74,4 +74,4 @@ handleAction = case _ of
     username <- H.gets _.username
     H.modify_ (_ { loading = true })
     response <- H.liftAff $ AX.get AXRF.string ("https://api.github.com/users/" <> username)
-    H.modify_ (_ { loading = false, result = hush response.body })
+    H.modify_ (_ { loading = false, result = map _.body (hush response) })

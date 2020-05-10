@@ -1,9 +1,9 @@
-module Example.Effects.Eff.Random.Main where
+module Example.Effects.Effect.Random.Main where
 
 import Prelude
 
 import Effect (Effect)
-import Example.Effects.Eff.Random.Component (component)
+import Example.Effects.Effect.Random.Component (component)
 import Halogen.Aff as HA
 import Halogen.VDom.Driver (runUI)
 

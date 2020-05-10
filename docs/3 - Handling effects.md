@@ -4,7 +4,7 @@ Halogen components have no built-in mechanisms for dealing with effects during q
 
 Let's take another look at the type of the button component from the last chapter:
 
-``` purescript
+```purescript
 myButton :: forall m. H.Component HH.HTML Query Input Message m
 ```
 
@@ -14,8 +14,8 @@ The `m` parameter we left polymorphic here is our means of introducing effect ha
 
 Here's a component that generates a random number on demand and displays it to the user:
 
-``` purescript
-module Example.Effects.Eff.Random.Component where
+```purescript
+module Example.Effects.Effect.Random.Component where
 
 import Prelude
 
@@ -62,11 +62,11 @@ handleAction = case _ of
 
 ```
 
-A runnable version of this is available in the [`effects-eff-random` example](../examples/effects-eff-random/).
+A runnable version of this is available in the [`effects-effect-random` example](../examples/effects-effect-random/).
 
 To be able to use [`random`][Effect.Random.random], we've constrained `m` to have an instance of `MonadEffect`, so we can now run this component in `Effect`, or `Aff` or any other monad which implements `MonadEffect`.
 
-``` purescript
+```purescript
 component :: forall f i o m. MonadEffect m => H.Component HH.HTML f i o m
 
 handleAction :: forall o m. MonadEffect m => Action -> H.HalogenM State Action () o m Unit
@@ -78,7 +78,7 @@ For a detailed explanation of `hoist`, please refer to the chapter on running Ha
 
 We can now use the [`liftEffect`][Effect.Class.liftEffect] function in `handleAction`:
 
-``` purescript
+```purescript
 handleAction :: forall o m. MonadEffect m => Action -> H.HalogenM State Action () o m Unit
 handleAction = case _ of
   Regenerate -> do
@@ -92,7 +92,7 @@ This works as there's a [`MonadEffect`][Effect.Class.MonadEffect] instance for `
 
 Occasionally it's useful to be able to fetch data from an API, so let's use that for the next example. We're going to make use of the [`affjax`][purescript-affjax] library as it provides a nice `Aff`-based interface for AJAX requests. Our data source will be GitHub's user API.
 
-``` purescript
+```purescript
 module Example.Effects.Aff.Ajax.Component where
 
 import Prelude
@@ -176,7 +176,7 @@ A runnable version of this is available in the [`effects-aff-ajax` example](../e
 
 As with the `Effect`-based example, we have constrained our component to use `MonadAff`, which subsumes synchronous effects while permitting asynchronous effects. `HalogenM` also has a [`MonadAff`][Effect.Aff.Class.MonadAff] instance where `m` has a `MonadAff` instance, and so we can now use [`liftAff`][Effect.Aff.Class.liftAff] in our `handleAff`:
 
-``` purescript
+```purescript
   MakeRequest event -> do
     H.liftEffect $ Event.preventDefault event
     username <- H.gets _.username
@@ -194,12 +194,10 @@ Any type that satisfies a `MonadAff` constraint also satisfies `MonadEffect`, so
 Let's take a look at [running a component][running-components] to produce a UI next, where we'll also cover how to mount a component in `Effect` or `Aff`.
 
 [purescript-affjax]: https://pursuit.purescript.org/packages/purescript-affjax "purescript-affjax"
-
 [Effect.Aff.Class.liftAff]: https://pursuit.purescript.org/packages/purescript-aff/4.0.0/docs/Effect.Aff.Class#v:liftAff "Effect.Aff.Class.liftAff"
 [Effect.Aff.Class.MonadAff]: https://pursuit.purescript.org/packages/purescript-aff/4.0.0/docs/Effect.Aff.Class#t:MonadAff "Effect.Aff.Class.MonadAff"
 [Effect.Class.liftEffect]: https://pursuit.purescript.org/packages/purescript-effect/2.0.0/docs/Effect.Class#v:liftEffect "Effect.Class.liftEffect"
 [Effect.Class.MonadEffect]: https://pursuit.purescript.org/packages/purescript-effect/2.0.0/docs/Effect.Class#t:MonadEffect "Effect.Class.MonadEffect"
 [Effect.Random.random]: https://pursuit.purescript.org/packages/purescript-random/4.0.0/docs/Effect.Random#v:random "Effect.Random.random"
 [Halogen.Component.hoist]: https://pursuit.purescript.org/packages/purescript-halogen/docs/Halogen.Component#v:hoist "Halogen.Component.hoist"
-
 [running-components]: 4%20-%20Running%20a%20component.md "Running a component"

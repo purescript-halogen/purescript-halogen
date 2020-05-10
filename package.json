@@ -1,28 +1,30 @@
 {
   "private": true,
   "scripts": {
-    "clean": "rimraf output && rimraf .pulp-cache",
-    "build": "pulp build -- --censor-lib --strict",
-    "test": "pulp build -I test -- --censor-lib --strict",
-    "example-ace": "pulp browserify --main Example.Ace.Main --include examples/ace/src --optimise --to examples/ace/dist/example.js",
-    "example-basic": "pulp build --main Example.Basic.Main --include examples/basic/src --to examples/basic/dist/example.js",
-    "example-components": "pulp build --main Example.Components.Main --include examples/components/src --to examples/components/dist/example.js",
-    "example-components-inputs": "pulp build --main Example.Components.Inputs.Main --include examples/components-inputs/src --to examples/components-inputs/dist/example.js",
-    "example-components-multitype": "pulp build --main Example.Components.Multitype.Main --include examples/components-multitype/src --to examples/components-multitype/dist/example.js",
-    "example-driver-io": "pulp build --main Example.Driver.IO.Main --include examples/driver-io/src --to examples/driver-io/dist/example.js",
-    "example-driver-routing": "pulp build --main Example.Driver.Routing.Main --include examples/driver-routing/src --to examples/driver-routing/dist/example.js",
-    "example-driver-websockets": "pulp build --main Example.Driver.Websockets.Main --include examples/driver-websockets/src --to examples/driver-websockets/dist/example.js",
-    "example-effects-aff-ajax": "pulp build --main Example.Effects.Aff.Ajax.Main --include examples/effects-aff-ajax/src --to examples/effects-aff-ajax/dist/example.js",
-    "example-effects-eff-random": "pulp build --main Example.Effects.Eff.Random.Main --include examples/effects-eff-random/src --to examples/effects-eff-random/dist/example.js",
-    "example-higher-order-components": "pulp build --main Example.HOC.Main --include examples/higher-order-components/src --to examples/higher-order-components/dist/example.js",
-    "example-interpret": "pulp build --main Example.Interpret.Main --include examples/interpret/src --to examples/interpret/dist/example.js",
-    "example-keyboard-input": "pulp build --main Example.KeyboardInput.Main --include examples/keyboard-input/src --to examples/keyboard-input/dist/example.js",
-    "example-lifecycle": "pulp build --main Example.Lifecycle.Main --include examples/lifecycle/src --to examples/lifecycle/dist/example.js"
+    "clean": "rimraf output && rimraf .spago",
+    "postinstall": "spago install",
+    "build": "spago build --purs-args '--censor-lib --strict'",
+    "test": "spago --config test/test.dhall test --purs-args '--censor-lib --strict'",
+    "example-all": "./build-examples.sh",
+    "example-ace": "spago --config examples/ace/spago.dhall bundle-app --main Example.Ace.Main --to examples/ace/dist/example.js",
+    "example-basic": "spago --config examples/basic/spago.dhall bundle-app --main Example.Basic.Main --to examples/basic/dist/example.js",
+    "example-components": "spago --config examples/components/spago.dhall bundle-app --main Example.Components.Main --to examples/components/dist/example.js",
+    "example-components-inputs": "spago --config examples/components-inputs/spago.dhall bundle-app --main Example.Components.Inputs.Main --to examples/components-inputs/dist/example.js",
+    "example-components-multitype": "spago --config examples/components-multitype/spago.dhall bundle-app --main Example.Components.Multitype.Main --to examples/components-multitype/dist/example.js",
+    "example-driver-io": "spago --config examples/driver-io/spago.dhall bundle-app --main Example.Driver.IO.Main --to examples/driver-io/dist/example.js",
+    "example-driver-routing": "spago --config examples/driver-routing/spago.dhall bundle-app --main Example.Driver.Routing.Main --to examples/driver-routing/dist/example.js",
+    "example-driver-websockets": "spago --config examples/driver-websockets/spago.dhall bundle-app --main Example.Driver.Websockets.Main --to examples/driver-websockets/dist/example.js",
+    "example-effects-aff-ajax": "spago --config examples/effects-aff-ajax/spago.dhall bundle-app --main Example.Effects.Aff.Ajax.Main --to examples/effects-aff-ajax/dist/example.js",
+    "example-effects-effect-random": "spago --config examples/effects-effect-random/spago.dhall bundle-app --main Example.Effects.Effect.Random.Main --to examples/effects-effect-random/dist/example.js",
+    "example-higher-order-components": "spago --config examples/higher-order-components/spago.dhall bundle-app --main Example.HOC.Main --to examples/higher-order-components/dist/example.js",
+    "example-interpret": "spago --config examples/interpret/spago.dhall bundle-app --main Example.Interpret.Main --to examples/interpret/dist/example.js",
+    "example-keyboard-input": "spago --config examples/keyboard-input/spago.dhall bundle-app --main Example.KeyboardInput.Main --to examples/keyboard-input/dist/example.js",
+    "example-lifecycle": "spago --config examples/lifecycle/spago.dhall bundle-app --main Example.Lifecycle.Main --to examples/lifecycle/dist/example.js"
   },
   "devDependencies": {
-    "pulp": "^13.0.0",
-    "purescript": "^0.13.0",
+    "purescript": "^0.13.6",
     "purescript-psa": "^0.7.3",
-    "rimraf": "^2.6.3"
+    "rimraf": "^2.6.3",
+    "spago": "^0.15.2"
   }
 }

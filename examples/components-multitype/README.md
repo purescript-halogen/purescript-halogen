@@ -1,15 +1,14 @@
-## Multi-child component example
+# Component With Multiple Child Component Types
 
-This example illustrates a parent component with multiple types of child component.
+This example demonstrates a component which has child components of differing types.
 
-### Building
+## Building
 
-From the root of the Halogen project:
+You can build this example from the root of the Halogen project:
 
+```sh
+npm install
+npm run example-components-multitype
 ```
-$ npm install
-$ bower install
-$ npm run example-components-multitype
-```
 
-The code will be built as `example.js` in the `examples-components-multitype/dist` directory within the example, runnable by opening the corresponding `index.html`.
+This will bundle a runnable JS file, `example.js`, in the `examples/components-multitype/dist` directory. You can view the running application by opening the corresponding `index.html` file.

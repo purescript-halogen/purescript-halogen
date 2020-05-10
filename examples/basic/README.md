@@ -1,15 +1,14 @@
-## Basic example
+# Basic
 
-A super simple button component. It's unlikely something this simple would deserve its own component in a real app!
+This example demonstrates close to the smallest Halogen component you can build. It's unlikely you'd make components this small in a real world application, but this lets you see the essential parts of a component definition.
 
-### Building
+## Building
 
-From the root of the Halogen project:
+You can build this example from the root of the Halogen project:
 
+```sh
+npm install
+npm run example-basic
 ```
-$ npm install
-$ bower install
-$ npm run example-basic
-```
 
-The code will be built as `example.js` in the `examples/basic/dist` directory within the example, runnable by opening the corresponding `index.html`.
+This will bundle a runnable JS file, `example.js`, in the `examples/basic/dist` directory. You can view the running application by opening the corresponding `index.html` file.
