@@ -3,7 +3,6 @@
 module Halogen.HTML
   ( ComponentHTML
   , PlainHTML
-  , fromPlainHTML
   , slot
   , memoized
   , lazy
@@ -25,25 +24,19 @@ import Halogen.HTML.Core (class IsProp, AttrName(..), ClassName(..), HTML(..), N
 import Halogen.HTML.Core as Core
 import Halogen.HTML.Properties (IProp, attr, attrNS, prop)
 import Halogen.VDom.Thunk (thunk1, thunk2, thunk3, thunked)
-import Prelude (class Ord, Void)
+import Prelude (class Ord)
 import Prim.Row as Row
-import Unsafe.Coerce (unsafeCoerce)
 
 -- | A convenience synonym for the output type of a `render` function, for a
 -- | component that renders HTML.
 type ComponentHTML action slots m = HTML (ComponentSlot HTML slots m action) action
 
--- | A type useful for a chunk of HTML with no slot-embedding or query-raising.
+-- | A type useful for a chunk of HTML with no slot-embedding or action-raising.
 -- |
 -- | Often a polymorphic usage of `HTML` is good enough for this, but sometimes
--- | it's useful to have a type like this (and accompanying coercion) when doing
--- | things like creating components that accept a chunk of HTML as part of
--- | their configuration.
-type PlainHTML = HTML Void Void
-
--- | Relaxes the type of `PlainHTML` to make it compatible with all `HTML`.
-fromPlainHTML :: forall w i. PlainHTML -> HTML w i
-fromPlainHTML = unsafeCoerce -- ≅ bimap absurd absurd
+-- | it's useful to have a type like this when doing things like creating
+-- | components that accept a chunk of HTML as part of their configuration.
+type PlainHTML = forall w i. HTML w i
 
 -- | Defines a slot for a child component. Takes:
 -- | - the slot address label
