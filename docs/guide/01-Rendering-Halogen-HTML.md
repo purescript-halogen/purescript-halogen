@@ -184,7 +184,7 @@ placeholder :: forall r i. String -> IProp (placeholder :: String | r) i
 placeholder = prop (PropName "placeholder")
 ```
 
-The `IProp` type is used to for events and properties. It uses a row type to uniquely identify particular events and properties; when you then use one of these properties with a Halogen HTML element, Halogen is able to verify whether the element you're applying the property to actually supports it.
+The `IProp` type is used for events and properties. It uses a row type to uniquely identify particular events and properties; when you then use one of these properties with a Halogen HTML element, Halogen is able to verify whether the element you're applying the property to actually supports it.
 
 This is possible because Halogen HTML elements also carry a row type which lists all the properties and events that it can support. When you apply a property or event to the element, Halogen looks up in the HTML element's row type whether or not it supports the property or event.
 

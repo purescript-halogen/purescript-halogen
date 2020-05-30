@@ -121,7 +121,7 @@ handleAction :: forall o m. Action -> H.HalogenM State Action () o m Unit
 
 As with our input type, we can leave type variables open for types that we aren't using. 
 
-* The type `()` means our component has no child components. We could also leave it open as a type variable, because we aren't using it, but `()` is so short that you'll see this commonly used.
+* The type `()` means our component has no child components. We could also leave it open as a type variable because we aren't using it -- `slots`, by convention -- but `()` is so short you'll see this type commonly used instead.
 * The `o` type parameter is only used when your component communicates with a parent.
 * The `m` type parameter is only relevant when your component performs effects.
 
@@ -144,7 +144,7 @@ Our `handleAction` function responds to `Decrement` by reducing our state variab
 * `modify` allows you to update the state, given the previous state, returning the new state
 * `modify_` is the same as `modify`, but it doesn't return the new state (thus you don't have to explicitly discard the result, as you would with `modify`)
 * `get` allows you to retrieve the current state
-* `gets` allows you to retrieve the current state and also apply a function to it (most commonly, `_.property` to retrieve a particular field from a record)
+* `gets` allows you to retrieve the current state and also apply a function to it (most commonly, `_.fieldName` to retrieve a particular field from a record)
 
 We'll talk more about `HalogenM` when we talk about performing effects. Our counter doesn't perform effects, so all we need are the state update functions.
 
