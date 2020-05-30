@@ -1,43 +1,25 @@
-# The Halogen guide
+# Halogen Documentation
 
+Halogen is a declarative, type-safe library for building user interfaces.
 
-1. [Introduction](1%20-%20Introduction.md)
-2. [Defining a component](2%20-%20Defining%20a%20component.md)
-    - [State](2%20-%20Defining%20a%20component.md#state)
-    - [Query algebra](2%20-%20Defining%20a%20component.md#query-algebra)
-    - [Output messages](2%20-%20Defining%20a%20component.md#output-messages)
-    - [Rendering](2%20-%20Defining%20a%20component.md#rendering)
-        - [The HTML DSL](2%20-%20Defining%20a%20component.md#the-html-dsl)
-    - [Query evaluation](2%20-%20Defining%20a%20component.md#query-evaluation)
-        - [`HalogenM`](2%20-%20Defining%20a%20component.md#halogenm)
-        - [Evaluating actions](2%20-%20Defining%20a%20component.md#evaluating-actions)
-        - [Evaluating requests](2%20-%20Defining%20a%20component.md#evaluating-requests)
-    - [Putting it all together](2%20-%20Defining%20a%20component.md#putting-it-all-together)
-3. [Handling effects](3%20-%20Handling%20effects.md)
-    - [Using `Effect` during `eval`](3%20-%20Handling%20effects.md#using-effect-during-eval)
-    - [Using `Aff` during `eval`](3%20-%20Handling%20effects.md#using-aff-during-eval)
-    - [Mixing `Effect` and `Aff`](3%20-%20Handling%20effects.md#mixing-effect-and-aff)
-4. [Running a component](4%20-%20Running%20a%20component.md)
-    - [`runUI`](4%20-%20Running%20a%20component.md#runui)
-    - [`Aff`-based utility functions](4%20-%20Running%20a%20component.md#aff-based-utility-functions)
-    - [Output and subscribers](4%20-%20Running%20a%20component.md#output-and-subscribers)
-5. [Parent and child components](5%20-%20Parent%20and%20child%20components.md)
-    - [Slot address](5%20-%20Parent%20and%20child%20components.md#slot-address)
-    - [Rendering](5%20-%20Parent%20and%20child%20components.md#rendering)
-    - [Querying](5%20-%20Parent%20and%20child%20components.md#querying)
-    - [Component definition](5%20-%20Parent%20and%20child%20components.md#component-definition)
-    - [Input values](5%20-%20Parent%20and%20child%20components.md#input-values)
-    - [Multiple types of child component](5%20-%20Parent%20and%20child%20components.md#multiple-types-of-child-component)
-        - [Rendering](5%20-%20Parent%20and%20child%20components.md#rendering-1)
-        - [Querying](5%20-%20Parent%20and%20child%20components.md#querying-1)
-5. Stateless Custom Elements
-6. Styling
-7. Accessible form behaviours and event handling
-8. Component lifecycle hooks*
-9. Event sources**
-10. Non-`Aff` effect monads**
+This documentation covers how to use Halogen and provides a concepts reference. There are also other resources for learning and using Halogen, including:
 
-\* Coming soon...
-\** ...ish
+* The Halogen [API Reference](https://pursuit.purescript.org/packages/purescript-halogen)
+* [Learn Halogen](https://github.com/JordanMartinez/learn-halogen) by [Jordan Martinez](https://github.com/JordanMartinez)
+* [Real World Halogen](https://github.com/thomashoneyman/purescript-halogen-realworld) by [Thomas Honeyman](https://github.com/thomashoneyman)
 
-**Note:** Please feel free to open issues if you encounter things in the guide that are confusing or need further explanation!
+## Quick Start: Halogen Guide
+
+If you are new to Halogen we recommend starting with the [Halogen Guide](https://github.com/purescript-halogen/purescript-halogen/tree/master/docs/guide). This short handbook demonstrates and explains Halogen concepts while building components.
+
+By the end of the guide you'll be ready to dive in to more advanced resources like the [Concepts Reference](https://github.com/purescript-halogen/purescript-halogen/tree/master/docs/concepts-reference) or [Real World Halogen](https://github.com/thomashoneyman/purescript-halogen-realworld).
+
+## Going Deeper: Concepts Reference
+
+Once you're comfortable with the main concepts from the [Halogen Guide](https://github.com/purescript-halogen/purescript-halogen/tree/master/docs/guide) you may be interested in more advanced topics and in understanding why Halogen features are designed the way they are. The [Concepts Reference](https://github.com/purescript-halogen/purescript-halogen/tree/master/docs/concepts-reference) will help you understand Halogen at a deeper level.
+
+## Major Version Changelog
+
+Major Halogen releases are accompanied by guides for transitioning from one version to the next in the [Major Version Changelog](https://github.com/purescript-halogen/purescript-halogen/tree/master/docs/changelog/). Currently, there are transition guides for the following versions:
+
+* [v5](https://github.com/purescript-halogen/purescript-halogen/blob/master/docs/changelog/v5.md)
