@@ -1,0 +1,6 @@
+[book]
+language = "en"
+multilingual = false
+src = "docs"
+title = "Halogen Guide"
+
