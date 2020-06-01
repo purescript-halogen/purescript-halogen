@@ -23,13 +23,22 @@ import Unsafe.Coerce (unsafeCoerce)
 
 foreign import data Any :: Type
 
--- | - `query` is the query algebra; the requests that can be made of the
--- |   component
--- | - `output` is the type of messages the component can raise
--- | - `slot` is the type used to index the component by. Use `Unit` if
--- |   there's only going to be one instance of that type of component,
--- |   and some other type like `Int` or `String` if there are going to
--- |   be multiple instances.
+-- | A type which records the queries, output messages, and slot identifier for
+-- | a particular slot (ie. a location in HTML where a component is rendered).
+-- | For example:
+-- |
+-- | ```purescript
+-- | type ButtonSlot slot = Slot Button.Query Button.Output slot
+-- |
+-- | -- A component using this slot type can have one type of child component,
+-- | -- which supports `Button.Query` queries, `Button.Output` outputs, and
+-- | -- which can be uniquely identified by an integer.
+-- | type Slots = ( button :: ButtonSlot Int )
+-- | ```
+-- |
+-- | - `query` represents the requests that can be made of this component
+-- | - `output` represents the output messages that can be raised by this component
+-- | - `slot` represents the unique identifier for this component
 data Slot (query :: Type -> Type) output slot
 
 newtype SlotStorage (slots :: # Type) (slot :: (Type -> Type) -> Type -> Type) =

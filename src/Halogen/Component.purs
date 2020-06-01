@@ -147,7 +147,7 @@ type EvalSpec state query action slots input output m =
 -- | specify things as needed. If a component only needs to handle actions,
 -- | for instance, a usage might be something like this:
 -- |
--- | ``` purescript
+-- | ```purescript
 -- | H.mkComponent
 -- |   { initialState
 -- |   , render
@@ -163,21 +163,22 @@ defaultEval =
   , finalize: Nothing
   }
 
--- | Accepts an `EvalSpec` to produce an `eval` function for a component.
+-- | Accepts an `EvalSpec` to produce an `eval` function for a component. For
+-- | example:
 -- |
--- | Examples:
+-- | ```purescript`
+-- | -- use `defaultEval` and override fields selectively
+-- | H.mkEval (H.defaultEval { handleAction = ?handleAction })
 -- |
--- |   H.mkEval
--- |     { handleAction: const (pure unit)
--- |     , handleQuery: const (pure Nothing)
--- |     , receive: const Nothing
--- |     , initialize: Nothing
--- |     , finalize: Nothing
--- |     }
--- |
--- |   H.mkEval H.defaultEval
--- |
--- |   H.mkEval (H.defaultEval { handleAction = ?handleAction })
+-- | -- or specify all the fields in the `EvalSpec`
+-- | H.mkEval
+-- |   { handleAction: ?handleAction
+-- |   , handleQuery: ?handleQuery
+-- |   , receive: ?receive
+-- |   , initialize: ?initialize
+-- |   , finalize: ?finalize
+-- |   }
+-- | ```
 mkEval
   :: forall state query action slots input output m
    . EvalSpec state query action slots input output m

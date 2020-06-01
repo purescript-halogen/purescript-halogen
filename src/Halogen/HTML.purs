@@ -29,13 +29,13 @@ import Prelude (class Ord, Void)
 import Prim.Row as Row
 import Unsafe.Coerce (unsafeCoerce)
 
--- | A convenience synonym for the output type of a `render` function, for a
+-- | A convenience synonym for the output type of a `render` function for a
 -- | component that renders HTML.
 -- |
--- | - `action` is the type of actions; messages internal to the component that
--- |   can be evaluated
--- | - `slots` is the set of slots for addressing child components
--- | - `m` is the effect monad used during evaluation
+-- | - `action` is the type of actions, events internal to the component that can
+-- |   be evaluated with the `handleAction` function
+-- | - `slots` is the set of child component types that can be used in the HTML
+-- | - `m` is the monad used by the child component during evaluation
 type ComponentHTML action slots m = HTML (ComponentSlot HTML slots m action) action
 
 -- | A type useful for a chunk of HTML with no slot-embedding or query-raising.

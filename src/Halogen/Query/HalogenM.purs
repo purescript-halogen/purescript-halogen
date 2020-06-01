@@ -33,12 +33,12 @@ import Web.DOM (Element)
 -- | The Halogen component eval algebra.
 -- |
 -- | - `state` is the component's state
--- | - `action` is the type of actions; messages internal to the component that
+-- | - `action` is the type of actions; events internal to the component that
 -- |   can be evaluated
 -- | - `slots` is the set of slots for addressing child components
--- | - `output` is the type of messages the component can raise
--- | - `m` is the effect monad used during evaluation
--- | - `a` is the result of the HalogenF expression. See HalogenM for usage example.
+-- | - `output` is the type of output messages the component can raise
+-- | - `m` is the monad used during evaluation
+-- | - `a` is the result of the HalogenF expression (see HalogenM for an example).
 data HalogenF state action slots output m a
   = State (state -> Tuple a state)
   | Subscribe (SubscriptionId -> ES.EventSource m action) (SubscriptionId -> a)
@@ -67,14 +67,14 @@ instance functorHalogenF :: Functor m => Functor (HalogenF state action slots ou
 -- | The Halogen component eval effect monad.
 -- |
 -- | - `state` is the component's state
--- | - `action` is the type of actions; messages internal to the component that
+-- | - `action` is the type of actions; veents internal to the component that
 -- |   can be evaluated
 -- | - `slots` is the set of slots for addressing child components
--- | - `output` is the type of messages the component can raise
--- | - `m` is the effect monad used during evaluation
+-- | - `output` is the type of output messages the component can raise
+-- | - `m` is the monad used during evaluation
 -- | - `a` is the result of the HalogenM expression. Use the following pattern:
--- |     `handleAction :: forall st ac sl o m.            ac -> H.HalogenM st ac sl o m Unit
--- |     `handleQuery  :: forall st ac sl o m a. YourQuery a -> H.HalogenM st ac sl o m (Maybe a)
+-- |     `handleAction :: Action -> H.HalogenM State Action Slots Output m Unit
+-- |     `handleQuery  :: forall a. Query a -> H.HalogenM State Action Slots Output m (Maybe a)
 newtype HalogenM state action slots output m a = HalogenM (Free (HalogenF state action slots output m) a)
 
 derive newtype instance functorHalogenM :: Functor (HalogenM state action slots output m)
