@@ -68,7 +68,7 @@ Halogen is a PureScript library, and it assumes basic knowledge of PureScript co
 2. [Introducing Components](./02-Introducing-Components.md)
 3. [Performing Effects](./03-Performing-Effects.md)
 4. [Lifecycles & Subscriptions](./04-Lifecycles-Subscriptions.md)
-5. [Parent & Child Components](./05-Parent-Child-Components)
+5. [Parent & Child Components](./05-Parent-Child-Components.md)
 6. [Running An Application](./06-Running-Application.md)
 7. [Next Steps](./07-Next-Steps.md)
 
