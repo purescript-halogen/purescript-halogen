@@ -23,6 +23,13 @@ import Unsafe.Coerce (unsafeCoerce)
 
 foreign import data Any :: Type
 
+-- | - `query` is the query algebra; the requests that can be made of the
+-- |   component
+-- | - `output` is the type of messages the component can raise
+-- | - `slot` is the type used to index the component by. Use `Unit` if
+-- |   there's only going to be one instance of that type of component,
+-- |   and some other type like `Int` or `String` if there are going to
+-- |   be multiple instances.
 data Slot (query :: Type -> Type) output slot
 
 newtype SlotStorage (slots :: # Type) (slot :: (Type -> Type) -> Type -> Type) =

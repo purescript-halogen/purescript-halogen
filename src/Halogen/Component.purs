@@ -164,6 +164,20 @@ defaultEval =
   }
 
 -- | Accepts an `EvalSpec` to produce an `eval` function for a component.
+-- |
+-- | Examples:
+-- |
+-- |   H.mkEval
+-- |     { handleAction: const (pure unit)
+-- |     , handleQuery: const (pure Nothing)
+-- |     , receive: const Nothing
+-- |     , initialize: Nothing
+-- |     , finalize: Nothing
+-- |     }
+-- |
+-- |   H.mkEval H.defaultEval
+-- |
+-- |   H.mkEval (H.defaultEval { handleAction = ?handleAction })
 mkEval
   :: forall state query action slots input output m
    . EvalSpec state query action slots input output m
