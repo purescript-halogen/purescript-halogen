@@ -3,4 +3,5 @@ language = "en"
 multilingual = false
 src = "docs"
 title = "Halogen Guide"
-
+[output.html]
+theme = "docs/theme"
