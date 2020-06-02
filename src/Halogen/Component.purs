@@ -166,7 +166,7 @@ defaultEval =
 -- | Accepts an `EvalSpec` to produce an `eval` function for a component. For
 -- | example:
 -- |
--- | ```purescript`
+-- | ```purescript
 -- | -- use `defaultEval` and override fields selectively
 -- | H.mkEval (H.defaultEval { handleAction = ?handleAction })
 -- |
