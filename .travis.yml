@@ -16,5 +16,3 @@ deploy:
   provider: pages
   local_dir: book
   deploy_key: github_deploy_key
-  on: # Todo - Just for testing - remove this before merge
-    branch: travis-demo # Will default to master branch if on.branch is removed
