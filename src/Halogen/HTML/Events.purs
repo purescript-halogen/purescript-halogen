@@ -58,8 +58,8 @@ import Prelude
 
 import Control.Monad.Except (runExcept)
 import Data.Either (either)
-import Data.Maybe (Maybe(..))
-import Data.Unfoldable (class Unfoldable)
+import Data.Maybe (Maybe(..), maybe)
+import Data.Unfoldable (class Unfoldable, none)
 import Foreign (F, Foreign, readBoolean, readInt, readString, unsafeToForeign)
 import Foreign.Index (readProp)
 import Halogen.HTML.Core (Prop)
@@ -117,16 +117,14 @@ onChange = handler ET.change
 onFileUpload
   :: forall r i t
    . Unfoldable t
-  => (Maybe (t File) -> i)
+  => (t File -> i)
   -> IProp (onChange :: Event | r) i
-onFileUpload f =
-  handler ET.change \ev ->
-    f $ Event.target ev
-      >>= HTMLInputElement.fromEventTarget
-      >>= HTMLInputElement.files
-      >>> unsafePerformEffect
-      >>= items
-      >>> pure
+onFileUpload f = handler ET.change $
+  ( Event.target >=>
+    HTMLInputElement.fromEventTarget >=>
+    HTMLInputElement.files >>> unsafePerformEffect ) >>>
+  maybe none items >>>
+  f
 
 onInput :: forall r i. (Event -> i) -> IProp (onInput :: Event | r) i
 onInput = handler ET.input
