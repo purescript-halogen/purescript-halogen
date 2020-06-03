@@ -142,15 +142,15 @@ mkSpec handler renderChildRef document =
           (ComponentSlot HTML slots Aff action)
           DOM.Node
   hydrateWidget spec elem = render
-      where
-      render :: V.Machine (ComponentSlot HTML slots Aff action) DOM.Node
-      render = EFn.mkEffectFn1 \slot ->
-        case slot of
-          ComponentSlot cs ->
-            EFn.runEffectFn3 renderComponentSlot renderChildRef render cs
-          ThunkSlot t -> do
-            step <- EFn.runEffectFn1 (Thunk.hydrateThunk unwrap spec elem) t
-            pure $ V.mkStep $ V.Step (V.extract step) (Just step) (Fn.runFn2 mkPatch renderChildRef render) widgetDone
+    where
+    render :: V.Machine (ComponentSlot HTML slots Aff action) DOM.Node
+    render = EFn.mkEffectFn1 \slot ->
+      case slot of
+        ComponentSlot cs ->
+          EFn.runEffectFn3 renderComponentSlot renderChildRef render cs
+        ThunkSlot t -> do
+          step <- EFn.runEffectFn1 (Thunk.hydrateThunk unwrap spec elem) t
+          pure $ V.mkStep $ V.Step (V.extract step) (Just step) (Fn.runFn2 mkPatch renderChildRef render) widgetDone
 
   buildWidget
     :: V.VDomSpec
