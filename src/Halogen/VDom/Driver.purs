@@ -53,6 +53,55 @@ type HTMLThunk slots action =
 type WidgetState slots action =
   Maybe (V.Step (HTMLThunk slots action) DOM.Node)
 
+-- | Utils
+
+getNode :: RenderStateX RenderState -> DOM.Node
+getNode = unRenderStateX (\(RenderState { node }) -> node)
+
+patch
+  :: forall slots action
+   . Ref (ChildRenderer action slots)
+  -> V.Machine
+        (ComponentSlot HTML slots Aff action)
+        DOM.Node
+  -> EFn.EffectFn2 (WidgetState slots action)
+        (ComponentSlot HTML slots Aff action)
+        (V.Step (ComponentSlot HTML slots Aff action) DOM.Node)
+patch renderChildRef buildWidget = EFn.mkEffectFn2 \st slot ->
+  case st of
+    Just step -> case slot of
+      ComponentSlot cs -> do
+        EFn.runEffectFn1 V.halt step
+        EFn.runEffectFn3 renderComponentSlot renderChildRef buildWidget cs
+      ThunkSlot t -> do
+        step' <- EFn.runEffectFn2 V.step step t
+        pure $ V.mkStep $ V.Step (V.extract step') (Just step') (patch renderChildRef buildWidget) widgetDone
+    _ -> EFn.runEffectFn1 buildWidget slot
+
+renderComponentSlot
+  :: forall action slots
+   . EFn.EffectFn3
+        (Ref (ChildRenderer action slots))
+        (V.Machine
+          (ComponentSlot HTML slots Aff action)
+          DOM.Node
+        )
+        (ComponentSlotBox HTML slots Aff action)
+        (V.Step (ComponentSlot HTML slots Aff action) DOM.Node)
+renderComponentSlot = EFn.mkEffectFn3 \renderChildRef buildWidget cs -> do
+  renderChild <- Ref.read renderChildRef
+  rsx <- renderChild cs
+  let node = getNode rsx
+  pure $ V.mkStep $ V.Step node Nothing (patch renderChildRef buildWidget) widgetDone
+
+widgetDone :: forall slots action . EFn.EffectFn1 (WidgetState slots action) Unit
+widgetDone = EFn.mkEffectFn1 \st ->
+  case st of
+    Just step -> EFn.runEffectFn1 V.halt step
+    _ -> pure unit
+
+--------------
+
 mkSpec
   :: forall action slots
    . (Input action -> Effect Unit)
@@ -62,13 +111,37 @@ mkSpec
       (Array (VP.Prop (Input action)))
       (ComponentSlot HTML slots Aff action)
 mkSpec handler renderChildRef document =
-  V.VDomSpec { buildWidget, buildAttributes, document }
+  V.VDomSpec { buildWidget, hydrateWidget, buildAttributes, hydrateAttributes, document }
   where
 
   buildAttributes
     :: DOM.Element
     -> V.Machine (Array (VP.Prop (Input action))) Unit
   buildAttributes = VP.buildProp handler
+
+  hydrateAttributes
+    :: DOM.Element
+    -> V.Machine (Array (VP.Prop (Input action))) Unit
+  hydrateAttributes = VP.hydrateProp handler
+
+  hydrateWidget
+    :: V.VDomSpec
+          (Array (VP.Prop (Input action)))
+          (ComponentSlot HTML slots Aff action)
+    -> DOM.Element
+    -> V.Machine
+          (ComponentSlot HTML slots Aff action)
+          DOM.Node
+  hydrateWidget spec elem = render
+      where
+      render :: V.Machine (ComponentSlot HTML slots Aff action) DOM.Node
+      render = EFn.mkEffectFn1 \slot ->
+        case slot of
+          ComponentSlot cs ->
+            EFn.runEffectFn3 renderComponentSlot renderChildRef render cs
+          ThunkSlot t -> do
+            step <- EFn.runEffectFn1 (Thunk.hydrateThunk unwrap spec elem) t
+            pure $ V.mkStep $ V.Step (V.extract step) (Just step) (patch renderChildRef render) widgetDone
 
   buildWidget
     :: V.VDomSpec
@@ -79,52 +152,14 @@ mkSpec handler renderChildRef document =
           DOM.Node
   buildWidget spec = render
     where
-
     render :: V.Machine (ComponentSlot HTML slots Aff action) DOM.Node
     render = EFn.mkEffectFn1 \slot ->
       case slot of
         ComponentSlot cs ->
-          EFn.runEffectFn1 renderComponentSlot cs
+          EFn.runEffectFn3 renderComponentSlot renderChildRef render cs
         ThunkSlot t -> do
-          step <- EFn.runEffectFn1 buildThunk t
-          pure $ V.mkStep $ V.Step (V.extract step) (Just step) patch done
-
-    patch
-      :: EFn.EffectFn2 (WidgetState slots action)
-            (ComponentSlot HTML slots Aff action)
-            (V.Step (ComponentSlot HTML slots Aff action) DOM.Node)
-    patch = EFn.mkEffectFn2 \st slot ->
-      case st of
-        Just step -> case slot of
-          ComponentSlot cs -> do
-            EFn.runEffectFn1 V.halt step
-            EFn.runEffectFn1 renderComponentSlot cs
-          ThunkSlot t -> do
-            step' <- EFn.runEffectFn2 V.step step t
-            pure $ V.mkStep $ V.Step (V.extract step') (Just step') patch done
-        _ -> EFn.runEffectFn1 render slot
-
-    buildThunk :: V.Machine (HTMLThunk slots action) DOM.Node
-    buildThunk = Thunk.buildThunk unwrap spec
-
-    renderComponentSlot
-      :: EFn.EffectFn1
-            (ComponentSlotBox HTML slots Aff action)
-            (V.Step (ComponentSlot HTML slots Aff action) DOM.Node)
-    renderComponentSlot = EFn.mkEffectFn1 \cs -> do
-      renderChild <- Ref.read renderChildRef
-      rsx <- renderChild cs
-      let node = getNode rsx
-      pure $ V.mkStep $ V.Step node Nothing patch done
-
-  done :: EFn.EffectFn1 (WidgetState slots action) Unit
-  done = EFn.mkEffectFn1 \st ->
-    case st of
-      Just step -> EFn.runEffectFn1 V.halt step
-      _ -> pure unit
-
-  getNode :: RenderStateX RenderState -> DOM.Node
-  getNode = unRenderStateX (\(RenderState { node }) -> node)
+          step <- EFn.runEffectFn1 (Thunk.buildThunk unwrap spec) t
+          pure $ V.mkStep $ V.Step (V.extract step) (Just step) (patch renderChildRef render) widgetDone
 
 runUI
   :: forall query input output
