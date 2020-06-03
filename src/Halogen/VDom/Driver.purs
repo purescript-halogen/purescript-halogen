@@ -14,6 +14,7 @@ import Effect.Class (liftEffect)
 import Effect.Ref (Ref)
 import Effect.Ref as Ref
 import Effect.Uncurried as EFn
+import Data.Function.Uncurried as Fn
 import Halogen.Aff.Driver (HalogenIO)
 import Halogen.Aff.Driver as AD
 import Halogen.Aff.Driver.State (RenderStateX, unRenderStateX)
@@ -58,25 +59,33 @@ type WidgetState slots action =
 getNode :: RenderStateX RenderState -> DOM.Node
 getNode = unRenderStateX (\(RenderState { node }) -> node)
 
-patch
+mkPatch
   :: forall slots action
-   . Ref (ChildRenderer action slots)
-  -> V.Machine
-        (ComponentSlot HTML slots Aff action)
-        DOM.Node
-  -> EFn.EffectFn2 (WidgetState slots action)
+   . Fn.Fn2
+       (Ref (ChildRenderer action slots))
+       (V.Machine
+          (ComponentSlot HTML slots Aff action)
+          DOM.Node)
+       (EFn.EffectFn2 (WidgetState slots action)
+          (ComponentSlot HTML slots Aff action)
+          (V.Step (ComponentSlot HTML slots Aff action) DOM.Node))
+mkPatch = Fn.mkFn2 \renderChildRef buildWidget ->
+  let
+    patch
+      :: EFn.EffectFn2 (WidgetState slots action)
         (ComponentSlot HTML slots Aff action)
         (V.Step (ComponentSlot HTML slots Aff action) DOM.Node)
-patch renderChildRef buildWidget = EFn.mkEffectFn2 \st slot ->
-  case st of
-    Just step -> case slot of
-      ComponentSlot cs -> do
-        EFn.runEffectFn1 V.halt step
-        EFn.runEffectFn3 renderComponentSlot renderChildRef buildWidget cs
-      ThunkSlot t -> do
-        step' <- EFn.runEffectFn2 V.step step t
-        pure $ V.mkStep $ V.Step (V.extract step') (Just step') (patch renderChildRef buildWidget) widgetDone
-    _ -> EFn.runEffectFn1 buildWidget slot
+    patch = EFn.mkEffectFn2 \st slot ->
+      case st of
+        Just step -> case slot of
+          ComponentSlot cs -> do
+            EFn.runEffectFn1 V.halt step
+            EFn.runEffectFn3 renderComponentSlot renderChildRef buildWidget cs
+          ThunkSlot t -> do
+            step' <- EFn.runEffectFn2 V.step step t
+            pure $ V.mkStep $ V.Step (V.extract step') (Just step') patch widgetDone
+        _ -> EFn.runEffectFn1 buildWidget slot
+    in patch
 
 renderComponentSlot
   :: forall action slots
@@ -92,7 +101,7 @@ renderComponentSlot = EFn.mkEffectFn3 \renderChildRef buildWidget cs -> do
   renderChild <- Ref.read renderChildRef
   rsx <- renderChild cs
   let node = getNode rsx
-  pure $ V.mkStep $ V.Step node Nothing (patch renderChildRef buildWidget) widgetDone
+  pure $ V.mkStep $ V.Step node Nothing (Fn.runFn2 mkPatch renderChildRef buildWidget) widgetDone
 
 widgetDone :: forall slots action . EFn.EffectFn1 (WidgetState slots action) Unit
 widgetDone = EFn.mkEffectFn1 \st ->
@@ -141,7 +150,7 @@ mkSpec handler renderChildRef document =
             EFn.runEffectFn3 renderComponentSlot renderChildRef render cs
           ThunkSlot t -> do
             step <- EFn.runEffectFn1 (Thunk.hydrateThunk unwrap spec elem) t
-            pure $ V.mkStep $ V.Step (V.extract step) (Just step) (patch renderChildRef render) widgetDone
+            pure $ V.mkStep $ V.Step (V.extract step) (Just step) (Fn.runFn2 mkPatch renderChildRef render) widgetDone
 
   buildWidget
     :: V.VDomSpec
@@ -159,7 +168,7 @@ mkSpec handler renderChildRef document =
           EFn.runEffectFn3 renderComponentSlot renderChildRef render cs
         ThunkSlot t -> do
           step <- EFn.runEffectFn1 (Thunk.buildThunk unwrap spec) t
-          pure $ V.mkStep $ V.Step (V.extract step) (Just step) (patch renderChildRef render) widgetDone
+          pure $ V.mkStep $ V.Step (V.extract step) (Just step) (Fn.runFn2 mkPatch renderChildRef render) widgetDone
 
 runUI
   :: forall query input output
