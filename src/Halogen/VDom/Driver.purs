@@ -1,11 +1,13 @@
 module Halogen.VDom.Driver
   ( runUI
+  , hydrateUI
   , module Halogen.Aff.Driver
   ) where
 
 import Prelude
 
 import Data.Foldable (traverse_)
+import Data.Function.Uncurried as Fn
 import Data.Maybe (Maybe(..))
 import Data.Newtype (unwrap)
 import Effect (Effect)
@@ -14,7 +16,6 @@ import Effect.Class (liftEffect)
 import Effect.Ref (Ref)
 import Effect.Ref as Ref
 import Effect.Uncurried as EFn
-import Data.Function.Uncurried as Fn
 import Halogen.Aff.Driver (HalogenIO)
 import Halogen.Aff.Driver as AD
 import Halogen.Aff.Driver.State (RenderStateX, unRenderStateX)
@@ -98,8 +99,8 @@ renderComponentSlot
         (ComponentSlotBox HTML slots Aff action)
         (V.Step (ComponentSlot HTML slots Aff action) DOM.Node)
 renderComponentSlot = EFn.mkEffectFn3 \renderChildRef buildWidget cs -> do
-  renderChild <- Ref.read renderChildRef
-  rsx <- renderChild cs
+  (renderChild :: ChildRenderer action slots) <- Ref.read renderChildRef
+  (rsx :: RenderStateX RenderState) <- renderChild cs
   let node = getNode rsx
   pure $ V.mkStep $ V.Step node Nothing (Fn.runFn2 mkPatch renderChildRef buildWidget) widgetDone
 
@@ -170,15 +171,56 @@ mkSpec handler renderChildRef document =
           step <- EFn.runEffectFn1 (Thunk.buildThunk unwrap spec) t
           pure $ V.mkStep $ V.Step (V.extract step) (Just step) (Fn.runFn2 mkPatch renderChildRef render) widgetDone
 
+findDocument :: Aff DOM.Document
+findDocument = liftEffect $ HTMLDocument.toDocument <$> (DOM.document =<< DOM.window)
+
 runUI
   :: forall query input output
    . Component HTML query input output Aff
   -> input
   -> DOM.HTMLElement
   -> Aff (HalogenIO query output Aff)
-runUI component i element = do
-  document <- liftEffect $ HTMLDocument.toDocument <$> (DOM.document =<< DOM.window)
-  AD.runUI (renderSpec document element) component i
+runUI component i container = do
+  document <- findDocument
+  AD.runUI (renderSpec document container) component i
+
+hydrateUI
+  :: forall query input output
+   . Component HTML query input output Aff
+  -> input
+  -> DOM.HTMLElement
+  -> Aff (HalogenIO query output Aff)
+hydrateUI component i rootElement = do
+  document <- findDocument
+  AD.runUI (renderSpecHydrate document rootElement) component i
+
+renderSpecHydrate
+  :: DOM.Document
+  -> DOM.HTMLElement
+  -> AD.RenderSpec HTML RenderState
+renderSpecHydrate document element =
+    { render
+    , renderChild: identity
+    , removeChild
+    , dispose: removeChild
+    }
+  where
+
+  render
+    :: forall state action slots output
+     . (Input action -> Effect Unit)
+    -> (ComponentSlotBox HTML slots Aff action -> Effect (RenderStateX RenderState))
+    -> HTML (ComponentSlot HTML slots Aff action) action
+    -> Maybe (RenderState state action slots output)
+    -> Effect (RenderState state action slots output)
+  render handler child (HTML vdom) =
+    case _ of
+      Nothing -> do
+        renderChildRef <- Ref.new child
+        let spec = mkSpec handler renderChildRef document
+        machine <- EFn.runEffectFn1 (V.hydrateVDom spec (HTMLElement.toElement element)) vdom
+        pure $ RenderState { machine, node: HTMLElement.toNode element, renderChildRef }
+      Just renderState -> processNextRenderStateChange child (HTML vdom) renderState
 
 renderSpec
   :: DOM.Document
@@ -208,15 +250,23 @@ renderSpec document container =
         let node = V.extract machine
         void $ DOM.appendChild node (HTMLElement.toNode container)
         pure $ RenderState { machine, node, renderChildRef }
-      Just (RenderState { machine, node, renderChildRef }) -> do
-        Ref.write child renderChildRef
-        parent <- DOM.parentNode node
-        nextSib <- DOM.nextSibling node
-        machine' <- EFn.runEffectFn2 V.step machine vdom
-        let newNode = V.extract machine'
-        when (not unsafeRefEq node newNode) do
-          substInParent newNode nextSib parent
-        pure $ RenderState { machine: machine', node: newNode, renderChildRef }
+      Just renderState -> processNextRenderStateChange child (HTML vdom) renderState
+
+processNextRenderStateChange
+  :: forall state action slots output
+   . (ComponentSlotBox HTML slots Aff action -> Effect (RenderStateX RenderState))
+  -> HTML (ComponentSlot HTML slots Aff action) action
+  -> RenderState state action slots output
+  -> Effect (RenderState state action slots output)
+processNextRenderStateChange child (HTML vdom) (RenderState { machine, node, renderChildRef }) = do
+  Ref.write child renderChildRef
+  machine' <- EFn.runEffectFn2 V.step machine vdom
+  let newNode = V.extract machine'
+  when (not unsafeRefEq node newNode) do
+    parent <- DOM.parentNode node
+    nextSib <- DOM.nextSibling node
+    substInParent newNode nextSib parent
+  pure $ RenderState { machine: machine', node: newNode, renderChildRef }
 
 removeChild :: forall state action slots output. RenderState state action slots output -> Effect Unit
 removeChild (RenderState { node }) = do
