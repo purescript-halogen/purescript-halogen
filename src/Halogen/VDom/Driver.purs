@@ -4,6 +4,7 @@ module Halogen.VDom.Driver
   , module Halogen.Aff.Driver
   ) where
 
+import Debug.Trace
 import Prelude
 
 import Data.Foldable (traverse_)
@@ -13,6 +14,7 @@ import Data.Newtype (unwrap)
 import Effect (Effect)
 import Effect.Aff (Aff)
 import Effect.Class (liftEffect)
+import Effect.Exception (throw)
 import Effect.Ref (Ref)
 import Effect.Ref as Ref
 import Effect.Uncurried as EFn
@@ -41,6 +43,9 @@ type VHTML action slots =
 
 type ChildRenderer action slots
   = ComponentSlotBox HTML slots Aff action -> Effect (RenderStateX RenderState)
+
+type ChildRendererHydrate action slots
+  = ComponentSlotBox HTML slots Aff action -> DOM.Element -> Effect (RenderStateX RenderState)
 
 newtype RenderState state action slots output =
   RenderState
@@ -98,9 +103,31 @@ renderComponentSlot
         )
         (ComponentSlotBox HTML slots Aff action)
         (V.Step (ComponentSlot HTML slots Aff action) DOM.Node)
-renderComponentSlot = EFn.mkEffectFn3 \renderChildRef buildWidget cs -> do
+renderComponentSlot = EFn.mkEffectFn3 \renderChildRef buildWidget componentSlotBox -> do
   (renderChild :: ChildRenderer action slots) <- Ref.read renderChildRef
-  (rsx :: RenderStateX RenderState) <- renderChild cs
+  traceM { message: "renderComponentSlot 1", renderChildRef, componentSlotBox }
+  (rsx :: RenderStateX RenderState) <- renderChild componentSlotBox
+  let node = getNode rsx
+  traceM { message: "renderComponentSlot 2", rsx, node }
+  pure $ V.mkStep $ V.Step node Nothing (Fn.runFn2 mkPatch renderChildRef buildWidget) widgetDone
+
+renderComponentSlotHydrate
+  :: forall action slots
+   . EFn.EffectFn5
+        DOM.Element
+        (Ref (ChildRenderer action slots))
+        (Ref (ChildRendererHydrate action slots))
+        (V.Machine
+          (ComponentSlot HTML slots Aff action)
+          DOM.Node
+        )
+        (ComponentSlotBox HTML slots Aff action)
+        (V.Step (ComponentSlot HTML slots Aff action) DOM.Node)
+renderComponentSlotHydrate = EFn.mkEffectFn5 \element renderChildRef renderChildHydrateRef buildWidget componentSlotBox -> do
+  (renderChildHydrate :: ChildRendererHydrate action slots) <- Ref.read renderChildHydrateRef
+  traceM { message: "renderComponentSlotHydrate 1", componentSlotBox }
+  (rsx :: RenderStateX RenderState) <- renderChildHydrate componentSlotBox element
+  traceM { message: "renderComponentSlotHydrate 2", rsx }
   let node = getNode rsx
   pure $ V.mkStep $ V.Step node Nothing (Fn.runFn2 mkPatch renderChildRef buildWidget) widgetDone
 
@@ -116,11 +143,12 @@ mkSpec
   :: forall action slots
    . (Input action -> Effect Unit)
   -> Ref (ChildRenderer action slots)
+  -> Ref (ChildRendererHydrate action slots)
   -> DOM.Document
   -> V.VDomSpec
       (Array (VP.Prop (Input action)))
       (ComponentSlot HTML slots Aff action)
-mkSpec handler renderChildRef document =
+mkSpec handler renderChildRef renderChildHydrateRef document =
   V.VDomSpec { buildWidget, hydrateWidget, buildAttributes, hydrateAttributes, document }
   where
 
@@ -142,13 +170,13 @@ mkSpec handler renderChildRef document =
     -> V.Machine
           (ComponentSlot HTML slots Aff action)
           DOM.Node
-  hydrateWidget spec elem = render
+  hydrateWidget spec elem = (trace { message: "hydrateWidget called", spec, elem } (const render))
     where
     render :: V.Machine (ComponentSlot HTML slots Aff action) DOM.Node
     render = EFn.mkEffectFn1 \slot ->
-      case slot of
+      case (trace { message: "hydrateWidget render called", slot } (const slot)) of
         ComponentSlot cs ->
-          EFn.runEffectFn3 renderComponentSlot renderChildRef render cs
+          EFn.runEffectFn5 renderComponentSlotHydrate elem renderChildRef renderChildHydrateRef render cs
         ThunkSlot t -> do
           step <- EFn.runEffectFn1 (Thunk.hydrateThunk unwrap spec elem) t
           pure $ V.mkStep $ V.Step (V.extract step) (Just step) (Fn.runFn2 mkPatch renderChildRef render) widgetDone
@@ -192,42 +220,15 @@ hydrateUI
   -> Aff (HalogenIO query output Aff)
 hydrateUI component i rootElement = do
   document <- findDocument
-  AD.runUI (renderSpecHydrate document rootElement) component i
-
-renderSpecHydrate
-  :: DOM.Document
-  -> DOM.HTMLElement
-  -> AD.RenderSpec HTML RenderState
-renderSpecHydrate document element =
-    { render
-    , renderChild: identity
-    , removeChild
-    , dispose: removeChild
-    }
-  where
-
-  render
-    :: forall state action slots output
-     . (Input action -> Effect Unit)
-    -> (ComponentSlotBox HTML slots Aff action -> Effect (RenderStateX RenderState))
-    -> HTML (ComponentSlot HTML slots Aff action) action
-    -> Maybe (RenderState state action slots output)
-    -> Effect (RenderState state action slots output)
-  render handler child (HTML vdom) =
-    case _ of
-      Nothing -> do
-        renderChildRef <- Ref.new child
-        let spec = mkSpec handler renderChildRef document
-        machine <- EFn.runEffectFn1 (V.hydrateVDom spec (HTMLElement.toElement element)) vdom
-        pure $ RenderState { machine, node: HTMLElement.toNode element, renderChildRef }
-      Just renderState -> processNextRenderStateChange child (HTML vdom) renderState
+  AD.hydrateUI (renderSpec document rootElement) component i
 
 renderSpec
   :: DOM.Document
   -> DOM.HTMLElement
   -> AD.RenderSpec HTML RenderState
-renderSpec document container =
+renderSpec document elementForHydrationOrContainerForRender =
     { render
+    , hydrate
     , renderChild: identity
     , removeChild
     , dispose: removeChild
@@ -241,16 +242,42 @@ renderSpec document container =
     -> HTML (ComponentSlot HTML slots Aff action) action
     -> Maybe (RenderState state action slots output)
     -> Effect (RenderState state action slots output)
-  render handler child (HTML vdom) =
+  render handler renderChild (HTML vdom) =
+    let container = elementForHydrationOrContainerForRender in
     case _ of
       Nothing -> do
-        renderChildRef <- Ref.new child
-        let spec = mkSpec handler renderChildRef document
+        traceM { message: "renderSpec render", handler, renderChild, vdom, container }
+        renderChildRef <- Ref.new renderChild
+        renderChildHydrateRef <- Ref.new (\_componentSlotBox _element -> throw "not implemented")
+        let spec = mkSpec handler renderChildRef renderChildHydrateRef document
         machine <- EFn.runEffectFn1 (V.buildVDom spec) vdom
         let node = V.extract machine
+        traceM { message: "renderSpec render -> appendChild", node, container }
         void $ DOM.appendChild node (HTMLElement.toNode container)
         pure $ RenderState { machine, node, renderChildRef }
-      Just renderState -> processNextRenderStateChange child (HTML vdom) renderState
+      Just renderState -> processNextRenderStateChange renderChild (HTML vdom) renderState
+
+  hydrate
+    :: forall state action slots output
+     . (Input action -> Effect Unit)
+    -> (ChildRenderer action slots)
+    -> (ChildRendererHydrate action slots)
+    -> HTML (ComponentSlot HTML slots Aff action) action
+    -> Maybe (RenderState state action slots output)
+    -> Effect (RenderState state action slots output)
+  hydrate handler renderChild renderChildHydrate (HTML vdom) =
+    let element = elementForHydrationOrContainerForRender in
+    case _ of
+      Nothing -> do
+        traceM { message: "renderSpecHydrate render", handler, renderChild, vdom }
+        renderChildRef <- Ref.new renderChild
+        renderChildHydrateRef <- Ref.new renderChildHydrate
+        let spec = mkSpec handler renderChildRef renderChildHydrateRef document
+        machine <- EFn.runEffectFn1 (V.hydrateVDom spec (HTMLElement.toElement element)) vdom
+        let node = HTMLElement.toNode element
+        traceM { message: "renderSpecHydrate render -> no-appendChild", node, element }
+        pure $ RenderState { machine, node, renderChildRef }
+      Just renderState -> processNextRenderStateChange renderChild (HTML vdom) renderState
 
 processNextRenderStateChange
   :: forall state action slots output
@@ -259,6 +286,7 @@ processNextRenderStateChange
   -> RenderState state action slots output
   -> Effect (RenderState state action slots output)
 processNextRenderStateChange child (HTML vdom) (RenderState { machine, node, renderChildRef }) = do
+  traceM { message: "processNextRenderStateChange!!!!!", node, vdom }
   Ref.write child renderChildRef
   machine' <- EFn.runEffectFn2 V.step machine vdom
   let newNode = V.extract machine'
