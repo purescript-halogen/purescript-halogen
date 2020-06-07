@@ -188,7 +188,7 @@ The `IProp` type is used for events and properties. It uses a row type to unique
 
 This is possible because Halogen HTML elements also carry a row type which lists all the properties and events that it can support. When you apply a property or event to the element, Halogen looks up in the HTML element's row type whether or not it supports the property or event.
 
-This helps ensure your HTML is well-formed. For example, `<div>` elements do not support the `placeholder` property according to thge DOM spec. Accordingly, if you try to give a `div` a `placeholder` property in Halogen you'll get a compile-time error:
+This helps ensure your HTML is well-formed. For example, `<div>` elements do not support the `placeholder` property according to the DOM spec. Accordingly, if you try to give a `div` a `placeholder` property in Halogen you'll get a compile-time error:
 
 ```purs
 -- ERROR: Could not match type ( placeholder :: String | r )
