@@ -24,6 +24,6 @@ component =
 
 render :: forall m. State -> H.ComponentHTML Action ChildSlots m
 render state =
-  HH.div_
-    [ HH.text "f"
+  HH.ul_
+    [ HH.li_ [ HH.text "f" ]
     ]

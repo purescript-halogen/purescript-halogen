@@ -37,9 +37,9 @@ component =
 
 render :: forall m. State -> H.ComponentHTML Action ChildSlots m
 render state =
-  HH.div_
-    [ HH.text "a"
-    , HH.slot _b unit B.component unit absurd
-    , HH.slot _c unit C.component unit absurd
-    , HH.text "a end"
+  HH.ul_
+    [ HH.li_ [ HH.text "a" ]
+    , HH.li_ [ HH.slot _b unit B.component unit absurd ]
+    , HH.li_ [ HH.slot _c unit C.component unit absurd ]
+    , HH.li_ [ HH.text "a end" ]
     ]
