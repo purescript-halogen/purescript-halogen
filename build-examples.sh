@@ -13,3 +13,4 @@ npm run -s example-higher-order-components
 npm run -s example-interpret
 npm run -s example-keyboard-input
 npm run -s example-lifecycle
+npm run -s example-nested
