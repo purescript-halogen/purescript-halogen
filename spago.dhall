@@ -24,6 +24,7 @@
     , "unsafe-reference"
     , "web-file"
     , "web-uievents"
+    , "debug"
     ]
 , packages = ./packages.dhall
 , sources = [ "src/**/*.purs" ]

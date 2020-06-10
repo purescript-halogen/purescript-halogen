@@ -22,31 +22,6 @@ let additions =
       , version =
           "v7.0.0"
       }
-  , halogen-vdom =
-      { dependencies =
-          [ "bifunctors"
-          , "console"
-          , "effect"
-          , "exists"
-          , "foreign"
-          , "foreign-object"
-          , "js-timers"
-          , "maybe"
-          , "prelude"
-          , "psci-support"
-          , "refs"
-          , "tuples"
-          , "unsafe-coerce"
-          , "web-html"
-          , "web-dom"
-          , "debug"
-          , "strings"
-          ]
-      , repo =
-          "https://github.com/srghma/purescript-halogen-vdom.git"
-      , version =
-          "master"
-      }
   }
 
 in  upstream // overrides // additions
