@@ -19,7 +19,7 @@ runUI
   -> i
   -> Aff (H.HalogenIO f o Aff)
 runUI = AD.runUI
-  { render: \_ _ _ _ -> pure (TestRenderState unit)
+  { render: \_ _ _ _ _ -> pure (TestRenderState unit)
   , renderChild: identity
   , removeChild: const (pure unit)
   , dispose: const (pure unit)
