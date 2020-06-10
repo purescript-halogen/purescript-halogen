@@ -166,6 +166,70 @@ runComponent renderSpec lchs handler j = unComponent \c -> do
   squashChildInitializers renderSpec lchs pre.initializers =<< Ref.read var
   pure var
 
+runComponentHydrate
+  :: forall f' i' o' h r
+   . RenderSpec h r
+  -> DOM.Element
+  -> Ref LifecycleHandlers
+  -> (o' -> Aff Unit)
+  -> i'
+  -> Component h f' i' o' Aff
+  -> Effect (Ref (DriverStateX h r f' o'))
+runComponentHydrate renderSpec rootElement lchs handler j = unComponent \c -> do
+  lchs' <- newLifecycleHandlers
+  var <- initDriverState c j handler lchs'
+  pre <- Ref.read lchs
+  Ref.write { initializers: L.Nil, finalizers: pre.finalizers } lchs
+  unDriverStateX (renderHydrate renderSpec rootElement lchs <<< _.selfRef) =<< Ref.read var
+  squashChildInitializers renderSpec lchs pre.initializers =<< Ref.read var
+  pure var
+
+renderHydrate
+  :: forall s f' act ps i' o' h r
+   . RenderSpec h r
+  -> DOM.Element
+  -> Ref LifecycleHandlers
+  -> Ref (DriverState h r s f' act ps i' o')
+  -> Effect Unit
+renderHydrate renderSpec rootElement lchs var = Ref.read var >>= \(DriverState ds) -> do
+  shouldProcessHandlers <- isNothing <$> Ref.read ds.pendingHandlers
+  when shouldProcessHandlers $ Ref.write (Just L.Nil) ds.pendingHandlers
+  Ref.write Slot.empty ds.childrenOut
+  Ref.write ds.children ds.childrenIn
+  let
+    -- The following 3 defs are working around a capture bug, see #586
+    pendingHandlers = identity ds.pendingHandlers
+    pendingQueries = identity ds.pendingQueries
+    selfRef = identity ds.selfRef
+    handler :: Input act -> Aff Unit
+    handler = Eval.queueOrRun pendingHandlers <<< void <<< Eval.evalF (render renderSpec) selfRef
+    childHandler :: act -> Aff Unit
+    childHandler = Eval.queueOrRun pendingQueries <<< handler <<< Input.Action
+  rendering <-
+    renderSpec.hydrate
+      (handleAff <<< handler)
+      (renderChild renderSpec lchs childHandler ds.childrenIn ds.childrenOut)
+      (renderChildHydrate renderSpec lchs childHandler ds.childrenIn ds.childrenOut)
+      (ds.component.render ds.state) -- !!!!!
+      ds.rendering
+  children <- Ref.read ds.childrenOut
+  childrenIn <- Ref.read ds.childrenIn
+  Slot.foreachSlot childrenIn \(DriverStateRef childVar) -> do
+    childDS <- Ref.read childVar
+    renderStateX_ renderSpec.removeChild childDS
+    finalize renderSpec lchs childDS
+  flip Ref.modify_ ds.selfRef $ mapDriverState \ds' ->
+    ds' { rendering = Just rendering, children = children }
+  when shouldProcessHandlers do
+    flip tailRecM unit \_ -> do
+      handlers <- Ref.read pendingHandlers
+      Ref.write (Just L.Nil) pendingHandlers
+      traverse_ (handleAff <<< traverse_ fork <<< L.reverse) handlers
+      mmore <- Ref.read pendingHandlers
+      if maybe false L.null mmore
+        then Ref.write Nothing pendingHandlers $> Done unit
+        else pure $ Loop unit
+
 render
   :: forall s f' act ps i' o' h r
    . RenderSpec h r

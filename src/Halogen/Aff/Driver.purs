@@ -44,15 +44,16 @@ hydrateUI
   :: forall h r f i o
    . RenderSpec h r
   -> Component h f i o Aff
+  -> DOM.Element
   -> i
   -> Aff (HalogenIO f o Aff)
-hydrateUI renderSpec component i = do
+hydrateUI renderSpec rootElement component i = do
   lchs <- liftEffect Implementation.newLifecycleHandlers
   fresh <- liftEffect $ Ref.new 0
   disposed <- liftEffect $ Ref.new false
   Eval.handleLifecycle lchs do
     listeners <- Ref.new M.empty
-    dsx <- Ref.read =<< Implementation.runComponent renderSpec lchs (Implementation.rootHandler listeners) i component
+    dsx <- Ref.read =<< Implementation.runComponentHydrate renderSpec rootElement lchs (Implementation.rootHandler listeners) i component
     unDriverStateX (\st ->
       pure
         { query: Implementation.evalDriver renderSpec disposed st.selfRef

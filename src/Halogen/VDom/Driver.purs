@@ -91,7 +91,7 @@ mkPatch = Fn.mkFn2 \renderChildRef buildWidget ->
             step' <- EFn.runEffectFn2 V.step step t
             pure $ V.mkStep $ V.Step (V.extract step') (Just step') patch widgetDone
         _ -> EFn.runEffectFn1 buildWidget slot
-    in patch
+  in patch
 
 renderComponentSlot
   :: forall action slots
@@ -116,19 +116,18 @@ renderComponentSlotHydrate
    . EFn.EffectFn5
         DOM.Element
         (Ref (ChildRenderer action slots))
-        (Ref (ChildRendererHydrate action slots))
+        (ChildRendererHydrate action slots)
         (V.Machine
           (ComponentSlot HTML slots Aff action)
           DOM.Node
         )
         (ComponentSlotBox HTML slots Aff action)
         (V.Step (ComponentSlot HTML slots Aff action) DOM.Node)
-renderComponentSlotHydrate = EFn.mkEffectFn5 \element renderChildRef renderChildHydrateRef buildWidget componentSlotBox -> do
-  (renderChildHydrate :: ChildRendererHydrate action slots) <- Ref.read renderChildHydrateRef
+renderComponentSlotHydrate = EFn.mkEffectFn5 \element renderChildRef renderChildHydrate buildWidget componentSlotBox -> do
   traceM { message: "renderComponentSlotHydrate 1", componentSlotBox }
-  (rsx :: RenderStateX RenderState) <- renderChildHydrate componentSlotBox element
+  (rsx :: RenderStateX RenderState) <- renderChildHydrate componentSlotBox element -- use hydration only initially here, but on next steps (patch - ordinary render)
   traceM { message: "renderComponentSlotHydrate 2", rsx }
-  let node = getNode rsx
+  let node = element
   pure $ V.mkStep $ V.Step node Nothing (Fn.runFn2 mkPatch renderChildRef buildWidget) widgetDone
 
 widgetDone :: forall slots action . EFn.EffectFn1 (WidgetState slots action) Unit
@@ -143,12 +142,12 @@ mkSpec
   :: forall action slots
    . (Input action -> Effect Unit)
   -> Ref (ChildRenderer action slots)
-  -> Ref (ChildRendererHydrate action slots)
+  -> ChildRendererHydrate action slots
   -> DOM.Document
   -> V.VDomSpec
       (Array (VP.Prop (Input action)))
       (ComponentSlot HTML slots Aff action)
-mkSpec handler renderChildRef renderChildHydrateRef document =
+mkSpec handler renderChildRef renderChildHydrate document =
   V.VDomSpec { buildWidget, hydrateWidget, buildAttributes, hydrateAttributes, document }
   where
 
@@ -176,10 +175,10 @@ mkSpec handler renderChildRef renderChildHydrateRef document =
     render = EFn.mkEffectFn1 \slot ->
       case (trace { message: "hydrateWidget render called", slot } (const slot)) of
         ComponentSlot cs ->
-          EFn.runEffectFn5 renderComponentSlotHydrate elem renderChildRef renderChildHydrateRef render cs
+          EFn.runEffectFn5 renderComponentSlotHydrate elem renderChildRef renderChildHydrate render cs
         ThunkSlot t -> do
           step <- EFn.runEffectFn1 (Thunk.hydrateThunk unwrap spec elem) t
-          pure $ V.mkStep $ V.Step (V.extract step) (Just step) (Fn.runFn2 mkPatch renderChildRef render) widgetDone
+          pure $ V.mkStep $ V.Step elem (Just step) (Fn.runFn2 mkPatch renderChildRef render) widgetDone
 
   buildWidget
     :: V.VDomSpec
@@ -248,8 +247,8 @@ renderSpec document elementForHydrationOrContainerForRender =
       Nothing -> do
         traceM { message: "renderSpec render", handler, renderChild, vdom, container }
         renderChildRef <- Ref.new renderChild
-        renderChildHydrateRef <- Ref.new (\_componentSlotBox _element -> throw "not implemented")
-        let spec = mkSpec handler renderChildRef renderChildHydrateRef document
+        let renderChildHydrate = \_componentSlotBox _element -> throw "should not be called" -- TODO!!!!!
+        let spec = mkSpec handler renderChildRef renderChildHydrate document
         machine <- EFn.runEffectFn1 (V.buildVDom spec) vdom
         let node = V.extract machine
         traceM { message: "renderSpec render -> appendChild", node, container }
@@ -263,21 +262,16 @@ renderSpec document elementForHydrationOrContainerForRender =
     -> (ChildRenderer action slots)
     -> (ChildRendererHydrate action slots)
     -> HTML (ComponentSlot HTML slots Aff action) action
-    -> Maybe (RenderState state action slots output)
     -> Effect (RenderState state action slots output)
-  hydrate handler renderChild renderChildHydrate (HTML vdom) =
-    let element = elementForHydrationOrContainerForRender in
-    case _ of
-      Nothing -> do
-        traceM { message: "renderSpecHydrate render", handler, renderChild, vdom }
-        renderChildRef <- Ref.new renderChild
-        renderChildHydrateRef <- Ref.new renderChildHydrate
-        let spec = mkSpec handler renderChildRef renderChildHydrateRef document
-        machine <- EFn.runEffectFn1 (V.hydrateVDom spec (HTMLElement.toElement element)) vdom
-        let node = HTMLElement.toNode element
-        traceM { message: "renderSpecHydrate render -> no-appendChild", node, element }
-        pure $ RenderState { machine, node, renderChildRef }
-      Just renderState -> processNextRenderStateChange renderChild (HTML vdom) renderState
+  hydrate handler renderChild renderChildHydrate (HTML vdom) = do
+    let element = elementForHydrationOrContainerForRender
+    traceM { message: "renderSpecHydrate render", handler, renderChild, vdom }
+    renderChildRef <- Ref.new renderChild
+    let spec = mkSpec handler renderChildRef renderChildHydrate document
+    machine <- EFn.runEffectFn1 (V.hydrateVDom spec (HTMLElement.toElement element)) vdom
+    let node = HTMLElement.toNode element
+    traceM { message: "renderSpecHydrate render -> no-appendChild", node, element }
+    pure $ RenderState { machine, node, renderChildRef }
 
 processNextRenderStateChange
   :: forall state action slots output
@@ -287,12 +281,12 @@ processNextRenderStateChange
   -> Effect (RenderState state action slots output)
 processNextRenderStateChange child (HTML vdom) (RenderState { machine, node, renderChildRef }) = do
   traceM { message: "processNextRenderStateChange!!!!!", node, vdom }
+  parent <- DOM.parentNode node
+  nextSib <- DOM.nextSibling node
   Ref.write child renderChildRef
   machine' <- EFn.runEffectFn2 V.step machine vdom
   let newNode = V.extract machine'
   when (not unsafeRefEq node newNode) do
-    parent <- DOM.parentNode node
-    nextSib <- DOM.nextSibling node
     substInParent newNode nextSib parent
   pure $ RenderState { machine: machine', node: newNode, renderChildRef }
 
