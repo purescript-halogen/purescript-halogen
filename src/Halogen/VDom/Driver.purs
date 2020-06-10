@@ -153,16 +153,18 @@ renderSpec document container =
      . (Input action -> Effect Unit)
     -> (ComponentSlotBox HTML slots Aff action -> Effect (RenderStateX RenderState))
     -> HTML (ComponentSlot HTML slots Aff action) action
+    -> Boolean
     -> Maybe (RenderState state action slots output)
     -> Effect (RenderState state action slots output)
-  render handler child (HTML vdom) =
+  render handler child (HTML vdom) isRoot =
     case _ of
       Nothing -> do
         renderChildRef <- Ref.new child
         let spec = mkSpec handler renderChildRef document
         machine <- EFn.runEffectFn1 (V.buildVDom spec) vdom
         let node = V.extract machine
-        void $ DOM.appendChild node (HTMLElement.toNode container)
+        when isRoot do
+          void $ DOM.appendChild node (HTMLElement.toNode container)
         pure $ RenderState { machine, node, renderChildRef }
       Just (RenderState { machine, node, renderChildRef }) -> do
         Ref.write child renderChildRef
