@@ -6,6 +6,7 @@ module Halogen.Aff.Util
   , awaitElementFirstChild
   , selectElement
   , findElementFirstChild
+  , findElementFirstChildOrThrow
   , runHalogenAff
   ) where
 
@@ -74,6 +75,9 @@ findElementFirstChild :: HTMLElement -> Aff (Either String HTMLElement)
 findElementFirstChild container = do
   element <- liftEffect $ Halogen.VDom.Finders.findElementFirstChild (HTMLElement.toElement container)
   pure $ element >>= (HTMLElement.fromElement >>> note "Could not convert root element to HTMLElement type")
+
+findElementFirstChildOrThrow :: HTMLElement -> Aff HTMLElement
+findElementFirstChildOrThrow container = findElementFirstChild container >>= either (throwError <<< error) pure
 
 -- | Runs an `Aff` value of the type commonly used by Halogen components. Any
 -- | unhandled errors will be re-thrown as exceptions.
