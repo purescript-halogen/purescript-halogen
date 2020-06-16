@@ -19,21 +19,22 @@ import Halogen.Aff.Driver.HydrationImplementation as HydrationImplementation
 import Halogen.Aff.Driver.State (unDriverStateX)
 import Halogen.Component (Component)
 import Web.DOM.Element (Element) as DOM
+import Web.DOM.Node (Node) as DOM
 
 hydrateUI
   :: forall h r f i o
    . RenderSpec h r
   -> Component h f i o Aff
   -> i
-  -> DOM.Element
+  -> DOM.Node
   -> Aff (HalogenIO f o Aff)
-hydrateUI renderSpec component i rootElement = do
+hydrateUI renderSpec component i rootNode = do
   lchs <- liftEffect RenderImplementation.newLifecycleHandlers
   fresh <- liftEffect $ Ref.new 0
   disposed <- liftEffect $ Ref.new false
   Eval.handleLifecycle lchs do
     listeners <- Ref.new M.empty
-    dsx <- Ref.read =<< HydrationImplementation.runComponentHydrate renderSpec true rootElement lchs (RenderImplementation.rootHandler listeners) i component
+    dsx <- Ref.read =<< HydrationImplementation.runComponentHydrate renderSpec true rootNode lchs (RenderImplementation.rootHandler listeners) i component
     unDriverStateX (\st ->
       pure
         { query: RenderImplementation.evalDriver renderSpec disposed st.selfRef

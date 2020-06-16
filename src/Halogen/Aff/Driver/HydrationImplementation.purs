@@ -22,6 +22,7 @@ import Halogen.Data.Slot as Slot
 import Halogen.Query.Input (Input)
 import Halogen.Query.Input as Input
 import Web.DOM.Element (Element) as DOM
+import Web.DOM.Node (Node) as DOM
 import Halogen.Aff.Driver.RenderImplementation as RenderImplementation
 import Halogen.Aff.Driver.RenderImplementation (RenderSpec)
 
@@ -29,18 +30,18 @@ runComponentHydrate
   :: forall f' i' o' h r
    . RenderSpec h r
   -> Boolean
-  -> DOM.Element
+  -> DOM.Node
   -> Ref LifecycleHandlers
   -> (o' -> Aff Unit)
   -> i'
   -> Component h f' i' o' Aff
   -> Effect (Ref (DriverStateX h r f' o'))
-runComponentHydrate renderSpec isRoot currentElement lchs handler j = unComponent \c -> do
+runComponentHydrate renderSpec isRoot currentNode lchs handler j = unComponent \c -> do
   lchs' <- RenderImplementation.newLifecycleHandlers
   var <- initDriverState c j handler lchs'
   pre <- Ref.read lchs
   Ref.write { initializers: L.Nil, finalizers: pre.finalizers } lchs
-  unDriverStateX (renderHydrate renderSpec isRoot currentElement lchs <<< _.selfRef) =<< Ref.read var
+  unDriverStateX (renderHydrate renderSpec isRoot currentNode lchs <<< _.selfRef) =<< Ref.read var
   RenderImplementation.squashChildInitializers renderSpec isRoot lchs pre.initializers =<< Ref.read var -- TODO
   pure var
 
@@ -48,12 +49,12 @@ renderHydrate
   :: forall s f' act ps i' o' h r
    . RenderSpec h r
   -> Boolean
-  -> DOM.Element
+  -> DOM.Node
   -> Ref LifecycleHandlers
   -> Ref (DriverState h r s f' act ps i' o')
   -> Effect Unit
-renderHydrate renderSpec isRoot currentElement lchs var = Ref.read var >>= \(DriverState ds) -> do
-  traceM { message: "Halogen.Aff.Driver.HydrationImplementation.renderHydrate", var, currentElement }
+renderHydrate renderSpec isRoot currentNode lchs var = Ref.read var >>= \(DriverState ds) -> do
+  traceM { message: "Halogen.Aff.Driver.HydrationImplementation.renderHydrate", var, currentNode }
   shouldProcessHandlers <- isNothing <$> Ref.read ds.pendingHandlers
   when shouldProcessHandlers $ Ref.write (Just L.Nil) ds.pendingHandlers
   Ref.write Slot.empty ds.childrenOut
@@ -73,7 +74,7 @@ renderHydrate renderSpec isRoot currentElement lchs var = Ref.read var >>= \(Dri
       (RenderImplementation.renderChild renderSpec lchs childHandler ds.childrenIn ds.childrenOut)
       (renderChildHydrate renderSpec lchs childHandler ds.childrenIn ds.childrenOut)
       (ds.component.render ds.state)
-      currentElement
+      currentNode
   children <- Ref.read ds.childrenOut
   childrenIn <- Ref.read ds.childrenIn
   Slot.foreachSlot childrenIn \(DriverStateRef childVar) -> do
@@ -100,9 +101,9 @@ renderChildHydrate
   -> Ref (Slot.SlotStorage ps (DriverStateRef h r))
   -> Ref (Slot.SlotStorage ps (DriverStateRef h r))
   -> ComponentSlotBox h ps Aff act
-  -> DOM.Element
+  -> DOM.Node
   -> Effect (RenderStateX r)
-renderChildHydrate renderSpec lchs handler childrenInRef childrenOutRef componentSlotBox element =
+renderChildHydrate renderSpec lchs handler childrenInRef childrenOutRef componentSlotBox currentNode =
   unComponentSlot (\slot -> do
     traceM { message: "Halogen.Aff.Driver.HydrationImplementation.runUI renderChild 1", slot, childrenInRef }
     childrenIn <- slot.pop <$> Ref.read childrenInRef
@@ -111,7 +112,7 @@ renderChildHydrate renderSpec lchs handler childrenInRef childrenOutRef componen
       Just (Tuple (DriverStateRef existing) childrenIn') -> throw "should not be called"
       Nothing -> do
         traceM { message: "Halogen.Aff.Driver.HydrationImplementation.runUI renderChild 3 -> childrenIn is nothing" }
-        runComponentHydrate renderSpec false element lchs (maybe (pure unit) handler <<< slot.output) slot.input slot.component
+        runComponentHydrate renderSpec false currentNode lchs (maybe (pure unit) handler <<< slot.output) slot.input slot.component
     isDuplicate <- isJust <<< slot.get <$> Ref.read childrenOutRef
     when isDuplicate
       $ warn "Halogen: Duplicate slot address was detected during rendering, unexpected results may occur"

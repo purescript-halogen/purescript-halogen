@@ -31,6 +31,7 @@ import Halogen.Query.HalogenQ as HQ
 import Halogen.Query.Input (Input)
 import Halogen.Query.Input as Input
 import Web.DOM.Element (Element) as DOM
+import Web.DOM.Node (Node) as DOM
 
 -- | `RenderSpec` allows for alternative driver implementations without the need
 -- | to provide all of the driver machinery again, focusing just on the code
@@ -104,9 +105,9 @@ type RenderSpec h r =
       :: forall s act ps o
        . (Input act -> Effect Unit)
       -> (ComponentSlotBox h ps Aff act -> Effect (RenderStateX r))
-      -> (ComponentSlotBox h ps Aff act -> DOM.Element -> Effect (RenderStateX r))
+      -> (ComponentSlotBox h ps Aff act -> DOM.Node -> Effect (RenderStateX r))
       -> h (ComponentSlot h ps Aff act) act
-      -> DOM.Element
+      -> DOM.Node
       -> Effect (r s act ps o)
   , renderChild :: forall s act ps o. r s act ps o -> r s act ps o
   , removeChild :: forall s act ps o. r s act ps o -> Effect Unit

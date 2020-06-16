@@ -46,7 +46,7 @@ type ChildRenderer action slots
   = ComponentSlotBox HTML slots Aff action -> Effect (RenderStateX RenderState)
 
 type ChildRendererHydrate action slots
-  = ComponentSlotBox HTML slots Aff action -> DOM.Element -> Effect (RenderStateX RenderState)
+  = ComponentSlotBox HTML slots Aff action -> DOM.Node -> Effect (RenderStateX RenderState)
 
 newtype RenderState state action slots output =
   RenderState
@@ -115,7 +115,7 @@ renderComponentSlot = EFn.mkEffectFn3 \renderChildRef buildWidget componentSlotB
 renderComponentSlotHydrate
   :: forall action slots
    . EFn.EffectFn5
-        DOM.Element
+        DOM.Node
         (Ref (ChildRenderer action slots))
         (ChildRendererHydrate action slots)
         (V.Machine
@@ -124,11 +124,10 @@ renderComponentSlotHydrate
         )
         (ComponentSlotBox HTML slots Aff action)
         (V.Step (ComponentSlot HTML slots Aff action) DOM.Node)
-renderComponentSlotHydrate = EFn.mkEffectFn5 \element renderChildRef renderChildHydrate buildWidget componentSlotBox -> do
+renderComponentSlotHydrate = EFn.mkEffectFn5 \node renderChildRef renderChildHydrate buildWidget componentSlotBox -> do
   traceM { message: "Halogen.VDom.Driver.renderComponentSlotHydrate 1", componentSlotBox }
-  (rsx :: RenderStateX RenderState) <- renderChildHydrate componentSlotBox element -- use hydration only initially here, but on next steps (patch - ordinary render)
+  (rsx :: RenderStateX RenderState) <- renderChildHydrate componentSlotBox node -- use hydration only initially here, but on next steps (patch - ordinary render)
   traceM { message: "Halogen.VDom.Driver.renderComponentSlotHydrate 2", rsx }
-  let node = DOMElement.toNode element
   pure $ V.mkStep $ V.Step node Nothing (Fn.runFn2 mkPatch renderChildRef buildWidget) widgetDone
 
 widgetDone :: forall slots action . EFn.EffectFn1 (WidgetState slots action) Unit
@@ -166,20 +165,19 @@ mkSpec handler renderChildRef renderChildHydrate document =
     :: V.VDomSpec
           (Array (VP.Prop (Input action)))
           (ComponentSlot HTML slots Aff action)
-    -> DOM.Element
+    -> DOM.Node
     -> V.Machine
           (ComponentSlot HTML slots Aff action)
           DOM.Node
-  hydrateWidget spec elem = (trace { message: "Halogen.VDom.Driver.hydrateWidget called", spec, elem } (const render))
+  hydrateWidget spec node = (trace { message: "Halogen.VDom.Driver.hydrateWidget called", spec, node } (const render))
     where
     render :: V.Machine (ComponentSlot HTML slots Aff action) DOM.Node
     render = EFn.mkEffectFn1 \slot ->
       case (trace { message: "Halogen.VDom.Driver.hydrateWidget render called", slot } (const slot)) of
         ComponentSlot cs ->
-          EFn.runEffectFn5 renderComponentSlotHydrate elem renderChildRef renderChildHydrate (buildWidget spec) cs
+          EFn.runEffectFn5 renderComponentSlotHydrate node renderChildRef renderChildHydrate (buildWidget spec) cs
         ThunkSlot t -> do
-          step <- EFn.runEffectFn1 (Thunk.hydrateThunk unwrap spec elem) t
-          let node = DOMElement.toNode elem
+          step <- EFn.runEffectFn1 (Thunk.hydrateThunk unwrap spec node) t
           pure $ V.mkStep $ V.Step node (Just step) (Fn.runFn2 mkPatch renderChildRef (buildWidget spec)) widgetDone
 
   buildWidget
@@ -222,7 +220,7 @@ hydrateUI
   -> Aff (HalogenIO query output Aff)
 hydrateUI component i container rootElement = do
   document <- findDocument
-  AD.hydrateUI (renderSpec document container) component i (HTMLElement.toElement rootElement)
+  AD.hydrateUI (renderSpec document container) component i (HTMLElement.toNode rootElement)
 
 renderSpec
   :: DOM.Document
@@ -266,15 +264,14 @@ renderSpec document container =
     -> (ChildRenderer action slots)
     -> (ChildRendererHydrate action slots)
     -> HTML (ComponentSlot HTML slots Aff action) action
-    -> DOM.Element
+    -> DOM.Node
     -> Effect (RenderState state action slots output)
-  hydrate handler renderChild renderChildHydrate (HTML vdom) element = do
+  hydrate handler renderChild renderChildHydrate (HTML vdom) node = do
     traceM { message: "Halogen.VDom.Driver.renderSpecHydrate render", handler, renderChild, vdom }
     renderChildRef <- Ref.new renderChild
     let spec = mkSpec handler renderChildRef renderChildHydrate document
-    machine <- EFn.runEffectFn1 (V.hydrateVDom spec element) vdom
-    let node = DOMElement.toNode element
-    traceM { message: "Halogen.VDom.Driver.renderSpecHydrate render -> no-appendChild", node, element }
+    machine <- EFn.runEffectFn1 (V.hydrateVDom spec node) vdom
+    traceM { message: "Halogen.VDom.Driver.renderSpecHydrate render -> no-appendChild", node }
     pure $ RenderState { machine, node, renderChildRef }
 
 processNextRenderStateChange
