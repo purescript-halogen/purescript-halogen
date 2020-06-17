@@ -7,4 +7,4 @@ import Halogen as H
 data Query a = GetTickCount (Int -> a)
 
 getTickCount :: forall o. H.HalogenIO Query o Aff -> Aff (Maybe Int)
-getTickCount app = app.query (H.request GetTickCount)
+getTickCount app = app.query (H.mkRequest GetTickCount)

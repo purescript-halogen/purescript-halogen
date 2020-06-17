@@ -16,7 +16,7 @@ data Action = Increment
 
 type State = Int
 
-component :: forall i o m. H.Component HH.HTML Query i o m
+component :: forall i o m. H.Component Query i o m
 component =
   H.mkComponent
     { initialState
@@ -38,7 +38,7 @@ render state =
         , HH.strong_ [ HH.text (show state) ]
         ]
     , HH.button
-        [ HE.onClick \_ -> Just Increment ]
+        [ HE.onClick \_ -> Increment ]
         [ HH.text ("Increment") ]
     ]
 

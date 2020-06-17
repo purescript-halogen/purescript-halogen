@@ -5,12 +5,13 @@ module Halogen.Aff.Driver
   , module Halogen
   ) where
 
-import Prelude (bind, pure, ($), (=<<))
+import Prelude
 
 import Data.Map as M
 import Effect.Aff (Aff)
 import Effect.Class (liftEffect)
 import Effect.Ref as Ref
+import FRP.Event as Event
 import Halogen (HalogenIO)
 import Halogen.Aff.Driver.Eval as Eval
 import Halogen.Aff.Driver.RenderImplementation (RenderSpec)
@@ -22,9 +23,9 @@ import Web.DOM.Element (Element) as DOM
 import Web.DOM.Node (Node) as DOM
 
 hydrateUI
-  :: forall h r f i o
-   . RenderSpec h r
-  -> Component h f i o Aff
+  :: forall r f i o
+   . RenderSpec r
+  -> Component f i o Aff
   -> i
   -> DOM.Node
   -> Aff (HalogenIO f o Aff)
@@ -33,19 +34,19 @@ hydrateUI renderSpec component i rootNode = do
   fresh <- liftEffect $ Ref.new 0
   disposed <- liftEffect $ Ref.new false
   Eval.handleLifecycle lchs do
-    listeners <- Ref.new M.empty
-    dsx <- Ref.read =<< HydrationImplementation.runComponentHydrate renderSpec true rootNode lchs (RenderImplementation.rootHandler listeners) i component
+    eio <- Event.create
+    dsx <- Ref.read =<< HydrationImplementation.runComponentHydrate renderSpec true rootNode lchs (liftEffect <<< eio.push) i component
     unDriverStateX (\st ->
       pure
         { query: RenderImplementation.evalDriver renderSpec disposed st.selfRef
-        , subscribe: RenderImplementation.subscribe fresh listeners
-        , dispose: RenderImplementation.dispose renderSpec disposed lchs dsx listeners
+        , messages: eio.event
+        , dispose: RenderImplementation.dispose renderSpec disposed lchs dsx
         }) dsx
 
 runUI
-  :: forall h r f i o
-   . RenderSpec h r
-  -> Component h f i o Aff
+  :: forall r f i o
+   . RenderSpec r
+  -> Component f i o Aff
   -> i
   -> Aff (HalogenIO f o Aff)
 runUI renderSpec component i = do
@@ -53,11 +54,11 @@ runUI renderSpec component i = do
   fresh <- liftEffect $ Ref.new 0
   disposed <- liftEffect $ Ref.new false
   Eval.handleLifecycle lchs do
-    listeners <- Ref.new M.empty
-    dsx <- Ref.read =<< RenderImplementation.runComponent renderSpec true lchs (RenderImplementation.rootHandler listeners) i component
+    eio <- Event.create
+    dsx <- Ref.read =<< RenderImplementation.runComponent renderSpec true lchs (liftEffect <<< eio.push) i component
     unDriverStateX (\st ->
       pure
         { query: RenderImplementation.evalDriver renderSpec disposed st.selfRef
-        , subscribe: RenderImplementation.subscribe fresh listeners
-        , dispose: RenderImplementation.dispose renderSpec disposed lchs dsx listeners
+        , messages: eio.event
+        , dispose: RenderImplementation.dispose renderSpec disposed lchs dsx
         }) dsx

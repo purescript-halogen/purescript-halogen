@@ -13,7 +13,7 @@ data Action = Regenerate
 
 type State = Maybe Number
 
-component :: forall f i o m. MonadEffect m => H.Component HH.HTML f i o m
+component :: forall q i o m. MonadEffect m => H.Component q i o m
 component =
   H.mkComponent
     { initialState
@@ -33,7 +33,7 @@ render state =
       [ HH.h1_ [ HH.text "Random number" ]
       , HH.p_ [ HH.text ("Current value: " <> value) ]
       , HH.button
-          [ HE.onClick \_ -> Just Regenerate ]
+          [ HE.onClick \_ -> Regenerate ]
           [ HH.text "Generate new number" ]
       ]
 

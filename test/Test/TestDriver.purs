@@ -5,17 +5,16 @@ import Prelude
 import Effect.Aff (Aff)
 import Halogen as H
 import Halogen.Aff.Driver as AD
+import Halogen.HTML as HH
 
-newtype TestRenderProduct p i = TestRenderProduct Unit
-
-render :: forall a p i. a -> TestRenderProduct p i
-render _ = TestRenderProduct unit
+render :: forall a p i. a -> HH.HTML p i
+render _ = HH.text ""
 
 newtype TestRenderState s act ps o = TestRenderState Unit
 
 runUI
   :: forall f i o
-   . H.Component TestRenderProduct f i o Aff
+   . H.Component f i o Aff
   -> i
   -> Aff (H.HalogenIO f o Aff)
 runUI = AD.runUI

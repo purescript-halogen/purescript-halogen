@@ -13,7 +13,7 @@ We'll learn about one other way actions can arise in a component when we learn a
 
 Every Halogen component has access to two lifecycle events:
 
-1. The component can evaluate an action it is initialized (Halogen creates it)
+1. The component can evaluate an action when it is initialized (Halogen creates it)
 2. The component can evaluate an action when it is finalized (Halogen removes it)
 
 We specify what action (if any) to run when the component is initialized and finalized as part of the `eval` function -- the same place where we've been providing the `handleAction` function. In the next section we'll get into more detail about what `eval` is, but first lets see an example of lifecycles in action.

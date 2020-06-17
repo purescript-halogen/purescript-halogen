@@ -28,7 +28,7 @@ type ChildSlots =
 
 _cell = SProxy :: SProxy "cell"
 
-child :: forall f. Int -> H.Component HH.HTML f Unit Message Aff
+child :: forall f. Int -> H.Component f Unit Message Aff
 child initialState =
   H.mkComponent
     { initialState: const initialState
@@ -45,10 +45,10 @@ child initialState =
     HH.div_
       [ HH.text ("Child " <> show id)
       , HH.ul_
-        [ HH.slot _cell 0 (cell 0) unit (listen 0)
-        , HH.slot _cell 1 (cell 1) unit (listen 1)
-        , HH.slot _cell 2 (cell 2) unit (listen 2)
-        ]
+          [ HH.slot _cell 0 (cell 0) unit (listen 0)
+          , HH.slot _cell 1 (cell 1) unit (listen 1)
+          , HH.slot _cell 2 (cell 2) unit (listen 2)
+          ]
       ]
 
   handleAction :: Action -> H.HalogenM Int Action ChildSlots Message Aff Unit
@@ -65,13 +65,13 @@ child initialState =
     H.liftEffect $ log $ "Child " <> show id <> " >>> " <> msg
     H.raise (Reported msg)
 
-  listen :: Int -> Message -> Maybe Action
-  listen i = Just <<< case _ of
+  listen :: Int -> Message -> Action
+  listen i = case _ of
     Initialized -> Report ("Heard Initialized from cell" <> show i)
     Finalized -> Report ("Heard Finalized from cell" <> show i)
     Reported msg -> Report ("Re-reporting from cell" <> show i <> ": " <> msg)
 
-cell :: forall f. Int -> H.Component HH.HTML f Unit Message Aff
+cell :: forall f. Int -> H.Component f Unit Message Aff
 cell initialState =
   H.mkComponent
     { initialState: const initialState

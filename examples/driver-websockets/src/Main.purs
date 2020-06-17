@@ -11,8 +11,8 @@ import Data.Foldable (for_)
 import Data.Maybe (Maybe(..))
 import Effect (Effect)
 import Effect.Aff (Aff)
-import Effect.Class (liftEffect)
 import Example.Driver.Websockets.Log as Log
+import FRP.Event as Event
 import Foreign (F, Foreign, unsafeToForeign, readString)
 import Halogen as H
 import Halogen.Aff as HA
@@ -44,17 +44,15 @@ wsProducer socket = CRA.produce \emitter -> do
 -- producer.
 wsConsumer :: (forall a. Log.Query a -> Aff (Maybe a)) -> CR.Consumer String Aff Unit
 wsConsumer query = CR.consumer \msg -> do
-  void $ query $ H.tell $ Log.ReceiveMessage msg
+  void $ query $ H.mkTell $ Log.ReceiveMessage msg
   pure Nothing
 
--- A consumer coroutine that takes output messages from our component IO
--- and sends them using the websocket
-wsSender :: WS.WebSocket -> CR.Consumer Log.Message Aff Unit
-wsSender socket = CR.consumer \msg -> do
-  case msg of
-    Log.OutputMessage msgContents ->
-      liftEffect $ WS.sendString socket msgContents
-  pure Nothing
+-- A handler for messages from our component IO that sends them to the server
+-- using the websocket
+wsSender :: WS.WebSocket -> Log.Message -> Effect Unit
+wsSender socket = case _ of
+  Log.OutputMessage msgContents ->
+    WS.sendString socket msgContents
 
 main :: Effect Unit
 main = do
@@ -63,9 +61,8 @@ main = do
     body <- HA.awaitBody
     io <- runUI Log.component unit body
 
-    -- The wsSender consumer subscribes to all output messages
-    -- from our component
-    io.subscribe $ wsSender connection
+    -- Subscribe to all output messages from our component
+    _ <- H.liftEffect $ Event.subscribe io.messages $ wsSender connection
 
     -- Connecting the consumer to the producer initializes both,
     -- feeding queries back to our component as messages are received.

@@ -27,7 +27,7 @@ type State =
   , inputText :: String
   }
 
-component :: forall i m. MonadEffect m => H.Component HH.HTML Query i Message m
+component :: forall i m. MonadEffect m => H.Component Query i Message m
 component =
   H.mkComponent
     { initialState
@@ -44,12 +44,12 @@ initialState _ = { messages: [] , inputText: "" }
 render :: forall m. State -> H.ComponentHTML Action () m
 render state =
   HH.form
-    [ HE.onSubmit (Just <<< Submit) ]
+    [ HE.onSubmit Submit ]
     [ HH.ol_ $ map (\msg -> HH.li_ [ HH.text msg ]) state.messages
     , HH.input
         [ HP.type_ HP.InputText
         , HP.value (state.inputText)
-        , HE.onValueInput (Just <<< HandleInput)
+        , HE.onValueInput HandleInput
         ]
     , HH.button
         [ HP.type_ HP.ButtonSubmit ]

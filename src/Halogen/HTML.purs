@@ -5,6 +5,7 @@ module Halogen.HTML
   , PlainHTML
   , fromPlainHTML
   , slot
+  , slot_
   , memoized
   , lazy
   , lazy2
@@ -16,8 +17,9 @@ module Halogen.HTML
 
 import Halogen.HTML.Elements
 
+import Data.Function (const)
 import Data.Function.Uncurried as Fn
-import Data.Maybe (Maybe)
+import Data.Maybe (Maybe(..))
 import Data.Symbol (class IsSymbol, SProxy)
 import Halogen.Component (Component, ComponentSlot(..), componentSlot)
 import Halogen.Data.Slot (Slot)
@@ -25,7 +27,7 @@ import Halogen.HTML.Core (class IsProp, AttrName(..), ClassName(..), HTML(..), N
 import Halogen.HTML.Core as Core
 import Halogen.HTML.Properties (IProp, attr, attrNS, prop)
 import Halogen.VDom.Thunk (thunk1, thunk2, thunk3, thunked)
-import Prelude (class Ord, Void)
+import Prelude (class Ord, Void, (<<<))
 import Prim.Row as Row
 import Unsafe.Coerce (unsafeCoerce)
 
@@ -36,7 +38,7 @@ import Unsafe.Coerce (unsafeCoerce)
 -- |   be evaluated with the `handleAction` function
 -- | - `slots` is the set of child component types that can be used in the HTML
 -- | - `m` is the monad used by the child component during evaluation
-type ComponentHTML action slots m = HTML (ComponentSlot HTML slots m action) action
+type ComponentHTML action slots m = HTML (ComponentSlot slots m action) action
 
 -- | A type useful for a chunk of HTML with no slot-embedding or query-raising.
 -- |
@@ -63,12 +65,36 @@ slot
   => Ord slot
   => SProxy label
   -> slot
-  -> Component HTML query input output m
+  -> Component query input output m
   -> input
-  -> (output -> Maybe action)
+  -> (output -> action)
   -> ComponentHTML action slots m
 slot label p component input outputQuery =
-  Core.widget (ComponentSlot (componentSlot label p component input outputQuery))
+  Core.widget (ComponentSlot (componentSlot label p component input (Just <<< outputQuery)))
+
+-- | Defines a slot for a child component, ignoring its output.
+-- |
+-- | This variant may be used when the component produces output, but it is not
+-- | needed in the current context, or instead of passing `absurd` to `slot`
+-- | when the output type is `Void`.
+-- |
+-- | Takes:
+-- | - the slot address label
+-- | - the slot address index
+-- | - the component for the slot
+-- | - the input value to pass to the component
+slot_
+  :: forall query action input output slots m label slot _1
+   . Row.Cons label (Slot query output slot) _1 slots
+  => IsSymbol label
+  => Ord slot
+  => SProxy label
+  -> slot
+  -> Component query input output m
+  -> input
+  -> ComponentHTML action slots m
+slot_ label p component input =
+  Core.widget (ComponentSlot (componentSlot label p component input (const Nothing)))
 
 -- | Optimizes rendering of a subtree given an equality predicate. If an argument
 -- | is deemed equivalent to the previous value, rendering and diffing will be
