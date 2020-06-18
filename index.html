@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Introduction - Halogen Guide</title>
+        <title>Halogen - Halogen Guide</title>
         
 
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
@@ -81,7 +81,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="guide/index.html">Introduction</a></li><li class="chapter-item expanded affix "><a href="guide/01-Rendering-Halogen-HTML.html">Rendering Halogen HTML</a></li><li class="chapter-item expanded affix "><a href="guide/02-Introducing-Components.html">Introducing Components</a></li><li class="chapter-item expanded affix "><a href="guide/03-Performing-Effects.html">Performing Effects</a></li><li class="chapter-item expanded affix "><a href="guide/04-Lifecycles-Subscriptions.html">Lifecycles Subscriptions</a></li><li class="chapter-item expanded affix "><a href="guide/05-Parent-Child-Components.html">Parent Child Components</a></li><li class="chapter-item expanded affix "><a href="guide/06-Running-Application.html">Running Application</a></li><li class="chapter-item expanded affix "><a href="guide/07-Next-Steps.html">Next Steps</a></li><li class="chapter-item expanded affix "><a href="concepts-reference/index.html">Concepts Reference</a></li><li class="chapter-item expanded affix "><a href="changelog/v5.html">V5 Changes</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="index.html" class="active"><strong aria-hidden="true">1.</strong> Halogen</a></li><li class="chapter-item expanded "><a href="guide/index.html"><strong aria-hidden="true">2.</strong> Guide</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="guide/02-Introducing-Components.html"><strong aria-hidden="true">2.1.</strong> Introducing Components</a></li><li class="chapter-item expanded "><a href="guide/03-Performing-Effects.html"><strong aria-hidden="true">2.2.</strong> Performing Effects</a></li><li class="chapter-item expanded "><a href="guide/04-Lifecycles-Subscriptions.html"><strong aria-hidden="true">2.3.</strong> Lifecycles Subscriptions</a></li><li class="chapter-item expanded "><a href="guide/05-Parent-Child-Components.html"><strong aria-hidden="true">2.4.</strong> Parent Child Components</a></li><li class="chapter-item expanded "><a href="guide/06-Running-Application.html"><strong aria-hidden="true">2.5.</strong> Running Application</a></li><li class="chapter-item expanded "><a href="guide/07-Next-Steps.html"><strong aria-hidden="true">2.6.</strong> Next Steps</a></li></ol></li><li class="chapter-item expanded "><a href="concepts-reference/index.html"><strong aria-hidden="true">3.</strong> Concepts Reference</a></li><li class="chapter-item expanded "><a href="changelog/index.html"><strong aria-hidden="true">4.</strong> Major Version Changelog</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="changelog/v5.html"><strong aria-hidden="true">4.1.</strong> Changes in v5</a></li></ol></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -147,71 +147,21 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1><a class="header" href="#halogen-guide" id="halogen-guide">Halogen Guide</a></h1>
-<p>Halogen is a declarative, component-based UI library for PureScript that emphasizes type safety. In this guide you will learn the core ideas and patterns needed to write real-world applications in Halogen.</p>
-<p>Here is a tiny Halogen app that lets you increment and decrement a counter:</p>
-<pre><code class="language-purs">module Main where
-
-import Prelude
-
-import Data.Maybe (Maybe(..))
-import Effect (Effect)
-import Halogen as H
-import Halogen.Aff as HA
-import Halogen.HTML as HH
-import Halogen.HTML.Events as HE
-import Halogen.VDom.Driver (runUI)
-
-main :: Effect Unit
-main = HA.runHalogenAff do
-  body &lt;- HA.awaitBody
-  runUI component unit body
-
-data Action = Increment | Decrement
-
-component =
-  H.mkComponent
-    { initialState
-    , render
-    , eval: H.mkEval $ H.defaultEval { handleAction = handleAction }
-    }
-  where
-  initialState _ = 0
-
-  render state =
-    HH.div_
-      [ HH.button [ HE.onClick \_ -&gt; Just Decrement ] [ HH.text &quot;-&quot; ]
-      , HH.div_ [ HH.text $ show state ]
-      , HH.button [ HE.onClick \_ -&gt; Just Increment ] [ HH.text &quot;+&quot; ]
-      ]
-
-  handleAction = case _ of
-    Increment -&gt; H.modify_ \state -&gt; state + 1
-    Decrement -&gt; H.modify_ \state -&gt; state - 1
-</code></pre>
-<p>You can paste this example (and any other full examples in this guide) into <a href="https://try.purescript.org">Try PureScript</a>. We highly recommend doing this to explore the examples interactively! For example, try changing the buttons so they use the words <code>&quot;Increment&quot;</code> and <code>&quot;Decrement&quot;</code> instead of the symbols <code>&quot;+&quot;</code> and <code>&quot;-&quot;</code>.</p>
-<blockquote>
-<p>By default, Try PureScript will compile every time you make a change. You can also disable the auto-compile feature, which will cause Try PureScript to wait for you to click the &quot;Compile&quot; button to compile your Halogen application.</p>
-</blockquote>
-<p>Don't worry if this code is overwhelming at first -- when you've read the next few chapters of the guide you'll gain a solid understanding of how this component works and how to write your own.</p>
-<h2><a class="header" href="#how-to-read-this-guide" id="how-to-read-this-guide">How to Read This Guide</a></h2>
-<p>In this guide we'll explore the building blocks of Halogen apps: elements and components. When you understand these you can create complex apps from small, reusable pieces.</p>
-<p>This is a step-by-step introduction to Halogen's main concepts. Each chapter builds on knowledge introduced in previous chapters, so we recommend reading through the guide in order.</p>
-<p>Halogen is a PureScript library, and it assumes basic knowledge of PureScript concepts like functions, records, arrays, <code>do</code> notation, <code>Effect</code>, and <code>Aff</code>. It will also help if you understand the basics of HTML and the DOM. If you need a refresher, we recommend:</p>
+                        <h1><a class="header" href="#halogen-documentation" id="halogen-documentation">Halogen Documentation</a></h1>
+<p>Halogen is a declarative, type-safe library for building user interfaces.</p>
+<p>This documentation covers how to use Halogen and provides a concepts reference. There are also other resources for learning and using Halogen, including:</p>
 <ul>
-<li>For PureScript: the <a href="https://book.purescript.org">PureScript Book</a> and Jordan Martinez's <a href="https://github.com/JordanMartinez/purescript-jordans-reference">PureScript Reference</a>.</li>
-<li>For HTML: the MDN introductions to <a href="https://developer.mozilla.org/en-US/docs/Learn/HTML/Introduction_to_HTML">HTML</a> and <a href="https://developer.mozilla.org/en-US/docs/Learn/JavaScript/Building_blocks/Events">DOM events</a>.</li>
+<li>The Halogen <a href="https://pursuit.purescript.org/packages/purescript-halogen">API Reference</a></li>
+<li><a href="https://github.com/JordanMartinez/learn-halogen">Learn Halogen</a> by <a href="https://github.com/JordanMartinez">Jordan Martinez</a></li>
+<li><a href="https://github.com/thomashoneyman/purescript-halogen-realworld">Real World Halogen</a> by <a href="https://github.com/thomashoneyman">Thomas Honeyman</a></li>
 </ul>
-<h2><a class="header" href="#table-of-contents" id="table-of-contents">Table of Contents</a></h2>
-<ol>
-<li><a href="./01-Rendering-Halogen-HTML.html">Rendering Halogen HTML</a></li>
-<li><a href="./02-Introducing-Components.html">Introducing Components</a></li>
-<li><a href="./03-Performing-Effects.html">Performing Effects</a></li>
-<li><a href="./04-Lifecycles-Subscriptions.html">Lifecycles &amp; Subscriptions</a></li>
-<li><a href="./05-Parent-Child-Components.html">Parent &amp; Child Components</a></li>
-<li><a href="./06-Running-Application.html">Running An Application</a></li>
-<li><a href="./07-Next-Steps.html">Next Steps</a></li>
-</ol>
+<h2><a class="header" href="#quick-start-halogen-guide" id="quick-start-halogen-guide">Quick Start: Halogen Guide</a></h2>
+<p>If you are new to Halogen we recommend starting with the <a href="./guide">Halogen Guide</a>. This short handbook demonstrates and explains Halogen concepts while building components.</p>
+<p>By the end of the guide you'll be ready to dive in to more advanced resources like the <a href="./concepts-reference">Concepts Reference</a> or <a href="https://github.com/thomashoneyman/purescript-halogen-realworld">Real World Halogen</a>.</p>
+<h2><a class="header" href="#going-deeper-concepts-reference" id="going-deeper-concepts-reference">Going Deeper: Concepts Reference</a></h2>
+<p>Once you're comfortable with the main concepts from the <a href="./guide">Halogen Guide</a> you may be interested in more advanced topics and in understanding why Halogen features are designed the way they are. The <a href="./concepts-reference">Concepts Reference</a> will help you understand Halogen at a deeper level.</p>
+<h2><a class="header" href="#major-version-changelog" id="major-version-changelog">Major Version Changelog</a></h2>
+<p>Major Halogen releases are accompanied by guides for transitioning from one version to the next in the <a href="./changelog">Major Version Changelog</a>.</p>
 
                     </main>
 
@@ -220,7 +170,7 @@ component =
                         
 
                         
-                            <a rel="next" href="guide/01-Rendering-Halogen-HTML.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next" href="guide/index.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
                         
@@ -234,7 +184,7 @@ component =
                 
 
                 
-                    <a rel="next" href="guide/01-Rendering-Halogen-HTML.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next" href="guide/index.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
                 

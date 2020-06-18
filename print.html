@@ -83,7 +83,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="guide/index.html">Introduction</a></li><li class="chapter-item expanded affix "><a href="guide/01-Rendering-Halogen-HTML.html">Rendering Halogen HTML</a></li><li class="chapter-item expanded affix "><a href="guide/02-Introducing-Components.html">Introducing Components</a></li><li class="chapter-item expanded affix "><a href="guide/03-Performing-Effects.html">Performing Effects</a></li><li class="chapter-item expanded affix "><a href="guide/04-Lifecycles-Subscriptions.html">Lifecycles Subscriptions</a></li><li class="chapter-item expanded affix "><a href="guide/05-Parent-Child-Components.html">Parent Child Components</a></li><li class="chapter-item expanded affix "><a href="guide/06-Running-Application.html">Running Application</a></li><li class="chapter-item expanded affix "><a href="guide/07-Next-Steps.html">Next Steps</a></li><li class="chapter-item expanded affix "><a href="concepts-reference/index.html">Concepts Reference</a></li><li class="chapter-item expanded affix "><a href="changelog/v5.html">V5 Changes</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="index.html"><strong aria-hidden="true">1.</strong> Halogen</a></li><li class="chapter-item expanded "><a href="guide/index.html"><strong aria-hidden="true">2.</strong> Guide</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="guide/02-Introducing-Components.html"><strong aria-hidden="true">2.1.</strong> Introducing Components</a></li><li class="chapter-item expanded "><a href="guide/03-Performing-Effects.html"><strong aria-hidden="true">2.2.</strong> Performing Effects</a></li><li class="chapter-item expanded "><a href="guide/04-Lifecycles-Subscriptions.html"><strong aria-hidden="true">2.3.</strong> Lifecycles Subscriptions</a></li><li class="chapter-item expanded "><a href="guide/05-Parent-Child-Components.html"><strong aria-hidden="true">2.4.</strong> Parent Child Components</a></li><li class="chapter-item expanded "><a href="guide/06-Running-Application.html"><strong aria-hidden="true">2.5.</strong> Running Application</a></li><li class="chapter-item expanded "><a href="guide/07-Next-Steps.html"><strong aria-hidden="true">2.6.</strong> Next Steps</a></li></ol></li><li class="chapter-item expanded "><a href="concepts-reference/index.html"><strong aria-hidden="true">3.</strong> Concepts Reference</a></li><li class="chapter-item expanded "><a href="changelog/index.html"><strong aria-hidden="true">4.</strong> Major Version Changelog</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="changelog/v5.html"><strong aria-hidden="true">4.1.</strong> Changes in v5</a></li></ol></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -149,7 +149,22 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1><a class="header" href="#halogen-guide" id="halogen-guide">Halogen Guide</a></h1>
+                        <h1><a class="header" href="#halogen-documentation" id="halogen-documentation">Halogen Documentation</a></h1>
+<p>Halogen is a declarative, type-safe library for building user interfaces.</p>
+<p>This documentation covers how to use Halogen and provides a concepts reference. There are also other resources for learning and using Halogen, including:</p>
+<ul>
+<li>The Halogen <a href="https://pursuit.purescript.org/packages/purescript-halogen">API Reference</a></li>
+<li><a href="https://github.com/JordanMartinez/learn-halogen">Learn Halogen</a> by <a href="https://github.com/JordanMartinez">Jordan Martinez</a></li>
+<li><a href="https://github.com/thomashoneyman/purescript-halogen-realworld">Real World Halogen</a> by <a href="https://github.com/thomashoneyman">Thomas Honeyman</a></li>
+</ul>
+<h2><a class="header" href="#quick-start-halogen-guide" id="quick-start-halogen-guide">Quick Start: Halogen Guide</a></h2>
+<p>If you are new to Halogen we recommend starting with the <a href="./guide">Halogen Guide</a>. This short handbook demonstrates and explains Halogen concepts while building components.</p>
+<p>By the end of the guide you'll be ready to dive in to more advanced resources like the <a href="./concepts-reference">Concepts Reference</a> or <a href="https://github.com/thomashoneyman/purescript-halogen-realworld">Real World Halogen</a>.</p>
+<h2><a class="header" href="#going-deeper-concepts-reference" id="going-deeper-concepts-reference">Going Deeper: Concepts Reference</a></h2>
+<p>Once you're comfortable with the main concepts from the <a href="./guide">Halogen Guide</a> you may be interested in more advanced topics and in understanding why Halogen features are designed the way they are. The <a href="./concepts-reference">Concepts Reference</a> will help you understand Halogen at a deeper level.</p>
+<h2><a class="header" href="#major-version-changelog" id="major-version-changelog">Major Version Changelog</a></h2>
+<p>Major Halogen releases are accompanied by guides for transitioning from one version to the next in the <a href="./changelog">Major Version Changelog</a>.</p>
+<h1><a class="header" href="#halogen-guide" id="halogen-guide">Halogen Guide</a></h1>
 <p>Halogen is a declarative, component-based UI library for PureScript that emphasizes type safety. In this guide you will learn the core ideas and patterns needed to write real-world applications in Halogen.</p>
 <p>Here is a tiny Halogen app that lets you increment and decrement a counter:</p>
 <pre><code class="language-purs">module Main where
@@ -214,141 +229,6 @@ component =
 <li><a href="guide/./06-Running-Application.html">Running An Application</a></li>
 <li><a href="guide/./07-Next-Steps.html">Next Steps</a></li>
 </ol>
-<h1><a class="header" href="#rendering-halogen-html" id="rendering-halogen-html">Rendering Halogen HTML</a></h1>
-<p>Halogen HTML elements are the smallest building block of Halogen applications. These elements describe what you want to see on the screen.</p>
-<p>Halogen HTML elements are not components (we'll get to components in the next chapter), and they can't be rendered without a component. However, it's common to write helper functions that produce Halogen HTML and then use those functions in a component.</p>
-<p>We'll explore writing HTML without components or events in this chapter.</p>
-<h2><a class="header" href="#halogen-html" id="halogen-html">Halogen HTML</a></h2>
-<p>You can write Halogen HTML using functions from the <code>Halogen.HTML</code> or <code>Halogen.HTML.Keyed</code> modules as in this example:</p>
-<pre><code class="language-purs">import Halogen.HTML as HH
-
-element = HH.h1 [ ] [ HH.text &quot;Hello, world&quot; ]
-</code></pre>
-<p>Halogen HTML elements can be thought of like browser DOM elements, but they are controlled by the Halogen library instead of being actual elements in the DOM. Under the hood, Halogen takes care of updating the actual DOM to match the code you have written.</p>
-<p>Elements in Halogen accept two arguments:</p>
-<ol>
-<li>An array of attributes, properties, event handlers, and/or references to apply to the element. These correspond with ordinary HTML properties like <code>placeholder</code> and event handlers like <code>onClick</code>. We'll learn how to handle events in the next chapter, and we'll only focus on properties in this chapter.</li>
-<li>An array of children, if the element supports children.</li>
-</ol>
-<p>As a brief example, let's translate this ordinary HTML into Halogen HTML:</p>
-<pre><code class="language-html">&lt;div id=&quot;root&quot;&gt;
-  &lt;input placeholder=&quot;Name&quot; /&gt;
-  &lt;button class=&quot;btn-primary&quot; type=&quot;submit&quot;&gt;
-    Submit
-  &lt;/button&gt;
-&lt;/div&gt;
-</code></pre>
-<p>Let's break down our Halogen HTML:</p>
-<ol>
-<li>Our Halogen code has the same shape as our ordinary HTML: a <code>div</code> containing an <code>input</code> and a <code>button</code>, which itself contains plain text.</li>
-<li>Properties move from key-value pairs inside the tags into an array of properties for the element.</li>
-<li>Child elements move from being inside an open and closing tag into an array of children, if the element supports children.</li>
-</ol>
-<p>Functions for writing properties in your HTML come from the <code>Halogen.HTML.Properties</code> module.</p>
-<pre><code class="language-purs">import Halogen.HTML as HH
-import Halogen.HTML.Properties as HP
-
-html =
-  HH.div
-    [ HP.id_ &quot;root&quot; ]
-    [ HH.input
-        [ HP.placeholder &quot;Name&quot; ]
-    , HH.button
-        [ HP.classes [ HH.ClassName &quot;btn-primary&quot; ]
-        , HP.type_ HP.ButtonSubmit
-        ]
-        [ HH.text &quot;Submit&quot; ]
-    ]
-</code></pre>
-<p>You can see Halogen's emphasis on type safety displayed here.</p>
-<ol>
-<li>A text input can't have children, so Halogen doesn't allow the element to take further elements as an argument.</li>
-<li>Only some values are possible for a button's <code>type</code> property, so Halogen restricts them with a sum type.</li>
-<li>CSS classes use a <code>ClassName</code> newtype so that they can be treated specially when needed; for example, the <code>classes</code> function ensures that your classes are space-separated when they're combined.</li>
-</ol>
-<p>Some HTML elements and properties clash with reserved keywords in PureScript or with common functions from the Prelude, so Halogen adds an underscore to them. That's why you see <code>type_</code> instead of <code>type</code> in the example above. (You also see <code>id_</code> instead of <code>id</code>, but in PureScript 0.12 the <code>id</code> function was renamed to <code>identity</code>; future versions of Halogen will just use <code>id</code> without an underscore.)</p>
-<p>When you don't need to set any properties on a Halogen HTML element, you can use its underscored version instead. For example, the <code>div</code> and <code>button</code> elements below have no properties:</p>
-<pre><code class="language-purs">html = HH.div [ ] [ HH.button [ ] [ HH.text &quot;Click me!&quot;] ]
-</code></pre>
-<p>That means we can rewrite them using their underscored versions. This can help keep your HTML tidy.</p>
-<pre><code class="language-purs">html = HH.div_ [ HH.button_ [ HH.text &quot;Click me!&quot; ] ]
-</code></pre>
-<h2><a class="header" href="#writing-functions-in-halogen-html" id="writing-functions-in-halogen-html">Writing Functions in Halogen HTML</a></h2>
-<p>It's common to write helper functions for Halogen HTML. Since Halogen HTML is built from ordinary PureScript functions, you can freely intersperse other functions in your code. </p>
-<p>In this example, our function accepts an integer and renders it as text:</p>
-<pre><code class="language-purs">header :: forall w i. Int -&gt; HH.HTML w i
-header visits = 
-  HH.h1_ 
-    [ HH.text $ &quot;You've had &quot; &lt;&gt; show visits &lt;&gt; &quot; visitors&quot; ] 
-</code></pre>
-<p>We can also render lists of things:</p>
-<pre><code class="language-purs">lakes = [ &quot;Lake Norman&quot;, &quot;Lake Wylie&quot; ]
-
-html :: forall w i. HH.HTML w i
-html = HH.div_ (map HH.text lakes)
--- same as: HH.div_ [ HH.text &quot;Lake Norman&quot;, HH.text &quot;Lake Wylie&quot; ]
-</code></pre>
-<p>These function introduced a new type, <code>HH.HTML</code>, which you haven't seen before. Don't worry! This is the type of Halogen HTML, and we'll learn about it in the next section. For now, let's continue learning about using functions in HTML.</p>
-<p>One common requirement is to conditionally render some HTML. You can do this with ordinary <code>if</code> and <code>case</code> statements, but it's useful to write helper functions for common patterns. Let's walk through two helper functions you might write in your own applications, which will help us get more practice writing functions with Halogen HTML.</p>
-<p>First, you may sometimes need to deal with elements that may or may not exist. A function like the one below lets you render a value if it exists, and render an empty node otherwise.</p>
-<pre><code class="language-purs">maybeElem :: forall w i a. Maybe a -&gt; (a -&gt; HH.HTML w i) -&gt; HH.HTML w i
-maybeElem val f =
-  case val of
-    Just x -&gt; f x
-    _ -&gt; HH.text &quot;&quot;
-
--- Render the name, if there is one
-renderName :: forall w i. Maybe String -&gt; HH.HTML w i
-renderName mbName = maybeElem mbName \name -&gt; HH.text name
-</code></pre>
-<p>Second, you may want to render some HTML only if a condition is true, without computing the HTML if it fails the condition. You can do this by hiding its evaluation behind a function so the HTML is only computed when the condition is true.</p>
-<pre><code class="language-purs">whenElem :: forall w i. Boolean -&gt; (Unit -&gt; HH.HTML w i) -&gt; HH.HTML w i
-whenElem cond f = if cond then f unit else HH.text &quot;&quot;
-
--- Render the old number, but only if it is different from the new number
-renderOld :: forall w i. { old :: Number, new :: Number } -&gt; HH.HTML w i
-renderOld { old, new } = 
-  whenElem (old /= new) \_ -&gt; 
-    HH.div_ [ HH.text $ show old ]
-</code></pre>
-<p>Now that we've explored a few ways to work with HTML, let's learn more about the types that describe it.</p>
-<h2><a class="header" href="#html-types" id="html-types">HTML Types</a></h2>
-<p>So far we've written HTML without type signatures. But when you write Halogen HTML in your application you'll include the type signatures.</p>
-<h3><a class="header" href="#html-w-i" id="html-w-i"><code>HTML w i</code></a></h3>
-<p><code>HTML</code> is the core type for HTML in Halogen. It is used for HTML elements that are not tied to a particular kind of component. For example, it's used as the type for the <code>h1</code>, <code>text</code>, and <code>button</code> elements we've seen so far. You can also use this type when defining your own custom HTML elements.</p>
-<p>The <code>HTML</code> type takes two type parameters: <code>w</code>, which stands for &quot;widget&quot; and describes what components can be used in the HTML, and <code>i</code>, which stands for &quot;input&quot; and represents the type used to handle DOM events.</p>
-<p>When you write helper functions for Halogen HTML that don't need to respond to DOM events, then you will typically use the <code>HTML</code> type without specifying what <code>w</code> and <code>i</code> are. For example, this helper function lets you create a button, given a label:</p>
-<pre><code class="language-purs">primaryButton :: forall w i. String -&gt; HH.HTML w i
-primaryButton label =
-  HH.button
-    [ HP.classes [ HH.ClassName &quot;primary&quot; ] ]
-    [ HH.text label ]
-</code></pre>
-<p>You could also accept HTML as the label instead of accepting just a string:</p>
-<pre><code class="language-purs">primaryButton :: forall w i. HH.HTML w i -&gt; HH.HTML w i
-primaryButton label =
-  HH.button
-    [ HP.classes [ HH.ClassName &quot;primary&quot; ] ]
-    [ label ]
-</code></pre>
-<p>Of course, being a button, you probably want to do something when it's clicked. Don't worry -- we'll cover handling DOM events in the next chapter!</p>
-<h3><a class="header" href="#componenthtml-and-plainhtml" id="componenthtml-and-plainhtml"><code>ComponentHTML</code> and <code>PlainHTML</code></a></h3>
-<p>There are two other HTML types you will commonly see in Halogen applications.</p>
-<p><code>ComponentHTML</code> is used when you write HTML that is meant to work with a particular type of component. It can also be used outside of components, but it is most commonly used within them. We'll learn more about this type in the next chapter.</p>
-<p><code>PlainHTML</code> is a more restrictive version of <code>HTML</code> that's used for HTML that doesn't contain components and doesn't respond to events in the DOM. The type lets you hide <code>HTML</code>'s two type parameters, which is convenient when you're passing HTML around as a value. However, if you want to combine values of this type with other HTML that does respond to DOM events or contain components, you'll need to convert it with <code>fromPlainHTML</code>.</p>
-<h3><a class="header" href="#iprop" id="iprop"><code>IProp</code></a></h3>
-<p>When you look up functions from the <code>Halogen.HTML.Properties</code> and <code>Halogen.HTML.Events</code> modules, you'll see the <code>IProp</code> type featured prominently. For example, here's the <code>placeholder</code> function which will let you set the string placeholder property on a text field:</p>
-<pre><code class="language-purs">placeholder :: forall r i. String -&gt; IProp (placeholder :: String | r) i
-placeholder = prop (PropName &quot;placeholder&quot;)
-</code></pre>
-<p>The <code>IProp</code> type is used for events and properties. It uses a row type to uniquely identify particular events and properties; when you then use one of these properties with a Halogen HTML element, Halogen is able to verify whether the element you're applying the property to actually supports it.</p>
-<p>This is possible because Halogen HTML elements also carry a row type which lists all the properties and events that it can support. When you apply a property or event to the element, Halogen looks up in the HTML element's row type whether or not it supports the property or event.</p>
-<p>This helps ensure your HTML is well-formed. For example, <code>&lt;div&gt;</code> elements do not support the <code>placeholder</code> property according to the DOM spec. Accordingly, if you try to give a <code>div</code> a <code>placeholder</code> property in Halogen you'll get a compile-time error:</p>
-<pre><code class="language-purs">-- ERROR: Could not match type ( placeholder :: String | r )
--- with type ( accessKey :: String, class :: String, ... )
-html = HH.div [ HP.placeholder &quot;blah&quot; ] [ ]
-</code></pre>
-<p>This error tells you that you've tried to use a property with an element that doesn't support it. It first lists the property you tried to use, and then it lists the properties that the element <em>does</em> support. Another example of Halogen's type safety in action!</p>
 <h1><a class="header" href="#introducing-components" id="introducing-components">Introducing Components</a></h1>
 <p>Halogen HTML is one basic building block of Halogen applications. But pure functions that produce HTML lack many essential features that a real world application needs: state that represents values over time, effects for things like network requests, and the ability to respond to DOM events (for example, when a user clicks a button).</p>
 <p>Halogen components accept input and produce Halogen HTML, like the functions we've seen so far. Unlike functions, though, components maintain internal state, can update their state or perform effects in response to events, and can communicate with other components.</p>
@@ -1982,6 +1862,7 @@ component =
 <h1><a class="header" href="#halogen-concepts-reference" id="halogen-concepts-reference">Halogen Concepts Reference</a></h1>
 <p>Halogen is a declarative, component-based UI library for PureScript that emphasizes type safety. This concepts reference is a glossary of the concepts used in Halogen, along with their technical motivation.</p>
 <p>This reference is still in progress. Check back later to see the finished product! For now, we suggest reading through the <a href="https://github.com/purescript-halogen/purescript-halogen/tree/master/docs/guide">Halogen Guide</a> to learn Halogen.</p>
+<h1><a class="header" href="#major-version-changelog-1" id="major-version-changelog-1">Major Version Changelog</a></h1>
 <h1><a class="header" href="#changes-in-v5" id="changes-in-v5">Changes in v5</a></h1>
 <p>This is a crash-course guide to things that have changed from Halogen 4 to Halogen 5. Please open an issue or a PR if you notice missing information or ways this transition guide could be improved!</p>
 <p>Halogen 5 introduces many improvements to Halogen's performance and usability. If you are migrating an application from Halogen 4 we recommend reading through the full transition guide. However, you can also hop directly to a relevant section using the table of contents below.</p>
