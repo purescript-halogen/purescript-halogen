@@ -9,7 +9,7 @@ Halogen is a type-safe library for building user interfaces in PureScript.
 * **Entirely PureScript**
   Halogen and its virtual DOM implementation are written in PureScript. Halogen's performance and bundle sizes are roughly equivalent to popular JavaScript UI libraries like React and Angular.
 
-[Read the guide](https://github.com/purescript-halogen/purescript-halogen/tree/master/docs) to learn how to use Halogen in your own projects.
+[Read the documentation](https://purescript-halogen.github.io/purescript-halogen) to learn how to use Halogen in your own projects.
 
 ## Installation
 
@@ -23,7 +23,7 @@ Or [create a new Halogen app from a template](https://github.com/purescript-halo
 
 ## Documentation
 
-You can find the Halogen documentation [in the docs folder](https://github.com/purescript-halogen/purescript-halogen/tree/master/docs). Documentation is divided into several categories:
+You can find the Halogen documentation [on the documentation site](https://purescript-halogen.github.io/purescript-halogen) or [in the docs folder](https://github.com/purescript-halogen/purescript-halogen/tree/master/docs). Documentation is divided into several categories:
 
 * [Halogen Guide](https://github.com/purescript-halogen/purescript-halogen/tree/master/docs/guide)
 * [Concepts Reference](https://github.com/purescript-halogen/purescript-halogen/tree/master/docs/concepts-reference) (Coming soon)
