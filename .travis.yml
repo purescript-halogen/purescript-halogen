@@ -3,8 +3,11 @@ dist: trusty
 sudo: required
 node_js: stable
 install:
-  - npm install
+- npm install
 script:
-  - npm run -s build
-  - npm run -s test
-  - npm run -s example-all
+- npm run -s build
+- npm run -s test
+- npm run -s example-all
+before_install:
+- openssl aes-256-cbc -K $encrypted_8ebb1ef83f64_key -iv $encrypted_8ebb1ef83f64_iv
+  -in github_deploy_key.enc -out github_deploy_key -d
