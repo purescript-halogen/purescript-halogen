@@ -1,0 +1,537 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Lifecycles Subscriptions - Halogen Guide</title>
+        
+
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800" rel="stylesheet" type="text/css">
+        <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro:500" rel="stylesheet" type="text/css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "light" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="../guide/index.html">Introduction</a></li><li class="chapter-item expanded affix "><a href="../guide/01-Rendering-Halogen-HTML.html">Rendering Halogen HTML</a></li><li class="chapter-item expanded affix "><a href="../guide/02-Introducing-Components.html">Introducing Components</a></li><li class="chapter-item expanded affix "><a href="../guide/03-Performing-Effects.html">Performing Effects</a></li><li class="chapter-item expanded affix "><a href="../guide/04-Lifecycles-Subscriptions.html" class="active">Lifecycles Subscriptions</a></li><li class="chapter-item expanded affix "><a href="../guide/05-Parent-Child-Components.html">Parent Child Components</a></li><li class="chapter-item expanded affix "><a href="../guide/06-Running-Application.html">Running Application</a></li><li class="chapter-item expanded affix "><a href="../guide/07-Next-Steps.html">Next Steps</a></li><li class="chapter-item expanded affix "><a href="../concepts-reference/index.html">Concepts Reference</a></li><li class="chapter-item expanded affix "><a href="../changelog/v5.html">V5 Changes</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                        
+                    </div>
+
+                    <h1 class="menu-title">Halogen Guide</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        
+                    </div>
+                </div>
+
+                
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1><a class="header" href="#lifecycles-and-subscriptions" id="lifecycles-and-subscriptions">Lifecycles and Subscriptions</a></h1>
+<p>The concepts you've learned so far cover the majority of Halogen components you'll write. Most components have internal state, render HTML elements, and respond by performing actions when users click, hover over, or otherwise interact with the rendered HTML.</p>
+<p>But actions can arise internally from other kinds of events, too. Here are some common examples:</p>
+<ol>
+<li>You need to run an action when the component starts up (for example, you need to perform an effect to get your initial state) or when the component is removed from the DOM (for example, to clean up resources you acquired). These are called <strong>lifecycle events</strong>.</li>
+<li>You need to run an action at regular intervals (for example, you need to perform an update every 10 seconds), or when an event arises from outside your rendered HTML (for example, you need to run an action when a key is pressed on the DOM window, or you need to handle events that occur in a third-party component like a text editor). These are handled by <strong>event source subscriptions</strong>, sometimes just called <strong>subscriptions</strong> or <strong>event sources</strong>.</li>
+</ol>
+<p>We'll learn about one other way actions can arise in a component when we learn about parent and child components in the next chapter. This chapter will focus on lifecycles and subscriptions.</p>
+<h2><a class="header" href="#lifecycle-events" id="lifecycle-events">Lifecycle Events</a></h2>
+<p>Every Halogen component has access to two lifecycle events:</p>
+<ol>
+<li>The component can evaluate an action when it is initialized (Halogen creates it)</li>
+<li>The component can evaluate an action when it is finalized (Halogen removes it)</li>
+</ol>
+<p>We specify what action (if any) to run when the component is initialized and finalized as part of the <code>eval</code> function -- the same place where we've been providing the <code>handleAction</code> function. In the next section we'll get into more detail about what <code>eval</code> is, but first lets see an example of lifecycles in action.</p>
+<p>The following example is nearly identical to our random number component, but with some important changes.</p>
+<ol>
+<li>We have added <code>Initialize</code> and <code>Finalize</code> in addition to our existing <code>Regenerate</code> action.</li>
+<li>We've expanded our <code>eval</code> to include an <code>initialize</code> field that states our <code>Initialize</code> action should be evaluated when the component initializes, and a <code>finalize</code> field that states our <code>Finalize</code> action should be evaluated when the component finalizes.</li>
+<li>Since we have two new actions, we've added two new cases to our <code>handleAction</code> function to describe how to handle them.</li>
+</ol>
+<p>Try reading through the example:</p>
+<pre><code class="language-purs">module Main where
+
+import Prelude
+
+import Data.Maybe (Maybe(..), maybe)
+import Effect.Class (class MonadEffect)
+import Effect.Class.Console (log)
+import Effect.Random (random)
+import Halogen as H
+import Halogen.HTML as HH
+import Halogen.HTML.Events as HE
+
+type State = Maybe Number
+
+data Action
+  = Initialize
+  | Regenerate
+  | Finalize
+
+component :: forall q i o m. MonadEffect m =&gt; H.Component HH.HTML q i o m
+component =
+  H.mkComponent
+    { initialState
+    , render
+    , eval: H.mkEval $ H.defaultEval
+        { handleAction = handleAction
+        , initialize = Just Initialize
+        , finalize = Just Finalize
+        }
+    }
+
+initialState :: forall i. i -&gt; State
+initialState _ = Nothing
+
+render :: forall m. State -&gt; H.ComponentHTML Action () m
+render state = do
+  let value = maybe &quot;No number generated yet&quot; show state
+  HH.div_
+    [ HH.h1_
+        [ HH.text &quot;Random number&quot; ]
+    , HH.p_
+        [ HH.text (&quot;Current value: &quot; &lt;&gt; value) ]
+    , HH.button
+        [ HE.onClick \_ -&gt; Just Regenerate ]
+        [ HH.text &quot;Generate new number&quot; ]
+    ]
+
+handleAction :: forall o m. MonadEffect m =&gt; Action -&gt; H.HalogenM State Action () o m Unit
+handleAction = case _ of
+  Initialize -&gt; do
+    handleAction Regenerate
+    log (&quot;Initialized: &quot; &lt;&gt; show newNumber)
+
+  Regenerate -&gt; do
+    newNumber &lt;- H.liftEffect random
+    H.put (Just newNumber)
+
+  Finalize -&gt; do
+    number &lt;- H.get
+    log (&quot;Finalized! Last number was: &quot; &lt;&gt; show number)
+</code></pre>
+<p>When this component mounts we'll generate a random number and log it to the console. We'll keep regenerating random numbers as the user clicks the button, and when this component is removed from the DOM it will log the last number it had in state.</p>
+<p>We made one other interesting change in this example: in our <code>Initialize</code> handler we called <code>handleAction Regenerate</code> -- we called <code>handleAction</code> recursively. It can be convenient to call actions from within other actions from time to time as we've done here. We could have also inlined <code>Regenerate</code>'s handler -- the following code does the same thing:</p>
+<pre><code class="language-purs">  Initialize -&gt; do
+    newNumber &lt;- H.liftEffect random
+    H.put (Just newNumber)
+    log (&quot;Initialized: &quot; &lt;&gt; show newNumber)
+</code></pre>
+<p>Before we move on to subscriptions and event sources, let's talk more about the <code>eval</code> function.</p>
+<h2><a class="header" href="#the-eval-function-mkeval-and-evalspec" id="the-eval-function-mkeval-and-evalspec">The <code>eval</code> Function, <code>mkEval</code>, and <code>EvalSpec</code></a></h2>
+<p>We've been using <code>eval</code> in all of our components, but so far we've only handled actions arising from our Halogen HTML via the <code>handleAction</code> function. But the <code>eval</code> function can describe <em>all</em> the ways our component can evaluate <code>HalogenM</code> code in response to events.</p>
+<p>In the vast majority of cases you don't need to care much about all the types and functions involved in the component spec and eval spec described below, but we'll briefly break down the types so you have an idea of what's going on.</p>
+<p>The <code>mkComponent</code> function takes a <code>ComponentSpec</code>, which is a record containing three fields:</p>
+<pre><code class="language-purs">H.mkComponent
+  { initialState :: input -&gt; state
+  , render :: state -&gt; H.ComponentHTML action slots m
+  , eval :: H.HalogenQ query action input ~&gt; H.HalogenM state action slots output m
+  }
+</code></pre>
+<p>We've spent plenty of time with the <code>initialState</code> and <code>render</code> functions already. But the <code>eval</code> function may look strange -- what is <code>HalogenQ</code>, and how do functions like <code>handleAction</code> fit in? For now, we'll focus on the most common use of this function, but you can find the full details in the Concepts Reference.</p>
+<p>The <code>eval</code> function describes how to handle events that arise in the component. It's usually constructed by applying the <code>mkEval</code> function to an <code>EvalSpec</code>, the same way we applied <code>mkComponent</code> to a <code>ComponentSpec</code> to produce a <code>Component</code>.</p>
+<p>For convenience, Halogen provides an already-complete <code>EvalSpec</code> called <code>defaultEval</code>, which does nothing when an event arises in the component. By using this default value you can override just the values you care about, while leaving the rest of them doing nothing.</p>
+<p>Here's how we've defined <code>eval</code> functions that only handle actions so far:</p>
+<pre><code class="language-purs">H.mkComponent
+  { initialState
+  , render
+  , eval: H.mkEval $ H.defaultEval { handleAction = handleAction }
+  }
+
+-- assuming we've defined a `handleAction` function in scope...
+handleAction = ...
+</code></pre>
+<p>You can override more fields, if you need to. For example, if you need to support an initializer then you would override the <code>initialize</code> field too:</p>
+<pre><code class="language-purs">H.mkComponent
+  { initialState
+  , render
+  , eval: H.mkEval $ H.defaultEval
+      { handleAction = handleAction
+      , initialize = Just Initialize
+      }
+  }
+</code></pre>
+<p>Let's take a quick look at the full type of <code>EvalSpec</code>:</p>
+<pre><code class="language-purs">type EvalSpec state query action slots input output m =
+  { handleAction :: action -&gt; HalogenM state action slots output m Unit
+  , handleQuery :: forall a. query a -&gt; HalogenM state action slots output m (Maybe a)
+  , initialize :: Maybe action
+  , receive :: input -&gt; Maybe action
+  , finalize :: Maybe action
+  }
+</code></pre>
+<p>The <code>EvalSpec</code> covers all the types available internally in your component. Fortunately, you don't need to specify this type anywhere -- you can just provide a record to <code>mkEval</code>. We'll cover the <code>handleQuery</code> and <code>receive</code> functions as well as the <code>query</code> and <code>output</code> types in the next chapter, as they're only relevant for child components.</p>
+<p>Since in normal use you'll override specific fields from <code>defaultEval</code> rather than write out a whole eval spec yourself, let's also look at what <code>defaultEval</code> implements for each of these functions:</p>
+<pre><code class="language-purs">defaultEval =
+  { handleAction: const (pure unit)
+  , handleQuery: const (pure Nothing) -- we'll learn about this when we cover child components
+  , initialize: Nothing
+  , receive: const Nothing -- we'll learn about this when we cover child components
+  , finalize: Nothing
+  }
+</code></pre>
+<p>Now, let's move to the other common source of internal events: event sources we've subscribed to.</p>
+<h2><a class="header" href="#subscriptions" id="subscriptions">Subscriptions</a></h2>
+<p>Sometimes you need to handle events arising internally that don't come from a user interacting with the Halogen HTML you've rendered. Two common sources are time-based actions and events that happen on an element outside one you've rendered (like the browser window).</p>
+<p>In Halogen these kinds of events come from <strong>event sources</strong>. Components can subscribe to event sources by providing an action that should run every time an event happens.</p>
+<p>Event sources are usually created with one of these functions:</p>
+<ol>
+<li><code>effectEventSource</code> and<code>affEventSource</code> let you produce an event source from an <code>Effect</code> or <code>Aff</code> function, respectively.</li>
+<li><code>eventListenerEventSource</code> lets you produce an event source by attaching an event listener to the DOM, like attaching a resize event to the browser window.</li>
+</ol>
+<p>An event source can be thought of as a stream of actions: actions can be produced at any time from the event source, and your component will evaluate those actions so long as it remains subscribed to the event source. It's common to use create an event source and subscribe to it when the component initializes, though you can subscribe or unsubscribe from an event source at any time.</p>
+<p>Let's see two examples of event sources in action: an <code>Aff</code>-based timer that counts the seconds since the component mounted and an event-listener-based stream that reports keyboard events on the document.</p>
+<h3><a class="header" href="#implementing-a-timer" id="implementing-a-timer">Implementing a Timer</a></h3>
+<p>Our first example will use an <code>Aff</code>-based timer to increment every second.</p>
+<pre><code class="language-purs">module Main where
+
+import Prelude
+
+import Control.Monad.Rec.Class (forever)
+import Effect.Aff (Milliseconds(..))
+import Effect.Aff as Aff
+import Effect.Aff.Class (class MonadAff)
+import Effect.Exception (error)
+import Halogen as H
+import Halogen.HTML as HH
+import Halogen.Query.EventSource (EventSource)
+import Halogen.Query.EventSource as EventSource
+
+data Action = Initialize | Tick
+
+type State = Int
+
+component :: forall q i o m. MonadAff m =&gt; H.Component HH.HTML q i o m
+component =
+  H.mkComponent
+    { initialState
+    , render
+    , eval: H.mkEval $ H.defaultEval { handleAction = handleAction }
+    }
+
+initialState :: forall i. i -&gt; State
+initialState _ = 0
+
+render :: forall m. State -&gt; H.ComponentHTML Action () m
+render seconds = HH.text (&quot;You have been here for &quot; &lt;&gt; show seconds &lt;&gt; &quot; seconds&quot;)
+
+handleAction :: forall o m. MonadAff m =&gt; Action -&gt; H.HalogenM State Action () o m Unit
+handleAction = case _ of
+  Initialize -&gt; do
+    _ &lt;- H.subscribe timer
+    pure unit
+
+  Tick -&gt;
+    H.modify_ \state -&gt; state + 1
+
+timer :: forall m. MonadAff m =&gt; EventSource m Action
+timer = EventSource.affEventSource \emitter -&gt; do
+  fiber &lt;- Aff.forkAff $ forever do
+    Aff.delay $ Milliseconds 1000.0
+    EventSource.emit emitter Tick
+
+  pure $ EventSource.Finalizer do
+    Aff.killFiber (error &quot;Event source finalized&quot;) fiber
+</code></pre>
+<p>Almost all of this code should look familiar, but there are two new parts.</p>
+<p>First, we've defined an event source that will emit a <code>Tick</code> action every second until it is closed:</p>
+<pre><code class="language-purs">timer :: forall m. MonadAff m =&gt; EventSource m Action
+timer = EventSource.affEventSource \emitter -&gt; do
+  fiber &lt;- Aff.forkAff $ forever do
+    Aff.delay $ Milliseconds 1000.0
+    EventSource.emit emitter Tick
+
+  pure $ EventSource.Finalizer do
+    Aff.killFiber (error &quot;Event source finalized&quot;) fiber
+</code></pre>
+<p>The <code>affEventSource</code> and <code>effectEventSource</code> functions take a callback that provides you with an <code>Emitter</code>. You can use this with the <code>EventSource.emit</code> function to broadcast an action, or with the <code>EventSource.close</code> function to close the event source (this lets you close an event source from within, instead of having to wait for the event source to be closed by its subscriber or automatically when the component finalizes). You can return a cleanup function to run when the event source closes, called its finalizer. In this case, we use the finalizer to kill the fiber we forked to loop the count.</p>
+<p>Second, we use the <code>subscribe</code> function from Halogen to attach to the event source:</p>
+<pre><code class="language-purs">  Initialize -&gt; do
+    _ &lt;- H.subscribe timer
+    pure unit
+</code></pre>
+<p>The <code>subscribe</code> function takes an event source as an argument and it returns a <code>SubscriptionId</code>. You can pass this <code>SubscriptionId</code> to the <code>unsubscribe</code> function at any point to close the event source, run its cleanup function, and stop listening to outputs from it. Components automatically unsubscribe from any event sources when the component finalizes, so we don't need to unsubscribe here.</p>
+<p>You may also be interested in the <a href="https://github.com/purescript-halogen/purescript-halogen/tree/master/examples/ace">Ace editor example</a>, which subscribes to events that happen inside a third-party JavaScript component and uses them to trigger actions in a Halogen component.</p>
+<h3><a class="header" href="#using-event-listeners-as-event-sources" id="using-event-listeners-as-event-sources">Using Event Listeners As Event Sources</a></h3>
+<p>Another common reason to use event sources is when you need to react to events in the DOM that don't arise directly from HTML elements you control. For example, we might want to listen to events that happen on the document itself.</p>
+<p>In the following example we subscribe to key events on the document, save any characters that are typed while holding the <code>Shift</code> key, and stop listening if the user hits the <code>Enter</code> key. It demonstrates using the <code>eventListenerEventSource</code> function to attach an event listener and using the <code>H.unsubscribe</code> function to choose when to clean it up.</p>
+<p>There is also a corresponding <a href="https://github.com/purescript-halogen/purescript-halogen/tree/master/examples/keyboard-input">example of keyboard input</a> in the examples directory.</p>
+<pre><code class="language-purs">module Main where
+
+import Prelude
+
+import Data.Maybe (Maybe(..))
+import Data.String as String
+import Effect.Aff.Class (class MonadAff)
+import Halogen as H
+import Halogen.HTML as HH
+import Halogen.Query.EventSource (EventSource, eventListenerEventSource)
+import Web.Event.Event as E
+import Web.HTML (HTMLDocument, window)
+import Web.HTML.HTMLDocument as HTMLDocument
+import Web.HTML.Window (document)
+import Web.UIEvent.KeyboardEvent as KE
+import Web.UIEvent.KeyboardEvent.EventTypes as KET
+
+type State = { chars :: String }
+
+data Action
+  = Initialize
+  | HandleKey H.SubscriptionId KE.KeyboardEvent
+
+component :: forall q i o m. MonadAff m =&gt; H.Component HH.HTML q i o m
+component =
+  H.mkComponent
+    { initialState
+    , render
+    , eval: H.mkEval $ H.defaultEval
+        { handleAction = handleAction
+        , initialize = Just Initialize
+        }
+    }
+
+initialState :: forall i. i -&gt; State
+initialState _ = { chars: &quot;&quot; }
+
+render :: forall m. State -&gt; H.ComponentHTML Action () m
+render state =
+  HH.div_
+    [ HH.p_ [ HH.text &quot;Hold down the shift key and type some characters!&quot; ]
+    , HH.p_ [ HH.text &quot;Press ENTER or RETURN to clear and remove the event listener.&quot; ]
+    , HH.p_ [ HH.text state.chars ]
+    ]
+
+handleAction :: forall o m. MonadAff m =&gt; Action -&gt; H.HalogenM State Action () o m Unit
+handleAction = case _ of
+  Initialize -&gt; do
+    document &lt;- H.liftEffect $ document =&lt;&lt; window
+    H.subscribe' \sid -&gt;
+      eventListenerEventSource
+        KET.keyup
+        (HTMLDocument.toEventTarget document)
+        (map (HandleKey sid) &lt;&lt;&lt; KE.fromEvent)
+
+  HandleKey sid ev
+    | KE.shiftKey ev -&gt; do
+        H.liftEffect $ E.preventDefault $ KE.toEvent ev
+        let char = KE.key ev
+        when (String.length char == 1) do
+          H.modify_ \st -&gt; st { chars = st.chars &lt;&gt; char }
+
+    | KE.key ev == &quot;Enter&quot; -&gt; do
+        H.liftEffect $ E.preventDefault (KE.toEvent ev)
+        H.modify_ _ { chars = &quot;&quot; }
+        H.unsubscribe sid
+
+    | otherwise -&gt;
+        pure unit
+</code></pre>
+<p>In this example we used the <code>H.subscribe'</code> function, which passes the <code>SubscriptionId</code> to the event source instead of returning it. This is an alternative that lets you keep the ID in the action type instead of the state, which can be more convenient.</p>
+<p>We wrote our event source right into our code to handle the <code>Initialize</code> action, which registers an event listener on the document and emits <code>HandleKey</code> every time a key is pressed.</p>
+<p><code>eventListenerEventSource</code> works a little differently from the other event sources. It uses types from the <code>purescript-web</code> libraries for working with the DOM to manually construct an event listener:</p>
+<pre><code>eventListenerEventSource
+  :: forall m a
+   . MonadAff m
+  =&gt; EventType
+  -&gt; EventTarget
+  -&gt; (Event -&gt; Maybe a)
+  -&gt; EventSource m a
+</code></pre>
+<p>It takes a type of event to listen to (in our case: <code>keyup</code>), a target indicating where to listen for events (in our case: the <code>HTMLDocument</code> itself), and a callback function that transforms the events that occur into a type that should be emitted (in our case: we emit our <code>Action</code> type by capturing the event in the <code>HandleKey</code> constructor).</p>
+<h2><a class="header" href="#wrapping-up" id="wrapping-up">Wrapping Up</a></h2>
+<p>Halogen components use the <code>Action</code> type to handle various kinds of events that arise internally in a component. We've now seen all the common ways this can happen:</p>
+<ol>
+<li>User interaction with HTML elements we rendered</li>
+<li>Lifecycle events</li>
+<li>Event sources, whether via <code>Aff</code> and <code>Effect</code> functions or from event listeners on the DOM</li>
+</ol>
+<p>You now know all the essentials for using Halogen components in isolation. In the next chapter we'll learn how to combine Halogen components together into a tree of parent and child components.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+                            <a rel="prev" href="../guide/03-Performing-Effects.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                        
+
+                        
+                            <a rel="next" href="../guide/05-Parent-Child-Components.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+                    <a rel="prev" href="../guide/03-Performing-Effects.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
+
+                
+                    <a rel="next" href="../guide/05-Parent-Child-Components.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                
+            </nav>
+
+        </div>
+
+        
+
+        
+
+        
+        
+        
+        <script type="text/javascript">
+            window.playpen_copyable = true;
+        </script>
+        
+
+        
+
+        
+        <script src="../elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../searcher.js" type="text/javascript" charset="utf-8"></script>
+        
+
+        <script src="../clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+
+        
+
+    </body>
+</html>

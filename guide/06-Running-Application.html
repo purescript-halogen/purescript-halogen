@@ -1,0 +1,363 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Running Application - Halogen Guide</title>
+        
+
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800" rel="stylesheet" type="text/css">
+        <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro:500" rel="stylesheet" type="text/css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "light" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="../guide/index.html">Introduction</a></li><li class="chapter-item expanded affix "><a href="../guide/01-Rendering-Halogen-HTML.html">Rendering Halogen HTML</a></li><li class="chapter-item expanded affix "><a href="../guide/02-Introducing-Components.html">Introducing Components</a></li><li class="chapter-item expanded affix "><a href="../guide/03-Performing-Effects.html">Performing Effects</a></li><li class="chapter-item expanded affix "><a href="../guide/04-Lifecycles-Subscriptions.html">Lifecycles Subscriptions</a></li><li class="chapter-item expanded affix "><a href="../guide/05-Parent-Child-Components.html">Parent Child Components</a></li><li class="chapter-item expanded affix "><a href="../guide/06-Running-Application.html" class="active">Running Application</a></li><li class="chapter-item expanded affix "><a href="../guide/07-Next-Steps.html">Next Steps</a></li><li class="chapter-item expanded affix "><a href="../concepts-reference/index.html">Concepts Reference</a></li><li class="chapter-item expanded affix "><a href="../changelog/v5.html">V5 Changes</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                        
+                    </div>
+
+                    <h1 class="menu-title">Halogen Guide</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        
+                    </div>
+                </div>
+
+                
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1><a class="header" href="#running-an-application" id="running-an-application">Running an Application</a></h1>
+<p>Over the course of this guide we've seen the standard way to run a Halogen application several times. In this chapter, we'll learn what is actually going on when we run a Halogen application and how to control a running app from the outside.</p>
+<h2><a class="header" href="#using-runui-and-awaitbody" id="using-runui-and-awaitbody">Using <code>runUI</code> and <code>awaitBody</code></a></h2>
+<p>PureScript applications use the <code>main</code> function in their <code>Main</code> module as their entrypoint. Here's a standard <code>main</code> function for Halogen apps:</p>
+<pre><code class="language-purs">module Main where
+
+import Prelude
+
+import Effect (Effect)
+import Halogen.Aff as HA
+import Halogen.VDom.Driver (runUI)
+
+main :: Effect Unit
+main = HA.runHalogenAff do
+  body &lt;- HA.awaitBody
+  runUI component unit body
+
+-- Assuming you have defined a root component for your application
+component :: forall q i o m. H.Component q i o m
+component = ...
+</code></pre>
+<p>The most important function used in <code>main</code> is the <code>runUI</code> function. Provide <code>runUI</code> with your root component, the root component's input value, and a reference to a DOM element, and it will provide your application to the Halogen virtual DOM. The virtual DOM will then render your application at that element and maintain it there for as long as your app is running.</p>
+<pre><code class="language-purs">runUI
+  :: forall query input output
+   . Component HTML query input output Aff
+  -&gt; input
+  -&gt; DOM.HTMLElement
+  -&gt; Aff (HalogenIO query output Aff)
+</code></pre>
+<p>As you can see, the <code>runUI</code> function requires that your Halogen application can ultimately be run in the <code>Aff</code> monad. In this guide we used constraints like <code>MonadEffect</code> and <code>MonadAff</code>, which <code>Aff</code> satisfies, so we're in the clear.</p>
+<blockquote>
+<p>If you chose to use another monad for your application then you'll need to hoist it to run in <code>Aff</code> before you provide your application to <code>runUI</code>. The <a href="https://github.com/thomashoneyman/purescript-halogen-realworld">Real World Halogen</a> uses a custom <code>AppM</code> monad that serves as a good example of how to do this.</p>
+</blockquote>
+<p>In addition to <code>runUI</code> we used two other helper functions. First, we used <code>awaitBody</code> to wait for the page to load and then acquire a reference to the <code>&lt;body&gt;</code> tag as the root HTML element for the application to control. Second, we used <code>runHalogenAff</code> to launch asynchronous effects (our <code>Aff</code> code containing <code>awaitBody</code> and <code>runUI</code>) from within <code>Effect</code>. This is necessary because <code>awaitBody</code>, <code>runUI</code>, and our applications run in the <code>Aff</code> monad, but PureScript <code>main</code> functions must be in <code>Effect</code>.</p>
+<p>The <code>main</code> function we've used here is the standard way to run a Halogen application that is the only thing running on the page. Sometimes, though, you may use Halogen to take over just one part of the page, or you may be running multiple Halogen apps. In these cases, you'll probably reach for a pair of different helper functions:</p>
+<ol>
+<li><code>awaitLoad</code> blocks until the document has loaded so that you can safely retrieve references to HTML elements on the page</li>
+<li><code>selectElement</code> can be used to target a particular element on the page to embed the app within</li>
+</ol>
+<h2><a class="header" href="#using-halogenio" id="using-halogenio">Using <code>HalogenIO</code></a></h2>
+<p>When you run your Halogen application with <code>runUI</code> you receive a record of functions with the type <code>DriverIO</code>. These functions can be used to control your root component from outside the application. Conceptually, they're like a makeshift parent component for your application.</p>
+<pre><code class="language-purs">type HalogenIO query output m =
+  { query :: forall a. query a -&gt; m (Maybe a)
+  , subscribe :: Control.Coroutine.Consumer output m Unit -&gt; m Unit
+  , dispose :: m Unit
+  }
+</code></pre>
+<ol>
+<li>The <code>query</code> function should look similar to you -- it's like the ordinary <code>H.query</code> function we used for parent components to imperatively tell a child component to do something or to request some information from it.</li>
+<li>The <code>subscribe</code> function can be used to subscribe to a stream of output messages from the component -- it's like the handler we provided to the <code>slot</code> function, except rather than evaluate an action here we can perform some effect instead.</li>
+<li>The <code>dispose</code> function can be used to halt and clean up the Halogen application. This will kill any forked threads, close all subscriptions, and so on.</li>
+</ol>
+<p>A common pattern in Halogen applications is to use a <code>Route</code> component as the root of the application, and use the <code>query</code> function from <code>HalogenIO</code> to trigger route changes in the application when the URL changes. You can see a full example of doing this in the <a href="https://github.com/thomashoneyman/purescript-halogen-realworld/blob/master/src/Main.purs">Real World Halogen <code>Main.purs</code> file</a>.</p>
+<h2><a class="header" href="#full-example-controlling-a-button-with-halogenio" id="full-example-controlling-a-button-with-halogenio">Full Example: Controlling a Button With <code>HalogenIO</code></a></h2>
+<p>You can paste this example into <a href="https://try.purescript.org">Try PureScript</a> to explore using <code>HalogenIO</code> to control the root component of an application.</p>
+<pre><code class="language-purs">module Main where
+
+import Prelude
+
+import Control.Coroutine as CR
+import Data.Array as Array
+import Data.Maybe (Maybe(..))
+import Effect (Effect)
+import Halogen as H
+import Halogen.Aff as HA
+import Halogen.HTML as HH
+import Halogen.HTML.Events as HE
+import Halogen.VDom.Driver (runUI)
+
+main :: Effect Unit
+main = HA.runHalogenAff do
+  body &lt;- HA.awaitBody
+  io &lt;- runUI component unit body
+  
+  -- Log a message from outside the application by sending it to the button
+  let logMessage str = void $ io.query $ H.tell $ AppendMessage str
+
+  io.subscribe $ CR.consumer \(Toggled newState) -&gt; do
+    logMessage $ &quot;Button was internally toggled to: &quot; &lt;&gt; show newState
+    pure Nothing
+
+  state0 &lt;- io.query $ H.request IsOn
+  logMessage $ &quot;The button state is currently: &quot; &lt;&gt; show state0
+
+  _ &lt;- io.query $ H.tell $ SetEnabled true
+
+  state1 &lt;- io.query $ H.request IsOn
+  logMessage $ &quot;The button state is now: &quot; &lt;&gt; show state1
+
+-- Child component implementation
+
+data Query a
+  = IsOn (Boolean -&gt; a)
+  | SetEnabled Boolean a
+  | AppendMessage String a
+
+data Output = Toggled Boolean
+
+data Action = Toggle
+
+type State = { enabled :: Boolean, messages :: Array String }
+
+component :: forall i m. H.Component HH.HTML Query i Output m
+component =
+  H.mkComponent
+    { initialState
+    , render
+    , eval: H.mkEval $ H.defaultEval
+        { handleAction = handleAction
+        , handleQuery = handleQuery
+        }
+    }
+  where
+  initialState :: i -&gt; State
+  initialState _ = { enabled: false, messages: [] }
+
+  render :: State -&gt; H.ComponentHTML Action () m
+  render state =
+    HH.div_
+      [ HH.div_ (map (\str -&gt; HH.p_ [ HH.text str ]) state.messages)
+      , HH.button
+          [ HE.onClick \_ -&gt; Just Toggle ]
+          [ HH.text $ if state.enabled then &quot;On&quot; else &quot;Off&quot; ]
+      ]
+  
+  handleAction :: Action -&gt; H.HalogenM State Action () Output m Unit
+  handleAction = case _ of
+    Toggle -&gt; do
+      newState &lt;- H.modify \st -&gt; st { enabled = not st.enabled }
+      H.raise (Toggled newState.enabled)
+  
+  handleQuery :: forall a. Query a -&gt; H.HalogenM State Action () Output m (Maybe a)
+  handleQuery = case _ of
+    IsOn reply -&gt; do
+      enabled &lt;- H.gets _.enabled
+      pure (Just (reply enabled))
+      
+    SetEnabled enabled a -&gt; do
+      H.modify_ _ { enabled = enabled }
+      pure (Just a)
+    
+    AppendMessage str a -&gt; do
+      H.modify_ \st -&gt; st { messages = Array.snoc st.messages str }
+      pure (Just a)
+</code></pre>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+                            <a rel="prev" href="../guide/05-Parent-Child-Components.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                        
+
+                        
+                            <a rel="next" href="../guide/07-Next-Steps.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+                    <a rel="prev" href="../guide/05-Parent-Child-Components.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
+
+                
+                    <a rel="next" href="../guide/07-Next-Steps.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                
+            </nav>
+
+        </div>
+
+        
+
+        
+
+        
+        
+        
+        <script type="text/javascript">
+            window.playpen_copyable = true;
+        </script>
+        
+
+        
+
+        
+        <script src="../elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../searcher.js" type="text/javascript" charset="utf-8"></script>
+        
+
+        <script src="../clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+
+        
+
+    </body>
+</html>

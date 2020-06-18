@@ -1,0 +1,626 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>V5 Changes - Halogen Guide</title>
+        
+
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800" rel="stylesheet" type="text/css">
+        <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro:500" rel="stylesheet" type="text/css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "light" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="../guide/index.html">Introduction</a></li><li class="chapter-item expanded affix "><a href="../guide/01-Rendering-Halogen-HTML.html">Rendering Halogen HTML</a></li><li class="chapter-item expanded affix "><a href="../guide/02-Introducing-Components.html">Introducing Components</a></li><li class="chapter-item expanded affix "><a href="../guide/03-Performing-Effects.html">Performing Effects</a></li><li class="chapter-item expanded affix "><a href="../guide/04-Lifecycles-Subscriptions.html">Lifecycles Subscriptions</a></li><li class="chapter-item expanded affix "><a href="../guide/05-Parent-Child-Components.html">Parent Child Components</a></li><li class="chapter-item expanded affix "><a href="../guide/06-Running-Application.html">Running Application</a></li><li class="chapter-item expanded affix "><a href="../guide/07-Next-Steps.html">Next Steps</a></li><li class="chapter-item expanded affix "><a href="../concepts-reference/index.html">Concepts Reference</a></li><li class="chapter-item expanded affix "><a href="../changelog/v5.html" class="active">V5 Changes</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                        
+                    </div>
+
+                    <h1 class="menu-title">Halogen Guide</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        
+                    </div>
+                </div>
+
+                
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1><a class="header" href="#changes-in-v5" id="changes-in-v5">Changes in v5</a></h1>
+<p>This is a crash-course guide to things that have changed from Halogen 4 to Halogen 5. Please open an issue or a PR if you notice missing information or ways this transition guide could be improved!</p>
+<p>Halogen 5 introduces many improvements to Halogen's performance and usability. If you are migrating an application from Halogen 4 we recommend reading through the full transition guide. However, you can also hop directly to a relevant section using the table of contents below.</p>
+<ol>
+<li><a href="#component-constructors-html-and-dsl-types">Component Constructors, HTML, and DSL Types</a></li>
+<li><a href="#queries-and-actions">Queries and Actions</a></li>
+<li><a href="#component-evaluation">Component Evaluation</a></li>
+<li><a href="#child-component-addressing">Child Component Addressing</a></li>
+<li><a href="#subscriptions-forking-and-event-sources">Subscriptions, Forking, and Event Sources</a></li>
+<li><a href="#performance-optimization-with-lazy-and-memoized">Performance Optimization with Lazy and Memoized</a></li>
+<li><a href="#other-changes">Other Changes</a></li>
+</ol>
+<h2><a class="header" href="#component-constructors-html-and-dsl-types" id="component-constructors-html-and-dsl-types">Component Constructors, HTML, and DSL Types</a></h2>
+<p>Halogen 4 distinguished among parent- and child-specific for the HTML and DSL types used when defining a component, and between parent-, child-, and lifecycle-specific functions for constructing components.</p>
+<p>Halogen 5 uses only one component constructor function, <code>mkComponent</code>, one type for HTML, <code>ComponentHTML</code>, and one type for component evaluation, <code>HalogenM</code>.</p>
+<p>For example, a parent component would previously be defined with the <code>parentComponent</code> constructor and use the <code>ParentHTML</code> and <code>ParentDSL</code> type synonyms:</p>
+<pre><code class="language-purs">parentComponent :: H.Component HH.HTML Query Input Message m
+parentComponent =
+  H.parentComponent
+    ...
+  where
+  render :: State  -&gt; H.ParentHTML Query ChildQuery Slots m
+
+  eval
+    :: Query
+    ~&gt; H.ParentDSL State Query ChildQuery Slots Message m
+</code></pre>
+<p>Whereas a child component would be defined with the <code>component</code> constructor and use the <code>ComponentHTML</code> and <code>ComponentDSL</code> type synonyms:</p>
+<pre><code class="language-purs">childComponent :: H.Component HH.HTML Query Input Message m
+childComponent =
+  H.component
+    ...
+  where
+  render :: State -&gt; H.ComponentHTML Query
+
+  eval :: Query ~&gt; H.ComponentDSL State Query Message m
+</code></pre>
+<p>A component which used lifecycles (an initializer and/or finalizer) would be constructed with yet another pair of constructor functions:</p>
+<pre><code class="language-purs">parentComponentWithLifecycles = H.lifecycleParentComponent ...
+childComponentWithLifecycles = H.lifecycleComponent ...
+</code></pre>
+<p>In Halogen 5, the only component constructor is <code>mkComponent</code>, the only type for HTML is <code>ComponentHTML</code>, and the only type for component evaluation is <code>HalogenM</code>.</p>
+<p>Due to changes in queries and evaluation in Halogen 5, these types are not the same as they were in Halogen 4. We'll explore those changes in the next section.</p>
+<h2><a class="header" href="#queries-and-actions" id="queries-and-actions">Queries and Actions</a></h2>
+<p>In Halogen 4, a component's query algebra defines everything the component can do. In Halogen 5, queries are only for parent-child communication, and a simpler action type is used within the component.</p>
+<p>Previously, queries were the only type for defining computations the component can run. Queries were paired with the <code>eval</code> function, which defines the computation that should run when a query happens. There were two ways to write a query: &quot;action-style&quot; and &quot;request-style&quot;:</p>
+<pre><code class="language-purs">data Query a
+  = HandleClick a
+  | RespondWithInt (Int -&gt; a)
+</code></pre>
+<p>Action-style queries like <code>HandleClick</code> don't return anything when they are run by the <code>eval</code> function, whereas request-style queries like <code>RespondWithInt</code> do return a result. Correspondingly, action-style queries were typically used to handle events arising from HTML or event sources, and request-style queries were used for parent-child component communication.</p>
+<p>In Halogen 5 this distinction has been made explicit. Components now use two separate types to represent computations: a query type for parent-child communication and an action type for internal events (like those arising from HTML or event sources).</p>
+<p>The above query type from Halogen 4 would become, in Halogen 5, these two definitions:</p>
+<pre><code class="language-purs">-- Actions don't need to be parameterised because they can't
+-- return a value. Actions are used instead of queries in
+-- ComponentHTML and to handle event sources.
+data Action
+  = HandleClick
+
+-- Queries are the same as they were in Halogen 4, but are
+-- used specifically for parent-child communication instead of
+-- being used to represent all computations in a component.
+data Query a
+  = RespondWithInt (Int -&gt; a)
+</code></pre>
+<p>Actions don't show up in the type of the component because they cannot be accessed outside of the component:</p>
+<pre><code class="language-purs">component :: forall m. H.Component Query Input Output m
+</code></pre>
+<h3><a class="header" href="#changes-to-query-evaluation" id="changes-to-query-evaluation">Changes to Query Evaluation</a></h3>
+<p>Queries are still used as the public interface for a component, which means they are useful for parent-child communication. They aren't required, however: many components are self-contained and only need actions.</p>
+<p>There have been a few other tweaks to queries in Halogen 5 worth knowing about.</p>
+<p>You can still write &quot;action-style&quot; queries, but to avoid terminology overloading, they're now termed &quot;tell-style&quot; queries and are constructed using <code>H.tell</code> instead of <code>H.action</code>.</p>
+<pre><code class="language-purs">data MyQuery a
+  = DoSomething a
+
+-- Halogen 4
+result &lt;- H.query ... $ H.action DoSomething
+
+-- Halogen 5
+result &lt;- H.query ... $ H.tell DoSomething
+</code></pre>
+<p>In addition, query evaluation in Halogen 5 can now &quot;fail&quot; without resorting to throwing exceptions. Query evaluation in Halogen 5 is now of the type:</p>
+<pre><code class="language-purs">query a -&gt; HalogenM ... (Maybe a)
+</code></pre>
+<p>instead of the Halogen 4 type:</p>
+<pre><code class="language-purs">query ~&gt; HalogenM ...
+</code></pre>
+<p>If evaluation returns <code>Nothing</code> for a query, then it will be flattened during the call to <code>H.query</code> and become indistinguishible from the case in which the component being queried doesn't exist.</p>
+<h3><a class="header" href="#introducing-actions" id="introducing-actions">Introducing Actions</a></h3>
+<p>Actions are now used to represent computations internal to a component. They are of the kind <code>Type</code> instead of <code>Type -&gt; Type</code> because, unlike queries, they can't return anything.</p>
+<pre><code class="language-purs">data Action
+  = Increment
+  | Decrement
+</code></pre>
+<p>Internally, actions are evaluated similarly to how queries are evaluated, with a function of the type:</p>
+<pre><code class="language-purs">action -&gt; HalogenM ... Unit
+</code></pre>
+<p>This action type is now used in place of the query type in your render function:</p>
+<pre><code class="language-purs">-- Halogen 4
+render :: State -&gt; H.ParentHTML Query ChildQuery Slots m
+render :: State -&gt; H.ComponentHTML Query
+
+-- Halogen 5
+render :: State -&gt; H.ComponentHTML Action Slots m
+</code></pre>
+<p>We're no longer using <code>Query</code> in the the Halogen 5 version. (We're not using <code>ChildQuery</code> either, but that's unrelated -- that's due to changes in how slots work in Halogen 5, which we'll address in a moment.)</p>
+<p>One last thing about actions: since they are not of kind <code>Type -&gt; Type</code>, helper functions like <code>input</code> and <code>input_</code> are no longer necessary when handling events in HTML, and so they have been removed in Halogen 5</p>
+<pre><code class="language-purs">-- Halogen 4
+module Halogen.HTML.Events where
+
+type Action f = Unit -&gt; f Unit
+
+input  :: forall f a. (a -&gt; Action f) -&gt; a -&gt; Maybe (f Unit)
+input_ :: forall f a. Action f -&gt; a -&gt; Maybe (f Unit)
+</code></pre>
+<p>In Halogen 4 these functions were used to transform queries in the render function:</p>
+<pre><code class="language-purs">-- Halogen 4
+import Halogen.HTML as HH
+import Halogen.HTML.Events as HE
+
+data Query a
+  = Toggle a
+  | Hover MouseEvent a
+
+render :: State -&gt; H.ComponentHTML Query
+render =
+  HH.button
+    [ HE.onClick (HE.input_ Toggle)
+    , HE.onMouseOver (HE.input Hover)
+    ]
+    [ HH.text &quot;Click me&quot; ]
+</code></pre>
+<p>This is how you'd write the same code in Halogen 5:</p>
+<pre><code class="language-purs">-- Halogen 5
+data Action
+  = Toggle
+  | Hover MouseEvent
+
+render :: forall m. State -&gt; H.ComponentHTML Action Slots m
+render =
+  HH.button
+    [ HE.onClick \_ -&gt; Just Toggle
+    , HE.onMouseOver (Just &lt;&lt;&lt; Hover)
+    ]
+    [ HH.text &quot;Click me&quot; ]
+</code></pre>
+<h3><a class="header" href="#mixing-queries-and-actions" id="mixing-queries-and-actions">Mixing Queries and Actions</a></h3>
+<p>Now that actions and queries have been split apart you may want to share some of the behavior between actions and queries without duplicating the constructors and/or implementation. You can do that by adding a constructor to your action type which allows you to use your action-style queries:</p>
+<pre><code class="language-purs">data Query a
+  = UpdateState a
+
+data Action
+  = HandleClick
+  | EvalQuery (Query Unit)
+</code></pre>
+<p>Then, you can evaluate the &quot;action-style&quot; query when it arises as an action by unwrapping it and passing it your query evaluation function.</p>
+<p>While it's also possible to add an <code>EvalAction Action a</code> constructor to your query type, this isn't recommended. The action type can be used to hide internal interactions that shouldn't be called externally, but the query type is always fully public.</p>
+<h2><a class="header" href="#component-evaluation" id="component-evaluation">Component Evaluation</a></h2>
+<p>Component evaluation has changed now that there is only one constructor, <code>mkComponent</code>, no differentiation between child, parent, and lifecycle components, and an explicit separation between actions and queries.</p>
+<p>In Halogen 4, the <code>component</code> constructor had separate fields for the <code>eval</code> function (handling queries) and the <code>receiver</code> function (handling component input), and the <code>lifecycleComponent</code> had additional fields for <code>initializer</code> and <code>finalizer</code> to handle lifecycle events.</p>
+<p>In Halogen 5, the <code>mkComponent</code> constructor has just a single evaluation function, <code>eval</code>, which handles all the various kinds of events a component can encounter, including lifecycles, component input, queries, and actions.</p>
+<pre><code class="language-purs">eval
+  :: HalogenQ query action input
+  ~&gt; HalogenM state action slots output m
+</code></pre>
+<p>In a moment we'll examine the <code>eval</code> function in-depth, but in most cases you'll construct it with the <code>mkEval</code> helper function paired with <code>defaultEval</code>, which provides default values for handling each of these cases. If <code>defaultEval</code> is used with no overrides the component will do nothing for any action raised internally, and any queries made of it will fail.</p>
+<p>Here are a few different eval functions which handle various cases:</p>
+<pre><code class="language-purs">-- This eval function does nothing
+H.mkComponent
+  { initialState: ...
+  , render: ...
+  , eval: H.mkEval H.defaultEval
+  }
+
+-- This one handles only actions
+eval = H.mkEval $ H.defaultEval
+  { handleAction = \action - &gt; ...
+  }
+
+-- This one handles actions, queries, and initialization:
+data Action = Initialize
+
+eval = H.mkEval $ H.defaultEval
+  { handleAction = \action -&gt; ...
+  , handleQuery = \query -&gt; ...
+  , initialize = Just Initialize
+  }
+</code></pre>
+<p>As you can tell, the <code>eval</code> function is no longer just for handling queries. Instead, it handles all the cases expressed by <code>HalogenQ</code>, a type that captures the various sorts of input that can be evaluated in a component:</p>
+<pre><code class="language-purs">data HalogenQ query action input a
+  = Initialize a
+  | Finalize a
+  | Receive input a
+  | Action action a
+  | Query (Coyoneda query a) (Unit -&gt; a)
+</code></pre>
+<p>You can write an <code>eval</code> function manually by pattern-matching on each of these constructors, but in most cases you should use the new <code>mkEval</code> helper function. This function accepts a record that looks similar to the old <code>lifecycleComponent</code> constructor:</p>
+<pre><code class="language-purs">type EvalSpec state query action slots input output m =
+   { handleAction
+       :: action
+       -&gt; HalogenM state action slots output m Unit
+   , handleQuery
+       :: forall a
+        . query a
+       -&gt; HalogenM state action slots output m (Maybe a)
+   , receive :: input -&gt; Maybe action
+   , initialize :: Maybe action
+   , finalize :: Maybe action
+   }
+</code></pre>
+<p>The <code>defaultEval</code> function provides default values for each of these handlers, which do nothing, and which you can override using ordinary PureScript record syntax:</p>
+<pre><code class="language-purs">-- This eval function uses the defaults, but overrides the
+-- `handleAction` and `handleQuery` functions.
+eval = H.mkEval $ H.defaultEval
+  { handleAction = case _ of ...
+  , handleQuery = case _ of ...
+  }
+</code></pre>
+<h2><a class="header" href="#child-component-addressing" id="child-component-addressing">Child Component Addressing</a></h2>
+<p>Halogen 4 used two types to determine information necessary to render and query child components: the child component query type and a slot value used to identify a particular child component.</p>
+<p>These types were unpleasant to work with when a component had multiple types of child component because they required nested <code>Coproduct</code> and <code>Either</code> types to accomodate everything, and you had to remember the order you listed your child component types in when using the <code>slot</code> or <code>query</code> functions.</p>
+<pre><code class="language-purs">-- Halogen 4
+
+type ChildQuery =
+  Coproduct3
+    ComponentA.Query
+    ComponentB.Query
+    ComponentC.Query
+
+type ChildSlot = Either3 Unit Int Unit
+
+render :: forall m. State -&gt; H.ParentHTML Query ChildQuery ChildSlot m
+render state =
+  HH.div_
+    [ HH.slot' CP.cp1 ComponentA.component unit absurd
+    , HH.slot CP.cp2 1 ComponentB.component unit absurd
+    , HH.slot' CP.cp3 ComponentC.component unit absurd
+    ]
+</code></pre>
+<p>In Halogen 5, all of this has been consolidated to a single row type where labels identify different child component types and the label's associated <code>H.Slot</code> value specifies the query, output, and slot type for the child component.</p>
+<p>We can replace the <code>ChildQuery</code> and <code>ChildSlot</code> types with a single row type:</p>
+<pre><code class="language-purs">-- Halogen 5
+type Slots =
+  ( a :: H.Slot ComponentA.Query Void Unit
+  , b :: H.Slot ComponentB.Query Void Int
+  , c :: H.Slot ComponentC.Query Void Unit
+  )
+</code></pre>
+<p>Instead of using <code>ChildPath</code> types (<code>cp1</code>, <code>cp2</code>, <code>cp3</code>, etc.) to identify components and slots, we now use symbol proxies for the labels in the row:</p>
+<pre><code class="language-purs">_a = SProxy :: SProxy &quot;a&quot;
+_b = SProxy :: SProxy &quot;b&quot;
+_c = SProxy :: SProxy &quot;c&quot;
+
+render :: forall m. State -&gt; H.ComponentHTML Action Slots m
+render state =
+  HH.div_
+    [ HH.slot _a unit ComponentA.component unit absurd
+    , HH.slot _b 1 ComponentB.component unit absurd
+    , HH.slot _c unit ComponentC.component unit absurd
+    ]
+</code></pre>
+<p>This may look similar on the surface to the prior non-row child query and child slot types, but in practice it is <em>much</em> nicer to deal with -- especially if you were one of the people out there who needed more than 10 types of child component, as we only provided helper types and premade <code>ChildPath</code> values up to that.</p>
+<p>In Halogen 4 the <code>slot</code>, <code>query</code>, and <code>queryAll</code> had primed variants, <code>slot'</code>, <code>query'</code>, and <code>queryAll'</code>, where the non-primed variants let you skip the <code>ChildPath</code> argument for components with only one type of child component.</p>
+<p>In Halogen 5 there are only the un-primed variants. You must always provide an <code>SProxy</code> to the <code>slot</code>, <code>query</code>, and <code>queryAll</code> functions to identify the child component you are targeting.</p>
+<p>The new row-based approach allows you greater flexibility to define helpers that work on slot types. For example, a common pattern in Halogen 5 applications is to define a <code>Slot</code> type synonym for a component in the same module in which the component is defined. This type synonym can specify the query and message types but leave the slot value unspecified, for a parent component to choose.</p>
+<p>For example, if each of the <code>ComponentA</code>, <code>ComponentB</code>, and <code>ComponentC</code> modules in the example above had been defined with a type synonym for their slot type already:</p>
+<pre><code class="language-purs">module ComponentA where
+
+type Slot = H.Slot Query Void
+
+data Query = ...
+
+component :: forall i o m. H.Component Query i Void m
+</code></pre>
+<p>Then parent components don't need to worry about specifying the query or message types for the child component:</p>
+<pre><code class="language-purs">type Slots =
+  ( a :: ComponentA.Slot Unit
+  , b :: ComponentB.Slot Int
+  , c :: ComponentC.Slot Unit
+  )
+</code></pre>
+<h2><a class="header" href="#subscriptions-forking-and-event-sources" id="subscriptions-forking-and-event-sources">Subscriptions, Forking, and Event Sources</a></h2>
+<p>Halogen 5 introduces a number of ergonomic improvements to subscriptions, forking, and event sources, including a new <code>EventSource</code> API.</p>
+<h3><a class="header" href="#subscriptions" id="subscriptions">Subscriptions</a></h3>
+<p>The <code>subscribe</code> function in Halogen 5 now returns a <code>SubscriptionId</code> value that allows a subscription to be cancelled later with <code>unsubscribe</code>. Subscriptions could previously only be ended in response to an event -- the event source would close itself.</p>
+<p>It's still possible for a subscription to unsubscribe itself. The <code>subscribe'</code> function passes the <code>SubscriptionId</code> into a function which returns the <code>EventSource</code>. That way the <code>EventSource</code> can raise an action with the relevant <code>SubscriptionId</code>.</p>
+<h3><a class="header" href="#event-sources" id="event-sources">Event Sources</a></h3>
+<p>Halogen 5 simplifies the <code>EventSource</code> API by introducing a new <code>Emitter</code> type and reducing the many, many variations of event source construction helpers to just <code>affEventSource</code>, <code>effectEventSource</code>, and <code>eventListenerEventSource</code>. Event sources now use queries instead of actions, and no longer require event handlers to return a subscription status.</p>
+<p>Event sources have simpler types in Halogen 5:</p>
+<pre><code class="language-purs">-- Halogen 4
+newtype EventSource f m =
+  EventSource (m
+    { producer :: CR.Producer (f SubscribeStatus) m Unit
+    , done :: m Unit
+    })
+
+-- Halogen 5
+newtype EventSource m a =
+  EventSource (m
+    { producer :: CR.Producer a m Unit
+    , finalizer :: Finalizer m
+    })
+</code></pre>
+<p>But it's not common to manually create an event source. Instead, you should use the new <code>affEventSource</code> and <code>effectEventSource</code> helper functions:</p>
+<pre><code class="language-purs">affEventSource
+  :: forall m a
+   . MonadAff m
+  =&gt; (Emitter Aff a -&gt; Aff (Finalizer Aff))
+  -&gt; EventSource m a
+
+effectEventSource
+  :: forall m a
+   . MonadAff m
+  =&gt; (Emitter Effect a -&gt; Effect (Finalizer Effect))
+  -&gt; EventSource m a
+</code></pre>
+<p>These functions let you set up a new event source from a setup function. This setup function operates in <code>Aff</code> or <code>Effect</code> and allows you to emit actions to the current component (or close the event source) using the <code>Emitter</code>. The setup function returns a <code>Finalizer</code> to run when the event source is unsubscribed or the emitter is closed.</p>
+<p>The <code>emit</code> function allows you to emit an action using the emitter provided by the <code>affEventSource</code> and <code>effectEventSource</code> functions. The <code>close</code> function lets you close the emitter and shut down the event source.</p>
+<p>For example, this example creates an event source which will emit the <code>Notify</code> action after one second and then close the event source:</p>
+<pre><code class="language-purs">data Action = Notify String
+
+myEventSource :: EventSource Aff Action
+myEventSource = EventSource.affEventSource \emitter -&gt; do
+  Aff.delay (Milliseconds 1000.0)
+  EventSource.emit emitter (Notify &quot;hello&quot;)
+  EventSource.close emitter
+  pure mempty
+</code></pre>
+<p>There is also an <code>eventListenerEventSource</code> function which you can use to set up an event source that listens to events in the DOM.</p>
+<pre><code class="language-purs">eventListenerEventSource
+  :: forall m a
+   . MonadAff m
+  =&gt; EventType
+  -&gt; EventTarget
+  -&gt; (Event -&gt; Maybe a)
+  -&gt; EventSource m a
+</code></pre>
+<p>For example, we can subscribe to changes in the browser window width:</p>
+<pre><code class="language-purs">data Action = Initialize | Handler Window
+
+handleAction = case _ of
+  Initialize -&gt;
+    void $ H.subscribe do
+      ES.eventListenerEventSource
+        (EventType &quot;resize&quot;)
+        (Window.toEventTarget window)
+        (Event.target &gt;&gt;&gt; map (fromEventTarget &gt;&gt;&gt; Handler))
+
+  Handler window -&gt;
+    width &lt;- liftEffect (innerWidth window)
+    -- ...do something with the window width
+</code></pre>
+<p>When using event sources in components, you no longer need to respond to events with a <code>SubscribeStatus</code>:</p>
+<pre><code class="language-purs">-- Halogen 4
+eval = case _ of
+  HandleChange reply -&gt; do
+    -- ... your code
+    pure (reply H.Listening)
+
+-- Halogen 5
+handleAction = case _ of
+  HandleChange -&gt;
+    -- ... your code
+</code></pre>
+<h3><a class="header" href="#forks" id="forks">Forks</a></h3>
+<p>In Halogen 4 the <code>H.fork</code> function returned a canceller function.</p>
+<p>In Halogen 5 it returns a <code>ForkId</code>, which you can pass to the <code>H.kill</code> function to cancel the fork. This mirrors the <code>H.subscribe</code> function. Forks are now killed when a component is finalized, unless the fork occurred during finalization.</p>
+<h2><a class="header" href="#performance-optimization-with-lazy-and-memoized" id="performance-optimization-with-lazy-and-memoized">Performance Optimization with Lazy and Memoized</a></h2>
+<p>Halogen 5 introduces the ability to skip rendering for arbitrary HTML trees, not just at component boundaries as was the case in Halogen 4.</p>
+<p>The new <code>memoized</code> function lets you skip rendering a tree of HTML given an equality predicate. If an argument is deemed equivalent to the value in the previous render then rendering and diffing will be skipped.</p>
+<pre><code class="language-purs">memoized
+  :: forall a action slots m
+   . (a -&gt; a -&gt; Boolean)
+  -&gt; (a -&gt; ComponentHTML action slots m)
+  -&gt; a
+  -&gt; ComponentHTML action slots m
+</code></pre>
+<p>For example, you can skip rendering for equal state values by wrapping your component's render function:</p>
+<pre><code class="language-purs">myComponent = component
+  { ...
+  , render: memoized eq render
+  , ...
+  }
+</code></pre>
+<p>You can also skip rendering for referentially-equal arguments using the <code>lazy</code>, <code>lazy2</code>, and <code>lazy3</code> functions. These work like <code>memoized</code>, but instead of taking an equality predicate they use referential equality.</p>
+<p>Here's an example of skipping rendering a large list of items when the state it depends on is unchanged between renders:</p>
+<pre><code class="language-purs">-- Before
+render state =
+  HH.div_ [ generateItems state.totalItems ]
+
+-- After
+render state =
+  HH.div_ [ HH.lazy generateItems state.totalItems ]
+</code></pre>
+<p>These functions are a convenient way to wring extra performance out of your render code.</p>
+<h2><a class="header" href="#other-changes" id="other-changes">Other Changes</a></h2>
+<p>Halogen 5 has also seen a number of other miscellaneous changes. These are quality of life improvements that don't affect many common workflows but which are worth noting.</p>
+<h3><a class="header" href="#halt-and-halogenm" id="halt-and-halogenm"><code>Halt</code> and HalogenM</a></h3>
+<p>The <code>Halt</code> constructor was removed from <code>HalogenM</code>. If a component needs to explode in that way, it should be done by lifting something into the component's <code>m</code> instead.</p>
+<p>If <code>Halt</code> was being used for an infallible case in a higher order component <code>eval</code>, the same effect can be achieved now by returning <code>Nothing</code>.</p>
+<p>If this doesn't mean anything to you, don't worry about it! Halting wasn't explained anywhere previously and was used internally for the most part.</p>
+<h3><a class="header" href="#driverio-and-app-disposal" id="driverio-and-app-disposal"><code>DriverIO</code> and App Disposal</a></h3>
+<p>The <code>DriverIO</code> type has been renamed to <code>HalogenIO</code>. You can now <code>dispose</code> of an entire Halogen app via the <code>HalogenIO</code> record returned from <code>runUI</code>. This will remove everything from the DOM and finalize the components. Attempting to <code>query</code> the <code>DriverIO</code> after this will return <code>Nothing</code>.</p>
+<h3><a class="header" href="#updated-examples" id="updated-examples">Updated Examples</a></h3>
+<p>The examples have been changed to try and best illustrate the feature they relate to, and just generally tidied up a bit. Some specifics:</p>
+<ul>
+<li>The <code>interpret</code> example now works on a component that is using a <code>ReaderT</code> over <code>Aff</code> rather than a <code>Free</code> monad. <code>ReaderT</code> + <code>Aff</code> is a very common real world setup for an app's effect monad.</li>
+<li>The <code>higher-order-components</code> example shows a expandable/collapsible container box kind of thing that allows interactions with the inner component when it is expanded.</li>
+<li>The <code>todo</code> example has gone, as it was intended to show a fairly-but-not-entirely trivial example, but had weird conventions that nobody uses. <a href="https://github.com/thomashoneyman">@thomashoneyman</a>'s <a href="https://github.com/thomashoneyman/purescript-halogen-realworld">Real World Halogen</a> is a much better and more comprehensive example of how an app might be structured and is up-to-date for Halogen 5.</li>
+</ul>
+<h3><a class="header" href="#file-inputs" id="file-inputs">File Inputs</a></h3>
+<p>The <code>accept</code> property (for file inputs) didn't have quite the right type before, it accepted a <code>MediaType</code>, but really should have allowed a collection of media types and file extensions. The type has been changed to a new <code>InputAcceptType</code> monoid to fix this.</p>
+<h3><a class="header" href="#longer-type-variables-in-type-signatures" id="longer-type-variables-in-type-signatures">Longer Type Variables in Type Signatures</a></h3>
+<p>The type variables have been renamed to full words in the component / query / etc. type signatures. Maybe this will help, maybe not - feedback is welcome and appreciated!</p>
+<h3><a class="header" href="#migration-to-spago" id="migration-to-spago">Migration to Spago</a></h3>
+<p><a href="https://github.com/purescript/spago">Spago</a> has emerged as the preferred dependency manager and build tool for PureScript. Halogen 5 -- both the library and the examples -- is now migrated entirely to Spago, with Bower used solely for publication.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+                            <a rel="prev" href="../concepts-reference/index.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                        
+
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+                    <a rel="prev" href="../concepts-reference/index.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
+
+                
+            </nav>
+
+        </div>
+
+        
+
+        
+
+        
+        
+        
+        <script type="text/javascript">
+            window.playpen_copyable = true;
+        </script>
+        
+
+        
+
+        
+        <script src="../elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../searcher.js" type="text/javascript" charset="utf-8"></script>
+        
+
+        <script src="../clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+
+        
+
+    </body>
+</html>
