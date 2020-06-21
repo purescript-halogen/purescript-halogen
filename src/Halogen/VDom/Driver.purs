@@ -73,17 +73,20 @@ mkPatch
        (V.Machine
           (ComponentSlot slots Aff action)
           DOM.Node)
-       (EFn.EffectFn2 (WidgetState slots action)
+       (EFn.EffectFn2
+          (WidgetState slots action)
           (ComponentSlot slots Aff action)
           (V.Step (ComponentSlot slots Aff action) DOM.Node))
 mkPatch = Fn.mkFn2 \renderChildRef buildWidget ->
   let
     patch
-      :: EFn.EffectFn2 (WidgetState slots action)
+      :: EFn.EffectFn2
+        (WidgetState slots action)
         (ComponentSlot slots Aff action)
         (V.Step (ComponentSlot slots Aff action) DOM.Node)
-    patch = EFn.mkEffectFn2 \st slot ->
-      case st of
+    patch = EFn.mkEffectFn2 \widgetState slot -> do
+      traceM { message: "patch", widgetState, slot }
+      case widgetState of
         Just step -> case slot of
           ComponentSlot cs -> do
             EFn.runEffectFn1 V.halt step
@@ -172,8 +175,9 @@ mkSpec handler renderChildRef renderChildHydrate document =
   hydrateWidget spec node = (trace { message: "Halogen.VDom.Driver.hydrateWidget called", spec, node } (const render))
     where
     render :: V.Machine (ComponentSlot slots Aff action) DOM.Node
-    render = EFn.mkEffectFn1 \slot ->
-      case (trace { message: "Halogen.VDom.Driver.hydrateWidget render called", slot } (const slot)) of
+    render = EFn.mkEffectFn1 \slot -> do
+      traceM { message: "Halogen.VDom.Driver.hydrateWidget render called", slot }
+      case slot of
         ComponentSlot cs ->
           EFn.runEffectFn5 renderComponentSlotHydrate node renderChildRef renderChildHydrate (buildWidget spec) cs
         ThunkSlot t -> do
@@ -191,7 +195,8 @@ mkSpec handler renderChildRef renderChildHydrate document =
     where
 
     render :: V.Machine (ComponentSlot slots Aff action) DOM.Node
-    render = EFn.mkEffectFn1 \slot ->
+    render = EFn.mkEffectFn1 \slot -> do
+      traceM { message: "Halogen.VDom.Driver.buildWidget render called", slot }
       case slot of
         ComponentSlot cs ->
           EFn.runEffectFn3 renderComponentSlot renderChildRef render cs
