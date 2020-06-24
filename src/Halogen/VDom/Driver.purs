@@ -4,7 +4,6 @@ module Halogen.VDom.Driver
   , module Halogen.Aff.Driver
   ) where
 
-import Debug.Trace
 import Prelude
 
 import Data.Foldable (traverse_)
@@ -14,7 +13,6 @@ import Data.Newtype (unwrap)
 import Effect (Effect)
 import Effect.Aff (Aff)
 import Effect.Class (liftEffect)
-import Effect.Exception (throw)
 import Effect.Ref (Ref)
 import Effect.Ref as Ref
 import Effect.Uncurried as EFn
@@ -32,7 +30,6 @@ import Halogen.VDom.Thunk as Thunk
 import Unsafe.Reference (unsafeRefEq)
 import Web.DOM.Document (Document) as DOM
 import Web.DOM.Element (Element) as DOM
-import Web.DOM.Element as DOMElement
 import Web.DOM.Node (Node, appendChild, removeChild, parentNode, nextSibling, insertBefore) as DOM
 import Web.HTML (window) as DOM
 import Web.HTML.HTMLDocument as HTMLDocument
@@ -255,11 +252,9 @@ renderSpecWithHydration document container =
     -> DOM.Node
     -> Effect (RenderState state action slots output)
   hydrate handler renderChild renderChildHydrate (HTML vdom) node = do
-    traceM { message: "Halogen.VDom.Driver.renderSpecHydrate render", handler, renderChild, vdom }
     renderChildRef <- Ref.new renderChild
     let spec = mkSpecWithHydration handler renderChildRef renderChildHydrate document
     machine <- EFn.runEffectFn1 (V.hydrateVDom spec node) vdom
-    traceM { message: "Halogen.VDom.Driver.renderSpecHydrate render -> no-appendChild", node }
     pure $ RenderState { machine, node, renderChildRef }
 
 renderSpec
@@ -285,12 +280,10 @@ renderSpec document container =
   render handler renderChild (HTML vdom) isRoot =
     case _ of
       Nothing -> do
-        traceM { message: "Halogen.VDom.Driver.renderSpec render", handler, renderChild, vdom, container }
         renderChildRef <- Ref.new renderChild
         let spec = mkSpec handler renderChildRef document
         machine <- EFn.runEffectFn1 (V.buildVDom spec) vdom
         let node = V.extract machine
-        traceM { message: "Halogen.VDom.Driver.renderSpec render -> appendChild", node, container, isRoot }
         when isRoot do
           void $ DOM.appendChild node (HTMLElement.toNode container)
         pure $ RenderState { machine, node, renderChildRef }
@@ -303,7 +296,6 @@ processNextRenderStateChange
   -> RenderState state action slots output
   -> Effect (RenderState state action slots output)
 processNextRenderStateChange newRenderChild (HTML vdom) (RenderState { machine, node, renderChildRef }) = do
-  traceM { message: "Halogen.VDom.Driver.processNextRenderStateChange!!!!!", node, vdom, machine, newRenderChild, renderChildRef }
   parent <- DOM.parentNode node
   nextSib <- DOM.nextSibling node
   Ref.write newRenderChild renderChildRef

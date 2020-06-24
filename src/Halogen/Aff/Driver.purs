@@ -7,7 +7,7 @@ module Halogen.Aff.Driver
 
 import Prelude
 
-import Data.Foldable (for_, traverse_)
+import Data.Foldable (for_)
 import Data.Maybe (Maybe(..))
 import Effect (Effect)
 import Effect.Aff (Aff)
@@ -21,8 +21,7 @@ import Halogen.Aff.Driver.Implementation.Hydrate as Hydrate
 import Halogen.Aff.Driver.Implementation.Render as Render
 import Halogen.Aff.Driver.Implementation.Types (RenderSpec, RenderSpecWithHydration)
 import Halogen.Aff.Driver.Implementation.Utils as Utils
-import Halogen.Aff.Driver.State (DriverState(..), DriverStateX, LifecycleHandlers)
-import Halogen.Aff.Driver.State (unDriverStateX)
+import Halogen.Aff.Driver.State (DriverState(..), DriverStateX, LifecycleHandlers, unDriverStateX)
 import Halogen.Component (Component)
 import Web.DOM.Node (Node) as DOM
 
