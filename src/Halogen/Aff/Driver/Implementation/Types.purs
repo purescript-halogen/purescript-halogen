@@ -100,6 +100,13 @@ type RenderSpec r =
       -> Boolean
       -> Maybe (r s act ps o)
       -> Effect (r s act ps o)
+  , renderChild :: forall s act ps o. r s act ps o -> r s act ps o
+  , removeChild :: forall s act ps o. r s act ps o -> Effect Unit
+  , dispose :: forall s act ps o. r s act ps o -> Effect Unit
+  }
+
+type RenderSpecWithHydration r =
+  { renderSpec :: RenderSpec r
   , hydrate
       :: forall s act ps o
        . (Input act -> Effect Unit)
@@ -108,7 +115,4 @@ type RenderSpec r =
       -> HC.HTML (ComponentSlot ps Aff act) act
       -> DOM.Node
       -> Effect (r s act ps o)
-  , renderChild :: forall s act ps o. r s act ps o -> r s act ps o
-  , removeChild :: forall s act ps o. r s act ps o -> Effect Unit
-  , dispose :: forall s act ps o. r s act ps o -> Effect Unit
   }

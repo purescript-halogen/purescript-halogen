@@ -19,7 +19,7 @@ import Halogen (HalogenIO)
 import Halogen.Aff.Driver.Eval as Eval
 import Halogen.Aff.Driver.Implementation.Hydrate as Hydrate
 import Halogen.Aff.Driver.Implementation.Render as Render
-import Halogen.Aff.Driver.Implementation.Types (RenderSpec)
+import Halogen.Aff.Driver.Implementation.Types (RenderSpec, RenderSpecWithHydration)
 import Halogen.Aff.Driver.Implementation.Utils as Utils
 import Halogen.Aff.Driver.State (DriverState(..), DriverStateX, LifecycleHandlers)
 import Halogen.Aff.Driver.State (unDriverStateX)
@@ -77,15 +77,15 @@ dispose renderSpec disposed lchs dsx = Eval.handleLifecycle lchs do
 
 hydrateUI
   :: forall r f i o
-   . RenderSpec r
+   . RenderSpecWithHydration r
   -> Component f i o Aff
   -> i
   -> DOM.Node
   -> Aff (HalogenIO f o Aff)
-hydrateUI renderSpec component i rootNode = runImplementation renderSpec runComponentImplementation
+hydrateUI renderSpecWithHydration component i rootNode = runImplementation renderSpecWithHydration.renderSpec runComponentImplementation
   where
     runComponentImplementation :: Ref.Ref LifecycleHandlers -> Event.EventIO o -> Effect (Ref.Ref (DriverStateX r f o))
-    runComponentImplementation lchs eio = Hydrate.runComponentHydrate renderSpec true rootNode lchs (liftEffect <<< eio.push) i component
+    runComponentImplementation lchs eio = Hydrate.runComponentHydrate renderSpecWithHydration true rootNode lchs (liftEffect <<< eio.push) i component
 
 runUI
   :: forall r f i o
