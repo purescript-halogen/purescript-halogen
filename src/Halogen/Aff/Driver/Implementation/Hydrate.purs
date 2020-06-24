@@ -1,4 +1,4 @@
-module Halogen.Aff.Driver.HydrationImplementation where
+module Halogen.Aff.Driver.Implementation.Hydrate where
 
 import Prelude
 
@@ -31,8 +31,8 @@ import Halogen.Query.Input as Input
 import Web.DOM.Element (Element) as DOM
 import Web.DOM.Node (Node) as DOM
 import Debug.Trace (traceM, trace)
-import Halogen.Aff.Driver.RenderImplementation as RenderImplementation
-import Halogen.Aff.Driver.RenderImplementation (RenderSpec)
+import Halogen.Aff.Driver.Implementation.Render as Render
+import Halogen.Aff.Driver.Implementation.Types (RenderSpec)
 
 runComponentHydrate
   :: forall f' i' o' r
@@ -45,12 +45,12 @@ runComponentHydrate
   -> Component f' i' o' Aff
   -> Effect (Ref (DriverStateX r f' o'))
 runComponentHydrate renderSpec isRoot currentNode lchs handler j = unComponent \c -> do
-  lchs' <- RenderImplementation.newLifecycleHandlers
+  lchs' <- Render.newLifecycleHandlers
   var <- initDriverState c j handler lchs'
   pre <- Ref.read lchs
   Ref.write { initializers: L.Nil, finalizers: pre.finalizers } lchs
   unDriverStateX (renderHydrate renderSpec isRoot currentNode lchs <<< _.selfRef) =<< Ref.read var
-  RenderImplementation.squashChildInitializers renderSpec isRoot lchs pre.initializers =<< Ref.read var -- TODO
+  Render.squashChildInitializers renderSpec isRoot lchs pre.initializers =<< Ref.read var -- TODO
   pure var
 
 renderHydrate
@@ -73,13 +73,13 @@ renderHydrate renderSpec isRoot currentNode lchs var = Ref.read var >>= \(Driver
     pendingQueries = identity ds.pendingQueries
     selfRef = identity ds.selfRef
     handler :: Input act -> Aff Unit
-    handler = Eval.queueOrRun pendingHandlers <<< void <<< Eval.evalF (RenderImplementation.render renderSpec false) selfRef -- TODO
+    handler = Eval.queueOrRun pendingHandlers <<< void <<< Eval.evalF (Render.render renderSpec false) selfRef -- TODO
     childHandler :: act -> Aff Unit
     childHandler = Eval.queueOrRun pendingQueries <<< handler <<< Input.Action
   rendering <-
     renderSpec.hydrate
       (Eval.handleAff <<< handler)
-      (RenderImplementation.renderChild renderSpec lchs childHandler ds.childrenIn ds.childrenOut)
+      (Render.renderChild renderSpec lchs childHandler ds.childrenIn ds.childrenOut)
       (renderChildHydrate renderSpec lchs childHandler ds.childrenIn ds.childrenOut)
       (ds.component.render ds.state)
       currentNode
@@ -88,7 +88,7 @@ renderHydrate renderSpec isRoot currentNode lchs var = Ref.read var >>= \(Driver
   Slot.foreachSlot childrenIn \(DriverStateRef childVar) -> do
     childDS <- Ref.read childVar
     renderStateX_ renderSpec.removeChild childDS
-    RenderImplementation.finalize renderSpec isRoot lchs childDS
+    Render.finalize renderSpec isRoot lchs childDS
   flip Ref.modify_ ds.selfRef $ mapDriverState \ds' ->
     ds' { rendering = Just rendering, children = children }
   when shouldProcessHandlers do
