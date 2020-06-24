@@ -7,7 +7,7 @@ module Halogen.Aff.Driver
 
 import Prelude
 
-import Data.Foldable (traverse_)
+import Data.Foldable (for_, traverse_)
 import Data.Maybe (Maybe(..))
 import Effect (Effect)
 import Effect.Aff (Aff)
@@ -71,7 +71,9 @@ dispose renderSpec disposed lchs dsx = Eval.handleLifecycle lchs do
       else do
         Ref.write true disposed
         Render.finalize renderSpec true lchs dsx
-        unDriverStateX (traverse_ renderSpec.dispose <<< _.rendering) dsx
+        dsx # unDriverStateX \{ selfRef } -> do
+          (DriverState ds) <- liftEffect $ Ref.read selfRef
+          for_ ds.rendering renderSpec.dispose
 
 hydrateUI
   :: forall r f i o
