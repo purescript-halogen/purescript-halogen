@@ -32,26 +32,23 @@ import Web.DOM.Element (Element) as DOM
 import Web.DOM.Node (Node) as DOM
 import Debug.Trace (traceM, trace)
 import Halogen.Aff.Driver.Implementation.Render as Render
+import Halogen.Aff.Driver.Implementation.Shared as Shared
 import Halogen.Aff.Driver.Implementation.Types (RenderSpec)
 
 runComponentHydrate
-  :: forall f' i' o' r
+  :: forall f i o r
    . RenderSpec r
   -> Boolean
   -> DOM.Node
   -> Ref LifecycleHandlers
-  -> (o' -> Aff Unit)
-  -> i'
-  -> Component f' i' o' Aff
-  -> Effect (Ref (DriverStateX r f' o'))
-runComponentHydrate renderSpec isRoot currentNode lchs handler j = unComponent \c -> do
-  lchs' <- Render.newLifecycleHandlers
-  var <- initDriverState c j handler lchs'
-  pre <- Ref.read lchs
-  Ref.write { initializers: L.Nil, finalizers: pre.finalizers } lchs
-  unDriverStateX (renderHydrate renderSpec isRoot currentNode lchs <<< _.selfRef) =<< Ref.read var
-  Render.squashChildInitializers renderSpec isRoot lchs pre.initializers =<< Ref.read var -- TODO
-  pure var
+  -> (o -> Aff Unit)
+  -> i
+  -> Component f i o Aff
+  -> Effect (Ref (DriverStateX r f o))
+runComponentHydrate renderSpec isRoot currentNode lchs handler j = Shared.runComponent renderSpec isRoot lchs handler j runRender
+  where
+    runRender :: DriverStateX r f o -> Effect Unit
+    runRender = unDriverStateX (renderHydrate renderSpec isRoot currentNode lchs <<< _.selfRef)
 
 renderHydrate
   :: forall s f' act ps i' o' r

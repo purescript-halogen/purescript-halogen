@@ -16,6 +16,7 @@ import Halogen (HalogenIO)
 import Halogen.Aff.Driver.Eval as Eval
 import Halogen.Aff.Driver.Implementation.Hydrate as Hydrate
 import Halogen.Aff.Driver.Implementation.Render as Render
+import Halogen.Aff.Driver.Implementation.Shared as Shared
 import Halogen.Aff.Driver.Implementation.Types (RenderSpec)
 import Halogen.Aff.Driver.State (DriverStateX, LifecycleHandlers)
 import Halogen.Aff.Driver.State (unDriverStateX)
@@ -28,7 +29,7 @@ runImplementation
   -> (Ref.Ref LifecycleHandlers -> Event.EventIO o -> Effect (Ref.Ref (DriverStateX r f o)))
   -> Aff (HalogenIO f o Aff)
 runImplementation renderSpec runComponentImplementation = do
-  lchs <- liftEffect Render.newLifecycleHandlers
+  lchs <- liftEffect Shared.newLifecycleHandlers
   fresh <- liftEffect $ Ref.new 0
   disposed <- liftEffect $ Ref.new false
   Eval.handleLifecycle lchs do

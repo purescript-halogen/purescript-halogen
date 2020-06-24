@@ -31,6 +31,7 @@ import Halogen.Query.Input as Input
 import Web.DOM.Element (Element) as DOM
 import Web.DOM.Node (Node) as DOM
 import Halogen.Aff.Driver.Implementation.Types (RenderSpec)
+import Halogen.Aff.Driver.Implementation.Shared as Shared
 import Debug.Trace (traceM, trace)
 
 evalDriver
@@ -46,22 +47,18 @@ evalDriver renderSpec disposed ref q =
       else Eval.evalQ (render renderSpec true) ref q -- true because `evalDriver` is used only on root container
 
 runComponent
-  :: forall f' i' o' r
+  :: forall f i o r
    . RenderSpec r
   -> Boolean
   -> Ref LifecycleHandlers
-  -> (o' -> Aff Unit)
-  -> i'
-  -> Component f' i' o' Aff
-  -> Effect (Ref (DriverStateX r f' o'))
-runComponent renderSpec isRoot lchs handler j = unComponent \c -> do
-  lchs' <- newLifecycleHandlers
-  var <- initDriverState c j handler lchs'
-  pre <- Ref.read lchs
-  Ref.write { initializers: L.Nil, finalizers: pre.finalizers } lchs
-  unDriverStateX (render renderSpec isRoot lchs <<< _.selfRef) =<< Ref.read var
-  squashChildInitializers renderSpec isRoot lchs pre.initializers =<< Ref.read var
-  pure var
+  -> (o -> Aff Unit)
+  -> i
+  -> Component f i o Aff
+  -> Effect (Ref (DriverStateX r f o))
+runComponent renderSpec isRoot lchs handler j = Shared.runComponent renderSpec isRoot lchs handler j runRender
+  where
+    runRender :: DriverStateX r f o -> Effect Unit
+    runRender = unDriverStateX (render renderSpec isRoot lchs <<< _.selfRef)
 
 render
   :: forall s f' act ps i' o' r
@@ -144,27 +141,6 @@ renderChild renderSpec lchs handler childrenInRef childrenOutRef =
       Nothing -> throw "Halogen internal error: child was not initialized in renderChild"
       Just r -> pure (renderSpec.renderChild r)
 
-squashChildInitializers
-  :: forall f' o' r
-   . RenderSpec r
-  -> Boolean
-  -> Ref LifecycleHandlers
-  -> L.List (Aff Unit)
-  -> DriverStateX r f' o'
-  -> Effect Unit
-squashChildInitializers renderSpec isRoot lchs preInits =
-  unDriverStateX \st -> do
-    let parentInitializer = Eval.evalM (render renderSpec isRoot) st.selfRef (st.component.eval (HQ.Initialize unit))
-    Ref.modify_ (\handlers ->
-      { initializers: (do
-          parSequence_ (L.reverse handlers.initializers)
-          parentInitializer
-          liftEffect do
-            handlePending st.pendingQueries
-            handlePending st.pendingOuts) : preInits
-      , finalizers: handlers.finalizers
-      }) lchs
-
 finalize
   :: forall f' o' r
    . RenderSpec r
@@ -198,15 +174,6 @@ dispose renderSpec disposed lchs dsx = Eval.handleLifecycle lchs do
         Ref.write true disposed
         finalize renderSpec true lchs dsx
         unDriverStateX (traverse_ renderSpec.dispose <<< _.rendering) dsx
-
-newLifecycleHandlers :: Effect (Ref LifecycleHandlers)
-newLifecycleHandlers = Ref.new { initializers: L.Nil, finalizers: L.Nil }
-
-handlePending :: Ref (Maybe (L.List (Aff Unit))) -> Effect Unit
-handlePending ref = do
-  queue <- Ref.read ref
-  Ref.write Nothing ref
-  for_ queue (Eval.handleAff <<< traverse_ fork <<< L.reverse)
 
 cleanupSubscriptionsAndForks
   :: forall r s f act ps i o
