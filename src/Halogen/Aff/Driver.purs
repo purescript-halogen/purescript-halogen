@@ -7,18 +7,21 @@ module Halogen.Aff.Driver
 
 import Prelude
 
+import Data.Foldable (traverse_)
+import Data.Maybe (Maybe(..))
 import Effect (Effect)
 import Effect.Aff (Aff)
 import Effect.Class (liftEffect)
+import Effect.Ref (Ref)
 import Effect.Ref as Ref
 import FRP.Event as Event
 import Halogen (HalogenIO)
 import Halogen.Aff.Driver.Eval as Eval
 import Halogen.Aff.Driver.Implementation.Hydrate as Hydrate
 import Halogen.Aff.Driver.Implementation.Render as Render
-import Halogen.Aff.Driver.Implementation.Shared as Shared
 import Halogen.Aff.Driver.Implementation.Types (RenderSpec)
-import Halogen.Aff.Driver.State (DriverStateX, LifecycleHandlers)
+import Halogen.Aff.Driver.Implementation.Utils as Utils
+import Halogen.Aff.Driver.State (DriverState(..), DriverStateX, LifecycleHandlers)
 import Halogen.Aff.Driver.State (unDriverStateX)
 import Halogen.Component (Component)
 import Web.DOM.Node (Node) as DOM
@@ -29,7 +32,7 @@ runImplementation
   -> (Ref.Ref LifecycleHandlers -> Event.EventIO o -> Effect (Ref.Ref (DriverStateX r f o)))
   -> Aff (HalogenIO f o Aff)
 runImplementation renderSpec runComponentImplementation = do
-  lchs <- liftEffect Shared.newLifecycleHandlers
+  lchs <- liftEffect Utils.newLifecycleHandlers
   fresh <- liftEffect $ Ref.new 0
   disposed <- liftEffect $ Ref.new false
   Eval.handleLifecycle lchs do
@@ -37,10 +40,38 @@ runImplementation renderSpec runComponentImplementation = do
     dsx <- Ref.read =<< runComponentImplementation lchs eio
     unDriverStateX (\st ->
       pure
-        { query: Render.evalDriver renderSpec disposed st.selfRef
+        { query: evalDriver renderSpec disposed st.selfRef
         , messages: eio.event
-        , dispose: Render.dispose renderSpec disposed lchs dsx
+        , dispose: dispose renderSpec disposed lchs dsx
         }) dsx
+
+evalDriver
+  :: forall s f act ps i o r
+   . RenderSpec r
+  -> Ref Boolean
+  -> Ref (DriverState r s f act ps i o)
+  -> forall a. (f a -> Aff (Maybe a))
+evalDriver renderSpec disposed ref q =
+  liftEffect (Ref.read disposed) >>=
+    if _
+      then pure Nothing
+      else Eval.evalQ (Render.render renderSpec true) ref q -- `isRoot` is true because `evalDriver` is used only on root container
+
+dispose
+  :: forall f o r
+   . RenderSpec r
+  -> Ref Boolean
+  -> Ref LifecycleHandlers
+  -> DriverStateX r f o
+  -> Aff Unit
+dispose renderSpec disposed lchs dsx = Eval.handleLifecycle lchs do
+  Ref.read disposed >>=
+    if _
+      then pure unit
+      else do
+        Ref.write true disposed
+        Render.finalize renderSpec true lchs dsx
+        unDriverStateX (traverse_ renderSpec.dispose <<< _.rendering) dsx
 
 hydrateUI
   :: forall r f i o

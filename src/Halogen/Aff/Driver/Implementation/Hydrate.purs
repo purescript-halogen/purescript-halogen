@@ -5,7 +5,7 @@ import Prelude
 import Control.Monad.Fork.Class (fork)
 import Control.Monad.Rec.Class (Step(..), tailRecM)
 import Control.Parallel (parSequence_)
-import Data.List ((:))
+import Data.List (List, (:))
 import Data.List as L
 import Data.Map as M
 import Data.Maybe (Maybe(..), maybe, isJust, isNothing)
@@ -22,17 +22,17 @@ import Effect.Ref as Ref
 import FRP.Event as Event
 import Halogen (HalogenIO)
 import Halogen.Aff.Driver.Eval as Eval
-import Halogen.Aff.Driver.Implementation.Render as Render
-import Halogen.Aff.Driver.Implementation.Shared as Shared
+import Halogen.Aff.Driver.State (DriverState, DriverStateX, LifecycleHandlers, unDriverStateX)
 import Halogen.Aff.Driver.Implementation.Types (RenderSpec)
-import Halogen.Aff.Driver.State (DriverState(..), DriverStateRef(..), DriverStateX, LifecycleHandlers, RenderStateX, initDriverState, mapDriverState, renderStateX, renderStateX_, unDriverStateX)
+import Halogen.Aff.Driver.Implementation.Utils as Utils
+import Halogen.Aff.Driver.Implementation.Render as Render
+import Halogen.Aff.Driver.State (DriverState(..), DriverStateRef(..), DriverStateX, LifecycleHandlers, RenderStateX, DriverStateRec, initDriverState, mapDriverState, renderStateX, renderStateX_, unDriverStateX)
 import Halogen.Component (Component, ComponentSlot, ComponentSlotBox, ComponentSlotSpec, unComponent, unComponentSlot)
 import Halogen.Data.Slot as Slot
 import Halogen.HTML.Core as HC
 import Halogen.Query.HalogenQ as HQ
 import Halogen.Query.Input (Input)
 import Halogen.Query.Input as Input
-import Unsafe.Coerce (unsafeCoerce)
 import Web.DOM.Element (Element) as DOM
 import Web.DOM.Node (Node) as DOM
 
@@ -46,7 +46,7 @@ runComponentHydrate
   -> i
   -> Component f i o Aff
   -> Effect (Ref (DriverStateX r f o))
-runComponentHydrate renderSpec isRoot currentNode lchs handler j = Shared.runComponent renderSpec isRoot lchs handler j runRender
+runComponentHydrate renderSpec isRoot currentNode lchs handler j = Render.runComponentImplementation renderSpec isRoot lchs handler j runRender
   where
     runRender :: DriverStateX r f o -> Effect Unit
     runRender = unDriverStateX (renderHydrate renderSpec isRoot currentNode lchs <<< _.selfRef)
@@ -59,45 +59,16 @@ renderHydrate
   -> Ref LifecycleHandlers
   -> Ref (DriverState r s f act ps i o)
   -> Effect Unit
-renderHydrate renderSpec isRoot currentNode lchs var = Ref.read var >>= \(DriverState ds) -> do
-  traceM { message: "Halogen.Aff.Driver.HydrationImplementation.renderHydrate", var, currentNode }
-  shouldProcessHandlers <- isNothing <$> Ref.read ds.pendingHandlers
-  when shouldProcessHandlers $ Ref.write (Just L.Nil) ds.pendingHandlers
-  Ref.write Slot.empty ds.childrenOut
-  Ref.write ds.children ds.childrenIn
-  let
-    -- The following 3 defs are working around a capture bug, see #586
-    pendingHandlers = identity ds.pendingHandlers
-    pendingQueries = identity ds.pendingQueries
-    selfRef = identity ds.selfRef
-    handler :: Input act -> Aff Unit
-    handler = Eval.queueOrRun pendingHandlers <<< void <<< Eval.evalF (Render.render renderSpec false) selfRef -- TODO
-    childHandler :: act -> Aff Unit
-    childHandler = Eval.queueOrRun pendingQueries <<< handler <<< Input.Action
-  rendering <-
+renderHydrate renderSpec isRoot currentNode lchs var = Render.renderImplementation renderSpec isRoot lchs var runRender
+  where
+  runRender :: (Input act -> Aff Unit) -> (act -> Aff Unit) -> DriverStateRec r s f act ps i o -> Effect (r s act ps o)
+  runRender handler childHandler ds =
     renderSpec.hydrate
       (Eval.handleAff <<< handler)
       (Render.renderChild renderSpec lchs childHandler ds.childrenIn ds.childrenOut)
       (renderChildHydrate renderSpec lchs childHandler ds.childrenIn ds.childrenOut)
       (ds.component.render ds.state)
       currentNode
-  children <- Ref.read ds.childrenOut
-  childrenIn <- Ref.read ds.childrenIn
-  Slot.foreachSlot childrenIn \(DriverStateRef childVar) -> do
-    childDS <- Ref.read childVar
-    renderStateX_ renderSpec.removeChild childDS
-    Render.finalize renderSpec isRoot lchs childDS
-  flip Ref.modify_ ds.selfRef $ mapDriverState \ds' ->
-    ds' { rendering = Just rendering, children = children }
-  when shouldProcessHandlers do
-    flip tailRecM unit \_ -> do
-      handlers <- Ref.read pendingHandlers
-      Ref.write (Just L.Nil) pendingHandlers
-      traverse_ (Eval.handleAff <<< traverse_ fork <<< L.reverse) handlers
-      mmore <- Ref.read pendingHandlers
-      if maybe false L.null mmore
-        then Ref.write Nothing pendingHandlers $> Done unit
-        else pure $ Loop unit
 
 renderChildHydrate
   :: forall ps act r
@@ -109,10 +80,10 @@ renderChildHydrate
   -> ComponentSlotBox ps Aff act
   -> DOM.Node
   -> Effect (RenderStateX r)
-renderChildHydrate renderSpec lchs handler childrenInRef childrenOutRef componentSlotBox currentNode = Shared.renderChild renderSpec lchs handler childrenInRef childrenOutRef renderWithExistenShildrenState renderNew componentSlotBox
+renderChildHydrate renderSpec lchs handler childrenInRef childrenOutRef componentSlotBox currentNode = Render.renderChildImplementation renderSpec lchs handler childrenInRef childrenOutRef renderWithExistingChildrenState renderNew componentSlotBox
   where
-  renderWithExistenShildrenState :: forall query input output. ComponentSlotSpec query input output ps Aff act -> Tuple (DriverStateRef r query output) (Slot.SlotStorage ps (DriverStateRef r)) -> Effect (Ref (DriverStateX r query output))
-  renderWithExistenShildrenState _ _ = throw "should not be called"
+  renderWithExistingChildrenState :: forall query input output. ComponentSlotSpec query input output ps Aff act -> Tuple (DriverStateRef r query output) (Slot.SlotStorage ps (DriverStateRef r)) -> Effect (Ref (DriverStateX r query output))
+  renderWithExistingChildrenState _ _ = throw "[renderChildHydrate] you are trying to render a component that already has a state. This should not have happened on hydration phase, because hydration is running only on initial rendering. On subsequent rendering the non-hydration functions are used"
 
   renderNew :: forall query input output. ComponentSlotSpec query input output ps Aff act -> Effect (Ref (DriverStateX r query output))
   renderNew slot = runComponentHydrate renderSpec false currentNode lchs (maybe (pure unit) handler <<< slot.output) slot.input slot.component
