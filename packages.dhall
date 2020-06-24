@@ -3,7 +3,7 @@ let upstream =
 
 let overrides =
     { web-dom =
-        upstream.web-dom // { repo = "https://github.com/srghma/purescript-web-dom.git", version = "patch-1" }
+        upstream.web-dom // { repo = "https://github.com/purescript-web/purescript-web-dom.git", version = "master" }
     }
 
 let additions =
