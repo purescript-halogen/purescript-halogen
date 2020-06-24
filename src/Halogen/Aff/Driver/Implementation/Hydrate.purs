@@ -11,6 +11,7 @@ import Data.Map as M
 import Data.Maybe (Maybe(..), maybe, isJust, isNothing)
 import Data.Traversable (for_, sequence_, traverse_)
 import Data.Tuple (Tuple(..))
+import Debug.Trace (traceM, trace)
 import Effect (Effect)
 import Effect.Aff (Aff, killFiber)
 import Effect.Class (liftEffect)
@@ -21,19 +22,19 @@ import Effect.Ref as Ref
 import FRP.Event as Event
 import Halogen (HalogenIO)
 import Halogen.Aff.Driver.Eval as Eval
+import Halogen.Aff.Driver.Implementation.Render as Render
+import Halogen.Aff.Driver.Implementation.Shared as Shared
+import Halogen.Aff.Driver.Implementation.Types (RenderSpec)
 import Halogen.Aff.Driver.State (DriverState(..), DriverStateRef(..), DriverStateX, LifecycleHandlers, RenderStateX, initDriverState, mapDriverState, renderStateX, renderStateX_, unDriverStateX)
-import Halogen.Component (Component, ComponentSlot, ComponentSlotBox, unComponent, unComponentSlot)
+import Halogen.Component (Component, ComponentSlot, ComponentSlotBox, ComponentSlotSpec, unComponent, unComponentSlot)
 import Halogen.Data.Slot as Slot
 import Halogen.HTML.Core as HC
 import Halogen.Query.HalogenQ as HQ
 import Halogen.Query.Input (Input)
 import Halogen.Query.Input as Input
+import Unsafe.Coerce (unsafeCoerce)
 import Web.DOM.Element (Element) as DOM
 import Web.DOM.Node (Node) as DOM
-import Debug.Trace (traceM, trace)
-import Halogen.Aff.Driver.Implementation.Render as Render
-import Halogen.Aff.Driver.Implementation.Shared as Shared
-import Halogen.Aff.Driver.Implementation.Types (RenderSpec)
 
 runComponentHydrate
   :: forall f i o r
@@ -51,12 +52,12 @@ runComponentHydrate renderSpec isRoot currentNode lchs handler j = Shared.runCom
     runRender = unDriverStateX (renderHydrate renderSpec isRoot currentNode lchs <<< _.selfRef)
 
 renderHydrate
-  :: forall s f' act ps i' o' r
+  :: forall s f act ps i o r
    . RenderSpec r
   -> Boolean
   -> DOM.Node
   -> Ref LifecycleHandlers
-  -> Ref (DriverState r s f' act ps i' o')
+  -> Ref (DriverState r s f act ps i o)
   -> Effect Unit
 renderHydrate renderSpec isRoot currentNode lchs var = Ref.read var >>= \(DriverState ds) -> do
   traceM { message: "Halogen.Aff.Driver.HydrationImplementation.renderHydrate", var, currentNode }
@@ -108,21 +109,10 @@ renderChildHydrate
   -> ComponentSlotBox ps Aff act
   -> DOM.Node
   -> Effect (RenderStateX r)
-renderChildHydrate renderSpec lchs handler childrenInRef childrenOutRef componentSlotBox currentNode =
-  unComponentSlot (\slot -> do
-    traceM { message: "Halogen.Aff.Driver.HydrationImplementation.runUI renderChild 1", slot, childrenInRef }
-    childrenIn <- slot.pop <$> Ref.read childrenInRef
-    traceM { message: "Halogen.Aff.Driver.HydrationImplementation.runUI renderChild 2", childrenIn }
-    var <- case childrenIn of
-      Just (Tuple (DriverStateRef existing) childrenIn') -> throw "should not be called"
-      Nothing -> do
-        traceM { message: "Halogen.Aff.Driver.HydrationImplementation.runUI renderChild 3 -> childrenIn is nothing" }
-        runComponentHydrate renderSpec false currentNode lchs (maybe (pure unit) handler <<< slot.output) slot.input slot.component
-    isDuplicate <- isJust <<< slot.get <$> Ref.read childrenOutRef
-    when isDuplicate
-      $ warn "Halogen: Duplicate slot address was detected during rendering, unexpected results may occur"
-    Ref.modify_ (slot.set $ DriverStateRef var) childrenOutRef
-    Ref.read var >>= renderStateX case _ of
-      Nothing -> throw "Halogen internal error: child was not initialized in renderChild"
-      Just r -> pure (renderSpec.renderChild r)
-  ) componentSlotBox
+renderChildHydrate renderSpec lchs handler childrenInRef childrenOutRef componentSlotBox currentNode = Shared.renderChild renderSpec lchs handler childrenInRef childrenOutRef renderWithExistenShildrenState renderNew componentSlotBox
+  where
+  renderWithExistenShildrenState :: forall query input output. ComponentSlotSpec query input output ps Aff act -> Tuple (DriverStateRef r query output) (Slot.SlotStorage ps (DriverStateRef r)) -> Effect (Ref (DriverStateX r query output))
+  renderWithExistenShildrenState _ _ = throw "should not be called"
+
+  renderNew :: forall query input output. ComponentSlotSpec query input output ps Aff act -> Effect (Ref (DriverStateX r query output))
+  renderNew slot = runComponentHydrate renderSpec false currentNode lchs (maybe (pure unit) handler <<< slot.output) slot.input slot.component

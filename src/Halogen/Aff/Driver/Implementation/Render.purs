@@ -11,6 +11,7 @@ import Data.Map as M
 import Data.Maybe (Maybe(..), maybe, isJust, isNothing)
 import Data.Traversable (for_, sequence_, traverse_)
 import Data.Tuple (Tuple(..))
+import Debug.Trace (traceM, trace)
 import Effect (Effect)
 import Effect.Aff (Aff, killFiber)
 import Effect.Class (liftEffect)
@@ -21,25 +22,26 @@ import Effect.Ref as Ref
 import FRP.Event as Event
 import Halogen (HalogenIO)
 import Halogen.Aff.Driver.Eval as Eval
+import Halogen.Aff.Driver.Implementation.Shared as Shared
+import Halogen.Aff.Driver.Implementation.Types (RenderSpec)
 import Halogen.Aff.Driver.State (DriverState(..), DriverStateRef(..), DriverStateX, LifecycleHandlers, RenderStateX, initDriverState, mapDriverState, renderStateX, renderStateX_, unDriverStateX)
-import Halogen.Component (Component, ComponentSlot, ComponentSlotBox, unComponent, unComponentSlot)
+import Halogen.Component (Component, ComponentSlot, ComponentSlotBox, ComponentSlotSpec, unComponent, unComponentSlot)
+import Halogen.Data.Slot (SlotStorage)
 import Halogen.Data.Slot as Slot
 import Halogen.HTML.Core as HC
 import Halogen.Query.HalogenQ as HQ
 import Halogen.Query.Input (Input)
 import Halogen.Query.Input as Input
+import Unsafe.Coerce (unsafeCoerce)
 import Web.DOM.Element (Element) as DOM
 import Web.DOM.Node (Node) as DOM
-import Halogen.Aff.Driver.Implementation.Types (RenderSpec)
-import Halogen.Aff.Driver.Implementation.Shared as Shared
-import Debug.Trace (traceM, trace)
 
 evalDriver
-  :: forall s f' act ps i' o' r
+  :: forall s f act ps i o r
    . RenderSpec r
   -> Ref Boolean
-  -> Ref (DriverState r s f' act ps i' o')
-  -> forall a. (f' a -> Aff (Maybe a))
+  -> Ref (DriverState r s f act ps i o)
+  -> forall a. (f a -> Aff (Maybe a))
 evalDriver renderSpec disposed ref q =
   liftEffect (Ref.read disposed) >>=
     if _
@@ -61,11 +63,11 @@ runComponent renderSpec isRoot lchs handler j = Shared.runComponent renderSpec i
     runRender = unDriverStateX (render renderSpec isRoot lchs <<< _.selfRef)
 
 render
-  :: forall s f' act ps i' o' r
+  :: forall s f act ps i o r
    . RenderSpec r
   -> Boolean
   -> Ref LifecycleHandlers
-  -> Ref (DriverState r s f' act ps i' o')
+  -> Ref (DriverState r s f act ps i o)
   -> Effect Unit
 render renderSpec isRoot lchs var = Ref.read var >>= \(DriverState ds) -> do
   traceM { message: "Halogen.Aff.Driver.runUI renderChild is called!!!!!!!!!!!!!!!!!!!!!", isRoot, ds }
@@ -116,37 +118,26 @@ renderChild
   -> Ref (Slot.SlotStorage ps (DriverStateRef r))
   -> ComponentSlotBox ps Aff act
   -> Effect (RenderStateX r)
-renderChild renderSpec lchs handler childrenInRef childrenOutRef =
-  unComponentSlot \slot -> do
-    traceM { message: "Halogen.Aff.Driver.runUI renderChild 1", slot, childrenInRef }
-    childrenIn <- slot.pop <$> Ref.read childrenInRef
-    traceM { message: "Halogen.Aff.Driver.runUI renderChild 2", childrenIn }
-    var <- case childrenIn of
-      Just (Tuple (DriverStateRef existing) childrenIn') -> do
-        traceM { message: "Halogen.Aff.Driver.runUI renderChild 3 -> childrenIn is just" }
-        Ref.write childrenIn' childrenInRef
-        dsx <- Ref.read existing
-        unDriverStateX (\st -> do
-          flip Ref.write st.handlerRef $ maybe (pure unit) handler <<< slot.output
-          Eval.handleAff $ Eval.evalM (render renderSpec false) st.selfRef (st.component.eval (HQ.Receive slot.input unit))) dsx
-        pure existing
-      Nothing -> do
-        traceM { message: "Halogen.Aff.Driver.runUI renderChild 3 -> childrenIn is nothing" }
-        runComponent renderSpec false lchs (maybe (pure unit) handler <<< slot.output) slot.input slot.component
-    isDuplicate <- isJust <<< slot.get <$> Ref.read childrenOutRef
-    when isDuplicate
-      $ warn "Halogen: Duplicate slot address was detected during rendering, unexpected results may occur"
-    Ref.modify_ (slot.set $ DriverStateRef var) childrenOutRef
-    Ref.read var >>= renderStateX case _ of
-      Nothing -> throw "Halogen internal error: child was not initialized in renderChild"
-      Just r -> pure (renderSpec.renderChild r)
+renderChild renderSpec lchs handler childrenInRef childrenOutRef = Shared.renderChild renderSpec lchs handler childrenInRef childrenOutRef renderWithExistenShildrenState renderNew
+  where
+  renderWithExistenShildrenState :: forall query input output. ComponentSlotSpec query input output ps Aff act -> Tuple (DriverStateRef r query output) (Slot.SlotStorage ps (DriverStateRef r)) -> Effect (Ref (DriverStateX r query output))
+  renderWithExistenShildrenState slot (Tuple (DriverStateRef existing) childrenIn') = do
+    Ref.write childrenIn' childrenInRef
+    dsx <- Ref.read existing
+    unDriverStateX (\st -> do
+      flip Ref.write st.handlerRef $ maybe (pure unit) handler <<< slot.output
+      Eval.handleAff $ Eval.evalM (render renderSpec false) st.selfRef (st.component.eval (HQ.Receive slot.input unit))) dsx
+    pure existing
+
+  renderNew :: forall query input output. ComponentSlotSpec query input output ps Aff act -> Effect (Ref (DriverStateX r query output))
+  renderNew slot = runComponent renderSpec false lchs (maybe (pure unit) handler <<< slot.output) slot.input slot.component
 
 finalize
-  :: forall f' o' r
+  :: forall f o r
    . RenderSpec r
   -> Boolean
   -> Ref LifecycleHandlers
-  -> DriverStateX r f' o'
+  -> DriverStateX r f o
   -> Effect Unit
 finalize renderSpec isRoot lchs = do
   unDriverStateX \st -> do
@@ -160,11 +151,12 @@ finalize renderSpec isRoot lchs = do
       dsx <- Ref.read ref
       finalize renderSpec isRoot lchs dsx
 
-dispose :: forall f' o' r
+dispose
+  :: forall f o r
    . RenderSpec r
   -> Ref Boolean
   -> Ref LifecycleHandlers
-  -> DriverStateX r f' o'
+  -> DriverStateX r f o
   -> Aff Unit
 dispose renderSpec disposed lchs dsx = Eval.handleLifecycle lchs do
   Ref.read disposed >>=

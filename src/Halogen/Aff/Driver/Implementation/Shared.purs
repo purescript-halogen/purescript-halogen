@@ -24,7 +24,7 @@ import Halogen (HalogenIO)
 import Halogen.Aff.Driver.Eval as Eval
 import Halogen.Aff.Driver.Implementation.Types (RenderSpec)
 import Halogen.Aff.Driver.State (DriverState(..), DriverStateRef(..), DriverStateX, LifecycleHandlers, RenderStateX, initDriverState, mapDriverState, renderStateX, renderStateX_, unDriverStateX)
-import Halogen.Component (Component, ComponentSlot, ComponentSlotBox, unComponent, unComponentSlot)
+import Halogen.Component (Component, ComponentSlot, ComponentSlotBox, ComponentSlotSpec, unComponent, unComponentSlot)
 import Halogen.Data.Slot as Slot
 import Halogen.HTML.Core as HC
 import Halogen.Query.HalogenQ as HQ
@@ -91,3 +91,28 @@ handlePending ref = do
   queue <- Ref.read ref
   Ref.write Nothing ref
   for_ queue (Eval.handleAff <<< traverse_ fork <<< L.reverse)
+
+renderChild
+  :: forall ps act r
+   . RenderSpec r
+  -> Ref LifecycleHandlers
+  -> (act -> Aff Unit)
+  -> Ref (Slot.SlotStorage ps (DriverStateRef r))
+  -> Ref (Slot.SlotStorage ps (DriverStateRef r))
+  -> (forall query input output. ComponentSlotSpec query input output ps Aff act -> Tuple (DriverStateRef r query output) (Slot.SlotStorage ps (DriverStateRef r)) -> Effect (Ref (DriverStateX r query output)))
+  -> (forall query input output. ComponentSlotSpec query input output ps Aff act -> Effect (Ref (DriverStateX r query output)))
+  -> ComponentSlotBox ps Aff act
+  -> Effect (RenderStateX r)
+renderChild renderSpec lchs handler childrenInRef childrenOutRef renderWithExistenShildrenState renderNew =
+  unComponentSlot \slot -> do
+    childrenIn <- slot.pop <$> Ref.read childrenInRef
+    var <- case childrenIn of
+      Just childrenIn' -> renderWithExistenShildrenState slot childrenIn'
+      Nothing -> renderNew slot
+    isDuplicate <- isJust <<< slot.get <$> Ref.read childrenOutRef
+    when isDuplicate
+      $ warn "Halogen: Duplicate slot address was detected during rendering, unexpected results may occur"
+    Ref.modify_ (slot.set $ DriverStateRef var) childrenOutRef
+    Ref.read var >>= renderStateX case _ of
+      Nothing -> throw "Halogen internal error: child was not initialized in renderChild"
+      Just r -> pure (renderSpec.renderChild r)
