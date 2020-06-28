@@ -936,6 +936,7 @@ handleAction = case _ of
 -- assuming we've defined a `handleAction` function in scope...
 handleAction = ...
 </code></pre>
+<p><em>Note</em>: <code>initialState</code> and <code>render</code> are set using abbreviated <em>record pun</em> notation; however, <code>handleAction</code> cannot be set with a pun in this case because it is part of a <em>record update</em>. More information about <em>record pun</em> and <em>record update</em> syntax is available in the <a href="https://github.com/purescript/documentation/blob/master/language/Records.md#record-update">Records Language Reference</a>.</p>
 <p>You can override more fields, if you need to. For example, if you need to support an initializer then you would override the <code>initialize</code> field too:</p>
 <pre><code class="language-purs">H.mkComponent
   { initialState
@@ -1010,8 +1011,8 @@ component =
   H.mkComponent
     { initialState
     , render
-    , eval: H.mkEval $ H.defaultEval 
-        { handleAction = handleAction 
+    , eval: H.mkEval $ H.defaultEval
+        { handleAction = handleAction
         , initialize = Just Initialize
         }
     }
