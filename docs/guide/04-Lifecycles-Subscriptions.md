@@ -32,12 +32,21 @@ module Main where
 import Prelude
 
 import Data.Maybe (Maybe(..), maybe)
+import Effect (Effect)
 import Effect.Class (class MonadEffect)
 import Effect.Class.Console (log)
 import Effect.Random (random)
 import Halogen as H
+import Halogen.Aff as HA
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
+import Halogen.HTML as HH
+import Halogen.VDom.Driver (runUI)
+
+main :: Effect Unit
+main = HA.runHalogenAff do
+  body <- HA.awaitBody
+  runUI component unit body
 
 type State = Maybe Number
 
@@ -78,6 +87,7 @@ handleAction :: forall o m. MonadEffect m => Action -> H.HalogenM State Action (
 handleAction = case _ of
   Initialize -> do
     handleAction Regenerate
+    newNumber <- H.get
     log ("Initialized: " <> show newNumber)
 
   Regenerate -> do
@@ -203,14 +213,23 @@ module Main where
 import Prelude
 
 import Control.Monad.Rec.Class (forever)
+import Data.Maybe (Maybe(..))
+import Effect (Effect)
 import Effect.Aff (Milliseconds(..))
 import Effect.Aff as Aff
 import Effect.Aff.Class (class MonadAff)
 import Effect.Exception (error)
 import Halogen as H
+import Halogen.Aff as HA
 import Halogen.HTML as HH
 import Halogen.Query.EventSource (EventSource)
 import Halogen.Query.EventSource as EventSource
+import Halogen.VDom.Driver (runUI)
+
+main :: Effect Unit
+main = HA.runHalogenAff do
+  body <- HA.awaitBody
+  runUI component unit body
 
 data Action = Initialize | Tick
 
@@ -221,7 +240,10 @@ component =
   H.mkComponent
     { initialState
     , render
-    , eval: H.mkEval $ H.defaultEval { handleAction = handleAction }
+    , eval: H.mkEval $ H.defaultEval 
+        { handleAction = handleAction 
+        , initialize = Just Initialize
+        }
     }
 
 initialState :: forall i. i -> State
@@ -293,16 +315,24 @@ import Prelude
 
 import Data.Maybe (Maybe(..))
 import Data.String as String
+import Effect (Effect)
 import Effect.Aff.Class (class MonadAff)
 import Halogen as H
+import Halogen.Aff as HA
 import Halogen.HTML as HH
-import Halogen.Query.EventSource (EventSource, eventListenerEventSource)
+import Halogen.Query.EventSource (eventListenerEventSource)
+import Halogen.VDom.Driver (runUI)
 import Web.Event.Event as E
-import Web.HTML (HTMLDocument, window)
+import Web.HTML (window)
 import Web.HTML.HTMLDocument as HTMLDocument
 import Web.HTML.Window (document)
 import Web.UIEvent.KeyboardEvent as KE
 import Web.UIEvent.KeyboardEvent.EventTypes as KET
+
+main :: Effect Unit
+main = HA.runHalogenAff do
+  body <- HA.awaitBody
+  runUI component unit body
 
 type State = { chars :: String }
 
