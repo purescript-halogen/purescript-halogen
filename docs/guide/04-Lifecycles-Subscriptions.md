@@ -147,6 +147,8 @@ H.mkComponent
 handleAction = ...
 ```
 
+_Note_: `initialState` and `render` are set using abbreviated _record pun_ notation; however, `handleAction` cannot be set with a pun in this case because it is part of a _record update_. More information about _record pun_ and _record update_ syntax is available in the [Records Language Reference](https://github.com/purescript/documentation/blob/master/language/Records.md#record-update).
+
 You can override more fields, if you need to. For example, if you need to support an initializer then you would override the `initialize` field too:
 
 ```purs
@@ -240,8 +242,8 @@ component =
   H.mkComponent
     { initialState
     , render
-    , eval: H.mkEval $ H.defaultEval 
-        { handleAction = handleAction 
+    , eval: H.mkEval $ H.defaultEval
+        { handleAction = handleAction
         , initialize = Just Initialize
         }
     }
