@@ -55,7 +55,7 @@ data Action
   | Regenerate
   | Finalize
 
-component :: forall q i o m. MonadEffect m => H.Component HH.HTML q i o m
+component :: forall query input output m. MonadEffect m => H.Component HH.HTML query input output m
 component =
   H.mkComponent
     { initialState
@@ -67,7 +67,7 @@ component =
         }
     }
 
-initialState :: forall i. i -> State
+initialState :: forall input. input -> State
 initialState _ = Nothing
 
 render :: forall m. State -> H.ComponentHTML Action () m
@@ -83,7 +83,7 @@ render state = do
         [ HH.text "Generate new number" ]
     ]
 
-handleAction :: forall o m. MonadEffect m => Action -> H.HalogenM State Action () o m Unit
+handleAction :: forall output m. MonadEffect m => Action -> H.HalogenM State Action () output m Unit
 handleAction = case _ of
   Initialize -> do
     handleAction Regenerate
@@ -237,7 +237,7 @@ data Action = Initialize | Tick
 
 type State = Int
 
-component :: forall q i o m. MonadAff m => H.Component HH.HTML q i o m
+component :: forall query input output m. MonadAff m => H.Component HH.HTML query input output m
 component =
   H.mkComponent
     { initialState
@@ -248,13 +248,13 @@ component =
         }
     }
 
-initialState :: forall i. i -> State
+initialState :: forall input. input -> State
 initialState _ = 0
 
 render :: forall m. State -> H.ComponentHTML Action () m
 render seconds = HH.text ("You have been here for " <> show seconds <> " seconds")
 
-handleAction :: forall o m. MonadAff m => Action -> H.HalogenM State Action () o m Unit
+handleAction :: forall output m. MonadAff m => Action -> H.HalogenM State Action () output m Unit
 handleAction = case _ of
   Initialize -> do
     _ <- H.subscribe timer
@@ -342,7 +342,7 @@ data Action
   = Initialize
   | HandleKey H.SubscriptionId KE.KeyboardEvent
 
-component :: forall q i o m. MonadAff m => H.Component HH.HTML q i o m
+component :: forall query input output m. MonadAff m => H.Component HH.HTML query input output m
 component =
   H.mkComponent
     { initialState
@@ -353,7 +353,7 @@ component =
         }
     }
 
-initialState :: forall i. i -> State
+initialState :: forall input. input -> State
 initialState _ = { chars: "" }
 
 render :: forall m. State -> H.ComponentHTML Action () m
@@ -364,7 +364,7 @@ render state =
     , HH.p_ [ HH.text state.chars ]
     ]
 
-handleAction :: forall o m. MonadAff m => Action -> H.HalogenM State Action () o m Unit
+handleAction :: forall output m. MonadAff m => Action -> H.HalogenM State Action () output m Unit
 handleAction = case _ of
   Initialize -> do
     document <- H.liftEffect $ document =<< window
@@ -398,12 +398,12 @@ We wrote our event source right into our code to handle the `Initialize` action,
 
 ```
 eventListenerEventSource
-  :: forall m a
+  :: forall action m
    . MonadAff m
   => EventType
   -> EventTarget
-  -> (Event -> Maybe a)
-  -> EventSource m a
+  -> (Event -> Maybe action)
+  -> EventSource m action
 ```
 
 It takes a type of event to listen to (in our case: `keyup`), a target indicating where to listen for events (in our case: the `HTMLDocument` itself), and a callback function that transforms the events that occur into a type that should be emitted (in our case: we emit our `Action` type by capturing the event in the `HandleKey` constructor).

@@ -97,7 +97,7 @@ initialState :: Input -> State
 Our counter component doesn't use its input, so our `initialState` function won't use an input type and will instead just leave that type variable open. Our counter should start at 0 when the component runs.
 
 ```purs
-initialState :: forall i. i -> State
+initialState :: forall input. input -> State
 initialState _ = 0
 ```
 
@@ -105,7 +105,12 @@ initialState _ = 0
 
 Halogen components can update state, perform effects, and communicate with other components in response to events that arise internally. Components use an "action" type to describe what kinds of things a component can do in response to internal events.
 
-Our counter has two internal events: a click event on the button to decrement the count and a click event on the button to increment the count. We can describe what our component should do in response to these events using a data type we'll call `Action`:
+Our counter has two internal events: 
+
+1. a click event on the "-" button to decrement the count
+2. a click event on the "+" button to increment the count. 
+
+We can describe what our component should do in response to these events using a data type we'll call `Action`:
 
 ```purs
 data Action = Increment | Decrement
@@ -116,21 +121,21 @@ This type signifies that our component is capable of incrementing and decrementi
 Just like how our state type had to be paired with an `initialState` function that describes how to produce a `State` value, our `Action` type should be paired with a function called `handleAction` that describes what to do when one of these actions occurs.
 
 ```purs
-handleAction :: forall o m. Action -> H.HalogenM State Action () o m Unit
+handleAction :: forall output m. Action -> H.HalogenM State Action () output m Unit
 ```
 
 As with our input type, we can leave type variables open for types that we aren't using. 
 
 * The type `()` means our component has no child components. We could also leave it open as a type variable because we aren't using it -- `slots`, by convention -- but `()` is so short you'll see this type commonly used instead.
-* The `o` type parameter is only used when your component communicates with a parent.
+* The `output` type parameter is only used when your component communicates with a parent.
 * The `m` type parameter is only relevant when your component performs effects.
 
-Since our counter has no child components we'll use `()` to describe them, and because it doesn't communicate with a parent or perform effects we'll leave the `o` and `m` type variables open.
+Since our counter has no child components we'll use `()` to describe them, and because it doesn't communicate with a parent or perform effects we'll leave the `output` and `m` type variables open.
 
 Here's the `handleAction` function for our counter:
 
 ```purs
-handleAction :: forall o m. Action -> H.HalogenM State Action () o m Unit
+handleAction :: forall output m. Action -> H.HalogenM State Action () output m Unit
 handleAction = case _ of
   Decrement -> 
     H.modify_ \state -> state - 1
@@ -182,15 +187,15 @@ You might be curious about why we provided an anonymous function to `onClick`. T
 
 ```purs
 onClick 
-  :: forall r i
-   . (MouseEvent -> Maybe i)
-  -> IProp (onClick :: MouseEvent | r) i
+  :: forall row action
+   . (MouseEvent -> Maybe action)
+  -> IProp (onClick :: MouseEvent | row) action
 
 -- Specialized to our component
 onClick 
-  :: forall r
+  :: forall row
    . (MouseEvent -> Maybe Action) 
-  -> IProp (onClick :: MouseEvent | r) Action
+  -> IProp (onClick :: MouseEvent | row) Action
 ```
 
 In Halogen, event handlers take as their first argument a callback. This callback receives the DOM event that occurred (in the case of a click event, that's a `MouseEvent`), which contains some metadata you may want to use, and is then responsible for returning an action that Halogen should run in response to the event. In our case, we won't inspect the event itself, so we throw the argument away and return the action we want to run (`Increment` or `Decrement`).
@@ -213,10 +218,10 @@ initialState = ...
 
 data Action = Increment | Decrement
 
-handleAction :: forall slots o m. Action -> H.HalogenM State Action () o m Unit
+handleAction :: forall slots output m. Action -> H.HalogenM State Action () output m Unit
 handleAction = ...
 
-render :: forall slots m. State -> H.ComponentHTML Action () m
+render :: forall m. State -> H.ComponentHTML Action () m
 render = ...
 ```
 
@@ -287,7 +292,7 @@ type State = Int
 
 data Action = Increment | Decrement
 
-component :: forall q i o m. H.Component HH.HTML q i o m
+component :: forall query input output m. H.Component HH.HTML query input output m
 component =
   H.mkComponent
     { initialState
@@ -295,7 +300,7 @@ component =
     , eval: H.mkEval H.defaultEval { handleAction = handleAction }
     }
 
-initialState :: forall i. i -> State
+initialState :: forall input. input -> State
 initialState _ = 0
 
 render :: forall m. State -> H.ComponentHTML Action () m
