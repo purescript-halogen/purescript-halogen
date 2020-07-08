@@ -212,27 +212,32 @@ component =
 <pre><code class="language-purs">initialState :: Input -&gt; State
 </code></pre>
 <p>Our counter component doesn't use its input, so our <code>initialState</code> function won't use an input type and will instead just leave that type variable open. Our counter should start at 0 when the component runs.</p>
-<pre><code class="language-purs">initialState :: forall i. i -&gt; State
+<pre><code class="language-purs">initialState :: forall input. input -&gt; State
 initialState _ = 0
 </code></pre>
 <h3><a class="header" href="#actions" id="actions">Actions</a></h3>
 <p>Halogen components can update state, perform effects, and communicate with other components in response to events that arise internally. Components use an &quot;action&quot; type to describe what kinds of things a component can do in response to internal events.</p>
-<p>Our counter has two internal events: a click event on the button to decrement the count and a click event on the button to increment the count. We can describe what our component should do in response to these events using a data type we'll call <code>Action</code>:</p>
+<p>Our counter has two internal events: </p>
+<ol>
+<li>a click event on the &quot;-&quot; button to decrement the count</li>
+<li>a click event on the &quot;+&quot; button to increment the count. </li>
+</ol>
+<p>We can describe what our component should do in response to these events using a data type we'll call <code>Action</code>:</p>
 <pre><code class="language-purs">data Action = Increment | Decrement
 </code></pre>
 <p>This type signifies that our component is capable of incrementing and decrementing. In a moment, we'll see this type used in our HTML -- another example of Halogen's declarative nature.</p>
 <p>Just like how our state type had to be paired with an <code>initialState</code> function that describes how to produce a <code>State</code> value, our <code>Action</code> type should be paired with a function called <code>handleAction</code> that describes what to do when one of these actions occurs.</p>
-<pre><code class="language-purs">handleAction :: forall o m. Action -&gt; H.HalogenM State Action () o m Unit
+<pre><code class="language-purs">handleAction :: forall output m. Action -&gt; H.HalogenM State Action () output m Unit
 </code></pre>
 <p>As with our input type, we can leave type variables open for types that we aren't using. </p>
 <ul>
 <li>The type <code>()</code> means our component has no child components. We could also leave it open as a type variable because we aren't using it -- <code>slots</code>, by convention -- but <code>()</code> is so short you'll see this type commonly used instead.</li>
-<li>The <code>o</code> type parameter is only used when your component communicates with a parent.</li>
+<li>The <code>output</code> type parameter is only used when your component communicates with a parent.</li>
 <li>The <code>m</code> type parameter is only relevant when your component performs effects.</li>
 </ul>
-<p>Since our counter has no child components we'll use <code>()</code> to describe them, and because it doesn't communicate with a parent or perform effects we'll leave the <code>o</code> and <code>m</code> type variables open.</p>
+<p>Since our counter has no child components we'll use <code>()</code> to describe them, and because it doesn't communicate with a parent or perform effects we'll leave the <code>output</code> and <code>m</code> type variables open.</p>
 <p>Here's the <code>handleAction</code> function for our counter:</p>
-<pre><code class="language-purs">handleAction :: forall o m. Action -&gt; H.HalogenM State Action () o m Unit
+<pre><code class="language-purs">handleAction :: forall output m. Action -&gt; H.HalogenM State Action () output m Unit
 handleAction = case _ of
   Decrement -&gt; 
     H.modify_ \state -&gt; state - 1
@@ -269,15 +274,15 @@ render state =
 <p>We can now see how to handle events in Halogen. First, you write the event handler in the properties array along with any other properties, attributes, and refs you might need. Then, you associate the event handler with an <code>Action</code> that your component knows how to handle. Finally, when the event occurs, your <code>handleAction</code> function is called to handle the event.</p>
 <p>You might be curious about why we provided an anonymous function to <code>onClick</code>. To see why, we can look at the actual type of <code>onClick</code>:</p>
 <pre><code class="language-purs">onClick 
-  :: forall r i
-   . (MouseEvent -&gt; Maybe i)
-  -&gt; IProp (onClick :: MouseEvent | r) i
+  :: forall row action
+   . (MouseEvent -&gt; Maybe action)
+  -&gt; IProp (onClick :: MouseEvent | row) action
 
 -- Specialized to our component
 onClick 
-  :: forall r
+  :: forall row
    . (MouseEvent -&gt; Maybe Action) 
-  -&gt; IProp (onClick :: MouseEvent | r) Action
+  -&gt; IProp (onClick :: MouseEvent | row) Action
 </code></pre>
 <p>In Halogen, event handlers take as their first argument a callback. This callback receives the DOM event that occurred (in the case of a click event, that's a <code>MouseEvent</code>), which contains some metadata you may want to use, and is then responsible for returning an action that Halogen should run in response to the event. In our case, we won't inspect the event itself, so we throw the argument away and return the action we want to run (<code>Increment</code> or <code>Decrement</code>).</p>
 <p>The <code>onClick</code> function then returns a value of type <code>IProp</code>. You should remember <code>IProp</code> from the previous chapter. As a refresher, Halogen HTML elements specify a list of what properties and events they support. Properties and events in turn specify their type. Halogen is then able to ensure that you never use a property or event on an element that doesn't support it. In this case buttons do support <code>onClick</code> events, so we're good to go!</p>
@@ -294,10 +299,10 @@ initialState = ...
 
 data Action = Increment | Decrement
 
-handleAction :: forall slots o m. Action -&gt; H.HalogenM State Action () o m Unit
+handleAction :: forall slots output m. Action -&gt; H.HalogenM State Action () output m Unit
 handleAction = ...
 
-render :: forall slots m. State -&gt; H.ComponentHTML Action () m
+render :: forall m. State -&gt; H.ComponentHTML Action () m
 render = ...
 </code></pre>
 <p>These types and functions are the core building blocks of a typical Halogen component. But they aren't sufficient on their own like this -- we need to bring them all together in one place. </p>
@@ -352,7 +357,7 @@ type State = Int
 
 data Action = Increment | Decrement
 
-component :: forall q i o m. H.Component HH.HTML q i o m
+component :: forall query input output m. H.Component HH.HTML query input output m
 component =
   H.mkComponent
     { initialState
@@ -360,7 +365,7 @@ component =
     , eval: H.mkEval H.defaultEval { handleAction = handleAction }
     }
 
-initialState :: forall i. i -&gt; State
+initialState :: forall input. input -&gt; State
 initialState _ = 0
 
 render :: forall m. State -&gt; H.ComponentHTML Action () m

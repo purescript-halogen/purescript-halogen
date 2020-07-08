@@ -183,7 +183,7 @@ import Prelude
 import Halogen as H
 import Halogen.HTML as HH
 
-parent :: forall q i o m. H.Component HH.HTML q i o m
+parent :: forall query input output m. H.Component HH.HTML query input output m
 parent =
   H.mkComponent
     { initialState: identity
@@ -191,7 +191,7 @@ parent =
     , eval: H.mkEval H.defaultEval
     }
   where
-  render :: forall state act. state -&gt; H.ComponentHTML act () m
+  render :: forall state action. state -&gt; H.ComponentHTML action () m
   render _ = HH.div_ [ button { label: &quot;Click Me&quot; } ]
 
 button :: forall w i. { label :: String } -&gt; HH.HTML w i
@@ -203,7 +203,7 @@ button { label } = HH.button [ ] [ HH.text label ]
 
 type State = { label :: String }
 
-button :: forall q o m. H.Component HH.HTML q Input o m
+button :: forall query output m. H.Component HH.HTML query Input output m
 button =
   H.mkComponent
     { initialState
@@ -214,7 +214,7 @@ button =
   initialState :: Input -&gt; State
   initialState input = input
 
-  render :: forall act. State -&gt; H.ComponentHTML act () m
+  render :: forall action. State -&gt; H.ComponentHTML action () m
   render { label } = HH.button [ ] [ HH.text label ]
 </code></pre>
 <p>We took a few steps to convert our button HTML function into a button component:</p>
@@ -246,7 +246,7 @@ button =
 +
 + _button = SProxy :: SProxy &quot;button&quot;
 
-  parent :: forall q i o m. H.Component HH.HTML q i o m
+  parent :: forall query input output m. H.Component HH.HTML query input output m
   parent =
     H.mkComponent
       { initialState: identity
@@ -254,8 +254,8 @@ button =
       , eval: H.mkEval H.defaultEval
       }
     where
--   render :: forall state act. state -&gt; H.ComponentHTML act () m
-+   render :: forall state act. state -&gt; H.ComponentHTML act Slots m
+-   render :: forall state action. state -&gt; H.ComponentHTML action () m
++   render :: forall state action. state -&gt; H.ComponentHTML action Slots m
     render _ =
 -     HH.div_ [ button { label: &quot;Click Me&quot; } ]
 +     HH.div_ [ HH.slot _button 0 button { label: &quot;Click Me&quot; } absurd ]
@@ -322,7 +322,7 @@ type ParentState = { count :: Int }
 
 data ParentAction = Initialize | Increment
 
-parent :: forall q i o m. MonadAff m =&gt; H.Component HH.HTML q i o m
+parent :: forall query input output m. MonadAff m =&gt; H.Component HH.HTML query input output m
 parent =
   H.mkComponent
     { initialState
@@ -333,14 +333,14 @@ parent =
         }
     }
   where
-  initialState :: i -&gt; ParentState
+  initialState :: input -&gt; ParentState
   initialState _ = { count: 0 }
 
   render :: ParentState -&gt; H.ComponentHTML ParentAction Slots m
   render { count } =
     HH.div_ [ HH.slot _button unit button { label: show count } absurd ]
 
-  handleAction :: ParentAction -&gt; H.HalogenM ParentState ParentAction Slots o m Unit
+  handleAction :: ParentAction -&gt; H.HalogenM ParentState ParentAction Slots output m Unit
   handleAction = case _ of
     Initialize -&gt; do
       void $ H.subscribe $ EventSource.affEventSource \emitter -&gt; do
@@ -360,7 +360,7 @@ type ButtonInput = { label :: String }
 
 type ButtonState = { label :: String }
 
-button :: forall q o m. H.Component HH.HTML q ButtonInput o m
+button :: forall query output m. H.Component HH.HTML query ButtonInput output m
 button =
   H.mkComponent
     { initialState
@@ -371,7 +371,7 @@ button =
   initialState :: ButtonInput -&gt; ButtonState
   initialState { label } = { label }
 
-  render :: forall act. ButtonState -&gt; H.ComponentHTML act () m
+  render :: forall action. ButtonState -&gt; H.ComponentHTML action () m
   render { label } = HH.button_ [ HH.text label ]
 </code></pre>
 <p>If you load this into Try PureScript you'll see that our button...never changes! Even though the parent component is sending it new input every second (every time the parent re-renders) our child component is never receiving it. It's not enough to accept input; we also need to explicitly decide what to do each time it is received.</p>
@@ -382,7 +382,7 @@ type ButtonInput = { label :: String }
 
 type ButtonState = { label :: String }
 
-button :: forall q o m. H.Component HH.HTML q ButtonInput o m
+button :: forall query output m. H.Component HH.HTML query ButtonInput output m
 button =
   H.mkComponent
     { initialState
@@ -399,7 +399,7 @@ button =
   render :: ButtonState -&gt; H.ComponentHTML ButtonAction () m
   render { label } = HH.button_ [ HH.text label ]
 
-  handleAction :: ButtonAction -&gt; H.HalogenM ButtonState ButtonAction () o m Unit
+  handleAction :: ButtonAction -&gt; H.HalogenM ButtonState ButtonAction () output m Unit
   handleAction = case _ of
     -- When we receive new input we update our `label` field in state.
     Receive input -&gt;
@@ -424,7 +424,7 @@ data Output = Clicked
 data Action = Click
 
 -- Our output type shows up in our `Component` type
-button :: forall q i m. H.Component HH.HTML q i Output m
+button :: forall query input m. H.Component HH.HTML query input Output m
 button =
   H.mkComponent
     { initialState: identity
@@ -439,7 +439,7 @@ button =
 
   -- Our output type also shows up in our `HalogenM` type, because this is
   -- where we can emit these output messages.
-  handleAction :: forall st. Action -&gt; H.HalogenM st Action () Output m Unit
+  handleAction :: forall state. Action -&gt; H.HalogenM state Action () Output m Unit
   handleAction = case _ of
     -- When the button is clicked we notify the parent component that the
     -- `Clicked` event has happened by emitting it with `H.raise`.
@@ -479,7 +479,7 @@ _button = SProxy :: SProxy &quot;button&quot;
 <pre><code class="language-purs">data Action = HandleButton Button.Output
 </code></pre>
 <p>When this action occurs in our component, we can unwrap it to get the <code>Button.Output</code> value and use that to decide what code to evaluate. Now that we have our slot and action types handled, let's write our parent component:</p>
-<pre><code class="language-purs">parent :: forall q i o m. H.Component HH.HTML q i o m
+<pre><code class="language-purs">parent :: forall query input output m. H.Component HH.HTML query input output m
 parent =
   H.mkComponent
     { initialState: identity
@@ -487,12 +487,12 @@ parent =
     , eval: H.mkEval $ H.defaultEval { handleAction = handleAction }
     }
   where
-  render :: forall st. st -&gt; H.ComponentHTML Action Slots m
+  render :: forall state. state -&gt; H.ComponentHTML Action Slots m
   render _ =
     HH.div_
       [ HH.slot _button 0 button unit (Just &lt;&lt;&lt; HandleButton) ]
 
-  handleAction :: forall st. Action -&gt; H.HalogenM st Action Slots o m Unit
+  handleAction :: forall state. Action -&gt; H.HalogenM state Action Slots output m Unit
   handleAction = case _ of
     HandleButton output -&gt;
       case output of
@@ -517,7 +517,7 @@ parent =
 </code></pre>
 <p>We can interpret this query as meaning &quot;A parent component can tell this component to do something with <code>Tell</code> and it can request a <code>Boolean</code> from this component with <code>Request</code>.&quot; When you implement a query type, remember that the <code>a</code> type parameter should be present in every constructor. It should be the final argument for tell-style queries and be the result of a function type for request-style queries.</p>
 <p>Queries are handled with a <code>handleQuery</code> function in your eval spec, just like how actions are handled with a <code>handleAction</code> function. Let's write a <code>handleQuery</code> function for our custom data type, assuming some state, action, and output types have already been defined:</p>
-<pre><code class="language-purs">handleQuery :: forall m. Query a -&gt; H.HalogenM State Action () Output m (Maybe a)
+<pre><code class="language-purs">handleQuery :: forall a m. Query a -&gt; H.HalogenM State Action () Output m (Maybe a)
 handleQuery = case _ of
   Tell a -&gt;
     -- ... do something, then return the `a` we received
@@ -549,7 +549,7 @@ data Query a
 type State = { count :: Int }
 
 -- Our query type shows up in our `Component` type
-counter :: forall i o m. H.Component HH.HTML Query i o m
+counter :: forall input output m. H.Component HH.HTML Query input output m
 counter =
   H.mkComponent
     { initialState: \_ -&gt; { count: 0 }
@@ -562,7 +562,7 @@ counter =
       [ HH.text $ show count ]
 
   -- We write a function to handle queries when they arise.
-  handleQuery :: forall act a. Query a -&gt; H.HalogenM State act () o m (Maybe a)
+  handleQuery :: forall action a. Query a -&gt; H.HalogenM State action () o m (Maybe a)
   handleQuery = case _ of
     -- When we receive the `Increment` query we'll increment our state.
     Increment a -&gt; do
@@ -591,7 +591,7 @@ _counter = SProxy :: SProxy &quot;counter&quot;
 <pre><code class="language-purs">data Action = Initialize
 </code></pre>
 <p>Now, we can move on to our component definition.</p>
-<pre><code class="language-purs">parent :: forall q i o m. H.Component HH.HTML q i o m
+<pre><code class="language-purs">parent :: forall query input output m. H.Component HH.HTML query input output m
 parent =
   H.mkComponent
     { initialState: identity
@@ -602,12 +602,12 @@ parent =
         }
     }
   where
-  render :: forall st. st -&gt; H.ComponentHTML Action Slots m
+  render :: forall state. state -&gt; H.ComponentHTML Action Slots m
   render _ =
     HH.div_
       [ HH.slot _counter unit counter unit absurd ]
 
-  handleAction :: forall st. Action -&gt; H.HalogenM st Action Slots o m Unit
+  handleAction :: forall state. Action -&gt; H.HalogenM state Action Slots output m Unit
   handleAction = case _ of
     Initialize -&gt;
       -- startCount :: Maybe Int
@@ -650,10 +650,10 @@ request query = query identity
 <pre><code class="language-purs">type Slots = ()
 </code></pre>
 <p>This means the component supports no child components.</p>
-<pre><code class="language-purs">type Slots = ( button :: forall q. H.Slot q Void Unit )
+<pre><code class="language-purs">type Slots = ( button :: forall query. H.Slot query Void Unit )
 </code></pre>
 <p>This means the component supports one type of child component, identified by the symbol <code>button</code>. You can't send queries to it (because <code>q</code> is an open type variable) and it doesn't emit any output messages (usually represented with <code>Void</code> so you can use <code>absurd</code> as the handler). You can have at most one of this component because only one value, <code>unit</code>, inhabits the <code>Unit</code> type.</p>
-<pre><code class="language-purs">type Slots = ( button :: forall q. H.Slot q Button.Output Int )
+<pre><code class="language-purs">type Slots = ( button :: forall query. H.Slot query Button.Output Int )
 </code></pre>
 <p>This type is quite similar to previous one. The difference is that the child component can raise output messages of type <code>Button.Output</code>, and you can have as many of this component as there are integers.</p>
 <pre><code class="language-purs">type Slots =
@@ -717,7 +717,7 @@ type ParentState = { clicked :: Int }
 
 -- The parent component uses no query, input, or output types of its own. It can
 -- use any monad so long as that monad can run `Effect` functions.
-parent :: forall q i o m. MonadEffect m =&gt; H.Component HH.HTML q i o m
+parent :: forall query input output m. MonadEffect m =&gt; H.Component HH.HTML query input output m
 parent =
   H.mkComponent
     { initialState
@@ -727,7 +727,7 @@ parent =
     , eval: H.mkEval $ H.defaultEval { handleAction = handleAction }
     }
   where
-  initialState :: i -&gt; ParentState
+  initialState :: input -&gt; ParentState
   initialState _ = { clicked: 0 }
 
   -- We render three buttons, handling their output messages with the `HandleButton`
@@ -746,7 +746,7 @@ parent =
       , HH.slot _button 2 button { label: clicks &lt;&gt; &quot; Switch&quot; } (Just &lt;&lt;&lt; HandleButton)
       ]
 
-  handleAction :: ParentAction -&gt; H.HalogenM ParentState ParentAction Slots o m Unit
+  handleAction :: ParentAction -&gt; H.HalogenM ParentState ParentAction Slots output m Unit
   handleAction = case _ of
     -- We handle one action, `HandleButton`, which itself handles the output messages
     -- of our button component.

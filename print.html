@@ -429,27 +429,32 @@ component =
 <pre><code class="language-purs">initialState :: Input -&gt; State
 </code></pre>
 <p>Our counter component doesn't use its input, so our <code>initialState</code> function won't use an input type and will instead just leave that type variable open. Our counter should start at 0 when the component runs.</p>
-<pre><code class="language-purs">initialState :: forall i. i -&gt; State
+<pre><code class="language-purs">initialState :: forall input. input -&gt; State
 initialState _ = 0
 </code></pre>
 <h3><a class="header" href="#actions" id="actions">Actions</a></h3>
 <p>Halogen components can update state, perform effects, and communicate with other components in response to events that arise internally. Components use an &quot;action&quot; type to describe what kinds of things a component can do in response to internal events.</p>
-<p>Our counter has two internal events: a click event on the button to decrement the count and a click event on the button to increment the count. We can describe what our component should do in response to these events using a data type we'll call <code>Action</code>:</p>
+<p>Our counter has two internal events: </p>
+<ol>
+<li>a click event on the &quot;-&quot; button to decrement the count</li>
+<li>a click event on the &quot;+&quot; button to increment the count. </li>
+</ol>
+<p>We can describe what our component should do in response to these events using a data type we'll call <code>Action</code>:</p>
 <pre><code class="language-purs">data Action = Increment | Decrement
 </code></pre>
 <p>This type signifies that our component is capable of incrementing and decrementing. In a moment, we'll see this type used in our HTML -- another example of Halogen's declarative nature.</p>
 <p>Just like how our state type had to be paired with an <code>initialState</code> function that describes how to produce a <code>State</code> value, our <code>Action</code> type should be paired with a function called <code>handleAction</code> that describes what to do when one of these actions occurs.</p>
-<pre><code class="language-purs">handleAction :: forall o m. Action -&gt; H.HalogenM State Action () o m Unit
+<pre><code class="language-purs">handleAction :: forall output m. Action -&gt; H.HalogenM State Action () output m Unit
 </code></pre>
 <p>As with our input type, we can leave type variables open for types that we aren't using. </p>
 <ul>
 <li>The type <code>()</code> means our component has no child components. We could also leave it open as a type variable because we aren't using it -- <code>slots</code>, by convention -- but <code>()</code> is so short you'll see this type commonly used instead.</li>
-<li>The <code>o</code> type parameter is only used when your component communicates with a parent.</li>
+<li>The <code>output</code> type parameter is only used when your component communicates with a parent.</li>
 <li>The <code>m</code> type parameter is only relevant when your component performs effects.</li>
 </ul>
-<p>Since our counter has no child components we'll use <code>()</code> to describe them, and because it doesn't communicate with a parent or perform effects we'll leave the <code>o</code> and <code>m</code> type variables open.</p>
+<p>Since our counter has no child components we'll use <code>()</code> to describe them, and because it doesn't communicate with a parent or perform effects we'll leave the <code>output</code> and <code>m</code> type variables open.</p>
 <p>Here's the <code>handleAction</code> function for our counter:</p>
-<pre><code class="language-purs">handleAction :: forall o m. Action -&gt; H.HalogenM State Action () o m Unit
+<pre><code class="language-purs">handleAction :: forall output m. Action -&gt; H.HalogenM State Action () output m Unit
 handleAction = case _ of
   Decrement -&gt; 
     H.modify_ \state -&gt; state - 1
@@ -486,15 +491,15 @@ render state =
 <p>We can now see how to handle events in Halogen. First, you write the event handler in the properties array along with any other properties, attributes, and refs you might need. Then, you associate the event handler with an <code>Action</code> that your component knows how to handle. Finally, when the event occurs, your <code>handleAction</code> function is called to handle the event.</p>
 <p>You might be curious about why we provided an anonymous function to <code>onClick</code>. To see why, we can look at the actual type of <code>onClick</code>:</p>
 <pre><code class="language-purs">onClick 
-  :: forall r i
-   . (MouseEvent -&gt; Maybe i)
-  -&gt; IProp (onClick :: MouseEvent | r) i
+  :: forall row action
+   . (MouseEvent -&gt; Maybe action)
+  -&gt; IProp (onClick :: MouseEvent | row) action
 
 -- Specialized to our component
 onClick 
-  :: forall r
+  :: forall row
    . (MouseEvent -&gt; Maybe Action) 
-  -&gt; IProp (onClick :: MouseEvent | r) Action
+  -&gt; IProp (onClick :: MouseEvent | row) Action
 </code></pre>
 <p>In Halogen, event handlers take as their first argument a callback. This callback receives the DOM event that occurred (in the case of a click event, that's a <code>MouseEvent</code>), which contains some metadata you may want to use, and is then responsible for returning an action that Halogen should run in response to the event. In our case, we won't inspect the event itself, so we throw the argument away and return the action we want to run (<code>Increment</code> or <code>Decrement</code>).</p>
 <p>The <code>onClick</code> function then returns a value of type <code>IProp</code>. You should remember <code>IProp</code> from the previous chapter. As a refresher, Halogen HTML elements specify a list of what properties and events they support. Properties and events in turn specify their type. Halogen is then able to ensure that you never use a property or event on an element that doesn't support it. In this case buttons do support <code>onClick</code> events, so we're good to go!</p>
@@ -511,10 +516,10 @@ initialState = ...
 
 data Action = Increment | Decrement
 
-handleAction :: forall slots o m. Action -&gt; H.HalogenM State Action () o m Unit
+handleAction :: forall slots output m. Action -&gt; H.HalogenM State Action () output m Unit
 handleAction = ...
 
-render :: forall slots m. State -&gt; H.ComponentHTML Action () m
+render :: forall m. State -&gt; H.ComponentHTML Action () m
 render = ...
 </code></pre>
 <p>These types and functions are the core building blocks of a typical Halogen component. But they aren't sufficient on their own like this -- we need to bring them all together in one place. </p>
@@ -569,7 +574,7 @@ type State = Int
 
 data Action = Increment | Decrement
 
-component :: forall q i o m. H.Component HH.HTML q i o m
+component :: forall query input output m. H.Component HH.HTML query input output m
 component =
   H.mkComponent
     { initialState
@@ -577,7 +582,7 @@ component =
     , eval: H.mkEval H.defaultEval { handleAction = handleAction }
     }
 
-initialState :: forall i. i -&gt; State
+initialState :: forall input. input -&gt; State
 initialState _ = 0
 
 render :: forall m. State -&gt; H.ComponentHTML Action () m
@@ -602,7 +607,7 @@ handleAction = case _ of
 <p>Before we start, it's important to know that you can only perform effects during evaluation, which means functions like <code>handleAction</code> which use the type <code>HalogenM</code>. You can't perform effects when you produce your initial state or during rendering. Since you can only perform effects when you're within <code>HalogenM</code>, let's briefly learn more about it before diving in to the examples.</p>
 <h2><a class="header" href="#the-halogenm-type" id="the-halogenm-type">The <code>HalogenM</code> Type</a></h2>
 <p>If you recall from last chapter, the <code>handleAction</code> function returns a type called <code>HalogenM</code>. Here's the <code>handleAction</code> we wrote:</p>
-<pre><code class="language-purs">handleAction :: forall o m. Action -&gt; HalogenM State Action () o m Unit
+<pre><code class="language-purs">handleAction :: forall output m. Action -&gt; HalogenM State Action () output m Unit
 </code></pre>
 <p><code>HalogenM</code> is a crucial part of Halogen, often called the &quot;eval&quot; monad. This monad enables Halogen features like state, forking threads, starting subscriptions, and more. But it's quite limited, concerning itself only with Halogen-specific features. In fact, Halogen components have no built-in mechanisms for effects!</p>
 <p>Instead, Halogen lets you choose what monad you would like to use with <code>HalogenM</code> in your component. You gain access to all the capabilities of <code>HalogenM</code> <em>and also</em> whatever capabilities your chosen monad supports. This is represented with the type parameter <code>m</code>, which stands for &quot;monad&quot;.</p>
@@ -611,16 +616,16 @@ handleAction = case _ of
 <pre><code class="language-purs">handleAction :: forall o. Action -&gt; HalogenM State Action () o Effect Unit
 </code></pre>
 <p>This one can use functions from <code>HalogenM</code> and also effectful functions from <code>Aff</code>:</p>
-<pre><code class="language-purs">handleAction :: forall o. Action -&gt; HalogenM State Action () o Aff Unit
+<pre><code class="language-purs">handleAction :: forall output. Action -&gt; HalogenM State Action () output Aff Unit
 </code></pre>
 <p>It is more common in Halogen to use constraints on the type parameter <code>m</code> to describe what the monad can do rather than choose a specific monad, which allows you to mix several monads together as your application grows. For example, most Halogen apps would use functions from <code>Aff</code> via this type signature:</p>
-<pre><code class="language-purs">handleAction :: forall o m. MonadAff m =&gt; Action -&gt; HalogenM State Action () o m Unit
+<pre><code class="language-purs">handleAction :: forall output m. MonadAff m =&gt; Action -&gt; HalogenM State Action () output m Unit
 </code></pre>
 <p>This lets you do everything the hardcoded <code>Aff</code> type did, but it also lets you mix in other constraints too.</p>
 <p>One last thing: when you choose a monad for your component it will show up in your <code>HalogenM</code> type, your <code>Component</code> type, and, if you are using child components, in your <code>ComponentHTML</code> type:</p>
-<pre><code class="language-purs">component :: forall q i o m. MonadAff m =&gt; H.Component q i o m
+<pre><code class="language-purs">component :: forall query input output m. MonadAff m =&gt; H.Component query input output m
 
-handleAction :: forall o m. MonadAff m =&gt; Action -&gt; HalogenM State Action () o m Unit
+handleAction :: forall output m. MonadAff m =&gt; Action -&gt; HalogenM State Action () output m Unit
 
 -- We aren't using child components, so we don't have to use the constraint here, but
 -- we'll learn about when it's required in the parent &amp; child components chapter.
@@ -655,7 +660,7 @@ type State = Maybe Number
 
 data Action = Regenerate
 
-component :: forall q i o m. MonadEffect m =&gt; H.Component HH.HTML q i o m
+component :: forall query input output m. MonadEffect m =&gt; H.Component HH.HTML query input output m
 component =
   H.mkComponent
     { initialState
@@ -663,7 +668,7 @@ component =
     , eval: H.mkEval $ H.defaultEval { handleAction = handleAction }
     }
 
-initialState :: forall i. i -&gt; State
+initialState :: forall input. input -&gt; State
 initialState _ = Nothing
 
 render :: forall m. State -&gt; H.ComponentHTML Action () m
@@ -679,7 +684,7 @@ render state = do
         [ HH.text &quot;Generate new number&quot; ]
     ]
 
-handleAction :: forall o m. MonadEffect m =&gt; Action -&gt; H.HalogenM State Action () o m Unit
+handleAction :: forall output m. MonadEffect m =&gt; Action -&gt; H.HalogenM State Action () output m Unit
 handleAction = case _ of
   Regenerate -&gt; do
     newNumber &lt;- H.liftEffect random
@@ -692,7 +697,7 @@ handleAction = case _ of
 </ol>
 <p>Let's break down using this effect a little more.</p>
 <pre><code class="language-purs">--                          [1]
-handleAction :: forall o m. MonadEffect m =&gt; Action -&gt; H.HalogenM State Action () o m Unit
+handleAction :: forall output m. MonadEffect m =&gt; Action -&gt; H.HalogenM State Action () output m Unit
 handleAction = case _ of
   Regenerate -&gt; do
     newNumber &lt;- H.liftEffect random -- [2]
@@ -746,7 +751,7 @@ data Action
   = SetUsername String
   | MakeRequest Event
 
-component :: forall q i o m. MonadAff m =&gt; H.Component HH.HTML q i o m
+component :: forall query input output m. MonadAff m =&gt; H.Component HH.HTML query input output m
 component =
   H.mkComponent
     { initialState
@@ -787,7 +792,7 @@ render st =
             ]
     ]
 
-handleAction :: forall o m. MonadAff m =&gt; Action -&gt; H.HalogenM State Action () o m Unit
+handleAction :: forall output m. MonadAff m =&gt; Action -&gt; H.HalogenM State Action () output m Unit
 handleAction = case _ of
   SetUsername username -&gt; do
     H.modify_ _ { username = username, result = Nothing }
@@ -862,7 +867,7 @@ data Action
   | Regenerate
   | Finalize
 
-component :: forall q i o m. MonadEffect m =&gt; H.Component HH.HTML q i o m
+component :: forall query input output m. MonadEffect m =&gt; H.Component HH.HTML query input output m
 component =
   H.mkComponent
     { initialState
@@ -874,7 +879,7 @@ component =
         }
     }
 
-initialState :: forall i. i -&gt; State
+initialState :: forall input. input -&gt; State
 initialState _ = Nothing
 
 render :: forall m. State -&gt; H.ComponentHTML Action () m
@@ -890,7 +895,7 @@ render state = do
         [ HH.text &quot;Generate new number&quot; ]
     ]
 
-handleAction :: forall o m. MonadEffect m =&gt; Action -&gt; H.HalogenM State Action () o m Unit
+handleAction :: forall output m. MonadEffect m =&gt; Action -&gt; H.HalogenM State Action () output m Unit
 handleAction = case _ of
   Initialize -&gt; do
     handleAction Regenerate
@@ -1006,7 +1011,7 @@ data Action = Initialize | Tick
 
 type State = Int
 
-component :: forall q i o m. MonadAff m =&gt; H.Component HH.HTML q i o m
+component :: forall query input output m. MonadAff m =&gt; H.Component HH.HTML query input output m
 component =
   H.mkComponent
     { initialState
@@ -1017,13 +1022,13 @@ component =
         }
     }
 
-initialState :: forall i. i -&gt; State
+initialState :: forall input. input -&gt; State
 initialState _ = 0
 
 render :: forall m. State -&gt; H.ComponentHTML Action () m
 render seconds = HH.text (&quot;You have been here for &quot; &lt;&gt; show seconds &lt;&gt; &quot; seconds&quot;)
 
-handleAction :: forall o m. MonadAff m =&gt; Action -&gt; H.HalogenM State Action () o m Unit
+handleAction :: forall output m. MonadAff m =&gt; Action -&gt; H.HalogenM State Action () output m Unit
 handleAction = case _ of
   Initialize -&gt; do
     _ &lt;- H.subscribe timer
@@ -1095,7 +1100,7 @@ data Action
   = Initialize
   | HandleKey H.SubscriptionId KE.KeyboardEvent
 
-component :: forall q i o m. MonadAff m =&gt; H.Component HH.HTML q i o m
+component :: forall query input output m. MonadAff m =&gt; H.Component HH.HTML query input output m
 component =
   H.mkComponent
     { initialState
@@ -1106,7 +1111,7 @@ component =
         }
     }
 
-initialState :: forall i. i -&gt; State
+initialState :: forall input. input -&gt; State
 initialState _ = { chars: &quot;&quot; }
 
 render :: forall m. State -&gt; H.ComponentHTML Action () m
@@ -1117,7 +1122,7 @@ render state =
     , HH.p_ [ HH.text state.chars ]
     ]
 
-handleAction :: forall o m. MonadAff m =&gt; Action -&gt; H.HalogenM State Action () o m Unit
+handleAction :: forall output m. MonadAff m =&gt; Action -&gt; H.HalogenM State Action () output m Unit
 handleAction = case _ of
   Initialize -&gt; do
     document &lt;- H.liftEffect $ document =&lt;&lt; window
@@ -1146,12 +1151,12 @@ handleAction = case _ of
 <p>We wrote our event source right into our code to handle the <code>Initialize</code> action, which registers an event listener on the document and emits <code>HandleKey</code> every time a key is pressed.</p>
 <p><code>eventListenerEventSource</code> works a little differently from the other event sources. It uses types from the <code>purescript-web</code> libraries for working with the DOM to manually construct an event listener:</p>
 <pre><code>eventListenerEventSource
-  :: forall m a
+  :: forall action m
    . MonadAff m
   =&gt; EventType
   -&gt; EventTarget
-  -&gt; (Event -&gt; Maybe a)
-  -&gt; EventSource m a
+  -&gt; (Event -&gt; Maybe action)
+  -&gt; EventSource m action
 </code></pre>
 <p>It takes a type of event to listen to (in our case: <code>keyup</code>), a target indicating where to listen for events (in our case: the <code>HTMLDocument</code> itself), and a callback function that transforms the events that occur into a type that should be emitted (in our case: we emit our <code>Action</code> type by capturing the event in the <code>HandleKey</code> constructor).</p>
 <h2><a class="header" href="#wrapping-up" id="wrapping-up">Wrapping Up</a></h2>
@@ -1198,7 +1203,7 @@ import Prelude
 import Halogen as H
 import Halogen.HTML as HH
 
-parent :: forall q i o m. H.Component HH.HTML q i o m
+parent :: forall query input output m. H.Component HH.HTML query input output m
 parent =
   H.mkComponent
     { initialState: identity
@@ -1206,7 +1211,7 @@ parent =
     , eval: H.mkEval H.defaultEval
     }
   where
-  render :: forall state act. state -&gt; H.ComponentHTML act () m
+  render :: forall state action. state -&gt; H.ComponentHTML action () m
   render _ = HH.div_ [ button { label: &quot;Click Me&quot; } ]
 
 button :: forall w i. { label :: String } -&gt; HH.HTML w i
@@ -1218,7 +1223,7 @@ button { label } = HH.button [ ] [ HH.text label ]
 
 type State = { label :: String }
 
-button :: forall q o m. H.Component HH.HTML q Input o m
+button :: forall query output m. H.Component HH.HTML query Input output m
 button =
   H.mkComponent
     { initialState
@@ -1229,7 +1234,7 @@ button =
   initialState :: Input -&gt; State
   initialState input = input
 
-  render :: forall act. State -&gt; H.ComponentHTML act () m
+  render :: forall action. State -&gt; H.ComponentHTML action () m
   render { label } = HH.button [ ] [ HH.text label ]
 </code></pre>
 <p>We took a few steps to convert our button HTML function into a button component:</p>
@@ -1261,7 +1266,7 @@ button =
 +
 + _button = SProxy :: SProxy &quot;button&quot;
 
-  parent :: forall q i o m. H.Component HH.HTML q i o m
+  parent :: forall query input output m. H.Component HH.HTML query input output m
   parent =
     H.mkComponent
       { initialState: identity
@@ -1269,8 +1274,8 @@ button =
       , eval: H.mkEval H.defaultEval
       }
     where
--   render :: forall state act. state -&gt; H.ComponentHTML act () m
-+   render :: forall state act. state -&gt; H.ComponentHTML act Slots m
+-   render :: forall state action. state -&gt; H.ComponentHTML action () m
++   render :: forall state action. state -&gt; H.ComponentHTML action Slots m
     render _ =
 -     HH.div_ [ button { label: &quot;Click Me&quot; } ]
 +     HH.div_ [ HH.slot _button 0 button { label: &quot;Click Me&quot; } absurd ]
@@ -1337,7 +1342,7 @@ type ParentState = { count :: Int }
 
 data ParentAction = Initialize | Increment
 
-parent :: forall q i o m. MonadAff m =&gt; H.Component HH.HTML q i o m
+parent :: forall query input output m. MonadAff m =&gt; H.Component HH.HTML query input output m
 parent =
   H.mkComponent
     { initialState
@@ -1348,14 +1353,14 @@ parent =
         }
     }
   where
-  initialState :: i -&gt; ParentState
+  initialState :: input -&gt; ParentState
   initialState _ = { count: 0 }
 
   render :: ParentState -&gt; H.ComponentHTML ParentAction Slots m
   render { count } =
     HH.div_ [ HH.slot _button unit button { label: show count } absurd ]
 
-  handleAction :: ParentAction -&gt; H.HalogenM ParentState ParentAction Slots o m Unit
+  handleAction :: ParentAction -&gt; H.HalogenM ParentState ParentAction Slots output m Unit
   handleAction = case _ of
     Initialize -&gt; do
       void $ H.subscribe $ EventSource.affEventSource \emitter -&gt; do
@@ -1375,7 +1380,7 @@ type ButtonInput = { label :: String }
 
 type ButtonState = { label :: String }
 
-button :: forall q o m. H.Component HH.HTML q ButtonInput o m
+button :: forall query output m. H.Component HH.HTML query ButtonInput output m
 button =
   H.mkComponent
     { initialState
@@ -1386,7 +1391,7 @@ button =
   initialState :: ButtonInput -&gt; ButtonState
   initialState { label } = { label }
 
-  render :: forall act. ButtonState -&gt; H.ComponentHTML act () m
+  render :: forall action. ButtonState -&gt; H.ComponentHTML action () m
   render { label } = HH.button_ [ HH.text label ]
 </code></pre>
 <p>If you load this into Try PureScript you'll see that our button...never changes! Even though the parent component is sending it new input every second (every time the parent re-renders) our child component is never receiving it. It's not enough to accept input; we also need to explicitly decide what to do each time it is received.</p>
@@ -1397,7 +1402,7 @@ type ButtonInput = { label :: String }
 
 type ButtonState = { label :: String }
 
-button :: forall q o m. H.Component HH.HTML q ButtonInput o m
+button :: forall query output m. H.Component HH.HTML query ButtonInput output m
 button =
   H.mkComponent
     { initialState
@@ -1414,7 +1419,7 @@ button =
   render :: ButtonState -&gt; H.ComponentHTML ButtonAction () m
   render { label } = HH.button_ [ HH.text label ]
 
-  handleAction :: ButtonAction -&gt; H.HalogenM ButtonState ButtonAction () o m Unit
+  handleAction :: ButtonAction -&gt; H.HalogenM ButtonState ButtonAction () output m Unit
   handleAction = case _ of
     -- When we receive new input we update our `label` field in state.
     Receive input -&gt;
@@ -1439,7 +1444,7 @@ data Output = Clicked
 data Action = Click
 
 -- Our output type shows up in our `Component` type
-button :: forall q i m. H.Component HH.HTML q i Output m
+button :: forall query input m. H.Component HH.HTML query input Output m
 button =
   H.mkComponent
     { initialState: identity
@@ -1454,7 +1459,7 @@ button =
 
   -- Our output type also shows up in our `HalogenM` type, because this is
   -- where we can emit these output messages.
-  handleAction :: forall st. Action -&gt; H.HalogenM st Action () Output m Unit
+  handleAction :: forall state. Action -&gt; H.HalogenM state Action () Output m Unit
   handleAction = case _ of
     -- When the button is clicked we notify the parent component that the
     -- `Clicked` event has happened by emitting it with `H.raise`.
@@ -1494,7 +1499,7 @@ _button = SProxy :: SProxy &quot;button&quot;
 <pre><code class="language-purs">data Action = HandleButton Button.Output
 </code></pre>
 <p>When this action occurs in our component, we can unwrap it to get the <code>Button.Output</code> value and use that to decide what code to evaluate. Now that we have our slot and action types handled, let's write our parent component:</p>
-<pre><code class="language-purs">parent :: forall q i o m. H.Component HH.HTML q i o m
+<pre><code class="language-purs">parent :: forall query input output m. H.Component HH.HTML query input output m
 parent =
   H.mkComponent
     { initialState: identity
@@ -1502,12 +1507,12 @@ parent =
     , eval: H.mkEval $ H.defaultEval { handleAction = handleAction }
     }
   where
-  render :: forall st. st -&gt; H.ComponentHTML Action Slots m
+  render :: forall state. state -&gt; H.ComponentHTML Action Slots m
   render _ =
     HH.div_
       [ HH.slot _button 0 button unit (Just &lt;&lt;&lt; HandleButton) ]
 
-  handleAction :: forall st. Action -&gt; H.HalogenM st Action Slots o m Unit
+  handleAction :: forall state. Action -&gt; H.HalogenM state Action Slots output m Unit
   handleAction = case _ of
     HandleButton output -&gt;
       case output of
@@ -1532,7 +1537,7 @@ parent =
 </code></pre>
 <p>We can interpret this query as meaning &quot;A parent component can tell this component to do something with <code>Tell</code> and it can request a <code>Boolean</code> from this component with <code>Request</code>.&quot; When you implement a query type, remember that the <code>a</code> type parameter should be present in every constructor. It should be the final argument for tell-style queries and be the result of a function type for request-style queries.</p>
 <p>Queries are handled with a <code>handleQuery</code> function in your eval spec, just like how actions are handled with a <code>handleAction</code> function. Let's write a <code>handleQuery</code> function for our custom data type, assuming some state, action, and output types have already been defined:</p>
-<pre><code class="language-purs">handleQuery :: forall m. Query a -&gt; H.HalogenM State Action () Output m (Maybe a)
+<pre><code class="language-purs">handleQuery :: forall a m. Query a -&gt; H.HalogenM State Action () Output m (Maybe a)
 handleQuery = case _ of
   Tell a -&gt;
     -- ... do something, then return the `a` we received
@@ -1564,7 +1569,7 @@ data Query a
 type State = { count :: Int }
 
 -- Our query type shows up in our `Component` type
-counter :: forall i o m. H.Component HH.HTML Query i o m
+counter :: forall input output m. H.Component HH.HTML Query input output m
 counter =
   H.mkComponent
     { initialState: \_ -&gt; { count: 0 }
@@ -1577,7 +1582,7 @@ counter =
       [ HH.text $ show count ]
 
   -- We write a function to handle queries when they arise.
-  handleQuery :: forall act a. Query a -&gt; H.HalogenM State act () o m (Maybe a)
+  handleQuery :: forall action a. Query a -&gt; H.HalogenM State action () o m (Maybe a)
   handleQuery = case _ of
     -- When we receive the `Increment` query we'll increment our state.
     Increment a -&gt; do
@@ -1606,7 +1611,7 @@ _counter = SProxy :: SProxy &quot;counter&quot;
 <pre><code class="language-purs">data Action = Initialize
 </code></pre>
 <p>Now, we can move on to our component definition.</p>
-<pre><code class="language-purs">parent :: forall q i o m. H.Component HH.HTML q i o m
+<pre><code class="language-purs">parent :: forall query input output m. H.Component HH.HTML query input output m
 parent =
   H.mkComponent
     { initialState: identity
@@ -1617,12 +1622,12 @@ parent =
         }
     }
   where
-  render :: forall st. st -&gt; H.ComponentHTML Action Slots m
+  render :: forall state. state -&gt; H.ComponentHTML Action Slots m
   render _ =
     HH.div_
       [ HH.slot _counter unit counter unit absurd ]
 
-  handleAction :: forall st. Action -&gt; H.HalogenM st Action Slots o m Unit
+  handleAction :: forall state. Action -&gt; H.HalogenM state Action Slots output m Unit
   handleAction = case _ of
     Initialize -&gt;
       -- startCount :: Maybe Int
@@ -1665,10 +1670,10 @@ request query = query identity
 <pre><code class="language-purs">type Slots = ()
 </code></pre>
 <p>This means the component supports no child components.</p>
-<pre><code class="language-purs">type Slots = ( button :: forall q. H.Slot q Void Unit )
+<pre><code class="language-purs">type Slots = ( button :: forall query. H.Slot query Void Unit )
 </code></pre>
 <p>This means the component supports one type of child component, identified by the symbol <code>button</code>. You can't send queries to it (because <code>q</code> is an open type variable) and it doesn't emit any output messages (usually represented with <code>Void</code> so you can use <code>absurd</code> as the handler). You can have at most one of this component because only one value, <code>unit</code>, inhabits the <code>Unit</code> type.</p>
-<pre><code class="language-purs">type Slots = ( button :: forall q. H.Slot q Button.Output Int )
+<pre><code class="language-purs">type Slots = ( button :: forall query. H.Slot query Button.Output Int )
 </code></pre>
 <p>This type is quite similar to previous one. The difference is that the child component can raise output messages of type <code>Button.Output</code>, and you can have as many of this component as there are integers.</p>
 <pre><code class="language-purs">type Slots =
@@ -1732,7 +1737,7 @@ type ParentState = { clicked :: Int }
 
 -- The parent component uses no query, input, or output types of its own. It can
 -- use any monad so long as that monad can run `Effect` functions.
-parent :: forall q i o m. MonadEffect m =&gt; H.Component HH.HTML q i o m
+parent :: forall query input output m. MonadEffect m =&gt; H.Component HH.HTML query input output m
 parent =
   H.mkComponent
     { initialState
@@ -1742,7 +1747,7 @@ parent =
     , eval: H.mkEval $ H.defaultEval { handleAction = handleAction }
     }
   where
-  initialState :: i -&gt; ParentState
+  initialState :: input -&gt; ParentState
   initialState _ = { clicked: 0 }
 
   -- We render three buttons, handling their output messages with the `HandleButton`
@@ -1761,7 +1766,7 @@ parent =
       , HH.slot _button 2 button { label: clicks &lt;&gt; &quot; Switch&quot; } (Just &lt;&lt;&lt; HandleButton)
       ]
 
-  handleAction :: ParentAction -&gt; H.HalogenM ParentState ParentAction Slots o m Unit
+  handleAction :: ParentAction -&gt; H.HalogenM ParentState ParentAction Slots output m Unit
   handleAction = case _ of
     -- We handle one action, `HandleButton`, which itself handles the output messages
     -- of our button component.
@@ -1890,7 +1895,7 @@ main = HA.runHalogenAff do
   runUI component unit body
 
 -- Assuming you have defined a root component for your application
-component :: forall q i o m. H.Component q i o m
+component :: forall query input output m. H.Component query input output m
 component = ...
 </code></pre>
 <p>The most important function used in <code>main</code> is the <code>runUI</code> function. Provide <code>runUI</code> with your root component, the root component's input value, and a reference to a DOM element, and it will provide your application to the Halogen virtual DOM. The virtual DOM will then render your application at that element and maintain it there for as long as your app is running.</p>
@@ -1974,7 +1979,7 @@ data Action = Toggle
 
 type State = { enabled :: Boolean, messages :: Array String }
 
-component :: forall i m. H.Component HH.HTML Query i Output m
+component :: forall input m. H.Component HH.HTML Query input Output m
 component =
   H.mkComponent
     { initialState
@@ -1985,7 +1990,7 @@ component =
         }
     }
   where
-  initialState :: i -&gt; State
+  initialState :: input -&gt; State
   initialState _ = { enabled: false, messages: [] }
 
   render :: State -&gt; H.ComponentHTML Action () m

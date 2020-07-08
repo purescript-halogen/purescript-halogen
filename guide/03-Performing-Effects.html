@@ -153,7 +153,7 @@
 <p>Before we start, it's important to know that you can only perform effects during evaluation, which means functions like <code>handleAction</code> which use the type <code>HalogenM</code>. You can't perform effects when you produce your initial state or during rendering. Since you can only perform effects when you're within <code>HalogenM</code>, let's briefly learn more about it before diving in to the examples.</p>
 <h2><a class="header" href="#the-halogenm-type" id="the-halogenm-type">The <code>HalogenM</code> Type</a></h2>
 <p>If you recall from last chapter, the <code>handleAction</code> function returns a type called <code>HalogenM</code>. Here's the <code>handleAction</code> we wrote:</p>
-<pre><code class="language-purs">handleAction :: forall o m. Action -&gt; HalogenM State Action () o m Unit
+<pre><code class="language-purs">handleAction :: forall output m. Action -&gt; HalogenM State Action () output m Unit
 </code></pre>
 <p><code>HalogenM</code> is a crucial part of Halogen, often called the &quot;eval&quot; monad. This monad enables Halogen features like state, forking threads, starting subscriptions, and more. But it's quite limited, concerning itself only with Halogen-specific features. In fact, Halogen components have no built-in mechanisms for effects!</p>
 <p>Instead, Halogen lets you choose what monad you would like to use with <code>HalogenM</code> in your component. You gain access to all the capabilities of <code>HalogenM</code> <em>and also</em> whatever capabilities your chosen monad supports. This is represented with the type parameter <code>m</code>, which stands for &quot;monad&quot;.</p>
@@ -162,16 +162,16 @@
 <pre><code class="language-purs">handleAction :: forall o. Action -&gt; HalogenM State Action () o Effect Unit
 </code></pre>
 <p>This one can use functions from <code>HalogenM</code> and also effectful functions from <code>Aff</code>:</p>
-<pre><code class="language-purs">handleAction :: forall o. Action -&gt; HalogenM State Action () o Aff Unit
+<pre><code class="language-purs">handleAction :: forall output. Action -&gt; HalogenM State Action () output Aff Unit
 </code></pre>
 <p>It is more common in Halogen to use constraints on the type parameter <code>m</code> to describe what the monad can do rather than choose a specific monad, which allows you to mix several monads together as your application grows. For example, most Halogen apps would use functions from <code>Aff</code> via this type signature:</p>
-<pre><code class="language-purs">handleAction :: forall o m. MonadAff m =&gt; Action -&gt; HalogenM State Action () o m Unit
+<pre><code class="language-purs">handleAction :: forall output m. MonadAff m =&gt; Action -&gt; HalogenM State Action () output m Unit
 </code></pre>
 <p>This lets you do everything the hardcoded <code>Aff</code> type did, but it also lets you mix in other constraints too.</p>
 <p>One last thing: when you choose a monad for your component it will show up in your <code>HalogenM</code> type, your <code>Component</code> type, and, if you are using child components, in your <code>ComponentHTML</code> type:</p>
-<pre><code class="language-purs">component :: forall q i o m. MonadAff m =&gt; H.Component q i o m
+<pre><code class="language-purs">component :: forall query input output m. MonadAff m =&gt; H.Component query input output m
 
-handleAction :: forall o m. MonadAff m =&gt; Action -&gt; HalogenM State Action () o m Unit
+handleAction :: forall output m. MonadAff m =&gt; Action -&gt; HalogenM State Action () output m Unit
 
 -- We aren't using child components, so we don't have to use the constraint here, but
 -- we'll learn about when it's required in the parent &amp; child components chapter.
@@ -206,7 +206,7 @@ type State = Maybe Number
 
 data Action = Regenerate
 
-component :: forall q i o m. MonadEffect m =&gt; H.Component HH.HTML q i o m
+component :: forall query input output m. MonadEffect m =&gt; H.Component HH.HTML query input output m
 component =
   H.mkComponent
     { initialState
@@ -214,7 +214,7 @@ component =
     , eval: H.mkEval $ H.defaultEval { handleAction = handleAction }
     }
 
-initialState :: forall i. i -&gt; State
+initialState :: forall input. input -&gt; State
 initialState _ = Nothing
 
 render :: forall m. State -&gt; H.ComponentHTML Action () m
@@ -230,7 +230,7 @@ render state = do
         [ HH.text &quot;Generate new number&quot; ]
     ]
 
-handleAction :: forall o m. MonadEffect m =&gt; Action -&gt; H.HalogenM State Action () o m Unit
+handleAction :: forall output m. MonadEffect m =&gt; Action -&gt; H.HalogenM State Action () output m Unit
 handleAction = case _ of
   Regenerate -&gt; do
     newNumber &lt;- H.liftEffect random
@@ -243,7 +243,7 @@ handleAction = case _ of
 </ol>
 <p>Let's break down using this effect a little more.</p>
 <pre><code class="language-purs">--                          [1]
-handleAction :: forall o m. MonadEffect m =&gt; Action -&gt; H.HalogenM State Action () o m Unit
+handleAction :: forall output m. MonadEffect m =&gt; Action -&gt; H.HalogenM State Action () output m Unit
 handleAction = case _ of
   Regenerate -&gt; do
     newNumber &lt;- H.liftEffect random -- [2]
@@ -297,7 +297,7 @@ data Action
   = SetUsername String
   | MakeRequest Event
 
-component :: forall q i o m. MonadAff m =&gt; H.Component HH.HTML q i o m
+component :: forall query input output m. MonadAff m =&gt; H.Component HH.HTML query input output m
 component =
   H.mkComponent
     { initialState
@@ -338,7 +338,7 @@ render st =
             ]
     ]
 
-handleAction :: forall o m. MonadAff m =&gt; Action -&gt; H.HalogenM State Action () o m Unit
+handleAction :: forall output m. MonadAff m =&gt; Action -&gt; H.HalogenM State Action () output m Unit
 handleAction = case _ of
   SetUsername username -&gt; do
     H.modify_ _ { username = username, result = Nothing }
