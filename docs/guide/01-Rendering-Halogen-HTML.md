@@ -197,3 +197,29 @@ html = HH.div [ HP.placeholder "blah" ] [ ]
 ```
 
 This error tells you that you've tried to use a property with an element that doesn't support it. It first lists the property you tried to use, and then it lists the properties that the element _does_ support. Another example of Halogen's type safety in action!
+
+### Adding missing properties
+
+Not all properties are currently available in Halogen.
+
+For example, you may try to write:
+```purs
+html = HH.iframe [ HP.sandbox "allow-scripts" ]
+```
+Only to receive this error:
+```
+Unknown value HP.sandbox
+```
+Even though it seems like this property should be [supported](https://pursuit.purescript.org/packages/purescript-dom-indexed/docs/DOM.HTML.Indexed#t:HTMLiframe):
+```purs
+type HTMLiframe = Noninteractive (height :: CSSPixel, name :: String, onLoad :: Event, sandbox :: String, src :: String, srcDoc :: String, width :: CSSPixel)
+```
+The solution is to write your own implementation of this missing property:
+```purs
+sandbox :: forall r i. String -> HH.IProp ( sandbox :: String | r ) i
+sandbox = HH.prop (HH.PropName "sandbox")
+```
+Then you can use it in your HTML element:
+```purs
+html = HH.iframe [ sandbox "allow-scripts" ]
+```
