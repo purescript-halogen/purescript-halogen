@@ -60,6 +60,7 @@ module Halogen.HTML.Properties
   , muted
   , poster
   , preload
+  , allowfullscreen
 
   , draggable
   , tabIndex
@@ -288,8 +289,12 @@ poster = prop (PropName "poster")
 preload :: forall r i. I.PreloadValue -> IProp (preload :: I.PreloadValue | r) i
 preload = prop (PropName "preload")
 
+allowfullscreen :: forall r i. Boolean -> IProp (allowfullscreen :: Boolean | r) i
+allowfullscreen = prop (PropName "allowfullscreen")
+
 draggable :: forall r i. Boolean -> IProp (draggable :: Boolean | r) i
 draggable = prop (PropName "draggable")
 
 tabIndex :: forall r i. Int -> IProp (tabIndex :: Int | r) i
 tabIndex = prop (PropName "tabIndex")
+
