@@ -60,7 +60,8 @@ module Halogen.HTML.Properties
   , muted
   , poster
   , preload
-  , allowfullscreen
+  , allow
+  , Allow(AllowFullScreen, AllowPaymentRequest, Allow)
 
   , draggable
   , tabIndex
@@ -289,8 +290,16 @@ poster = prop (PropName "poster")
 preload :: forall r i. I.PreloadValue -> IProp (preload :: I.PreloadValue | r) i
 preload = prop (PropName "preload")
 
-allowfullscreen :: forall r i. Boolean -> IProp (allowfullscreen :: Boolean | r) i
-allowfullscreen = prop (PropName "allowfullscreen")
+allow :: forall r i. Allow -> IProp (allow :: String | r) i
+allow = prop (PropName "allowfullscreen") <<< case _ of
+  AllowFullScreen -> "fullscreen"
+  AllowPaymentRequest -> "payment"
+  Allow x -> x
+
+data Allow
+  = AllowFullScreen
+  | AllowPaymentRequest
+  | Allow String
 
 draggable :: forall r i. Boolean -> IProp (draggable :: Boolean | r) i
 draggable = prop (PropName "draggable")
