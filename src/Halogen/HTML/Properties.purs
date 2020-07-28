@@ -61,7 +61,7 @@ module Halogen.HTML.Properties
   , poster
   , preload
   , allow
-  , Allow(AllowFullScreen, AllowPaymentRequest, Allow)
+  , Allow(AllowFullScreen, AllowPaymentRequest, Allow, AllowMultiple)
 
   , draggable
   , tabIndex
@@ -82,6 +82,7 @@ import DOM.HTML.Indexed.OnOff (OnOff(..)) as I
 import DOM.HTML.Indexed.OrderedListType (OrderedListType(..)) as I
 import DOM.HTML.Indexed.PreloadValue (PreloadValue(..)) as I
 import DOM.HTML.Indexed.StepValue (StepValue(..)) as I
+import Data.Array (intercalate)
 import Data.Maybe (Maybe(..))
 import Data.MediaType (MediaType)
 import Data.Newtype (class Newtype, unwrap)
@@ -291,15 +292,19 @@ preload :: forall r i. I.PreloadValue -> IProp (preload :: I.PreloadValue | r) i
 preload = prop (PropName "preload")
 
 allow :: forall r i. Allow -> IProp (allow :: String | r) i
-allow = prop (PropName "allowfullscreen") <<< case _ of
-  AllowFullScreen -> "fullscreen"
-  AllowPaymentRequest -> "payment"
-  Allow x -> x
+allow = prop (PropName "allowfullscreen") <<< toValue
+  where
+    toValue = case _ of
+      AllowFullScreen -> "fullscreen"
+      AllowPaymentRequest -> "payment"
+      Allow x -> x
+      AllowMultiple xs -> intercalate " " $ map toValue xs
 
 data Allow
   = AllowFullScreen
   | AllowPaymentRequest
   | Allow String
+  | AllowMultiple (Array Allow)
 
 draggable :: forall r i. Boolean -> IProp (draggable :: Boolean | r) i
 draggable = prop (PropName "draggable")
