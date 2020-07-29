@@ -200,26 +200,37 @@ This error tells you that you've tried to use a property with an element that do
 
 ### Adding missing properties
 
-Not all properties are currently available in Halogen.
+HTML is a [living standard](https://html.spec.whatwg.org/multipage) that is constantly being revised. Halogen tries to keep up with these changes, but sometimes falls behind. (If you have any ideas for how we can automate the process of detecting these changes, please [let us know](https://github.com/purescript-halogen/purescript-halogen/issues/685)).
 
-For example, you may try to write:
+You'll likely discover that some properties are missing in Halogen. For example, you may try to write:
+
 ```purs
 html = HH.iframe [ HP.sandbox "allow-scripts" ]
 ```
+
 Only to receive this error:
+
 ```
 Unknown value HP.sandbox
 ```
+
 Even though it seems like this property should be [supported](https://pursuit.purescript.org/packages/purescript-dom-indexed/docs/DOM.HTML.Indexed#t:HTMLiframe):
+
 ```purs
 type HTMLiframe = Noninteractive (height :: CSSPixel, name :: String, onLoad :: Event, sandbox :: String, src :: String, srcDoc :: String, width :: CSSPixel)
 ```
+
 The solution is to write your own implementation of this missing property:
+
 ```purs
 sandbox :: forall r i. String -> HH.IProp ( sandbox :: String | r ) i
 sandbox = HH.prop (HH.PropName "sandbox")
 ```
+
 Then you can use it in your HTML element:
+
 ```purs
 html = HH.iframe [ sandbox "allow-scripts" ]
 ```
+
+Please open an issue or PR to add this missing property. This is an easy way to contribute to Halogen.
