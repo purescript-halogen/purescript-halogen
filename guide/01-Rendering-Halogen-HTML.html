@@ -282,6 +282,25 @@ placeholder = prop (PropName &quot;placeholder&quot;)
 html = HH.div [ HP.placeholder &quot;blah&quot; ] [ ]
 </code></pre>
 <p>This error tells you that you've tried to use a property with an element that doesn't support it. It first lists the property you tried to use, and then it lists the properties that the element <em>does</em> support. Another example of Halogen's type safety in action!</p>
+<h3><a class="header" href="#adding-missing-properties" id="adding-missing-properties">Adding missing properties</a></h3>
+<p>HTML is a <a href="https://html.spec.whatwg.org/multipage">living standard</a> that is constantly being revised. Halogen tries to keep up with these changes, but sometimes falls behind. (If you have any ideas for how we can automate the process of detecting these changes, please <a href="https://github.com/purescript-halogen/purescript-halogen/issues/685">let us know</a>).</p>
+<p>You'll likely discover that some properties are missing in Halogen. For example, you may try to write:</p>
+<pre><code class="language-purs">html = HH.iframe [ HP.sandbox &quot;allow-scripts&quot; ]
+</code></pre>
+<p>Only to receive this error:</p>
+<pre><code>Unknown value HP.sandbox
+</code></pre>
+<p>Even though it seems like this property should be <a href="https://pursuit.purescript.org/packages/purescript-dom-indexed/docs/DOM.HTML.Indexed#t:HTMLiframe">supported</a>:</p>
+<pre><code class="language-purs">type HTMLiframe = Noninteractive (height :: CSSPixel, name :: String, onLoad :: Event, sandbox :: String, src :: String, srcDoc :: String, width :: CSSPixel)
+</code></pre>
+<p>The solution is to write your own implementation of this missing property:</p>
+<pre><code class="language-purs">sandbox :: forall r i. String -&gt; HH.IProp ( sandbox :: String | r ) i
+sandbox = HH.prop (HH.PropName &quot;sandbox&quot;)
+</code></pre>
+<p>Then you can use it in your HTML element:</p>
+<pre><code class="language-purs">html = HH.iframe [ sandbox &quot;allow-scripts&quot; ]
+</code></pre>
+<p>Please open an issue or PR to add this missing property. This is an easy way to contribute to Halogen.</p>
 
                     </main>
 
