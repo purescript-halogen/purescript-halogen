@@ -189,6 +189,9 @@ rel = prop (PropName "rel")
 src :: forall r i. String -> IProp (src :: String | r) i
 src = prop (PropName "src")
 
+style :: forall r i. String -> IProp (style :: String | r) i
+style = attr (AttrName "style")
+
 target :: forall r i. String -> IProp (target :: String | r) i
 target = prop (PropName "target")
 
