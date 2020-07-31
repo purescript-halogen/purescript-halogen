@@ -737,8 +737,11 @@ td = element (ElemName "td")
 td_ :: forall w i. Array (HTML w i) -> HTML w i
 td_ = td []
 
-textarea :: forall w i. Leaf I.HTMLtextarea w i
-textarea es = element (ElemName "textarea") es []
+textarea :: forall w i. Node I.HTMLtextarea w i
+textarea = element (ElemName "textarea")
+
+textarea_ :: forall w i. Array (HTML w i) -> HTML w i
+textarea_ = textarea []
 
 tfoot :: forall w i. Node I.HTMLtfoot w i
 tfoot = element (ElemName "tfoot")
