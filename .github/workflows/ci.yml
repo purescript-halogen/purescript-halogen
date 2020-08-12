@@ -26,5 +26,7 @@ jobs:
             output
 
       - run: npm run -s build
+
       - run: npm run -s test
+
       - run: npm run -s example-all
