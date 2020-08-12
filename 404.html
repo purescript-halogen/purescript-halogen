@@ -3,8 +3,10 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Next Steps - Halogen Guide</title>
+        <title></title>
         
+        
+        <base href="/">
         
 
 
@@ -17,23 +19,23 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff" />
 
-        <link rel="icon" href="../favicon.svg">
-        <link rel="shortcut icon" href="../favicon.png">
-        <link rel="stylesheet" href="../css/variables.css">
-        <link rel="stylesheet" href="../css/general.css">
-        <link rel="stylesheet" href="../css/chrome.css">
-        <link rel="stylesheet" href="../css/print.css" media="print">
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
 
         <!-- Fonts -->
-        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
         
-        <link rel="stylesheet" href="../fonts/fonts.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
         
 
         <!-- Highlight.js Stylesheets -->
-        <link rel="stylesheet" href="../highlight.css">
-        <link rel="stylesheet" href="../tomorrow-night.css">
-        <link rel="stylesheet" href="../ayu-highlight.css">
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
 
         <!-- Custom theme stylesheets -->
         
@@ -43,7 +45,7 @@
     <body>
         <!-- Provide site root to javascript -->
         <script type="text/javascript">
-            var path_to_root = "../";
+            var path_to_root = "";
             var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
         </script>
 
@@ -89,7 +91,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="../index.html"><strong aria-hidden="true">1.</strong> Halogen</a></li><li class="chapter-item expanded "><a href="../guide/index.html"><strong aria-hidden="true">2.</strong> Guide</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../guide/01-Rendering-Halogen-HTML.html"><strong aria-hidden="true">2.1.</strong> Rendering Halogen HTML</a></li><li class="chapter-item expanded "><a href="../guide/02-Introducing-Components.html"><strong aria-hidden="true">2.2.</strong> Introducing Components</a></li><li class="chapter-item expanded "><a href="../guide/03-Performing-Effects.html"><strong aria-hidden="true">2.3.</strong> Performing Effects</a></li><li class="chapter-item expanded "><a href="../guide/04-Lifecycles-Subscriptions.html"><strong aria-hidden="true">2.4.</strong> Lifecycles &amp; Subscriptions</a></li><li class="chapter-item expanded "><a href="../guide/05-Parent-Child-Components.html"><strong aria-hidden="true">2.5.</strong> Parent &amp; Child Components</a></li><li class="chapter-item expanded "><a href="../guide/06-Running-Application.html"><strong aria-hidden="true">2.6.</strong> Running Application</a></li><li class="chapter-item expanded "><a href="../guide/07-Next-Steps.html" class="active"><strong aria-hidden="true">2.7.</strong> Next Steps</a></li></ol></li><li class="chapter-item expanded "><a href="../concepts-reference/index.html"><strong aria-hidden="true">3.</strong> Concepts Reference</a></li><li class="chapter-item expanded "><a href="../changelog/index.html"><strong aria-hidden="true">4.</strong> Major Version Changelog</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../changelog/v5.html"><strong aria-hidden="true">4.1.</strong> Changes in v5</a></li></ol></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="index.html"><strong aria-hidden="true">1.</strong> Halogen</a></li><li class="chapter-item expanded "><a href="guide/index.html"><strong aria-hidden="true">2.</strong> Guide</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="guide/01-Rendering-Halogen-HTML.html"><strong aria-hidden="true">2.1.</strong> Rendering Halogen HTML</a></li><li class="chapter-item expanded "><a href="guide/02-Introducing-Components.html"><strong aria-hidden="true">2.2.</strong> Introducing Components</a></li><li class="chapter-item expanded "><a href="guide/03-Performing-Effects.html"><strong aria-hidden="true">2.3.</strong> Performing Effects</a></li><li class="chapter-item expanded "><a href="guide/04-Lifecycles-Subscriptions.html"><strong aria-hidden="true">2.4.</strong> Lifecycles &amp; Subscriptions</a></li><li class="chapter-item expanded "><a href="guide/05-Parent-Child-Components.html"><strong aria-hidden="true">2.5.</strong> Parent &amp; Child Components</a></li><li class="chapter-item expanded "><a href="guide/06-Running-Application.html"><strong aria-hidden="true">2.6.</strong> Running Application</a></li><li class="chapter-item expanded "><a href="guide/07-Next-Steps.html"><strong aria-hidden="true">2.7.</strong> Next Steps</a></li></ol></li><li class="chapter-item expanded "><a href="concepts-reference/index.html"><strong aria-hidden="true">3.</strong> Concepts Reference</a></li><li class="chapter-item expanded "><a href="changelog/index.html"><strong aria-hidden="true">4.</strong> Major Version Changelog</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="changelog/v5.html"><strong aria-hidden="true">4.1.</strong> Changes in v5</a></li></ol></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -124,7 +126,7 @@
                     <h1 class="menu-title">Halogen Guide</h1>
 
                     <div class="right-buttons">
-                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
                             <i id="print-button" class="fa fa-print"></i>
                         </a>
                         
@@ -155,29 +157,15 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1><a class="header" href="#next-steps" id="next-steps">Next Steps</a></h1>
-<p>This guide has demonstrated the basic building blocks for Halogen applications. We learned how Halogen provides a type-safe, declarative way to build complex apps out of reusable pieces called components. We learned how write functions that produce Halogen HTML, how to write individual components, and how to render components within other components. We also learned how components can communicate with each other and how to run a full Halogen application.</p>
-<p>You now know how Halogen works, but you may not yet feel comfortable building a real application with the library yet. That's perfectly normal! There are more resources to help you continue learning about Halogen. </p>
-<ol>
-<li>To go more in-depth on concepts you learned in this guide, explore the <a href="">Concepts Reference</a>.</li>
-<li>To learn Halogen in a slower-paced, bottom-up way, try reviewing Jordan Martinez's <a href="https://github.com/JordanMartinez/learn-halogen">Learn Halogen</a> repository.</li>
-<li>To learn how to build real world applications in Halogen, review the Real World Halogen <a href="https://thomashoneyman.com/guides/real-world-halogen/">handbook</a> and <a href="https://github.com/thomashoneyman/purescript-halogen-realworld/">example application</a>.</li>
-</ol>
+                        <h1><a class="header" href="#document-not-found-404" id="document-not-found-404">Document not found (404)</a></h1>
+<p>This URL is invalid, sorry. Please use the navigation bar or search to continue.</p>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
                         
-                            <a rel="prev" href="../guide/06-Running-Application.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
-                                <i class="fa fa-angle-left"></i>
-                            </a>
-                        
 
-                        
-                            <a rel="next" href="../concepts-reference/index.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
-                                <i class="fa fa-angle-right"></i>
-                            </a>
                         
 
                         <div style="clear: both"></div>
@@ -187,15 +175,7 @@
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
                 
-                    <a rel="prev" href="../guide/06-Running-Application.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
-                        <i class="fa fa-angle-left"></i>
-                    </a>
-                
 
-                
-                    <a rel="next" href="../concepts-reference/index.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
-                        <i class="fa fa-angle-right"></i>
-                    </a>
                 
             </nav>
 
@@ -216,14 +196,14 @@
         
 
         
-        <script src="../elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../mark.min.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../searcher.js" type="text/javascript" charset="utf-8"></script>
+        <script src="elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="searcher.js" type="text/javascript" charset="utf-8"></script>
         
 
-        <script src="../clipboard.min.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../highlight.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../book.js" type="text/javascript" charset="utf-8"></script>
+        <script src="clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="book.js" type="text/javascript" charset="utf-8"></script>
 
         <!-- Custom JS scripts -->
         
