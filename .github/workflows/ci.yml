@@ -10,9 +10,6 @@ jobs:
 
       - uses: actions/setup-node@v1
 
-      - name: Install purescript-psa
-        run: npm install -g purescript-psa
-
       - uses: thomashoneyman/setup-purescript@v1
         with:
           purescript: "0.13.8"
