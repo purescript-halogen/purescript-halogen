@@ -1,7 +1,7 @@
 .*
+!.github
 !.gitignore
 !.eslintrc.json
-!.travis.yml
 
 *.lock
 package-lock.json
@@ -11,4 +11,3 @@ node_modules
 output
 
 example/example.js
-github_deploy_key
