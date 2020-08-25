@@ -1,5 +1,6 @@
 module Halogen.HTML.Events
   ( handler
+  , handler'
   , onAbort
   , onError
   , onLoad
