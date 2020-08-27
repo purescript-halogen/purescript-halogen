@@ -189,6 +189,14 @@ rel = prop (PropName "rel")
 src :: forall r i. String -> IProp (src :: String | r) i
 src = prop (PropName "src")
 
+-- | Sets the `style` attribute to the specified string.
+-- |
+-- | ```purs
+-- | ... [ style "height: 50px;" ]
+-- | ```
+-- |
+-- | If you prefer to use typed CSS for this attribute, you can use the purescript-halogen-css library:
+-- | https://github.com/purescript-halogen/purescript-halogen-css
 style :: forall r i. String -> IProp (style :: String | r) i
 style = attr (AttrName "style")
 
