@@ -32,12 +32,21 @@ module Main where
 import Prelude
 
 import Data.Maybe (Maybe(..), maybe)
+import Effect (Effect)
 import Effect.Class (class MonadEffect)
 import Effect.Class.Console (log)
 import Effect.Random (random)
 import Halogen as H
+import Halogen.Aff as HA
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
+import Halogen.HTML as HH
+import Halogen.VDom.Driver (runUI)
+
+main :: Effect Unit
+main = HA.runHalogenAff do
+  body <- HA.awaitBody
+  runUI component unit body
 
 type State = Maybe Number
 
@@ -46,7 +55,7 @@ data Action
   | Regenerate
   | Finalize
 
-component :: forall q i o m. MonadEffect m => H.Component HH.HTML q i o m
+component :: forall query input output m. MonadEffect m => H.Component HH.HTML query input output m
 component =
   H.mkComponent
     { initialState
@@ -58,7 +67,7 @@ component =
         }
     }
 
-initialState :: forall i. i -> State
+initialState :: forall input. input -> State
 initialState _ = Nothing
 
 render :: forall m. State -> H.ComponentHTML Action () m
@@ -74,10 +83,11 @@ render state = do
         [ HH.text "Generate new number" ]
     ]
 
-handleAction :: forall o m. MonadEffect m => Action -> H.HalogenM State Action () o m Unit
+handleAction :: forall output m. MonadEffect m => Action -> H.HalogenM State Action () output m Unit
 handleAction = case _ of
   Initialize -> do
     handleAction Regenerate
+    newNumber <- H.get
     log ("Initialized: " <> show newNumber)
 
   Regenerate -> do
@@ -136,6 +146,8 @@ H.mkComponent
 -- assuming we've defined a `handleAction` function in scope...
 handleAction = ...
 ```
+
+_Note_: `initialState` and `render` are set using abbreviated _record pun_ notation; however, `handleAction` cannot be set with a pun in this case because it is part of a _record update_. More information about _record pun_ and _record update_ syntax is available in the [Records Language Reference](https://github.com/purescript/documentation/blob/master/language/Records.md#record-update).
 
 You can override more fields, if you need to. For example, if you need to support an initializer then you would override the `initialize` field too:
 
@@ -203,34 +215,46 @@ module Main where
 import Prelude
 
 import Control.Monad.Rec.Class (forever)
+import Data.Maybe (Maybe(..))
+import Effect (Effect)
 import Effect.Aff (Milliseconds(..))
 import Effect.Aff as Aff
 import Effect.Aff.Class (class MonadAff)
 import Effect.Exception (error)
 import Halogen as H
+import Halogen.Aff as HA
 import Halogen.HTML as HH
 import Halogen.Query.EventSource (EventSource)
 import Halogen.Query.EventSource as EventSource
+import Halogen.VDom.Driver (runUI)
+
+main :: Effect Unit
+main = HA.runHalogenAff do
+  body <- HA.awaitBody
+  runUI component unit body
 
 data Action = Initialize | Tick
 
 type State = Int
 
-component :: forall q i o m. MonadAff m => H.Component HH.HTML q i o m
+component :: forall query input output m. MonadAff m => H.Component HH.HTML query input output m
 component =
   H.mkComponent
     { initialState
     , render
-    , eval: H.mkEval $ H.defaultEval { handleAction = handleAction }
+    , eval: H.mkEval $ H.defaultEval
+        { handleAction = handleAction
+        , initialize = Just Initialize
+        }
     }
 
-initialState :: forall i. i -> State
+initialState :: forall input. input -> State
 initialState _ = 0
 
 render :: forall m. State -> H.ComponentHTML Action () m
 render seconds = HH.text ("You have been here for " <> show seconds <> " seconds")
 
-handleAction :: forall o m. MonadAff m => Action -> H.HalogenM State Action () o m Unit
+handleAction :: forall output m. MonadAff m => Action -> H.HalogenM State Action () output m Unit
 handleAction = case _ of
   Initialize -> do
     _ <- H.subscribe timer
@@ -293,16 +317,24 @@ import Prelude
 
 import Data.Maybe (Maybe(..))
 import Data.String as String
+import Effect (Effect)
 import Effect.Aff.Class (class MonadAff)
 import Halogen as H
+import Halogen.Aff as HA
 import Halogen.HTML as HH
-import Halogen.Query.EventSource (EventSource, eventListenerEventSource)
+import Halogen.Query.EventSource (eventListenerEventSource)
+import Halogen.VDom.Driver (runUI)
 import Web.Event.Event as E
-import Web.HTML (HTMLDocument, window)
+import Web.HTML (window)
 import Web.HTML.HTMLDocument as HTMLDocument
 import Web.HTML.Window (document)
 import Web.UIEvent.KeyboardEvent as KE
 import Web.UIEvent.KeyboardEvent.EventTypes as KET
+
+main :: Effect Unit
+main = HA.runHalogenAff do
+  body <- HA.awaitBody
+  runUI component unit body
 
 type State = { chars :: String }
 
@@ -310,7 +342,7 @@ data Action
   = Initialize
   | HandleKey H.SubscriptionId KE.KeyboardEvent
 
-component :: forall q i o m. MonadAff m => H.Component HH.HTML q i o m
+component :: forall query input output m. MonadAff m => H.Component HH.HTML query input output m
 component =
   H.mkComponent
     { initialState
@@ -321,7 +353,7 @@ component =
         }
     }
 
-initialState :: forall i. i -> State
+initialState :: forall input. input -> State
 initialState _ = { chars: "" }
 
 render :: forall m. State -> H.ComponentHTML Action () m
@@ -332,7 +364,7 @@ render state =
     , HH.p_ [ HH.text state.chars ]
     ]
 
-handleAction :: forall o m. MonadAff m => Action -> H.HalogenM State Action () o m Unit
+handleAction :: forall output m. MonadAff m => Action -> H.HalogenM State Action () output m Unit
 handleAction = case _ of
   Initialize -> do
     document <- H.liftEffect $ document =<< window
@@ -366,12 +398,12 @@ We wrote our event source right into our code to handle the `Initialize` action,
 
 ```
 eventListenerEventSource
-  :: forall m a
+  :: forall action m
    . MonadAff m
   => EventType
   -> EventTarget
-  -> (Event -> Maybe a)
-  -> EventSource m a
+  -> (Event -> Maybe action)
+  -> EventSource m action
 ```
 
 It takes a type of event to listen to (in our case: `keyup`), a target indicating where to listen for events (in our case: the `HTMLDocument` itself), and a callback function that transforms the events that occur into a type that should be emitted (in our case: we emit our `Action` type by capturing the event in the `HandleKey` constructor).
