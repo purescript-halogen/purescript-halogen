@@ -318,7 +318,7 @@ handleAction = ...
 <li><code>effectEventSource</code> and<code>affEventSource</code> let you produce an event source from an <code>Effect</code> or <code>Aff</code> function, respectively.</li>
 <li><code>eventListenerEventSource</code> lets you produce an event source by attaching an event listener to the DOM, like attaching a resize event to the browser window.</li>
 </ol>
-<p>An event source can be thought of as a stream of actions: actions can be produced at any time from the event source, and your component will evaluate those actions so long as it remains subscribed to the event source. It's common to use create an event source and subscribe to it when the component initializes, though you can subscribe or unsubscribe from an event source at any time.</p>
+<p>An event source can be thought of as a stream of actions: actions can be produced at any time from the event source, and your component will evaluate those actions so long as it remains subscribed to the event source. It's common to create an event source and subscribe to it when the component initializes, though you can subscribe or unsubscribe from an event source at any time.</p>
 <p>Let's see two examples of event sources in action: an <code>Aff</code>-based timer that counts the seconds since the component mounted and an event-listener-based stream that reports keyboard events on the document.</p>
 <h3><a class="header" href="#implementing-a-timer" id="implementing-a-timer">Implementing a Timer</a></h3>
 <p>Our first example will use an <code>Aff</code>-based timer to increment every second.</p>
