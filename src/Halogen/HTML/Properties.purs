@@ -24,6 +24,7 @@ module Halogen.HTML.Properties
   , name
   , rel
   , src
+  , style
   , target
   , title
   , download
