@@ -201,7 +201,7 @@ Event sources are usually created with one of these functions:
 1. `effectEventSource` and`affEventSource` let you produce an event source from an `Effect` or `Aff` function, respectively.
 2. `eventListenerEventSource` lets you produce an event source by attaching an event listener to the DOM, like attaching a resize event to the browser window.
 
-An event source can be thought of as a stream of actions: actions can be produced at any time from the event source, and your component will evaluate those actions so long as it remains subscribed to the event source. It's common to use create an event source and subscribe to it when the component initializes, though you can subscribe or unsubscribe from an event source at any time.
+An event source can be thought of as a stream of actions: actions can be produced at any time from the event source, and your component will evaluate those actions so long as it remains subscribed to the event source. It's common to create an event source and subscribe to it when the component initializes, though you can subscribe or unsubscribe from an event source at any time.
 
 Let's see two examples of event sources in action: an `Aff`-based timer that counts the seconds since the component mounted and an event-listener-based stream that reports keyboard events on the document.
 
