@@ -168,6 +168,7 @@ import Halogen.HTML.Properties as HP
 import Halogen.VDom.Driver (runUI)
 import Web.Event.Event (Event)
 import Web.Event.Event as Event
+import Web.UIEvent.MouseEvent (toEvent)
 
 main :: Effect Unit
 main = runHalogenAff do
@@ -197,8 +198,7 @@ initialState _ = { loading: false, username: "", result: Nothing }
 
 render :: forall m. State -> H.ComponentHTML Action () m
 render st =
-  HH.form
-    [ HE.onSubmit \ev -> Just (MakeRequest ev) ]
+  HH.form_
     [ HH.h1_ [ HH.text "Look up GitHub user" ]
     , HH.label_
         [ HH.div_ [ HH.text "Enter username:" ]
@@ -210,6 +210,7 @@ render st =
     , HH.button
         [ HP.disabled st.loading
         , HP.type_ HP.ButtonSubmit
+        , HE.onClick \ev -> Just (MakeRequest (toEvent ev))
         ]
         [ HH.text "Fetch info" ]
     , HH.p_

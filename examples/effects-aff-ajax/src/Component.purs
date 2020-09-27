@@ -13,6 +13,7 @@ import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
 import Web.Event.Event (Event)
 import Web.Event.Event as Event
+import Web.UIEvent.MouseEvent (toEvent)
 
 type State =
   { loading :: Boolean
@@ -37,8 +38,7 @@ initialState _ = { loading: false, username: "", result: Nothing }
 
 render :: forall m. State -> H.ComponentHTML Action () m
 render st =
-  HH.form
-    [ HE.onSubmit (Just <<< MakeRequest) ]
+  HH.form_
     [ HH.h1_ [ HH.text "Lookup GitHub user" ]
     , HH.label_
         [ HH.div_ [ HH.text "Enter username:" ]
@@ -50,6 +50,7 @@ render st =
     , HH.button
         [ HP.disabled st.loading
         , HP.type_ HP.ButtonSubmit
+        , HE.onClick (Just <<< MakeRequest <<< toEvent)
         ]
         [ HH.text "Fetch info" ]
     , HH.p_
