@@ -32,7 +32,8 @@ render state =
   in
     HH.div
       [ ]
-      [ HH.text "Position in tree"
+      [ HH.span_
+          [ HH.text "Sibling to portal, within <div>" ]
       , HH.portal state.target do
           HH.button
             [ HP.title label

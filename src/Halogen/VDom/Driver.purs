@@ -87,7 +87,8 @@ mkSpec handler renderChildRef document =
           EFn.runEffectFn2 renderPortalSlot elem inner
 
     patch
-      :: EFn.EffectFn2 (WidgetState slots action)
+      :: EFn.EffectFn2
+            (WidgetState slots action)
             (ComponentSlot slots Aff action)
             (V.Step (ComponentSlot slots Aff action) DOM.Node)
     patch = EFn.mkEffectFn2 \st slot ->
@@ -102,7 +103,8 @@ mkSpec handler renderChildRef document =
           PortalSlot elem inner -> do
             EFn.runEffectFn1 V.halt step
             EFn.runEffectFn2 renderPortalSlot elem inner
-        _ -> EFn.runEffectFn1 render slot
+        _ ->
+          EFn.runEffectFn1 render slot
 
     buildThunk :: V.Machine (HTMLThunk slots action) DOM.Node
     buildThunk = Thunk.buildThunk unwrap spec
@@ -122,18 +124,16 @@ mkSpec handler renderChildRef document =
             DOM.HTMLElement
             (HTML (ComponentSlot slots Aff action) action)
             (V.Step (ComponentSlot slots Aff action) DOM.Node)
-    renderPortalSlot = EFn.mkEffectFn2 \elem (HTML vdom) -> do
-      machine <- EFn.runEffectFn1 (V.buildVDom spec) vdom
-      let node = V.extract machine
-      void $ DOM.appendChild node (HTMLElement.toNode elem)
+    renderPortalSlot = EFn.mkEffectFn2 \elem inner -> do
+      step <- EFn.runEffectFn1 buildThunk (Thunk.thunked (\_ _ -> false) (const inner) unit)
       emptyNode <- EFn.runEffectFn2 Util.createTextNode "" document
-      pure $ V.mkStep $ V.Step emptyNode Nothing patch done
+      void $ DOM.appendChild (V.extract step) (HTMLElement.toNode elem)
+      pure $ V.mkStep $ V.Step emptyNode (Just step) patch done
 
   done :: EFn.EffectFn1 (WidgetState slots action) Unit
-  done = EFn.mkEffectFn1 \st ->
-    case st of
-      Just step -> EFn.runEffectFn1 V.halt step
-      _ -> pure unit
+  done = EFn.mkEffectFn1 case _ of
+    Just step -> EFn.runEffectFn1 V.halt step
+    _ -> pure unit
 
   getNode :: RenderStateX RenderState -> DOM.Node
   getNode = unRenderStateX (\(RenderState { node }) -> node)
@@ -159,7 +159,6 @@ renderSpec document container =
     , dispose: removeChild
     }
   where
-
   render
     :: forall state action slots output
      . (Input action -> Effect Unit)
