@@ -99,8 +99,7 @@ slot_ label p component input =
   Core.widget (ComponentSlot (componentSlot label p component input (const Nothing)))
 
 -- | Renders `ComponentHTML` to an arbitrary element in the DOM instead of its
--- | actual location within a component's render tree. Providing `Nothing` will
--- | append the element to the <body> tag.
+-- | actual location within a component's render tree.
 portal
   :: forall action slots m
    . HTMLElement

@@ -9,7 +9,7 @@ From the root of the Halogen project:
 ```
 $ npm install
 $ bower install
-$ npm run example-basic
+$ npm run example-portal
 ```
 
-The code will be built as `example.js` in the `examples/basic/dist` directory within the example, runnable by opening the corresponding `index.html`.
+The code will be built as `example.js` in the `examples/portal/dist` directory within the example, runnable by opening the corresponding `index.html`.
