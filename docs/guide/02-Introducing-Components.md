@@ -218,7 +218,7 @@ initialState = ...
 
 data Action = Increment | Decrement
 
-handleAction :: forall slots output m. Action -> H.HalogenM State Action () output m Unit
+handleAction :: forall slots output m. Action -> H.HalogenM State Action slots output m Unit
 handleAction = ...
 
 render :: forall m. State -> H.ComponentHTML Action () m
