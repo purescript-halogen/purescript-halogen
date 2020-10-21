@@ -43,7 +43,7 @@ This lets you do everything the hardcoded `Aff` type did, but it also lets you m
 One last thing: when you choose a monad for your component it will show up in your `HalogenM` type, your `Component` type, and, if you are using child components, in your `ComponentHTML` type:
 
 ```purs
-component :: forall query input output m. MonadAff m => H.Component query input output m
+component :: forall query input output m. MonadAff m => H.Component HH.HTML query input output m
 
 handleAction :: forall output m. MonadAff m => Action -> HalogenM State Action () output m Unit
 
