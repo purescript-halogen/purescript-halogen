@@ -651,7 +651,7 @@ handleAction = case _ of
 </code></pre>
 <p>This lets you do everything the hardcoded <code>Aff</code> type did, but it also lets you mix in other constraints too.</p>
 <p>One last thing: when you choose a monad for your component it will show up in your <code>HalogenM</code> type, your <code>Component</code> type, and, if you are using child components, in your <code>ComponentHTML</code> type:</p>
-<pre><code class="language-purs">component :: forall query input output m. MonadAff m =&gt; H.Component query input output m
+<pre><code class="language-purs">component :: forall query input output m. MonadAff m =&gt; H.Component HH.HTML query input output m
 
 handleAction :: forall output m. MonadAff m =&gt; Action -&gt; HalogenM State Action () output m Unit
 
