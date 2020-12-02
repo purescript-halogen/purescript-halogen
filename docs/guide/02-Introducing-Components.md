@@ -52,7 +52,7 @@ component =
       H.modify_ \state -> state + 1
 ```
 
-This component mantains an integer as its internal state, and updates that state in response to click events on the two buttons.
+This component maintains an integer as its internal state, and updates that state in response to click events on the two buttons.
 
 This component works, but in a real world application we wouldn't leave all the types unspecified. Let's rebuild this component from scratch with all the types it uses.
 
