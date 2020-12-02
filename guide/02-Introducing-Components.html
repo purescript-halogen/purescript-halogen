@@ -202,7 +202,7 @@ component =
     Increment -&gt;
       H.modify_ \state -&gt; state + 1
 </code></pre>
-<p>This component mantains an integer as its internal state, and updates that state in response to click events on the two buttons.</p>
+<p>This component maintains an integer as its internal state, and updates that state in response to click events on the two buttons.</p>
 <p>This component works, but in a real world application we wouldn't leave all the types unspecified. Let's rebuild this component from scratch with all the types it uses.</p>
 <h2><a class="header" href="#building-a-basic-component-with-types" id="building-a-basic-component-with-types">Building a Basic Component (With Types)</a></h2>
 <p>A typical Halogen component accepts input, maintains an internal state, produces Halogen HTML from that state, and updates its state or performs effects in response to events. In this case we don't need to perform any effects, but we'll cover them soon.</p>
