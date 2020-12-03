@@ -10,7 +10,7 @@ jobs:
 
       - uses: actions/setup-node@v1
 
-      - uses: thomashoneyman/setup-purescript@v1.1
+      - uses: thomashoneyman/setup-purescript@main
         with:
           purescript: "0.13.8"
 
