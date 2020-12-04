@@ -20,7 +20,7 @@ module Halogen.HTML.Properties
   , height
   , width
   , href
-  , id_
+  , id
   , name
   , rel
   , src
@@ -177,8 +177,8 @@ width = prop (PropName "width")
 href :: forall r i. String -> IProp (href :: String | r) i
 href = prop (PropName "href")
 
-id_ :: forall r i. String -> IProp (id :: String | r) i
-id_ = prop (PropName "id")
+id :: forall r i. String -> IProp (id :: String | r) i
+id = prop (PropName "id")
 
 name :: forall r i. String -> IProp (name :: String | r) i
 name = prop (PropName "name")
