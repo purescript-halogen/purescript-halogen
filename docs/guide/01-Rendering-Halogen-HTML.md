@@ -65,7 +65,7 @@ You can see Halogen's emphasis on type safety displayed here.
 2. Only some values are possible for a button's `type` property, so Halogen restricts them with a sum type.
 3. CSS classes use a `ClassName` newtype so that they can be treated specially when needed; for example, the `classes` function ensures that your classes are space-separated when they're combined.
 
-Some HTML elements and properties clash with reserved keywords in PureScript or with common functions from the Prelude, so Halogen adds an underscore to them. That's why you see `type_` instead of `type` in the example above. (You also see `id_` instead of `id`, but in PureScript 0.12 the `id` function was renamed to `identity`; future versions of Halogen will just use `id` without an underscore.)
+Some HTML elements and properties clash with reserved keywords in PureScript or with common functions from the Prelude, so Halogen adds an underscore to them. That's why you see `type_` instead of `type` in the example above.
 
 When you don't need to set any properties on a Halogen HTML element, you can use its underscored version instead. For example, the `div` and `button` elements below have no properties:
 
