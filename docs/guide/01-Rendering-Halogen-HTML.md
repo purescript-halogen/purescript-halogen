@@ -48,7 +48,7 @@ import Halogen.HTML.Properties as HP
 
 html =
   HH.div
-    [ HP.id_ "root" ]
+    [ HP.id "root" ]
     [ HH.input
         [ HP.placeholder "Name" ]
     , HH.button
