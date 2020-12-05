@@ -20,6 +20,7 @@ module Halogen.HTML.Properties
   , height
   , width
   , href
+  , id
   , id_
   , name
   , rel
@@ -88,6 +89,7 @@ import Halogen.HTML.Core (class IsProp, AttrName(..), ClassName, Namespace, Prop
 import Halogen.HTML.Core as Core
 import Halogen.Query.Input (Input(..), RefLabel)
 import Prim.Row as Row
+import Prim.TypeError as TypeError
 import Unsafe.Coerce (unsafeCoerce)
 import Web.DOM.Element (Element)
 
@@ -177,8 +179,11 @@ width = prop (PropName "width")
 href :: forall r i. String -> IProp (href :: String | r) i
 href = prop (PropName "href")
 
-id_ :: forall r i. String -> IProp (id :: String | r) i
-id_ = prop (PropName "id")
+id :: forall r i. String -> IProp (id :: String | r) i
+id = prop (PropName "id")
+
+id_ :: forall r i. TypeError.Warn (TypeError.Text "`id_` is deprecated. Prefer `id` instead.") => String -> IProp (id :: String | r) i
+id_ = id
 
 name :: forall r i. String -> IProp (name :: String | r) i
 name = prop (PropName "name")
