@@ -1,6 +1,10 @@
 name: CI
 
-on: push
+on:
+  push:
+    branches: master
+  pull_request:
+    branches: master
 
 jobs:
   build:
@@ -10,7 +14,7 @@ jobs:
 
       - uses: actions/setup-node@v1
 
-      - uses: thomashoneyman/setup-purescript@main
+      - uses: purescript-contrib/setup-purescript@main
         with:
           purescript: "0.13.8"
 
