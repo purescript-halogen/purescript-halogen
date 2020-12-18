@@ -1,4 +1,7 @@
-# Halogen [![Latest release](http://img.shields.io/github/release/purescript-halogen/purescript-halogen.svg)](https://github.com/purescript-halogen/purescript-halogen/releases) [![halogen in package-sets](https://img.shields.io/endpoint.svg?url=https://package-sets-badge-0lf69kxs4fbd.runkit.sh/halogen)](https://github.com/purescript/package-sets) [![CI](https://github.com/purescript-halogen/purescript-halogen/workflows/CI/badge.svg?branch=master)](https://github.com/purescript-halogen/purescript-halogen/actions?query=workflow%3ACI+branch%3Amaster)
+# Halogen
+
+[![Latest release](http://img.shields.io/github/release/purescript-halogen/purescript-halogen.svg)](https://github.com/purescript-halogen/purescript-halogen/releases)
+[![CI](https://github.com/purescript-halogen/purescript-halogen/workflows/CI/badge.svg?branch=master)](https://github.com/purescript-halogen/purescript-halogen/actions?query=workflow%3ACI+branch%3Amaster)
 
 Halogen is a type-safe library for building user interfaces in PureScript.
 
