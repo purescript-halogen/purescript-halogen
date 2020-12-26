@@ -49,6 +49,8 @@ You can paste this example (and any other full examples in this guide) into [Try
 
 > By default, Try PureScript will compile every time you make a change. You can also disable the auto-compile feature, which will cause Try PureScript to wait for you to click the "Compile" button to compile your Halogen application.
 
+You can also create your own starter project with the [official Halogen template](https://github.com/purescript-halogen/purescript-halogen-template). This template includes extra tools and scripts to help you get up and running with a full Halogen application.
+
 Don't worry if this code is overwhelming at first -- when you've read the next few chapters of the guide you'll gain a solid understanding of how this component works and how to write your own.
 
 ## How to Read This Guide
@@ -59,8 +61,8 @@ This is a step-by-step introduction to Halogen's main concepts. Each chapter bui
 
 Halogen is a PureScript library, and it assumes basic knowledge of PureScript concepts like functions, records, arrays, `do` notation, `Effect`, and `Aff`. It will also help if you understand the basics of HTML and the DOM. If you need a refresher, we recommend:
 
-* For PureScript: the [PureScript Book](https://book.purescript.org) and Jordan Martinez's [PureScript Reference](https://github.com/JordanMartinez/purescript-jordans-reference).
-* For HTML: the MDN introductions to [HTML](https://developer.mozilla.org/en-US/docs/Learn/HTML/Introduction_to_HTML) and [DOM events](https://developer.mozilla.org/en-US/docs/Learn/JavaScript/Building_blocks/Events).
+- For PureScript: the [PureScript Book](https://book.purescript.org) and Jordan Martinez's [PureScript Reference](https://github.com/JordanMartinez/purescript-jordans-reference).
+- For HTML: the MDN introductions to [HTML](https://developer.mozilla.org/en-US/docs/Learn/HTML/Introduction_to_HTML) and [DOM events](https://developer.mozilla.org/en-US/docs/Learn/JavaScript/Building_blocks/Events).
 
 ## Table of Contents
 
@@ -71,4 +73,3 @@ Halogen is a PureScript library, and it assumes basic knowledge of PureScript co
 5. [Parent & Child Components](./05-Parent-Child-Components.md)
 6. [Running An Application](./06-Running-Application.md)
 7. [Next Steps](./07-Next-Steps.md)
-

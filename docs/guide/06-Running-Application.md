@@ -21,7 +21,7 @@ main = HA.runHalogenAff do
   runUI component unit body
 
 -- Assuming you have defined a root component for your application
-component :: forall q i o m. H.Component q i o m
+component :: forall query input output m. H.Component query input output m
 component = ...
 ```
 
@@ -117,7 +117,7 @@ data Action = Toggle
 
 type State = { enabled :: Boolean, messages :: Array String }
 
-component :: forall i m. H.Component HH.HTML Query i Output m
+component :: forall input m. H.Component HH.HTML Query input Output m
 component =
   H.mkComponent
     { initialState
@@ -128,7 +128,7 @@ component =
         }
     }
   where
-  initialState :: i -> State
+  initialState :: input -> State
   initialState _ = { enabled: false, messages: [] }
 
   render :: State -> H.ComponentHTML Action () m
