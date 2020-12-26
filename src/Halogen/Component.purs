@@ -194,7 +194,7 @@ mkEval args = case _ of
 
 -- | A slot for a child component in a component's rendered content.
 data ComponentSlotBox
-  (slots :: # Type)
+  (slots :: Row Type)
   (m :: Type -> Type)
   (action :: Type)
 

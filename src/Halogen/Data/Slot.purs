@@ -41,7 +41,7 @@ foreign import data Any :: Type
 -- | - `slot` represents the unique identifier for this component
 data Slot (query :: Type -> Type) output slot
 
-newtype SlotStorage (slots :: # Type) (slot :: (Type -> Type) -> Type -> Type) =
+newtype SlotStorage (slots :: Row Type) (slot :: (Type -> Type) -> Type -> Type) =
   SlotStorage (Map (Tuple String (OrdBox Any)) Any)
 
 empty :: forall slots slot. SlotStorage slots slot
