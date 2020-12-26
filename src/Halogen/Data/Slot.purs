@@ -39,6 +39,7 @@ foreign import data Any :: Type
 -- | - `query` represents the requests that can be made of this component
 -- | - `output` represents the output messages that can be raised by this component
 -- | - `slot` represents the unique identifier for this component
+data Slot :: (Type -> Type) -> Type -> Type -> Type
 data Slot (query :: Type -> Type) output slot
 
 newtype SlotStorage (slots :: Row Type) (slot :: (Type -> Type) -> Type -> Type) =
