@@ -1,7 +1,7 @@
 .*
+!.github
 !.gitignore
 !.eslintrc.json
-!.travis.yml
 
 *.lock
 package-lock.json

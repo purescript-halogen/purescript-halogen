@@ -188,7 +188,7 @@ The `IProp` type is used for events and properties. It uses a row type to unique
 
 This is possible because Halogen HTML elements also carry a row type which lists all the properties and events that it can support. When you apply a property or event to the element, Halogen looks up in the HTML element's row type whether or not it supports the property or event.
 
-This helps ensure your HTML is well-formed. For example, `<div>` elements do not support the `placeholder` property according to thge DOM spec. Accordingly, if you try to give a `div` a `placeholder` property in Halogen you'll get a compile-time error:
+This helps ensure your HTML is well-formed. For example, `<div>` elements do not support the `placeholder` property according to the DOM spec. Accordingly, if you try to give a `div` a `placeholder` property in Halogen you'll get a compile-time error:
 
 ```purs
 -- ERROR: Could not match type ( placeholder :: String | r )
@@ -197,3 +197,40 @@ html = HH.div [ HP.placeholder "blah" ] [ ]
 ```
 
 This error tells you that you've tried to use a property with an element that doesn't support it. It first lists the property you tried to use, and then it lists the properties that the element _does_ support. Another example of Halogen's type safety in action!
+
+### Adding missing properties
+
+HTML is a [living standard](https://html.spec.whatwg.org/multipage) that is constantly being revised. Halogen tries to keep up with these changes, but sometimes falls behind. (If you have any ideas for how we can automate the process of detecting these changes, please [let us know](https://github.com/purescript-halogen/purescript-halogen/issues/685)).
+
+You'll likely discover that some properties are missing in Halogen. For example, you may try to write:
+
+```purs
+html = HH.iframe [ HP.sandbox "allow-scripts" ]
+```
+
+Only to receive this error:
+
+```
+Unknown value HP.sandbox
+```
+
+Even though it seems like this property should be [supported](https://pursuit.purescript.org/packages/purescript-dom-indexed/docs/DOM.HTML.Indexed#t:HTMLiframe):
+
+```purs
+type HTMLiframe = Noninteractive (height :: CSSPixel, name :: String, onLoad :: Event, sandbox :: String, src :: String, srcDoc :: String, width :: CSSPixel)
+```
+
+The solution is to write your own implementation of this missing property:
+
+```purs
+sandbox :: forall r i. String -> HH.IProp ( sandbox :: String | r ) i
+sandbox = HH.prop (HH.PropName "sandbox")
+```
+
+Then you can use it in your HTML element:
+
+```purs
+html = HH.iframe [ sandbox "allow-scripts" ]
+```
+
+Please open an issue or PR to add this missing property. This is an easy way to contribute to Halogen.

@@ -25,6 +25,8 @@ module Halogen.HTML.Properties
   , name
   , rel
   , src
+  , style
+  , scope
   , target
   , title
   , download
@@ -80,6 +82,7 @@ import DOM.HTML.Indexed.MenuitemType (MenuitemType(..)) as I
 import DOM.HTML.Indexed.OnOff (OnOff(..)) as I
 import DOM.HTML.Indexed.OrderedListType (OrderedListType(..)) as I
 import DOM.HTML.Indexed.PreloadValue (PreloadValue(..)) as I
+import DOM.HTML.Indexed.ScopeValue(ScopeValue(..)) as I
 import DOM.HTML.Indexed.StepValue (StepValue(..)) as I
 import Data.Maybe (Maybe(..))
 import Data.MediaType (MediaType)
@@ -193,6 +196,20 @@ rel = prop (PropName "rel")
 
 src :: forall r i. String -> IProp (src :: String | r) i
 src = prop (PropName "src")
+
+-- | Sets the `style` attribute to the specified string.
+-- |
+-- | ```purs
+-- | ... [ style "height: 50px;" ]
+-- | ```
+-- |
+-- | If you prefer to use typed CSS for this attribute, you can use the purescript-halogen-css library:
+-- | https://github.com/purescript-halogen/purescript-halogen-css
+style :: forall r i. String -> IProp (style :: String | r) i
+style = attr (AttrName "style")
+
+scope :: forall r i. I.ScopeValue -> IProp (scope :: I.ScopeValue | r) i
+scope = prop (PropName "scope")
 
 target :: forall r i. String -> IProp (target :: String | r) i
 target = prop (PropName "target")
