@@ -140,23 +140,23 @@ We can fix our `render` function by rendering our component in a slot via the `s
 +   render :: forall state action. state -> H.ComponentHTML action Slots m
     render _ =
 -     HH.div_ [ button { label: "Click Me" } ]
-+     HH.div_ [ HH.slot _button 0 button { label: "Click Me" } absurd ]
++     HH.div_ [ HH.slot_ _button 0 button { label: "Click Me" } ]
 ```
 
 Our parent component is now rendering a child component -- our button component. Rendering a component introduced two big changes:
 
-1. We used the `slot` function to render the component, which takes several arguments we haven't explored yet. Two of those arguments are the `button` component itself and the label it needs as input.
+1. We used the `slot_` function to render the component, which takes several arguments we haven't explored yet. Two of those arguments are the `button` component itself and the label it needs as input.
 2. We added a new type called `Slots`, which is a row containing a label for our button component with a value of type `H.Slot`, and we used this new type in our `ComponentHTML` instead of the previous empty row `()` we've seen so far.
 
-The `slot` function and `Slot` type let you render a stateful, effectful child component in your Halogen HTML as if it were any other HTML element. But why are there so many arguments and types involved in doing this? Why can't we just call `button` with its input?
+The `slot` and `slot_` functions and the `Slot` type let you render a stateful, effectful child component in your Halogen HTML as if it were any other HTML element. But why are there so many arguments and types involved in doing this? Why can't we just call `button` with its input?
 
 The answer is that Halogen provides two ways for a parent and child component to communicate with one another, and we need to ensure that this communication is type-safe. The `slot` function allows us to:
 
-1. Decide how to identify a particular component by a label (the type-level string "button", which we represent at the term level with the symbol proxy `Proxy :: Proxy "button"`) and a unique identifier (the integer `0`, in this case) so that we can send it _queries_.
-2. Render the component (`button`) and give it its _input_ (`{ label: "Click Me" }`), which will be re-sent every time the parent component renders in case the input changes over time.
-3. Decide how to handle _output messages_ from the child component (here, `absurd`, which is used when a child component doesn't have any output).
+1. Decide how to identify a particular component by a label (the type-level string "button", which we represent at the term level with the proxy `Proxy :: Proxy "button"`) and a unique identifier (the integer `0`, in this case) so that we can send it _queries_. This is an imperative form of communication from the parent to the child.
+2. Render the component (`button`) and give it its _input_ (`{ label: "Click Me" }`), which will be re-sent every time the parent component renders in case the input changes over time. This is a declarative form of communication from the parent to the child.
+3. Decide how to handle _output messages_ from the child component. The `slot` function lets you provide a handler for child outputs, while the `slot_` function can be used when a child component doesn't have any outputs or you want to ignore them. This is communication from the child to the parent.
 
-The `slot` function and the `H.Slot` type let us manage these three communication mechanisms in a type-safe way. In the rest of this chapter we'll focus on how parent and child components communicate with one another, and along the way we'll explore slots and slot types.
+The `slot` and `slot_` functions and the `H.Slot` type let us manage these three communication mechanisms in a type-safe way. In the rest of this chapter we'll focus on how parent and child components communicate with one another, and along the way we'll explore slots and slot types.
 
 ## Communicating Among Components
 
@@ -236,7 +236,7 @@ parent =
 
   render :: ParentState -> H.ComponentHTML ParentAction Slots m
   render { count } =
-    HH.div_ [ HH.slot _button unit button { label: show count } absurd ]
+    HH.div_ [ HH.slot_ _button unit button { label: show count } ]
 
   handleAction :: ParentAction -> H.HalogenM ParentState ParentAction Slots output m Unit
   handleAction = case _ of
@@ -328,6 +328,8 @@ Concretely, our modal could raise a `Closed` output to the parent component. The
 As a tiny example, let's consider how we'd design a button that lets the parent component decide what to do when it is clicked:
 
 ```purs
+module Button where
+
 -- This component can notify parent components of one event, `Clicked`
 data Output = Clicked
 
@@ -374,6 +376,8 @@ Let's start writing our parent component by writing a slot type:
 
 ```purs
 module Parent where
+
+import Button as Button
 
 type Slots = ( button :: forall query. H.Slot query Button.Output Int )
 
@@ -451,7 +455,7 @@ data Query a
   | Request (Boolean -> a)
 ```
 
-We can interpret this query as meaning "A parent component can tell this component to do something with `Tell` and it can request a `Boolean` from this component with `Request`." When you implement a query type, remember that the `a` type parameter should be present in every constructor. It should be the final argument for tell-style queries and be the result of a function type for request-style queries.
+We can interpret this query as meaning "A parent component can tell this component to do something with the `tell` function and it can request a `Boolean` from this component with the `request` function." When you implement a query type, remember that the `a` type parameter should be present in every constructor. It should be the final argument for tell-style queries and be the result of a function type for request-style queries.
 
 Queries are handled with a `handleQuery` function in your eval spec, just like how actions are handled with a `handleAction` function. Let's write a `handleQuery` function for our custom data type, assuming some state, action, and output types have already been defined:
 
@@ -564,17 +568,17 @@ parent =
   render :: forall state. state -> H.ComponentHTML Action Slots m
   render _ =
     HH.div_
-      [ HH.slot _counter unit counter unit absurd ]
+      [ HH.slot_ _counter unit counter unit ]
 
   handleAction :: forall state. Action -> H.HalogenM state Action Slots output m Unit
   handleAction = case _ of
     Initialize ->
       -- startCount :: Maybe Int
-      startCount <- H.query _counter unit $ H.request Counter.GetCount
+      startCount <- H.request _counter unit Counter.GetCount
       -- _ :: Maybe Unit
-      _ <- H.query _counter unit $ H.tell Counter.Increment
+      H.tell _counter unit Counter.Increment
       -- endCount :: Maybe Int
-      endCount <- H.query _counter unit $ H.request Counter.GetCount
+      endCount <- H.request _counter unit Counter.GetCount
 
       when (startCount /= endCount) do
         -- ... do something
@@ -582,33 +586,10 @@ parent =
 
 There are several things to notice here.
 
-1. We used the symbol proxy for the counter's label in the slot type, `_counter`, along with its identifier, `unit`, both to render the component with the `slot` function and also to send queries to the component with the `query` function. The label and identifier are always used to work with a particular child component.
-2. We used the `H.query` function with the component's label and identifier to send it a query. We used the `H.tell` function to send the tell-style query `Increment`, and we used the `H.request` function to send the request-style query `GetCount`. The `GetCount` query had a reply function of type `(Int -> a)`, so you'll notice that when we used it we received a `Maybe Int` in return.
+1. We used the proxy for the counter's label in the slot type, `_counter`, along with its identifier, `unit`, both to render the component with the `slot` function and also to send queries to the component with the `tell` and `request` functions. The label and identifier are always used to work with a particular child component.
+2. We used the `H.tell` function to send the tell-style query `Increment`, and we used the `H.request` function to send the request-style query `GetCount`. The `GetCount` query had a reply function of type `(Int -> a)`, so you'll notice that when we used it we received a `Maybe Int` in return.
 
-The `query` function takes a label, a slot identifier, and a query to send. It returns the response wrapped in a `Maybe`, where `Nothing` signifies that the query failed (either the child component returned `Nothing`, or no component exists at the label and slot identifier you provided). There is also a `queryAll` function that sends the same query to _all_ components at a given label.
-
-The `query` function wants to take a fully-applied query to send to the child component. The `tell` and `request` functions are conveniences for creating tell-style and request-style queries, but you don't strictly need to use them. We could also have written:
-
-```purs
-startCount <- H.query _counter unit $ Counter.GetCount (identity :: Int -> Int)
-_ <- H.query _counter unit $ Counter.Increment unit
-```
-
-The `Counter.GetCount` constructor takes a function of type `(Int -> a)`, where `a` can be anything, so we can supply the `identity` function to mean "Return the `Int` that you received." The `Counter.Increment` constructor takes a value of type `a`, where `a` can be anything; since we just get the value we provided back, we don't care about it, and so by convention tell-style queries supply `unit` for `a`.
-
-In almost all cases we supply `identity` to request-style queries and `unit` to tell-style queries, so the `tell` and `request` functions help hide away the implementation by doing this for us.
-
-```purs
-type Tell f = Unit -> f Unit
-
-tell :: forall f. Tell f -> f Unit
-tell query = query unit
-
-type Request f a = (a -> a) -> f a
-
-request :: forall f a. Request f a -> f a
-request query = query identity
-```
+The `tell` and `request` functions take a label, a slot identifier, and a query to send. The `tell` function doesn't return anything, but the `request` function returns a response from the child wrapped in `Maybe`, where `Nothing` signifies that the query failed (either the child component returned `Nothing`, or no component exists at the label and slot identifier you provided). There are also `tellAll` and `requestAll` functions that send the same query to _all_ components at a given label.
 
 Many people find queries to be the most confusing part of the Halogen library. Luckily, queries aren't used nearly so much as the other Halogen features we've learned about in this guide, and if you get stuck you can always return to this section of the guide as a reference.
 
@@ -755,8 +736,8 @@ parent =
         -- then send a query to all the child components requesting their current
         -- enabled state, which we log to the console.
         H.modify_ \state -> state { clicked = state.clicked + 1 }
-        _ <- H.query _button 0 $ H.tell (SetEnabled true)
-        on <- H.queryAll _button $ H.request GetEnabled
+        H.tell _button 0 (SetEnabled true)
+        on <- H.requestAll _button GetEnabled
         logShow on
 
 -- We now move on to the child component, a component called `button`.

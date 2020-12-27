@@ -46,17 +46,17 @@ render state = HH.div_
   [ HH.div
       [ HP.class_ (H.ClassName "box")]
       [ HH.h1_ [ HH.text "Component A" ]
-      , HH.slot _a unit CA.component unit absurd
+      , HH.slot_ _a unit CA.component unit
       ]
   , HH.div
       [ HP.class_ (H.ClassName "box")]
       [ HH.h1_ [ HH.text "Component B" ]
-      , HH.slot _b unit CB.component unit absurd
+      , HH.slot_ _b unit CB.component unit
       ]
   , HH.div
       [ HP.class_ (H.ClassName "box")]
       [ HH.h1_ [ HH.text "Component C" ]
-      , HH.slot _c unit CC.component unit absurd
+      , HH.slot_ _c unit CC.component unit
       ]
   , HH.p_
       [ HH.text "Last observed states:"]

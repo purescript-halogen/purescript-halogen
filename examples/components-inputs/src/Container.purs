@@ -35,11 +35,11 @@ render :: forall m. State -> H.ComponentHTML Action ChildSlots m
 render state =
   HH.div_
     [ HH.ul_
-        [ HH.slot _display 1 Display.component state absurd
-        , HH.slot _display 2 Display.component (state * 2) absurd
-        , HH.slot _display 3 Display.component (state * 3) absurd
-        , HH.slot _display 4 Display.component (state * 10) absurd
-        , HH.slot _display 5 Display.component (state * state) absurd
+        [ HH.slot_ _display 1 Display.component state
+        , HH.slot_ _display 2 Display.component (state * 2)
+        , HH.slot_ _display 3 Display.component (state * 3)
+        , HH.slot_ _display 4 Display.component (state * 10)
+        , HH.slot_ _display 5 Display.component (state * state)
         ]
     , HH.button
         [ HE.onClick \_ -> Increment ]
