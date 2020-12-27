@@ -24,7 +24,7 @@ import Data.Coyoneda (unCoyoneda)
 import Data.Foldable (traverse_)
 import Data.Maybe (Maybe(..), maybe)
 import Data.Newtype (under)
-import Data.Symbol (class IsSymbol, SProxy)
+import Data.Symbol (class IsSymbol)
 import Data.Tuple (Tuple)
 import Halogen.Data.Slot (Slot, SlotStorage)
 import Halogen.Data.Slot as Slot
@@ -35,6 +35,7 @@ import Halogen.Query.HalogenQ (HalogenQ(..))
 import Halogen.VDom.Thunk (Thunk)
 import Halogen.VDom.Thunk as Thunk
 import Prim.Row as Row
+import Type.Proxy (Proxy)
 import Unsafe.Coerce (unsafeCoerce)
 
 -- | The "public" type for a component, with details of the component internals
@@ -224,7 +225,7 @@ componentSlot
    . Row.Cons label (Slot query output slot) _1 slots
   => IsSymbol label
   => Ord slot
-  => SProxy label
+  => Proxy label
   -> slot
   -> Component query input output m
   -> input

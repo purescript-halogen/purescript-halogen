@@ -3,7 +3,6 @@ module Example.Components.Multitype.Container where
 import Prelude
 
 import Data.Maybe (Maybe(..))
-import Data.Symbol (SProxy(..))
 import Example.Components.Multitype.ComponentA as CA
 import Example.Components.Multitype.ComponentB as CB
 import Example.Components.Multitype.ComponentC as CC
@@ -11,6 +10,7 @@ import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
+import Type.Proxy (Proxy(..))
 
 data Action = ReadStates
 
@@ -26,9 +26,9 @@ type ChildSlots =
   , c :: CC.Slot Unit
   )
 
-_a = SProxy :: SProxy "a"
-_b = SProxy :: SProxy "b"
-_c = SProxy :: SProxy "c"
+_a = Proxy :: Proxy "a"
+_b = Proxy :: Proxy "b"
+_c = Proxy :: Proxy "c"
 
 component :: forall q i o m. H.Component q i o m
 component =

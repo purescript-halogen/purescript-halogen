@@ -15,10 +15,11 @@ import Data.Foldable (traverse_)
 import Data.Map (Map)
 import Data.Map as Map
 import Data.Maybe (Maybe(..))
-import Data.Symbol (class IsSymbol, SProxy, reflectSymbol)
+import Data.Symbol (class IsSymbol, reflectSymbol)
 import Data.Tuple (Tuple(..))
 import Halogen.Data.OrdBox (OrdBox, mkOrdBox, unOrdBox)
 import Prim.Row as Row
+import Type.Proxy (Proxy)
 import Unsafe.Coerce (unsafeCoerce)
 
 foreign import data Any :: Type
@@ -53,7 +54,7 @@ lookup
    . Row.Cons sym (Slot query output s) px slots
   => IsSymbol sym
   => Ord s
-  => SProxy sym
+  => Proxy sym
   -> s
   -> SlotStorage slots slot
   -> Maybe (slot query output)
@@ -71,7 +72,7 @@ pop
    . Row.Cons sym (Slot query output s) px slots
   => IsSymbol sym
   => Ord s
-  => SProxy sym
+  => Proxy sym
   -> s
   -> SlotStorage slots slot
   -> Maybe (Tuple (slot query output) (SlotStorage slots slot))
@@ -89,7 +90,7 @@ insert
    . Row.Cons sym (Slot query output s) px slots
   => IsSymbol sym
   => Ord s
-  => SProxy sym
+  => Proxy sym
   -> s
   -> slot query output
   -> SlotStorage slots slot
@@ -108,7 +109,7 @@ slots
    . Row.Cons sym (Slot query output s) px slots
   => IsSymbol sym
   => Ord s
-  => SProxy sym
+  => Proxy sym
   -> SlotStorage slots slot
   -> Map s (slot query output)
 slots sym (SlotStorage m) = Map.foldSubmap Nothing Nothing go m

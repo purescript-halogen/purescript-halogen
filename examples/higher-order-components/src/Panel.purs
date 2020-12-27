@@ -3,11 +3,11 @@ module Example.HOC.Panel (Slot, Query(..), Message(..), component) where
 import Prelude
 
 import Data.Maybe (Maybe(..))
-import Data.Symbol (SProxy(..))
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
+import Type.Proxy (Proxy(..))
 
 type Slot f o = H.Slot (Query f) (Message o)
 
@@ -33,8 +33,7 @@ type ChildSlots f o =
   ( inner :: H.Slot f o Unit
   )
 
-_inner :: SProxy "inner"
-_inner = SProxy
+_inner = Proxy :: Proxy "inner"
 
 component
   :: forall q i o m

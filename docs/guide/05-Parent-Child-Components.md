@@ -122,11 +122,11 @@ That extra information comes from the `slot` function and the slot type used in 
 We can fix our `render` function by rendering our component in a slot via the `slot` function. We'll also update the slot type in our `ComponentHTML` to include the component our Halogen HTML now must support. This diff demonstrates the differences between rendering an HTML element and rendering a component:
 
 ```diff
-+ import Data.Symbol (SProxy(..))
++ import Type.Proxy (Proxy(..))
 +
 + type Slots = ( button :: forall query. H.Slot query Void Int )
 +
-+ _button = SProxy :: SProxy "button"
++ _button = Proxy :: Proxy "button"
 
   parent :: forall query input output m. H.Component HH.HTML query input output m
   parent =
@@ -152,7 +152,7 @@ The `slot` function and `Slot` type let you render a stateful, effectful child c
 
 The answer is that Halogen provides two ways for a parent and child component to communicate with one another, and we need to ensure that this communication is type-safe. The `slot` function allows us to:
 
-1. Decide how to identify a particular component by a label (the type-level string "button", which we represent at the term level with the symbol proxy `SProxy :: SProxy "button"`) and a unique identifier (the integer `0`, in this case) so that we can send it _queries_.
+1. Decide how to identify a particular component by a label (the type-level string "button", which we represent at the term level with the symbol proxy `Proxy :: Proxy "button"`) and a unique identifier (the integer `0`, in this case) so that we can send it _queries_.
 2. Render the component (`button`) and give it its _input_ (`{ label: "Click Me" }`), which will be re-sent every time the parent component renders in case the input changes over time.
 3. Decide how to handle _output messages_ from the child component (here, `absurd`, which is used when a child component doesn't have any output).
 
@@ -195,7 +195,6 @@ import Prelude
 
 import Control.Monad.Rec.Class (forever)
 import Data.Maybe (Maybe(..))
-import Data.Symbol (SProxy(..))
 import Effect (Effect)
 import Effect.Aff (Milliseconds(..))
 import Effect.Aff as Aff
@@ -206,6 +205,7 @@ import Halogen.Aff (awaitBody, runHalogenAff)
 import Halogen.HTML as HH
 import Halogen.Query.EventSource as EventSource
 import Halogen.VDom.Driver (runUI)
+import Type.Proxy (Proxy(..))
 
 main :: Effect Unit
 main = runHalogenAff do
@@ -214,7 +214,7 @@ main = runHalogenAff do
 
 type Slots = ( button :: forall q. H.Slot q Void Unit )
 
-_button = SProxy :: SProxy "button"
+_button = Proxy :: Proxy "button"
 
 type ParentState = { count :: Int }
 
@@ -362,7 +362,7 @@ We took a few steps to implement this output message.
 
 1. We added an `Output` type which describes what output messages our component can emit. We used the type in our `Component` type because it's part of the component's public interface and our `HalogenM` type because this is where we can actually emit the output message.
 1. We added an `Action` type with a `Click` constructor to handle the click event in our Halogen HTML
-2. We handled the `Click` action in our `handleAction` by *raising* an output message to the parent component. You can emit output messages with the `H.raise` function.
+1. We handled the `Click` action in our `handleAction` by _raising_ an output message to the parent component. You can emit output messages with the `H.raise` function.
 
 We now know how a component can emit output messages. Now, let's see how to handle output messages from a child component. There are three things to keep in mind:
 
@@ -380,8 +380,8 @@ type Slots = ( button :: forall query. H.Slot query Button.Output Int )
 -- We can refer to the `button` label using a symbol proxy, which is a
 -- way to refer to a type-level string like `button` at the value level.
 -- We define this for convenience, so we can use _button to refer to its
--- label in the slot type rather than write `SProxy` over and over.
-_button = SProxy :: SProxy "button"
+-- label in the slot type rather than write `Proxy` over and over.
+_button = Proxy :: Proxy "button"
 ```
 
 Our slot type is a row, where each label designates a particular _type_ of child component we support, in each case using the type `H.Slot`:
@@ -436,8 +436,8 @@ Queries represent commands or requests that a parent component can send to a chi
 
 Queries are most useful when a parent component needs to control when an event occurs instead of a child component. For example:
 
-* A parent component can _tell_ a form to submit, rather than wait for a user to click a submit button.
-* A parent component can _request_ the current selections from an autocomplete, rather than wait for an output message from the child component when a selection is made.
+- A parent component can _tell_ a form to submit, rather than wait for a user to click a submit button.
+- A parent component can _request_ the current selections from an autocomplete, rather than wait for an output message from the child component when a selection is made.
 
 Queries are a way for parent components to imperatively control a child component. As introduced in our two examples, there are two common styles of query: a tell-style query for when a parent component commands a child component to do something, and a request-style query for when a parent component wants information from a child component.
 
@@ -536,7 +536,7 @@ module Parent where
 
 type Slots = ( counter :: H.Slot Counter.Query Void Int )
 
-_counter = SProxy :: SProxy "counter"
+_counter = Proxy :: Proxy "counter"
 ```
 
 Our slot type records the counter component with its query type and leaves its output message type as `Void` to indicate there are none.
@@ -684,7 +684,6 @@ module Main where
 import Prelude
 
 import Data.Maybe (Maybe(..))
-import Data.Symbol (SProxy(..))
 import Effect (Effect)
 import Effect.Class (class MonadEffect)
 import Effect.Class.Console (logShow)
@@ -693,6 +692,7 @@ import Halogen.Aff as HA
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.VDom.Driver (runUI)
+import Type.Proxy (Proxy(..))
 
 main :: Effect Unit
 main = HA.runHalogenAff do
@@ -768,7 +768,7 @@ type ButtonSlot = H.Slot ButtonQuery ButtonOutput
 
 -- We think our button will have the label "button" in the row where it's used,
 -- so we're exporting a symbol proxy for convenience.
-_button = SProxy :: SProxy "button"
+_button = Proxy :: Proxy "button"
 
 -- This component accepts two queries. The first is a request-style query that
 -- lets a parent component request a `Boolean` value from us. The second is a

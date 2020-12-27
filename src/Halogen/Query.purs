@@ -19,7 +19,7 @@ import Prelude
 import Control.Monad.State.Class (get, gets, modify, modify_, put) as Exports
 import Control.Monad.Trans.Class (lift) as Exports
 import Data.Maybe (Maybe)
-import Data.Symbol (class IsSymbol, SProxy)
+import Data.Symbol (class IsSymbol)
 import Effect.Aff.Class (liftAff) as Exports
 import Effect.Class (liftEffect) as Exports
 import Halogen.Data.Slot (Slot)
@@ -27,6 +27,7 @@ import Halogen.Query.HalogenM (HalogenM(..), HalogenF(..), SubscriptionId, ForkI
 import Halogen.Query.HalogenQ (HalogenQ(..))
 import Halogen.Query.Input (RefLabel(..))
 import Prim.Row as Row
+import Type.Proxy (Proxy)
 import Web.HTML.HTMLElement (HTMLElement)
 import Web.HTML.HTMLElement as HTMLElement
 
@@ -66,7 +67,7 @@ tell
    . Row.Cons label (Slot query output' slot) _1 slots
   => IsSymbol label
   => Ord slot
-  => SProxy label
+  => Proxy label
   -> slot
   -> Tell query
   -> HalogenM state action slots output m Unit
@@ -102,7 +103,7 @@ request
    . Row.Cons label (Slot query output' slot) _1 slots
   => IsSymbol label
   => Ord slot
-  => SProxy label
+  => Proxy label
   -> slot
   -> Request query a
   -> HalogenM state action slots output m (Maybe a)
