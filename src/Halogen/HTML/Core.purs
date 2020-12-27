@@ -11,9 +11,6 @@ module Halogen.HTML.Core
   , ref
   , class IsProp
   , toPropValue
-  , PropName(..)
-  , AttrName(..)
-  , ClassName(..)
   , module Exports
   ) where
 
@@ -47,6 +44,8 @@ import Halogen.VDom.Types as VDom
 import Unsafe.Coerce (unsafeCoerce)
 import Web.DOM.Element (Element)
 import Web.Event.Event (Event, EventType)
+import Web.HTML.Common (AttrName(..), ClassName(..), PropName(..)) as Exports
+import Web.HTML.Common (AttrName(..), PropName(..))
 
 newtype HTML w i = HTML (VDom.VDom (Array (Prop (Input i))) w)
 
@@ -167,29 +166,3 @@ instance isPropWrapValue :: IsProp WrapValue where
 
 instance isPropInputAcceptType :: IsProp InputAcceptType where
   toPropValue = propFromString <<< renderInputAcceptType
-
--- | A type-safe wrapper for property names.
--- |
--- | The phantom type `value` describes the type of value which this property
--- | requires.
-newtype PropName :: Type -> Type
-newtype PropName value = PropName String
-
-derive instance newtypePropName :: Newtype (PropName value) _
-derive newtype instance eqPropName :: Eq (PropName value)
-derive newtype instance ordPropName :: Ord (PropName value)
-
--- | A type-safe wrapper for attribute names.
-newtype AttrName = AttrName String
-
-derive instance newtypeAttrName :: Newtype AttrName _
-derive newtype instance eqAttrName :: Eq AttrName
-derive newtype instance ordAttrName :: Ord AttrName
-
--- | A wrapper for strings which are used as CSS classes.
-newtype ClassName = ClassName String
-
-derive instance newtypeClassName :: Newtype ClassName _
-derive newtype instance eqClassName :: Eq ClassName
-derive newtype instance ordClassName :: Ord ClassName
-derive newtype instance semigroupClassName :: Semigroup ClassName
