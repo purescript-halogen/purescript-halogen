@@ -2,11 +2,11 @@ module Example.Components.Inputs.Container where
 
 import Prelude
 
-import Data.Symbol (SProxy(..))
 import Example.Components.Inputs.Display as Display
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
+import Type.Proxy (Proxy(..))
 
 data Action
   = Increment
@@ -18,7 +18,7 @@ type ChildSlots =
   ( display :: Display.Slot Int
   )
 
-_display = SProxy :: SProxy "display"
+_display = Proxy :: Proxy "display"
 
 component :: forall q i o m. H.Component q i o m
 component =

@@ -5,7 +5,6 @@ import Prelude
 import Data.Array (snoc, filter, reverse)
 import Data.Const (Const)
 import Data.Maybe (Maybe(..))
-import Data.Symbol (SProxy(..))
 import Data.Tuple (Tuple(..))
 import Effect (Effect)
 import Effect.Aff (Aff)
@@ -17,6 +16,7 @@ import Halogen.HTML as HH
 import Halogen.HTML.Elements.Keyed as HK
 import Halogen.HTML.Events as HE
 import Halogen.VDom.Driver (runUI)
+import Type.Proxy (Proxy(..))
 
 type State =
   { currentId :: Int
@@ -41,7 +41,7 @@ type ChildSlots =
   ( child :: H.Slot (Const Void) Child.Message Int
   )
 
-_child = SProxy :: SProxy "child"
+_child = Proxy :: Proxy "child"
 
 ui :: forall f. H.Component f Unit Void Aff
 ui =

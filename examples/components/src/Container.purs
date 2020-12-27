@@ -3,11 +3,11 @@ module Example.Components.Container (component) where
 import Prelude
 
 import Data.Maybe (Maybe(..), maybe)
-import Data.Symbol (SProxy(..))
 import Example.Components.Button as Button
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
+import Type.Proxy (Proxy(..))
 
 data Action
   = HandleButton Button.Message
@@ -22,8 +22,8 @@ type ChildSlots =
   ( button :: Button.Slot Unit
   )
 
-_button :: SProxy "button"
-_button = SProxy
+_button :: Proxy "button"
+_button = Proxy
 
 component :: forall q i o m. H.Component q i o m
 component =
