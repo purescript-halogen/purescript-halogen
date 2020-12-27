@@ -2,12 +2,12 @@ module Example.Ace.Container where
 
 import Prelude
 
-import Data.Symbol (SProxy(..))
 import Effect.Aff.Class (class MonadAff)
 import Example.Ace.AceComponent as AceComponent
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
+import Type.Proxy (Proxy(..))
 
 -- | The application state, which in this case just stores the current text in
 -- | the editor.
@@ -22,7 +22,7 @@ type ChildSlots =
   ( ace :: AceComponent.Slot Unit
   )
 
-_ace = SProxy :: SProxy "ace"
+_ace = Proxy :: Proxy "ace"
 
 -- | The main UI component definition.
 component :: forall q i o m. MonadAff m => H.Component q i o m

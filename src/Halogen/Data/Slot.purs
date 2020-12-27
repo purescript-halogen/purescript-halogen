@@ -15,10 +15,11 @@ import Data.Foldable (traverse_)
 import Data.Map (Map)
 import Data.Map as Map
 import Data.Maybe (Maybe(..))
-import Data.Symbol (class IsSymbol, SProxy, reflectSymbol)
+import Data.Symbol (class IsSymbol, reflectSymbol)
 import Data.Tuple (Tuple(..))
 import Halogen.Data.OrdBox (OrdBox, mkOrdBox, unOrdBox)
 import Prim.Row as Row
+import Type.Proxy (Proxy)
 import Unsafe.Coerce (unsafeCoerce)
 
 foreign import data Any :: Type
@@ -39,9 +40,10 @@ foreign import data Any :: Type
 -- | - `query` represents the requests that can be made of this component
 -- | - `output` represents the output messages that can be raised by this component
 -- | - `slot` represents the unique identifier for this component
+data Slot :: (Type -> Type) -> Type -> Type -> Type
 data Slot (query :: Type -> Type) output slot
 
-newtype SlotStorage (slots :: # Type) (slot :: (Type -> Type) -> Type -> Type) =
+newtype SlotStorage (slots :: Row Type) (slot :: (Type -> Type) -> Type -> Type) =
   SlotStorage (Map (Tuple String (OrdBox Any)) Any)
 
 empty :: forall slots slot. SlotStorage slots slot
@@ -52,7 +54,7 @@ lookup
    . Row.Cons sym (Slot query output s) px slots
   => IsSymbol sym
   => Ord s
-  => SProxy sym
+  => Proxy sym
   -> s
   -> SlotStorage slots slot
   -> Maybe (slot query output)
@@ -70,7 +72,7 @@ pop
    . Row.Cons sym (Slot query output s) px slots
   => IsSymbol sym
   => Ord s
-  => SProxy sym
+  => Proxy sym
   -> s
   -> SlotStorage slots slot
   -> Maybe (Tuple (slot query output) (SlotStorage slots slot))
@@ -88,7 +90,7 @@ insert
    . Row.Cons sym (Slot query output s) px slots
   => IsSymbol sym
   => Ord s
-  => SProxy sym
+  => Proxy sym
   -> s
   -> slot query output
   -> SlotStorage slots slot
@@ -107,7 +109,7 @@ slots
    . Row.Cons sym (Slot query output s) px slots
   => IsSymbol sym
   => Ord s
-  => SProxy sym
+  => Proxy sym
   -> SlotStorage slots slot
   -> Map s (slot query output)
 slots sym (SlotStorage m) = Map.foldSubmap Nothing Nothing go m

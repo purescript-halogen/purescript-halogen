@@ -4,11 +4,11 @@ import Prelude
 
 import Data.Const (Const)
 import Data.Maybe (Maybe(..))
-import Data.Symbol (SProxy(..))
 import Effect.Aff (Aff)
 import Effect.Console (log)
 import Halogen as H
 import Halogen.HTML as HH
+import Type.Proxy (Proxy(..))
 
 data Action
   = Initialize
@@ -26,7 +26,7 @@ type ChildSlots =
   ( cell :: H.Slot (Const Void) Message Int
   )
 
-_cell = SProxy :: SProxy "cell"
+_cell = Proxy :: Proxy "cell"
 
 child :: forall f. Int -> H.Component f Unit Message Aff
 child initialState =

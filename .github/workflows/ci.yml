@@ -4,7 +4,6 @@ on:
   push:
     branches: master
   pull_request:
-    branches: master
 
 jobs:
   build:
@@ -16,7 +15,7 @@ jobs:
 
       - uses: purescript-contrib/setup-purescript@main
         with:
-          purescript: "0.13.8"
+          purescript: "0.14.0-rc4"
 
       - name: Cache PureScript dependencies
         uses: actions/cache@v2
