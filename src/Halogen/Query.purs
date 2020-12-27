@@ -113,7 +113,7 @@ request slot id req = query slot id (req identity)
 -- | rendered output of a component. If there is no currently rendered value (or
 -- | it is not an `HTMLElement`) for the request will return `Nothing`.
 getHTMLElementRef
-  :: forall surface action slots output m
+  :: forall state action slots output m
    . RefLabel
-  -> HalogenM surface action slots output m (Maybe HTMLElement)
+  -> HalogenM state action slots output m (Maybe HTMLElement)
 getHTMLElementRef = map (HTMLElement.fromElement =<< _) <<< getRef
