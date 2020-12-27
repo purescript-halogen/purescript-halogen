@@ -15,7 +15,7 @@ When you move from a single component to many components you begin to need mecha
 These type parameters are represented in the `Component` type, and some are also found in the `ComponentHTML` and `HalogenM` types. For example, a component that supports queries, input, and output messages will have this `Component` type:
 
 ```purs
-component :: forall m. H.Component HH.HTML Query Input Output m
+component :: forall m. H.Component Query Input Output m
 ```
 
 You can think of the ways a component can communicate with other components as its _public interface_, and the public interface shows up in the `Component` type.
@@ -52,7 +52,7 @@ import Prelude
 import Halogen as H
 import Halogen.HTML as HH
 
-parent :: forall query input output m. H.Component HH.HTML query input output m
+parent :: forall query input output m. H.Component query input output m
 parent =
   H.mkComponent
     { initialState: identity
@@ -76,7 +76,7 @@ type Input = { label :: String }
 
 type State = { label :: String }
 
-button :: forall query output m. H.Component HH.HTML query Input output m
+button :: forall query output m. H.Component query Input output m
 button =
   H.mkComponent
     { initialState
@@ -128,7 +128,7 @@ We can fix our `render` function by rendering our component in a slot via the `s
 +
 + _button = Proxy :: Proxy "button"
 
-  parent :: forall query input output m. H.Component HH.HTML query input output m
+  parent :: forall query input output m. H.Component query input output m
   parent =
     H.mkComponent
       { initialState: identity
@@ -220,7 +220,7 @@ type ParentState = { count :: Int }
 
 data ParentAction = Initialize | Increment
 
-parent :: forall query input output m. MonadAff m => H.Component HH.HTML query input output m
+parent :: forall query input output m. MonadAff m => H.Component query input output m
 parent =
   H.mkComponent
     { initialState
@@ -258,7 +258,7 @@ type ButtonInput = { label :: String }
 
 type ButtonState = { label :: String }
 
-button :: forall query output m. H.Component HH.HTML query ButtonInput output m
+button :: forall query output m. H.Component query ButtonInput output m
 button =
   H.mkComponent
     { initialState
@@ -284,7 +284,7 @@ type ButtonInput = { label :: String }
 
 type ButtonState = { label :: String }
 
-button :: forall query output m. H.Component HH.HTML query ButtonInput output m
+button :: forall query output m. H.Component query ButtonInput output m
 button =
   H.mkComponent
     { initialState
@@ -335,7 +335,7 @@ data Output = Clicked
 data Action = Click
 
 -- Our output type shows up in our `Component` type
-button :: forall query input m. H.Component HH.HTML query input Output m
+button :: forall query input m. H.Component query input Output m
 button =
   H.mkComponent
     { initialState: identity
@@ -345,7 +345,7 @@ button =
   where
   render _ =
     HH.button
-      [ HE.onClick \_ -> Just Click ]
+      [ HE.onClick \_ -> Click ]
       [ HH.text "Click me" ]
 
   -- Our output type also shows up in our `HalogenM` type, because this is
@@ -405,7 +405,7 @@ data Action = HandleButton Button.Output
 When this action occurs in our component, we can unwrap it to get the `Button.Output` value and use that to decide what code to evaluate. Now that we have our slot and action types handled, let's write our parent component:
 
 ```purs
-parent :: forall query input output m. H.Component HH.HTML query input output m
+parent :: forall query input output m. H.Component query input output m
 parent =
   H.mkComponent
     { initialState: identity
@@ -416,7 +416,7 @@ parent =
   render :: forall state. state -> H.ComponentHTML Action Slots m
   render _ =
     HH.div_
-      [ HH.slot _button 0 button unit (Just <<< HandleButton) ]
+      [ HH.slot _button 0 button unit HandleButton ]
 
   handleAction :: forall state. Action -> H.HalogenM state Action Slots output m Unit
   handleAction = case _ of
@@ -498,7 +498,7 @@ data Query a
 type State = { count :: Int }
 
 -- Our query type shows up in our `Component` type
-counter :: forall input output m. H.Component HH.HTML Query input output m
+counter :: forall input output m. H.Component Query input output m
 counter =
   H.mkComponent
     { initialState: \_ -> { count: 0 }
@@ -550,7 +550,7 @@ data Action = Initialize
 Now, we can move on to our component definition.
 
 ```purs
-parent :: forall query input output m. H.Component HH.HTML query input output m
+parent :: forall query input output m. H.Component query input output m
 parent =
   H.mkComponent
     { initialState: identity
@@ -714,7 +714,7 @@ type ParentState = { clicked :: Int }
 
 -- The parent component uses no query, input, or output types of its own. It can
 -- use any monad so long as that monad can run `Effect` functions.
-parent :: forall query input output m. MonadEffect m => H.Component HH.HTML query input output m
+parent :: forall query input output m. MonadEffect m => H.Component query input output m
 parent =
   H.mkComponent
     { initialState
@@ -736,11 +736,11 @@ parent =
     let clicks = show clicked
     HH.div_
       [ -- We render our first button with the slot id 0
-        HH.slot _button 0 button { label: clicks <> " Enabled" } (Just <<< HandleButton)
+        HH.slot _button 0 button { label: clicks <> " Enabled" } HandleButton
         -- We render our second button with the slot id 1
-      , HH.slot _button 1 button { label: clicks <> " Power" } (Just <<< HandleButton)
+      , HH.slot _button 1 button { label: clicks <> " Power" } HandleButton
         -- We render our third button with the slot id 2
-      , HH.slot _button 2 button { label: clicks <> " Switch" } (Just <<< HandleButton)
+      , HH.slot _button 2 button { label: clicks <> " Switch" } HandleButton
       ]
 
   handleAction :: ParentAction -> H.HalogenM ParentState ParentAction Slots output m Unit
@@ -797,7 +797,7 @@ type ButtonState = { label :: String, enabled :: Boolean }
 -- type `ButtonInput`, and can send outputs of type `ButtonOutput`. It doesn't
 -- perform any effects, which we can tell because the `m` type parameter has
 -- no constraints.
-button :: forall m. H.Component HH.HTML ButtonQuery ButtonInput ButtonOutput m
+button :: forall m. H.Component ButtonQuery ButtonInput ButtonOutput m
 button =
   H.mkComponent
     { initialState
@@ -819,7 +819,7 @@ button =
   render :: ButtonState -> H.ComponentHTML ButtonAction () m
   render { label, enabled } =
     HH.button
-      [ HE.onClick \_ -> Just Click ]
+      [ HE.onClick \_ -> Click ]
       [ HH.text $ label <> " (" <> (if enabled then "on" else "off") <> ")" ]
 
   handleAction

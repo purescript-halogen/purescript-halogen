@@ -54,7 +54,7 @@ data Action
   | Regenerate
   | Finalize
 
-component :: forall query input output m. MonadEffect m => H.Component HH.HTML query input output m
+component :: forall query input output m. MonadEffect m => H.Component query input output m
 component =
   H.mkComponent
     { initialState
@@ -78,7 +78,7 @@ render state = do
     , HH.p_
         [ HH.text ("Current value: " <> value) ]
     , HH.button
-        [ HE.onClick \_ -> Just Regenerate ]
+        [ HE.onClick \_ -> Regenerate ]
         [ HH.text "Generate new number" ]
     ]
 
@@ -236,7 +236,7 @@ data Action = Initialize | Tick
 
 type State = Int
 
-component :: forall query input output m. MonadAff m => H.Component HH.HTML query input output m
+component :: forall query input output m. MonadAff m => H.Component query input output m
 component =
   H.mkComponent
     { initialState
@@ -341,7 +341,7 @@ data Action
   = Initialize
   | HandleKey H.SubscriptionId KE.KeyboardEvent
 
-component :: forall query input output m. MonadAff m => H.Component HH.HTML query input output m
+component :: forall query input output m. MonadAff m => H.Component query input output m
 component =
   H.mkComponent
     { initialState
@@ -395,7 +395,7 @@ We wrote our event source right into our code to handle the `Initialize` action,
 
 `eventListenerEventSource` works a little differently from the other event sources. It uses types from the `purescript-web` libraries for working with the DOM to manually construct an event listener:
 
-```
+```purs
 eventListenerEventSource
   :: forall action m
    . MonadAff m

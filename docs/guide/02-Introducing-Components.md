@@ -21,7 +21,6 @@ module Main where
 
 import Prelude
 
-import Data.Maybe (Maybe(..))
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
@@ -39,9 +38,9 @@ component =
 
   render state =
     HH.div_
-      [ HH.button [ HE.onClick \_ -> Just Decrement ] [ HH.text "-" ]
+      [ HH.button [ HE.onClick \_ -> Decrement ] [ HH.text "-" ]
       , HH.text (show state)
-      , HH.button [ HE.onClick \_ -> Just Increment ] [ HH.text "+" ]
+      , HH.button [ HE.onClick \_ -> Increment ] [ HH.text "+" ]
       ]
 
   handleAction = case _ of
@@ -105,10 +104,10 @@ initialState _ = 0
 
 Halogen components can update state, perform effects, and communicate with other components in response to events that arise internally. Components use an "action" type to describe what kinds of things a component can do in response to internal events.
 
-Our counter has two internal events: 
+Our counter has two internal events:
 
 1. a click event on the "-" button to decrement the count
-2. a click event on the "+" button to increment the count. 
+2. a click event on the "+" button to increment the count.
 
 We can describe what our component should do in response to these events using a data type we'll call `Action`:
 
@@ -124,11 +123,11 @@ Just like how our state type had to be paired with an `initialState` function th
 handleAction :: forall output m. Action -> H.HalogenM State Action () output m Unit
 ```
 
-As with our input type, we can leave type variables open for types that we aren't using. 
+As with our input type, we can leave type variables open for types that we aren't using.
 
-* The type `()` means our component has no child components. We could also leave it open as a type variable because we aren't using it -- `slots`, by convention -- but `()` is so short you'll see this type commonly used instead.
-* The `output` type parameter is only used when your component communicates with a parent.
-* The `m` type parameter is only relevant when your component performs effects.
+- The type `()` means our component has no child components. We could also leave it open as a type variable because we aren't using it -- `slots`, by convention -- but `()` is so short you'll see this type commonly used instead.
+- The `output` type parameter is only used when your component communicates with a parent.
+- The `m` type parameter is only relevant when your component performs effects.
 
 Since our counter has no child components we'll use `()` to describe them, and because it doesn't communicate with a parent or perform effects we'll leave the `output` and `m` type variables open.
 
@@ -137,7 +136,7 @@ Here's the `handleAction` function for our counter:
 ```purs
 handleAction :: forall output m. Action -> H.HalogenM State Action () output m Unit
 handleAction = case _ of
-  Decrement -> 
+  Decrement ->
     H.modify_ \state -> state - 1
 
   Increment ->
@@ -146,10 +145,10 @@ handleAction = case _ of
 
 Our `handleAction` function responds to `Decrement` by reducing our state variable by 1, and to `Increment` by increasing our state variable by 1. Halogen provides several update functions you can use in your `handleAction` function; these ones are commonly used:
 
-* `modify` allows you to update the state, given the previous state, returning the new state
-* `modify_` is the same as `modify`, but it doesn't return the new state (thus you don't have to explicitly discard the result, as you would with `modify`)
-* `get` allows you to retrieve the current state
-* `gets` allows you to retrieve the current state and also apply a function to it (most commonly, `_.fieldName` to retrieve a particular field from a record)
+- `modify` allows you to update the state, given the previous state, returning the new state
+- `modify_` is the same as `modify`, but it doesn't return the new state (thus you don't have to explicitly discard the result, as you would with `modify`)
+- `get` allows you to retrieve the current state
+- `gets` allows you to retrieve the current state and also apply a function to it (most commonly, `_.fieldName` to retrieve a particular field from a record)
 
 We'll talk more about `HalogenM` when we talk about performing effects. Our counter doesn't perform effects, so all we need are the state update functions.
 
@@ -159,7 +158,7 @@ Halogen components produce HTML from their state using a function called `render
 
 Render functions in Halogen are pure, which means that you can't do things like get the current time, make network requests, or anything like that during rendering. All you can do is produce HTML for your state value.
 
-When we look at the type of our render function we can see the `ComponentHTML` type we touched on last chapter. This type is a more specialized version of the `HTML` type, meant specifically for HTML produced in components. Once again, we'll use `()`  and leave `m` open because they are only relevant when using child components, which we'll cover in a later chapter.
+When we look at the type of our render function we can see the `ComponentHTML` type we touched on last chapter. This type is a more specialized version of the `HTML` type, meant specifically for HTML produced in components. Once again, we'll use `()` and leave `m` open because they are only relevant when using child components, which we'll cover in a later chapter.
 
 ```purs
 render :: forall m. State -> H.ComponentHTML Action () m
@@ -173,9 +172,9 @@ import Halogen.HTML.Events
 render :: forall m. State -> H.ComponentHTML Action () m
 render state =
   HH.div_
-    [ HH.button [ HE.onClick \_ -> Just Decrement ] [ HH.text "-" ]
+    [ HH.button [ HE.onClick \_ -> Decrement ] [ HH.text "-" ]
     , HH.text (show state)
-    , HH.button [ HE.onClick \_ -> Just Increment ] [ HH.text "+" ]
+    , HH.button [ HE.onClick \_ -> Increment ] [ HH.text "+" ]
     ]
 ```
 
@@ -186,15 +185,15 @@ We can now see how to handle events in Halogen. First, you write the event handl
 You might be curious about why we provided an anonymous function to `onClick`. To see why, we can look at the actual type of `onClick`:
 
 ```purs
-onClick 
+onClick
   :: forall row action
-   . (MouseEvent -> Maybe action)
+   . (MouseEvent -> action)
   -> IProp (onClick :: MouseEvent | row) action
 
 -- Specialized to our component
-onClick 
+onClick
   :: forall row
-   . (MouseEvent -> Maybe Action) 
+   . (MouseEvent -> Action)
   -> IProp (onClick :: MouseEvent | row) Action
 ```
 
@@ -218,14 +217,14 @@ initialState = ...
 
 data Action = Increment | Decrement
 
-handleAction :: forall slots output m. Action -> H.HalogenM State Action () output m Unit
+handleAction :: forall output m. Action -> H.HalogenM State Action () output m Unit
 handleAction = ...
 
 render :: forall m. State -> H.ComponentHTML Action () m
 render = ...
 ```
 
-These types and functions are the core building blocks of a typical Halogen component. But they aren't sufficient on their own like this -- we need to bring them all together in one place. 
+These types and functions are the core building blocks of a typical Halogen component. But they aren't sufficient on their own like this -- we need to bring them all together in one place.
 
 We'll do that using the `H.mkComponent` function. This function takes a `ComponentSpec`, which is a record containing an `initialState`, `render`, and `eval` function, and produces a `Component` from it:
 
@@ -251,15 +250,14 @@ Our component is now complete, but we're missing one last type definition: our c
 The `mkComponent` function produces a component from a `ComponentSpec`, which is a record of the functions that Halogen needs to run a component. We'll get into more detail about this type in a subsequent chapter.
 
 ```purs
-mkComponent :: H.ComponentSpec ... -> H.Component HH.HTML query input output m
+mkComponent :: H.ComponentSpec ... -> H.Component query input output m
 ```
 
 The resulting component has the type `H.Component`, which itself takes five type parameters that describe the public interface of the component. Our component doesn't communicate with parent components or child components, so it doesn't use any of these type variables. Still, we'll briefly step through them now so you know what's coming in subsequent chapters.
 
-1. The first parameter is always `HH.HTML`, indicating that the component produces Halogen HTML. It is possible for components to target things other than the DOM, in which case this would be different, but on the Web it's always `HH.HTML`.
-2. The second parameter `query` represents a way that parent components can communicate with this component. We will talk about it more when we talk about parent and child components.
-3. The third parameter `input` represents the input our component accepts. In our case, the component doesn't accept any input, so we'll leave this variable open.
-4. The fourth parameter `output` represents a way that this component can communicate with its parent component. We'll talk about it more when we talk about parent and child components.
+2. The first parameter `query` represents a way that parent components can communicate with this component. We will talk about it more when we talk about parent and child components.
+3. The second parameter `input` represents the input our component accepts. In our case, the component doesn't accept any input, so we'll leave this variable open.
+4. The third parameter `output` represents a way that this component can communicate with its parent component. We'll talk about it more when we talk about parent and child components.
 5. The final parameter, `m`, represents the monad that can be used to run effects in the component. Our component doesn't run any effects, so we'll leave this variable open.
 
 Our counter component can therefore be specified by leaving all of the `H.Component` type variables open except for the first one, `HH.HTML`.
@@ -275,7 +273,6 @@ module Main where
 
 import Prelude
 
-import Data.Maybe (Maybe(..))
 import Effect (Effect)
 import Halogen as H
 import Halogen.Aff as HA
@@ -292,7 +289,7 @@ type State = Int
 
 data Action = Increment | Decrement
 
-component :: forall query input output m. H.Component HH.HTML query input output m
+component :: forall query input output m. H.Component query input output m
 component =
   H.mkComponent
     { initialState
@@ -306,12 +303,12 @@ initialState _ = 0
 render :: forall m. State -> H.ComponentHTML Action () m
 render state =
   HH.div_
-    [ HH.button [ HE.onClick \_ -> Just Decrement ] [ HH.text "-" ]
+    [ HH.button [ HE.onClick \_ -> Decrement ] [ HH.text "-" ]
     , HH.text (show state)
-    , HH.button [ HE.onClick \_ -> Just Increment ] [ HH.text "+" ]
+    , HH.button [ HE.onClick \_ -> Increment ] [ HH.text "+" ]
     ]
 
-handleAction :: forall o m. Action -> H.HalogenM State Action () o m Unit
+handleAction :: forall output m. Action -> H.HalogenM State Action () output m Unit
 handleAction = case _ of
   Decrement ->
     H.modify_ \state -> state - 1

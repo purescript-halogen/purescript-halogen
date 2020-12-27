@@ -88,7 +88,7 @@ main :: Effect Unit
 main = HA.runHalogenAff do
   body <- HA.awaitBody
   io <- runUI component unit body
-  
+
   -- Log a message from outside the application by sending it to the button
   let logMessage str = void $ io.query $ H.tell $ AppendMessage str
 
@@ -117,7 +117,7 @@ data Action = Toggle
 
 type State = { enabled :: Boolean, messages :: Array String }
 
-component :: forall input m. H.Component HH.HTML Query input Output m
+component :: forall input m. H.Component Query input Output m
 component =
   H.mkComponent
     { initialState
@@ -136,26 +136,26 @@ component =
     HH.div_
       [ HH.div_ (map (\str -> HH.p_ [ HH.text str ]) state.messages)
       , HH.button
-          [ HE.onClick \_ -> Just Toggle ]
+          [ HE.onClick \_ -> Toggle ]
           [ HH.text $ if state.enabled then "On" else "Off" ]
       ]
-  
+
   handleAction :: Action -> H.HalogenM State Action () Output m Unit
   handleAction = case _ of
     Toggle -> do
       newState <- H.modify \st -> st { enabled = not st.enabled }
       H.raise (Toggled newState.enabled)
-  
+
   handleQuery :: forall a. Query a -> H.HalogenM State Action () Output m (Maybe a)
   handleQuery = case _ of
     IsOn reply -> do
       enabled <- H.gets _.enabled
       pure (Just (reply enabled))
-      
+
     SetEnabled enabled a -> do
       H.modify_ _ { enabled = enabled }
       pure (Just a)
-    
+
     AppendMessage str a -> do
       H.modify_ \st -> st { messages = Array.snoc st.messages str }
       pure (Just a)
