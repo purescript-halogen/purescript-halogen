@@ -193,12 +193,9 @@ Now, let's move to the other common source of internal events: event sources we'
 
 Sometimes you need to handle events arising internally that don't come from a user interacting with the Halogen HTML you've rendered. Two common sources are time-based actions and events that happen on an element outside one you've rendered (like the browser window).
 
-In Halogen these kinds of events come from **event sources**. Components can subscribe to event sources by providing an action that should run every time an event happens.
+In Halogen these kinds of events can be created manually with the [`event`](https://github.com/paf31/purescript-event) library. Halogen components can subscribe to an `Event` by providing an action that should run when the event happens.
 
-Event sources are usually created with one of these functions:
-
-1. `effectEventSource` and`affEventSource` let you produce an event source from an `Effect` or `Aff` function, respectively.
-2. `eventListenerEventSource` lets you produce an event source by attaching an event listener to the DOM, like attaching a resize event to the browser window.
+You can subscribe to events using functions from the `event` library, but Halogen provides a special helper function for subscribing to events from event listeners in the DOM called `eventListenerEventSource`.
 
 An event source can be thought of as a stream of actions: actions can be produced at any time from the event source, and your component will evaluate those actions so long as it remains subscribed to the event source. It's common to create an event source and subscribe to it when the component initializes, though you can subscribe or unsubscribe from an event source at any time.
 
@@ -220,11 +217,11 @@ import Effect.Aff (Milliseconds(..))
 import Effect.Aff as Aff
 import Effect.Aff.Class (class MonadAff)
 import Effect.Exception (error)
+import FRP.Event (Event)
+import FRP.Event as Event
 import Halogen as H
 import Halogen.Aff as HA
 import Halogen.HTML as HH
-import Halogen.Query.EventSource (EventSource)
-import Halogen.Query.EventSource as EventSource
 import Halogen.VDom.Driver (runUI)
 
 main :: Effect Unit
@@ -256,20 +253,19 @@ render seconds = HH.text ("You have been here for " <> show seconds <> " seconds
 handleAction :: forall output m. MonadAff m => Action -> H.HalogenM State Action () output m Unit
 handleAction = case _ of
   Initialize -> do
-    _ <- H.subscribe timer
+    _ <- H.subscribe =<< timer
     pure unit
 
   Tick ->
     H.modify_ \state -> state + 1
 
-timer :: forall m. MonadAff m => EventSource m Action
-timer = EventSource.affEventSource \emitter -> do
-  fiber <- Aff.forkAff $ forever do
+timer :: forall m. MonadAff m => m (Event Action)
+timer = do
+  { event, push } <- H.liftEffect Event.create
+  _ <- Aff.forkAff $ forever do
     Aff.delay $ Milliseconds 1000.0
-    EventSource.emit emitter Tick
-
-  pure $ EventSource.Finalizer do
-    Aff.killFiber (error "Event source finalized") fiber
+    push Tick
+  pure event
 ```
 
 Almost all of this code should look familiar, but there are two new parts.
@@ -277,27 +273,26 @@ Almost all of this code should look familiar, but there are two new parts.
 First, we've defined an event source that will emit a `Tick` action every second until it is closed:
 
 ```purs
-timer :: forall m. MonadAff m => EventSource m Action
-timer = EventSource.affEventSource \emitter -> do
-  fiber <- Aff.forkAff $ forever do
+timer :: forall m. MonadAff m => m (Event Action)
+timer = do
+  { event, push } <- H.liftEffect Event.create
+  _ <- Aff.forkAff $ forever do
     Aff.delay $ Milliseconds 1000.0
-    EventSource.emit emitter Tick
-
-  pure $ EventSource.Finalizer do
-    Aff.killFiber (error "Event source finalized") fiber
+    push Tick
+  pure event
 ```
 
-The `affEventSource` and `effectEventSource` functions take a callback that provides you with an `Emitter`. You can use this with the `EventSource.emit` function to broadcast an action, or with the `EventSource.close` function to close the event source (this lets you close an event source from within, instead of having to wait for the event source to be closed by its subscriber or automatically when the component finalizes). You can return a cleanup function to run when the event source closes, called its finalizer. In this case, we use the finalizer to kill the fiber we forked to loop the count.
+When creating effectful event sources (as opposed to event sources tied to event listeners in the DOM), we can simply use functions from the `event` library. Most commonly you'll use [`Event.create`](https://pursuit.purescript.org/packages/purescript-event/docs/FRP.Event#v:create), but if you need to manually control unsubscription you can also use [`Event.makeEvent`](https://pursuit.purescript.org/packages/purescript-event/docs/FRP.Event#v:makeEvent).
 
 Second, we use the `subscribe` function from Halogen to attach to the event source:
 
 ```purs
   Initialize -> do
-    _ <- H.subscribe timer
+    _ <- H.subscribe =<< timer
     pure unit
 ```
 
-The `subscribe` function takes an event source as an argument and it returns a `SubscriptionId`. You can pass this `SubscriptionId` to the `unsubscribe` function at any point to close the event source, run its cleanup function, and stop listening to outputs from it. Components automatically unsubscribe from any event sources when the component finalizes, so we don't need to unsubscribe here.
+The `subscribe` function takes an `Event` as an argument and it returns a `SubscriptionId`. You can pass this `SubscriptionId` to the `unsubscribe` function at any point to close the event source, run its cleanup function, and stop listening to outputs from it. Components automatically unsubscribe from any event sources when the component finalizes, so we don't need to unsubscribe here.
 
 You may also be interested in the [Ace editor example](https://github.com/purescript-halogen/purescript-halogen/tree/master/examples/ace), which subscribes to events that happen inside a third-party JavaScript component and uses them to trigger actions in a Halogen component.
 
@@ -321,7 +316,7 @@ import Effect.Aff.Class (class MonadAff)
 import Halogen as H
 import Halogen.Aff as HA
 import Halogen.HTML as HH
-import Halogen.Query.EventSource (eventListenerEventSource)
+import Halogen.Query.Event (eventListenerEventSource)
 import Halogen.VDom.Driver (runUI)
 import Web.Event.Event as E
 import Web.HTML (window)
@@ -397,12 +392,11 @@ We wrote our event source right into our code to handle the `Initialize` action,
 
 ```purs
 eventListenerEventSource
-  :: forall action m
-   . MonadAff m
-  => EventType
-  -> EventTarget
-  -> (Event -> Maybe action)
-  -> EventSource m action
+  :: forall a
+   . Web.Event.EventType
+  -> Web.Event.EventTarget.EventTarget
+  -> (Web.Event.Event -> Maybe a)
+  -> FRP.Event.Event a
 ```
 
 It takes a type of event to listen to (in our case: `keyup`), a target indicating where to listen for events (in our case: the `HTMLDocument` itself), and a callback function that transforms the events that occur into a type that should be emitted (in our case: we emit our `Action` type by capturing the event in the `HandleKey` constructor).

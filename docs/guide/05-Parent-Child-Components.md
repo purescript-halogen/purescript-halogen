@@ -200,10 +200,11 @@ import Effect.Aff (Milliseconds(..))
 import Effect.Aff as Aff
 import Effect.Aff.Class (class MonadAff)
 import Effect.Exception (error)
+import FRP.Event (Event)
+import FRP.Event as Event
 import Halogen as H
 import Halogen.Aff (awaitBody, runHalogenAff)
 import Halogen.HTML as HH
-import Halogen.Query.EventSource as EventSource
 import Halogen.VDom.Driver (runUI)
 import Type.Proxy (Proxy(..))
 
@@ -241,14 +242,11 @@ parent =
   handleAction :: ParentAction -> H.HalogenM ParentState ParentAction Slots output m Unit
   handleAction = case _ of
     Initialize -> do
-      void $ H.subscribe $ EventSource.affEventSource \emitter -> do
-        fiber <- Aff.forkAff $ forever do
-          Aff.delay $ Milliseconds 1000.0
-          EventSource.emit emitter Increment
-
-        pure $ EventSource.Finalizer do
-          Aff.killFiber (error "Event source finalized") fiber
-
+      { event, push } <- H.liftEffect Event.create
+      void $ H.subscribe event
+      void $ Aff.forkAff $ forever do
+        Aff.delay $ Milliseconds 1000.0
+        push Increment
     Increment ->
       H.modify_ \st -> st { count = st.count + 1 }
 
