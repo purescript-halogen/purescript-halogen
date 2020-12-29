@@ -73,8 +73,8 @@ instance functorHalogenF :: Functor m => Functor (HalogenF state action slots ou
 -- | - `output` is the type of output messages the component can raise
 -- | - `m` is the monad used during evaluation
 -- | - `a` is the result of the HalogenM expression. Use the following pattern:
--- |     `handleAction :: Action -> H.HalogenM State Action Slots Output m Unit
--- |     `handleQuery  :: forall a. Query a -> H.HalogenM State Action Slots Output m (Maybe a)
+-- |     `handleAction :: Action -> H.HalogenM State Action Slots Output m Unit`
+-- |     `handleQuery  :: forall a. Query a -> H.HalogenM State Action Slots Output m (Maybe a)`
 newtype HalogenM state action slots output m a = HalogenM (Free (HalogenF state action slots output m) a)
 
 derive newtype instance functorHalogenM :: Functor (HalogenM state action slots output m)
