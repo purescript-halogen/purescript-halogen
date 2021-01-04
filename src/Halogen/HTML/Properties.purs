@@ -185,7 +185,7 @@ href = prop (PropName "href")
 id :: forall r i. String -> IProp (id :: String | r) i
 id = prop (PropName "id")
 
-id_ :: forall r i. TypeError.Warn (TypeError.Text "`id_` is deprecated. Prefer `id` instead.") => String -> IProp (id :: String | r) i
+id_ :: forall r i. TypeError.Warn (TypeError.Text "`id_` is deprecated. Use `id` instead.") => String -> IProp (id :: String | r) i
 id_ = id
 
 name :: forall r i. String -> IProp (name :: String | r) i
