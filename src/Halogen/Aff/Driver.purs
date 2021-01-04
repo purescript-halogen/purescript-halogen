@@ -264,13 +264,14 @@ runUI renderSpec component i = do
     -> DriverStateX r f' o'
     -> Aff Unit
   dispose disposed lchs dsx = Eval.handleLifecycle lchs do
-    Ref.read disposed >>=
-      if _
-        then pure unit
-        else do
-          Ref.write true disposed
-          finalize lchs dsx
-          unDriverStateX (traverse_ renderSpec.dispose <<< _.rendering) dsx
+    Ref.read disposed >>= if _ then
+      pure unit
+    else do
+      Ref.write true disposed
+      finalize lchs dsx
+      dsx # unDriverStateX \{ selfRef } -> do
+        (DriverState ds) <- liftEffect $ Ref.read selfRef
+        for_ ds.rendering renderSpec.dispose
 
 newLifecycleHandlers :: Effect (Ref LifecycleHandlers)
 newLifecycleHandlers = Ref.new { initializers: L.Nil, finalizers: L.Nil }

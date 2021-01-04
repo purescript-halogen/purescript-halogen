@@ -21,7 +21,7 @@ import Halogen.HTML.Elements
 import Data.Function (const)
 import Data.Function.Uncurried as Fn
 import Data.Maybe (Maybe(..))
-import Data.Symbol (class IsSymbol, SProxy)
+import Data.Symbol (class IsSymbol)
 import Halogen.Component (Component, ComponentSlot(..), componentSlot)
 import Halogen.Data.Slot (Slot)
 import Halogen.HTML.Core (class IsProp, AttrName(..), ClassName(..), HTML(..), Namespace(..), PropName(..), ElemName(..), text, handler)
@@ -30,6 +30,7 @@ import Halogen.HTML.Properties (IProp, attr, attrNS, prop)
 import Halogen.VDom.Thunk (thunk1, thunk2, thunk3, thunked)
 import Prelude (class Ord, Void, (<<<))
 import Prim.Row as Row
+import Type.Proxy (Proxy)
 import Unsafe.Coerce (unsafeCoerce)
 import Web.HTML (HTMLElement)
 
@@ -65,7 +66,7 @@ slot
    . Row.Cons label (Slot query output slot) _1 slots
   => IsSymbol label
   => Ord slot
-  => SProxy label
+  => Proxy label
   -> slot
   -> Component query input output m
   -> input
@@ -90,7 +91,7 @@ slot_
    . Row.Cons label (Slot query output slot) _1 slots
   => IsSymbol label
   => Ord slot
-  => SProxy label
+  => Proxy label
   -> slot
   -> Component query input output m
   -> input

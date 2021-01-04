@@ -11,7 +11,7 @@ Before we start, it's important to know that you can only perform effects during
 If you recall from last chapter, the `handleAction` function returns a type called `HalogenM`. Here's the `handleAction` we wrote:
 
 ```purs
-handleAction :: forall o m. Action -> HalogenM State Action () o m Unit
+handleAction :: forall output m. Action -> HalogenM State Action () output m Unit
 ```
 
 `HalogenM` is a crucial part of Halogen, often called the "eval" monad. This monad enables Halogen features like state, forking threads, starting subscriptions, and more. But it's quite limited, concerning itself only with Halogen-specific features. In fact, Halogen components have no built-in mechanisms for effects!
@@ -23,19 +23,19 @@ A component that only uses Halogen-specific features can leave this type paramet
 This `handleAction` is able to use functions from `HalogenM` like `modify_` and can also use effectful functions from `Effect`:
 
 ```purs
-handleAction :: forall o. Action -> HalogenM State Action () o Effect Unit
+handleAction :: forall output. Action -> HalogenM State Action () output Effect Unit
 ```
 
 This one can use functions from `HalogenM` and also effectful functions from `Aff`:
 
 ```purs
-handleAction :: forall o. Action -> HalogenM State Action () o Aff Unit
+handleAction :: forall output. Action -> HalogenM State Action () output Aff Unit
 ```
 
 It is more common in Halogen to use constraints on the type parameter `m` to describe what the monad can do rather than choose a specific monad, which allows you to mix several monads together as your application grows. For example, most Halogen apps would use functions from `Aff` via this type signature:
 
 ```purs
-handleAction :: forall o m. MonadAff m => Action -> HalogenM State Action () o m Unit
+handleAction :: forall output m. MonadAff m => Action -> HalogenM State Action () output m Unit
 ```
 
 This lets you do everything the hardcoded `Aff` type did, but it also lets you mix in other constraints too.
@@ -43,9 +43,9 @@ This lets you do everything the hardcoded `Aff` type did, but it also lets you m
 One last thing: when you choose a monad for your component it will show up in your `HalogenM` type, your `Component` type, and, if you are using child components, in your `ComponentHTML` type:
 
 ```purs
-component :: forall q i o m. MonadAff m => H.Component q i o m
+component :: forall query input output m. MonadAff m => H.Component query input output m
 
-handleAction :: forall o m. MonadAff m => Action -> HalogenM State Action () o m Unit
+handleAction :: forall output m. MonadAff m => Action -> HalogenM State Action () output m Unit
 
 -- We aren't using child components, so we don't have to use the constraint here, but
 -- we'll learn about when it's required in the parent & child components chapter.
@@ -84,7 +84,7 @@ type State = Maybe Number
 
 data Action = Regenerate
 
-component :: forall q i o m. MonadEffect m => H.Component HH.HTML q i o m
+component :: forall query input output m. MonadEffect m => H.Component query input output m
 component =
   H.mkComponent
     { initialState
@@ -92,7 +92,7 @@ component =
     , eval: H.mkEval $ H.defaultEval { handleAction = handleAction }
     }
 
-initialState :: forall i. i -> State
+initialState :: forall input. input -> State
 initialState _ = Nothing
 
 render :: forall m. State -> H.ComponentHTML Action () m
@@ -104,11 +104,11 @@ render state = do
     , HH.p_
         [ HH.text ("Current value: " <> value) ]
     , HH.button
-        [ HE.onClick \_ -> Just Regenerate ]
+        [ HE.onClick \_ -> Regenerate ]
         [ HH.text "Generate new number" ]
     ]
 
-handleAction :: forall o m. MonadEffect m => Action -> H.HalogenM State Action () o m Unit
+handleAction :: forall output m. MonadEffect m => Action -> H.HalogenM State Action () output m Unit
 handleAction = case _ of
   Regenerate -> do
     newNumber <- H.liftEffect random
@@ -124,7 +124,7 @@ Let's break down using this effect a little more.
 
 ```purs
 --                          [1]
-handleAction :: forall o m. MonadEffect m => Action -> H.HalogenM State Action () o m Unit
+handleAction :: forall output m. MonadEffect m => Action -> H.HalogenM State Action () output m Unit
 handleAction = case _ of
   Regenerate -> do
     newNumber <- H.liftEffect random -- [2]
@@ -184,7 +184,7 @@ data Action
   = SetUsername String
   | MakeRequest Event
 
-component :: forall q i o m. MonadAff m => H.Component HH.HTML q i o m
+component :: forall query input output m. MonadAff m => H.Component query input output m
 component =
   H.mkComponent
     { initialState
@@ -192,19 +192,19 @@ component =
     , eval: H.mkEval $ H.defaultEval { handleAction = handleAction }
     }
 
-initialState :: forall i. i -> State
+initialState :: forall input. input -> State
 initialState _ = { loading: false, username: "", result: Nothing }
 
 render :: forall m. State -> H.ComponentHTML Action () m
 render st =
   HH.form
-    [ HE.onSubmit \ev -> Just (MakeRequest ev) ]
+    [ HE.onSubmit \ev -> MakeRequest ev ]
     [ HH.h1_ [ HH.text "Look up GitHub user" ]
     , HH.label_
         [ HH.div_ [ HH.text "Enter username:" ]
         , HH.input
             [ HP.value st.username
-            , HE.onValueInput \str -> Just (SetUsername str)
+            , HE.onValueInput \str -> SetUsername str
             ]
         ]
     , HH.button
@@ -213,7 +213,7 @@ render st =
         ]
         [ HH.text "Fetch info" ]
     , HH.p_
-        [ HH.text (if st.loading then "Working..." else "") ]
+        [ HH.text $ if st.loading then "Working..." else "" ]
     , HH.div_
         case st.result of
           Nothing -> []
@@ -225,7 +225,7 @@ render st =
             ]
     ]
 
-handleAction :: forall o m. MonadAff m => Action -> H.HalogenM State Action () o m Unit
+handleAction :: forall output m. MonadAff m => Action -> H.HalogenM State Action () output m Unit
 handleAction = case _ of
   SetUsername username -> do
     H.modify_ _ { username = username, result = Nothing }
@@ -252,4 +252,3 @@ That last point is especially important: when you modify state your component re
 It's worth noting that because we're using `MonadAff` our request will not block the component from doing other work, and we don't have to deal with callbacks to get this async superpower. The computation we've written in `MakeRequest` simply suspends until we get the response and then proceeds to update the state the second time.
 
 It's a smart idea to only modify state when necessary and to batch updates together if possible (like how we call `modify_` once to update both the `loading` and `result` fields). That helps make sure you're only re-rendering when needed.
-

@@ -61,6 +61,9 @@ level = attr (AttrName "aria-level")
 live :: forall r i. String -> IProp r i
 live = attr (AttrName "aria-live")
 
+modal :: forall r i. String -> IProp r i
+modal = attr (AttrName "aria-modal")
+
 multiLine :: forall r i. String -> IProp r i
 multiLine = attr (AttrName "aria-multiline")
 

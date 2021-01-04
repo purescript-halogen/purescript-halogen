@@ -23,9 +23,8 @@
     "example-portal": "spago --config examples/portal/spago.dhall bundle-app --main Example.Portal.Main --to examples/portal/dist/example.js"
   },
   "devDependencies": {
-    "purescript": "^0.13.6",
-    "purescript-psa": "^0.7.3",
-    "rimraf": "^2.6.3",
-    "spago": "^0.15.2"
+    "purescript-psa": "^0.8.0",
+    "rimraf": "^3.0.2",
+    "spago": "^0.18.1"
   }
 }
