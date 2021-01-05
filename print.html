@@ -174,8 +174,8 @@
 <p>This documentation covers how to use Halogen and provides a concepts reference. There are also other resources for learning and using Halogen, including:</p>
 <ul>
 <li>The Halogen <a href="https://pursuit.purescript.org/packages/purescript-halogen">API Reference</a></li>
-<li><a href="https://github.com/JordanMartinez/learn-halogen">Learn Halogen</a> by <a href="https://github.com/JordanMartinez">Jordan Martinez</a></li>
 <li><a href="https://github.com/thomashoneyman/purescript-halogen-realworld">Real World Halogen</a> by <a href="https://github.com/thomashoneyman">Thomas Honeyman</a></li>
+<li><a href="https://github.com/JordanMartinez/learn-halogen">Learn Halogen</a> by <a href="https://github.com/JordanMartinez">Jordan Martinez</a></li>
 </ul>
 <h2><a class="header" href="#quick-start-halogen-guide" id="quick-start-halogen-guide">Quick Start: Halogen Guide</a></h2>
 <p>If you are new to Halogen we recommend starting with the <a href="./guide">Halogen Guide</a>. This short handbook demonstrates and explains Halogen concepts while building components.</p>
@@ -183,7 +183,11 @@
 <h2><a class="header" href="#going-deeper-concepts-reference" id="going-deeper-concepts-reference">Going Deeper: Concepts Reference</a></h2>
 <p>Once you're comfortable with the main concepts from the <a href="./guide">Halogen Guide</a> you may be interested in more advanced topics and in understanding why Halogen features are designed the way they are. The <a href="./concepts-reference">Concepts Reference</a> will help you understand Halogen at a deeper level.</p>
 <h2><a class="header" href="#major-version-changelog" id="major-version-changelog">Major Version Changelog</a></h2>
-<p>Major Halogen releases are accompanied by guides for transitioning from one version to the next in the <a href="./changelog">Major Version Changelog</a>.</p>
+<p>Major Halogen releases are accompanied by guides for transitioning from one version to the next in the <a href="./changelog">Major Version Changelog</a>. Currently, there are transition guides for the following versions:</p>
+<ul>
+<li><a href="./changelog/v6.html">v6</a></li>
+<li><a href="./changelog/v5.html">v5</a></li>
+</ul>
 <h1><a class="header" href="#halogen-guide" id="halogen-guide">Halogen Guide</a></h1>
 <p>Halogen is a declarative, component-based UI library for PureScript that emphasizes type safety. In this guide you will learn the core ideas and patterns needed to write real-world applications in Halogen.</p>
 <p>Here is a tiny Halogen app that lets you increment and decrement a counter:</p>
@@ -286,7 +290,7 @@ import Halogen.HTML.Properties as HP
 
 html =
   HH.div
-    [ HP.id_ &quot;root&quot; ]
+    [ HP.id &quot;root&quot; ]
     [ HH.input
         [ HP.placeholder &quot;Name&quot; ]
     , HH.button
@@ -302,7 +306,7 @@ html =
 <li>Only some values are possible for a button's <code>type</code> property, so Halogen restricts them with a sum type.</li>
 <li>CSS classes use a <code>ClassName</code> newtype so that they can be treated specially when needed; for example, the <code>classes</code> function ensures that your classes are space-separated when they're combined.</li>
 </ol>
-<p>Some HTML elements and properties clash with reserved keywords in PureScript or with common functions from the Prelude, so Halogen adds an underscore to them. That's why you see <code>type_</code> instead of <code>type</code> in the example above. (You also see <code>id_</code> instead of <code>id</code>, but in PureScript 0.12 the <code>id</code> function was renamed to <code>identity</code>; future versions of Halogen will just use <code>id</code> without an underscore.)</p>
+<p>Some HTML elements and properties clash with reserved keywords in PureScript or with common functions from the Prelude, so Halogen adds an underscore to them. That's why you see <code>type_</code> instead of <code>type</code> in the example above.</p>
 <p>When you don't need to set any properties on a Halogen HTML element, you can use its underscored version instead. For example, the <code>div</code> and <code>button</code> elements below have no properties:</p>
 <pre><code class="language-purs">html = HH.div [ ] [ HH.button [ ] [ HH.text &quot;Click me!&quot;] ]
 </code></pre>
@@ -417,7 +421,6 @@ sandbox = HH.prop (HH.PropName &quot;sandbox&quot;)
 
 import Prelude
 
-import Data.Maybe (Maybe(..))
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
@@ -435,9 +438,9 @@ component =
 
   render state =
     HH.div_
-      [ HH.button [ HE.onClick \_ -&gt; Just Decrement ] [ HH.text &quot;-&quot; ]
+      [ HH.button [ HE.onClick \_ -&gt; Decrement ] [ HH.text &quot;-&quot; ]
       , HH.text (show state)
-      , HH.button [ HE.onClick \_ -&gt; Just Increment ] [ HH.text &quot;+&quot; ]
+      , HH.button [ HE.onClick \_ -&gt; Increment ] [ HH.text &quot;+&quot; ]
       ]
 
   handleAction = case _ of
@@ -474,10 +477,10 @@ initialState _ = 0
 </code></pre>
 <h3><a class="header" href="#actions" id="actions">Actions</a></h3>
 <p>Halogen components can update state, perform effects, and communicate with other components in response to events that arise internally. Components use an &quot;action&quot; type to describe what kinds of things a component can do in response to internal events.</p>
-<p>Our counter has two internal events: </p>
+<p>Our counter has two internal events:</p>
 <ol>
 <li>a click event on the &quot;-&quot; button to decrement the count</li>
-<li>a click event on the &quot;+&quot; button to increment the count. </li>
+<li>a click event on the &quot;+&quot; button to increment the count.</li>
 </ol>
 <p>We can describe what our component should do in response to these events using a data type we'll call <code>Action</code>:</p>
 <pre><code class="language-purs">data Action = Increment | Decrement
@@ -486,7 +489,7 @@ initialState _ = 0
 <p>Just like how our state type had to be paired with an <code>initialState</code> function that describes how to produce a <code>State</code> value, our <code>Action</code> type should be paired with a function called <code>handleAction</code> that describes what to do when one of these actions occurs.</p>
 <pre><code class="language-purs">handleAction :: forall output m. Action -&gt; H.HalogenM State Action () output m Unit
 </code></pre>
-<p>As with our input type, we can leave type variables open for types that we aren't using. </p>
+<p>As with our input type, we can leave type variables open for types that we aren't using.</p>
 <ul>
 <li>The type <code>()</code> means our component has no child components. We could also leave it open as a type variable because we aren't using it -- <code>slots</code>, by convention -- but <code>()</code> is so short you'll see this type commonly used instead.</li>
 <li>The <code>output</code> type parameter is only used when your component communicates with a parent.</li>
@@ -496,7 +499,7 @@ initialState _ = 0
 <p>Here's the <code>handleAction</code> function for our counter:</p>
 <pre><code class="language-purs">handleAction :: forall output m. Action -&gt; H.HalogenM State Action () output m Unit
 handleAction = case _ of
-  Decrement -&gt; 
+  Decrement -&gt;
     H.modify_ \state -&gt; state - 1
 
   Increment -&gt;
@@ -513,7 +516,7 @@ handleAction = case _ of
 <h3><a class="header" href="#rendering" id="rendering">Rendering</a></h3>
 <p>Halogen components produce HTML from their state using a function called <code>render</code>. The render function runs every time the state changes. This is what makes Halogen declarative: for any given state, you describe the UI that it corresponds to. Halogen handles the workload of ensuring that state changes always result in the UI you described.</p>
 <p>Render functions in Halogen are pure, which means that you can't do things like get the current time, make network requests, or anything like that during rendering. All you can do is produce HTML for your state value.</p>
-<p>When we look at the type of our render function we can see the <code>ComponentHTML</code> type we touched on last chapter. This type is a more specialized version of the <code>HTML</code> type, meant specifically for HTML produced in components. Once again, we'll use <code>()</code>  and leave <code>m</code> open because they are only relevant when using child components, which we'll cover in a later chapter.</p>
+<p>When we look at the type of our render function we can see the <code>ComponentHTML</code> type we touched on last chapter. This type is a more specialized version of the <code>HTML</code> type, meant specifically for HTML produced in components. Once again, we'll use <code>()</code> and leave <code>m</code> open because they are only relevant when using child components, which we'll cover in a later chapter.</p>
 <pre><code class="language-purs">render :: forall m. State -&gt; H.ComponentHTML Action () m
 </code></pre>
 <p>Now that we're working with our render function, we're back to the Halogen HTML that should be familiar from the last chapter! You can write regular HTML in <code>ComponentHTML</code> just like we did last chapter:</p>
@@ -522,23 +525,23 @@ handleAction = case _ of
 render :: forall m. State -&gt; H.ComponentHTML Action () m
 render state =
   HH.div_
-    [ HH.button [ HE.onClick \_ -&gt; Just Decrement ] [ HH.text &quot;-&quot; ]
+    [ HH.button [ HE.onClick \_ -&gt; Decrement ] [ HH.text &quot;-&quot; ]
     , HH.text (show state)
-    , HH.button [ HE.onClick \_ -&gt; Just Increment ] [ HH.text &quot;+&quot; ]
+    , HH.button [ HE.onClick \_ -&gt; Increment ] [ HH.text &quot;+&quot; ]
     ]
 </code></pre>
 <h4><a class="header" href="#handling-events" id="handling-events">Handling Events</a></h4>
 <p>We can now see how to handle events in Halogen. First, you write the event handler in the properties array along with any other properties, attributes, and refs you might need. Then, you associate the event handler with an <code>Action</code> that your component knows how to handle. Finally, when the event occurs, your <code>handleAction</code> function is called to handle the event.</p>
 <p>You might be curious about why we provided an anonymous function to <code>onClick</code>. To see why, we can look at the actual type of <code>onClick</code>:</p>
-<pre><code class="language-purs">onClick 
+<pre><code class="language-purs">onClick
   :: forall row action
-   . (MouseEvent -&gt; Maybe action)
+   . (MouseEvent -&gt; action)
   -&gt; IProp (onClick :: MouseEvent | row) action
 
 -- Specialized to our component
-onClick 
+onClick
   :: forall row
-   . (MouseEvent -&gt; Maybe Action) 
+   . (MouseEvent -&gt; Action)
   -&gt; IProp (onClick :: MouseEvent | row) Action
 </code></pre>
 <p>In Halogen, event handlers take as their first argument a callback. This callback receives the DOM event that occurred (in the case of a click event, that's a <code>MouseEvent</code>), which contains some metadata you may want to use, and is then responsible for returning an action that Halogen should run in response to the event. In our case, we won't inspect the event itself, so we throw the argument away and return the action we want to run (<code>Increment</code> or <code>Decrement</code>).</p>
@@ -556,13 +559,13 @@ initialState = ...
 
 data Action = Increment | Decrement
 
-handleAction :: forall slots output m. Action -&gt; H.HalogenM State Action () output m Unit
+handleAction :: forall output m. Action -&gt; H.HalogenM State Action () output m Unit
 handleAction = ...
 
 render :: forall m. State -&gt; H.ComponentHTML Action () m
 render = ...
 </code></pre>
-<p>These types and functions are the core building blocks of a typical Halogen component. But they aren't sufficient on their own like this -- we need to bring them all together in one place. </p>
+<p>These types and functions are the core building blocks of a typical Halogen component. But they aren't sufficient on their own like this -- we need to bring them all together in one place.</p>
 <p>We'll do that using the <code>H.mkComponent</code> function. This function takes a <code>ComponentSpec</code>, which is a record containing an <code>initialState</code>, <code>render</code>, and <code>eval</code> function, and produces a <code>Component</code> from it:</p>
 <pre><code class="language-purs">component =
   H.mkComponent
@@ -579,14 +582,13 @@ render = ...
 <p>Our component is now complete, but we're missing one last type definition: our component type.</p>
 <h3><a class="header" href="#the-hcomponent-type" id="the-hcomponent-type">The <code>H.Component</code> Type</a></h3>
 <p>The <code>mkComponent</code> function produces a component from a <code>ComponentSpec</code>, which is a record of the functions that Halogen needs to run a component. We'll get into more detail about this type in a subsequent chapter.</p>
-<pre><code class="language-purs">mkComponent :: H.ComponentSpec ... -&gt; H.Component HH.HTML query input output m
+<pre><code class="language-purs">mkComponent :: H.ComponentSpec ... -&gt; H.Component query input output m
 </code></pre>
 <p>The resulting component has the type <code>H.Component</code>, which itself takes five type parameters that describe the public interface of the component. Our component doesn't communicate with parent components or child components, so it doesn't use any of these type variables. Still, we'll briefly step through them now so you know what's coming in subsequent chapters.</p>
-<ol>
-<li>The first parameter is always <code>HH.HTML</code>, indicating that the component produces Halogen HTML. It is possible for components to target things other than the DOM, in which case this would be different, but on the Web it's always <code>HH.HTML</code>.</li>
-<li>The second parameter <code>query</code> represents a way that parent components can communicate with this component. We will talk about it more when we talk about parent and child components.</li>
-<li>The third parameter <code>input</code> represents the input our component accepts. In our case, the component doesn't accept any input, so we'll leave this variable open.</li>
-<li>The fourth parameter <code>output</code> represents a way that this component can communicate with its parent component. We'll talk about it more when we talk about parent and child components.</li>
+<ol start="2">
+<li>The first parameter <code>query</code> represents a way that parent components can communicate with this component. We will talk about it more when we talk about parent and child components.</li>
+<li>The second parameter <code>input</code> represents the input our component accepts. In our case, the component doesn't accept any input, so we'll leave this variable open.</li>
+<li>The third parameter <code>output</code> represents a way that this component can communicate with its parent component. We'll talk about it more when we talk about parent and child components.</li>
 <li>The final parameter, <code>m</code>, represents the monad that can be used to run effects in the component. Our component doesn't run any effects, so we'll leave this variable open.</li>
 </ol>
 <p>Our counter component can therefore be specified by leaving all of the <code>H.Component</code> type variables open except for the first one, <code>HH.HTML</code>.</p>
@@ -597,7 +599,6 @@ render = ...
 
 import Prelude
 
-import Data.Maybe (Maybe(..))
 import Effect (Effect)
 import Halogen as H
 import Halogen.Aff as HA
@@ -614,7 +615,7 @@ type State = Int
 
 data Action = Increment | Decrement
 
-component :: forall query input output m. H.Component HH.HTML query input output m
+component :: forall query input output m. H.Component query input output m
 component =
   H.mkComponent
     { initialState
@@ -628,12 +629,12 @@ initialState _ = 0
 render :: forall m. State -&gt; H.ComponentHTML Action () m
 render state =
   HH.div_
-    [ HH.button [ HE.onClick \_ -&gt; Just Decrement ] [ HH.text &quot;-&quot; ]
+    [ HH.button [ HE.onClick \_ -&gt; Decrement ] [ HH.text &quot;-&quot; ]
     , HH.text (show state)
-    , HH.button [ HE.onClick \_ -&gt; Just Increment ] [ HH.text &quot;+&quot; ]
+    , HH.button [ HE.onClick \_ -&gt; Increment ] [ HH.text &quot;+&quot; ]
     ]
 
-handleAction :: forall o m. Action -&gt; H.HalogenM State Action () o m Unit
+handleAction :: forall output m. Action -&gt; H.HalogenM State Action () output m Unit
 handleAction = case _ of
   Decrement -&gt;
     H.modify_ \state -&gt; state - 1
@@ -653,7 +654,7 @@ handleAction = case _ of
 <p>Instead, Halogen lets you choose what monad you would like to use with <code>HalogenM</code> in your component. You gain access to all the capabilities of <code>HalogenM</code> <em>and also</em> whatever capabilities your chosen monad supports. This is represented with the type parameter <code>m</code>, which stands for &quot;monad&quot;.</p>
 <p>A component that only uses Halogen-specific features can leave this type parameter open. Our counter, for example, only updated state. But a component that performs effects can use the <code>Effect</code> or <code>Aff</code> monads, or you can supply a custom monad of your own.</p>
 <p>This <code>handleAction</code> is able to use functions from <code>HalogenM</code> like <code>modify_</code> and can also use effectful functions from <code>Effect</code>:</p>
-<pre><code class="language-purs">handleAction :: forall o. Action -&gt; HalogenM State Action () o Effect Unit
+<pre><code class="language-purs">handleAction :: forall output. Action -&gt; HalogenM State Action () output Effect Unit
 </code></pre>
 <p>This one can use functions from <code>HalogenM</code> and also effectful functions from <code>Aff</code>:</p>
 <pre><code class="language-purs">handleAction :: forall output. Action -&gt; HalogenM State Action () output Aff Unit
@@ -663,7 +664,7 @@ handleAction = case _ of
 </code></pre>
 <p>This lets you do everything the hardcoded <code>Aff</code> type did, but it also lets you mix in other constraints too.</p>
 <p>One last thing: when you choose a monad for your component it will show up in your <code>HalogenM</code> type, your <code>Component</code> type, and, if you are using child components, in your <code>ComponentHTML</code> type:</p>
-<pre><code class="language-purs">component :: forall query input output m. MonadAff m =&gt; H.Component HH.HTML query input output m
+<pre><code class="language-purs">component :: forall query input output m. MonadAff m =&gt; H.Component query input output m
 
 handleAction :: forall output m. MonadAff m =&gt; Action -&gt; HalogenM State Action () output m Unit
 
@@ -700,7 +701,7 @@ type State = Maybe Number
 
 data Action = Regenerate
 
-component :: forall query input output m. MonadEffect m =&gt; H.Component HH.HTML query input output m
+component :: forall query input output m. MonadEffect m =&gt; H.Component query input output m
 component =
   H.mkComponent
     { initialState
@@ -720,7 +721,7 @@ render state = do
     , HH.p_
         [ HH.text (&quot;Current value: &quot; &lt;&gt; value) ]
     , HH.button
-        [ HE.onClick \_ -&gt; Just Regenerate ]
+        [ HE.onClick \_ -&gt; Regenerate ]
         [ HH.text &quot;Generate new number&quot; ]
     ]
 
@@ -791,7 +792,7 @@ data Action
   = SetUsername String
   | MakeRequest Event
 
-component :: forall query input output m. MonadAff m =&gt; H.Component HH.HTML query input output m
+component :: forall query input output m. MonadAff m =&gt; H.Component query input output m
 component =
   H.mkComponent
     { initialState
@@ -799,19 +800,19 @@ component =
     , eval: H.mkEval $ H.defaultEval { handleAction = handleAction }
     }
 
-initialState :: forall i. i -&gt; State
+initialState :: forall input. input -&gt; State
 initialState _ = { loading: false, username: &quot;&quot;, result: Nothing }
 
 render :: forall m. State -&gt; H.ComponentHTML Action () m
 render st =
   HH.form
-    [ HE.onSubmit \ev -&gt; Just (MakeRequest ev) ]
+    [ HE.onSubmit \ev -&gt; MakeRequest ev ]
     [ HH.h1_ [ HH.text &quot;Look up GitHub user&quot; ]
     , HH.label_
         [ HH.div_ [ HH.text &quot;Enter username:&quot; ]
         , HH.input
             [ HP.value st.username
-            , HE.onValueInput \str -&gt; Just (SetUsername str)
+            , HE.onValueInput \str -&gt; SetUsername str
             ]
         ]
     , HH.button
@@ -820,7 +821,7 @@ render st =
         ]
         [ HH.text &quot;Fetch info&quot; ]
     , HH.p_
-        [ HH.text (if st.loading then &quot;Working...&quot; else &quot;&quot;) ]
+        [ HH.text $ if st.loading then &quot;Working...&quot; else &quot;&quot; ]
     , HH.div_
         case st.result of
           Nothing -&gt; []
@@ -906,7 +907,7 @@ data Action
   | Regenerate
   | Finalize
 
-component :: forall query input output m. MonadEffect m =&gt; H.Component HH.HTML query input output m
+component :: forall query input output m. MonadEffect m =&gt; H.Component query input output m
 component =
   H.mkComponent
     { initialState
@@ -930,7 +931,7 @@ render state = do
     , HH.p_
         [ HH.text (&quot;Current value: &quot; &lt;&gt; value) ]
     , HH.button
-        [ HE.onClick \_ -&gt; Just Regenerate ]
+        [ HE.onClick \_ -&gt; Regenerate ]
         [ HH.text &quot;Generate new number&quot; ]
     ]
 
@@ -1013,12 +1014,8 @@ handleAction = ...
 <p>Now, let's move to the other common source of internal events: event sources we've subscribed to.</p>
 <h2><a class="header" href="#subscriptions" id="subscriptions">Subscriptions</a></h2>
 <p>Sometimes you need to handle events arising internally that don't come from a user interacting with the Halogen HTML you've rendered. Two common sources are time-based actions and events that happen on an element outside one you've rendered (like the browser window).</p>
-<p>In Halogen these kinds of events come from <strong>event sources</strong>. Components can subscribe to event sources by providing an action that should run every time an event happens.</p>
-<p>Event sources are usually created with one of these functions:</p>
-<ol>
-<li><code>effectEventSource</code> and<code>affEventSource</code> let you produce an event source from an <code>Effect</code> or <code>Aff</code> function, respectively.</li>
-<li><code>eventListenerEventSource</code> lets you produce an event source by attaching an event listener to the DOM, like attaching a resize event to the browser window.</li>
-</ol>
+<p>In Halogen these kinds of events can be created manually with the <a href="https://github.com/paf31/purescript-event"><code>event</code></a> library. Halogen components can subscribe to an <code>Event</code> by providing an action that should run when the event happens.</p>
+<p>You can subscribe to events using functions from the <code>event</code> library, but Halogen provides a special helper function for subscribing to events from event listeners in the DOM called <code>eventListenerEventSource</code>.</p>
 <p>An event source can be thought of as a stream of actions: actions can be produced at any time from the event source, and your component will evaluate those actions so long as it remains subscribed to the event source. It's common to create an event source and subscribe to it when the component initializes, though you can subscribe or unsubscribe from an event source at any time.</p>
 <p>Let's see two examples of event sources in action: an <code>Aff</code>-based timer that counts the seconds since the component mounted and an event-listener-based stream that reports keyboard events on the document.</p>
 <h3><a class="header" href="#implementing-a-timer" id="implementing-a-timer">Implementing a Timer</a></h3>
@@ -1034,11 +1031,11 @@ import Effect.Aff (Milliseconds(..))
 import Effect.Aff as Aff
 import Effect.Aff.Class (class MonadAff)
 import Effect.Exception (error)
+import FRP.Event (Event)
+import FRP.Event as Event
 import Halogen as H
 import Halogen.Aff as HA
 import Halogen.HTML as HH
-import Halogen.Query.EventSource (EventSource)
-import Halogen.Query.EventSource as EventSource
 import Halogen.VDom.Driver (runUI)
 
 main :: Effect Unit
@@ -1050,7 +1047,7 @@ data Action = Initialize | Tick
 
 type State = Int
 
-component :: forall query input output m. MonadAff m =&gt; H.Component HH.HTML query input output m
+component :: forall query input output m. MonadAff m =&gt; H.Component query input output m
 component =
   H.mkComponent
     { initialState
@@ -1070,39 +1067,37 @@ render seconds = HH.text (&quot;You have been here for &quot; &lt;&gt; show seco
 handleAction :: forall output m. MonadAff m =&gt; Action -&gt; H.HalogenM State Action () output m Unit
 handleAction = case _ of
   Initialize -&gt; do
-    _ &lt;- H.subscribe timer
+    _ &lt;- H.subscribe =&lt;&lt; timer
     pure unit
 
   Tick -&gt;
     H.modify_ \state -&gt; state + 1
 
-timer :: forall m. MonadAff m =&gt; EventSource m Action
-timer = EventSource.affEventSource \emitter -&gt; do
-  fiber &lt;- Aff.forkAff $ forever do
+timer :: forall m. MonadAff m =&gt; m (Event Action)
+timer = do
+  { event, push } &lt;- H.liftEffect Event.create
+  _ &lt;- Aff.forkAff $ forever do
     Aff.delay $ Milliseconds 1000.0
-    EventSource.emit emitter Tick
-
-  pure $ EventSource.Finalizer do
-    Aff.killFiber (error &quot;Event source finalized&quot;) fiber
+    push Tick
+  pure event
 </code></pre>
 <p>Almost all of this code should look familiar, but there are two new parts.</p>
 <p>First, we've defined an event source that will emit a <code>Tick</code> action every second until it is closed:</p>
-<pre><code class="language-purs">timer :: forall m. MonadAff m =&gt; EventSource m Action
-timer = EventSource.affEventSource \emitter -&gt; do
-  fiber &lt;- Aff.forkAff $ forever do
+<pre><code class="language-purs">timer :: forall m. MonadAff m =&gt; m (Event Action)
+timer = do
+  { event, push } &lt;- H.liftEffect Event.create
+  _ &lt;- Aff.forkAff $ forever do
     Aff.delay $ Milliseconds 1000.0
-    EventSource.emit emitter Tick
-
-  pure $ EventSource.Finalizer do
-    Aff.killFiber (error &quot;Event source finalized&quot;) fiber
+    push Tick
+  pure event
 </code></pre>
-<p>The <code>affEventSource</code> and <code>effectEventSource</code> functions take a callback that provides you with an <code>Emitter</code>. You can use this with the <code>EventSource.emit</code> function to broadcast an action, or with the <code>EventSource.close</code> function to close the event source (this lets you close an event source from within, instead of having to wait for the event source to be closed by its subscriber or automatically when the component finalizes). You can return a cleanup function to run when the event source closes, called its finalizer. In this case, we use the finalizer to kill the fiber we forked to loop the count.</p>
+<p>When creating effectful event sources (as opposed to event sources tied to event listeners in the DOM), we can simply use functions from the <code>event</code> library. Most commonly you'll use <a href="https://pursuit.purescript.org/packages/purescript-event/docs/FRP.Event#v:create"><code>Event.create</code></a>, but if you need to manually control unsubscription you can also use <a href="https://pursuit.purescript.org/packages/purescript-event/docs/FRP.Event#v:makeEvent"><code>Event.makeEvent</code></a>.</p>
 <p>Second, we use the <code>subscribe</code> function from Halogen to attach to the event source:</p>
 <pre><code class="language-purs">  Initialize -&gt; do
-    _ &lt;- H.subscribe timer
+    _ &lt;- H.subscribe =&lt;&lt; timer
     pure unit
 </code></pre>
-<p>The <code>subscribe</code> function takes an event source as an argument and it returns a <code>SubscriptionId</code>. You can pass this <code>SubscriptionId</code> to the <code>unsubscribe</code> function at any point to close the event source, run its cleanup function, and stop listening to outputs from it. Components automatically unsubscribe from any event sources when the component finalizes, so we don't need to unsubscribe here.</p>
+<p>The <code>subscribe</code> function takes an <code>Event</code> as an argument and it returns a <code>SubscriptionId</code>. You can pass this <code>SubscriptionId</code> to the <code>unsubscribe</code> function at any point to close the event source, run its cleanup function, and stop listening to outputs from it. Components automatically unsubscribe from any event sources when the component finalizes, so we don't need to unsubscribe here.</p>
 <p>You may also be interested in the <a href="https://github.com/purescript-halogen/purescript-halogen/tree/master/examples/ace">Ace editor example</a>, which subscribes to events that happen inside a third-party JavaScript component and uses them to trigger actions in a Halogen component.</p>
 <h3><a class="header" href="#using-event-listeners-as-event-sources" id="using-event-listeners-as-event-sources">Using Event Listeners As Event Sources</a></h3>
 <p>Another common reason to use event sources is when you need to react to events in the DOM that don't arise directly from HTML elements you control. For example, we might want to listen to events that happen on the document itself.</p>
@@ -1119,7 +1114,7 @@ import Effect.Aff.Class (class MonadAff)
 import Halogen as H
 import Halogen.Aff as HA
 import Halogen.HTML as HH
-import Halogen.Query.EventSource (eventListenerEventSource)
+import Halogen.Query.Event (eventListenerEventSource)
 import Halogen.VDom.Driver (runUI)
 import Web.Event.Event as E
 import Web.HTML (window)
@@ -1139,7 +1134,7 @@ data Action
   = Initialize
   | HandleKey H.SubscriptionId KE.KeyboardEvent
 
-component :: forall query input output m. MonadAff m =&gt; H.Component HH.HTML query input output m
+component :: forall query input output m. MonadAff m =&gt; H.Component query input output m
 component =
   H.mkComponent
     { initialState
@@ -1189,13 +1184,12 @@ handleAction = case _ of
 <p>In this example we used the <code>H.subscribe'</code> function, which passes the <code>SubscriptionId</code> to the event source instead of returning it. This is an alternative that lets you keep the ID in the action type instead of the state, which can be more convenient.</p>
 <p>We wrote our event source right into our code to handle the <code>Initialize</code> action, which registers an event listener on the document and emits <code>HandleKey</code> every time a key is pressed.</p>
 <p><code>eventListenerEventSource</code> works a little differently from the other event sources. It uses types from the <code>purescript-web</code> libraries for working with the DOM to manually construct an event listener:</p>
-<pre><code>eventListenerEventSource
-  :: forall action m
-   . MonadAff m
-  =&gt; EventType
-  -&gt; EventTarget
-  -&gt; (Event -&gt; Maybe action)
-  -&gt; EventSource m action
+<pre><code class="language-purs">eventListenerEventSource
+  :: forall a
+   . Web.Event.EventType
+  -&gt; Web.Event.EventTarget.EventTarget
+  -&gt; (Web.Event.Event -&gt; Maybe a)
+  -&gt; FRP.Event.Event a
 </code></pre>
 <p>It takes a type of event to listen to (in our case: <code>keyup</code>), a target indicating where to listen for events (in our case: the <code>HTMLDocument</code> itself), and a callback function that transforms the events that occur into a type that should be emitted (in our case: we emit our <code>Action</code> type by capturing the event in the <code>HandleKey</code> constructor).</p>
 <h2><a class="header" href="#wrapping-up" id="wrapping-up">Wrapping Up</a></h2>
@@ -1217,7 +1211,7 @@ handleAction = case _ of
 <li>A child component can emit <em>output messages</em> to the parent component, notifying it when an important event has occurred.</li>
 </ol>
 <p>These type parameters are represented in the <code>Component</code> type, and some are also found in the <code>ComponentHTML</code> and <code>HalogenM</code> types. For example, a component that supports queries, input, and output messages will have this <code>Component</code> type:</p>
-<pre><code class="language-purs">component :: forall m. H.Component HH.HTML Query Input Output m
+<pre><code class="language-purs">component :: forall m. H.Component Query Input Output m
 </code></pre>
 <p>You can think of the ways a component can communicate with other components as its <em>public interface</em>, and the public interface shows up in the <code>Component</code> type.</p>
 <p>In this chapter we'll learn about:</p>
@@ -1242,7 +1236,7 @@ import Prelude
 import Halogen as H
 import Halogen.HTML as HH
 
-parent :: forall query input output m. H.Component HH.HTML query input output m
+parent :: forall query input output m. H.Component query input output m
 parent =
   H.mkComponent
     { initialState: identity
@@ -1262,7 +1256,7 @@ button { label } = HH.button [ ] [ HH.text label ]
 
 type State = { label :: String }
 
-button :: forall query output m. H.Component HH.HTML query Input output m
+button :: forall query output m. H.Component query Input output m
 button =
   H.mkComponent
     { initialState
@@ -1299,13 +1293,13 @@ button =
 <p>Conceptually, components occupy a &quot;slot&quot; in your tree of HTML. This slot is a place where the component can produce Halogen HTML until it is removed from the DOM. A component in a slot can be thought of as a dynamic, stateful HTML element. You can freely intermix these dynamic elements with ordinary Halogen HTML elements, but the dynamic elements need more information.</p>
 <p>That extra information comes from the <code>slot</code> function and the slot type used in <code>ComponentHTML</code>, which we've so far been leaving as the empty row, <code>()</code>. We'll talk a lot more about rendering components in slots in a moment, but for now let's get things compiling.</p>
 <p>We can fix our <code>render</code> function by rendering our component in a slot via the <code>slot</code> function. We'll also update the slot type in our <code>ComponentHTML</code> to include the component our Halogen HTML now must support. This diff demonstrates the differences between rendering an HTML element and rendering a component:</p>
-<pre><code class="language-diff">+ import Data.Symbol (SProxy(..))
+<pre><code class="language-diff">+ import Type.Proxy (Proxy(..))
 +
 + type Slots = ( button :: forall query. H.Slot query Void Int )
 +
-+ _button = SProxy :: SProxy &quot;button&quot;
++ _button = Proxy :: Proxy &quot;button&quot;
 
-  parent :: forall query input output m. H.Component HH.HTML query input output m
+  parent :: forall query input output m. H.Component query input output m
   parent =
     H.mkComponent
       { initialState: identity
@@ -1317,21 +1311,21 @@ button =
 +   render :: forall state action. state -&gt; H.ComponentHTML action Slots m
     render _ =
 -     HH.div_ [ button { label: &quot;Click Me&quot; } ]
-+     HH.div_ [ HH.slot _button 0 button { label: &quot;Click Me&quot; } absurd ]
++     HH.div_ [ HH.slot_ _button 0 button { label: &quot;Click Me&quot; } ]
 </code></pre>
 <p>Our parent component is now rendering a child component -- our button component. Rendering a component introduced two big changes:</p>
 <ol>
-<li>We used the <code>slot</code> function to render the component, which takes several arguments we haven't explored yet. Two of those arguments are the <code>button</code> component itself and the label it needs as input.</li>
+<li>We used the <code>slot_</code> function to render the component, which takes several arguments we haven't explored yet. Two of those arguments are the <code>button</code> component itself and the label it needs as input.</li>
 <li>We added a new type called <code>Slots</code>, which is a row containing a label for our button component with a value of type <code>H.Slot</code>, and we used this new type in our <code>ComponentHTML</code> instead of the previous empty row <code>()</code> we've seen so far.</li>
 </ol>
-<p>The <code>slot</code> function and <code>Slot</code> type let you render a stateful, effectful child component in your Halogen HTML as if it were any other HTML element. But why are there so many arguments and types involved in doing this? Why can't we just call <code>button</code> with its input?</p>
+<p>The <code>slot</code> and <code>slot_</code> functions and the <code>Slot</code> type let you render a stateful, effectful child component in your Halogen HTML as if it were any other HTML element. But why are there so many arguments and types involved in doing this? Why can't we just call <code>button</code> with its input?</p>
 <p>The answer is that Halogen provides two ways for a parent and child component to communicate with one another, and we need to ensure that this communication is type-safe. The <code>slot</code> function allows us to:</p>
 <ol>
-<li>Decide how to identify a particular component by a label (the type-level string &quot;button&quot;, which we represent at the term level with the symbol proxy <code>SProxy :: SProxy &quot;button&quot;</code>) and a unique identifier (the integer <code>0</code>, in this case) so that we can send it <em>queries</em>.</li>
-<li>Render the component (<code>button</code>) and give it its <em>input</em> (<code>{ label: &quot;Click Me&quot; }</code>), which will be re-sent every time the parent component renders in case the input changes over time.</li>
-<li>Decide how to handle <em>output messages</em> from the child component (here, <code>absurd</code>, which is used when a child component doesn't have any output).</li>
+<li>Decide how to identify a particular component by a label (the type-level string &quot;button&quot;, which we represent at the term level with the proxy <code>Proxy :: Proxy &quot;button&quot;</code>) and a unique identifier (the integer <code>0</code>, in this case) so that we can send it <em>queries</em>. This is an imperative form of communication from the parent to the child.</li>
+<li>Render the component (<code>button</code>) and give it its <em>input</em> (<code>{ label: &quot;Click Me&quot; }</code>), which will be re-sent every time the parent component renders in case the input changes over time. This is a declarative form of communication from the parent to the child.</li>
+<li>Decide how to handle <em>output messages</em> from the child component. The <code>slot</code> function lets you provide a handler for child outputs, while the <code>slot_</code> function can be used when a child component doesn't have any outputs or you want to ignore them. This is communication from the child to the parent.</li>
 </ol>
-<p>The <code>slot</code> function and the <code>H.Slot</code> type let us manage these three communication mechanisms in a type-safe way. In the rest of this chapter we'll focus on how parent and child components communicate with one another, and along the way we'll explore slots and slot types.</p>
+<p>The <code>slot</code> and <code>slot_</code> functions and the <code>H.Slot</code> type let us manage these three communication mechanisms in a type-safe way. In the rest of this chapter we'll focus on how parent and child components communicate with one another, and along the way we'll explore slots and slot types.</p>
 <h2><a class="header" href="#communicating-among-components" id="communicating-among-components">Communicating Among Components</a></h2>
 <p>When you move from using one component to using many components you'll soon need some way for them to communicate with one another. In Halogen there are three ways that a parent and child component can communicate directly:</p>
 <ol>
@@ -1356,17 +1350,18 @@ import Prelude
 
 import Control.Monad.Rec.Class (forever)
 import Data.Maybe (Maybe(..))
-import Data.Symbol (SProxy(..))
 import Effect (Effect)
 import Effect.Aff (Milliseconds(..))
 import Effect.Aff as Aff
 import Effect.Aff.Class (class MonadAff)
 import Effect.Exception (error)
+import FRP.Event (Event)
+import FRP.Event as Event
 import Halogen as H
 import Halogen.Aff (awaitBody, runHalogenAff)
 import Halogen.HTML as HH
-import Halogen.Query.EventSource as EventSource
 import Halogen.VDom.Driver (runUI)
+import Type.Proxy (Proxy(..))
 
 main :: Effect Unit
 main = runHalogenAff do
@@ -1375,13 +1370,13 @@ main = runHalogenAff do
 
 type Slots = ( button :: forall q. H.Slot q Void Unit )
 
-_button = SProxy :: SProxy &quot;button&quot;
+_button = Proxy :: Proxy &quot;button&quot;
 
 type ParentState = { count :: Int }
 
 data ParentAction = Initialize | Increment
 
-parent :: forall query input output m. MonadAff m =&gt; H.Component HH.HTML query input output m
+parent :: forall query input output m. MonadAff m =&gt; H.Component query input output m
 parent =
   H.mkComponent
     { initialState
@@ -1397,19 +1392,16 @@ parent =
 
   render :: ParentState -&gt; H.ComponentHTML ParentAction Slots m
   render { count } =
-    HH.div_ [ HH.slot _button unit button { label: show count } absurd ]
+    HH.div_ [ HH.slot_ _button unit button { label: show count } ]
 
   handleAction :: ParentAction -&gt; H.HalogenM ParentState ParentAction Slots output m Unit
   handleAction = case _ of
     Initialize -&gt; do
-      void $ H.subscribe $ EventSource.affEventSource \emitter -&gt; do
-        fiber &lt;- Aff.forkAff $ forever do
-          Aff.delay $ Milliseconds 1000.0
-          EventSource.emit emitter Increment
-
-        pure $ EventSource.Finalizer do
-          Aff.killFiber (error &quot;Event source finalized&quot;) fiber
-
+      { event, push } &lt;- H.liftEffect Event.create
+      void $ H.subscribe event
+      void $ Aff.forkAff $ forever do
+        Aff.delay $ Milliseconds 1000.0
+        push Increment
     Increment -&gt;
       H.modify_ \st -&gt; st { count = st.count + 1 }
 
@@ -1419,7 +1411,7 @@ type ButtonInput = { label :: String }
 
 type ButtonState = { label :: String }
 
-button :: forall query output m. H.Component HH.HTML query ButtonInput output m
+button :: forall query output m. H.Component query ButtonInput output m
 button =
   H.mkComponent
     { initialState
@@ -1441,7 +1433,7 @@ type ButtonInput = { label :: String }
 
 type ButtonState = { label :: String }
 
-button :: forall query output m. H.Component HH.HTML query ButtonInput output m
+button :: forall query output m. H.Component query ButtonInput output m
 button =
   H.mkComponent
     { initialState
@@ -1476,14 +1468,16 @@ button =
 <p>In Halogen we'd handle this situation by designing the modal (the child component) to raise an <strong>output message</strong> to the parent component. The parent component can then handle the message like any other action in its <code>handleAction</code> function. Conceptually, it's as though the child component is an event source the that the parent component automatically subscribes to.</p>
 <p>Concretely, our modal could raise a <code>Closed</code> output to the parent component. The parent could then change its state to indicate the modal should no longer display, and on the next render the modal is removed from the DOM.</p>
 <p>As a tiny example, let's consider how we'd design a button that lets the parent component decide what to do when it is clicked:</p>
-<pre><code class="language-purs">-- This component can notify parent components of one event, `Clicked`
+<pre><code class="language-purs">module Button where
+
+-- This component can notify parent components of one event, `Clicked`
 data Output = Clicked
 
 -- This component can handle one internal event, `Click`
 data Action = Click
 
 -- Our output type shows up in our `Component` type
-button :: forall query input m. H.Component HH.HTML query input Output m
+button :: forall query input m. H.Component query input Output m
 button =
   H.mkComponent
     { initialState: identity
@@ -1493,7 +1487,7 @@ button =
   where
   render _ =
     HH.button
-      [ HE.onClick \_ -&gt; Just Click ]
+      [ HE.onClick \_ -&gt; Click ]
       [ HH.text &quot;Click me&quot; ]
 
   -- Our output type also shows up in our `HalogenM` type, because this is
@@ -1520,13 +1514,15 @@ button =
 <p>Let's start writing our parent component by writing a slot type:</p>
 <pre><code class="language-purs">module Parent where
 
+import Button as Button
+
 type Slots = ( button :: forall query. H.Slot query Button.Output Int )
 
 -- We can refer to the `button` label using a symbol proxy, which is a
 -- way to refer to a type-level string like `button` at the value level.
 -- We define this for convenience, so we can use _button to refer to its
--- label in the slot type rather than write `SProxy` over and over.
-_button = SProxy :: SProxy &quot;button&quot;
+-- label in the slot type rather than write `Proxy` over and over.
+_button = Proxy :: Proxy &quot;button&quot;
 </code></pre>
 <p>Our slot type is a row, where each label designates a particular <em>type</em> of child component we support, in each case using the type <code>H.Slot</code>:</p>
 <pre><code class="language-purs">H.Slot query output id
@@ -1538,7 +1534,7 @@ _button = SProxy :: SProxy &quot;button&quot;
 <pre><code class="language-purs">data Action = HandleButton Button.Output
 </code></pre>
 <p>When this action occurs in our component, we can unwrap it to get the <code>Button.Output</code> value and use that to decide what code to evaluate. Now that we have our slot and action types handled, let's write our parent component:</p>
-<pre><code class="language-purs">parent :: forall query input output m. H.Component HH.HTML query input output m
+<pre><code class="language-purs">parent :: forall query input output m. H.Component query input output m
 parent =
   H.mkComponent
     { initialState: identity
@@ -1549,7 +1545,7 @@ parent =
   render :: forall state. state -&gt; H.ComponentHTML Action Slots m
   render _ =
     HH.div_
-      [ HH.slot _button 0 button unit (Just &lt;&lt;&lt; HandleButton) ]
+      [ HH.slot _button 0 button unit HandleButton ]
 
   handleAction :: forall state. Action -&gt; H.HalogenM state Action Slots output m Unit
   handleAction = case _ of
@@ -1574,7 +1570,7 @@ parent =
   = Tell a
   | Request (Boolean -&gt; a)
 </code></pre>
-<p>We can interpret this query as meaning &quot;A parent component can tell this component to do something with <code>Tell</code> and it can request a <code>Boolean</code> from this component with <code>Request</code>.&quot; When you implement a query type, remember that the <code>a</code> type parameter should be present in every constructor. It should be the final argument for tell-style queries and be the result of a function type for request-style queries.</p>
+<p>We can interpret this query as meaning &quot;A parent component can tell this component to do something with the <code>tell</code> function and it can request a <code>Boolean</code> from this component with the <code>request</code> function.&quot; When you implement a query type, remember that the <code>a</code> type parameter should be present in every constructor. It should be the final argument for tell-style queries and be the result of a function type for request-style queries.</p>
 <p>Queries are handled with a <code>handleQuery</code> function in your eval spec, just like how actions are handled with a <code>handleAction</code> function. Let's write a <code>handleQuery</code> function for our custom data type, assuming some state, action, and output types have already been defined:</p>
 <pre><code class="language-purs">handleQuery :: forall a m. Query a -&gt; H.HalogenM State Action () Output m (Maybe a)
 handleQuery = case _ of
@@ -1608,7 +1604,7 @@ data Query a
 type State = { count :: Int }
 
 -- Our query type shows up in our `Component` type
-counter :: forall input output m. H.Component HH.HTML Query input output m
+counter :: forall input output m. H.Component Query input output m
 counter =
   H.mkComponent
     { initialState: \_ -&gt; { count: 0 }
@@ -1643,14 +1639,14 @@ counter =
 
 type Slots = ( counter :: H.Slot Counter.Query Void Int )
 
-_counter = SProxy :: SProxy &quot;counter&quot;
+_counter = Proxy :: Proxy &quot;counter&quot;
 </code></pre>
 <p>Our slot type records the counter component with its query type and leaves its output message type as <code>Void</code> to indicate there are none.</p>
 <p>When our parent component initializes, we'll fetch the count from the child component, then increment it, and then get the count again so we can see that it has increased. To do that, we'll need an action to run on initialize:</p>
 <pre><code class="language-purs">data Action = Initialize
 </code></pre>
 <p>Now, we can move on to our component definition.</p>
-<pre><code class="language-purs">parent :: forall query input output m. H.Component HH.HTML query input output m
+<pre><code class="language-purs">parent :: forall query input output m. H.Component query input output m
 parent =
   H.mkComponent
     { initialState: identity
@@ -1664,43 +1660,27 @@ parent =
   render :: forall state. state -&gt; H.ComponentHTML Action Slots m
   render _ =
     HH.div_
-      [ HH.slot _counter unit counter unit absurd ]
+      [ HH.slot_ _counter unit counter unit ]
 
   handleAction :: forall state. Action -&gt; H.HalogenM state Action Slots output m Unit
   handleAction = case _ of
     Initialize -&gt;
       -- startCount :: Maybe Int
-      startCount &lt;- H.query _counter unit $ H.request Counter.GetCount
+      startCount &lt;- H.request _counter unit Counter.GetCount
       -- _ :: Maybe Unit
-      _ &lt;- H.query _counter unit $ H.tell Counter.Increment
+      H.tell _counter unit Counter.Increment
       -- endCount :: Maybe Int
-      endCount &lt;- H.query _counter unit $ H.request Counter.GetCount
+      endCount &lt;- H.request _counter unit Counter.GetCount
 
       when (startCount /= endCount) do
         -- ... do something
 </code></pre>
 <p>There are several things to notice here.</p>
 <ol>
-<li>We used the symbol proxy for the counter's label in the slot type, <code>_counter</code>, along with its identifier, <code>unit</code>, both to render the component with the <code>slot</code> function and also to send queries to the component with the <code>query</code> function. The label and identifier are always used to work with a particular child component.</li>
-<li>We used the <code>H.query</code> function with the component's label and identifier to send it a query. We used the <code>H.tell</code> function to send the tell-style query <code>Increment</code>, and we used the <code>H.request</code> function to send the request-style query <code>GetCount</code>. The <code>GetCount</code> query had a reply function of type <code>(Int -&gt; a)</code>, so you'll notice that when we used it we received a <code>Maybe Int</code> in return.</li>
+<li>We used the proxy for the counter's label in the slot type, <code>_counter</code>, along with its identifier, <code>unit</code>, both to render the component with the <code>slot</code> function and also to send queries to the component with the <code>tell</code> and <code>request</code> functions. The label and identifier are always used to work with a particular child component.</li>
+<li>We used the <code>H.tell</code> function to send the tell-style query <code>Increment</code>, and we used the <code>H.request</code> function to send the request-style query <code>GetCount</code>. The <code>GetCount</code> query had a reply function of type <code>(Int -&gt; a)</code>, so you'll notice that when we used it we received a <code>Maybe Int</code> in return.</li>
 </ol>
-<p>The <code>query</code> function takes a label, a slot identifier, and a query to send. It returns the response wrapped in a <code>Maybe</code>, where <code>Nothing</code> signifies that the query failed (either the child component returned <code>Nothing</code>, or no component exists at the label and slot identifier you provided). There is also a <code>queryAll</code> function that sends the same query to <em>all</em> components at a given label.</p>
-<p>The <code>query</code> function wants to take a fully-applied query to send to the child component. The <code>tell</code> and <code>request</code> functions are conveniences for creating tell-style and request-style queries, but you don't strictly need to use them. We could also have written:</p>
-<pre><code class="language-purs">startCount &lt;- H.query _counter unit $ Counter.GetCount (identity :: Int -&gt; Int)
-_ &lt;- H.query _counter unit $ Counter.Increment unit
-</code></pre>
-<p>The <code>Counter.GetCount</code> constructor takes a function of type <code>(Int -&gt; a)</code>, where <code>a</code> can be anything, so we can supply the <code>identity</code> function to mean &quot;Return the <code>Int</code> that you received.&quot; The <code>Counter.Increment</code> constructor takes a value of type <code>a</code>, where <code>a</code> can be anything; since we just get the value we provided back, we don't care about it, and so by convention tell-style queries supply <code>unit</code> for <code>a</code>.</p>
-<p>In almost all cases we supply <code>identity</code> to request-style queries and <code>unit</code> to tell-style queries, so the <code>tell</code> and <code>request</code> functions help hide away the implementation by doing this for us.</p>
-<pre><code class="language-purs">type Tell f = Unit -&gt; f Unit
-
-tell :: forall f. Tell f -&gt; f Unit
-tell query = query unit
-
-type Request f a = (a -&gt; a) -&gt; f a
-
-request :: forall f a. Request f a -&gt; f a
-request query = query identity
-</code></pre>
+<p>The <code>tell</code> and <code>request</code> functions take a label, a slot identifier, and a query to send. The <code>tell</code> function doesn't return anything, but the <code>request</code> function returns a response from the child wrapped in <code>Maybe</code>, where <code>Nothing</code> signifies that the query failed (either the child component returned <code>Nothing</code>, or no component exists at the label and slot identifier you provided). There are also <code>tellAll</code> and <code>requestAll</code> functions that send the same query to <em>all</em> components at a given label.</p>
 <p>Many people find queries to be the most confusing part of the Halogen library. Luckily, queries aren't used nearly so much as the other Halogen features we've learned about in this guide, and if you get stuck you can always return to this section of the guide as a reference.</p>
 <h2><a class="header" href="#component-slots" id="component-slots">Component Slots</a></h2>
 <p>We've learned a lot about how components communicate with one another. Before we move on to our final example let's recap what we've learned about slots along the way.</p>
@@ -1746,7 +1726,6 @@ type Slot id = H.Slot Query Output id
 import Prelude
 
 import Data.Maybe (Maybe(..))
-import Data.Symbol (SProxy(..))
 import Effect (Effect)
 import Effect.Class (class MonadEffect)
 import Effect.Class.Console (logShow)
@@ -1755,6 +1734,7 @@ import Halogen.Aff as HA
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.VDom.Driver (runUI)
+import Type.Proxy (Proxy(..))
 
 main :: Effect Unit
 main = HA.runHalogenAff do
@@ -1776,7 +1756,7 @@ type ParentState = { clicked :: Int }
 
 -- The parent component uses no query, input, or output types of its own. It can
 -- use any monad so long as that monad can run `Effect` functions.
-parent :: forall query input output m. MonadEffect m =&gt; H.Component HH.HTML query input output m
+parent :: forall query input output m. MonadEffect m =&gt; H.Component query input output m
 parent =
   H.mkComponent
     { initialState
@@ -1798,11 +1778,11 @@ parent =
     let clicks = show clicked
     HH.div_
       [ -- We render our first button with the slot id 0
-        HH.slot _button 0 button { label: clicks &lt;&gt; &quot; Enabled&quot; } (Just &lt;&lt;&lt; HandleButton)
+        HH.slot _button 0 button { label: clicks &lt;&gt; &quot; Enabled&quot; } HandleButton
         -- We render our second button with the slot id 1
-      , HH.slot _button 1 button { label: clicks &lt;&gt; &quot; Power&quot; } (Just &lt;&lt;&lt; HandleButton)
+      , HH.slot _button 1 button { label: clicks &lt;&gt; &quot; Power&quot; } HandleButton
         -- We render our third button with the slot id 2
-      , HH.slot _button 2 button { label: clicks &lt;&gt; &quot; Switch&quot; } (Just &lt;&lt;&lt; HandleButton)
+      , HH.slot _button 2 button { label: clicks &lt;&gt; &quot; Switch&quot; } HandleButton
       ]
 
   handleAction :: ParentAction -&gt; H.HalogenM ParentState ParentAction Slots output m Unit
@@ -1817,8 +1797,8 @@ parent =
         -- then send a query to all the child components requesting their current
         -- enabled state, which we log to the console.
         H.modify_ \state -&gt; state { clicked = state.clicked + 1 }
-        _ &lt;- H.query _button 0 $ H.tell (SetEnabled true)
-        on &lt;- H.queryAll _button $ H.request GetEnabled
+        H.tell _button 0 (SetEnabled true)
+        on &lt;- H.requestAll _button GetEnabled
         logShow on
 
 -- We now move on to the child component, a component called `button`.
@@ -1830,7 +1810,7 @@ type ButtonSlot = H.Slot ButtonQuery ButtonOutput
 
 -- We think our button will have the label &quot;button&quot; in the row where it's used,
 -- so we're exporting a symbol proxy for convenience.
-_button = SProxy :: SProxy &quot;button&quot;
+_button = Proxy :: Proxy &quot;button&quot;
 
 -- This component accepts two queries. The first is a request-style query that
 -- lets a parent component request a `Boolean` value from us. The second is a
@@ -1859,7 +1839,7 @@ type ButtonState = { label :: String, enabled :: Boolean }
 -- type `ButtonInput`, and can send outputs of type `ButtonOutput`. It doesn't
 -- perform any effects, which we can tell because the `m` type parameter has
 -- no constraints.
-button :: forall m. H.Component HH.HTML ButtonQuery ButtonInput ButtonOutput m
+button :: forall m. H.Component ButtonQuery ButtonInput ButtonOutput m
 button =
   H.mkComponent
     { initialState
@@ -1881,7 +1861,7 @@ button =
   render :: ButtonState -&gt; H.ComponentHTML ButtonAction () m
   render { label, enabled } =
     HH.button
-      [ HE.onClick \_ -&gt; Just Click ]
+      [ HE.onClick \_ -&gt; Click ]
       [ HH.text $ label &lt;&gt; &quot; (&quot; &lt;&gt; (if enabled then &quot;on&quot; else &quot;off&quot;) &lt;&gt; &quot;)&quot; ]
 
   handleAction
@@ -1940,7 +1920,7 @@ component = ...
 <p>The most important function used in <code>main</code> is the <code>runUI</code> function. Provide <code>runUI</code> with your root component, the root component's input value, and a reference to a DOM element, and it will provide your application to the Halogen virtual DOM. The virtual DOM will then render your application at that element and maintain it there for as long as your app is running.</p>
 <pre><code class="language-purs">runUI
   :: forall query input output
-   . Component HTML query input output Aff
+   . Component query input output Aff
   -&gt; input
   -&gt; DOM.HTMLElement
   -&gt; Aff (HalogenIO query output Aff)
@@ -1956,69 +1936,71 @@ component = ...
 <li><code>selectElement</code> can be used to target a particular element on the page to embed the app within</li>
 </ol>
 <h2><a class="header" href="#using-halogenio" id="using-halogenio">Using <code>HalogenIO</code></a></h2>
-<p>When you run your Halogen application with <code>runUI</code> you receive a record of functions with the type <code>DriverIO</code>. These functions can be used to control your root component from outside the application. Conceptually, they're like a makeshift parent component for your application.</p>
+<p>When you run your Halogen application with <code>runUI</code> you receive a record of functions with the type <code>HalogenIO</code>. These functions can be used to control your root component from outside the application. Conceptually, they're like a makeshift parent component for your application.</p>
 <pre><code class="language-purs">type HalogenIO query output m =
   { query :: forall a. query a -&gt; m (Maybe a)
-  , subscribe :: Control.Coroutine.Consumer output m Unit -&gt; m Unit
+  , messages :: Event output
   , dispose :: m Unit
   }
 </code></pre>
 <ol>
-<li>The <code>query</code> function should look similar to you -- it's like the ordinary <code>H.query</code> function we used for parent components to imperatively tell a child component to do something or to request some information from it.</li>
-<li>The <code>subscribe</code> function can be used to subscribe to a stream of output messages from the component -- it's like the handler we provided to the <code>slot</code> function, except rather than evaluate an action here we can perform some effect instead.</li>
+<li>The <code>query</code> function is like the <code>H.query</code> function which underpins <code>tell</code> and <code>request</code>. This allows you to send queries to the root component of your application from outside the application.</li>
+<li>The <code>messages</code> event can be used to subscribe to a stream of output messages from the component -- it's like the handler we provided to the <code>slot</code> function, except rather than evaluate an action here we can perform some effect instead.</li>
 <li>The <code>dispose</code> function can be used to halt and clean up the Halogen application. This will kill any forked threads, close all subscriptions, and so on.</li>
 </ol>
+<p>You can't use <code>tell</code> and <code>request</code> at the root of your application, but you can use the <code>mkTell</code> and <code>mkRequest</code> functions (as seen in the example below) for a similar effect.</p>
 <p>A common pattern in Halogen applications is to use a <code>Route</code> component as the root of the application, and use the <code>query</code> function from <code>HalogenIO</code> to trigger route changes in the application when the URL changes. You can see a full example of doing this in the <a href="https://github.com/thomashoneyman/purescript-halogen-realworld/blob/master/src/Main.purs">Real World Halogen <code>Main.purs</code> file</a>.</p>
 <h2><a class="header" href="#full-example-controlling-a-button-with-halogenio" id="full-example-controlling-a-button-with-halogenio">Full Example: Controlling a Button With <code>HalogenIO</code></a></h2>
 <p>You can paste this example into <a href="https://try.purescript.org">Try PureScript</a> to explore using <code>HalogenIO</code> to control the root component of an application.</p>
-<pre><code class="language-purs">module Main where
+<pre><code class="language-purs">module Example.Driver.IO.Main where
 
 import Prelude
 
-import Control.Coroutine as CR
-import Data.Array as Array
 import Data.Maybe (Maybe(..))
 import Effect (Effect)
+import Effect.Console (log)
+import Example.Driver.IO.Button as B
+import FRP.Event as Event
+import Halogen (liftEffect)
 import Halogen as H
-import Halogen.Aff as HA
 import Halogen.HTML as HH
+import Halogen.Aff as HA
 import Halogen.HTML.Events as HE
+import Halogen.HTML.Properties as HP
 import Halogen.VDom.Driver (runUI)
 
 main :: Effect Unit
 main = HA.runHalogenAff do
   body &lt;- HA.awaitBody
-  io &lt;- runUI component unit body
-  
-  -- Log a message from outside the application by sending it to the button
-  let logMessage str = void $ io.query $ H.tell $ AppendMessage str
+  io &lt;- runUI B.component unit body
 
-  io.subscribe $ CR.consumer \(Toggled newState) -&gt; do
-    logMessage $ &quot;Button was internally toggled to: &quot; &lt;&gt; show newState
+  _ &lt;- liftEffect $ Event.subscribe io.messages \(Toggled newState) -&gt; do
+    liftEffect $ log $ &quot;Button was internally toggled to: &quot; &lt;&gt; show newState
     pure Nothing
 
-  state0 &lt;- io.query $ H.request IsOn
-  logMessage $ &quot;The button state is currently: &quot; &lt;&gt; show state0
+  state0 &lt;- io.query $ H.mkRequest IsOn
+  liftEffect $ log $ &quot;The button state is currently: &quot; &lt;&gt; show state0
 
-  _ &lt;- io.query $ H.tell $ SetEnabled true
+  void $ io.query $ H.mkTell (B.SetState true)
 
-  state1 &lt;- io.query $ H.request IsOn
-  logMessage $ &quot;The button state is now: &quot; &lt;&gt; show state1
+  state1 &lt;- io.query $ H.mkRequest IsOn
+  liftEffect $ log $ &quot;The button state is now: &quot; &lt;&gt; show state1
 
 -- Child component implementation
 
+type Slot = H.Slot Query Message
+
 data Query a
   = IsOn (Boolean -&gt; a)
-  | SetEnabled Boolean a
-  | AppendMessage String a
+  | SetState Boolean a
 
-data Output = Toggled Boolean
+data Message = Toggled Boolean
 
 data Action = Toggle
 
-type State = { enabled :: Boolean, messages :: Array String }
+type State = { enabled :: Boolean }
 
-component :: forall input m. H.Component HH.HTML Query input Output m
+component :: forall i m. H.Component Query i Message m
 component =
   H.mkComponent
     { initialState
@@ -2028,44 +2010,41 @@ component =
         , handleQuery = handleQuery
         }
     }
-  where
-  initialState :: input -&gt; State
-  initialState _ = { enabled: false, messages: [] }
 
-  render :: State -&gt; H.ComponentHTML Action () m
-  render state =
-    HH.div_
-      [ HH.div_ (map (\str -&gt; HH.p_ [ HH.text str ]) state.messages)
-      , HH.button
-          [ HE.onClick \_ -&gt; Just Toggle ]
-          [ HH.text $ if state.enabled then &quot;On&quot; else &quot;Off&quot; ]
+initialState :: forall i. i -&gt; State
+initialState _ = { enabled: false }
+
+render :: forall m. State -&gt; H.ComponentHTML Action () m
+render state =
+  let
+    label = if state.enabled then &quot;On&quot; else &quot;Off&quot;
+  in
+    HH.button
+      [ HP.title label
+      , HE.onClick \_ -&gt; Toggle
       ]
-  
-  handleAction :: Action -&gt; H.HalogenM State Action () Output m Unit
-  handleAction = case _ of
-    Toggle -&gt; do
-      newState &lt;- H.modify \st -&gt; st { enabled = not st.enabled }
-      H.raise (Toggled newState.enabled)
-  
-  handleQuery :: forall a. Query a -&gt; H.HalogenM State Action () Output m (Maybe a)
-  handleQuery = case _ of
-    IsOn reply -&gt; do
-      enabled &lt;- H.gets _.enabled
-      pure (Just (reply enabled))
-      
-    SetEnabled enabled a -&gt; do
-      H.modify_ _ { enabled = enabled }
-      pure (Just a)
-    
-    AppendMessage str a -&gt; do
-      H.modify_ \st -&gt; st { messages = Array.snoc st.messages str }
-      pure (Just a)
+      [ HH.text label ]
+
+handleAction :: forall m. Action -&gt; H.HalogenM State Action () Message m Unit
+handleAction = case _ of
+  Toggle -&gt; do
+    newState &lt;- H.modify \st -&gt; st { enabled = not st.enabled }
+    H.raise (Toggled newState.enabled)
+
+handleQuery :: forall m a. Query a -&gt; H.HalogenM State Action () Message m (Maybe a)
+handleQuery = case _ of
+  IsOn k -&gt; do
+    enabled &lt;- H.gets _.enabled
+    pure (Just (k enabled))
+  SetState enabled a -&gt; do
+    H.modify_ (_ { enabled = enabled })
+    pure (Just a)
 </code></pre>
 <h1><a class="header" href="#next-steps" id="next-steps">Next Steps</a></h1>
 <p>This guide has demonstrated the basic building blocks for Halogen applications. We learned how Halogen provides a type-safe, declarative way to build complex apps out of reusable pieces called components. We learned how write functions that produce Halogen HTML, how to write individual components, and how to render components within other components. We also learned how components can communicate with each other and how to run a full Halogen application.</p>
-<p>You now know how Halogen works, but you may not yet feel comfortable building a real application with the library yet. That's perfectly normal! There are more resources to help you continue learning about Halogen. </p>
+<p>You now know how Halogen works, but you may not yet feel comfortable building a real application with the library yet. That's perfectly normal! There are more resources to help you continue learning about Halogen.</p>
 <ol>
-<li>To go more in-depth on concepts you learned in this guide, explore the <a href="guide/">Concepts Reference</a>.</li>
+<li>To go more in-depth on concepts you learned in this guide, explore the <a href="guide/../concepts-reference">Concepts Reference</a>.</li>
 <li>To learn Halogen in a slower-paced, bottom-up way, try reviewing Jordan Martinez's <a href="https://github.com/JordanMartinez/learn-halogen">Learn Halogen</a> repository.</li>
 <li>To learn how to build real world applications in Halogen, review the Real World Halogen <a href="https://thomashoneyman.com/guides/real-world-halogen/">handbook</a> and <a href="https://github.com/thomashoneyman/purescript-halogen-realworld/">example application</a>.</li>
 </ol>

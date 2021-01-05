@@ -179,7 +179,7 @@
 <p>Instead, Halogen lets you choose what monad you would like to use with <code>HalogenM</code> in your component. You gain access to all the capabilities of <code>HalogenM</code> <em>and also</em> whatever capabilities your chosen monad supports. This is represented with the type parameter <code>m</code>, which stands for &quot;monad&quot;.</p>
 <p>A component that only uses Halogen-specific features can leave this type parameter open. Our counter, for example, only updated state. But a component that performs effects can use the <code>Effect</code> or <code>Aff</code> monads, or you can supply a custom monad of your own.</p>
 <p>This <code>handleAction</code> is able to use functions from <code>HalogenM</code> like <code>modify_</code> and can also use effectful functions from <code>Effect</code>:</p>
-<pre><code class="language-purs">handleAction :: forall o. Action -&gt; HalogenM State Action () o Effect Unit
+<pre><code class="language-purs">handleAction :: forall output. Action -&gt; HalogenM State Action () output Effect Unit
 </code></pre>
 <p>This one can use functions from <code>HalogenM</code> and also effectful functions from <code>Aff</code>:</p>
 <pre><code class="language-purs">handleAction :: forall output. Action -&gt; HalogenM State Action () output Aff Unit
@@ -189,7 +189,7 @@
 </code></pre>
 <p>This lets you do everything the hardcoded <code>Aff</code> type did, but it also lets you mix in other constraints too.</p>
 <p>One last thing: when you choose a monad for your component it will show up in your <code>HalogenM</code> type, your <code>Component</code> type, and, if you are using child components, in your <code>ComponentHTML</code> type:</p>
-<pre><code class="language-purs">component :: forall query input output m. MonadAff m =&gt; H.Component HH.HTML query input output m
+<pre><code class="language-purs">component :: forall query input output m. MonadAff m =&gt; H.Component query input output m
 
 handleAction :: forall output m. MonadAff m =&gt; Action -&gt; HalogenM State Action () output m Unit
 
@@ -226,7 +226,7 @@ type State = Maybe Number
 
 data Action = Regenerate
 
-component :: forall query input output m. MonadEffect m =&gt; H.Component HH.HTML query input output m
+component :: forall query input output m. MonadEffect m =&gt; H.Component query input output m
 component =
   H.mkComponent
     { initialState
@@ -246,7 +246,7 @@ render state = do
     , HH.p_
         [ HH.text (&quot;Current value: &quot; &lt;&gt; value) ]
     , HH.button
-        [ HE.onClick \_ -&gt; Just Regenerate ]
+        [ HE.onClick \_ -&gt; Regenerate ]
         [ HH.text &quot;Generate new number&quot; ]
     ]
 
@@ -317,7 +317,7 @@ data Action
   = SetUsername String
   | MakeRequest Event
 
-component :: forall query input output m. MonadAff m =&gt; H.Component HH.HTML query input output m
+component :: forall query input output m. MonadAff m =&gt; H.Component query input output m
 component =
   H.mkComponent
     { initialState
@@ -325,19 +325,19 @@ component =
     , eval: H.mkEval $ H.defaultEval { handleAction = handleAction }
     }
 
-initialState :: forall i. i -&gt; State
+initialState :: forall input. input -&gt; State
 initialState _ = { loading: false, username: &quot;&quot;, result: Nothing }
 
 render :: forall m. State -&gt; H.ComponentHTML Action () m
 render st =
   HH.form
-    [ HE.onSubmit \ev -&gt; Just (MakeRequest ev) ]
+    [ HE.onSubmit \ev -&gt; MakeRequest ev ]
     [ HH.h1_ [ HH.text &quot;Look up GitHub user&quot; ]
     , HH.label_
         [ HH.div_ [ HH.text &quot;Enter username:&quot; ]
         , HH.input
             [ HP.value st.username
-            , HE.onValueInput \str -&gt; Just (SetUsername str)
+            , HE.onValueInput \str -&gt; SetUsername str
             ]
         ]
     , HH.button
@@ -346,7 +346,7 @@ render st =
         ]
         [ HH.text &quot;Fetch info&quot; ]
     , HH.p_
-        [ HH.text (if st.loading then &quot;Working...&quot; else &quot;&quot;) ]
+        [ HH.text $ if st.loading then &quot;Working...&quot; else &quot;&quot; ]
     , HH.div_
         case st.result of
           Nothing -&gt; []

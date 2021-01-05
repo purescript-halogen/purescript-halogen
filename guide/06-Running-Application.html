@@ -191,7 +191,7 @@ component = ...
 <p>The most important function used in <code>main</code> is the <code>runUI</code> function. Provide <code>runUI</code> with your root component, the root component's input value, and a reference to a DOM element, and it will provide your application to the Halogen virtual DOM. The virtual DOM will then render your application at that element and maintain it there for as long as your app is running.</p>
 <pre><code class="language-purs">runUI
   :: forall query input output
-   . Component HTML query input output Aff
+   . Component query input output Aff
   -&gt; input
   -&gt; DOM.HTMLElement
   -&gt; Aff (HalogenIO query output Aff)
@@ -207,69 +207,71 @@ component = ...
 <li><code>selectElement</code> can be used to target a particular element on the page to embed the app within</li>
 </ol>
 <h2><a class="header" href="#using-halogenio" id="using-halogenio">Using <code>HalogenIO</code></a></h2>
-<p>When you run your Halogen application with <code>runUI</code> you receive a record of functions with the type <code>DriverIO</code>. These functions can be used to control your root component from outside the application. Conceptually, they're like a makeshift parent component for your application.</p>
+<p>When you run your Halogen application with <code>runUI</code> you receive a record of functions with the type <code>HalogenIO</code>. These functions can be used to control your root component from outside the application. Conceptually, they're like a makeshift parent component for your application.</p>
 <pre><code class="language-purs">type HalogenIO query output m =
   { query :: forall a. query a -&gt; m (Maybe a)
-  , subscribe :: Control.Coroutine.Consumer output m Unit -&gt; m Unit
+  , messages :: Event output
   , dispose :: m Unit
   }
 </code></pre>
 <ol>
-<li>The <code>query</code> function should look similar to you -- it's like the ordinary <code>H.query</code> function we used for parent components to imperatively tell a child component to do something or to request some information from it.</li>
-<li>The <code>subscribe</code> function can be used to subscribe to a stream of output messages from the component -- it's like the handler we provided to the <code>slot</code> function, except rather than evaluate an action here we can perform some effect instead.</li>
+<li>The <code>query</code> function is like the <code>H.query</code> function which underpins <code>tell</code> and <code>request</code>. This allows you to send queries to the root component of your application from outside the application.</li>
+<li>The <code>messages</code> event can be used to subscribe to a stream of output messages from the component -- it's like the handler we provided to the <code>slot</code> function, except rather than evaluate an action here we can perform some effect instead.</li>
 <li>The <code>dispose</code> function can be used to halt and clean up the Halogen application. This will kill any forked threads, close all subscriptions, and so on.</li>
 </ol>
+<p>You can't use <code>tell</code> and <code>request</code> at the root of your application, but you can use the <code>mkTell</code> and <code>mkRequest</code> functions (as seen in the example below) for a similar effect.</p>
 <p>A common pattern in Halogen applications is to use a <code>Route</code> component as the root of the application, and use the <code>query</code> function from <code>HalogenIO</code> to trigger route changes in the application when the URL changes. You can see a full example of doing this in the <a href="https://github.com/thomashoneyman/purescript-halogen-realworld/blob/master/src/Main.purs">Real World Halogen <code>Main.purs</code> file</a>.</p>
 <h2><a class="header" href="#full-example-controlling-a-button-with-halogenio" id="full-example-controlling-a-button-with-halogenio">Full Example: Controlling a Button With <code>HalogenIO</code></a></h2>
 <p>You can paste this example into <a href="https://try.purescript.org">Try PureScript</a> to explore using <code>HalogenIO</code> to control the root component of an application.</p>
-<pre><code class="language-purs">module Main where
+<pre><code class="language-purs">module Example.Driver.IO.Main where
 
 import Prelude
 
-import Control.Coroutine as CR
-import Data.Array as Array
 import Data.Maybe (Maybe(..))
 import Effect (Effect)
+import Effect.Console (log)
+import Example.Driver.IO.Button as B
+import FRP.Event as Event
+import Halogen (liftEffect)
 import Halogen as H
-import Halogen.Aff as HA
 import Halogen.HTML as HH
+import Halogen.Aff as HA
 import Halogen.HTML.Events as HE
+import Halogen.HTML.Properties as HP
 import Halogen.VDom.Driver (runUI)
 
 main :: Effect Unit
 main = HA.runHalogenAff do
   body &lt;- HA.awaitBody
-  io &lt;- runUI component unit body
-  
-  -- Log a message from outside the application by sending it to the button
-  let logMessage str = void $ io.query $ H.tell $ AppendMessage str
+  io &lt;- runUI B.component unit body
 
-  io.subscribe $ CR.consumer \(Toggled newState) -&gt; do
-    logMessage $ &quot;Button was internally toggled to: &quot; &lt;&gt; show newState
+  _ &lt;- liftEffect $ Event.subscribe io.messages \(Toggled newState) -&gt; do
+    liftEffect $ log $ &quot;Button was internally toggled to: &quot; &lt;&gt; show newState
     pure Nothing
 
-  state0 &lt;- io.query $ H.request IsOn
-  logMessage $ &quot;The button state is currently: &quot; &lt;&gt; show state0
+  state0 &lt;- io.query $ H.mkRequest IsOn
+  liftEffect $ log $ &quot;The button state is currently: &quot; &lt;&gt; show state0
 
-  _ &lt;- io.query $ H.tell $ SetEnabled true
+  void $ io.query $ H.mkTell (B.SetState true)
 
-  state1 &lt;- io.query $ H.request IsOn
-  logMessage $ &quot;The button state is now: &quot; &lt;&gt; show state1
+  state1 &lt;- io.query $ H.mkRequest IsOn
+  liftEffect $ log $ &quot;The button state is now: &quot; &lt;&gt; show state1
 
 -- Child component implementation
 
+type Slot = H.Slot Query Message
+
 data Query a
   = IsOn (Boolean -&gt; a)
-  | SetEnabled Boolean a
-  | AppendMessage String a
+  | SetState Boolean a
 
-data Output = Toggled Boolean
+data Message = Toggled Boolean
 
 data Action = Toggle
 
-type State = { enabled :: Boolean, messages :: Array String }
+type State = { enabled :: Boolean }
 
-component :: forall input m. H.Component HH.HTML Query input Output m
+component :: forall i m. H.Component Query i Message m
 component =
   H.mkComponent
     { initialState
@@ -279,38 +281,35 @@ component =
         , handleQuery = handleQuery
         }
     }
-  where
-  initialState :: input -&gt; State
-  initialState _ = { enabled: false, messages: [] }
 
-  render :: State -&gt; H.ComponentHTML Action () m
-  render state =
-    HH.div_
-      [ HH.div_ (map (\str -&gt; HH.p_ [ HH.text str ]) state.messages)
-      , HH.button
-          [ HE.onClick \_ -&gt; Just Toggle ]
-          [ HH.text $ if state.enabled then &quot;On&quot; else &quot;Off&quot; ]
+initialState :: forall i. i -&gt; State
+initialState _ = { enabled: false }
+
+render :: forall m. State -&gt; H.ComponentHTML Action () m
+render state =
+  let
+    label = if state.enabled then &quot;On&quot; else &quot;Off&quot;
+  in
+    HH.button
+      [ HP.title label
+      , HE.onClick \_ -&gt; Toggle
       ]
-  
-  handleAction :: Action -&gt; H.HalogenM State Action () Output m Unit
-  handleAction = case _ of
-    Toggle -&gt; do
-      newState &lt;- H.modify \st -&gt; st { enabled = not st.enabled }
-      H.raise (Toggled newState.enabled)
-  
-  handleQuery :: forall a. Query a -&gt; H.HalogenM State Action () Output m (Maybe a)
-  handleQuery = case _ of
-    IsOn reply -&gt; do
-      enabled &lt;- H.gets _.enabled
-      pure (Just (reply enabled))
-      
-    SetEnabled enabled a -&gt; do
-      H.modify_ _ { enabled = enabled }
-      pure (Just a)
-    
-    AppendMessage str a -&gt; do
-      H.modify_ \st -&gt; st { messages = Array.snoc st.messages str }
-      pure (Just a)
+      [ HH.text label ]
+
+handleAction :: forall m. Action -&gt; H.HalogenM State Action () Message m Unit
+handleAction = case _ of
+  Toggle -&gt; do
+    newState &lt;- H.modify \st -&gt; st { enabled = not st.enabled }
+    H.raise (Toggled newState.enabled)
+
+handleQuery :: forall m a. Query a -&gt; H.HalogenM State Action () Message m (Maybe a)
+handleQuery = case _ of
+  IsOn k -&gt; do
+    enabled &lt;- H.gets _.enabled
+    pure (Just (k enabled))
+  SetState enabled a -&gt; do
+    H.modify_ (_ { enabled = enabled })
+    pure (Just a)
 </code></pre>
 
                     </main>

@@ -203,7 +203,7 @@ import Halogen.HTML.Properties as HP
 
 html =
   HH.div
-    [ HP.id_ &quot;root&quot; ]
+    [ HP.id &quot;root&quot; ]
     [ HH.input
         [ HP.placeholder &quot;Name&quot; ]
     , HH.button
@@ -219,7 +219,7 @@ html =
 <li>Only some values are possible for a button's <code>type</code> property, so Halogen restricts them with a sum type.</li>
 <li>CSS classes use a <code>ClassName</code> newtype so that they can be treated specially when needed; for example, the <code>classes</code> function ensures that your classes are space-separated when they're combined.</li>
 </ol>
-<p>Some HTML elements and properties clash with reserved keywords in PureScript or with common functions from the Prelude, so Halogen adds an underscore to them. That's why you see <code>type_</code> instead of <code>type</code> in the example above. (You also see <code>id_</code> instead of <code>id</code>, but in PureScript 0.12 the <code>id</code> function was renamed to <code>identity</code>; future versions of Halogen will just use <code>id</code> without an underscore.)</p>
+<p>Some HTML elements and properties clash with reserved keywords in PureScript or with common functions from the Prelude, so Halogen adds an underscore to them. That's why you see <code>type_</code> instead of <code>type</code> in the example above.</p>
 <p>When you don't need to set any properties on a Halogen HTML element, you can use its underscored version instead. For example, the <code>div</code> and <code>button</code> elements below have no properties:</p>
 <pre><code class="language-purs">html = HH.div [ ] [ HH.button [ ] [ HH.text &quot;Click me!&quot;] ]
 </code></pre>

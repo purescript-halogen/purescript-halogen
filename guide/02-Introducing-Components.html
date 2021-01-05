@@ -180,7 +180,6 @@
 
 import Prelude
 
-import Data.Maybe (Maybe(..))
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
@@ -198,9 +197,9 @@ component =
 
   render state =
     HH.div_
-      [ HH.button [ HE.onClick \_ -&gt; Just Decrement ] [ HH.text &quot;-&quot; ]
+      [ HH.button [ HE.onClick \_ -&gt; Decrement ] [ HH.text &quot;-&quot; ]
       , HH.text (show state)
-      , HH.button [ HE.onClick \_ -&gt; Just Increment ] [ HH.text &quot;+&quot; ]
+      , HH.button [ HE.onClick \_ -&gt; Increment ] [ HH.text &quot;+&quot; ]
       ]
 
   handleAction = case _ of
@@ -237,10 +236,10 @@ initialState _ = 0
 </code></pre>
 <h3><a class="header" href="#actions" id="actions">Actions</a></h3>
 <p>Halogen components can update state, perform effects, and communicate with other components in response to events that arise internally. Components use an &quot;action&quot; type to describe what kinds of things a component can do in response to internal events.</p>
-<p>Our counter has two internal events: </p>
+<p>Our counter has two internal events:</p>
 <ol>
 <li>a click event on the &quot;-&quot; button to decrement the count</li>
-<li>a click event on the &quot;+&quot; button to increment the count. </li>
+<li>a click event on the &quot;+&quot; button to increment the count.</li>
 </ol>
 <p>We can describe what our component should do in response to these events using a data type we'll call <code>Action</code>:</p>
 <pre><code class="language-purs">data Action = Increment | Decrement
@@ -249,7 +248,7 @@ initialState _ = 0
 <p>Just like how our state type had to be paired with an <code>initialState</code> function that describes how to produce a <code>State</code> value, our <code>Action</code> type should be paired with a function called <code>handleAction</code> that describes what to do when one of these actions occurs.</p>
 <pre><code class="language-purs">handleAction :: forall output m. Action -&gt; H.HalogenM State Action () output m Unit
 </code></pre>
-<p>As with our input type, we can leave type variables open for types that we aren't using. </p>
+<p>As with our input type, we can leave type variables open for types that we aren't using.</p>
 <ul>
 <li>The type <code>()</code> means our component has no child components. We could also leave it open as a type variable because we aren't using it -- <code>slots</code>, by convention -- but <code>()</code> is so short you'll see this type commonly used instead.</li>
 <li>The <code>output</code> type parameter is only used when your component communicates with a parent.</li>
@@ -259,7 +258,7 @@ initialState _ = 0
 <p>Here's the <code>handleAction</code> function for our counter:</p>
 <pre><code class="language-purs">handleAction :: forall output m. Action -&gt; H.HalogenM State Action () output m Unit
 handleAction = case _ of
-  Decrement -&gt; 
+  Decrement -&gt;
     H.modify_ \state -&gt; state - 1
 
   Increment -&gt;
@@ -276,7 +275,7 @@ handleAction = case _ of
 <h3><a class="header" href="#rendering" id="rendering">Rendering</a></h3>
 <p>Halogen components produce HTML from their state using a function called <code>render</code>. The render function runs every time the state changes. This is what makes Halogen declarative: for any given state, you describe the UI that it corresponds to. Halogen handles the workload of ensuring that state changes always result in the UI you described.</p>
 <p>Render functions in Halogen are pure, which means that you can't do things like get the current time, make network requests, or anything like that during rendering. All you can do is produce HTML for your state value.</p>
-<p>When we look at the type of our render function we can see the <code>ComponentHTML</code> type we touched on last chapter. This type is a more specialized version of the <code>HTML</code> type, meant specifically for HTML produced in components. Once again, we'll use <code>()</code>  and leave <code>m</code> open because they are only relevant when using child components, which we'll cover in a later chapter.</p>
+<p>When we look at the type of our render function we can see the <code>ComponentHTML</code> type we touched on last chapter. This type is a more specialized version of the <code>HTML</code> type, meant specifically for HTML produced in components. Once again, we'll use <code>()</code> and leave <code>m</code> open because they are only relevant when using child components, which we'll cover in a later chapter.</p>
 <pre><code class="language-purs">render :: forall m. State -&gt; H.ComponentHTML Action () m
 </code></pre>
 <p>Now that we're working with our render function, we're back to the Halogen HTML that should be familiar from the last chapter! You can write regular HTML in <code>ComponentHTML</code> just like we did last chapter:</p>
@@ -285,23 +284,23 @@ handleAction = case _ of
 render :: forall m. State -&gt; H.ComponentHTML Action () m
 render state =
   HH.div_
-    [ HH.button [ HE.onClick \_ -&gt; Just Decrement ] [ HH.text &quot;-&quot; ]
+    [ HH.button [ HE.onClick \_ -&gt; Decrement ] [ HH.text &quot;-&quot; ]
     , HH.text (show state)
-    , HH.button [ HE.onClick \_ -&gt; Just Increment ] [ HH.text &quot;+&quot; ]
+    , HH.button [ HE.onClick \_ -&gt; Increment ] [ HH.text &quot;+&quot; ]
     ]
 </code></pre>
 <h4><a class="header" href="#handling-events" id="handling-events">Handling Events</a></h4>
 <p>We can now see how to handle events in Halogen. First, you write the event handler in the properties array along with any other properties, attributes, and refs you might need. Then, you associate the event handler with an <code>Action</code> that your component knows how to handle. Finally, when the event occurs, your <code>handleAction</code> function is called to handle the event.</p>
 <p>You might be curious about why we provided an anonymous function to <code>onClick</code>. To see why, we can look at the actual type of <code>onClick</code>:</p>
-<pre><code class="language-purs">onClick 
+<pre><code class="language-purs">onClick
   :: forall row action
-   . (MouseEvent -&gt; Maybe action)
+   . (MouseEvent -&gt; action)
   -&gt; IProp (onClick :: MouseEvent | row) action
 
 -- Specialized to our component
-onClick 
+onClick
   :: forall row
-   . (MouseEvent -&gt; Maybe Action) 
+   . (MouseEvent -&gt; Action)
   -&gt; IProp (onClick :: MouseEvent | row) Action
 </code></pre>
 <p>In Halogen, event handlers take as their first argument a callback. This callback receives the DOM event that occurred (in the case of a click event, that's a <code>MouseEvent</code>), which contains some metadata you may want to use, and is then responsible for returning an action that Halogen should run in response to the event. In our case, we won't inspect the event itself, so we throw the argument away and return the action we want to run (<code>Increment</code> or <code>Decrement</code>).</p>
@@ -319,13 +318,13 @@ initialState = ...
 
 data Action = Increment | Decrement
 
-handleAction :: forall slots output m. Action -&gt; H.HalogenM State Action () output m Unit
+handleAction :: forall output m. Action -&gt; H.HalogenM State Action () output m Unit
 handleAction = ...
 
 render :: forall m. State -&gt; H.ComponentHTML Action () m
 render = ...
 </code></pre>
-<p>These types and functions are the core building blocks of a typical Halogen component. But they aren't sufficient on their own like this -- we need to bring them all together in one place. </p>
+<p>These types and functions are the core building blocks of a typical Halogen component. But they aren't sufficient on their own like this -- we need to bring them all together in one place.</p>
 <p>We'll do that using the <code>H.mkComponent</code> function. This function takes a <code>ComponentSpec</code>, which is a record containing an <code>initialState</code>, <code>render</code>, and <code>eval</code> function, and produces a <code>Component</code> from it:</p>
 <pre><code class="language-purs">component =
   H.mkComponent
@@ -342,14 +341,13 @@ render = ...
 <p>Our component is now complete, but we're missing one last type definition: our component type.</p>
 <h3><a class="header" href="#the-hcomponent-type" id="the-hcomponent-type">The <code>H.Component</code> Type</a></h3>
 <p>The <code>mkComponent</code> function produces a component from a <code>ComponentSpec</code>, which is a record of the functions that Halogen needs to run a component. We'll get into more detail about this type in a subsequent chapter.</p>
-<pre><code class="language-purs">mkComponent :: H.ComponentSpec ... -&gt; H.Component HH.HTML query input output m
+<pre><code class="language-purs">mkComponent :: H.ComponentSpec ... -&gt; H.Component query input output m
 </code></pre>
 <p>The resulting component has the type <code>H.Component</code>, which itself takes five type parameters that describe the public interface of the component. Our component doesn't communicate with parent components or child components, so it doesn't use any of these type variables. Still, we'll briefly step through them now so you know what's coming in subsequent chapters.</p>
-<ol>
-<li>The first parameter is always <code>HH.HTML</code>, indicating that the component produces Halogen HTML. It is possible for components to target things other than the DOM, in which case this would be different, but on the Web it's always <code>HH.HTML</code>.</li>
-<li>The second parameter <code>query</code> represents a way that parent components can communicate with this component. We will talk about it more when we talk about parent and child components.</li>
-<li>The third parameter <code>input</code> represents the input our component accepts. In our case, the component doesn't accept any input, so we'll leave this variable open.</li>
-<li>The fourth parameter <code>output</code> represents a way that this component can communicate with its parent component. We'll talk about it more when we talk about parent and child components.</li>
+<ol start="2">
+<li>The first parameter <code>query</code> represents a way that parent components can communicate with this component. We will talk about it more when we talk about parent and child components.</li>
+<li>The second parameter <code>input</code> represents the input our component accepts. In our case, the component doesn't accept any input, so we'll leave this variable open.</li>
+<li>The third parameter <code>output</code> represents a way that this component can communicate with its parent component. We'll talk about it more when we talk about parent and child components.</li>
 <li>The final parameter, <code>m</code>, represents the monad that can be used to run effects in the component. Our component doesn't run any effects, so we'll leave this variable open.</li>
 </ol>
 <p>Our counter component can therefore be specified by leaving all of the <code>H.Component</code> type variables open except for the first one, <code>HH.HTML</code>.</p>
@@ -360,7 +358,6 @@ render = ...
 
 import Prelude
 
-import Data.Maybe (Maybe(..))
 import Effect (Effect)
 import Halogen as H
 import Halogen.Aff as HA
@@ -377,7 +374,7 @@ type State = Int
 
 data Action = Increment | Decrement
 
-component :: forall query input output m. H.Component HH.HTML query input output m
+component :: forall query input output m. H.Component query input output m
 component =
   H.mkComponent
     { initialState
@@ -391,12 +388,12 @@ initialState _ = 0
 render :: forall m. State -&gt; H.ComponentHTML Action () m
 render state =
   HH.div_
-    [ HH.button [ HE.onClick \_ -&gt; Just Decrement ] [ HH.text &quot;-&quot; ]
+    [ HH.button [ HE.onClick \_ -&gt; Decrement ] [ HH.text &quot;-&quot; ]
     , HH.text (show state)
-    , HH.button [ HE.onClick \_ -&gt; Just Increment ] [ HH.text &quot;+&quot; ]
+    , HH.button [ HE.onClick \_ -&gt; Increment ] [ HH.text &quot;+&quot; ]
     ]
 
-handleAction :: forall o m. Action -&gt; H.HalogenM State Action () o m Unit
+handleAction :: forall output m. Action -&gt; H.HalogenM State Action () output m Unit
 handleAction = case _ of
   Decrement -&gt;
     H.modify_ \state -&gt; state - 1

@@ -216,7 +216,7 @@ data Action
   | Regenerate
   | Finalize
 
-component :: forall query input output m. MonadEffect m =&gt; H.Component HH.HTML query input output m
+component :: forall query input output m. MonadEffect m =&gt; H.Component query input output m
 component =
   H.mkComponent
     { initialState
@@ -240,7 +240,7 @@ render state = do
     , HH.p_
         [ HH.text (&quot;Current value: &quot; &lt;&gt; value) ]
     , HH.button
-        [ HE.onClick \_ -&gt; Just Regenerate ]
+        [ HE.onClick \_ -&gt; Regenerate ]
         [ HH.text &quot;Generate new number&quot; ]
     ]
 
@@ -323,12 +323,8 @@ handleAction = ...
 <p>Now, let's move to the other common source of internal events: event sources we've subscribed to.</p>
 <h2><a class="header" href="#subscriptions" id="subscriptions">Subscriptions</a></h2>
 <p>Sometimes you need to handle events arising internally that don't come from a user interacting with the Halogen HTML you've rendered. Two common sources are time-based actions and events that happen on an element outside one you've rendered (like the browser window).</p>
-<p>In Halogen these kinds of events come from <strong>event sources</strong>. Components can subscribe to event sources by providing an action that should run every time an event happens.</p>
-<p>Event sources are usually created with one of these functions:</p>
-<ol>
-<li><code>effectEventSource</code> and<code>affEventSource</code> let you produce an event source from an <code>Effect</code> or <code>Aff</code> function, respectively.</li>
-<li><code>eventListenerEventSource</code> lets you produce an event source by attaching an event listener to the DOM, like attaching a resize event to the browser window.</li>
-</ol>
+<p>In Halogen these kinds of events can be created manually with the <a href="https://github.com/paf31/purescript-event"><code>event</code></a> library. Halogen components can subscribe to an <code>Event</code> by providing an action that should run when the event happens.</p>
+<p>You can subscribe to events using functions from the <code>event</code> library, but Halogen provides a special helper function for subscribing to events from event listeners in the DOM called <code>eventListenerEventSource</code>.</p>
 <p>An event source can be thought of as a stream of actions: actions can be produced at any time from the event source, and your component will evaluate those actions so long as it remains subscribed to the event source. It's common to create an event source and subscribe to it when the component initializes, though you can subscribe or unsubscribe from an event source at any time.</p>
 <p>Let's see two examples of event sources in action: an <code>Aff</code>-based timer that counts the seconds since the component mounted and an event-listener-based stream that reports keyboard events on the document.</p>
 <h3><a class="header" href="#implementing-a-timer" id="implementing-a-timer">Implementing a Timer</a></h3>
@@ -344,11 +340,11 @@ import Effect.Aff (Milliseconds(..))
 import Effect.Aff as Aff
 import Effect.Aff.Class (class MonadAff)
 import Effect.Exception (error)
+import FRP.Event (Event)
+import FRP.Event as Event
 import Halogen as H
 import Halogen.Aff as HA
 import Halogen.HTML as HH
-import Halogen.Query.EventSource (EventSource)
-import Halogen.Query.EventSource as EventSource
 import Halogen.VDom.Driver (runUI)
 
 main :: Effect Unit
@@ -360,7 +356,7 @@ data Action = Initialize | Tick
 
 type State = Int
 
-component :: forall query input output m. MonadAff m =&gt; H.Component HH.HTML query input output m
+component :: forall query input output m. MonadAff m =&gt; H.Component query input output m
 component =
   H.mkComponent
     { initialState
@@ -380,39 +376,37 @@ render seconds = HH.text (&quot;You have been here for &quot; &lt;&gt; show seco
 handleAction :: forall output m. MonadAff m =&gt; Action -&gt; H.HalogenM State Action () output m Unit
 handleAction = case _ of
   Initialize -&gt; do
-    _ &lt;- H.subscribe timer
+    _ &lt;- H.subscribe =&lt;&lt; timer
     pure unit
 
   Tick -&gt;
     H.modify_ \state -&gt; state + 1
 
-timer :: forall m. MonadAff m =&gt; EventSource m Action
-timer = EventSource.affEventSource \emitter -&gt; do
-  fiber &lt;- Aff.forkAff $ forever do
+timer :: forall m. MonadAff m =&gt; m (Event Action)
+timer = do
+  { event, push } &lt;- H.liftEffect Event.create
+  _ &lt;- Aff.forkAff $ forever do
     Aff.delay $ Milliseconds 1000.0
-    EventSource.emit emitter Tick
-
-  pure $ EventSource.Finalizer do
-    Aff.killFiber (error &quot;Event source finalized&quot;) fiber
+    push Tick
+  pure event
 </code></pre>
 <p>Almost all of this code should look familiar, but there are two new parts.</p>
 <p>First, we've defined an event source that will emit a <code>Tick</code> action every second until it is closed:</p>
-<pre><code class="language-purs">timer :: forall m. MonadAff m =&gt; EventSource m Action
-timer = EventSource.affEventSource \emitter -&gt; do
-  fiber &lt;- Aff.forkAff $ forever do
+<pre><code class="language-purs">timer :: forall m. MonadAff m =&gt; m (Event Action)
+timer = do
+  { event, push } &lt;- H.liftEffect Event.create
+  _ &lt;- Aff.forkAff $ forever do
     Aff.delay $ Milliseconds 1000.0
-    EventSource.emit emitter Tick
-
-  pure $ EventSource.Finalizer do
-    Aff.killFiber (error &quot;Event source finalized&quot;) fiber
+    push Tick
+  pure event
 </code></pre>
-<p>The <code>affEventSource</code> and <code>effectEventSource</code> functions take a callback that provides you with an <code>Emitter</code>. You can use this with the <code>EventSource.emit</code> function to broadcast an action, or with the <code>EventSource.close</code> function to close the event source (this lets you close an event source from within, instead of having to wait for the event source to be closed by its subscriber or automatically when the component finalizes). You can return a cleanup function to run when the event source closes, called its finalizer. In this case, we use the finalizer to kill the fiber we forked to loop the count.</p>
+<p>When creating effectful event sources (as opposed to event sources tied to event listeners in the DOM), we can simply use functions from the <code>event</code> library. Most commonly you'll use <a href="https://pursuit.purescript.org/packages/purescript-event/docs/FRP.Event#v:create"><code>Event.create</code></a>, but if you need to manually control unsubscription you can also use <a href="https://pursuit.purescript.org/packages/purescript-event/docs/FRP.Event#v:makeEvent"><code>Event.makeEvent</code></a>.</p>
 <p>Second, we use the <code>subscribe</code> function from Halogen to attach to the event source:</p>
 <pre><code class="language-purs">  Initialize -&gt; do
-    _ &lt;- H.subscribe timer
+    _ &lt;- H.subscribe =&lt;&lt; timer
     pure unit
 </code></pre>
-<p>The <code>subscribe</code> function takes an event source as an argument and it returns a <code>SubscriptionId</code>. You can pass this <code>SubscriptionId</code> to the <code>unsubscribe</code> function at any point to close the event source, run its cleanup function, and stop listening to outputs from it. Components automatically unsubscribe from any event sources when the component finalizes, so we don't need to unsubscribe here.</p>
+<p>The <code>subscribe</code> function takes an <code>Event</code> as an argument and it returns a <code>SubscriptionId</code>. You can pass this <code>SubscriptionId</code> to the <code>unsubscribe</code> function at any point to close the event source, run its cleanup function, and stop listening to outputs from it. Components automatically unsubscribe from any event sources when the component finalizes, so we don't need to unsubscribe here.</p>
 <p>You may also be interested in the <a href="https://github.com/purescript-halogen/purescript-halogen/tree/master/examples/ace">Ace editor example</a>, which subscribes to events that happen inside a third-party JavaScript component and uses them to trigger actions in a Halogen component.</p>
 <h3><a class="header" href="#using-event-listeners-as-event-sources" id="using-event-listeners-as-event-sources">Using Event Listeners As Event Sources</a></h3>
 <p>Another common reason to use event sources is when you need to react to events in the DOM that don't arise directly from HTML elements you control. For example, we might want to listen to events that happen on the document itself.</p>
@@ -429,7 +423,7 @@ import Effect.Aff.Class (class MonadAff)
 import Halogen as H
 import Halogen.Aff as HA
 import Halogen.HTML as HH
-import Halogen.Query.EventSource (eventListenerEventSource)
+import Halogen.Query.Event (eventListenerEventSource)
 import Halogen.VDom.Driver (runUI)
 import Web.Event.Event as E
 import Web.HTML (window)
@@ -449,7 +443,7 @@ data Action
   = Initialize
   | HandleKey H.SubscriptionId KE.KeyboardEvent
 
-component :: forall query input output m. MonadAff m =&gt; H.Component HH.HTML query input output m
+component :: forall query input output m. MonadAff m =&gt; H.Component query input output m
 component =
   H.mkComponent
     { initialState
@@ -499,13 +493,12 @@ handleAction = case _ of
 <p>In this example we used the <code>H.subscribe'</code> function, which passes the <code>SubscriptionId</code> to the event source instead of returning it. This is an alternative that lets you keep the ID in the action type instead of the state, which can be more convenient.</p>
 <p>We wrote our event source right into our code to handle the <code>Initialize</code> action, which registers an event listener on the document and emits <code>HandleKey</code> every time a key is pressed.</p>
 <p><code>eventListenerEventSource</code> works a little differently from the other event sources. It uses types from the <code>purescript-web</code> libraries for working with the DOM to manually construct an event listener:</p>
-<pre><code>eventListenerEventSource
-  :: forall action m
-   . MonadAff m
-  =&gt; EventType
-  -&gt; EventTarget
-  -&gt; (Event -&gt; Maybe action)
-  -&gt; EventSource m action
+<pre><code class="language-purs">eventListenerEventSource
+  :: forall a
+   . Web.Event.EventType
+  -&gt; Web.Event.EventTarget.EventTarget
+  -&gt; (Web.Event.Event -&gt; Maybe a)
+  -&gt; FRP.Event.Event a
 </code></pre>
 <p>It takes a type of event to listen to (in our case: <code>keyup</code>), a target indicating where to listen for events (in our case: the <code>HTMLDocument</code> itself), and a callback function that transforms the events that occur into a type that should be emitted (in our case: we emit our <code>Action</code> type by capturing the event in the <code>HandleKey</code> constructor).</p>
 <h2><a class="header" href="#wrapping-up" id="wrapping-up">Wrapping Up</a></h2>
