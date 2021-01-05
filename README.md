@@ -5,9 +5,9 @@
 
 ---
 
-:warning: the default branch of this repository is for the upcoming Halogen 6 release, which is only compatible with PureScript 0.14. you may wish to browse this repository at:
+:warning: The default branch of this repository is for the upcoming Halogen 6 release, which is only compatible with PureScript 0.14. You may wish to browse this repository at:
 
-- [v5.1.0](https://github.com/purescript-halogen/purescript-halogen/tree/v5.1.0), the latest Halogen release
+- [v5.1.1](https://github.com/purescript-halogen/purescript-halogen/tree/v5.1.1), the latest Halogen release
 - [v4.0.0](https://github.com/purescript-halogen/purescript-halogen/tree/v4.0.0), the previous Halogen release
 
 ---
