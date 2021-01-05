@@ -1,6 +1,6 @@
 ## Portal example
 
-A simple component being rendered to a specific target element (the page body) instead of its parent component.
+A simple component being rendered to a specific target element instead of its parent component. Note that the the tooltip breaks out of its container despite `overflow: hidden;` being set.
 
 ### Building
 
