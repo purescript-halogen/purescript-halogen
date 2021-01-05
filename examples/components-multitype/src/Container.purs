@@ -3,7 +3,6 @@ module Example.Components.Multitype.Container where
 import Prelude
 
 import Data.Maybe (Maybe(..))
-import Data.Symbol (SProxy(..))
 import Example.Components.Multitype.ComponentA as CA
 import Example.Components.Multitype.ComponentB as CB
 import Example.Components.Multitype.ComponentC as CC
@@ -11,6 +10,7 @@ import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
+import Type.Proxy (Proxy(..))
 
 data Action = ReadStates
 
@@ -26,11 +26,11 @@ type ChildSlots =
   , c :: CC.Slot Unit
   )
 
-_a = SProxy :: SProxy "a"
-_b = SProxy :: SProxy "b"
-_c = SProxy :: SProxy "c"
+_a = Proxy :: Proxy "a"
+_b = Proxy :: Proxy "b"
+_c = Proxy :: Proxy "c"
 
-component :: forall f i o m. H.Component HH.HTML f i o m
+component :: forall q i o m. H.Component q i o m
 component =
   H.mkComponent
     { initialState
@@ -46,17 +46,17 @@ render state = HH.div_
   [ HH.div
       [ HP.class_ (H.ClassName "box")]
       [ HH.h1_ [ HH.text "Component A" ]
-      , HH.slot _a unit CA.component unit absurd
+      , HH.slot_ _a unit CA.component unit
       ]
   , HH.div
       [ HP.class_ (H.ClassName "box")]
       [ HH.h1_ [ HH.text "Component B" ]
-      , HH.slot _b unit CB.component unit absurd
+      , HH.slot_ _b unit CB.component unit
       ]
   , HH.div
       [ HP.class_ (H.ClassName "box")]
       [ HH.h1_ [ HH.text "Component C" ]
-      , HH.slot _c unit CC.component unit absurd
+      , HH.slot_ _c unit CC.component unit
       ]
   , HH.p_
       [ HH.text "Last observed states:"]
@@ -66,14 +66,14 @@ render state = HH.div_
       , HH.li_ [ HH.text ("Component C: " <> show state.c) ]
       ]
   , HH.button
-      [ HE.onClick (\_ -> Just ReadStates) ]
+      [ HE.onClick \_ -> ReadStates ]
       [ HH.text "Check states now" ]
   ]
 
 handleAction :: forall o m. Action -> H.HalogenM State Action ChildSlots o m Unit
 handleAction = case _ of
   ReadStates -> do
-    a <- H.query _a unit (H.request CA.IsOn)
-    b <- H.query _b unit (H.request CB.GetCount)
-    c <- H.query _c unit (H.request CC.GetValue)
+    a <- H.request _a unit CA.IsOn
+    b <- H.request _b unit CB.GetCount
+    c <- H.request _c unit CC.GetValue
     H.put { a, b, c }

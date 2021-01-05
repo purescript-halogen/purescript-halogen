@@ -17,7 +17,7 @@ data Action = HandleInput String
 
 type State = String
 
-component :: forall i o m. H.Component HH.HTML Query i o m
+component :: forall i o m. H.Component Query i o m
 component =
   H.mkComponent
     { initialState
@@ -37,7 +37,7 @@ render state =
     [ HH.p_ [ HH.text "What do you have to say?" ]
     , HH.input
         [ HP.value state
-        , HE.onValueInput (Just <<< HandleInput)
+        , HE.onValueInput HandleInput
         ]
     ]
 

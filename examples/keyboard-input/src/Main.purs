@@ -9,7 +9,7 @@ import Effect.Aff (Aff)
 import Halogen as H
 import Halogen.Aff as HA
 import Halogen.HTML as HH
-import Halogen.Query.EventSource as ES
+import Halogen.Query.Event (eventListenerEventSource)
 import Halogen.VDom.Driver (runUI)
 import Web.Event.Event as E
 import Web.HTML (window) as Web
@@ -28,7 +28,7 @@ data Action
   = Init
   | HandleKey H.SubscriptionId KeyboardEvent
 
-ui :: forall f i o. H.Component HH.HTML f i o Aff
+ui :: forall f i o. H.Component f i o Aff
 ui =
   H.mkComponent
     { initialState: const initialState
@@ -50,7 +50,7 @@ handleAction = case _ of
   Init -> do
     document <- H.liftEffect $ Web.document =<< Web.window
     H.subscribe' \sid ->
-      ES.eventListenerEventSource
+      eventListenerEventSource
         KET.keyup
         (HTMLDocument.toEventTarget document)
         (map (HandleKey sid) <<< KE.fromEvent)

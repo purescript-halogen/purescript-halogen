@@ -24,7 +24,7 @@ data Action
   = SetUsername String
   | MakeRequest Event
 
-component :: forall f i o m. MonadAff m => H.Component HH.HTML f i o m
+component :: forall q i o m. MonadAff m => H.Component q i o m
 component =
   H.mkComponent
     { initialState
@@ -38,13 +38,13 @@ initialState _ = { loading: false, username: "", result: Nothing }
 render :: forall m. State -> H.ComponentHTML Action () m
 render st =
   HH.form
-    [ HE.onSubmit (Just <<< MakeRequest) ]
+    [ HE.onSubmit MakeRequest ]
     [ HH.h1_ [ HH.text "Lookup GitHub user" ]
     , HH.label_
         [ HH.div_ [ HH.text "Enter username:" ]
         , HH.input
             [ HP.value st.username
-            , HE.onValueInput (Just <<< SetUsername)
+            , HE.onValueInput SetUsername
             ]
         ]
     , HH.button

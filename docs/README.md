@@ -4,9 +4,9 @@ Halogen is a declarative, type-safe library for building user interfaces.
 
 This documentation covers how to use Halogen and provides a concepts reference. There are also other resources for learning and using Halogen, including:
 
-* The Halogen [API Reference](https://pursuit.purescript.org/packages/purescript-halogen)
-* [Learn Halogen](https://github.com/JordanMartinez/learn-halogen) by [Jordan Martinez](https://github.com/JordanMartinez)
-* [Real World Halogen](https://github.com/thomashoneyman/purescript-halogen-realworld) by [Thomas Honeyman](https://github.com/thomashoneyman)
+- The Halogen [API Reference](https://pursuit.purescript.org/packages/purescript-halogen)
+- [Real World Halogen](https://github.com/thomashoneyman/purescript-halogen-realworld) by [Thomas Honeyman](https://github.com/thomashoneyman)
+- [Learn Halogen](https://github.com/JordanMartinez/learn-halogen) by [Jordan Martinez](https://github.com/JordanMartinez)
 
 ## Quick Start: Halogen Guide
 
@@ -20,4 +20,7 @@ Once you're comfortable with the main concepts from the [Halogen Guide](./guide)
 
 ## Major Version Changelog
 
-Major Halogen releases are accompanied by guides for transitioning from one version to the next in the [Major Version Changelog](./changelog).
+Major Halogen releases are accompanied by guides for transitioning from one version to the next in the [Major Version Changelog](./changelog). Currently, there are transition guides for the following versions:
+
+- [v6](./changelog/v6.md)
+- [v5](./changelog/v5.md)

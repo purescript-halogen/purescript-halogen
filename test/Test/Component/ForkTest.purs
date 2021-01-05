@@ -2,7 +2,6 @@ module Test.Component.ForkTest where
 
 import Prelude
 
-import Control.Coroutine as CR
 import Data.Foldable (traverse_)
 import Data.List ((:))
 import Data.List as L
@@ -10,6 +9,7 @@ import Data.Maybe (Maybe(..))
 import Effect.Aff (Aff)
 import Effect.Aff as Aff
 import Effect.Ref as Ref
+import FRP.Event as Event
 import Halogen as H
 import Test.Assert (assertEqual)
 import Test.TestDriver as TD
@@ -25,7 +25,7 @@ newtype Message = Message String
 derive newtype instance eqMessage :: Eq Message
 derive newtype instance showMessage :: Show Message
 
-component :: H.Component TD.TestRenderProduct Query Unit Message Aff
+component :: H.Component Query Unit Message Aff
 component =
   H.mkComponent
     { initialState: const Nothing
@@ -58,13 +58,13 @@ testForkKill = do
 
   logRef <- H.liftEffect $ Ref.new L.Nil
 
-  io.subscribe $ CR.consumer \msg -> do
+  _ ← H.liftEffect $ Event.subscribe io.messages \msg -> do
     H.liftEffect $ Ref.modify_ (msg : _) logRef
     pure Nothing
 
-  _ <- io.query (H.tell StartFork)
+  _ <- io.query (H.mkTell StartFork)
   Aff.delay (Aff.Milliseconds 350.0)
-  _ <- io.query (H.tell KillFork)
+  _ <- io.query (H.mkTell KillFork)
 
   -- TODO: revisit this: why do we need to wait to receive `raise`d messages
   -- from the component, if the `raise` occurs after any bind?
@@ -90,11 +90,11 @@ testFinalize = do
 
   logRef <- H.liftEffect $ Ref.new L.Nil
 
-  io.subscribe $ CR.consumer \msg -> do
+  _ ← H.liftEffect $ Event.subscribe io.messages \msg -> do
     H.liftEffect $ Ref.modify_ (msg : _) logRef
     pure Nothing
 
-  _ <- io.query (H.tell StartFork)
+  _ <- io.query (H.mkTell StartFork)
   io.dispose
   Aff.delay (Aff.Milliseconds 350.0)
 

@@ -5,7 +5,6 @@ import Prelude
 import Data.Array (snoc, filter, reverse)
 import Data.Const (Const)
 import Data.Maybe (Maybe(..))
-import Data.Symbol (SProxy(..))
 import Data.Tuple (Tuple(..))
 import Effect (Effect)
 import Effect.Aff (Aff)
@@ -17,6 +16,7 @@ import Halogen.HTML as HH
 import Halogen.HTML.Elements.Keyed as HK
 import Halogen.HTML.Events as HE
 import Halogen.VDom.Driver (runUI)
+import Type.Proxy (Proxy(..))
 
 type State =
   { currentId :: Int
@@ -41,9 +41,9 @@ type ChildSlots =
   ( child :: H.Slot (Const Void) Child.Message Int
   )
 
-_child = SProxy :: SProxy "child"
+_child = Proxy :: Proxy "child"
 
-ui :: forall f. H.Component HH.HTML f Unit Void Aff
+ui :: forall f. H.Component f Unit Void Aff
 ui =
   H.mkComponent
     { initialState: const initialState
@@ -59,16 +59,16 @@ ui =
   render state =
     HH.div_
       [ HH.button
-          [ HE.onClick \_ -> Just Add ]
+          [ HE.onClick \_ -> Add ]
           [ HH.text "Add" ]
       , HH.button
-          [ HE.onClick \_ -> Just Reverse ]
+          [ HE.onClick \_ -> Reverse ]
           [ HH.text "Reverse" ]
       , HK.ul_ $ flip map state.slots \sid ->
           Tuple (show sid) $
             HH.li_
               [ HH.button
-                  [ HE.onClick \_ -> Just (Remove sid) ]
+                  [ HE.onClick \_ -> Remove sid ]
                   [ HH.text "Remove" ]
               , HH.slot _child sid (Child.child sid) unit (listen sid)
               ]
@@ -91,8 +91,8 @@ ui =
   handleAction (ReportRoot msg) =
     H.liftEffect $ log ("Root >>> " <> msg)
 
-  listen :: Int -> Child.Message -> Maybe Action
-  listen i = Just <<< case _ of
+  listen :: Int -> Child.Message -> Action
+  listen i = case _ of
     Child.Initialized -> ReportRoot ("Heard Initialized from child" <> show i)
     Child.Finalized -> ReportRoot ("Heard Finalized from child" <> show i)
     Child.Reported msg -> ReportRoot ("Re-reporting from child" <> show i <> ": " <> msg)

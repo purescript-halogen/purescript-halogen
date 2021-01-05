@@ -2,12 +2,11 @@ module Example.Components.Inputs.Container where
 
 import Prelude
 
-import Data.Maybe (Maybe(..))
-import Data.Symbol (SProxy(..))
 import Example.Components.Inputs.Display as Display
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
+import Type.Proxy (Proxy(..))
 
 data Action
   = Increment
@@ -19,9 +18,9 @@ type ChildSlots =
   ( display :: Display.Slot Int
   )
 
-_display = SProxy :: SProxy "display"
+_display = Proxy :: Proxy "display"
 
-component :: forall q i o m. H.Component HH.HTML q i o m
+component :: forall q i o m. H.Component q i o m
 component =
   H.mkComponent
     { initialState
@@ -36,17 +35,17 @@ render :: forall m. State -> H.ComponentHTML Action ChildSlots m
 render state =
   HH.div_
     [ HH.ul_
-        [ HH.slot _display 1 Display.component state absurd
-        , HH.slot _display 2 Display.component (state * 2) absurd
-        , HH.slot _display 3 Display.component (state * 3) absurd
-        , HH.slot _display 4 Display.component (state * 10) absurd
-        , HH.slot _display 5 Display.component (state * state) absurd
+        [ HH.slot_ _display 1 Display.component state
+        , HH.slot_ _display 2 Display.component (state * 2)
+        , HH.slot_ _display 3 Display.component (state * 3)
+        , HH.slot_ _display 4 Display.component (state * 10)
+        , HH.slot_ _display 5 Display.component (state * state)
         ]
     , HH.button
-        [ HE.onClick (\_ -> Just Increment) ]
+        [ HE.onClick \_ -> Increment ]
         [ HH.text "+1"]
     , HH.button
-        [ HE.onClick (\_ -> Just Decrement) ]
+        [ HE.onClick \_ -> Decrement ]
         [ HH.text "-1"]
     ]
 

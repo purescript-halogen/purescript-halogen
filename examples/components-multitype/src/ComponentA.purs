@@ -16,7 +16,7 @@ data Action = Toggle
 
 type State = Boolean
 
-component :: forall i o m. H.Component HH.HTML Query i o m
+component :: forall i o m. H.Component Query i o m
 component =
   H.mkComponent
     { initialState
@@ -35,7 +35,7 @@ render state =
   HH.div_
     [ HH.p_ [ HH.text "Toggle me!" ]
     , HH.button
-        [ HE.onClick \_ -> Just Toggle ]
+        [ HE.onClick \_ -> Toggle ]
         [ HH.text (if state then "On" else "Off") ]
     ]
 

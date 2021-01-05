@@ -18,28 +18,29 @@ module Halogen.Component
 
 import Prelude
 
-import Data.Bifunctor (class Bifunctor, lmap)
+import Data.Bifunctor (lmap)
 import Data.Bifunctor.Wrap (Wrap(..))
 import Data.Coyoneda (unCoyoneda)
 import Data.Foldable (traverse_)
 import Data.Maybe (Maybe(..), maybe)
 import Data.Newtype (under)
-import Data.Symbol (class IsSymbol, SProxy)
+import Data.Symbol (class IsSymbol)
 import Data.Tuple (Tuple)
 import Halogen.Data.Slot (Slot, SlotStorage)
 import Halogen.Data.Slot as Slot
+import Halogen.HTML.Core as HC
 import Halogen.Query.HalogenM (HalogenM)
 import Halogen.Query.HalogenM as HM
 import Halogen.Query.HalogenQ (HalogenQ(..))
 import Halogen.VDom.Thunk (Thunk)
 import Halogen.VDom.Thunk as Thunk
 import Prim.Row as Row
+import Type.Proxy (Proxy)
 import Unsafe.Coerce (unsafeCoerce)
 
 -- | The "public" type for a component, with details of the component internals
 -- | existentially hidden.
 -- |
--- | - `surface` is the type that will be rendered by the component, usually
 -- |   `HTML`
 -- | - `query` is the query algebra; the requests that can be made of the
 -- |   component
@@ -48,7 +49,6 @@ import Unsafe.Coerce (unsafeCoerce)
 -- | - `output` is the type of messages the component can raise
 -- | - `m` is the effect monad used during evaluation
 data Component
-  (surface :: Type -> Type -> Type)
   (query :: Type -> Type)
   (input :: Type)
   (output :: Type)
@@ -57,8 +57,6 @@ data Component
 -- | The spec for a component.
 -- |
 -- | The type variables involved:
--- | - `surface` is the type that will be rendered by the component, usually
--- |   `HTML`
 -- | - `state` is the component's state
 -- | - `query` is the query algebra; the requests that can be made of the
 -- |   component
@@ -80,17 +78,17 @@ data Component
 -- |   raise actions that will be handled in `eval`.
 -- | - `eval` is a function that handles the `HalogenQ` algebra that deals with
 -- |   component lifecycle, handling actions, and responding to requests.
-type ComponentSpec surface state query action slots input output m =
+type ComponentSpec state query action slots input output m =
   { initialState :: input -> state
-  , render :: state -> surface (ComponentSlot surface slots m action) action
+  , render :: state -> HC.HTML (ComponentSlot slots m action) action
   , eval :: HalogenQ query action input ~> HalogenM state action slots output m
   }
 
 -- | Constructs a [`Component`](#t:Component) from a [`ComponentSpec`](#t:ComponentSpec).
 mkComponent
-  :: forall surface state query action slots input output m
-   . ComponentSpec surface state query action slots input output m
-  -> Component surface query input output m
+  :: forall state query action slots input output m
+   . ComponentSpec state query action slots input output m
+  -> Component query input output m
 mkComponent = unsafeCoerce
 
 -- | Exposes the inner details of a [`Component`](#t:Component) to a function
@@ -100,9 +98,9 @@ mkComponent = unsafeCoerce
 -- | of the function - if any of the hidden types (state, action, set of slots)
 -- | appear in the result, the compiler will complain about an escaped skolem.
 unComponent
-  :: forall surface query input output m a
-   . (forall state action slots. ComponentSpec surface state query action slots input output m -> a)
-  -> Component surface query input output m
+  :: forall query input output m a
+   . (forall state action slots. ComponentSpec state query action slots input output m -> a)
+  -> Component query input output m
   -> a
 unComponent = unsafeCoerce
 
@@ -110,12 +108,11 @@ unComponent = unsafeCoerce
 -- | might be to interpret some `Free` monad as `Aff` so the component can be
 -- | used with `runUI`.
 hoist
-  :: forall surface query input output m m'
-   . Bifunctor surface
-  => Functor m'
+  :: forall query input output m m'
+   . Functor m'
   => (m ~> m')
-  -> Component surface query input output m
-  -> Component surface query input output m'
+  -> Component query input output m
+  -> Component query input output m'
 hoist nat = unComponent \c ->
   mkComponent
     { initialState: c.initialState
@@ -198,20 +195,19 @@ mkEval args = case _ of
 
 -- | A slot for a child component in a component's rendered content.
 data ComponentSlotBox
-  (surface :: Type -> Type -> Type)
-  (slots :: # Type)
+  (slots :: Row Type)
   (m :: Type -> Type)
   (action :: Type)
 
-instance functorComponentSlotBox :: Functor (ComponentSlotBox surface slots m) where
+instance functorComponentSlotBox :: Functor (ComponentSlotBox slots m) where
   map f = unComponentSlot \slot ->
     mkComponentSlot $ slot { output = map f <$> slot.output }
 
-data ComponentSlot surface slots m action
-  = ComponentSlot (ComponentSlotBox surface slots m action)
-  | ThunkSlot (Thunk (surface (ComponentSlot surface slots m action)) action)
+data ComponentSlot slots m action
+  = ComponentSlot (ComponentSlotBox slots m action)
+  | ThunkSlot (Thunk (HC.HTML (ComponentSlot slots m action)) action)
 
-instance functorComponentSlot :: Bifunctor surface => Functor (ComponentSlot surface slots m) where
+instance functorComponentSlot :: Functor (ComponentSlot slots m) where
   map f = case _ of
     ComponentSlot box -> ComponentSlot (map f box)
     ThunkSlot thunk -> ThunkSlot (Thunk.mapThunk (under Wrap (map f) <<< lmap (map f)) thunk)
@@ -225,16 +221,16 @@ instance functorComponentSlot :: Bifunctor surface => Functor (ComponentSlot sur
 -- | - the input value to pass to the component
 -- | - a function mapping outputs from the component to a query in the parent
 componentSlot
-  :: forall surface query input output slots m action label slot _1
+  :: forall query input output slots m action label slot _1
    . Row.Cons label (Slot query output slot) _1 slots
   => IsSymbol label
   => Ord slot
-  => SProxy label
+  => Proxy label
   -> slot
-  -> Component surface query input output m
+  -> Component query input output m
   -> input
   -> (output -> Maybe action)
-  -> ComponentSlotBox surface slots m action
+  -> ComponentSlotBox slots m action
 componentSlot label p comp input output =
   mkComponentSlot
     { get: Slot.lookup label p
@@ -246,20 +242,20 @@ componentSlot label p comp input output =
     }
 
 -- | The internal representation used for a [`ComponentSlot`](#t:ComponentSlot).
-type ComponentSlotSpec surface query input output slots m action =
+type ComponentSlotSpec query input output slots m action =
   { get :: forall slot. SlotStorage slots slot -> Maybe (slot query output)
   , pop :: forall slot. SlotStorage slots slot -> Maybe (Tuple (slot query output) (SlotStorage slots slot))
   , set :: forall slot. slot query output -> SlotStorage slots slot -> SlotStorage slots slot
-  , component :: Component surface query input output m
+  , component :: Component query input output m
   , input :: input
   , output :: output -> Maybe action
   }
 
 -- | Constructs [`ComponentSlotBox`](#t:ComponentSlot) from a [`ComponentSlotSpec`](#t:ComponentSlotSpec).
 mkComponentSlot
-  :: forall surface query input output slots m action
-   . ComponentSlotSpec surface query input output slots m action
-  -> ComponentSlotBox surface slots m action
+  :: forall query input output slots m action
+   . ComponentSlotSpec query input output slots m action
+  -> ComponentSlotBox slots m action
 mkComponentSlot = unsafeCoerce
 
 -- | Exposes the inner details of a [`ComponentSlot`](#t:ComponentSlot) to a
@@ -269,20 +265,19 @@ mkComponentSlot = unsafeCoerce
 -- | of the function - if any of the hidden types (state, action, set of slots)
 -- | appear in the result, the compiler will complain about an escaped skolem.
 unComponentSlot
-  :: forall surface slots m action a
-   . (forall query input output. ComponentSlotSpec surface query input output slots m action -> a)
-  -> ComponentSlotBox surface slots m action
+  :: forall slots m action a
+   . (forall query input output. ComponentSlotSpec query input output slots m action -> a)
+  -> ComponentSlotBox slots m action
   -> a
 unComponentSlot = unsafeCoerce
 
 -- | Changes the [`ComponentSlot`](#t:ComponentSlot)'s `m` type.
 hoistSlot
-  :: forall surface slots m m' action
-   . Bifunctor surface
-  => Functor m'
+  :: forall slots m m' action
+   . Functor m'
   => (m ~> m')
-  -> ComponentSlot surface slots m action
-  -> ComponentSlot surface slots m' action
+  -> ComponentSlot slots m action
+  -> ComponentSlot slots m' action
 hoistSlot nat = case _ of
   ComponentSlot cs ->
     cs # unComponentSlot \slot ->
