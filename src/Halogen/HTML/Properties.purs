@@ -20,11 +20,13 @@ module Halogen.HTML.Properties
   , height
   , width
   , href
+  , id
   , id_
   , name
   , rel
   , src
   , style
+  , scope
   , target
   , title
   , download
@@ -80,6 +82,7 @@ import DOM.HTML.Indexed.MenuitemType (MenuitemType(..)) as I
 import DOM.HTML.Indexed.OnOff (OnOff(..)) as I
 import DOM.HTML.Indexed.OrderedListType (OrderedListType(..)) as I
 import DOM.HTML.Indexed.PreloadValue (PreloadValue(..)) as I
+import DOM.HTML.Indexed.ScopeValue(ScopeValue(..)) as I
 import DOM.HTML.Indexed.StepValue (StepValue(..)) as I
 import Data.Maybe (Maybe(..))
 import Data.MediaType (MediaType)
@@ -89,12 +92,13 @@ import Halogen.HTML.Core (class IsProp, AttrName(..), ClassName, Namespace, Prop
 import Halogen.HTML.Core as Core
 import Halogen.Query.Input (Input(..), RefLabel)
 import Prim.Row as Row
+import Prim.TypeError as TypeError
 import Unsafe.Coerce (unsafeCoerce)
 import Web.DOM.Element (Element)
 
 -- | The phantom row `r` can be thought of as a context which is synthesized in
 -- | the course of constructing a refined HTML expression.
-newtype IProp (r :: # Type) i = IProp (Prop (Input i))
+newtype IProp (r :: Row Type) i = IProp (Prop (Input i))
 
 derive instance newtypeIProp :: Newtype (IProp r i) _
 derive instance functorIProp :: Functor (IProp r)
@@ -178,8 +182,11 @@ width = prop (PropName "width")
 href :: forall r i. String -> IProp (href :: String | r) i
 href = prop (PropName "href")
 
-id_ :: forall r i. String -> IProp (id :: String | r) i
-id_ = prop (PropName "id")
+id :: forall r i. String -> IProp (id :: String | r) i
+id = prop (PropName "id")
+
+id_ :: forall r i. TypeError.Warn (TypeError.Text "`id_` is deprecated. Use `id` instead.") => String -> IProp (id :: String | r) i
+id_ = id
 
 name :: forall r i. String -> IProp (name :: String | r) i
 name = prop (PropName "name")
@@ -200,6 +207,9 @@ src = prop (PropName "src")
 -- | https://github.com/purescript-halogen/purescript-halogen-css
 style :: forall r i. String -> IProp (style :: String | r) i
 style = attr (AttrName "style")
+
+scope :: forall r i. I.ScopeValue -> IProp (scope :: I.ScopeValue | r) i
+scope = prop (PropName "scope")
 
 target :: forall r i. String -> IProp (target :: String | r) i
 target = prop (PropName "target")

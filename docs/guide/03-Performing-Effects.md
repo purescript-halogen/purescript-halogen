@@ -23,7 +23,7 @@ A component that only uses Halogen-specific features can leave this type paramet
 This `handleAction` is able to use functions from `HalogenM` like `modify_` and can also use effectful functions from `Effect`:
 
 ```purs
-handleAction :: forall o. Action -> HalogenM State Action () o Effect Unit
+handleAction :: forall output. Action -> HalogenM State Action () output Effect Unit
 ```
 
 This one can use functions from `HalogenM` and also effectful functions from `Aff`:
@@ -84,7 +84,7 @@ type State = Maybe Number
 
 data Action = Regenerate
 
-component :: forall query input output m. MonadEffect m => H.Component HH.HTML query input output m
+component :: forall query input output m. MonadEffect m => H.Component query input output m
 component =
   H.mkComponent
     { initialState
@@ -104,7 +104,7 @@ render state = do
     , HH.p_
         [ HH.text ("Current value: " <> value) ]
     , HH.button
-        [ HE.onClick \_ -> Just Regenerate ]
+        [ HE.onClick \_ -> Regenerate ]
         [ HH.text "Generate new number" ]
     ]
 
@@ -184,7 +184,7 @@ data Action
   = SetUsername String
   | MakeRequest Event
 
-component :: forall query input output m. MonadAff m => H.Component HH.HTML query input output m
+component :: forall query input output m. MonadAff m => H.Component query input output m
 component =
   H.mkComponent
     { initialState
@@ -192,19 +192,19 @@ component =
     , eval: H.mkEval $ H.defaultEval { handleAction = handleAction }
     }
 
-initialState :: forall i. i -> State
+initialState :: forall input. input -> State
 initialState _ = { loading: false, username: "", result: Nothing }
 
 render :: forall m. State -> H.ComponentHTML Action () m
 render st =
   HH.form
-    [ HE.onSubmit \ev -> Just (MakeRequest ev) ]
+    [ HE.onSubmit \ev -> MakeRequest ev ]
     [ HH.h1_ [ HH.text "Look up GitHub user" ]
     , HH.label_
         [ HH.div_ [ HH.text "Enter username:" ]
         , HH.input
             [ HP.value st.username
-            , HE.onValueInput \str -> Just (SetUsername str)
+            , HE.onValueInput \str -> SetUsername str
             ]
         ]
     , HH.button
@@ -213,7 +213,7 @@ render st =
         ]
         [ HH.text "Fetch info" ]
     , HH.p_
-        [ HH.text (if st.loading then "Working..." else "") ]
+        [ HH.text $ if st.loading then "Working..." else "" ]
     , HH.div_
         case st.result of
           Nothing -> []
@@ -252,4 +252,3 @@ That last point is especially important: when you modify state your component re
 It's worth noting that because we're using `MonadAff` our request will not block the component from doing other work, and we don't have to deal with callbacks to get this async superpower. The computation we've written in `MakeRequest` simply suspends until we get the response and then proceeds to update the state the second time.
 
 It's a smart idea to only modify state when necessary and to batch updates together if possible (like how we call `modify_` once to update both the `loading` and `result` fields). That helps make sure you're only re-rendering when needed.
-

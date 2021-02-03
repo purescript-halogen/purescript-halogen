@@ -5,3 +5,4 @@ src = "docs"
 title = "Halogen Guide"
 [output.html]
 theme = "docs/theme"
+git-repository-url = "https://github.com/purescript-halogen/purescript-halogen"

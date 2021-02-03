@@ -10,6 +10,7 @@ import Halogen.HTML as HH
 render :: forall a p i. a -> HH.HTML p i
 render _ = HH.text ""
 
+newtype TestRenderState :: Type -> Type -> Row Type -> Type -> Type
 newtype TestRenderState s act ps o = TestRenderState Unit
 
 runUI

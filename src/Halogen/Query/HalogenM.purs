@@ -17,7 +17,7 @@ import Data.Map (Map)
 import Data.Map as Map
 import Data.Maybe (Maybe(..), maybe)
 import Data.Newtype (class Newtype, over)
-import Data.Symbol (class IsSymbol, SProxy)
+import Data.Symbol (class IsSymbol)
 import Data.Traversable (traverse)
 import Data.Tuple (Tuple)
 import Effect.Aff.Class (class MonadAff, liftAff)
@@ -28,6 +28,7 @@ import Halogen.Data.Slot as Slot
 import Halogen.Query.ChildQuery as CQ
 import Halogen.Query.Input (RefLabel)
 import Prim.Row as Row
+import Type.Proxy (Proxy)
 import Web.DOM (Element)
 
 -- | The Halogen component eval algebra.
@@ -73,8 +74,8 @@ instance functorHalogenF :: Functor m => Functor (HalogenF state action slots ou
 -- | - `output` is the type of output messages the component can raise
 -- | - `m` is the monad used during evaluation
 -- | - `a` is the result of the HalogenM expression. Use the following pattern:
--- |     `handleAction :: Action -> H.HalogenM State Action Slots Output m Unit
--- |     `handleQuery  :: forall a. Query a -> H.HalogenM State Action Slots Output m (Maybe a)
+-- |     `handleAction :: Action -> H.HalogenM State Action Slots Output m Unit`
+-- |     `handleQuery  :: forall a. Query a -> H.HalogenM State Action Slots Output m (Maybe a)`
 newtype HalogenM state action slots output m a = HalogenM (Free (HalogenF state action slots output m) a)
 
 derive newtype instance functorHalogenM :: Functor (HalogenM state action slots output m)
@@ -133,7 +134,7 @@ query
    . Row.Cons label (Slot query output' slot) _1 slots
   => IsSymbol label
   => Ord slot
-  => SProxy label
+  => Proxy label
   -> slot
   -> query a
   -> HalogenM state action slots output m (Maybe a)
@@ -146,7 +147,7 @@ queryAll
    . Row.Cons label (Slot query output' slot) _1 slots
   => IsSymbol label
   => Ord slot
-  => SProxy label
+  => Proxy label
   -> query a
   -> HalogenM state action slots output m (Map slot a)
 queryAll label q =

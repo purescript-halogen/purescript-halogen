@@ -3,7 +3,6 @@ module Example.Components.Multitype.Container where
 import Prelude
 
 import Data.Maybe (Maybe(..))
-import Data.Symbol (SProxy(..))
 import Example.Components.Multitype.ComponentA as CA
 import Example.Components.Multitype.ComponentB as CB
 import Example.Components.Multitype.ComponentC as CC
@@ -11,6 +10,7 @@ import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
+import Type.Proxy (Proxy(..))
 
 data Action = ReadStates
 
@@ -26,9 +26,9 @@ type ChildSlots =
   , c :: CC.Slot Unit
   )
 
-_a = SProxy :: SProxy "a"
-_b = SProxy :: SProxy "b"
-_c = SProxy :: SProxy "c"
+_a = Proxy :: Proxy "a"
+_b = Proxy :: Proxy "b"
+_c = Proxy :: Proxy "c"
 
 component :: forall q i o m. H.Component q i o m
 component =
@@ -46,17 +46,17 @@ render state = HH.div_
   [ HH.div
       [ HP.class_ (H.ClassName "box")]
       [ HH.h1_ [ HH.text "Component A" ]
-      , HH.slot _a unit CA.component unit absurd
+      , HH.slot_ _a unit CA.component unit
       ]
   , HH.div
       [ HP.class_ (H.ClassName "box")]
       [ HH.h1_ [ HH.text "Component B" ]
-      , HH.slot _b unit CB.component unit absurd
+      , HH.slot_ _b unit CB.component unit
       ]
   , HH.div
       [ HP.class_ (H.ClassName "box")]
       [ HH.h1_ [ HH.text "Component C" ]
-      , HH.slot _c unit CC.component unit absurd
+      , HH.slot_ _c unit CC.component unit
       ]
   , HH.p_
       [ HH.text "Last observed states:"]

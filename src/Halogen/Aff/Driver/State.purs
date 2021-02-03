@@ -69,7 +69,7 @@ newtype DriverStateRef r f o = DriverStateRef (Ref (DriverStateX r f o))
 -- | A version of `DriverState` with the aspects relating to child components
 -- | existentially hidden.
 data DriverStateX
-  (r :: Type -> Type -> # Type -> Type -> Type)
+  (r :: Type -> Type -> Row Type -> Type -> Type)
   (f :: Type -> Type)
   (o :: Type)
 
@@ -88,7 +88,7 @@ unDriverStateX = unsafeCoerce
 
 -- | A wrapper of `r` from `DriverState` with the aspects relating to child
 -- | components existentially hidden.
-data RenderStateX (r :: Type -> Type -> # Type -> Type -> Type)
+data RenderStateX (r :: Type -> Type -> Row Type -> Type -> Type)
 
 mkRenderStateX
   :: forall r s f ps o m

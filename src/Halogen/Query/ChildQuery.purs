@@ -6,7 +6,8 @@ import Data.Maybe (Maybe)
 import Halogen.Data.Slot (SlotStorage)
 import Unsafe.Coerce (unsafeCoerce)
 
-data ChildQueryBox (ps :: # Type) a
+data ChildQueryBox :: Row Type -> Type -> Type
+data ChildQueryBox (ps :: Row Type) a
 
 data ChildQuery ps g o a f b =
   ChildQuery

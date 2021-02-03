@@ -1,6 +1,9 @@
 name: CI
 
-on: push
+on:
+  push:
+    branches: master
+  pull_request:
 
 jobs:
   build:
@@ -10,9 +13,9 @@ jobs:
 
       - uses: actions/setup-node@v1
 
-      - uses: thomashoneyman/setup-purescript@v1.1
+      - uses: purescript-contrib/setup-purescript@main
         with:
-          purescript: "0.13.8"
+          purescript: "0.14.0-rc5"
 
       - name: Cache PureScript dependencies
         uses: actions/cache@v2

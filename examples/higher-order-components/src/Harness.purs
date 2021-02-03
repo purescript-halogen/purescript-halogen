@@ -3,12 +3,12 @@ module Example.HOC.Harness (component) where
 import Prelude
 
 import Data.Maybe (Maybe(..))
-import Data.Symbol (SProxy(..))
 import Example.HOC.Button as Button
 import Example.HOC.Panel as Panel
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
+import Type.Proxy (Proxy(..))
 
 data Action
   = CheckButtonState
@@ -23,8 +23,7 @@ type ChildSlots =
   ( panel :: Panel.Slot Button.Query Button.Message Unit
   )
 
-_panel :: SProxy "panel"
-_panel = SProxy
+_panel = Proxy :: Proxy "panel"
 
 component :: forall q i o m. H.Component q i o m
 component =
