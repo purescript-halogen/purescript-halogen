@@ -13,3 +13,6 @@ in  upstream
 
   with quickcheck-laws.version = "master"
   with quickcheck-laws.repo = "https://github.com/thomashoneyman/purescript-quickcheck-laws"
+
+  with halogen-vdom.version = "master"
+  with halogen-vdom.repo = "https://github.com/srghma/purescript-halogen-vdom"
