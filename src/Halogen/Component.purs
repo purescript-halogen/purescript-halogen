@@ -18,7 +18,7 @@ module Halogen.Component
 
 import Prelude
 
-import Data.Bifunctor (lmap)
+import Data.Bifunctor (bimap, lmap)
 import Data.Coyoneda (unCoyoneda)
 import Data.Foldable (traverse_)
 import Data.Maybe (Maybe(..), maybe)
