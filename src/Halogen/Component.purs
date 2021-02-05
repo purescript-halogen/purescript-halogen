@@ -19,7 +19,6 @@ module Halogen.Component
 import Prelude
 
 import Data.Bifunctor (lmap)
-import Data.Bifunctor.Wrap (Wrap(..))
 import Data.Coyoneda (unCoyoneda)
 import Data.Foldable (traverse_)
 import Data.Maybe (Maybe(..), maybe)
@@ -210,7 +209,7 @@ data ComponentSlot slots m action
 instance functorComponentSlot :: Functor (ComponentSlot slots m) where
   map f = case _ of
     ComponentSlot box -> ComponentSlot (map f box)
-    ThunkSlot thunk -> ThunkSlot (Thunk.mapThunk (under Wrap (map f) <<< lmap (map f)) thunk)
+    ThunkSlot thunk -> ThunkSlot (Thunk.mapThunk (bimap (map f) f) thunk)
 
 -- | Constructs a [`ComponentSlot`](#t:ComponentSlot).
 -- |
