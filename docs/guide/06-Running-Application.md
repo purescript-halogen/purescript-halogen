@@ -141,7 +141,7 @@ render state =
   in
     HH.button
       [ HP.title label
-      , HE.onClick \_ -> Toggle
+      , HE.onClick \_ -> Just Toggle
       ]
       [ HH.text label ]
 

@@ -345,7 +345,7 @@ button =
   where
   render _ =
     HH.button
-      [ HE.onClick \_ -> Click ]
+      [ HE.onClick \_ -> Just Click ]
       [ HH.text "Click me" ]
 
   -- Our output type also shows up in our `HalogenM` type, because this is
@@ -798,7 +798,7 @@ button =
   render :: ButtonState -> H.ComponentHTML ButtonAction () m
   render { label, enabled } =
     HH.button
-      [ HE.onClick \_ -> Click ]
+      [ HE.onClick \_ -> Just Click ]
       [ HH.text $ label <> " (" <> (if enabled then "on" else "off") <> ")" ]
 
   handleAction

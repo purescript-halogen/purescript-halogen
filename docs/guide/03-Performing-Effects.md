@@ -104,7 +104,7 @@ render state = do
     , HH.p_
         [ HH.text ("Current value: " <> value) ]
     , HH.button
-        [ HE.onClick \_ -> Regenerate ]
+        [ HE.onClick \_ -> Just Regenerate ]
         [ HH.text "Generate new number" ]
     ]
 

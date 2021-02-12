@@ -21,6 +21,7 @@ module Main where
 
 import Prelude
 
+import Data.Maybe (Maybe(..))
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
@@ -38,9 +39,9 @@ component =
 
   render state =
     HH.div_
-      [ HH.button [ HE.onClick \_ -> Decrement ] [ HH.text "-" ]
+      [ HH.button [ HE.onClick \_ -> Just Decrement ] [ HH.text "-" ]
       , HH.text (show state)
-      , HH.button [ HE.onClick \_ -> Increment ] [ HH.text "+" ]
+      , HH.button [ HE.onClick \_ -> Just Increment ] [ HH.text "+" ]
       ]
 
   handleAction = case _ of
@@ -172,9 +173,9 @@ import Halogen.HTML.Events
 render :: forall m. State -> H.ComponentHTML Action () m
 render state =
   HH.div_
-    [ HH.button [ HE.onClick \_ -> Decrement ] [ HH.text "-" ]
+    [ HH.button [ HE.onClick \_ -> Just Decrement ] [ HH.text "-" ]
     , HH.text (show state)
-    , HH.button [ HE.onClick \_ -> Increment ] [ HH.text "+" ]
+    , HH.button [ HE.onClick \_ -> Just Increment ] [ HH.text "+" ]
     ]
 ```
 
@@ -187,17 +188,17 @@ You might be curious about why we provided an anonymous function to `onClick`. T
 ```purs
 onClick
   :: forall row action
-   . (MouseEvent -> action)
+   . (MouseEvent -> Maybe action)
   -> IProp (onClick :: MouseEvent | row) action
 
 -- Specialized to our component
 onClick
   :: forall row
-   . (MouseEvent -> Action)
+   . (MouseEvent -> Maybe Action)
   -> IProp (onClick :: MouseEvent | row) Action
 ```
 
-In Halogen, event handlers take as their first argument a callback. This callback receives the DOM event that occurred (in the case of a click event, that's a `MouseEvent`), which contains some metadata you may want to use, and is then responsible for returning an action that Halogen should run in response to the event. In our case, we won't inspect the event itself, so we throw the argument away and return the action we want to run (`Increment` or `Decrement`).
+In Halogen, event handlers take as their first argument a callback. This callback receives the DOM event that occurred (in the case of a click event, that's a `MouseEvent`), which contains some metadata you may want to use, and is then responsible for returning an action that Halogen should run in response to the event (or `Nothing`, if no action should be performed). In our case, we won't inspect the event itself, so we throw the argument away and return the action we want to run (`Increment` or `Decrement`).
 
 The `onClick` function then returns a value of type `IProp`. You should remember `IProp` from the previous chapter. As a refresher, Halogen HTML elements specify a list of what properties and events they support. Properties and events in turn specify their type. Halogen is then able to ensure that you never use a property or event on an element that doesn't support it. In this case buttons do support `onClick` events, so we're good to go!
 
@@ -274,6 +275,7 @@ module Main where
 import Prelude
 
 import Effect (Effect)
+import Data.Maybe (Maybe(..))
 import Halogen as H
 import Halogen.Aff as HA
 import Halogen.HTML as HH
@@ -303,9 +305,9 @@ initialState _ = 0
 render :: forall m. State -> H.ComponentHTML Action () m
 render state =
   HH.div_
-    [ HH.button [ HE.onClick \_ -> Decrement ] [ HH.text "-" ]
+    [ HH.button [ HE.onClick \_ -> Just Decrement ] [ HH.text "-" ]
     , HH.text (show state)
-    , HH.button [ HE.onClick \_ -> Increment ] [ HH.text "+" ]
+    , HH.button [ HE.onClick \_ -> Just Increment ] [ HH.text "+" ]
     ]
 
 handleAction :: forall output m. Action -> H.HalogenM State Action () output m Unit
