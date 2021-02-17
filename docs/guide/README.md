@@ -9,6 +9,7 @@ module Main where
 
 import Prelude
 
+import Data.Maybe (Maybe(..))
 import Effect (Effect)
 import Halogen as H
 import Halogen.Aff as HA
@@ -34,9 +35,9 @@ component =
 
   render state =
     HH.div_
-      [ HH.button [ HE.onClick \_ -> Decrement ] [ HH.text "-" ]
+      [ HH.button [ HE.onClick \_ -> Just Decrement ] [ HH.text "-" ]
       , HH.div_ [ HH.text $ show state ]
-      , HH.button [ HE.onClick \_ -> Increment ] [ HH.text "+" ]
+      , HH.button [ HE.onClick \_ -> Just Increment ] [ HH.text "+" ]
       ]
 
   handleAction = case _ of
