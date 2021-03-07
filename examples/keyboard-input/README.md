@@ -1,6 +1,6 @@
-# Keyboard Input (Event Sources)
+# Keyboard Input (Subscriptions)
 
-This example demonstrates how to selectively capture keyboard events and, more generally, how to use `EventSource`s in Halogen.
+This example demonstrates how to selectively capture keyboard events and, more generally, how to use event listeners in Halogen.
 
 ## Building
 

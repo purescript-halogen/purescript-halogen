@@ -15,6 +15,8 @@ import Data.Foldable (traverse_)
 import Data.Map (Map)
 import Data.Map as Map
 import Data.Maybe (Maybe(..))
+import Data.Monoid.Alternate (Alternate(..))
+import Data.Newtype (un)
 import Data.Symbol (class IsSymbol, reflectSymbol)
 import Data.Tuple (Tuple(..))
 import Halogen.Data.OrdBox (OrdBox, mkOrdBox, unOrdBox)
@@ -112,13 +114,13 @@ slots
   => Proxy sym
   -> SlotStorage slots slot
   -> Map s (slot query output)
-slots sym (SlotStorage m) = Map.foldSubmap Nothing Nothing go m
+slots sym (SlotStorage m) = un Alternate $ Map.foldSubmap Nothing Nothing go m
   where
   key = reflectSymbol sym
 
   go (Tuple key' ob) val
-    | key == key' = Map.singleton (unOrdBox (coerceBox ob)) (coerceVal val)
-    | otherwise = mempty
+    | key == key' = Alternate $ Map.singleton (unOrdBox (coerceBox ob)) (coerceVal val)
+    | otherwise = Alternate Map.empty
 
   coerceBox :: OrdBox Any -> OrdBox s
   coerceBox = unsafeCoerce

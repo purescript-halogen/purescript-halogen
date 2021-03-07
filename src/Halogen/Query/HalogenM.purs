@@ -22,11 +22,11 @@ import Data.Traversable (traverse)
 import Data.Tuple (Tuple)
 import Effect.Aff.Class (class MonadAff, liftAff)
 import Effect.Class (class MonadEffect, liftEffect)
-import FRP.Event as Event
 import Halogen.Data.Slot (Slot)
 import Halogen.Data.Slot as Slot
 import Halogen.Query.ChildQuery as CQ
 import Halogen.Query.Input (RefLabel)
+import Halogen.Subscription as HS
 import Prim.Row as Row
 import Type.Proxy (Proxy)
 import Web.DOM (Element)
@@ -42,7 +42,7 @@ import Web.DOM (Element)
 -- | - `a` is the result of the HalogenF expression (see HalogenM for an example).
 data HalogenF state action slots output m a
   = State (state -> Tuple a state)
-  | Subscribe (SubscriptionId -> Event.Event action) (SubscriptionId -> a)
+  | Subscribe (SubscriptionId -> HS.Emitter action) (SubscriptionId -> a)
   | Unsubscribe SubscriptionId a
   | Lift (m a)
   | ChildQuery (CQ.ChildQueryBox slots a)
@@ -164,28 +164,28 @@ newtype SubscriptionId = SubscriptionId Int
 derive newtype instance eqSubscriptionId :: Eq SubscriptionId
 derive newtype instance ordSubscriptionId :: Ord SubscriptionId
 
--- | Subscribes a component to an `EventSource`.
+-- | Subscribes a component to an `Emitter`.
 -- |
 -- | When a component is disposed of any active subscriptions will automatically
 -- | be stopped and no further subscriptions will be possible during
 -- | finalization.
-subscribe :: forall state action slots output m. Event.Event action -> HalogenM state action slots output m SubscriptionId
+subscribe :: forall state action slots output m. HS.Emitter action -> HalogenM state action slots output m SubscriptionId
 subscribe es = HalogenM $ liftF $ Subscribe (\_ -> es) identity
 
 -- | An alternative to `subscribe`, intended for subscriptions that unsubscribe
 -- | themselves. Instead of returning the `SubscriptionId` from `subscribe'`, it
--- | is passed into an `EventSource` constructor. This allows emitted queries
+-- | is passed into an `Emitter` constructor. This allows emitted queries
 -- | to include the `SubscriptionId`, rather than storing it in the state of the
 -- | component.
 -- |
 -- | When a component is disposed of any active subscriptions will automatically
 -- | be stopped and no further subscriptions will be possible during
 -- | finalization.
-subscribe' :: forall state action slots output m. (SubscriptionId -> Event.Event action) -> HalogenM state action slots output m Unit
+subscribe' :: forall state action slots output m. (SubscriptionId -> HS.Emitter action) -> HalogenM state action slots output m Unit
 subscribe' esc = HalogenM $ liftF $ Subscribe esc (const unit)
 
--- | Unsubscribes a component from an `EventSource`. If the subscription
--- | associated with the ID has already ended this will have no effect.
+-- | Unsubscribes a component from a subscription. If the subscription associated
+-- | with the ID has already ended this will have no effect.
 unsubscribe :: forall state action slots output m. SubscriptionId -> HalogenM state action slots output m Unit
 unsubscribe sid = HalogenM $ liftF $ Unsubscribe sid unit
 
