@@ -11,7 +11,7 @@
     "purescript-avar": "^4.0.0",
     "purescript-console": "^5.0.0",
     "purescript-const": "^5.0.0",
-    "purescript-dom-indexed": "^7.0.0",
+    "purescript-dom-indexed": "^8.0.0",
     "purescript-effect": "^3.0.0",
     "purescript-foreign": "^6.0.0",
     "purescript-fork": "^5.0.0",
