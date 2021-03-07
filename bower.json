@@ -17,7 +17,7 @@
     "purescript-fork": "^5.0.0",
     "purescript-free": "^6.0.0",
     "purescript-freeap": "^6.0.0",
-    "purescript-halogen-subscriptions": "https://github.com/purescript-halogen/purescript-halogen-subscriptions.git#^1.0.0",
+    "purescript-halogen-subscriptions": "https://github.com/purescript-halogen/purescript-halogen-subscriptions.git#1.0.0",
     "purescript-halogen-vdom": "^7.0.0",
     "purescript-media-types": "^5.0.0",
     "purescript-nullable": "^5.0.0",
