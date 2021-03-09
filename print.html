@@ -862,7 +862,7 @@ handleAction = case _ of
 <p>But actions can arise internally from other kinds of events, too. Here are some common examples:</p>
 <ol>
 <li>You need to run an action when the component starts up (for example, you need to perform an effect to get your initial state) or when the component is removed from the DOM (for example, to clean up resources you acquired). These are called <strong>lifecycle events</strong>.</li>
-<li>You need to run an action at regular intervals (for example, you need to perform an update every 10 seconds), or when an event arises from outside your rendered HTML (for example, you need to run an action when a key is pressed on the DOM window, or you need to handle events that occur in a third-party component like a text editor). These are handled by <strong>event source subscriptions</strong>, sometimes just called <strong>subscriptions</strong> or <strong>event sources</strong>.</li>
+<li>You need to run an action at regular intervals (for example, you need to perform an update every 10 seconds), or when an event arises from outside your rendered HTML (for example, you need to run an action when a key is pressed on the DOM window, or you need to handle events that occur in a third-party component like a text editor). These are handled by <strong>subscriptions</strong>.</li>
 </ol>
 <p>We'll learn about one other way actions can arise in a component when we learn about parent and child components in the next chapter. This chapter will focus on lifecycles and subscriptions.</p>
 <h2><a class="header" href="#lifecycle-events" id="lifecycle-events">Lifecycle Events</a></h2>
@@ -956,7 +956,7 @@ handleAction = case _ of
     H.put (Just newNumber)
     log (&quot;Initialized: &quot; &lt;&gt; show newNumber)
 </code></pre>
-<p>Before we move on to subscriptions and event sources, let's talk more about the <code>eval</code> function.</p>
+<p>Before we move on to subscriptions, let's talk more about the <code>eval</code> function.</p>
 <h2><a class="header" href="#the-eval-function-mkeval-and-evalspec" id="the-eval-function-mkeval-and-evalspec">The <code>eval</code> Function, <code>mkEval</code>, and <code>EvalSpec</code></a></h2>
 <p>We've been using <code>eval</code> in all of our components, but so far we've only handled actions arising from our Halogen HTML via the <code>handleAction</code> function. But the <code>eval</code> function can describe <em>all</em> the ways our component can evaluate <code>HalogenM</code> code in response to events.</p>
 <p>In the vast majority of cases you don't need to care much about all the types and functions involved in the component spec and eval spec described below, but we'll briefly break down the types so you have an idea of what's going on.</p>
@@ -1010,13 +1010,13 @@ handleAction = ...
   , finalize: Nothing
   }
 </code></pre>
-<p>Now, let's move to the other common source of internal events: event sources we've subscribed to.</p>
+<p>Now, let's move to the other common source of internal events: subscriptions.</p>
 <h2><a class="header" href="#subscriptions" id="subscriptions">Subscriptions</a></h2>
 <p>Sometimes you need to handle events arising internally that don't come from a user interacting with the Halogen HTML you've rendered. Two common sources are time-based actions and events that happen on an element outside one you've rendered (like the browser window).</p>
-<p>In Halogen these kinds of events can be created manually with the <a href="https://github.com/paf31/purescript-event"><code>event</code></a> library. Halogen components can subscribe to an <code>Event</code> by providing an action that should run when the event happens.</p>
-<p>You can subscribe to events using functions from the <code>event</code> library, but Halogen provides a special helper function for subscribing to events from event listeners in the DOM called <code>eventListenerEventSource</code>.</p>
-<p>An event source can be thought of as a stream of actions: actions can be produced at any time from the event source, and your component will evaluate those actions so long as it remains subscribed to the event source. It's common to create an event source and subscribe to it when the component initializes, though you can subscribe or unsubscribe from an event source at any time.</p>
-<p>Let's see two examples of event sources in action: an <code>Aff</code>-based timer that counts the seconds since the component mounted and an event-listener-based stream that reports keyboard events on the document.</p>
+<p>In Halogen these kinds of events can be created manually with the <a href="https://github.com/purescript-halogen/purescript-halogen-subscriptions"><code>halogen-subscriptions</code></a> library. Halogen components can subscribe to an <code>Emitter</code> by providing an action that should run when the emitter fires.</p>
+<p>You can subscribe to events using functions from the <code>halogen-subscriptions</code> library, but Halogen provides a special helper function for subscribing to event listeners in the DOM called <code>eventListener</code>.</p>
+<p>An <code>Emitter</code> produces a stream of actions, and your component will evaluate those actions so long as it remains subscribed to the emitter. It's common to create an emitter and subscribe to it when the component initializes, though you can subscribe or unsubscribe from an emitter at any time.</p>
+<p>Let's see two examples of subscriptions in action: an <code>Aff</code>-based timer that counts the seconds since the component mounted and an event-listener-based stream that reports keyboard events on the document.</p>
 <h3><a class="header" href="#implementing-a-timer" id="implementing-a-timer">Implementing a Timer</a></h3>
 <p>Our first example will use an <code>Aff</code>-based timer to increment every second.</p>
 <pre><code class="language-purs">module Main where
@@ -1030,11 +1030,10 @@ import Effect.Aff (Milliseconds(..))
 import Effect.Aff as Aff
 import Effect.Aff.Class (class MonadAff)
 import Effect.Exception (error)
-import FRP.Event (Event)
-import FRP.Event as Event
 import Halogen as H
 import Halogen.Aff as HA
 import Halogen.HTML as HH
+import Halogen.Subscription as HS
 import Halogen.VDom.Driver (runUI)
 
 main :: Effect Unit
@@ -1066,41 +1065,41 @@ render seconds = HH.text (&quot;You have been here for &quot; &lt;&gt; show seco
 handleAction :: forall output m. MonadAff m =&gt; Action -&gt; H.HalogenM State Action () output m Unit
 handleAction = case _ of
   Initialize -&gt; do
-    _ &lt;- H.subscribe =&lt;&lt; timer
+    _ &lt;- H.subscribe =&lt;&lt; timer Tick
     pure unit
 
   Tick -&gt;
     H.modify_ \state -&gt; state + 1
 
-timer :: forall m. MonadAff m =&gt; m (Event Action)
-timer = do
-  { event, push } &lt;- H.liftEffect Event.create
+timer :: forall m a. MonadAff m =&gt; a -&gt; m (HS.Emitter a)
+timer val = do
+  { emitter, listener } &lt;- H.liftEffect HS.create
   _ &lt;- Aff.forkAff $ forever do
     Aff.delay $ Milliseconds 1000.0
-    push Tick
-  pure event
+    HS.notify listener val
+  pure emitter
 </code></pre>
 <p>Almost all of this code should look familiar, but there are two new parts.</p>
-<p>First, we've defined an event source that will emit a <code>Tick</code> action every second until it is closed:</p>
-<pre><code class="language-purs">timer :: forall m. MonadAff m =&gt; m (Event Action)
-timer = do
-  { event, push } &lt;- H.liftEffect Event.create
+<p>First, we've defined a reusable <code>Emitter</code> that will broadcast a value of our choice every second until it has no subscribers:</p>
+<pre><code class="language-purs">timer :: forall m a. MonadAff m =&gt; a -&gt; m (HS.Emitter a)
+timer val = do
+  { emitter, listener } &lt;- H.liftEffect Event.create
   _ &lt;- Aff.forkAff $ forever do
     Aff.delay $ Milliseconds 1000.0
-    push Tick
-  pure event
+    HS.notify listener val
+  pure emitter
 </code></pre>
-<p>When creating effectful event sources (as opposed to event sources tied to event listeners in the DOM), we can simply use functions from the <code>event</code> library. Most commonly you'll use <a href="https://pursuit.purescript.org/packages/purescript-event/docs/FRP.Event#v:create"><code>Event.create</code></a>, but if you need to manually control unsubscription you can also use <a href="https://pursuit.purescript.org/packages/purescript-event/docs/FRP.Event#v:makeEvent"><code>Event.makeEvent</code></a>.</p>
-<p>Second, we use the <code>subscribe</code> function from Halogen to attach to the event source:</p>
+<p>Unless you are creating emitters tied to event listeners in the DOM, you should use functions from the <code>halogen-subscriptions</code> library. Most commonly you'll use <code>HS.create</code> to create an emitter and a listener, but if you need to manually control unsubscription you can also use <code>HS.makeEmitter</code>.</p>
+<p>Second, we use the <code>subscribe</code> function from Halogen to attach to the emitter, also providing the specific action we'd like to emit every second:</p>
 <pre><code class="language-purs">  Initialize -&gt; do
-    _ &lt;- H.subscribe =&lt;&lt; timer
+    _ &lt;- H.subscribe =&lt;&lt; timer Tick
     pure unit
 </code></pre>
-<p>The <code>subscribe</code> function takes an <code>Event</code> as an argument and it returns a <code>SubscriptionId</code>. You can pass this <code>SubscriptionId</code> to the <code>unsubscribe</code> function at any point to close the event source, run its cleanup function, and stop listening to outputs from it. Components automatically unsubscribe from any event sources when the component finalizes, so we don't need to unsubscribe here.</p>
+<p>The <code>subscribe</code> function takes an <code>Emitter</code> as an argument and it returns a <code>SubscriptionId</code>. You can pass this <code>SubscriptionId</code> to the Halogen <code>unsubscribe</code> function at any point to end the subscription. Components automatically end any subscriptions it has when they finalize, so there's no requirement to unsubscribe here.</p>
 <p>You may also be interested in the <a href="https://github.com/purescript-halogen/purescript-halogen/tree/master/examples/ace">Ace editor example</a>, which subscribes to events that happen inside a third-party JavaScript component and uses them to trigger actions in a Halogen component.</p>
-<h3><a class="header" href="#using-event-listeners-as-event-sources" id="using-event-listeners-as-event-sources">Using Event Listeners As Event Sources</a></h3>
-<p>Another common reason to use event sources is when you need to react to events in the DOM that don't arise directly from HTML elements you control. For example, we might want to listen to events that happen on the document itself.</p>
-<p>In the following example we subscribe to key events on the document, save any characters that are typed while holding the <code>Shift</code> key, and stop listening if the user hits the <code>Enter</code> key. It demonstrates using the <code>eventListenerEventSource</code> function to attach an event listener and using the <code>H.unsubscribe</code> function to choose when to clean it up.</p>
+<h3><a class="header" href="#using-event-listeners-as-subscriptions" id="using-event-listeners-as-subscriptions">Using Event Listeners As Subscriptions</a></h3>
+<p>Another common reason to use subscriptions is when you need to react to events in the DOM that don't arise directly from HTML elements you control. For example, we might want to listen to events that happen on the document itself.</p>
+<p>In the following example we subscribe to key events on the document, save any characters that are typed while holding the <code>Shift</code> key, and stop listening if the user hits the <code>Enter</code> key. It demonstrates using the <code>eventListener</code> function to attach an event listener and using the <code>H.unsubscribe</code> function to choose when to clean it up.</p>
 <p>There is also a corresponding <a href="https://github.com/purescript-halogen/purescript-halogen/tree/master/examples/keyboard-input">example of keyboard input</a> in the examples directory.</p>
 <pre><code class="language-purs">module Main where
 
@@ -1113,7 +1112,7 @@ import Effect.Aff.Class (class MonadAff)
 import Halogen as H
 import Halogen.Aff as HA
 import Halogen.HTML as HH
-import Halogen.Query.Event (eventListenerEventSource)
+import Halogen.Query.Event (eventListener)
 import Halogen.VDom.Driver (runUI)
 import Web.Event.Event as E
 import Web.HTML (window)
@@ -1160,7 +1159,7 @@ handleAction = case _ of
   Initialize -&gt; do
     document &lt;- H.liftEffect $ document =&lt;&lt; window
     H.subscribe' \sid -&gt;
-      eventListenerEventSource
+      eventListener
         KET.keyup
         (HTMLDocument.toEventTarget document)
         (map (HandleKey sid) &lt;&lt;&lt; KE.fromEvent)
@@ -1180,15 +1179,15 @@ handleAction = case _ of
     | otherwise -&gt;
         pure unit
 </code></pre>
-<p>In this example we used the <code>H.subscribe'</code> function, which passes the <code>SubscriptionId</code> to the event source instead of returning it. This is an alternative that lets you keep the ID in the action type instead of the state, which can be more convenient.</p>
-<p>We wrote our event source right into our code to handle the <code>Initialize</code> action, which registers an event listener on the document and emits <code>HandleKey</code> every time a key is pressed.</p>
-<p><code>eventListenerEventSource</code> works a little differently from the other event sources. It uses types from the <code>purescript-web</code> libraries for working with the DOM to manually construct an event listener:</p>
-<pre><code class="language-purs">eventListenerEventSource
+<p>In this example we used the <code>H.subscribe'</code> function, which passes the <code>SubscriptionId</code> to the emitter instead of returning it. This is an alternative that lets you keep the ID in the action type instead of the state, which can be more convenient.</p>
+<p>We wrote our emitter right into our code to handle the <code>Initialize</code> action, which registers an event listener on the document and emits <code>HandleKey</code> every time a key is pressed.</p>
+<p><code>eventListener</code> uses types from the <code>purescript-web</code> libraries for working with the DOM to manually construct an event listener:</p>
+<pre><code class="language-purs">eventListener
   :: forall a
    . Web.Event.EventType
   -&gt; Web.Event.EventTarget.EventTarget
   -&gt; (Web.Event.Event -&gt; Maybe a)
-  -&gt; FRP.Event.Event a
+  -&gt; HS.Emitter a
 </code></pre>
 <p>It takes a type of event to listen to (in our case: <code>keyup</code>), a target indicating where to listen for events (in our case: the <code>HTMLDocument</code> itself), and a callback function that transforms the events that occur into a type that should be emitted (in our case: we emit our <code>Action</code> type by capturing the event in the <code>HandleKey</code> constructor).</p>
 <h2><a class="header" href="#wrapping-up" id="wrapping-up">Wrapping Up</a></h2>
@@ -1196,7 +1195,7 @@ handleAction = case _ of
 <ol>
 <li>User interaction with HTML elements we rendered</li>
 <li>Lifecycle events</li>
-<li>Event sources, whether via <code>Aff</code> and <code>Effect</code> functions or from event listeners on the DOM</li>
+<li>Subscriptions, whether via <code>Aff</code> and <code>Effect</code> functions or from event listeners on the DOM</li>
 </ol>
 <p>You now know all the essentials for using Halogen components in isolation. In the next chapter we'll learn how to combine Halogen components together into a tree of parent and child components.</p>
 <h1><a class="header" href="#parent-and-child-components" id="parent-and-child-components">Parent and Child Components</a></h1>
@@ -1329,7 +1328,7 @@ button =
 <p>When you move from using one component to using many components you'll soon need some way for them to communicate with one another. In Halogen there are three ways that a parent and child component can communicate directly:</p>
 <ol>
 <li>The parent component can provide input to the child component. Each time the parent component renders it will send the input again, and then it's up to the child component to decide what to do with the new input.</li>
-<li>The child component can emit output messages to the parent, similar to how we've been using event sources so far. The child component can notify the parent component when an important event has happened, like a modal closing or a form being submitted, and then the parent can decide what to do.</li>
+<li>The child component can emit output messages to the parent, similar to how we've been using subscriptions so far. The child component can notify the parent component when an important event has happened, like a modal closing or a form being submitted, and then the parent can decide what to do.</li>
 <li>The parent component can query the child component, either by telling it to do something or by requesting some information from it. The parent component can decide when it needs the child component to do something or give it some information, and then it's up to the child component to handle the query.</li>
 </ol>
 <p>These three mechanisms give you several ways to communicate between components. Let's briefly explore these three mechanisms, and then we'll see how the <code>slot</code> function and the slot type you define for your component help you use them in a type-safe way.</p>
@@ -1464,7 +1463,7 @@ button =
 <h3><a class="header" href="#output-messages" id="output-messages">Output Messages</a></h3>
 <p>Sometimes an event happens in a child component that it shouldn't handle itself.</p>
 <p>For example, let's say we're writing a modal component, and we need to evaluate some code when a user clicks to close the modal. To keep this modal flexible we'd like for the parent component to decide what should happen when the modal is closed.</p>
-<p>In Halogen we'd handle this situation by designing the modal (the child component) to raise an <strong>output message</strong> to the parent component. The parent component can then handle the message like any other action in its <code>handleAction</code> function. Conceptually, it's as though the child component is an event source the that the parent component automatically subscribes to.</p>
+<p>In Halogen we'd handle this situation by designing the modal (the child component) to raise an <strong>output message</strong> to the parent component. The parent component can then handle the message like any other action in its <code>handleAction</code> function. Conceptually, it's as though the child component is a subscription that the parent component automatically subscribes to.</p>
 <p>Concretely, our modal could raise a <code>Closed</code> output to the parent component. The parent could then change its state to indicate the modal should no longer display, and on the next render the modal is removed from the DOM.</p>
 <p>As a tiny example, let's consider how we'd design a button that lets the parent component decide what to do when it is clicked:</p>
 <pre><code class="language-purs">module Button where
@@ -2054,6 +2053,7 @@ handleQuery = case _ of
 <p>Halogen's major versions come with transition guides that explain how to migrate your code from one version to the next, along with summaries and the motivation for major changes to the library.</p>
 <p>Currently these major versions are supported:</p>
 <ul>
+<li><a href="changelog/./v6.html">v6</a></li>
 <li><a href="changelog/./v5.html">v5</a></li>
 </ul>
 <h1><a class="header" href="#changes-in-v5" id="changes-in-v5">Changes in v5</a></h1>
