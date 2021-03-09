@@ -11,4 +11,5 @@
     - [Next Steps](guide/07-Next-Steps.md)
 - [Concepts Reference](concepts-reference/README.md)
 - [Major Version Changelog](changelog/README.md)
+    - [Changes in v6](changelog/v6.md)
     - [Changes in v5](changelog/v5.md)
