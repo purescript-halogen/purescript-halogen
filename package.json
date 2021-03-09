@@ -22,8 +22,8 @@
     "example-lifecycle": "spago --config examples/lifecycle/spago.dhall bundle-app --main Example.Lifecycle.Main --to examples/lifecycle/dist/example.js"
   },
   "devDependencies": {
-    "purescript-psa": "^0.8.0",
+    "purescript-psa": "^0.8.2",
     "rimraf": "^3.0.2",
-    "spago": "^0.18.1"
+    "spago": "^0.19.1"
   }
 }

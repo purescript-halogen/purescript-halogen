@@ -9,10 +9,10 @@ import Ace.Types (Editor)
 import Data.Foldable (traverse_)
 import Data.Maybe (Maybe(..))
 import Effect.Aff.Class (class MonadAff)
-import FRP.Event as Event
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Properties as HP
+import Halogen.Subscription as HS
 
 type Slot = H.Slot Query Output
 
@@ -60,9 +60,9 @@ handleAction = case _ of
       editor <- H.liftEffect $ Ace.editNode element Ace.ace
       session <- H.liftEffect $ Editor.getSession editor
       H.modify_ (_ { editor = Just editor })
-      { event, push } <- H.liftEffect $ Event.create
-      void $ H.subscribe event
-      H.liftEffect $ Session.onChange session (\_ -> push HandleChange)
+      { emitter, listener } <- H.liftEffect HS.create
+      void $ H.subscribe emitter
+      H.liftEffect $ Session.onChange session (\_ -> HS.notify listener HandleChange)
   Finalize -> do
     -- Release the reference to the editor and do any other cleanup that a
     -- real world component might need.

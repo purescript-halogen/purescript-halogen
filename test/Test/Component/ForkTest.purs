@@ -9,8 +9,8 @@ import Data.Maybe (Maybe(..))
 import Effect.Aff (Aff)
 import Effect.Aff as Aff
 import Effect.Ref as Ref
-import FRP.Event as Event
 import Halogen as H
+import Halogen.Subscription as HS
 import Test.Assert (assertEqual)
 import Test.TestDriver as TD
 
@@ -58,7 +58,7 @@ testForkKill = do
 
   logRef <- H.liftEffect $ Ref.new L.Nil
 
-  _ ← H.liftEffect $ Event.subscribe io.messages \msg -> do
+  _ ← H.liftEffect $ HS.subscribe io.messages \msg -> do
     H.liftEffect $ Ref.modify_ (msg : _) logRef
     pure Nothing
 
@@ -90,7 +90,7 @@ testFinalize = do
 
   logRef <- H.liftEffect $ Ref.new L.Nil
 
-  _ ← H.liftEffect $ Event.subscribe io.messages \msg -> do
+  _ ← H.liftEffect $ HS.subscribe io.messages \msg -> do
     H.liftEffect $ Ref.modify_ (msg : _) logRef
     pure Nothing
 

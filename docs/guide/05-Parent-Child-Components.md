@@ -163,7 +163,7 @@ The `slot` and `slot_` functions and the `H.Slot` type let us manage these three
 When you move from using one component to using many components you'll soon need some way for them to communicate with one another. In Halogen there are three ways that a parent and child component can communicate directly:
 
 1. The parent component can provide input to the child component. Each time the parent component renders it will send the input again, and then it's up to the child component to decide what to do with the new input.
-2. The child component can emit output messages to the parent, similar to how we've been using event sources so far. The child component can notify the parent component when an important event has happened, like a modal closing or a form being submitted, and then the parent can decide what to do.
+2. The child component can emit output messages to the parent, similar to how we've been using subscriptions so far. The child component can notify the parent component when an important event has happened, like a modal closing or a form being submitted, and then the parent can decide what to do.
 3. The parent component can query the child component, either by telling it to do something or by requesting some information from it. The parent component can decide when it needs the child component to do something or give it some information, and then it's up to the child component to handle the query.
 
 These three mechanisms give you several ways to communicate between components. Let's briefly explore these three mechanisms, and then we'll see how the `slot` function and the slot type you define for your component help you use them in a type-safe way.
@@ -319,7 +319,7 @@ Sometimes an event happens in a child component that it shouldn't handle itself.
 
 For example, let's say we're writing a modal component, and we need to evaluate some code when a user clicks to close the modal. To keep this modal flexible we'd like for the parent component to decide what should happen when the modal is closed.
 
-In Halogen we'd handle this situation by designing the modal (the child component) to raise an **output message** to the parent component. The parent component can then handle the message like any other action in its `handleAction` function. Conceptually, it's as though the child component is an event source the that the parent component automatically subscribes to.
+In Halogen we'd handle this situation by designing the modal (the child component) to raise an **output message** to the parent component. The parent component can then handle the message like any other action in its `handleAction` function. Conceptually, it's as though the child component is a subscription that the parent component automatically subscribes to.
 
 Concretely, our modal could raise a `Closed` output to the parent component. The parent could then change its state to indicate the modal should no longer display, and on the next render the modal is removed from the DOM.
 

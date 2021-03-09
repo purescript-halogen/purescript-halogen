@@ -13,7 +13,7 @@ import Data.List ((:))
 import Data.List as L
 import Data.Map as M
 import Data.Maybe (Maybe(..), maybe, isJust, isNothing)
-import Data.Traversable (for_, sequence_, traverse_)
+import Data.Traversable (for_, traverse_)
 import Data.Tuple (Tuple(..))
 import Effect (Effect)
 import Effect.Aff (Aff, killFiber)
@@ -22,7 +22,6 @@ import Effect.Console (warn)
 import Effect.Exception (error, throw)
 import Effect.Ref (Ref)
 import Effect.Ref as Ref
-import FRP.Event as Event
 import Halogen (HalogenIO)
 import Halogen.Aff.Driver.Eval as Eval
 import Halogen.Aff.Driver.State (DriverState(..), DriverStateRef(..), DriverStateX, LifecycleHandlers, RenderStateX, initDriverState, mapDriverState, renderStateX, renderStateX_, unDriverStateX)
@@ -32,6 +31,7 @@ import Halogen.HTML.Core as HC
 import Halogen.Query.HalogenQ as HQ
 import Halogen.Query.Input (Input)
 import Halogen.Query.Input as Input
+import Halogen.Subscription as HS
 
 -- | `RenderSpec` allows for alternative driver implementations without the need
 -- | to provide all of the driver machinery again, focusing just on the code
@@ -116,12 +116,12 @@ runUI renderSpec component i = do
   fresh <- liftEffect $ Ref.new 0
   disposed <- liftEffect $ Ref.new false
   Eval.handleLifecycle lchs do
-    eio <- Event.create
-    dsx <- Ref.read =<< runComponent lchs (liftEffect <<< eio.push) i component
+    sio <- HS.create
+    dsx <- Ref.read =<< runComponent lchs (liftEffect <<< HS.notify sio.listener) i component
     unDriverStateX (\st ->
       pure
         { query: evalDriver disposed st.selfRef
-        , messages: eio.event
+        , messages: sio.emitter
         , dispose: dispose disposed lchs dsx
         }) dsx
 
@@ -291,7 +291,7 @@ cleanupSubscriptionsAndForks
    . DriverState r s f act ps i o
   -> Effect Unit
 cleanupSubscriptionsAndForks (DriverState ds) = do
-  traverse_ sequence_ =<< Ref.read ds.subscriptions
+  traverse_ (traverse_ HS.unsubscribe) =<< Ref.read ds.subscriptions
   Ref.write Nothing ds.subscriptions
   traverse_ (Eval.handleAff <<< killFiber (error "finalized")) =<< Ref.read ds.forks
   Ref.write M.empty ds.forks
