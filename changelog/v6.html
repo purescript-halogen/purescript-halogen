@@ -1,0 +1,363 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Changes in v6 - Halogen Guide</title>
+        
+        
+
+
+        <!-- Custom HTML head -->
+        
+
+
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        
+        <link rel="icon" href="../favicon.svg">
+        
+        
+        <link rel="shortcut icon" href="../favicon.png">
+        
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        
+        <link rel="stylesheet" href="../css/print.css" media="print">
+        
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        
+        <link rel="stylesheet" href="../fonts/fonts.css">
+        
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="../index.html"><strong aria-hidden="true">1.</strong> Halogen</a></li><li class="chapter-item expanded "><a href="../guide/index.html"><strong aria-hidden="true">2.</strong> Guide</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../guide/01-Rendering-Halogen-HTML.html"><strong aria-hidden="true">2.1.</strong> Rendering Halogen HTML</a></li><li class="chapter-item expanded "><a href="../guide/02-Introducing-Components.html"><strong aria-hidden="true">2.2.</strong> Introducing Components</a></li><li class="chapter-item expanded "><a href="../guide/03-Performing-Effects.html"><strong aria-hidden="true">2.3.</strong> Performing Effects</a></li><li class="chapter-item expanded "><a href="../guide/04-Lifecycles-Subscriptions.html"><strong aria-hidden="true">2.4.</strong> Lifecycles &amp; Subscriptions</a></li><li class="chapter-item expanded "><a href="../guide/05-Parent-Child-Components.html"><strong aria-hidden="true">2.5.</strong> Parent &amp; Child Components</a></li><li class="chapter-item expanded "><a href="../guide/06-Running-Application.html"><strong aria-hidden="true">2.6.</strong> Running Application</a></li><li class="chapter-item expanded "><a href="../guide/07-Next-Steps.html"><strong aria-hidden="true">2.7.</strong> Next Steps</a></li></ol></li><li class="chapter-item expanded "><a href="../concepts-reference/index.html"><strong aria-hidden="true">3.</strong> Concepts Reference</a></li><li class="chapter-item expanded "><a href="../changelog/index.html"><strong aria-hidden="true">4.</strong> Major Version Changelog</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../changelog/v6.html" class="active"><strong aria-hidden="true">4.1.</strong> Changes in v6</a></li><li class="chapter-item expanded "><a href="../changelog/v5.html"><strong aria-hidden="true">4.2.</strong> Changes in v5</a></li></ol></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                        
+                    </div>
+
+                    <h1 class="menu-title">Halogen Guide</h1>
+
+                    <div class="right-buttons">
+                        
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        
+                        
+                        <a href="https://github.com/purescript-halogen/purescript-halogen" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        
+                    </div>
+                </div>
+
+                
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1><a class="header" href="#changes-in-v6" id="changes-in-v6">Changes in v6</a></h1>
+<p>This is a crash-course on the changes from Halogen 5 to Halogen 6. Please open an issue or PR if you notice missing information or ways this guide could be improved!</p>
+<p>Halogen 6 introduces several quality-of-life improvements for using Halogen on a day-to-day basis, without major changes to how you use the library to build your applications. It's an intentionally small release which adds polish to the library and which is the first version to support version 0.14 of the PureScript compiler.</p>
+<p>If you are migrating an application from Halogen 5 we recommend reading through the full transition guide. However, you can also hop directly to a relevant section using the table of contents below.</p>
+<ol>
+<li><a href="#purescript-014">PureScript 0.14</a></li>
+<li><a href="#component-types">Component Types</a></li>
+<li><a href="#event-handler-types">Event Handler Types</a></li>
+<li><a href="#query-helper-functions">Query Helper Functions</a></li>
+<li><a href="#subscriptions">Subscriptions</a></li>
+<li><a href="#other-changes">Other Changes</a></li>
+</ol>
+<h2><a class="header" href="#purescript-014" id="purescript-014">PureScript 0.14</a></h2>
+<p>Halogen 6 is the first version of Halogen compatible with PureScript 0.14. You'll need PureScript 0.14 to compile the library, and if you're upgrading your application to use PureScript 0.14 then you'll need to be on Halogen 6. We know it can be painful dealing with compiler changes <em>and</em> library changes, so we've kept this release intentionally small.</p>
+<h2><a class="header" href="#component-types" id="component-types">Component Types</a></h2>
+<p>Component types have been simplified by removing the <code>surface</code> parameter.</p>
+<p>In Halogen 5 (and prior versions), components and the internal functions which manage them carried a <code>surface</code> parameter which indicated the target for the UI to render. As no one ever wrote an alternate target from <code>HTML</code>, Halogen applications have always fixed this parameter to <code>HTML</code> in component definitions, as in:</p>
+<pre><code class="language-purs">import Halogen as H
+import Halogen.HTML as HH
+
+myComponent :: forall q i o m. H.Component HH.HTML q i o m
+</code></pre>
+<p>In Halogen 6 the <code>surface</code> parameter has been removed. The only real user-visible change is that components and functions which operate on them no longer carry the <code>surface</code> parameter.</p>
+<pre><code class="language-purs">import Halogen as H
+
+myComponent :: forall q i o m. H.Component q i o m
+</code></pre>
+<p>This is a breaking change, but one which is easily fixed: remove this parameter from your components and any related functions and types.</p>
+<p>Added in <a href="https://github.com/purescript-halogen/purescript-halogen/pull/616">#616</a>.</p>
+<h2><a class="header" href="#event-handler-types" id="event-handler-types">Event Handler Types</a></h2>
+<p>We've also made event handlers a little nicer to work with. The <code>Maybe action</code> return value has been removed from event handlers, which now return <code>action</code> directly.</p>
+<p>In Halogen 5, when you wanted to respond to a click event, or a message from a child component, the output was of type <code>Maybe action</code>. This allowed you to selectively emit outputs (you could emit <code>Nothing</code> for some events). In practice, though, few do this.</p>
+<p>To remove friction around such a common task, these handlers no longer return in <code>Maybe</code> in Halogen 6. Instead, they return the action directly. Here is how some simple render code would change from Halogen 5 to Halogen 6:</p>
+<pre><code class="language-diff"> HH.div_
+   [ HH.button
+-      [ HE.onClick \_ -&gt; Just Clear ]
++      [ HE.onClick \_ -&gt; Clear ]
+       [ HH.text &quot;Clear&quot; ]
+-   , HH.slot _id unit component unit (Just &lt;&lt;&lt; Handle)
++   , HH.slot _id unit component unit Handle
+   ]
+</code></pre>
+<p>You're no longer able to ignore the output of a child component by providing a handler <code>\_ -&gt; Nothing</code>. Instead, you can use the <code>slot_</code> function if you don't care about a child component's output. This code from Halogen 5:</p>
+<pre><code class="language-purs">HH.slot _id unit component unit (\_ -&gt; Nothing)
+</code></pre>
+<p>becomes this code in Halogen 6:</p>
+<pre><code class="language-purs">HH.slot_ _id unit component unit
+</code></pre>
+<p>Note: You can recover the old Halogen 5 behavior by adding a <code>DoNothing</code> constructor to your action type, or by wrapping your action type in <code>Maybe</code>.</p>
+<p>Added in <a href="https://github.com/purescript-halogen/purescript-halogen/pull/636/">#636</a> and <a href="https://github.com/purescript-halogen/purescript-halogen/pull/642">#642</a>.</p>
+<h2><a class="header" href="#query-helper-functions" id="query-helper-functions">Query Helper Functions</a></h2>
+<p>We've simplified the helper functions which are used with queries so that you can use <code>tell</code> and <code>request</code> directly, rather than use them in conjunction with the <code>query</code> and <code>request</code> functions.</p>
+<p>In Halogen 5, to execute a query you would use the <code>query</code> function and combine it with the <code>request</code> function (for request-style queries, which return a result) or the <code>tell</code> function (for tell-style queries, which don't return a result). This was always a bit difficult to explain and easy to trip over when writing queries yourself.</p>
+<p>Here's how you would execute a request-style and then a tell-style query in Halogen 5:</p>
+<pre><code class="language-purs">handleAction = do
+  a &lt;- H.query _a unit (H.request Child.SomeRequestQuery)
+  _ &lt;- H.query _a unit (H.tell Child.SomeTellQuery)
+</code></pre>
+<p>In Halogen 6, you no longer use the <code>query</code> function. Instead, you use <code>request</code> and <code>tell</code> directly. You also don't have to throw away the result of <code>tell</code>, as it can already be safely discarded:</p>
+<pre><code class="language-purs">handleAction = do
+  a &lt;- H.request _a unit Child.SomeRequestQuery
+  H.tell _a unit Child.SomeTellQuery
+</code></pre>
+<p>The old <code>tell</code> and <code>request</code> functions still exist in Halogen 6, but they've been renamed to <code>mkTell</code> and <code>mkRequest</code> and are only used when querying the root of your application. For example, this code in Halogen 5:</p>
+<pre><code class="language-purs">io &lt;- runUI component unit body
+
+state &lt;- io.query $ H.request SomeRequestQuery
+_ &lt;- io.query $ H.tell SomeTellQuery
+</code></pre>
+<p>becomes this code in Halogen 6:</p>
+<pre><code class="language-purs">io &lt;- runUI component unit body
+
+state &lt;- io.query $ H.mkRequest SomeRequestQuery
+_ &lt;- io.query $ H.mkTell SomeTellQuery
+</code></pre>
+<p>Added in <a href="https://github.com/purescript-halogen/purescript-halogen/pull/621">#621</a>.</p>
+<h2><a class="header" href="#subscriptions" id="subscriptions">Subscriptions</a></h2>
+<p>Event sources have been replaced with the new <a href="https://github.com/purescript-halogen/purescript-halogen-subscriptions"><code>halogen-subscriptions</code></a> library. The previous implementation of event sources was built on top of <a href="https://github.com/purescript-contrib/purescript-coroutines"><code>coroutines</code></a>. This update simplifies the library internals and connects Halogen with a subscription management library that can be used independently of Halogen itself.</p>
+<p>Notable changes include:</p>
+<ul>
+<li>The entire <code>Halogen.Query.EventSource</code> module has been removed and replaced with <code>Halogen.Query.Event</code> which provides only an <code>eventListener</code> function. The new function is a drop-in replacement for the old <code>eventListenerEventSource</code>, so all you need to do is update your import.</li>
+<li><code>affEventSource</code> and <code>effectEventSource</code> functions can be trivially replaced with code using the <code>halogen-subscriptions</code> library directly, so they have been removed. Examples of how to rewrite these functions are below.</li>
+<li>The other helper functions and types from the <code>Halogen.Query.EventSource</code> module are no longer required.</li>
+<li>The <code>subscribe</code> function and <code>Subscribe</code> constructor no longer take an <code>EventSource m action</code> to subscribe to. They take an <code>Emitter action</code> instead.</li>
+<li>The <code>HalogenIO</code> type returned by running your root-level component now contains a <code>messages :: Emitter output</code> instead of a <code>subscribe :: Coroutine.Consumer output m Unit -&gt; m Unit</code>.</li>
+</ul>
+<p>If you were previously using <code>effectEventSource</code>, then you would change this Halogen 5 code:</p>
+<pre><code class="language-purs">import Halogen as H
+import Halogen.Query.EventSource as ES
+
+do
+  void $ H.subscribe $ ES.effectEventSource \emitter -&gt; do
+    ES.emit emitter MyAction
+    pure mempty
+</code></pre>
+<p>with this Halogen 6 code:</p>
+<pre><code class="language-purs">import Halogen as H
+import Halogen.Subscription as HS
+
+do
+  { emitter, listener } &lt;- H.liftEffect HS.create
+  void $ H.subscribe emitter
+  H.liftEffect $ HS.notify listener MyAction
+</code></pre>
+<p>When running your root component, you'll also need to replace your use of coroutines. For example, this Halogen 5 code:</p>
+<pre><code class="language-purs">main :: Effect Unit
+main = ...
+  io &lt;- runUI component unit body
+  io.subscribe $ Coroutine.consumer \msg -&gt; do
+     ...
+</code></pre>
+<p>should be replaced with this Halogen 6 code:</p>
+<pre><code class="language-purs">main :: Effect Unit
+main = ...
+  io &lt;- runUI component unit body
+  _ &lt;- liftEffect $ HS.subscribe io.messages \msg -&gt; do
+     ...
+</code></pre>
+<h2><a class="header" href="#other-changes" id="other-changes">Other changes</a></h2>
+<p>Halogen 6 is an intentionally small release because it coincides with the PureScript 0.14 release. There are only a few other changes in the library to report:</p>
+<ul>
+<li>The <code>id_</code> function has been renamed to <code>id</code> now that <code>id</code> has been renamed to <code>identity</code> in the PureScript Prelude. <code>id_</code> continues to work, but has a deprecation notice and will be removed in the next version. See <a href="https://github.com/purescript-halogen/purescript-halogen/pull/717">#717</a>.</li>
+<li>PureScript 0.14 <a href="https://github.com/purescript/purescript-prelude/blob/212e48692be1126d3eb7e0a1fc89e452cb82acfd/src/Data/Symbol.purs#L10-L13">deprecated the <code>SProxy</code> type in favor of the simpler <code>Proxy</code> type</a>. For this reason, all usages of <code>SProxy</code> in Halogen have been replaced with <code>Proxy</code>. You can do the same in your application with a simple find/replace which replaces <code>SProxy</code> with <code>Proxy</code> and the import <code>Data.Symbol (SProxy(..))</code> with <code>Type.Proxy (Proxy(..))</code>.</li>
+<li>The <code>AttrName</code>, <code>PropName</code>, and <code>ClassName</code> types from Halogen have been migrated into the <a href="https://github.com/purescript-web/purescript-web-html"><code>web-html</code></a> library and imported back into Halogen. This allows libraries to share these types rather than re-implement them over and over. These types are re-exported from Halogen, so your code doesn't need to change.</li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+                            <a rel="prev" href="../changelog/index.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                        
+
+                        
+                            <a rel="next" href="../changelog/v5.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+                    <a rel="prev" href="../changelog/index.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
+
+                
+                    <a rel="next" href="../changelog/v5.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                
+            </nav>
+
+        </div>
+
+        
+
+        
+
+        
+
+        
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        
+
+        
+
+        
+        <script src="../elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../searcher.js" type="text/javascript" charset="utf-8"></script>
+        
+
+        <script src="../clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+
+        
+
+    </body>
+</html>
