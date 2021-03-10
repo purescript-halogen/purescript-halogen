@@ -261,9 +261,9 @@ handleAction = case _ of
 timer :: forall m a. MonadAff m => a -> m (HS.Emitter a)
 timer val = do
   { emitter, listener } <- H.liftEffect HS.create
-  _ <- Aff.forkAff $ forever do
+  _ <- H.liftAff $ Aff.forkAff $ forever do
     Aff.delay $ Milliseconds 1000.0
-    HS.notify listener val
+    H.liftEffect $ HS.notify listener val
   pure emitter
 ```
 
@@ -274,10 +274,10 @@ First, we've defined a reusable `Emitter` that will broadcast a value of our cho
 ```purs
 timer :: forall m a. MonadAff m => a -> m (HS.Emitter a)
 timer val = do
-  { emitter, listener } <- H.liftEffect Event.create
-  _ <- Aff.forkAff $ forever do
+  { emitter, listener } <- H.liftEffect HS.create
+  _ <- H.liftAff $ Aff.forkAff $ forever do
     Aff.delay $ Milliseconds 1000.0
-    HS.notify listener val
+    H.liftEffect $ HS.notify listener val
   pure emitter
 ```
 
