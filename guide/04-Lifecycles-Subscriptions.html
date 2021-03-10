@@ -384,19 +384,19 @@ handleAction = case _ of
 timer :: forall m a. MonadAff m =&gt; a -&gt; m (HS.Emitter a)
 timer val = do
   { emitter, listener } &lt;- H.liftEffect HS.create
-  _ &lt;- Aff.forkAff $ forever do
+  _ &lt;- H.liftAff $ Aff.forkAff $ forever do
     Aff.delay $ Milliseconds 1000.0
-    HS.notify listener val
+    H.liftEffect $ HS.notify listener val
   pure emitter
 </code></pre>
 <p>Almost all of this code should look familiar, but there are two new parts.</p>
 <p>First, we've defined a reusable <code>Emitter</code> that will broadcast a value of our choice every second until it has no subscribers:</p>
 <pre><code class="language-purs">timer :: forall m a. MonadAff m =&gt; a -&gt; m (HS.Emitter a)
 timer val = do
-  { emitter, listener } &lt;- H.liftEffect Event.create
-  _ &lt;- Aff.forkAff $ forever do
+  { emitter, listener } &lt;- H.liftEffect HS.create
+  _ &lt;- H.liftAff $ Aff.forkAff $ forever do
     Aff.delay $ Milliseconds 1000.0
-    HS.notify listener val
+    H.liftEffect $ HS.notify listener val
   pure emitter
 </code></pre>
 <p>Unless you are creating emitters tied to event listeners in the DOM, you should use functions from the <code>halogen-subscriptions</code> library. Most commonly you'll use <code>HS.create</code> to create an emitter and a listener, but if you need to manually control unsubscription you can also use <code>HS.makeEmitter</code>.</p>
