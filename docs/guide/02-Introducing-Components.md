@@ -260,7 +260,7 @@ The resulting component has the type `H.Component`, which itself takes four type
 1. The third parameter `output` represents a way that this component can communicate with its parent component. We'll talk about it more when we talk about parent and child components.
 1. The final parameter, `m`, represents the monad that can be used to run effects in the component. Our component doesn't run any effects, so we'll leave this variable open.
 
-Our counter component can therefore be specified by leaving all of the `H.Component` type variables open except for the first one, `HH.HTML`.
+Our counter component can therefore be specified by leaving all of the `H.Component` type variables open.
 
 ## The Final Product
 
