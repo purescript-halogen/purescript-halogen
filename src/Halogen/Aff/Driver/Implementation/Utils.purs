@@ -6,7 +6,7 @@ import Control.Monad.Fork.Class (fork)
 import Data.List as L
 import Data.Map as M
 import Data.Maybe (Maybe(..))
-import Data.Traversable (for_, sequence_, traverse_)
+import Data.Traversable (for_, traverse_)
 import Effect (Effect)
 import Effect.Aff (Aff, killFiber)
 import Effect.Exception (error)
@@ -14,6 +14,7 @@ import Effect.Ref (Ref)
 import Effect.Ref as Ref
 import Halogen.Aff.Driver.Eval as Eval
 import Halogen.Aff.Driver.State (DriverState(..), LifecycleHandlers)
+import Halogen.Subscription as HS
 
 -- | Functions that are not dependent on any rendering
 
@@ -31,7 +32,7 @@ cleanupSubscriptionsAndForks
    . DriverState r s f act ps i o
   -> Effect Unit
 cleanupSubscriptionsAndForks (DriverState ds) = do
-  traverse_ sequence_ =<< Ref.read ds.subscriptions
+  traverse_ (traverse_ HS.unsubscribe) =<< Ref.read ds.subscriptions
   Ref.write Nothing ds.subscriptions
   traverse_ (Eval.handleAff <<< killFiber (error "finalized")) =<< Ref.read ds.forks
   Ref.write M.empty ds.forks

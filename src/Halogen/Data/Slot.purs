@@ -14,14 +14,15 @@ import Prelude
 import Data.Foldable (traverse_)
 import Data.Map (Map)
 import Data.Map as Map
-import Data.Maybe (Maybe(..), maybe)
+import Data.Maybe (Maybe(..))
+import Data.Monoid.Alternate (Alternate(..))
+import Data.Newtype (un)
 import Data.Symbol (class IsSymbol, reflectSymbol)
 import Data.Tuple (Tuple(..))
 import Halogen.Data.OrdBox (OrdBox, mkOrdBox, unOrdBox)
 import Prim.Row as Row
 import Type.Proxy (Proxy)
 import Unsafe.Coerce (unsafeCoerce)
-import Data.FoldableWithIndex (foldrWithIndex)
 
 foreign import data Any :: Type
 
@@ -105,10 +106,6 @@ insert sym key val (SlotStorage m) =
   coerceVal :: slot query output -> Any
   coerceVal = unsafeCoerce
 
--- | Similar to mapMaybeWithKey, but can change key
-mapMaybeWithKeyToNewKey :: forall k k' v v'. Ord k => Ord k' => (k -> v -> Maybe (Tuple k' v')) -> Map k v -> Map k' v'
-mapMaybeWithKeyToNewKey f = foldrWithIndex (\k v acc → maybe acc (\(Tuple k' v') -> Map.insert k' v' acc) (f k v)) Map.empty
-
 slots
   :: forall sym px slots slot query output s
    . Row.Cons sym (Slot query output s) px slots
@@ -117,14 +114,13 @@ slots
   => Proxy sym
   -> SlotStorage slots slot
   -> Map s (slot query output)
-slots sym (SlotStorage m) = mapMaybeWithKeyToNewKey go m
+slots sym (SlotStorage m) = un Alternate $ Map.foldSubmap Nothing Nothing go m
   where
   key = reflectSymbol sym
 
-  go :: Tuple String (OrdBox Any) -> Any -> Maybe (Tuple s (slot query output))
   go (Tuple key' ob) val
-    | key == key' = Just $ Tuple (unOrdBox (coerceBox ob)) (coerceVal val)
-    | otherwise = Nothing
+    | key == key' = Alternate $ Map.singleton (unOrdBox (coerceBox ob)) (coerceVal val)
+    | otherwise = Alternate Map.empty
 
   coerceBox :: OrdBox Any -> OrdBox s
   coerceBox = unsafeCoerce

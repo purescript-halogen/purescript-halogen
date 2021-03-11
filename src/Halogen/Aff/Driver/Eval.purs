@@ -16,7 +16,7 @@ import Control.Monad.Free (foldFree)
 import Control.Parallel (parSequence_, parallel, sequential)
 import Data.Coyoneda (liftCoyoneda)
 import Data.Either (either)
-import Data.Foldable (sequence_, traverse_)
+import Data.Foldable (traverse_)
 import Data.List (List, (:))
 import Data.List as L
 import Data.Map as M
@@ -28,13 +28,13 @@ import Effect.Class (liftEffect)
 import Effect.Exception (throwException)
 import Effect.Ref (Ref)
 import Effect.Ref as Ref
-import FRP.Event as Event
 import Halogen.Aff.Driver.State (DriverState(..), DriverStateRef(..), LifecycleHandlers, mapDriverState, unDriverStateX)
 import Halogen.Query.ChildQuery as CQ
 import Halogen.Query.HalogenM (ForkId(..), HalogenAp(..), HalogenF(..), HalogenM(..), SubscriptionId(..))
 import Halogen.Query.HalogenQ as HQ
 import Halogen.Query.Input (Input)
 import Halogen.Query.Input as Input
+import Halogen.Subscription as HS
 import Unsafe.Reference (unsafeRefEq)
 
 type Renderer r
@@ -92,7 +92,7 @@ evalM render initRef (HalogenM hm) = foldFree (go initRef) hm
               pure a
     Subscribe fes k -> do
       sid <- fresh SubscriptionId ref
-      finalize <- liftEffect $ Event.subscribe (fes sid) \act →
+      finalize <- liftEffect $ HS.subscribe (fes sid) \act →
         handleAff $ evalF render ref (Input.Action act)
       DriverState ({ subscriptions }) <- liftEffect (Ref.read ref)
       liftEffect $ Ref.modify_ (map (M.insert sid finalize)) subscriptions
@@ -154,7 +154,7 @@ unsubscribe
 unsubscribe sid ref = do
   DriverState ({ subscriptions }) <- Ref.read ref
   subs <- Ref.read subscriptions
-  sequence_ (M.lookup sid =<< subs)
+  traverse_ HS.unsubscribe (M.lookup sid =<< subs)
 
 handleLifecycle :: Ref LifecycleHandlers -> Effect ~> Aff
 handleLifecycle lchs f = do

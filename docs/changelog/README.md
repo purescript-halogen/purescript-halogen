@@ -4,4 +4,5 @@ Halogen's major versions come with transition guides that explain how to migrate
 
 Currently these major versions are supported:
 
+- [v6](./v6.md)
 - [v5](./v5.md)

@@ -3,15 +3,6 @@
 [![Latest release](http://img.shields.io/github/release/purescript-halogen/purescript-halogen.svg)](https://github.com/purescript-halogen/purescript-halogen/releases)
 [![CI](https://github.com/purescript-halogen/purescript-halogen/workflows/CI/badge.svg?branch=master)](https://github.com/purescript-halogen/purescript-halogen/actions?query=workflow%3ACI+branch%3Amaster)
 
----
-
-:warning: The default branch of this repository is for the upcoming Halogen 6 release, which is only compatible with PureScript 0.14. You may wish to browse this repository at:
-
-- [v5.1.1](https://github.com/purescript-halogen/purescript-halogen/tree/v5.1.1), the latest Halogen release
-- [v4.0.0](https://github.com/purescript-halogen/purescript-halogen/tree/v4.0.0), the previous Halogen release
-
----
-
 Halogen is a type-safe library for building user interfaces in PureScript.
 
 - **Declarative**

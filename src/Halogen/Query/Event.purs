@@ -4,22 +4,22 @@ import Prelude
 
 import Data.Foldable (traverse_)
 import Data.Maybe (Maybe)
-import FRP.Event as Event
-import Web.Event.Event as E
-import Web.Event.EventTarget as ET
+import Halogen.Subscription as HS
+import Web.Event.Event as Event
+import Web.Event.EventTarget as EventTarget
 
--- | Constructs an `Event` for a DOM event. Accepts a function that maps event
+-- | Constructs an `Emitter` for a DOM event. Accepts a function that maps event
 -- | values to a `Maybe`-wrapped action, allowing it to filter events if
 -- | necessary.
-eventListenerEventSource
+eventListener
   :: forall a
-   . E.EventType
-  -> ET.EventTarget
-  -> (E.Event -> Maybe a)
-  -> Event.Event a
-eventListenerEventSource eventType target f =
-  Event.makeEvent \push -> do
-    listener <- ET.eventListener \ev -> traverse_ push (f ev)
-    ET.addEventListener eventType listener false target
+   . Event.EventType
+  -> EventTarget.EventTarget
+  -> (Event.Event -> Maybe a)
+  -> HS.Emitter a
+eventListener eventType target f =
+  HS.makeEmitter \push -> do
+    listener <- EventTarget.eventListener \ev -> traverse_ push (f ev)
+    EventTarget.addEventListener eventType listener false target
     pure do
-      ET.removeEventListener eventType listener false target
+      EventTarget.removeEventListener eventType listener false target

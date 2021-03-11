@@ -12,10 +12,10 @@ import Data.Maybe (Maybe(..))
 import Effect (Effect)
 import Effect.Aff (Aff)
 import Example.Driver.Websockets.Log as Log
-import FRP.Event as Event
 import Foreign (F, Foreign, unsafeToForeign, readString)
 import Halogen as H
 import Halogen.Aff as HA
+import Halogen.Subscription as HS
 import Halogen.VDom.Driver (runUI)
 import Web.Event.EventTarget as EET
 import Web.Socket.Event.EventTypes as WSET
@@ -62,7 +62,7 @@ main = do
     io <- runUI Log.component unit body
 
     -- Subscribe to all output messages from our component
-    _ <- H.liftEffect $ Event.subscribe io.messages $ wsSender connection
+    _ <- H.liftEffect $ HS.subscribe io.messages $ wsSender connection
 
     -- Connecting the consumer to the producer initializes both,
     -- feeding queries back to our component as messages are received.

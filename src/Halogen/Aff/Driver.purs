@@ -14,7 +14,6 @@ import Effect.Aff (Aff)
 import Effect.Class (liftEffect)
 import Effect.Ref (Ref)
 import Effect.Ref as Ref
-import FRP.Event as Event
 import Halogen (HalogenIO)
 import Halogen.Aff.Driver.Eval as Eval
 import Halogen.Aff.Driver.Implementation.Hydrate as Hydrate
@@ -24,23 +23,24 @@ import Halogen.Aff.Driver.Implementation.Utils as Utils
 import Halogen.Aff.Driver.State (DriverState(..), DriverStateX, LifecycleHandlers, unDriverStateX)
 import Halogen.Component (Component)
 import Web.DOM.Node (Node) as DOM
+import Halogen.Subscription as HS
 
 runImplementation
   :: forall r f o
    . RenderSpec r
-  -> (Ref.Ref LifecycleHandlers -> Event.EventIO o -> Effect (Ref.Ref (DriverStateX r f o)))
+  -> (Ref.Ref LifecycleHandlers -> HS.SubscribeIO o -> Effect (Ref.Ref (DriverStateX r f o)))
   -> Aff (HalogenIO f o Aff)
 runImplementation renderSpec runComponentImplementation = do
   lchs <- liftEffect Utils.newLifecycleHandlers
   fresh <- liftEffect $ Ref.new 0
   disposed <- liftEffect $ Ref.new false
   Eval.handleLifecycle lchs do
-    eio <- Event.create
-    dsx <- Ref.read =<< runComponentImplementation lchs eio
+    sio <- HS.create
+    dsx <- Ref.read =<< runComponentImplementation lchs sio
     unDriverStateX (\st ->
       pure
         { query: evalDriver renderSpec disposed st.selfRef
-        , messages: eio.event
+        , messages: sio.emitter
         , dispose: dispose renderSpec disposed lchs dsx
         }) dsx
 
@@ -83,8 +83,8 @@ hydrateUI
   -> Aff (HalogenIO f o Aff)
 hydrateUI renderSpecWithHydration component i rootNode = runImplementation renderSpecWithHydration.renderSpec runComponentImplementation
   where
-    runComponentImplementation :: Ref.Ref LifecycleHandlers -> Event.EventIO o -> Effect (Ref.Ref (DriverStateX r f o))
-    runComponentImplementation lchs eio = Hydrate.runComponentHydrate renderSpecWithHydration true rootNode lchs (liftEffect <<< eio.push) i component
+    runComponentImplementation :: Ref.Ref LifecycleHandlers -> HS.SubscribeIO o -> Effect (Ref.Ref (DriverStateX r f o))
+    runComponentImplementation lchs sio = Hydrate.runComponentHydrate renderSpecWithHydration true rootNode lchs (liftEffect <<< HS.notify sio.listener) i component
 
 runUI
   :: forall r f i o
@@ -94,5 +94,5 @@ runUI
   -> Aff (HalogenIO f o Aff)
 runUI renderSpec component i = runImplementation renderSpec runComponentImplementation
   where
-    runComponentImplementation :: Ref.Ref LifecycleHandlers -> Event.EventIO o -> Effect (Ref.Ref (DriverStateX r f o))
-    runComponentImplementation lchs eio = Render.runComponent renderSpec true lchs (liftEffect <<< eio.push) i component
+    runComponentImplementation :: Ref.Ref LifecycleHandlers -> HS.SubscribeIO o -> Effect (Ref.Ref (DriverStateX r f o))
+    runComponentImplementation lchs sio = Render.runComponent renderSpec true lchs (liftEffect <<< HS.notify sio.listener) i component

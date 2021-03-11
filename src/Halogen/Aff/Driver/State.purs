@@ -28,6 +28,7 @@ import Halogen.Component (ComponentSpec)
 import Halogen.Data.Slot (SlotStorage)
 import Halogen.Data.Slot as SlotStorage
 import Halogen.Query.HalogenM (ForkId, SubscriptionId)
+import Halogen.Subscription as HS
 import Unsafe.Coerce (unsafeCoerce)
 import Web.DOM (Element)
 
@@ -52,7 +53,7 @@ type DriverStateRec r s f act ps i o =
   , pendingHandlers :: Ref (Maybe (List (Aff Unit)))
   , rendering :: Maybe (r s act ps o)
   , fresh :: Ref Int
-  , subscriptions :: Ref (Maybe (M.Map SubscriptionId (Effect Unit)))
+  , subscriptions :: Ref (Maybe (M.Map SubscriptionId HS.Subscription))
   , forks :: Ref (M.Map ForkId (Fiber Unit))
   , lifecycleHandlers :: Ref LifecycleHandlers
   }
