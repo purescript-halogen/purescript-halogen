@@ -583,14 +583,14 @@ render = ...
 <p>The <code>mkComponent</code> function produces a component from a <code>ComponentSpec</code>, which is a record of the functions that Halogen needs to run a component. We'll get into more detail about this type in a subsequent chapter.</p>
 <pre><code class="language-purs">mkComponent :: H.ComponentSpec ... -&gt; H.Component query input output m
 </code></pre>
-<p>The resulting component has the type <code>H.Component</code>, which itself takes five type parameters that describe the public interface of the component. Our component doesn't communicate with parent components or child components, so it doesn't use any of these type variables. Still, we'll briefly step through them now so you know what's coming in subsequent chapters.</p>
+<p>The resulting component has the type <code>H.Component</code>, which itself takes four type parameters that describe the public interface of the component. Our component doesn't communicate with parent components or child components, so it doesn't use any of these type variables. Still, we'll briefly step through them now so you know what's coming in subsequent chapters.</p>
 <ol>
 <li>The first parameter <code>query</code> represents a way that parent components can communicate with this component. We will talk about it more when we talk about parent and child components.</li>
 <li>The second parameter <code>input</code> represents the input our component accepts. In our case, the component doesn't accept any input, so we'll leave this variable open.</li>
 <li>The third parameter <code>output</code> represents a way that this component can communicate with its parent component. We'll talk about it more when we talk about parent and child components.</li>
 <li>The final parameter, <code>m</code>, represents the monad that can be used to run effects in the component. Our component doesn't run any effects, so we'll leave this variable open.</li>
 </ol>
-<p>Our counter component can therefore be specified by leaving all of the <code>H.Component</code> type variables open except for the first one, <code>HH.HTML</code>.</p>
+<p>Our counter component can therefore be specified by leaving all of the <code>H.Component</code> type variables open.</p>
 <h2><a class="header" href="#the-final-product" id="the-final-product">The Final Product</a></h2>
 <p>That was a lot to take in! We've finally got our counter component fully specified with types. If you can comfortably build components like this one, you're most of the way to a thorough understanding of building Halogen components in general. The rest of this guide will build on top of your understanding of state, actions, and rendering HTML.</p>
 <p>We've added a <code>main</code> function that runs our Halogen application so that you can try this example out by pasting it into <a href="https://try.purescript.org">Try PureScript</a>. We'll cover how to run Halogen applications in a later chapter -- for now you can ignore the <code>main</code> function and focus on the component we've defined.</p>
