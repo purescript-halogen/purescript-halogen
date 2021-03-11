@@ -253,14 +253,14 @@ The `mkComponent` function produces a component from a `ComponentSpec`, which is
 mkComponent :: H.ComponentSpec ... -> H.Component query input output m
 ```
 
-The resulting component has the type `H.Component`, which itself takes five type parameters that describe the public interface of the component. Our component doesn't communicate with parent components or child components, so it doesn't use any of these type variables. Still, we'll briefly step through them now so you know what's coming in subsequent chapters.
+The resulting component has the type `H.Component`, which itself takes four type parameters that describe the public interface of the component. Our component doesn't communicate with parent components or child components, so it doesn't use any of these type variables. Still, we'll briefly step through them now so you know what's coming in subsequent chapters.
 
 1. The first parameter `query` represents a way that parent components can communicate with this component. We will talk about it more when we talk about parent and child components.
 1. The second parameter `input` represents the input our component accepts. In our case, the component doesn't accept any input, so we'll leave this variable open.
 1. The third parameter `output` represents a way that this component can communicate with its parent component. We'll talk about it more when we talk about parent and child components.
 1. The final parameter, `m`, represents the monad that can be used to run effects in the component. Our component doesn't run any effects, so we'll leave this variable open.
 
-Our counter component can therefore be specified by leaving all of the `H.Component` type variables open except for the first one, `HH.HTML`.
+Our counter component can therefore be specified by leaving all of the `H.Component` type variables open.
 
 ## The Final Product
 
