@@ -4,9 +4,11 @@ module Halogen.Query
   ( Tell
   , mkTell
   , tell
+  , tellAll
   , Request
   , mkRequest
   , request
+  , requestAll
   , getHTMLElementRef
   , module Exports
   , module Halogen.Query.Input
@@ -18,12 +20,13 @@ import Prelude
 
 import Control.Monad.State.Class (get, gets, modify, modify_, put) as Exports
 import Control.Monad.Trans.Class (lift) as Exports
+import Data.Map (Map)
 import Data.Maybe (Maybe)
 import Data.Symbol (class IsSymbol)
 import Effect.Aff.Class (liftAff) as Exports
 import Effect.Class (liftEffect) as Exports
 import Halogen.Data.Slot (Slot)
-import Halogen.Query.HalogenM (HalogenM(..), HalogenF(..), SubscriptionId, ForkId, fork, kill, getRef, query, queryAll, subscribe, subscribe', unsubscribe, raise)
+import Halogen.Query.HalogenM (ForkId, HalogenF(..), HalogenM(..), SubscriptionId, fork, getRef, kill, query, queryAll, raise, subscribe, subscribe', unsubscribe)
 import Halogen.Query.HalogenQ (HalogenQ(..))
 import Halogen.Query.Input (RefLabel(..))
 import Prim.Row as Row
@@ -71,7 +74,17 @@ tell
   -> slot
   -> Tell query
   -> HalogenM state action slots output m Unit
-tell slot id req = void $ query slot id (req unit)
+tell slot label req = void $ query slot label (req unit)
+
+tellAll
+  :: forall state action output m label slots query output' slot _1
+   . Row.Cons label (Slot query output' slot) _1 slots
+  => IsSymbol label
+  => Ord slot
+  => Proxy label
+  -> Tell query
+  -> HalogenM state action slots output m Unit
+tellAll label req = void $ queryAll label (req unit)
 
 -- | Type synonym for an "request-style" query - queries that can cause effects
 -- | as well as fetching some information from a component.
@@ -107,7 +120,17 @@ request
   -> slot
   -> Request query a
   -> HalogenM state action slots output m (Maybe a)
-request slot id req = query slot id (req identity)
+request slot label req = query slot label (req identity)
+
+requestAll
+  :: forall state action output m label slots query output' slot a _1
+   . Row.Cons label (Slot query output' slot) _1 slots
+  => IsSymbol label
+  => Ord slot
+  => Proxy label
+  -> Request query a
+  -> HalogenM state action slots output m (Map slot a)
+requestAll label req = queryAll label (req identity)
 
 -- | Retrieves a `HTMLElement` value that is associated with a `Ref` in the
 -- | rendered output of a component. If there is no currently rendered value (or
