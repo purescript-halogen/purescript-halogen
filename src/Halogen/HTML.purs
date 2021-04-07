@@ -27,7 +27,7 @@ import Halogen.HTML.Core (class IsProp, AttrName(..), ClassName(..), HTML(..), N
 import Halogen.HTML.Core as Core
 import Halogen.HTML.Properties (IProp, attr, attrNS, prop)
 import Halogen.VDom.Thunk (thunk1, thunk2, thunk3, thunked)
-import Prelude (class Ord, Void, (<<<))
+import Prelude (class Ord, Void, (<<<), (<$>))
 import Prim.Row as Row
 import Type.Proxy (Proxy)
 import Unsafe.Coerce (unsafeCoerce)
@@ -115,7 +115,10 @@ memoized
   -> (a -> ComponentHTML action slots m)
   -> a
   -> ComponentHTML action slots m
-memoized eqFn f a = Core.widget (ThunkSlot (thunked eqFn f a))
+memoized eqFn f =
+  -- Note: This implementation must not be eta-expanded, as it relies on
+  -- partial application to work.
+  Core.widget <<< ThunkSlot <$> thunked eqFn f
 
 -- | Skips rendering for referentially equal arguments. You should not use this
 -- | function fully saturated, but instead partially apply it for use within a
