@@ -33,7 +33,7 @@ render :: forall m. State -> H.ComponentHTML Action ChildSlots m
 render state =
   HH.div_
     [ HH.p_
-        [ HH.text "Make the Fibonnaci function slower. Currently: "
+        [ HH.text "Make the Fibonacci function slower. Currently: "
         , HH.strong_ [ HH.text (show state.fibInt) ]
         , HH.button
             [ HE.onClick \_ -> Add 1 ]

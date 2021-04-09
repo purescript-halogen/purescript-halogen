@@ -4,7 +4,7 @@ import Prelude
 
 import Data.Const (Const)
 import Data.Maybe (Maybe(..))
-import Example.MemoizedLazy.Fibonnaci (renderFib)
+import Example.MemoizedLazy.Fibonacci (renderFib)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML as HP
