@@ -513,7 +513,7 @@ counter =
       [ HH.text $ show count ]
 
   -- We write a function to handle queries when they arise.
-  handleQuery :: forall action a. Query a -> H.HalogenM State action () o m (Maybe a)
+  handleQuery :: forall action a. Query a -> H.HalogenM State action () output m (Maybe a)
   handleQuery = case _ of
     -- When we receive the `Increment` query we'll increment our state.
     Increment a -> do
