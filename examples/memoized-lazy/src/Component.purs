@@ -25,7 +25,7 @@ normalComponent :: forall q o m. H.Component q Input o m
 normalComponent =
   H.mkComponent
     { initialState
-    , render: HH.memoized eq render
+    , render
     , eval: H.mkEval $ H.defaultEval
         { handleAction = handleAction
         , receive = Just <<< HandleInput
