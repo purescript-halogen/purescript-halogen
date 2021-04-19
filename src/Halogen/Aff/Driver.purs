@@ -113,7 +113,6 @@ runUI
   -> Aff (HalogenIO f o Aff)
 runUI renderSpec component i = do
   lchs <- liftEffect newLifecycleHandlers
-  fresh <- liftEffect $ Ref.new 0
   disposed <- liftEffect $ Ref.new false
   Eval.handleLifecycle lchs do
     sio <- HS.create
