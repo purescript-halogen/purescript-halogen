@@ -129,7 +129,7 @@ evalM render initRef (HalogenM hm) = foldFree (go initRef) hm
       traverse_ (killFiber (error "Cancelled")) (M.lookup fid forkMap)
       pure a
     GetRef (Input.RefLabel p) k -> do
-      DriverState { component, refs } <- liftEffect (Ref.read ref)
+      DriverState { refs } <- liftEffect (Ref.read ref)
       pure $ k $ M.lookup p refs
 
   evalChildQuery
