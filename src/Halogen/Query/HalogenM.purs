@@ -68,7 +68,7 @@ instance functorHalogenF :: Functor m => Functor (HalogenF state action slots ou
 -- | The Halogen component eval effect monad.
 -- |
 -- | - `state` is the component's state
--- | - `action` is the type of actions; veents internal to the component that
+-- | - `action` is the type of actions; events internal to the component that
 -- |   can be evaluated
 -- | - `slots` is the set of slots for addressing child components
 -- | - `output` is the type of output messages the component can raise
