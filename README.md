@@ -42,7 +42,7 @@ There are several ways to get help if you get stuck using Halogen:
 
 - [Open an issue](https://github.com/purescript-halogen/purescript-halogen/issues) if you have encountered a bug or problem.
 - [Start a thread on the PureScript Discourse](https://discourse.purescript.org/) or browse the `#halogen` tag if you have general questions about Halogen.
-- Join the `#purescript` and `#purescript-beginners` channels on the [Functional Programming Slack](https://functionalprogramming.slack.com) ([invite link](https://fpchat-invite.herokuapp.com/)) to chat about Halogen with other PureScript users.
+- Join the the [PureScript Discord](https://discord.com/invite/sMqwYUbvz6) to chat about Halogen with other PureScript users.
 
 ## Examples
 
