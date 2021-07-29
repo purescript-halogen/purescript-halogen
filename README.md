@@ -35,7 +35,6 @@ You can find the Halogen documentation [on the documentation site](https://pures
 
 We also recommend these community resources for learning how to use Halogen in your applications:
 
-- [Learn Halogen](https://github.com/JordanMartinez/learn-halogen) by [Jordan Martinez](https://github.com/JordanMartinez)
 - [Real World Halogen](https://github.com/thomashoneyman/purescript-halogen-realworld) by [Thomas Honeyman](https://github.com/thomashoneyman)
 
 There are several ways to get help if you get stuck using Halogen:
@@ -54,7 +53,7 @@ You may also want to review the [Real World Halogen](https://github.com/thomasho
 
 The main purpose of this repository is to continue evolving Halogen, making it faster and easier to use. Halogen is developed in the open on GitHub and we're grateful for community-contributed bugfixes and improvements.
 
-You can take part in improving Halogen by opening or participating in issues, opening pull requests to add new features, documentation, or tests, and by helping other Halogen users on Slack and Discourse.
+You can take part in improving Halogen by opening or participating in issues, opening pull requests to add new features, documentation, or tests, and by helping other Halogen users on Discord and Discourse.
 
 ### License & Credits
 
