@@ -201,6 +201,8 @@ In Halogen, event handlers take as their first argument a callback. This callbac
 
 The `onClick` function then returns a value of type `IProp`. You should remember `IProp` from the previous chapter. As a refresher, Halogen HTML elements specify a list of what properties and events they support. Properties and events in turn specify their type. Halogen is then able to ensure that you never use a property or event on an element that doesn't support it. In this case buttons do support `onClick` events, so we're good to go!
 
+In this simple example, the `MouseEvent` parameter is ignored by the handler function passed to `onClick`, since the action is completely determined by which button receives the click.  We will talk about accessing the event itself after we have looked at effects in section 3 of this guide.
+
 ### Bringing It All Together
 
 Let's bring each of our types and functions back together to produce our counter component -- this time with types specified. Let's revisit the types and functions that we wrote:

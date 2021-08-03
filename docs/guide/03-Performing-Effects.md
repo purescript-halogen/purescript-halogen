@@ -252,3 +252,12 @@ That last point is especially important: when you modify state your component re
 It's worth noting that because we're using `MonadAff` our request will not block the component from doing other work, and we don't have to deal with callbacks to get this async superpower. The computation we've written in `MakeRequest` simply suspends until we get the response and then proceeds to update the state the second time.
 
 It's a smart idea to only modify state when necessary and to batch updates together if possible (like how we call `modify_` once to update both the `loading` and `result` fields). That helps make sure you're only re-rendering when needed.
+
+### Event Handling Revisited
+
+There is a lot going on in this example, so it is worth concentrating for a moment on the new event-handling features which it introduces.  Unlike the simple click handlers of the button example, the handlers defined here do make use of the event data they are given:
+
+- The value of the username input is used by the `onValueInput` handler (the `SetUsername` action).
+- `preventDefault` is called on the event in the `onSubmit` handler (the `MakeRequest` action).
+
+The type of parameter passed to the handler depends on which function is used to attach it. Sometimes, as for `onValueInput`, the handler simply receives data extracted from the event - a `String` in this case. Most of the other `on...` functions set up a handler to receive the whole event, either as a value of type `Event`, or as a specialised type like `MouseEvent`. The details can be found in the [module documentation for `Halogen.HTML.Events`](https://pursuit.purescript.org/packages/purescript-halogen/docs/Halogen.HTML.Events) on pursuit; the types and functions used for events can be found in the [web-events](https://pursuit.purescript.org/packages/purescript-web-events) and [web-uievents](https://pursuit.purescript.org/packages/purescript-web-uievents) packages.
