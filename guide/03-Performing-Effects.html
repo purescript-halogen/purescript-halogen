@@ -383,6 +383,13 @@ handleAction = case _ of
 </ol>
 <p>It's worth noting that because we're using <code>MonadAff</code> our request will not block the component from doing other work, and we don't have to deal with callbacks to get this async superpower. The computation we've written in <code>MakeRequest</code> simply suspends until we get the response and then proceeds to update the state the second time.</p>
 <p>It's a smart idea to only modify state when necessary and to batch updates together if possible (like how we call <code>modify_</code> once to update both the <code>loading</code> and <code>result</code> fields). That helps make sure you're only re-rendering when needed.</p>
+<h3><a class="header" href="#event-handling-revisited" id="event-handling-revisited">Event Handling Revisited</a></h3>
+<p>There is a lot going on in this example, so it is worth concentrating for a moment on the new event-handling features which it introduces.  Unlike the simple click handlers of the button example, the handlers defined here do make use of the event data they are given:</p>
+<ul>
+<li>The value of the username input is used by the <code>onValueInput</code> handler (the <code>SetUsername</code> action).</li>
+<li><code>preventDefault</code> is called on the event in the <code>onSubmit</code> handler (the <code>MakeRequest</code> action).</li>
+</ul>
+<p>The type of parameter passed to the handler depends on which function is used to attach it. Sometimes, as for <code>onValueInput</code>, the handler simply receives data extracted from the event - a <code>String</code> in this case. Most of the other <code>on...</code> functions set up a handler to receive the whole event, either as a value of type <code>Event</code>, or as a specialised type like <code>MouseEvent</code>. The details can be found in the <a href="https://pursuit.purescript.org/packages/purescript-halogen/docs/Halogen.HTML.Events">module documentation for <code>Halogen.HTML.Events</code></a> on pursuit; the types and functions used for events can be found in the <a href="https://pursuit.purescript.org/packages/purescript-web-events">web-events</a> and <a href="https://pursuit.purescript.org/packages/purescript-web-uievents">web-uievents</a> packages.</p>
 
                     </main>
 
