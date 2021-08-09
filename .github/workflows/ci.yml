@@ -15,7 +15,7 @@ jobs:
 
       - uses: purescript-contrib/setup-purescript@main
         with:
-          purescript: "0.14.0-rc5"
+          purescript: "0.14.3"
 
       - name: Cache PureScript dependencies
         uses: actions/cache@v2
