@@ -670,6 +670,7 @@ import Halogen as H
 import Halogen.Aff as HA
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
+import Halogen.Query as HQ
 import Halogen.VDom.Driver (runUI)
 import Type.Proxy (Proxy(..))
 
@@ -735,7 +736,7 @@ parent =
         -- enabled state, which we log to the console.
         H.modify_ \state -> state { clicked = state.clicked + 1 }
         H.tell _button 0 (SetEnabled true)
-        on <- H.requestAll _button GetEnabled
+        on <- HQ.requestAll _button GetEnabled
         logShow on
 
 -- We now move on to the child component, a component called `button`.
