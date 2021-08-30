@@ -36,6 +36,7 @@ You can find the Halogen documentation [on the documentation site](https://pures
 We also recommend these community resources for learning how to use Halogen in your applications:
 
 - [Real World Halogen](https://github.com/thomashoneyman/purescript-halogen-realworld) by [Thomas Honeyman](https://github.com/thomashoneyman)
+- [Functional Programming Made Easier](https://leanpub.com/fp-made-easier)
 
 There are several ways to get help if you get stuck using Halogen:
 
