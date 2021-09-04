@@ -43,11 +43,7 @@ import Halogen.HTML.Core (ElemName(..), HTML)
 import Halogen.HTML.Elements (keyed)
 import Halogen.HTML.Properties (IProp)
 
-type KeyedNode r w i
-  =
-  Array (IProp r i)
-  -> Array (Tuple String (HTML w i))
-  -> HTML w i
+type KeyedNode r w i = Array (IProp r i) -> Array (Tuple String (HTML w i)) -> HTML w i
 
 article :: forall w i. KeyedNode I.HTMLarticle w i
 article = keyed (ElemName "article")

@@ -131,8 +131,7 @@ onFileUpload f = handler ET.change $
         HTMLInputElement.files >>> unsafePerformEffect
   )
     >>> maybe none items
-    >>>
-      f
+    >>> f
 
 onInput :: forall r i. (Event -> i) -> IProp (onInput :: Event | r) i
 onInput = handler ET.input

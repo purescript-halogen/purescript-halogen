@@ -225,17 +225,10 @@ import Halogen.VDom as VDom
 import Unsafe.Coerce (unsafeCoerce)
 
 -- | An HTML element that admits children.
-type Node r w i
-  =
-  Array (IProp r i)
-  -> Array (HTML w i)
-  -> HTML w i
+type Node r w i = Array (IProp r i) -> Array (HTML w i) -> HTML w i
 
 -- | An HTML element that does not admit children.
-type Leaf r w i
-  =
-  Array (IProp r i)
-  -> HTML w i
+type Leaf r w i = Array (IProp r i) -> HTML w i
 
 -- | Creates an HTML element that expects indexed properties.
 element :: forall r w i. ElemName -> Array (IProp r i) -> Array (HTML w i) -> HTML w i

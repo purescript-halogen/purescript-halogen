@@ -117,24 +117,17 @@ runUI renderSpec component i = do
   Eval.handleLifecycle lchs do
     sio <- HS.create
     dsx <- Ref.read =<< runComponent lchs (liftEffect <<< HS.notify sio.listener) i component
-    unDriverStateX
-      ( \st ->
-          pure
-            { query: evalDriver disposed st.selfRef
-            , messages: sio.emitter
-            , dispose: dispose disposed lchs dsx
-            }
-      )
-      dsx
-
+    dsx # unDriverStateX \st -> pure
+      { query: evalDriver disposed st.selfRef
+      , messages: sio.emitter
+      , dispose: dispose disposed lchs dsx
+      }
   where
-
   evalDriver
     :: forall s f' act ps i' o'
      . Ref Boolean
     -> Ref (DriverState r s f' act ps i' o')
-    -> forall a
-     . (f' a -> Aff (Maybe a))
+    -> (forall a. f' a -> Aff (Maybe a))
   evalDriver disposed ref q =
     liftEffect (Ref.read disposed) >>=
       if _ then pure Nothing
@@ -213,12 +206,9 @@ runUI renderSpec component i = do
         Just (Tuple (DriverStateRef existing) childrenIn') -> do
           Ref.write childrenIn' childrenInRef
           dsx <- Ref.read existing
-          unDriverStateX
-            ( \st -> do
-                flip Ref.write st.handlerRef $ maybe (pure unit) handler <<< slot.output
-                Eval.handleAff $ Eval.evalM render st.selfRef (st.component.eval (HQ.Receive slot.input unit))
-            )
-            dsx
+          dsx # unDriverStateX \st -> do
+            flip Ref.write st.handlerRef $ maybe (pure unit) handler <<< slot.output
+            Eval.handleAff $ Eval.evalM render st.selfRef (st.component.eval (HQ.Receive slot.input unit))
           pure existing
         Nothing ->
           runComponent lchs (maybe (pure unit) handler <<< slot.output) slot.input slot.component
@@ -239,20 +229,17 @@ runUI renderSpec component i = do
   squashChildInitializers lchs preInits =
     unDriverStateX \st -> do
       let parentInitializer = Eval.evalM render st.selfRef (st.component.eval (HQ.Initialize unit))
-      Ref.modify_
-        ( \handlers ->
-            { initializers:
-                ( do
-                    parSequence_ (L.reverse handlers.initializers)
-                    parentInitializer
-                    liftEffect do
-                      handlePending st.pendingQueries
-                      handlePending st.pendingOuts
-                ) : preInits
-            , finalizers: handlers.finalizers
-            }
-        )
-        lchs
+      lchs # Ref.modify_ \handlers ->
+        { initializers:
+            ( do
+                parSequence_ (L.reverse handlers.initializers)
+                parentInitializer
+                liftEffect do
+                  handlePending st.pendingQueries
+                  handlePending st.pendingOuts
+            ) : preInits
+        , finalizers: handlers.finalizers
+        }
 
   finalize
     :: forall f' o'
@@ -263,13 +250,10 @@ runUI renderSpec component i = do
     unDriverStateX \st -> do
       cleanupSubscriptionsAndForks (DriverState st)
       let f = Eval.evalM render st.selfRef (st.component.eval (HQ.Finalize unit))
-      Ref.modify_
-        ( \handlers ->
-            { initializers: handlers.initializers
-            , finalizers: f : handlers.finalizers
-            }
-        )
-        lchs
+      lchs # Ref.modify_ \handlers ->
+        { initializers: handlers.initializers
+        , finalizers: f : handlers.finalizers
+        }
       Slot.foreachSlot st.children \(DriverStateRef ref) -> do
         dsx <- Ref.read ref
         finalize lchs dsx

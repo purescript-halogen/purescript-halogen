@@ -37,8 +37,7 @@ import Halogen.Query.Input as Input
 import Halogen.Subscription as HS
 import Unsafe.Reference (unsafeRefEq)
 
-type Renderer r
-  =
+type Renderer r =
   forall s f act ps i o
    . Ref LifecycleHandlers
   -> Ref (DriverState r s f act ps i o)
@@ -69,18 +68,18 @@ evalQ render ref q = do
   evalM render ref (st.component.eval (HQ.Query (Just <$> liftCoyoneda q) (const Nothing)))
 
 evalM
-  :: forall r s f act ps i o
+  :: forall r s f act ps i o a
    . Renderer r
   -> Ref (DriverState r s f act ps i o)
-  -> HalogenM s act ps o Aff
-       ~> Aff
+  -> HalogenM s act ps o Aff a
+  -> Aff a
 evalM render initRef (HalogenM hm) = foldFree (go initRef) hm
   where
   go
-    :: forall s' f' act' ps' i' o'
+    :: forall s' f' act' ps' i' o' a'
      . Ref (DriverState r s' f' act' ps' i' o')
-    -> HalogenF s' act' ps' o' Aff
-         ~> Aff
+    -> HalogenF s' act' ps' o' Aff a'
+    -> Aff a'
   go ref = case _ of
     State f -> do
       DriverState (st@{ state, lifecycleHandlers }) <- liftEffect (Ref.read ref)
@@ -141,15 +140,12 @@ evalM render initRef (HalogenM hm) = foldFree (go initRef) hm
     -> Aff a'
   evalChildQuery ref cqb = do
     DriverState st <- liftEffect (Ref.read ref)
-    CQ.unChildQueryBox
-      ( \(CQ.ChildQuery unpack query reply) -> do
-          let
-            evalChild (DriverStateRef var) = parallel do
-              dsx <- liftEffect (Ref.read var)
-              unDriverStateX (\ds -> evalQ render ds.selfRef query) dsx
-          reply <$> sequential (unpack evalChild st.children)
-      )
-      cqb
+    cqb # CQ.unChildQueryBox \(CQ.ChildQuery unpack query reply) -> do
+      let
+        evalChild (DriverStateRef var) = parallel do
+          dsx <- liftEffect (Ref.read var)
+          unDriverStateX (\ds -> evalQ render ds.selfRef query) dsx
+      reply <$> sequential (unpack evalChild st.children)
 
 unsubscribe
   :: forall r s' f' act' ps' i' o'

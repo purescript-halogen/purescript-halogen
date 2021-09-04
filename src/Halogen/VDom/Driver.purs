@@ -147,7 +147,6 @@ renderSpec document container =
   , dispose: removeChild
   }
   where
-
   render
     :: forall state action slots output
      . (Input action -> Effect Unit)
