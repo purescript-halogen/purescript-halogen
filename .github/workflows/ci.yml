@@ -11,11 +11,12 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - uses: actions/setup-node@v1
+      - uses: actions/setup-node@v2
 
       - uses: purescript-contrib/setup-purescript@main
         with:
           purescript: "0.14.4"
+          purs-tidy: "0.4.6"
 
       - name: Cache PureScript dependencies
         uses: actions/cache@v2
