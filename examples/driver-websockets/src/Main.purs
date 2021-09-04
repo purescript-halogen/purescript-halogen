@@ -35,9 +35,9 @@ wsProducer socket = CRA.produce \emitter -> do
     false
     (WS.toEventTarget socket)
   where
-    readHelper :: forall a b. (Foreign -> F a) -> b -> Maybe a
-    readHelper read =
-      either (const Nothing) Just <<< runExcept <<< read <<< unsafeToForeign
+  readHelper :: forall a b. (Foreign -> F a) -> b -> Maybe a
+  readHelper read =
+    either (const Nothing) Just <<< runExcept <<< read <<< unsafeToForeign
 
 -- A consumer coroutine that takes the `query` function from our component IO
 -- record and sends `ReceiveMessage` queries in when it receives inputs from the

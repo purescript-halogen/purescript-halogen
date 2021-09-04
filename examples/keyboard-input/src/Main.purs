@@ -22,7 +22,7 @@ import Web.UIEvent.KeyboardEvent.EventTypes as KET
 type State = { chars :: String }
 
 initialState :: State
-initialState = { chars : "" }
+initialState = { chars: "" }
 
 data Action
   = Init

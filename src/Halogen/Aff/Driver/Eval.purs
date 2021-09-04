@@ -38,7 +38,8 @@ import Halogen.Subscription as HS
 import Unsafe.Reference (unsafeRefEq)
 
 type Renderer r
-  = forall s f act ps i o
+  =
+  forall s f act ps i o
    . Ref LifecycleHandlers
   -> Ref (DriverState r s f act ps i o)
   -> Effect Unit
@@ -72,14 +73,14 @@ evalM
    . Renderer r
   -> Ref (DriverState r s f act ps i o)
   -> HalogenM s act ps o Aff
-  ~> Aff
+       ~> Aff
 evalM render initRef (HalogenM hm) = foldFree (go initRef) hm
   where
   go
     :: forall s' f' act' ps' i' o'
      . Ref (DriverState r s' f' act' ps' i' o')
     -> HalogenF s' act' ps' o' Aff
-    ~> Aff
+         ~> Aff
   go ref = case _ of
     State f -> do
       DriverState (st@{ state, lifecycleHandlers }) <- liftEffect (Ref.read ref)
@@ -92,7 +93,7 @@ evalM render initRef (HalogenM hm) = foldFree (go initRef) hm
               pure a
     Subscribe fes k -> do
       sid <- fresh SubscriptionId ref
-      finalize <- liftEffect $ HS.subscribe (fes sid) \act →
+      finalize <- liftEffect $ HS.subscribe (fes sid) \act ->
         handleAff $ evalF render ref (Input.Action act)
       DriverState ({ subscriptions }) <- liftEffect (Ref.read ref)
       liftEffect $ Ref.modify_ (map (M.insert sid finalize)) subscriptions
@@ -116,9 +117,10 @@ evalM render initRef (HalogenM hm) = foldFree (go initRef) hm
       DriverState ({ forks }) <- liftEffect (Ref.read ref)
       doneRef <- liftEffect (Ref.new false)
       fiber <- fork $ finally
-        (liftEffect do
-          Ref.modify_ (M.delete fid) forks
-          Ref.write true doneRef)
+        ( liftEffect do
+            Ref.modify_ (M.delete fid) forks
+            Ref.write true doneRef
+        )
         (evalM render ref hmu)
       liftEffect $ unlessM (Ref.read doneRef) do
         Ref.modify_ (M.insert fid fiber) forks
@@ -139,12 +141,15 @@ evalM render initRef (HalogenM hm) = foldFree (go initRef) hm
     -> Aff a'
   evalChildQuery ref cqb = do
     DriverState st <- liftEffect (Ref.read ref)
-    CQ.unChildQueryBox (\(CQ.ChildQuery unpack query reply) -> do
-      let
-        evalChild (DriverStateRef var) = parallel do
-          dsx <- liftEffect (Ref.read var)
-          unDriverStateX (\ds -> evalQ render ds.selfRef query) dsx
-      reply <$> sequential (unpack evalChild st.children)) cqb
+    CQ.unChildQueryBox
+      ( \(CQ.ChildQuery unpack query reply) -> do
+          let
+            evalChild (DriverStateRef var) = parallel do
+              dsx <- liftEffect (Ref.read var)
+              unDriverStateX (\ds -> evalQ render ds.selfRef query) dsx
+          reply <$> sequential (unpack evalChild st.children)
+      )
+      cqb
 
 unsubscribe
   :: forall r s' f' act' ps' i' o'

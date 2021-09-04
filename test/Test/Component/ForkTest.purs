@@ -58,7 +58,7 @@ testForkKill = do
 
   logRef <- H.liftEffect $ Ref.new L.Nil
 
-  _ ← H.liftEffect $ HS.subscribe io.messages \msg -> do
+  _ <- H.liftEffect $ HS.subscribe io.messages \msg -> do
     H.liftEffect $ Ref.modify_ (msg : _) logRef
     pure Nothing
 
@@ -90,7 +90,7 @@ testFinalize = do
 
   logRef <- H.liftEffect $ Ref.new L.Nil
 
-  _ ← H.liftEffect $ HS.subscribe io.messages \msg -> do
+  _ <- H.liftEffect $ HS.subscribe io.messages \msg -> do
     H.liftEffect $ Ref.modify_ (msg : _) logRef
     pure Nothing
 

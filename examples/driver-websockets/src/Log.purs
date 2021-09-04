@@ -39,7 +39,7 @@ component =
     }
 
 initialState :: forall i. i -> State
-initialState _ = { messages: [] , inputText: "" }
+initialState _ = { messages: [], inputText: "" }
 
 render :: forall m. State -> H.ComponentHTML Action () m
 render state =

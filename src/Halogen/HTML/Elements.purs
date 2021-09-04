@@ -5,114 +5,208 @@ module Halogen.HTML.Elements
   , elementNS
   , keyed
   , keyedNS
-  , withKeys, withKeys_
-  , a, a_
-  , abbr, abbr_
-  , address, address_
+  , withKeys
+  , withKeys_
+  , a
+  , a_
+  , abbr
+  , abbr_
+  , address
+  , address_
   , area
-  , article, article_
-  , aside, aside_
-  , audio, audio_
-  , b, b_
+  , article
+  , article_
+  , aside
+  , aside_
+  , audio
+  , audio_
+  , b
+  , b_
   , base
-  , bdi, bdi_
-  , bdo, bdo_
-  , blockquote, blockquote_
-  , body, body_
-  , br, br_
-  , button, button_
+  , bdi
+  , bdi_
+  , bdo
+  , bdo_
+  , blockquote
+  , blockquote_
+  , body
+  , body_
+  , br
+  , br_
+  , button
+  , button_
   , canvas
-  , caption, caption_
-  , cite, cite_
-  , code, code_
+  , caption
+  , caption_
+  , cite
+  , cite_
+  , code
+  , code_
   , col
-  , colgroup, colgroup_
+  , colgroup
+  , colgroup_
   , command
-  , datalist, datalist_
-  , dd, dd_
-  , del, del_
-  , details, details_
-  , dfn, dfn_
-  , dialog, dialog_
-  , div, div_
-  , dl, dl_
-  , dt, dt_
-  , em, em_
-  , embed, embed_
-  , fieldset, fieldset_
-  , figcaption, figcaption_
-  , figure, figure_
-  , footer, footer_
-  , form, form_
-  , h1, h1_
-  , h2, h2_
-  , h3, h3_
-  , h4, h4_
-  , h5, h5_
-  , h6, h6_
-  , head, head_
-  , header, header_
-  , hr, hr_
-  , html, html_
-  , i, i_
+  , datalist
+  , datalist_
+  , dd
+  , dd_
+  , del
+  , del_
+  , details
+  , details_
+  , dfn
+  , dfn_
+  , dialog
+  , dialog_
+  , div
+  , div_
+  , dl
+  , dl_
+  , dt
+  , dt_
+  , em
+  , em_
+  , embed
+  , embed_
+  , fieldset
+  , fieldset_
+  , figcaption
+  , figcaption_
+  , figure
+  , figure_
+  , footer
+  , footer_
+  , form
+  , form_
+  , h1
+  , h1_
+  , h2
+  , h2_
+  , h3
+  , h3_
+  , h4
+  , h4_
+  , h5
+  , h5_
+  , h6
+  , h6_
+  , head
+  , head_
+  , header
+  , header_
+  , hr
+  , hr_
+  , html
+  , html_
+  , i
+  , i_
   , iframe
   , img
   , input
-  , ins, ins_
-  , kbd, kbd_
-  , label, label_
-  , legend, legend_
-  , li, li_
+  , ins
+  , ins_
+  , kbd
+  , kbd_
+  , label
+  , label_
+  , legend
+  , legend_
+  , li
+  , li_
   , link
-  , main, main_
-  , map, map_
-  , mark, mark_
-  , menu, menu_
-  , menuitem, menuitem_
+  , main
+  , main_
+  , map
+  , map_
+  , mark
+  , mark_
+  , menu
+  , menu_
+  , menuitem
+  , menuitem_
   , meta
-  , meter, meter_
-  , nav, nav_
-  , noscript, noscript_
-  , object, object_
-  , ol, ol_
-  , optgroup, optgroup_
-  , option, option_
-  , output, output_
-  , p, p_
+  , meter
+  , meter_
+  , nav
+  , nav_
+  , noscript
+  , noscript_
+  , object
+  , object_
+  , ol
+  , ol_
+  , optgroup
+  , optgroup_
+  , option
+  , option_
+  , output
+  , output_
+  , p
+  , p_
   , param
-  , pre, pre_
-  , progress, progress_
-  , q, q_
-  , rp, rp_
-  , rt, rt_
-  , ruby, ruby_
-  , samp, samp_
-  , script, script_
-  , section, section_
-  , select, select_
-  , small, small_
+  , pre
+  , pre_
+  , progress
+  , progress_
+  , q
+  , q_
+  , rp
+  , rp_
+  , rt
+  , rt_
+  , ruby
+  , ruby_
+  , samp
+  , samp_
+  , script
+  , script_
+  , section
+  , section_
+  , select
+  , select_
+  , small
+  , small_
   , source
-  , span, span_
-  , strong, strong_
-  , style, style_
-  , sub, sub_
-  , summary, summary_
-  , sup, sup_
-  , table, table_
-  , tbody, tbody_
-  , td, td_
+  , span
+  , span_
+  , strong
+  , strong_
+  , style
+  , style_
+  , sub
+  , sub_
+  , summary
+  , summary_
+  , sup
+  , sup_
+  , table
+  , table_
+  , tbody
+  , tbody_
+  , td
+  , td_
   , textarea
-  , tfoot, tfoot_
-  , th, th_
-  , thead, thead_
-  , time, time_
-  , title, title_
-  , tr, tr_
+  , tfoot
+  , tfoot_
+  , th
+  , th_
+  , thead
+  , thead_
+  , time
+  , time_
+  , title
+  , title_
+  , tr
+  , tr_
   , track
-  , u, u_
-  , ul, ul_
-  , var, var_
-  , video, video_
+  , u
+  , u_
+  , ul
+  , ul_
+  , var
+  , var_
+  , video
+  , video_
   , wbr
   ) where
 
@@ -132,58 +226,66 @@ import Unsafe.Coerce (unsafeCoerce)
 
 -- | An HTML element that admits children.
 type Node r w i
-   = Array (IProp r i)
+  =
+  Array (IProp r i)
   -> Array (HTML w i)
   -> HTML w i
 
 -- | An HTML element that does not admit children.
 type Leaf r w i
-   = Array (IProp r i)
+  =
+  Array (IProp r i)
   -> HTML w i
 
 -- | Creates an HTML element that expects indexed properties.
 element :: forall r w i. ElemName -> Array (IProp r i) -> Array (HTML w i) -> HTML w i
 element =
   Core.element Nothing #
-    (unsafeCoerce
-      :: (ElemName -> Array (Prop i) -> Array (HTML w i) -> HTML w i) -> ElemName -> Array (IProp r i)
-      -> Array (HTML w i)
-      -> HTML w i)
+    ( unsafeCoerce
+        :: (ElemName -> Array (Prop i) -> Array (HTML w i) -> HTML w i)
+        -> ElemName
+        -> Array (IProp r i)
+        -> Array (HTML w i)
+        -> HTML w i
+    )
 
 -- | Creates a Namespaced HTML element that expects indexed properties.
 elementNS :: forall r w i. Namespace -> ElemName -> Array (IProp r i) -> Array (HTML w i) -> HTML w i
 elementNS =
   pure >>> Core.element >>>
-    (unsafeCoerce
-      :: (ElemName -> Array (Prop i) -> Array (HTML w i) -> HTML w i)
-      -> ElemName
-      -> Array (IProp r i)
-      -> Array (HTML w i)
-      -> HTML w i)
+    ( unsafeCoerce
+        :: (ElemName -> Array (Prop i) -> Array (HTML w i) -> HTML w i)
+        -> ElemName
+        -> Array (IProp r i)
+        -> Array (HTML w i)
+        -> HTML w i
+    )
 
 -- | Creates an HTML element that expects indexed properties, with keyed
 -- | children.
 keyed :: forall r w i. ElemName -> Array (IProp r i) -> Array (Tuple String (HTML w i)) -> HTML w i
 keyed =
   Core.keyed Nothing #
-    (unsafeCoerce
-      :: (ElemName -> Array (Prop i) -> Array (Tuple String (HTML w i)) -> HTML w i)
-      -> ElemName
-      -> Array (IProp r i)
-      -> Array (Tuple String (HTML w i))
-      -> HTML w i)
+    ( unsafeCoerce
+        :: (ElemName -> Array (Prop i) -> Array (Tuple String (HTML w i)) -> HTML w i)
+        -> ElemName
+        -> Array (IProp r i)
+        -> Array (Tuple String (HTML w i))
+        -> HTML w i
+    )
 
 -- | Creates a Namespaced HTML element that expects indexed properties, with
 -- | keyed children.
 keyedNS :: forall r w i. Namespace -> ElemName -> Array (IProp r i) -> Array (Tuple String (HTML w i)) -> HTML w i
 keyedNS =
   pure >>> Core.keyed >>>
-    (unsafeCoerce
-      :: (ElemName -> Array (Prop i) -> Array (Tuple String (HTML w i)) -> HTML w i)
-      -> ElemName
-      -> Array (IProp r i)
-      -> Array (Tuple String (HTML w i))
-      -> HTML w i)
+    ( unsafeCoerce
+        :: (ElemName -> Array (Prop i) -> Array (Tuple String (HTML w i)) -> HTML w i)
+        -> ElemName
+        -> Array (IProp r i)
+        -> Array (Tuple String (HTML w i))
+        -> HTML w i
+    )
 
 withKeys :: forall r w i. (Array (IProp r i) -> Array (HTML w i) -> HTML w i) -> Array (IProp r i) -> Array (Tuple String (HTML w i)) -> HTML w i
 withKeys ctor props children =

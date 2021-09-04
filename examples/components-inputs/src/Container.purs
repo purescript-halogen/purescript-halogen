@@ -43,10 +43,10 @@ render state =
         ]
     , HH.button
         [ HE.onClick \_ -> Increment ]
-        [ HH.text "+1"]
+        [ HH.text "+1" ]
     , HH.button
         [ HE.onClick \_ -> Decrement ]
-        [ HH.text "-1"]
+        [ HH.text "-1" ]
     ]
 
 handleAction :: forall o m. Action -> H.HalogenM State Action ChildSlots o m Unit

@@ -93,12 +93,16 @@ import Effect.Unsafe (unsafePerformEffect)
 handler :: forall r i. EventType -> (Event -> i) -> IProp r i
 handler et f =
   (unsafeCoerce :: (EventType -> (Event -> Maybe i) -> Prop i) -> EventType -> (Event -> Maybe (Input i)) -> IProp r i)
-    Core.handler et \ev -> Just (Action (f ev))
+    Core.handler
+    et
+    \ev -> Just (Action (f ev))
 
 handler' :: forall r i. EventType -> (Event -> Maybe i) -> IProp r i
 handler' et f =
   (unsafeCoerce :: (EventType -> (Event -> Maybe i) -> Prop i) -> EventType -> (Event -> Maybe (Input i)) -> IProp r i)
-    Core.handler et \ev -> Action <$> f ev
+    Core.handler
+    et
+    \ev -> Action <$> f ev
 
 onAbort :: forall r i. (Event -> i) -> IProp (onAbort :: Event | r) i
 onAbort = handler (EventType "abort")
@@ -121,11 +125,14 @@ onFileUpload
   => (t File -> i)
   -> IProp (onChange :: Event | r) i
 onFileUpload f = handler ET.change $
-  ( Event.target >=>
-    HTMLInputElement.fromEventTarget >=>
-    HTMLInputElement.files >>> unsafePerformEffect ) >>>
-  maybe none items >>>
-  f
+  ( Event.target
+      >=> HTMLInputElement.fromEventTarget
+      >=>
+        HTMLInputElement.files >>> unsafePerformEffect
+  )
+    >>> maybe none items
+    >>>
+      f
 
 onInput :: forall r i. (Event -> i) -> IProp (onInput :: Event | r) i
 onInput = handler ET.input

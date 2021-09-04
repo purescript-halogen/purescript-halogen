@@ -1,21 +1,38 @@
 module Halogen.HTML.Elements.Keyed
-  ( article, article_
-  , colgroup, colgroup_
-  , dialog, dialog_
-  , div, div_
-  , dl, dl_
-  , fieldset, fieldset_
-  , footer, footer_
-  , form, form_
-  , header, header_
-  , menu, menu_
-  , ol, ol_
-  , table, table_
-  , tbody, tbody_
-  , tfoot, tfoot_
-  , thead, thead_
-  , tr, tr_
-  , ul, ul_
+  ( article
+  , article_
+  , colgroup
+  , colgroup_
+  , dialog
+  , dialog_
+  , div
+  , div_
+  , dl
+  , dl_
+  , fieldset
+  , fieldset_
+  , footer
+  , footer_
+  , form
+  , form_
+  , header
+  , header_
+  , menu
+  , menu_
+  , ol
+  , ol_
+  , table
+  , table_
+  , tbody
+  , tbody_
+  , tfoot
+  , tfoot_
+  , thead
+  , thead_
+  , tr
+  , tr_
+  , ul
+  , ul_
   ) where
 
 import Data.Tuple (Tuple)
@@ -27,7 +44,8 @@ import Halogen.HTML.Elements (keyed)
 import Halogen.HTML.Properties (IProp)
 
 type KeyedNode r w i
-   = Array (IProp r i)
+  =
+  Array (IProp r i)
   -> Array (Tuple String (HTML w i))
   -> HTML w i
 

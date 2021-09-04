@@ -5,6 +5,8 @@
     "postinstall": "spago install",
     "build": "spago build --purs-args '--censor-lib --strict'",
     "test": "spago --config test/test.dhall test --purs-args '--censor-lib --strict'",
+    "format": "purs-tidy format-in-place src test examples",
+    "check-formatting": "purs-tidy check src test examples",
     "example-all": "./build-examples.sh",
     "example-ace": "spago --config examples/ace/spago.dhall bundle-app --main Example.Ace.Main --to examples/ace/dist/example.js",
     "example-basic": "spago --config examples/basic/spago.dhall bundle-app --main Example.Basic.Main --to examples/basic/dist/example.js",
@@ -24,6 +26,7 @@
   },
   "devDependencies": {
     "purescript-psa": "^0.8.2",
+    "purs-tidy": "^0.4.6",
     "rimraf": "^3.0.2",
     "spago": "^0.19.1"
   }

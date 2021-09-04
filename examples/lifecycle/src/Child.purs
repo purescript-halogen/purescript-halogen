@@ -33,11 +33,13 @@ child initialState =
   H.mkComponent
     { initialState: const initialState
     , render
-    , eval: H.mkEval (H.defaultEval
-        { handleAction = handleAction
-        , initialize = Just Initialize
-        , finalize = Just Finalize
-        })
+    , eval: H.mkEval
+        ( H.defaultEval
+            { handleAction = handleAction
+            , initialize = Just Initialize
+            , finalize = Just Finalize
+            }
+        )
     }
   where
   render :: Int -> H.ComponentHTML Action ChildSlots Aff
@@ -76,11 +78,13 @@ cell initialState =
   H.mkComponent
     { initialState: const initialState
     , render
-    , eval: H.mkEval (H.defaultEval
-        { handleAction = handleAction
-        , initialize = Just Initialize
-        , finalize = Just Finalize
-        })
+    , eval: H.mkEval
+        ( H.defaultEval
+            { handleAction = handleAction
+            , initialize = Just Initialize
+            , finalize = Just Finalize
+            }
+        )
     }
   where
 

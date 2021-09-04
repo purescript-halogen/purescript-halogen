@@ -48,15 +48,15 @@ render state =
     , HH.p_
         [ HH.text
             $ "Last time I checked, the button was: "
-            <> (maybe "(not checked yet)" (if _ then "on" else "off") state.buttonState)
-            <> ". "
+              <> (maybe "(not checked yet)" (if _ then "on" else "off") state.buttonState)
+              <> ". "
         , HH.button
             [ HE.onClick \_ -> CheckButtonState ]
             [ HH.text "Check now" ]
         ]
     ]
 
-handleAction ::forall o m. Action -> H.HalogenM State Action ChildSlots o m Unit
+handleAction :: forall o m. Action -> H.HalogenM State Action ChildSlots o m Unit
 handleAction = case _ of
   HandleButton (Button.Toggled _) -> do
     H.modify_ (\st -> st { toggleCount = st.toggleCount + 1 })

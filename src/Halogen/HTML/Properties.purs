@@ -11,7 +11,8 @@ module Halogen.HTML.Properties
 
   , alt
   , charset
-  , class_, classes
+  , class_
+  , classes
   , cols
   , rows
   , colSpan
@@ -82,7 +83,7 @@ import DOM.HTML.Indexed.MenuitemType (MenuitemType(..)) as I
 import DOM.HTML.Indexed.OnOff (OnOff(..)) as I
 import DOM.HTML.Indexed.OrderedListType (OrderedListType(..)) as I
 import DOM.HTML.Indexed.PreloadValue (PreloadValue(..)) as I
-import DOM.HTML.Indexed.ScopeValue(ScopeValue(..)) as I
+import DOM.HTML.Indexed.ScopeValue (ScopeValue(..)) as I
 import DOM.HTML.Indexed.StepValue (StepValue(..)) as I
 import Data.Maybe (Maybe(..))
 import Data.MediaType (MediaType)
@@ -116,21 +117,23 @@ prop = (unsafeCoerce :: (PropName value -> value -> Prop (Input i)) -> PropName 
 attr :: forall r i. AttrName -> String -> IProp r i
 attr =
   Core.attr Nothing #
-    (unsafeCoerce
-      :: (AttrName -> String -> Prop (Input i))
-      -> AttrName
-      -> String
-      -> IProp r i)
+    ( unsafeCoerce
+        :: (AttrName -> String -> Prop (Input i))
+        -> AttrName
+        -> String
+        -> IProp r i
+    )
 
 -- | Creates an indexed HTML attribute.
 attrNS :: forall r i. Namespace -> AttrName -> String -> IProp r i
 attrNS =
   pure >>> Core.attr >>>
-    (unsafeCoerce
-      :: (AttrName -> String -> Prop (Input i))
-      -> AttrName
-      -> String
-      -> IProp r i)
+    ( unsafeCoerce
+        :: (AttrName -> String -> Prop (Input i))
+        -> AttrName
+        -> String
+        -> IProp r i
+    )
 
 -- | The `ref` property allows an input to be raised once a `HTMLElement` has
 -- | been created or destroyed in the DOM for the element that the property is
@@ -143,7 +146,7 @@ ref = (unsafeCoerce :: ((Maybe Element -> Maybe (Input i)) -> Prop (Input i)) ->
 
 -- | Every `IProp lt i` can be cast to some `IProp gt i` as long as `lt` is a
 -- | subset of `gt`.
-expand ∷ ∀ lt gt a i. Row.Union lt a gt ⇒ IProp lt i → IProp gt i
+expand :: forall lt gt a i. Row.Union lt a gt => IProp lt i -> IProp gt i
 expand = unsafeCoerce
 
 alt :: forall r i. String -> IProp (alt :: String | r) i
@@ -217,7 +220,7 @@ target = prop (PropName "target")
 title :: forall r i. String -> IProp (title :: String | r) i
 title = prop (PropName "title")
 
-download :: ∀ r i. String -> IProp (download :: String | r) i
+download :: forall r i. String -> IProp (download :: String | r) i
 download = prop (PropName "download")
 
 method :: forall r i. I.FormMethod -> IProp (method :: I.FormMethod | r) i

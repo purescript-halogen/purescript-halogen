@@ -33,7 +33,7 @@ component =
     , eval: H.mkEval $ H.defaultEval { handleAction = handleAction }
     }
 
-initialState ∷ forall i. i -> State
+initialState :: forall i. i -> State
 initialState _ = { buttonCheckState: Nothing, buttonMessageState: Nothing }
 
 render :: forall m. State -> H.ComponentHTML Action ChildSlots m
@@ -49,7 +49,8 @@ render state =
         ]
     , HH.div_
         [ HH.p_
-            [ HH.text ("Last message from the button: " <> printButtonState state.buttonMessageState ) ]]
+            [ HH.text ("Last message from the button: " <> printButtonState state.buttonMessageState) ]
+        ]
     ]
 
 printButtonState :: Maybe Boolean -> String
@@ -77,7 +78,7 @@ handlePanelMessage = case _ of
   Panel.Bubble msg ->
     handleButtonMessage msg
 
-handleButtonMessage  :: forall o m. Button.Message -> H.HalogenM State Action ChildSlots o m Unit
+handleButtonMessage :: forall o m. Button.Message -> H.HalogenM State Action ChildSlots o m Unit
 handleButtonMessage = case _ of
   Button.Toggled b ->
     H.modify_ (_ { buttonMessageState = Just b })

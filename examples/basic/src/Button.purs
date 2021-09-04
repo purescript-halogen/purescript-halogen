@@ -33,7 +33,7 @@ render state =
       ]
       [ HH.text label ]
 
-handleAction ∷ forall o m. Action → H.HalogenM State Action () o m Unit
+handleAction :: forall o m. Action -> H.HalogenM State Action () o m Unit
 handleAction = case _ of
   Toggle ->
     H.modify_ \st -> st { enabled = not st.enabled }

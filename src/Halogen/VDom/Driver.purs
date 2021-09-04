@@ -59,8 +59,8 @@ mkSpec
   -> Ref (ChildRenderer action slots)
   -> DOM.Document
   -> V.VDomSpec
-      (Array (VP.Prop (Input action)))
-      (ComponentSlot slots Aff action)
+       (Array (VP.Prop (Input action)))
+       (ComponentSlot slots Aff action)
 mkSpec handler renderChildRef document =
   V.VDomSpec { buildWidget, buildAttributes, document }
   where
@@ -72,11 +72,11 @@ mkSpec handler renderChildRef document =
 
   buildWidget
     :: V.VDomSpec
-          (Array (VP.Prop (Input action)))
-          (ComponentSlot slots Aff action)
+         (Array (VP.Prop (Input action)))
+         (ComponentSlot slots Aff action)
     -> V.Machine
-          (ComponentSlot slots Aff action)
-          DOM.Node
+         (ComponentSlot slots Aff action)
+         DOM.Node
   buildWidget spec = render
     where
 
@@ -91,8 +91,8 @@ mkSpec handler renderChildRef document =
 
     patch
       :: EFn.EffectFn2 (WidgetState slots action)
-            (ComponentSlot slots Aff action)
-            (V.Step (ComponentSlot slots Aff action) DOM.Node)
+        (ComponentSlot slots Aff action)
+        (V.Step (ComponentSlot slots Aff action) DOM.Node)
     patch = EFn.mkEffectFn2 \st slot ->
       case st of
         Just step -> case slot of
@@ -109,8 +109,8 @@ mkSpec handler renderChildRef document =
 
     renderComponentSlot
       :: EFn.EffectFn1
-            (ComponentSlotBox slots Aff action)
-            (V.Step (ComponentSlot slots Aff action) DOM.Node)
+        (ComponentSlotBox slots Aff action)
+        (V.Step (ComponentSlot slots Aff action) DOM.Node)
     renderComponentSlot = EFn.mkEffectFn1 \cs -> do
       renderChild <- Ref.read renderChildRef
       rsx <- renderChild cs
@@ -141,11 +141,11 @@ renderSpec
   -> DOM.HTMLElement
   -> AD.RenderSpec RenderState
 renderSpec document container =
-    { render
-    , renderChild: identity
-    , removeChild
-    , dispose: removeChild
-    }
+  { render
+  , renderChild: identity
+  , removeChild
+  , dispose: removeChild
+  }
   where
 
   render
