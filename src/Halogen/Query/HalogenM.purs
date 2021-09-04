@@ -227,11 +227,11 @@ getRef :: forall state action slots output m. RefLabel -> HalogenM state action 
 getRef p = HalogenM $ liftF $ GetRef p identity
 
 imapState
-  :: forall state state' action slots output m
+  :: forall state state' action slots output m a
    . (state -> state')
   -> (state' -> state)
-  -> HalogenM state action slots output m
-       ~> HalogenM state' action slots output m
+  -> HalogenM state action slots output m a
+  -> HalogenM state' action slots output m a
 imapState f f' (HalogenM h) = HalogenM (hoistFree go h)
   where
   go :: HalogenF state action slots output m ~> HalogenF state' action slots output m
@@ -248,11 +248,11 @@ imapState f f' (HalogenM h) = HalogenM (hoistFree go h)
     GetRef p k -> GetRef p k
 
 mapAction
-  :: forall state action action' slots output m
+  :: forall state action action' slots output m a
    . Functor m
   => (action -> action')
-  -> HalogenM state action slots output m
-       ~> HalogenM state action' slots output m
+  -> HalogenM state action slots output m a
+  -> HalogenM state action' slots output m a
 mapAction f (HalogenM h) = HalogenM (hoistFree go h)
   where
   go :: HalogenF state action slots output m ~> HalogenF state action' slots output m
@@ -269,10 +269,10 @@ mapAction f (HalogenM h) = HalogenM (hoistFree go h)
     GetRef p k -> GetRef p k
 
 mapOutput
-  :: forall state action slots output output' m
+  :: forall state action slots output output' m a
    . (output -> output')
-  -> HalogenM state action slots output m
-       ~> HalogenM state action slots output' m
+  -> HalogenM state action slots output m a
+  -> HalogenM state action slots output' m a
 mapOutput f (HalogenM h) = HalogenM (hoistFree go h)
   where
   go :: HalogenF state action slots output m ~> HalogenF state action slots output' m
@@ -289,11 +289,11 @@ mapOutput f (HalogenM h) = HalogenM (hoistFree go h)
     GetRef p k -> GetRef p k
 
 hoist
-  :: forall state action slots output m m'
+  :: forall state action slots output m m' a
    . Functor m'
   => (m ~> m')
-  -> HalogenM state action slots output m
-       ~> HalogenM state action slots output m'
+  -> HalogenM state action slots output m a
+  -> HalogenM state action slots output m' a
 hoist nat (HalogenM fa) = HalogenM (hoistFree go fa)
   where
   go :: HalogenF state action slots output m ~> HalogenF state action slots output m'
