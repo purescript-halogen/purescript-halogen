@@ -91,8 +91,8 @@ mkSpec handler renderChildRef document =
 
     patch
       :: EFn.EffectFn2 (WidgetState slots action)
-        (ComponentSlot slots Aff action)
-        (V.Step (ComponentSlot slots Aff action) DOM.Node)
+           (ComponentSlot slots Aff action)
+           (V.Step (ComponentSlot slots Aff action) DOM.Node)
     patch = EFn.mkEffectFn2 \st slot ->
       case st of
         Just step -> case slot of
@@ -109,8 +109,8 @@ mkSpec handler renderChildRef document =
 
     renderComponentSlot
       :: EFn.EffectFn1
-        (ComponentSlotBox slots Aff action)
-        (V.Step (ComponentSlot slots Aff action) DOM.Node)
+           (ComponentSlotBox slots Aff action)
+           (V.Step (ComponentSlot slots Aff action) DOM.Node)
     renderComponentSlot = EFn.mkEffectFn1 \cs -> do
       renderChild <- Ref.read renderChildRef
       rsx <- renderChild cs
