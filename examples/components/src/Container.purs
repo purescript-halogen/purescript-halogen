@@ -48,8 +48,8 @@ render state =
     , HH.p_
         [ HH.text
             $ "Last time I checked, the button was: "
-              <> (maybe "(not checked yet)" (if _ then "on" else "off") state.buttonState)
-              <> ". "
+                <> (maybe "(not checked yet)" (if _ then "on" else "off") state.buttonState)
+                <> ". "
         , HH.button
             [ HE.onClick \_ -> CheckButtonState ]
             [ HH.text "Check now" ]
