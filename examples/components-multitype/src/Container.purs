@@ -44,22 +44,22 @@ initialState _ = { a: Nothing, b: Nothing, c: Nothing }
 render :: forall m. State -> H.ComponentHTML Action ChildSlots m
 render state = HH.div_
   [ HH.div
-      [ HP.class_ (H.ClassName "box")]
+      [ HP.class_ (H.ClassName "box") ]
       [ HH.h1_ [ HH.text "Component A" ]
       , HH.slot_ _a unit CA.component unit
       ]
   , HH.div
-      [ HP.class_ (H.ClassName "box")]
+      [ HP.class_ (H.ClassName "box") ]
       [ HH.h1_ [ HH.text "Component B" ]
       , HH.slot_ _b unit CB.component unit
       ]
   , HH.div
-      [ HP.class_ (H.ClassName "box")]
+      [ HP.class_ (H.ClassName "box") ]
       [ HH.h1_ [ HH.text "Component C" ]
       , HH.slot_ _c unit CC.component unit
       ]
   , HH.p_
-      [ HH.text "Last observed states:"]
+      [ HH.text "Last observed states:" ]
   , HH.ul_
       [ HH.li_ [ HH.text ("Component A: " <> show state.a) ]
       , HH.li_ [ HH.text ("Component B: " <> show state.b) ]

@@ -57,7 +57,7 @@ instance bifunctorHTML :: Bifunctor HTML where
 instance functorHTML :: Functor (HTML p) where
   map = rmap
 
-renderWidget ∷ ∀ w x i j. (i → j) → (w → HTML x j) → HTML w i → HTML x j
+renderWidget :: forall w x i j. (i -> j) -> (w -> HTML x j) -> HTML w i -> HTML x j
 renderWidget f g (HTML vdom) =
   HTML (VDom.renderWidget (map (map (map f))) (un HTML <<< g) vdom)
 
@@ -75,7 +75,10 @@ element ns =
   where
   coe
     :: (VDom.ElemName -> Array (Prop i) -> Array (VDom.VDom (Array (Prop i)) w) -> VDom.VDom (Array (Prop i)) w)
-    -> VDom.ElemName -> Array (Prop i) -> Array (HTML w i) -> HTML w i
+    -> VDom.ElemName
+    -> Array (Prop i)
+    -> Array (HTML w i)
+    -> HTML w i
   coe = unsafeCoerce
 
 -- | A smart constructor for HTML elements with keyed children.
@@ -84,7 +87,10 @@ keyed ns = coe (\name props children -> VDom.Keyed ns name props children)
   where
   coe
     :: (VDom.ElemName -> Array (Prop i) -> Array (Tuple String (VDom.VDom (Array (Prop i)) w)) -> VDom.VDom (Array (Prop i)) w)
-    -> VDom.ElemName -> Array (Prop i) -> Array (Tuple String (HTML w i)) -> HTML w i
+    -> VDom.ElemName
+    -> Array (Prop i)
+    -> Array (Tuple String (HTML w i))
+    -> HTML w i
   coe = unsafeCoerce
 
 -- | Create a HTML property.

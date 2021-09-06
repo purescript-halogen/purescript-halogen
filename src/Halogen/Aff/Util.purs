@@ -49,8 +49,8 @@ awaitBody = do
 -- | Tries to find an element in the document.
 selectElement :: QuerySelector -> Aff (Maybe HTMLElement)
 selectElement query = do
-  mel <- liftEffect $
-    ((querySelector query <<< HTMLDocument.toParentNode <=< Window.document) =<< window)
+  mel <- liftEffect do
+    (querySelector query <<< HTMLDocument.toParentNode <=< Window.document) =<< window
   pure $ HTMLElement.fromElement =<< mel
 
 -- | Runs an `Aff` value of the type commonly used by Halogen components. Any

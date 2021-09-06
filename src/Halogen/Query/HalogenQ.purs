@@ -10,7 +10,7 @@ data HalogenQ query action input a
   | Finalize a
   | Receive input a
   | Action action a
-  | Query (Coyoneda query a) (Unit → a)
+  | Query (Coyoneda query a) (Unit -> a)
 
 instance bifunctorHalogenQ :: Bifunctor (HalogenQ query action) where
   bimap f g = case _ of

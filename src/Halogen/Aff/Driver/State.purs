@@ -60,7 +60,7 @@ type DriverStateRec r s f act ps i o =
 
 mapDriverState
   :: forall r s f act ps i o
-  . (DriverStateRec r s f act ps i o -> DriverStateRec r s f act ps i o)
+   . (DriverStateRec r s f act ps i o -> DriverStateRec r s f act ps i o)
   -> DriverState r s f act ps i o
   -> DriverState r s f act ps i o
 mapDriverState f (DriverState ds) = DriverState (f ds)
