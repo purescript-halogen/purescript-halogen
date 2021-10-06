@@ -201,7 +201,7 @@ rel = prop (PropName "rel")
 src :: forall r i. String -> IProp (src :: String | r) i
 src = prop (PropName "src")
 
-srcDoc :: forall r i. String -> IProp ( srcDoc :: String | r ) i
+srcDoc :: forall r i. String -> IProp (srcDoc :: String | r) i
 srcDoc = prop (PropName "srcdoc")
 
 -- | Sets the `style` attribute to the specified string.
