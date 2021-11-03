@@ -85,7 +85,7 @@ import Halogen.HTML as HH
 import Halogen.Aff as HA
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
-import Halogen.Subscription as SUB
+import Halogen.Subscription as HS
 import Halogen.VDom.Driver (runUI)
 
 main :: Effect Unit
@@ -93,7 +93,7 @@ main = HA.runHalogenAff do
   body <- HA.awaitBody
   io <- runUI component unit body
 
-  _ <- liftEffect $ SUB.subscribe io.messages \(Toggled newState) -> do
+  _ <- liftEffect $ HS.subscribe io.messages \(Toggled newState) -> do
     liftEffect $ log $ "Button was internally toggled to: " <> show newState
     pure Nothing
 
