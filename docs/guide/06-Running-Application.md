@@ -79,29 +79,28 @@ import Prelude
 import Data.Maybe (Maybe(..))
 import Effect (Effect)
 import Effect.Console (log)
-import Example.Driver.IO.Button as B
-import FRP.Event as Event
 import Halogen (liftEffect)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.Aff as HA
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
+import Halogen.Subscription as HS
 import Halogen.VDom.Driver (runUI)
 
 main :: Effect Unit
 main = HA.runHalogenAff do
   body <- HA.awaitBody
-  io <- runUI B.component unit body
+  io <- runUI component unit body
 
-  _ <- liftEffect $ Event.subscribe io.messages \(Toggled newState) -> do
+  _ <- liftEffect $ HS.subscribe io.messages \(Toggled newState) -> do
     liftEffect $ log $ "Button was internally toggled to: " <> show newState
     pure Nothing
 
   state0 <- io.query $ H.mkRequest IsOn
   liftEffect $ log $ "The button state is currently: " <> show state0
 
-  void $ io.query $ H.mkTell (B.SetState true)
+  void $ io.query $ H.mkTell (SetState true)
 
   state1 <- io.query $ H.mkRequest IsOn
   liftEffect $ log $ "The button state is now: " <> show state1
