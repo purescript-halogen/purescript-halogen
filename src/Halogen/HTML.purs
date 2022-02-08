@@ -4,6 +4,7 @@ module Halogen.HTML
   ( ComponentHTML
   , PlainHTML
   , fromPlainHTML
+  , rawHTML
   , slot
   , slot_
   , memoized
@@ -52,6 +53,9 @@ type PlainHTML = HTML Void Void
 -- | Relaxes the type of `PlainHTML` to make it compatible with all `HTML`.
 fromPlainHTML :: forall w i. PlainHTML -> HTML w i
 fromPlainHTML = unsafeCoerce -- ≅ bimap absurd absurd
+
+rawHTML :: forall action slots m. String -> ComponentHTML action slots m
+rawHTML html = Core.widget (RawHTML html)
 
 -- | Defines a slot for a child component. Takes:
 -- | - the slot address label

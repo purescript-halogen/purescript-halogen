@@ -26,13 +26,15 @@ import Halogen.VDom.Thunk (Thunk)
 import Halogen.VDom.Thunk as Thunk
 import Unsafe.Reference (unsafeRefEq)
 import Web.DOM.Document (Document) as DOM
-import Web.DOM.Element (Element) as DOM
+import Web.DOM.Element (Element, toNode) as DOM
 import Web.DOM.Node (Node, appendChild, removeChild, parentNode, nextSibling, insertBefore) as DOM
 import Web.HTML (window) as DOM
 import Web.HTML.HTMLDocument as HTMLDocument
 import Web.HTML.HTMLElement (HTMLElement) as DOM
 import Web.HTML.HTMLElement as HTMLElement
 import Web.HTML.Window (document) as DOM
+
+foreign import createElementFromHTML :: String -> DOM.Element
 
 type VHTML action slots =
   V.VDom (Array (Prop (Input action))) (ComponentSlot slots Aff action)
@@ -88,6 +90,9 @@ mkSpec handler renderChildRef document =
         ThunkSlot t -> do
           step <- EFn.runEffectFn1 buildThunk t
           pure $ V.mkStep $ V.Step (V.extract step) (Just step) patch done
+        RawHTML html -> do
+          let node = DOM.toNode $ createElementFromHTML html
+          pure $ V.mkStep $ V.Step node Nothing patch done
 
     patch
       :: EFn.EffectFn2 (WidgetState slots action)
@@ -102,6 +107,11 @@ mkSpec handler renderChildRef document =
           ThunkSlot t -> do
             step' <- EFn.runEffectFn2 V.step step t
             pure $ V.mkStep $ V.Step (V.extract step') (Just step') patch done
+          RawHTML html -> do
+            -- probably have to come up with some more intelligent patch here instead of re-creating node
+            let node = DOM.toNode $ createElementFromHTML html
+            pure $ V.mkStep $ V.Step node Nothing patch done
+
         _ -> EFn.runEffectFn1 render slot
 
     buildThunk :: V.Machine (HTMLThunk slots action) DOM.Node
