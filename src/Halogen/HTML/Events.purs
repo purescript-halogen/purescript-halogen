@@ -16,6 +16,7 @@ module Halogen.HTML.Events
   , onCopy
   , onPaste
   , onCut
+  , onAuxClick
   , onClick
   -- , onContextMenu
   , onDoubleClick
@@ -159,6 +160,9 @@ onPaste = handler CET.paste <<< clipboardHandler
 
 onCut :: forall r i. (ClipboardEvent -> i) -> IProp (onCut :: ClipboardEvent | r) i
 onCut = handler CET.cut <<< clipboardHandler
+
+onAuxClick :: forall r i. (MouseEvent -> i) -> IProp (onAuxClick :: MouseEvent | r) i
+onAuxClick = handler MET.auxclick <<< mouseHandler
 
 onClick :: forall r i. (MouseEvent -> i) -> IProp (onClick :: MouseEvent | r) i
 onClick = handler MET.click <<< mouseHandler
