@@ -25,6 +25,6 @@ main = HA.runHalogenAff do
   liftEffect do
     listener <- DOM.eventListener $ HCE.fromEvent >>> traverse_ \event -> do
       let hash = Str.drop 1 $ Str.dropWhile (_ /= '#') $ HCE.newURL event
-      launchAff_ $ io.query $ H.mkTell $ RouteLog.ChangeRoute hash
+      launchAff_ $ void $ io.query $ H.mkTell $ RouteLog.ChangeRoute hash
 
     DOM.addEventListener HCET.hashchange listener false <<< Window.toEventTarget =<< DOM.window

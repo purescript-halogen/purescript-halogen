@@ -101,6 +101,6 @@ cell initialState =
     id <- H.get
     H.liftEffect $ log ("Finalize Cell " <> show id)
     H.raise Finalized
-  handleAction (Report msg) =
+  handleAction (Report _msg) =
     -- A `cell` doesn't have children, so cannot listen and `Report`.
     pure unit

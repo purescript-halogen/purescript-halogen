@@ -2,7 +2,7 @@ module Example.Effects.Aff.Ajax.Component where
 
 import Prelude
 
-import Affjax as AX
+import Affjax.Web as AX
 import Affjax.ResponseFormat as AXRF
 import Data.Either (hush)
 import Data.Maybe (Maybe(..))
