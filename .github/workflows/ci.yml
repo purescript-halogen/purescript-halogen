@@ -26,6 +26,8 @@ jobs:
             .spago
             output
 
+      - run: npm install esbuild
+
       - run: npm run -s build
 
       - run: npm run -s test
