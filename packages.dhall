@@ -1,4 +1,42 @@
 let upstream =
-      https://github.com/purescript/package-sets/releases/download/psc-0.14.3-20210808/packages.dhall sha256:dbc06803c031113d3f9e001f8d95629e48da720d2bfe45d8bbe2c0cffcef293d
+      https://raw.githubusercontent.com/purescript/package-sets/prepare-0.15/src/packages.dhall
+        sha256:30d10fa9332cfe1b7300d51d1d35337c3b67ab4ec42a0ac9b9f8dce48851631c
 
 in  upstream
+  with
+    halogen-subscriptions =
+      { version = "purs-0.15"
+      , repo =
+          "https://github.com/purescript-halogen/purescript-halogen-subscriptions.git"
+      , dependencies =
+        [ "arrays"
+        , "contravariant"
+        , "control"
+        , "effect"
+        , "foldable-traversable"
+        , "maybe"
+        , "prelude"
+        , "refs"
+        , "safe-coerce"
+        , "unsafe-reference"
+        ]
+      }
+
+  with
+    halogen-vdom =
+      { version = "purs-0.15"
+      , repo =
+          "https://github.com/purescript-halogen/purescript-halogen-vdom.git"
+      , dependencies =
+        [ "bifunctors"
+        , "effect"
+        , "foreign"
+        , "foreign-object"
+        , "maybe"
+        , "prelude"
+        , "refs"
+        , "tuples"
+        , "unsafe-coerce"
+        , "web-html"
+        ]
+      }

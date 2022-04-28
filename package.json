@@ -26,8 +26,8 @@
   },
   "devDependencies": {
     "purescript-psa": "^0.8.2",
-    "purs-tidy": "^0.5.1",
+    "purs-tidy": "^0.7.2",
     "rimraf": "^3.0.2",
-    "spago": "^0.20.3"
+    "spago": "^0.20.8"
   }
 }
