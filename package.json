@@ -25,6 +25,7 @@
     "example-memoized-lazy": "spago --config examples/memoized-lazy/spago.dhall bundle-app --main Example.MemoizedLazy.Main --to examples/memoized-lazy/dist/example.js"
   },
   "devDependencies": {
+    "ace-builds": "^1.4.14",
     "esbuild": "^0.14.38",
     "purescript-psa": "^0.8.2",
     "purs-tidy": "^0.7.2",
