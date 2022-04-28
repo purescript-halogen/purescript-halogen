@@ -21,7 +21,7 @@
     "purescript-free": "^v7.0.0",
     "purescript-freeap": "https://github.com/thomashoneyman/purescript-freeap.git#purs-0.15",
     "purescript-functions": "^v6.0.0",
-    "purescript-halogen-subscriptions": "https://github.com/purescript-halogen/purescript-halogen-subscriptions.git#purs-0.15",
+    "purescript-halogen-subscriptions": "https://github.com/purescript-halogen/purescript-halogen-subscriptions.git#^2.0.0",
     "purescript-halogen-vdom": "^8.0.0",
     "purescript-lazy": "^v6.0.0",
     "purescript-lists": "^v7.0.0",
