@@ -242,7 +242,7 @@ noValidate = prop (PropName "noValidate")
 type_ :: forall r i value. IsProp value => value -> IProp (type :: value | r) i
 type_ = prop (PropName "type")
 
-value :: forall r i. String -> IProp (value :: String | r) i
+value :: forall r i value. IsProp value => value -> IProp (value :: value | r) i
 value = prop (PropName "value")
 
 min :: forall r i. Number -> IProp (min :: Number | r) i
