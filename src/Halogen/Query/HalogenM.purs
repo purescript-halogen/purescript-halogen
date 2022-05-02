@@ -49,6 +49,7 @@ data HalogenF state action slots output m a
   | Raise output a
   | Par (HalogenAp state action slots output m a)
   | Fork (HalogenM state action slots output m Unit) (ForkId -> a)
+  | Join ForkId a
   | Kill ForkId a
   | GetRef RefLabel (Maybe Element -> a)
 
@@ -62,6 +63,7 @@ instance functorHalogenF :: Functor m => Functor (HalogenF state action slots ou
     Raise o a -> Raise o (f a)
     Par pa -> Par (map f pa)
     Fork hmu k -> Fork hmu (f <<< k)
+    Join fid a -> Join fid (f a)
     Kill fid a -> Kill fid (f a)
     GetRef p k -> GetRef p (f <<< k)
 
@@ -215,6 +217,13 @@ derive newtype instance ordForkId :: Ord ForkId
 fork :: forall state action slots output m. HalogenM state action slots output m Unit -> HalogenM state action slots output m ForkId
 fork hmu = HalogenM $ liftF $ Fork hmu identity
 
+-- | Joins a forked process. Attempting to join a forked process that has
+-- | already ended will result in eval continuing immediately. Attempting
+-- | to join a forked process that has been killed will also terminate the
+-- | current eval.
+join :: forall state action slots output m. ForkId -> HalogenM state action slots output m Unit
+join fid = HalogenM $ liftF $ Join fid unit
+
 -- | Kills a forked process if it is still running. Attempting to kill a forked
 -- | process that has already ended will have no effect.
 kill :: forall state action slots output m. ForkId -> HalogenM state action slots output m Unit
@@ -244,6 +253,7 @@ imapState f f' (HalogenM h) = HalogenM (hoistFree go h)
     Raise o a -> Raise o a
     Par p -> Par (over HalogenAp (hoistFreeAp (imapState f f')) p)
     Fork hmu k -> Fork (imapState f f' hmu) k
+    Join fid a -> Join fid a
     Kill fid a -> Kill fid a
     GetRef p k -> GetRef p k
 
@@ -265,6 +275,7 @@ mapAction f (HalogenM h) = HalogenM (hoistFree go h)
     Raise o a -> Raise o a
     Par p -> Par (over HalogenAp (hoistFreeAp (mapAction f)) p)
     Fork hmu k -> Fork (mapAction f hmu) k
+    Join fid a -> Join fid a
     Kill fid a -> Kill fid a
     GetRef p k -> GetRef p k
 
@@ -285,6 +296,7 @@ mapOutput f (HalogenM h) = HalogenM (hoistFree go h)
     Raise o a -> Raise (f o) a
     Par p -> Par (over HalogenAp (hoistFreeAp (mapOutput f)) p)
     Fork hmu k -> Fork (mapOutput f hmu) k
+    Join fid a -> Join fid a
     Kill fid a -> Kill fid a
     GetRef p k -> GetRef p k
 
@@ -306,5 +318,6 @@ hoist nat (HalogenM fa) = HalogenM (hoistFree go fa)
     Raise o a -> Raise o a
     Par p -> Par (over HalogenAp (hoistFreeAp (hoist nat)) p)
     Fork hmu k -> Fork (hoist nat hmu) k
+    Join fid a -> Join fid a
     Kill fid a -> Kill fid a
     GetRef p k -> GetRef p k
