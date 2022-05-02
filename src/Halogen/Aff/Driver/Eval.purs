@@ -23,7 +23,7 @@ import Data.Map as M
 import Data.Maybe (Maybe(..))
 import Data.Tuple (Tuple(..))
 import Effect (Effect)
-import Effect.Aff (Aff, error, finally, killFiber, runAff_)
+import Effect.Aff (Aff, error, finally, joinFiber, killFiber, runAff_)
 import Effect.Class (liftEffect)
 import Effect.Exception (throwException)
 import Effect.Ref (Ref)
@@ -123,6 +123,11 @@ evalM render initRef (HalogenM hm) = foldFree (go initRef) hm
       liftEffect $ unlessM (Ref.read doneRef) do
         Ref.modify_ (M.insert fid fiber) forks
       pure (k fid)
+    Join fid a -> do
+      DriverState ({ forks }) <- liftEffect (Ref.read ref)
+      forkMap <- liftEffect (Ref.read forks)
+      traverse_ joinFiber (M.lookup fid forkMap)
+      pure a
     Kill fid a -> do
       DriverState ({ forks }) <- liftEffect (Ref.read ref)
       forkMap <- liftEffect (Ref.read forks)
