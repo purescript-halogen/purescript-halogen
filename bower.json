@@ -11,7 +11,7 @@
     "purescript-bifunctors": "^v6.0.0",
     "purescript-console": "^v6.0.0",
     "purescript-control": "^v6.0.0",
-    "purescript-dom-indexed": "^9.0.0",
+    "purescript-dom-indexed": "^10.0.0",
     "purescript-effect": "^v4.0.0",
     "purescript-either": "^v6.0.0",
     "purescript-exceptions": "^v6.0.0",
