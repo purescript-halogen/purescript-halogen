@@ -3,3 +3,9 @@ let upstream =
         sha256:03c682bff56fc8f9d8c495ffcc6f524cbd3c89fe04778f965265c08757de8c9d
 
 in  upstream
+  with
+    dom-indexed = {
+      repo = "https://github.com/purescript-halogen/purescript-dom-indexed.git",
+      version = "v10.0.0",
+      dependencies = upstream.dom-indexed.dependencies
+    }

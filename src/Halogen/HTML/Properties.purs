@@ -74,13 +74,13 @@ module Halogen.HTML.Properties
 import Prelude
 
 import DOM.HTML.Indexed (CSSPixel) as I
+import DOM.HTML.Indexed.AutocompleteType (AutocompleteType(..)) as I
 import DOM.HTML.Indexed.ButtonType (ButtonType(..)) as I
 import DOM.HTML.Indexed.FormMethod (FormMethod(..)) as I
 import DOM.HTML.Indexed.InputAcceptType (InputAcceptType(..)) as I
 import DOM.HTML.Indexed.InputType (InputType(..)) as I
 import DOM.HTML.Indexed.MenuType (MenuType(..)) as I
 import DOM.HTML.Indexed.MenuitemType (MenuitemType(..)) as I
-import DOM.HTML.Indexed.OnOff (OnOff(..)) as I
 import DOM.HTML.Indexed.OrderedListType (OrderedListType(..)) as I
 import DOM.HTML.Indexed.PreloadValue (PreloadValue(..)) as I
 import DOM.HTML.Indexed.ScopeValue (ScopeValue(..)) as I
@@ -276,8 +276,8 @@ selectedIndex = prop (PropName "selectedIndex")
 placeholder :: forall r i. String -> IProp (placeholder :: String | r) i
 placeholder = prop (PropName "placeholder")
 
-autocomplete :: forall r i. Boolean -> IProp (autocomplete :: I.OnOff | r) i
-autocomplete = prop (PropName "autocomplete") <<< (\b -> if b then I.On else I.Off)
+autocomplete :: forall r i. I.AutocompleteType -> IProp (autocomplete :: I.AutocompleteType | r) i
+autocomplete = prop (PropName "autocomplete")
 
 list :: forall r i. String -> IProp (list :: String | r) i
 list = attr (AttrName "list")
