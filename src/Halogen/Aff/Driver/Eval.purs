@@ -124,7 +124,7 @@ evalM render initRef (HalogenM hm) = foldFree (go initRef) hm
         Ref.modify_ (M.insert fid fiber) forks
       pure (k fid)
     Join fid a -> do
-      DriverState ({ forks }) <- liftEffect (Ref.read ref)
+      DriverState { forks } <- liftEffect (Ref.read ref)
       forkMap <- liftEffect (Ref.read forks)
       traverse_ joinFiber (M.lookup fid forkMap)
       pure a
