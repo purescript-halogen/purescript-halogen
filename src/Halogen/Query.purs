@@ -16,7 +16,7 @@ module Halogen.Query
   , module Halogen.Query.HalogenQ
   ) where
 
-import Prelude
+import Prelude hiding (join)
 
 import Control.Monad.State.Class (get, gets, modify, modify_, put) as Exports
 import Control.Monad.Trans.Class (lift) as Exports
@@ -26,7 +26,7 @@ import Data.Symbol (class IsSymbol)
 import Effect.Aff.Class (liftAff) as Exports
 import Effect.Class (liftEffect) as Exports
 import Halogen.Data.Slot (Slot)
-import Halogen.Query.HalogenM (ForkId, HalogenF(..), HalogenM(..), SubscriptionId, fork, getRef, kill, query, queryAll, raise, subscribe, subscribe', unsubscribe)
+import Halogen.Query.HalogenM (ForkId, HalogenF(..), HalogenM(..), SubscriptionId, fork, getRef, join, kill, query, queryAll, raise, subscribe, subscribe', unsubscribe)
 import Halogen.Query.HalogenQ (HalogenQ(..))
 import Halogen.Query.Input (RefLabel(..))
 import Prim.Row as Row

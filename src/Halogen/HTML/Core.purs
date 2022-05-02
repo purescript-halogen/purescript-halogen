@@ -16,6 +16,7 @@ module Halogen.HTML.Core
 
 import Prelude
 
+import DOM.HTML.Indexed.AutocompleteType (AutocompleteType, renderAutocompleteType)
 import DOM.HTML.Indexed.ButtonType (ButtonType, renderButtonType)
 import DOM.HTML.Indexed.CrossOriginValue (CrossOriginValue, renderCrossOriginValue)
 import DOM.HTML.Indexed.DirValue (DirValue, renderDirValue)
@@ -25,7 +26,6 @@ import DOM.HTML.Indexed.InputType (InputType, renderInputType)
 import DOM.HTML.Indexed.KindValue (KindValue, renderKindValue)
 import DOM.HTML.Indexed.MenuType (MenuType, renderMenuType)
 import DOM.HTML.Indexed.MenuitemType (MenuitemType, renderMenuitemType)
-import DOM.HTML.Indexed.OnOff (OnOff, renderOnOff)
 import DOM.HTML.Indexed.OrderedListType (OrderedListType, renderOrderedListType)
 import DOM.HTML.Indexed.PreloadValue (PreloadValue, renderPreloadValue)
 import DOM.HTML.Indexed.ScopeValue (ScopeValue, renderScopeValue)
@@ -152,8 +152,8 @@ instance isPropMenuitemType :: IsProp MenuitemType where
 instance isPropMenuType :: IsProp MenuType where
   toPropValue = propFromString <<< renderMenuType
 
-instance isPropOnOff :: IsProp OnOff where
-  toPropValue = propFromString <<< renderOnOff
+instance isPropAutocompleteType :: IsProp AutocompleteType where
+  toPropValue = propFromString <<< renderAutocompleteType
 
 instance isPropOrderedListType :: IsProp OrderedListType where
   toPropValue = propFromString <<< renderOrderedListType

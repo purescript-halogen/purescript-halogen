@@ -1,4 +1,11 @@
 let upstream =
-      https://github.com/purescript/package-sets/releases/download/psc-0.14.3-20210808/packages.dhall sha256:dbc06803c031113d3f9e001f8d95629e48da720d2bfe45d8bbe2c0cffcef293d
+      https://github.com/purescript/package-sets/releases/download/psc-0.15.0-20220429/packages.dhall
+        sha256:03c682bff56fc8f9d8c495ffcc6f524cbd3c89fe04778f965265c08757de8c9d
 
 in  upstream
+  with
+    dom-indexed = {
+      repo = "https://github.com/purescript-halogen/purescript-dom-indexed.git",
+      version = "v10.0.0",
+      dependencies = upstream.dom-indexed.dependencies
+    }
