@@ -35,6 +35,16 @@ module Halogen.HTML.Events
   , onFocus
   , onFocusIn
   , onFocusOut
+  , onPointerCancel
+  , onPointerDown
+  , onPointerEnter
+  , onPointerLeave
+  , onPointerMove
+  , onPointerOut
+  , onPointerOver
+  , onPointerUp
+  , onGotPointerCapture
+  , onLostPointerCapture
   , onDrag
   , onDragEnd
   , onDragExit
@@ -87,6 +97,8 @@ import Web.UIEvent.KeyboardEvent (KeyboardEvent)
 import Web.UIEvent.KeyboardEvent.EventTypes as KET
 import Web.UIEvent.MouseEvent (MouseEvent)
 import Web.UIEvent.MouseEvent.EventTypes as MET
+import Web.PointerEvent (PointerEvent)
+import Web.PointerEvent.EventTypes as PET
 import Web.UIEvent.WheelEvent (WheelEvent)
 import Web.UIEvent.WheelEvent.EventTypes as WET
 import Effect.Unsafe (unsafePerformEffect)
@@ -242,6 +254,36 @@ onDragStart = handler DET.dragstart <<< dragHandler
 onDrop :: forall r i. (DragEvent -> i) -> IProp (onDrop :: DragEvent | r) i
 onDrop = handler DET.drop <<< dragHandler
 
+onPointerOver :: forall r i. (PointerEvent -> i) -> IProp (onPointerOver :: PointerEvent | r) i
+onPointerOver = handler PET.pointerover <<< pointerHandler
+
+onPointerOut :: forall r i. (PointerEvent -> i) -> IProp (onPointerOut :: PointerEvent | r) i
+onPointerOut = handler PET.pointerout <<< pointerHandler
+
+onPointerEnter :: forall r i. (PointerEvent -> i) -> IProp (onPointerEnter :: PointerEvent | r) i
+onPointerEnter = handler PET.pointerenter <<< pointerHandler
+
+onPointerLeave :: forall r i. (PointerEvent -> i) -> IProp (onPointerLeave :: PointerEvent | r) i
+onPointerLeave = handler PET.pointerleave <<< pointerHandler
+
+onPointerUp :: forall r i. (PointerEvent -> i) -> IProp (onPointerUp :: PointerEvent | r) i
+onPointerUp = handler PET.pointerup <<< pointerHandler
+
+onPointerDown :: forall r i. (PointerEvent -> i) -> IProp (onPointerDown :: PointerEvent | r) i
+onPointerDown = handler PET.pointerdown <<< pointerHandler
+
+onPointerMove :: forall r i. (PointerEvent -> i) -> IProp (onPointerMove :: PointerEvent | r) i
+onPointerMove = handler PET.pointermove <<< pointerHandler
+
+onPointerCancel :: forall r i. (PointerEvent -> i) -> IProp (onPointerCancel :: PointerEvent | r) i
+onPointerCancel = handler PET.pointercancel <<< pointerHandler
+
+onGotPointerCapture :: forall r i. (PointerEvent -> i) -> IProp (onGotPointerCapture :: PointerEvent | r) i
+onGotPointerCapture = handler PET.gotpointercapture <<< pointerHandler
+
+onLostPointerCapture :: forall r i. (PointerEvent -> i) -> IProp (onLostPointerCapture :: PointerEvent | r) i
+onLostPointerCapture = handler PET.lostpointercapture <<< pointerHandler
+
 onTouchCancel :: forall r i. (TouchEvent -> i) -> IProp (onTouchCancel :: TouchEvent | r) i
 onTouchCancel = handler (EventType "touchcancel") <<< touchHandler
 
@@ -280,6 +322,9 @@ dragHandler = unsafeCoerce
 
 clipboardHandler :: forall i. (ClipboardEvent -> i) -> Event -> i
 clipboardHandler = unsafeCoerce
+
+pointerHandler :: forall i. (PointerEvent -> i) -> Event -> i
+pointerHandler = unsafeCoerce
 
 touchHandler :: forall i. (TouchEvent -> i) -> Event -> i
 touchHandler = unsafeCoerce
