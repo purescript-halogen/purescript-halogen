@@ -45,7 +45,7 @@
     "purescript-web-events": "^v4.0.0",
     "purescript-web-file": "^v4.0.0",
     "purescript-web-html": "^v4.0.0",
-    "purescript-web-pointerevents": "^v1.0.0",
+    "purescript-web-pointerevents": "https://github.com/purescript-web/purescript-web-pointerevents.git#^v1.0.0",
     "purescript-web-touchevents": "^v4.0.0",
     "purescript-web-uievents": "^v4.0.0"
   }
