@@ -11,7 +11,7 @@
     "purescript-bifunctors": "^v6.0.0",
     "purescript-console": "^v6.0.0",
     "purescript-control": "^v6.0.0",
-    "purescript-dom-indexed": "^10.0.0",
+    "purescript-dom-indexed": "^10.1.0",
     "purescript-effect": "^v4.0.0",
     "purescript-either": "^v6.0.0",
     "purescript-exceptions": "^v6.0.0",
@@ -45,6 +45,7 @@
     "purescript-web-events": "^v4.0.0",
     "purescript-web-file": "^v4.0.0",
     "purescript-web-html": "^v4.0.0",
+    "purescript-web-pointerevents": "^v1.0.0",
     "purescript-web-touchevents": "^v4.0.0",
     "purescript-web-uievents": "^v4.0.0"
   }
