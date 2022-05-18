@@ -20,7 +20,7 @@ import Halogen.Component (Component, ComponentSpec, ComponentSlot, ComponentSlot
 import Halogen.Data.Slot (Slot)
 import Halogen.HTML (ComponentHTML)
 import Halogen.HTML.Core (AttrName(..), ClassName(..), Namespace(..), PropName(..), ElemName(..))
-import Halogen.Query (ForkId, HalogenF(..), HalogenM(..), HalogenQ(..), RefLabel(..), Request, SubscriptionId, Tell, fork, get, getHTMLElementRef, getRef, gets, join, kill, lift, liftAff, liftEffect, mkRequest, mkTell, modify, modify_, put, query, queryAll, raise, request, requestAll, subscribe, subscribe', tell, unsubscribe)
+import Halogen.Query (ForkId, HalogenF(..), HalogenM(..), HalogenQ(..), RefLabel(..), Request, SubscriptionId, Tell, fork, get, getHTMLElementRef, getRef, gets, join, kill, lift, liftAff, liftEffect, mkRequest, mkTell, modify, modify_, put, query, queryAll, raise, request, requestAll, subscribe, subscribe', tell, tellAll, unsubscribe)
 import Halogen.Subscription as HS
 
 -- | A record produced when the root component in a Halogen UI has been run.
