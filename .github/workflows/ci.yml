@@ -15,8 +15,8 @@ jobs:
 
       - uses: purescript-contrib/setup-purescript@main
         with:
-          purescript: "0.14.4"
-          purs-tidy: "0.5.1"
+          purescript: "0.15.0"
+          purs-tidy: "0.8.0"
 
       - name: Cache PureScript dependencies
         uses: actions/cache@v2
@@ -26,6 +26,8 @@ jobs:
             .spago
             output
 
+      - run: npm install
+
       - run: npm run -s build
 
       - run: npm run -s test
@@ -33,3 +35,8 @@ jobs:
       - run: npm run -s example-all
 
       - run: npm run -s check-formatting
+
+      - name: Verify Pulp & Bower
+        run: |
+          npx bower install --production
+          npx pulp build

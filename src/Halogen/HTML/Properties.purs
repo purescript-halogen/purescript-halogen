@@ -22,7 +22,6 @@ module Halogen.HTML.Properties
   , width
   , href
   , id
-  , id_
   , name
   , rel
   , src
@@ -75,13 +74,13 @@ module Halogen.HTML.Properties
 import Prelude
 
 import DOM.HTML.Indexed (CSSPixel) as I
+import DOM.HTML.Indexed.AutocompleteType (AutocompleteType(..)) as I
 import DOM.HTML.Indexed.ButtonType (ButtonType(..)) as I
 import DOM.HTML.Indexed.FormMethod (FormMethod(..)) as I
 import DOM.HTML.Indexed.InputAcceptType (InputAcceptType(..)) as I
 import DOM.HTML.Indexed.InputType (InputType(..)) as I
 import DOM.HTML.Indexed.MenuType (MenuType(..)) as I
 import DOM.HTML.Indexed.MenuitemType (MenuitemType(..)) as I
-import DOM.HTML.Indexed.OnOff (OnOff(..)) as I
 import DOM.HTML.Indexed.OrderedListType (OrderedListType(..)) as I
 import DOM.HTML.Indexed.PreloadValue (PreloadValue(..)) as I
 import DOM.HTML.Indexed.ScopeValue (ScopeValue(..)) as I
@@ -94,7 +93,6 @@ import Halogen.HTML.Core (class IsProp, AttrName(..), ClassName, Namespace, Prop
 import Halogen.HTML.Core as Core
 import Halogen.Query.Input (Input(..), RefLabel)
 import Prim.Row as Row
-import Prim.TypeError as TypeError
 import Unsafe.Coerce (unsafeCoerce)
 import Web.DOM.Element (Element)
 
@@ -189,9 +187,6 @@ href = prop (PropName "href")
 id :: forall r i. String -> IProp (id :: String | r) i
 id = prop (PropName "id")
 
-id_ :: forall r i. TypeError.Warn (TypeError.Text "`id_` is deprecated. Use `id` instead.") => String -> IProp (id :: String | r) i
-id_ = id
-
 name :: forall r i. String -> IProp (name :: String | r) i
 name = prop (PropName "name")
 
@@ -242,7 +237,7 @@ noValidate = prop (PropName "noValidate")
 type_ :: forall r i value. IsProp value => value -> IProp (type :: value | r) i
 type_ = prop (PropName "type")
 
-value :: forall r i. String -> IProp (value :: String | r) i
+value :: forall r i value. IsProp value => value -> IProp (value :: value | r) i
 value = prop (PropName "value")
 
 min :: forall r i. Number -> IProp (min :: Number | r) i
@@ -281,8 +276,8 @@ selectedIndex = prop (PropName "selectedIndex")
 placeholder :: forall r i. String -> IProp (placeholder :: String | r) i
 placeholder = prop (PropName "placeholder")
 
-autocomplete :: forall r i. Boolean -> IProp (autocomplete :: I.OnOff | r) i
-autocomplete = prop (PropName "autocomplete") <<< (\b -> if b then I.On else I.Off)
+autocomplete :: forall r i. I.AutocompleteType -> IProp (autocomplete :: I.AutocompleteType | r) i
+autocomplete = prop (PropName "autocomplete")
 
 list :: forall r i. String -> IProp (list :: String | r) i
 list = attr (AttrName "list")

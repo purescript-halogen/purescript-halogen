@@ -26,9 +26,11 @@
     "example-raw-html": "spago --config examples/raw-html/spago.dhall bundle-app --main Example.RawHTML.Main --to examples/raw-html/dist/example.js"
   },
   "devDependencies": {
+    "ace-builds": "^1.4.14",
+    "esbuild": "^0.14.38",
     "purescript-psa": "^0.8.2",
-    "purs-tidy": "^0.5.1",
+    "purs-tidy": "^0.7.2",
     "rimraf": "^3.0.2",
-    "spago": "^0.20.3"
+    "spago": "^0.20.8"
   }
 }

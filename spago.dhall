@@ -40,6 +40,7 @@
     , "web-events"
     , "web-file"
     , "web-html"
+    , "web-pointerevents"
     , "web-touchevents"
     , "web-uievents"
     ]

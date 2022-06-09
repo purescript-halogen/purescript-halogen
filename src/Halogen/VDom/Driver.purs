@@ -39,8 +39,7 @@ foreign import createElementFromHTML :: String -> DOM.Element
 type VHTML action slots =
   V.VDom (Array (Prop (Input action))) (ComponentSlot slots Aff action)
 
-type ChildRenderer action slots
-  = ComponentSlotBox slots Aff action -> Effect (RenderStateX RenderState)
+type ChildRenderer action slots = ComponentSlotBox slots Aff action -> Effect (RenderStateX RenderState)
 
 newtype RenderState state action slots output =
   RenderState
