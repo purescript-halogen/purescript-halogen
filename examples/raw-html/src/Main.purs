@@ -22,23 +22,3 @@ component = H.mkComponent
 
 template :: forall action m. H.ComponentHTML action (()) m
 template = HH.rawHTML "<b>hello world</b>"
-
-
--- HH.div [ css "hero min-h-screen bg-base-200" ]
---   [ HH.div [ css "text-center hero-content" ]
---       [ HH.div [ css "max-w-md space-y-5" ]
---           [ HH.h1 [ css "text-5xl font-bold" ] [ HH.text "timey.app" ]
---           , HH.form [ css "space-y-5" ]
---               [ HH.div [ css "form-control" ]
---                   [ HH.input
---                       [ HP.type_ HP.InputText, HP.placeholder "e-mail", css "input input-bordered" ]
---                   ]
---               , HH.div [ css "form-control" ]
---                   [ HH.input
---                       [ HP.type_ HP.InputPassword, HP.placeholder "password", css "input input-bordered" ]
---                   ]
---               , HH.input [ HP.type_ HP.InputSubmit, HP.value "Login", css "btn" ]
---               ]
---           ]
---       ]
---   ]
