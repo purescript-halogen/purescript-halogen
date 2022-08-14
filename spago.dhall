@@ -25,6 +25,7 @@
     , "newtype"
     , "ordered-collections"
     , "parallel"
+    , "partial"
     , "prelude"
     , "profunctor"
     , "refs"
