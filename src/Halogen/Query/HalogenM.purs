@@ -19,7 +19,7 @@ import Data.Maybe (Maybe(..), maybe)
 import Data.Newtype (class Newtype, over)
 import Data.Symbol (class IsSymbol)
 import Data.Traversable (traverse)
-import Data.Tuple (Tuple)
+import Data.Tuple (Tuple(..))
 import Effect.Aff.Class (class MonadAff, liftAff)
 import Effect.Class (class MonadEffect, liftEffect)
 import Halogen.Data.Slot (Slot)
@@ -241,21 +241,14 @@ imapState
   -> (state' -> state)
   -> HalogenM state action slots output m a
   -> HalogenM state' action slots output m a
-imapState f f' (HalogenM h) = HalogenM (hoistFree go h)
-  where
-  go :: HalogenF state action slots output m ~> HalogenF state' action slots output m
-  go = case _ of
-    State fs -> State (map f <<< fs <<< f')
-    Subscribe fes k -> Subscribe fes k
-    Unsubscribe sid a -> Unsubscribe sid a
-    Lift q -> Lift q
-    ChildQuery cq -> ChildQuery cq
-    Raise o a -> Raise o a
-    Par p -> Par (over HalogenAp (hoistFreeAp (imapState f f')) p)
-    Fork hmu k -> Fork (imapState f f' hmu) k
-    Join fid a -> Join fid a
-    Kill fid a -> Kill fid a
-    GetRef p k -> GetRef p k
+imapState f f' = mapState (\s' -> Tuple (f' s') f)
+
+mapState 
+  :: forall state state' action slots output m a
+   . (state' -> Tuple state (state -> state'))
+  -> HalogenM state action slots output m a
+  -> HalogenM state' action slots output m a
+mapState lens = mapHalogen lens identity identity identity
 
 mapAction
   :: forall state action action' slots output m a
@@ -263,42 +256,14 @@ mapAction
   => (action -> action')
   -> HalogenM state action slots output m a
   -> HalogenM state action' slots output m a
-mapAction f (HalogenM h) = HalogenM (hoistFree go h)
-  where
-  go :: HalogenF state action slots output m ~> HalogenF state action' slots output m
-  go = case _ of
-    State fs -> State fs
-    Subscribe fes k -> Subscribe (map f <<< fes) k
-    Unsubscribe sid a -> Unsubscribe sid a
-    Lift q -> Lift q
-    ChildQuery cq -> ChildQuery cq
-    Raise o a -> Raise o a
-    Par p -> Par (over HalogenAp (hoistFreeAp (mapAction f)) p)
-    Fork hmu k -> Fork (mapAction f hmu) k
-    Join fid a -> Join fid a
-    Kill fid a -> Kill fid a
-    GetRef p k -> GetRef p k
+mapAction f = mapHalogen identityLens f identity identity
 
 mapOutput
   :: forall state action slots output output' m a
    . (output -> output')
   -> HalogenM state action slots output m a
   -> HalogenM state action slots output' m a
-mapOutput f (HalogenM h) = HalogenM (hoistFree go h)
-  where
-  go :: HalogenF state action slots output m ~> HalogenF state action slots output' m
-  go = case _ of
-    State fs -> State fs
-    Subscribe fes k -> Subscribe fes k
-    Unsubscribe sid a -> Unsubscribe sid a
-    Lift q -> Lift q
-    ChildQuery cq -> ChildQuery cq
-    Raise o a -> Raise (f o) a
-    Par p -> Par (over HalogenAp (hoistFreeAp (mapOutput f)) p)
-    Fork hmu k -> Fork (mapOutput f hmu) k
-    Join fid a -> Join fid a
-    Kill fid a -> Kill fid a
-    GetRef p k -> GetRef p k
+mapOutput fo = mapHalogen identityLens identity fo identity
 
 hoist
   :: forall state action slots output m m' a
@@ -306,18 +271,31 @@ hoist
   => (m ~> m')
   -> HalogenM state action slots output m a
   -> HalogenM state action slots output m' a
-hoist nat (HalogenM fa) = HalogenM (hoistFree go fa)
+hoist = mapHalogen identityLens identity identity 
+
+mapHalogen 
+  :: forall state state' action action' slots output output' m m' a
+   . (state' -> Tuple state (state -> state'))
+  -> (action -> action')
+  -> (output -> output')
+  -> (m ~> m')
+  -> HalogenM state action slots output m a
+  -> HalogenM state' action' slots output' m' a
+mapHalogen lens fa fo nat (HalogenM alg) = HalogenM (hoistFree go alg)
   where
-  go :: HalogenF state action slots output m ~> HalogenF state action slots output m'
+  go :: HalogenF state action slots output m ~> HalogenF state' action' slots output' m'
   go = case _ of
-    State f -> State f
-    Subscribe fes k -> Subscribe fes k
+    State f -> State (\s' -> let Tuple s g = lens s' in (map g (f s) ))
+    Subscribe fes k -> Subscribe (map fa <<< fes) k
     Unsubscribe sid a -> Unsubscribe sid a
     Lift q -> Lift (nat q)
     ChildQuery cq -> ChildQuery cq
-    Raise o a -> Raise o a
-    Par p -> Par (over HalogenAp (hoistFreeAp (hoist nat)) p)
-    Fork hmu k -> Fork (hoist nat hmu) k
+    Raise o a -> Raise (fo o) a
+    Par p -> Par (over HalogenAp (hoistFreeAp (mapHalogen lens fa fo nat)) p)
+    Fork hmu k -> Fork (mapHalogen lens fa fo nat hmu) k
     Join fid a -> Join fid a
     Kill fid a -> Kill fid a
     GetRef p k -> GetRef p k
+
+identityLens :: forall s . s -> Tuple s (s -> s)
+identityLens s = Tuple s identity
