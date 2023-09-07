@@ -8,6 +8,7 @@ module Halogen.HTML.Events
   , onChange
   , onFileUpload
   , onInput
+  , onBeforeInput
   , onInvalid
   , onReset
   , onSelect
@@ -148,6 +149,9 @@ onFileUpload f = handler ET.change $
 
 onInput :: forall r i. (Event -> i) -> IProp (onInput :: Event | r) i
 onInput = handler ET.input
+
+onBeforeInput :: forall r i. (Event -> i) -> IProp (onBeforeInput :: Event | r) i
+onBeforeInput = handler ET.input
 
 onInvalid :: forall r i. (Event -> i) -> IProp (onInvalid :: Event | r) i
 onInvalid = handler ET.invalid
