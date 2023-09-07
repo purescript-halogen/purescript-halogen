@@ -98,6 +98,7 @@ import Web.UIEvent.KeyboardEvent (KeyboardEvent)
 import Web.UIEvent.KeyboardEvent.EventTypes as KET
 import Web.UIEvent.MouseEvent (MouseEvent)
 import Web.UIEvent.MouseEvent.EventTypes as MET
+import Web.UIEvent.InputEvent.EventTypes as IET
 import Web.PointerEvent (PointerEvent)
 import Web.PointerEvent.EventTypes as PET
 import Web.UIEvent.WheelEvent (WheelEvent)
@@ -151,7 +152,7 @@ onInput :: forall r i. (Event -> i) -> IProp (onInput :: Event | r) i
 onInput = handler ET.input
 
 onBeforeInput :: forall r i. (Event -> i) -> IProp (onBeforeInput :: Event | r) i
-onBeforeInput = handler ET.input
+onBeforeInput = handler IET.beforeinput
 
 onInvalid :: forall r i. (Event -> i) -> IProp (onInvalid :: Event | r) i
 onInvalid = handler ET.invalid
