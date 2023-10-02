@@ -6,7 +6,7 @@ module Halogen.VDom.Driver
 import Prelude
 
 import Data.Foldable (traverse_)
-import Data.Maybe (Maybe(..))
+import Data.Maybe (Maybe(..), fromJust)
 import Data.Newtype (unwrap)
 import Effect (Effect)
 import Effect.Aff (Aff)
@@ -24,15 +24,22 @@ import Halogen.VDom as V
 import Halogen.VDom.DOM.Prop as VP
 import Halogen.VDom.Thunk (Thunk)
 import Halogen.VDom.Thunk as Thunk
+import Partial.Unsafe (unsafePartial)
 import Unsafe.Reference (unsafeRefEq)
 import Web.DOM.Document (Document) as DOM
-import Web.DOM.Element (Element) as DOM
+import Web.DOM.Element (Element, toNode, fromNode) as DOM
 import Web.DOM.Node (Node, appendChild, removeChild, parentNode, nextSibling, insertBefore) as DOM
 import Web.HTML (window) as DOM
 import Web.HTML.HTMLDocument as HTMLDocument
 import Web.HTML.HTMLElement (HTMLElement) as DOM
 import Web.HTML.HTMLElement as HTMLElement
 import Web.HTML.Window (document) as DOM
+
+foreign import createElementFromHTML :: String -> DOM.Element
+
+foreign import getOuterHtml :: DOM.Element -> String
+
+foreign import setOuterHtml :: DOM.Element -> String -> DOM.Element
 
 type VHTML action slots =
   V.VDom (Array (Prop (Input action))) (ComponentSlot slots Aff action)
@@ -87,6 +94,9 @@ mkSpec handler renderChildRef document =
         ThunkSlot t -> do
           step <- EFn.runEffectFn1 buildThunk t
           pure $ V.mkStep $ V.Step (V.extract step) (Just step) patch done
+        RawHTML html -> do
+          let node = DOM.toNode $ createElementFromHTML html
+          pure $ V.mkStep $ V.Step node Nothing patch done
 
     patch
       :: EFn.EffectFn2 (WidgetState slots action)
@@ -101,6 +111,15 @@ mkSpec handler renderChildRef document =
           ThunkSlot t -> do
             step' <- EFn.runEffectFn2 V.step step t
             pure $ V.mkStep $ V.Step (V.extract step') (Just step') patch done
+          RawHTML html -> do
+            let old_node = V.extract step
+            let old_element = unsafePartial $ fromJust $ DOM.fromNode old_node
+            if html == getOuterHtml old_element then
+              pure $ V.mkStep $ V.Step old_node st patch done
+            else do
+              let updated_node = DOM.toNode $ setOuterHtml old_element html
+              pure $ V.mkStep $ V.Step updated_node st patch done
+
         _ -> EFn.runEffectFn1 render slot
 
     buildThunk :: V.Machine (HTMLThunk slots action) DOM.Node

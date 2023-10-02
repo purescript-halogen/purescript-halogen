@@ -204,11 +204,13 @@ instance functorComponentSlotBox :: Functor (ComponentSlotBox slots m) where
 data ComponentSlot slots m action
   = ComponentSlot (ComponentSlotBox slots m action)
   | ThunkSlot (Thunk (HC.HTML (ComponentSlot slots m action)) action)
+  | RawHTML String
 
 instance functorComponentSlot :: Functor (ComponentSlot slots m) where
   map f = case _ of
     ComponentSlot box -> ComponentSlot (map f box)
     ThunkSlot thunk -> ThunkSlot (Thunk.mapThunk (bimap (map f) f) thunk)
+    RawHTML html -> RawHTML html
 
 -- | Constructs a [`ComponentSlot`](#t:ComponentSlot).
 -- |
@@ -282,3 +284,5 @@ hoistSlot nat = case _ of
       ComponentSlot $ mkComponentSlot $ slot { component = hoist nat slot.component }
   ThunkSlot t ->
     ThunkSlot $ Thunk.hoist (lmap (hoistSlot nat)) t
+  RawHTML html ->
+    RawHTML html
