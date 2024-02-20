@@ -74,6 +74,8 @@ data DriverStateX
   (f :: Type -> Type)
   (o :: Type)
 
+type role DriverStateX representational representational representational
+
 mkDriverStateXRef
   :: forall r s f act ps i o
    . Ref (DriverState r s f act ps i o)
