@@ -45,6 +45,8 @@ foreign import data Any :: Type
 data Slot :: (Type -> Type) -> Type -> Type -> Type
 data Slot (query :: Type -> Type) output slot
 
+type role Slot representational representational representational
+
 newtype SlotStorage (slots :: Row Type) (slot :: (Type -> Type) -> Type -> Type) =
   SlotStorage (Map (Tuple String (OrdBox Any)) Any)
 

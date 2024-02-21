@@ -52,6 +52,8 @@ data Component
   (output :: Type)
   (m :: Type -> Type)
 
+type role Component representational representational representational representational
+
 -- | The spec for a component.
 -- |
 -- | The type variables involved:
@@ -196,6 +198,8 @@ data ComponentSlotBox
   (slots :: Row Type)
   (m :: Type -> Type)
   (action :: Type)
+
+type role ComponentSlotBox representational representational representational
 
 instance functorComponentSlotBox :: Functor (ComponentSlotBox slots m) where
   map f = unComponentSlot \slot ->

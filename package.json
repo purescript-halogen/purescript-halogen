@@ -28,8 +28,8 @@
     "ace-builds": "^1.4.14",
     "esbuild": "^0.14.38",
     "purescript-psa": "^0.8.2",
-    "purs-tidy": "^0.7.2",
-    "rimraf": "^3.0.2",
-    "spago": "^0.20.8"
+    "purs-tidy": "^0.10.1",
+    "rimraf": "^5.0.5",
+    "spago": "^0.21.0"
   }
 }
