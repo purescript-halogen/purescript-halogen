@@ -34,14 +34,6 @@ As a brief example, let's translate this ordinary HTML into Halogen HTML:
 </div>
 ```
 
-Let's break down our Halogen HTML:
-
-1. Our Halogen code has the same shape as our ordinary HTML: a `div` containing an `input` and a `button`, which itself contains plain text.
-2. Properties move from key-value pairs inside the tags into an array of properties for the element.
-3. Child elements move from being inside an open and closing tag into an array of children, if the element supports children.
-
-Functions for writing properties in your HTML come from the `Halogen.HTML.Properties` module.
-
 ```purs
 import Halogen.HTML as HH
 import Halogen.HTML.Properties as HP
@@ -59,6 +51,13 @@ html =
     ]
 ```
 
+Let's break down our Halogen HTML:
+
+1. Our Halogen code has the same shape as our ordinary HTML: a `div` containing an `input` and a `button`, which itself contains plain text.
+2. Properties move from key-value pairs inside the tags into an array of properties for the element.
+3. Child elements move from being inside an open and closing tag into an array of children, if the element supports children.
+
+Functions for writing properties in your HTML come from the `Halogen.HTML.Properties` module.
 You can see Halogen's emphasis on type safety displayed here.
 
 1. A text input can't have children, so Halogen doesn't allow the element to take further elements as an argument.
@@ -81,15 +80,15 @@ html = HH.div_ [ HH.button_ [ HH.text "Click me!" ] ]
 
 ## Writing Functions in Halogen HTML
 
-It's common to write helper functions for Halogen HTML. Since Halogen HTML is built from ordinary PureScript functions, you can freely intersperse other functions in your code. 
+It's common to write helper functions for Halogen HTML. Since Halogen HTML is built from ordinary PureScript functions, you can freely intersperse other functions in your code.
 
 In this example, our function accepts an integer and renders it as text:
 
 ```purs
 header :: forall w i. Int -> HH.HTML w i
-header visits = 
-  HH.h1_ 
-    [ HH.text $ "You've had " <> show visits <> " visitors" ] 
+header visits =
+  HH.h1_
+    [ HH.text $ "You've had " <> show visits <> " visitors" ]
 ```
 
 We can also render lists of things:
@@ -128,8 +127,8 @@ whenElem cond f = if cond then f unit else HH.text ""
 
 -- Render the old number, but only if it is different from the new number
 renderOld :: forall w i. { old :: Number, new :: Number } -> HH.HTML w i
-renderOld { old, new } = 
-  whenElem (old /= new) \_ -> 
+renderOld { old, new } =
+  whenElem (old /= new) \_ ->
     HH.div_ [ HH.text $ show old ]
 ```
 
@@ -139,7 +138,7 @@ Now that we've explored a few ways to work with HTML, let's learn more about the
 
 So far we've written HTML without type signatures. But when you write Halogen HTML in your application you'll include the type signatures.
 
-### `HTML w i` 
+### `HTML w i`
 
 `HTML` is the core type for HTML in Halogen. It is used for HTML elements that are not tied to a particular kind of component. For example, it's used as the type for the `h1`, `text`, and `button` elements we've seen so far. You can also use this type when defining your own custom HTML elements.
 
