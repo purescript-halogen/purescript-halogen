@@ -255,7 +255,8 @@ runUI renderSpec component i = do
     -> DriverStateX r f' o'
     -> Effect Unit
   finalize lchs = do
-    unDriverStateX \st -> do
+    unDriverStateX \{ selfRef } -> do
+      (DriverState st) <- liftEffect $ Ref.read selfRef
       cleanupSubscriptionsAndForks (DriverState st)
       let f = Eval.evalM render st.selfRef (st.component.eval (HQ.Finalize unit))
       lchs # Ref.modify_ \handlers ->
