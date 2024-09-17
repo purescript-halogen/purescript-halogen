@@ -243,7 +243,7 @@ imapState
   -> HalogenM state' action slots output m a
 imapState f f' = mapState (\s' -> Tuple (f' s') f)
 
-mapState 
+mapState
   :: forall state state' action slots output m a
    . (state' -> Tuple state (state -> state'))
   -> HalogenM state action slots output m a
@@ -271,9 +271,9 @@ hoist
   => (m ~> m')
   -> HalogenM state action slots output m a
   -> HalogenM state action slots output m' a
-hoist = mapHalogen identityLens identity identity 
+hoist = mapHalogen identityLens identity identity
 
-mapHalogen 
+mapHalogen
   :: forall state state' action action' slots output output' m m' a
    . (state' -> Tuple state (state -> state'))
   -> (action -> action')
@@ -285,7 +285,7 @@ mapHalogen lens fa fo nat (HalogenM alg) = HalogenM (hoistFree go alg)
   where
   go :: HalogenF state action slots output m ~> HalogenF state' action' slots output' m'
   go = case _ of
-    State f -> State (\s' -> let Tuple s g = lens s' in (map g (f s) ))
+    State f -> State (\s' -> let Tuple s g = lens s' in (map g (f s)))
     Subscribe fes k -> Subscribe (map fa <<< fes) k
     Unsubscribe sid a -> Unsubscribe sid a
     Lift q -> Lift (nat q)
@@ -297,5 +297,5 @@ mapHalogen lens fa fo nat (HalogenM alg) = HalogenM (hoistFree go alg)
     Kill fid a -> Kill fid a
     GetRef p k -> GetRef p k
 
-identityLens :: forall s . s -> Tuple s (s -> s)
+identityLens :: forall s. s -> Tuple s (s -> s)
 identityLens s = Tuple s identity
