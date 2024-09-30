@@ -48,6 +48,8 @@ You can paste this example (and any other full examples in this guide) into [Try
 
 > By default, Try PureScript will compile every time you make a change. You can also disable the auto-compile feature, which will cause Try PureScript to wait for you to click the "Compile" button to compile your Halogen application.
 
+If you're trying to run this code locally, note that this does not create a window, so you'd get a `ReferenceError: window is not defined` exception. You may need to "bundle" the output with `spago bundle-app` and then create an HTML file that points to the resulting `index.js`, and then open the HTML file in a browser.
+
 You can also create your own starter project with the [official Halogen template](https://github.com/purescript-halogen/purescript-halogen-template). This template includes extra tools and scripts to help you get up and running with a full Halogen application.
 
 Don't worry if this code is overwhelming at first -- when you've read the next few chapters of the guide you'll gain a solid understanding of how this component works and how to write your own.
