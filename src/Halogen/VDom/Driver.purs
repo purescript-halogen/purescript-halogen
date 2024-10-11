@@ -6,7 +6,7 @@ module Halogen.VDom.Driver
 import Prelude
 
 import Data.Foldable (traverse_)
-import Data.Maybe (Maybe(..))
+import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Newtype (unwrap)
 import Effect (Effect)
 import Effect.Aff (Aff)
@@ -27,7 +27,7 @@ import Halogen.VDom.Thunk as Thunk
 import Unsafe.Reference (unsafeRefEq)
 import Web.DOM.Document (Document) as DOM
 import Web.DOM.Element (Element) as DOM
-import Web.DOM.Node (Node, appendChild, removeChild, parentNode, nextSibling, insertBefore) as DOM
+import Web.DOM.Node (Node, appendChild, insertBefore, nextSibling, parentNode, removeChild) as DOM
 import Web.HTML (window) as DOM
 import Web.HTML.HTMLDocument as HTMLDocument
 import Web.HTML.HTMLElement (HTMLElement) as DOM
@@ -42,6 +42,7 @@ type ChildRenderer action slots = ComponentSlotBox slots Aff action -> Effect (R
 newtype RenderState state action slots output =
   RenderState
     { node :: DOM.Node
+    , parentNode :: DOM.Node
     , machine :: V.Step (VHTML action slots) DOM.Node
     , renderChildRef :: Ref (ChildRenderer action slots)
     }
@@ -161,23 +162,28 @@ renderSpec document container =
         machine <- EFn.runEffectFn1 (V.buildVDom spec) vdom
         let node = V.extract machine
         void $ DOM.appendChild node (HTMLElement.toNode container)
-        pure $ RenderState { machine, node, renderChildRef }
-      Just (RenderState { machine, node, renderChildRef }) -> do
+        pure $ RenderState { machine, node, parentNode: HTMLElement.toNode container, renderChildRef }
+      Just (RenderState { machine, node, parentNode, renderChildRef }) -> do
         Ref.write child renderChildRef
         parent <- DOM.parentNode node
+        let parentNode' = fromMaybe parentNode parent
         nextSib <- DOM.nextSibling node
         machine' <- EFn.runEffectFn2 V.step machine vdom
         let newNode = V.extract machine'
         when (not unsafeRefEq node newNode) do
-          substInParent newNode nextSib parent
-        pure $ RenderState { machine: machine', node: newNode, renderChildRef }
+          substInParent newNode nextSib parentNode'
+        pure $ RenderState
+          { machine: machine'
+          , node: newNode
+          , parentNode: parentNode'
+          , renderChildRef
+          }
 
 removeChild :: forall state action slots output. RenderState state action slots output -> Effect Unit
 removeChild (RenderState { node }) = do
   npn <- DOM.parentNode node
   traverse_ (\pn -> DOM.removeChild node pn) npn
 
-substInParent :: DOM.Node -> Maybe DOM.Node -> Maybe DOM.Node -> Effect Unit
-substInParent newNode (Just sib) (Just pn) = void $ DOM.insertBefore newNode sib pn
-substInParent newNode Nothing (Just pn) = void $ DOM.appendChild newNode pn
-substInParent _ _ _ = pure unit
+substInParent :: DOM.Node -> Maybe DOM.Node -> DOM.Node -> Effect Unit
+substInParent newNode (Just sib) pn = DOM.insertBefore newNode sib pn
+substInParent newNode Nothing pn = DOM.appendChild newNode pn
