@@ -1,0 +1,11 @@
+package:
+  name: halogen-driver-io
+  dependencies:
+    - halogen
+    - ace
+workspace:
+  extraPackages:
+    halogen:
+      path: ../..
+  packageSet:
+    registry: 64.1.1

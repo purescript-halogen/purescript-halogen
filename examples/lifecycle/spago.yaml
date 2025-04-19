@@ -1,0 +1,12 @@
+package:
+  name: halogen-lifecycle
+  dependencies:
+    - halogen
+    - arrays
+    - const
+workspace:
+  extraPackages:
+    halogen:
+      path: ../..
+  packageSet:
+    registry: 64.1.1

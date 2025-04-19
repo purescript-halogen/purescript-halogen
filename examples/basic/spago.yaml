@@ -1,0 +1,10 @@
+package:
+  name: halogen-basic
+  dependencies:
+    - halogen
+workspace:
+  extraPackages:
+    halogen:
+      path: ../..
+  packageSet:
+    registry: 64.1.1

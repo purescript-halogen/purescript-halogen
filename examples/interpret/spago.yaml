@@ -1,0 +1,12 @@
+package:
+  name: halogen-interpret
+  dependencies:
+    - halogen
+    - affjax
+    - affjax-web
+workspace:
+  extraPackages:
+    halogen:
+      path: ../..
+  packageSet:
+    registry: 64.1.1

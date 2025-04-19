@@ -1,0 +1,60 @@
+package:
+  name: halogen
+  publish:
+    license: Apache-2.0
+    version: 7.0.0
+    location:
+      githubOwner: purescript-halogen
+      githubRepo: purescript-halogen
+  dependencies:
+    - aff: ">=8.0.0 <9.0.0"
+    - bifunctors: ">=6.1.0 <7.0.0"
+    - console: ">=6.1.0 <7.0.0"
+    - control: ">=6.0.0 <7.0.0"
+    - dom-indexed: "*"
+    - effect: ">=4.0.0 <5.0.0"
+    - either: ">=6.1.0 <7.0.0"
+    - exceptions: ">=6.1.0 <7.0.0"
+    - foldable-traversable: ">=6.0.0 <7.0.0"
+    - foreign: ">=7.0.0 <8.0.0"
+    - fork: ">=6.0.0 <7.0.0"
+    - free: ">=7.1.0 <8.0.0"
+    - freeap: ">=7.0.0 <8.0.0"
+    - functions: ">=6.0.0 <7.0.0"
+    - halogen-subscriptions: ">=2.0.0 <3.0.0"
+    - halogen-vdom: ">=8.0.0 <9.0.0"
+    - lazy: ">=6.0.0 <7.0.0"
+    - lists: ">=7.0.0 <8.0.0"
+    - maybe: ">=6.0.0 <7.0.0"
+    - media-types: ">=6.0.0 <7.0.0"
+    - newtype: ">=5.0.0 <6.0.0"
+    - ordered-collections: ">=3.2.0 <4.0.0"
+    - parallel: ">=7.0.0 <8.0.0"
+    - prelude: ">=6.0.2 <7.0.0"
+    - profunctor: ">=6.0.1 <7.0.0"
+    - refs: ">=6.0.0 <7.0.0"
+    - strings: ">=6.0.1 <7.0.0"
+    - tailrec: ">=6.1.0 <7.0.0"
+    - transformers: ">=6.1.0 <7.0.0"
+    - tuples: ">=7.0.0 <8.0.0"
+    - unfoldable: ">=6.0.0 <7.0.0"
+    - unsafe-coerce: ">=6.0.0 <7.0.0"
+    - unsafe-reference: ">=5.0.0 <6.0.0"
+    - web-clipboard: ">=6.0.0 <7.0.0"
+    - web-dom: ">=6.0.0 <7.0.0"
+    - web-events: ">=4.0.0 <5.0.0"
+    - web-file: ">=4.0.0 <5.0.0"
+    - web-html: ">=4.1.0 <5.0.0"
+    - web-pointerevents: ">=2.0.0 <3.0.0"
+    - web-touchevents: ">=4.0.0 <5.0.0"
+    - web-uievents: ">=5.0.0 <6.0.0"
+  test:
+    main: Test.Main
+    dependencies:
+      - console
+      - effect
+      - assert
+workspace:
+  extraPackages: {}
+  packageSet:
+    registry: 64.1.1

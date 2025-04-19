@@ -1,0 +1,14 @@
+package:
+  name: halogen-driver-websockets
+  dependencies:
+    - halogen
+    - aff-coroutines
+    - arrays
+    - coroutines
+    - web-socket
+workspace:
+  extraPackages:
+    halogen:
+      path: ../..
+  packageSet:
+    registry: 64.1.1

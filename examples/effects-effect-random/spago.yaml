@@ -1,0 +1,11 @@
+package:
+  name: halogen-effects-effect-random
+  dependencies:
+    - halogen
+    - random
+workspace:
+  extraPackages:
+    halogen:
+      path: ../..
+  packageSet:
+    registry: 64.1.1
