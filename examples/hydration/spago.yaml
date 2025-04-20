@@ -1,0 +1,24 @@
+package:
+  name: halogen-hydration
+  dependencies:
+    - halogen
+    - halogen-vdom-string-renderer
+    - node-fs
+workspace:
+  extraPackages:
+    halogen:
+      path: ../..
+    halogen-higher-order-components:
+      path: ../higher-order-components
+    halogen-vdom:
+      # path: /home/srghma/projects/purescript-halogen-vdom
+      # git: https://github.com/purescript-halogen/purescript-halogen-vdom.git
+      git: https://github.com/srghma/purescript-halogen-vdom.git
+      ref: pure/hydration
+    halogen-vdom-string-renderer:
+      # path: /home/srghma/projects/purescript-halogen-vdom-string-renderer
+      # git: https://github.com/purescript-halogen/purescript-halogen-vdom-string-renderer.git
+      git: https://github.com/srghma/purescript-halogen-vdom-string-renderer.git
+      ref: master
+  packageSet:
+    registry: 64.1.1
