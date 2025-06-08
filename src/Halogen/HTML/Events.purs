@@ -65,6 +65,7 @@ module Halogen.HTML.Events
   , onValueInput
   , onSelectedIndexChange
   , onChecked
+  , onTimeUpdate
   ) where
 
 import Prelude
@@ -309,6 +310,9 @@ onTouchStart = handler (EventType "touchstart") <<< touchHandler
 
 onResize :: forall r i. (Event -> i) -> IProp (onResize :: Event | r) i
 onResize = handler (EventType "resize")
+
+onTimeUpdate :: forall r i. (Event -> i) -> IProp (onTimeUpdate :: Event | r) i
+onTimeUpdate = handler (EventType "timeupdate")
 
 keyHandler :: forall i. (KeyboardEvent -> i) -> Event -> i
 keyHandler = unsafeCoerce
