@@ -1,0 +1,22 @@
+package:
+  name: halogen-lifecycle
+  dependencies:
+    - halogen
+    - arrays
+    - const
+workspace:
+  extraPackages:
+    halogen:
+      path: ../..
+    halogen-vdom-string-renderer:
+      # path: /home/srghma/projects/purescript-halogen-vdom-string-renderer
+      # git: https://github.com/purescript-halogen/purescript-halogen-vdom-string-renderer.git
+      git: https://github.com/srghma/purescript-halogen-vdom-string-renderer.git
+      ref: master
+    halogen-vdom:
+      # path: /home/srghma/projects/purescript-halogen-vdom
+      # git: https://github.com/purescript-halogen/purescript-halogen-vdom.git
+      git: https://github.com/srghma/purescript-halogen-vdom.git
+      ref: pure/hydration
+  packageSet:
+    registry: 64.1.1

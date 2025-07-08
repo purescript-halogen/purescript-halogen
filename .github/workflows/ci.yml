@@ -2,41 +2,42 @@ name: CI
 
 on:
   push:
-    branches: master
+    branches: [master]
   pull_request:
+    branches: [master]
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v2
+      - uses: actions/setup-node@v4
 
-      - uses: purescript-contrib/setup-purescript@main
+      - name: Set up a PureScript toolchain
+        uses: purescript-contrib/setup-purescript@main
         with:
-          purescript: "0.15.0"
-          purs-tidy: "0.8.0"
+          purescript: "latest"
+          # NOTE: "latest" = "0.11.1" and "0.11.1" was removed (?)
+          purs-tidy: "0.11.0" # "latest"
+          spago: "unstable" # "0.93.43" # "next"
 
       - name: Cache PureScript dependencies
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
-          key: ${{ runner.os }}-spago-${{ hashFiles('**/*.dhall') }}
+          key: ${{ runner.os }}-spago-${{ hashFiles('**/spago.lock') }}
           path: |
             .spago
             output
+            examples/**/.spago
+            examples/**/output
 
       - run: npm install
 
       - run: npm run -s build
 
-      - run: npm run -s test
-
-      - run: npm run -s example-all
+      - run: npm run -s test --offline
 
       - run: npm run -s check-formatting
 
-      - name: Verify Pulp & Bower
-        run: |
-          npx bower install --production
-          npx pulp build
+      - run: npm run -s example-all

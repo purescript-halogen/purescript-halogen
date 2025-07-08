@@ -1,0 +1,7 @@
+{
+  "scripts": {
+    "all": "mkdir -p ./dist && npm run generate-html && npm run bundle",
+    "generate-html": "spago run --main Example.Hydration.MainGenerateIndexHtml",
+    "bundle": "spago bundle --module Example.Hydration.Main --outfile dist/example.js"
+  }
+}
