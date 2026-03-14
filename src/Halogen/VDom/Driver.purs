@@ -26,13 +26,21 @@ import Halogen.VDom.Thunk (Thunk)
 import Halogen.VDom.Thunk as Thunk
 import Unsafe.Reference (unsafeRefEq)
 import Web.DOM.Document (Document) as DOM
-import Web.DOM.Element (Element) as DOM
+import Web.DOM.Element (Element, toNode) as DOM
 import Web.DOM.Node (Node, appendChild, removeChild, parentNode, nextSibling, insertBefore) as DOM
 import Web.HTML (window) as DOM
 import Web.HTML.HTMLDocument as HTMLDocument
 import Web.HTML.HTMLElement (HTMLElement) as DOM
 import Web.HTML.HTMLElement as HTMLElement
 import Web.HTML.Window (document) as DOM
+
+foreign import createElementFromHTML :: String -> DOM.Element
+foreign import replaceNode :: EFn.EffectFn2 DOM.Node DOM.Node Unit
+
+removeRawNode :: DOM.Node -> Effect Unit
+removeRawNode node = do
+  npn <- DOM.parentNode node
+  traverse_ (\pn -> DOM.removeChild node pn) npn
 
 type VHTML action slots =
   V.VDom (Array (Prop (Input action))) (ComponentSlot slots Aff action)
@@ -49,8 +57,10 @@ newtype RenderState state action slots output =
 type HTMLThunk slots action =
   Thunk (HTML (ComponentSlot slots Aff action)) action
 
-type WidgetState slots action =
-  Maybe (V.Step (HTMLThunk slots action) DOM.Node)
+data WidgetState slots action
+  = ThunkWidget (V.Step (HTMLThunk slots action) DOM.Node)
+  | RawHTMLWidget DOM.Node
+  | NoWidget
 
 mkSpec
   :: forall action slots
@@ -86,7 +96,10 @@ mkSpec handler renderChildRef document =
           EFn.runEffectFn1 renderComponentSlot cs
         ThunkSlot t -> do
           step <- EFn.runEffectFn1 buildThunk t
-          pure $ V.mkStep $ V.Step (V.extract step) (Just step) patch done
+          pure $ V.mkStep $ V.Step (V.extract step) (ThunkWidget step) patch done
+        RawHTML html -> do
+          let node = DOM.toNode $ createElementFromHTML html
+          pure $ V.mkStep $ V.Step node (RawHTMLWidget node) patch done
 
     patch
       :: EFn.EffectFn2 (WidgetState slots action)
@@ -94,14 +107,23 @@ mkSpec handler renderChildRef document =
            (V.Step (ComponentSlot slots Aff action) DOM.Node)
     patch = EFn.mkEffectFn2 \st slot ->
       case st of
-        Just step -> case slot of
-          ComponentSlot cs -> do
-            EFn.runEffectFn1 V.halt step
-            EFn.runEffectFn1 renderComponentSlot cs
+        ThunkWidget step -> case slot of
           ThunkSlot t -> do
             step' <- EFn.runEffectFn2 V.step step t
-            pure $ V.mkStep $ V.Step (V.extract step') (Just step') patch done
-        _ -> EFn.runEffectFn1 render slot
+            pure $ V.mkStep $ V.Step (V.extract step') (ThunkWidget step') patch done
+          _ -> do
+            EFn.runEffectFn1 V.halt step
+            EFn.runEffectFn1 render slot
+        RawHTMLWidget oldNode -> case slot of
+          RawHTML html -> do
+            let newNode = DOM.toNode $ createElementFromHTML html
+            EFn.runEffectFn2 replaceNode oldNode newNode
+            pure $ V.mkStep $ V.Step newNode (RawHTMLWidget newNode) patch done
+          _ -> do
+            removeRawNode oldNode
+            EFn.runEffectFn1 render slot
+        NoWidget ->
+          EFn.runEffectFn1 render slot
 
     buildThunk :: V.Machine (HTMLThunk slots action) DOM.Node
     buildThunk = Thunk.buildThunk unwrap spec
@@ -114,13 +136,14 @@ mkSpec handler renderChildRef document =
       renderChild <- Ref.read renderChildRef
       rsx <- renderChild cs
       let node = getNode rsx
-      pure $ V.mkStep $ V.Step node Nothing patch done
+      pure $ V.mkStep $ V.Step node NoWidget patch done
 
   done :: EFn.EffectFn1 (WidgetState slots action) Unit
   done = EFn.mkEffectFn1 \st ->
     case st of
-      Just step -> EFn.runEffectFn1 V.halt step
-      _ -> pure unit
+      ThunkWidget step -> EFn.runEffectFn1 V.halt step
+      RawHTMLWidget node -> removeRawNode node
+      NoWidget -> pure unit
 
   getNode :: RenderStateX RenderState -> DOM.Node
   getNode = unRenderStateX (\(RenderState { node }) -> node)
