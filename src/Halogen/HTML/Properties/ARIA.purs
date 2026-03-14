@@ -22,6 +22,9 @@ checked = attr (AttrName "aria-checked")
 controls :: forall r i. String -> IProp r i
 controls = attr (AttrName "aria-controls")
 
+current :: forall r i. String -> IProp r i
+current = attr (AttrName "aria-current")
+
 describedBy :: forall r i. String -> IProp r i
 describedBy = attr (AttrName "aria-describedby")
 

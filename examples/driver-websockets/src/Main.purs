@@ -56,7 +56,7 @@ wsSender socket = case _ of
 
 main :: Effect Unit
 main = do
-  connection <- WS.create "ws://echo.websocket.org" []
+  connection <- WS.create "wss://ws.postman-echo.com/raw" []
   HA.runHalogenAff do
     body <- HA.awaitBody
     io <- runUI Log.component unit body
