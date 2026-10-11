@@ -1,63 +1,63 @@
 <!DOCTYPE HTML>
-<html lang="en" class="sidebar-visible no-js light">
+<html lang="en" class="light sidebar-visible" dir="ltr">
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
         <title>Introducing Components - Halogen Guide</title>
-        
-        
 
 
         <!-- Custom HTML head -->
-        
 
-
-        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="theme-color" content="#ffffff" />
+        <meta name="theme-color" content="#ffffff">
 
-        
-        <link rel="icon" href="../favicon.svg">
-        
-        
-        <link rel="shortcut icon" href="../favicon.png">
-        
-        <link rel="stylesheet" href="../css/variables.css">
-        <link rel="stylesheet" href="../css/general.css">
-        <link rel="stylesheet" href="../css/chrome.css">
-        
-        <link rel="stylesheet" href="../css/print.css" media="print">
-        
+        <link rel="icon" href="../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../css/general-e96d0476.css">
+        <link rel="stylesheet" href="../css/chrome-d279d366.css">
+        <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
 
         <!-- Fonts -->
-        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
-        
-        <link rel="stylesheet" href="../fonts/fonts.css">
-        
+        <link rel="stylesheet" href="../fonts/fonts-9644e21d.css">
 
         <!-- Highlight.js Stylesheets -->
-        <link rel="stylesheet" href="../highlight.css">
-        <link rel="stylesheet" href="../tomorrow-night.css">
-        <link rel="stylesheet" href="../ayu-highlight.css">
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../ayu-highlight-3fdfc3ac.css">
 
         <!-- Custom theme stylesheets -->
-        
 
-        
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../searchindex-27ee378e.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc-9cd3f867.js"></script>
     </head>
     <body>
-        <!-- Provide site root to javascript -->
-        <script type="text/javascript">
-            var path_to_root = "../";
-            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
-        </script>
-
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
         <!-- Work around some values being stored in localStorage wrapped in quotes -->
-        <script type="text/javascript">
+        <script>
             try {
-                var theme = localStorage.getItem('mdbook-theme');
-                var sidebar = localStorage.getItem('mdbook-sidebar');
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
 
                 if (theme.startsWith('"') && theme.endsWith('"')) {
                     localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
@@ -70,111 +70,121 @@
         </script>
 
         <!-- Set the theme before any content is loaded, prevents flash -->
-        <script type="text/javascript">
-            var theme;
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
             try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
             if (theme === null || theme === undefined) { theme = default_theme; }
-            var html = document.querySelector('html');
-            html.classList.remove('no-js')
+            const html = document.documentElement;
             html.classList.remove('light')
             html.classList.add(theme);
-            html.classList.add('js');
+            html.classList.add("js");
         </script>
 
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
         <!-- Hide / unhide sidebar before it is displayed -->
-        <script type="text/javascript">
-            var html = document.querySelector('html');
-            var sidebar = 'hidden';
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
             if (document.body.clientWidth >= 1080) {
                 try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
                 sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
             }
-            html.classList.remove('sidebar-visible');
-            html.classList.add("sidebar-" + sidebar);
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
         </script>
 
-        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
-            <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="../index.html"><strong aria-hidden="true">1.</strong> Halogen</a></li><li class="chapter-item expanded "><a href="../guide/index.html"><strong aria-hidden="true">2.</strong> Guide</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../guide/01-Rendering-Halogen-HTML.html"><strong aria-hidden="true">2.1.</strong> Rendering Halogen HTML</a></li><li class="chapter-item expanded "><a href="../guide/02-Introducing-Components.html" class="active"><strong aria-hidden="true">2.2.</strong> Introducing Components</a></li><li class="chapter-item expanded "><a href="../guide/03-Performing-Effects.html"><strong aria-hidden="true">2.3.</strong> Performing Effects</a></li><li class="chapter-item expanded "><a href="../guide/04-Lifecycles-Subscriptions.html"><strong aria-hidden="true">2.4.</strong> Lifecycles &amp; Subscriptions</a></li><li class="chapter-item expanded "><a href="../guide/05-Parent-Child-Components.html"><strong aria-hidden="true">2.5.</strong> Parent &amp; Child Components</a></li><li class="chapter-item expanded "><a href="../guide/06-Running-Application.html"><strong aria-hidden="true">2.6.</strong> Running Application</a></li><li class="chapter-item expanded "><a href="../guide/07-Next-Steps.html"><strong aria-hidden="true">2.7.</strong> Next Steps</a></li></ol></li><li class="chapter-item expanded "><a href="../concepts-reference/index.html"><strong aria-hidden="true">3.</strong> Concepts Reference</a></li><li class="chapter-item expanded "><a href="../changelog/index.html"><strong aria-hidden="true">4.</strong> Major Version Changelog</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../changelog/v6.html"><strong aria-hidden="true">4.1.</strong> Changes in v6</a></li><li class="chapter-item expanded "><a href="../changelog/v5.html"><strong aria-hidden="true">4.2.</strong> Changes in v5</a></li></ol></li></ol>
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
             </div>
-            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
 
-        <div id="page-wrapper" class="page-wrapper">
+        <div id="mdbook-page-wrapper" class="page-wrapper">
 
             <div class="page">
-                
-                <div id="menu-bar-hover-placeholder"></div>
-                <div id="menu-bar" class="menu-bar sticky bordered">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
                     <div class="left-buttons">
-                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
-                            <i class="fa fa-bars"></i>
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
                         </button>
-                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
-                            <i class="fa fa-paint-brush"></i>
-                        </button>
-                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
-                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
-                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
-                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
-                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
-                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
                         </ul>
-                        
-                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
-                            <i class="fa fa-search"></i>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
                         </button>
-                        
                     </div>
 
                     <h1 class="menu-title">Halogen Guide</h1>
 
                     <div class="right-buttons">
-                        
                         <a href="../print.html" title="Print this book" aria-label="Print this book">
-                            <i id="print-button" class="fa fa-print"></i>
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
                         </a>
-                        
-                        
                         <a href="https://github.com/purescript-halogen/purescript-halogen" title="Git repository" aria-label="Git repository">
-                            <i id="git-repository-button" class="fa fa-github"></i>
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
                         </a>
-                        
+
                     </div>
                 </div>
 
-                
-                <div id="search-wrapper" class="hidden">
-                    <form id="searchbar-outer" class="searchbar-outer">
-                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
                     </form>
-                    <div id="searchresults-outer" class="searchresults-outer hidden">
-                        <div id="searchresults-header" class="searchresults-header"></div>
-                        <ul id="searchresults">
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
                         </ul>
                     </div>
                 </div>
-                
 
                 <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
-                <script type="text/javascript">
-                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
-                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
-                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
                         link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
                     });
                 </script>
 
-                <div id="content" class="content">
+                <div id="mdbook-content" class="content">
                     <main>
-                        <h1><a class="header" href="#introducing-components" id="introducing-components">Introducing Components</a></h1>
+                        <h1 id="introducing-components"><a class="header" href="#introducing-components">Introducing Components</a></h1>
 <p>Halogen HTML is one basic building block of Halogen applications. But pure functions that produce HTML lack many essential features that a real world application needs: state that represents values over time, effects for things like network requests, and the ability to respond to DOM events (for example, when a user clicks a button).</p>
-<p>Halogen components accept input and produce Halogen HTML, like the functions we've seen so far. Unlike functions, though, components maintain internal state, can update their state or perform effects in response to events, and can communicate with other components.</p>
+<p>Halogen components accept input and produce Halogen HTML, like the functions we’ve seen so far. Unlike functions, though, components maintain internal state, can update their state or perform effects in response to events, and can communicate with other components.</p>
 <p>Halogen uses a component architecture. That means that Halogen uses components to let you split your UI into independent, reusable pieces and think about each piece in isolation. You can then combine components together to produce sophisticated applications.</p>
-<p>For example, every Halogen application is made up of at least one component, which is called the &quot;root&quot; component. Halogen components can contain further components, and the resulting tree of components comprises your Halogen application.</p>
-<p>In this chapter we'll learn most of the essential types and functions for writing Halogen components. For a beginner, this is the hardest chapter in the guide because many of these concepts will be brand-new. Don't worry if it feels overwhelming the first time you read it! You'll use these types and functions over and over again when you write Halogen applications, and they soon become second nature. If you're having a hard time with the chapter, try reading it again while building a simple component other than the one described here.</p>
-<p>In this chapter we'll also see more examples of Halogen's declarative style of programming. When you write a component you're responsible for describing what UI should exist for any given internal state. Halogen, under the hood, updates the actual DOM elements to match your desired UI.</p>
-<h2><a class="header" href="#a-tiny-example" id="a-tiny-example">A Tiny Example</a></h2>
+<p>For example, every Halogen application is made up of at least one component, which is called the “root” component. Halogen components can contain further components, and the resulting tree of components comprises your Halogen application.</p>
+<p>In this chapter we’ll learn most of the essential types and functions for writing Halogen components. For a beginner, this is the hardest chapter in the guide because many of these concepts will be brand-new. Don’t worry if it feels overwhelming the first time you read it! You’ll use these types and functions over and over again when you write Halogen applications, and they soon become second nature. If you’re having a hard time with the chapter, try reading it again while building a simple component other than the one described here.</p>
+<p>In this chapter we’ll also see more examples of Halogen’s declarative style of programming. When you write a component you’re responsible for describing what UI should exist for any given internal state. Halogen, under the hood, updates the actual DOM elements to match your desired UI.</p>
+<h2 id="a-tiny-example"><a class="header" href="#a-tiny-example">A Tiny Example</a></h2>
 <p>We have already seen a simple example of a component: a counter that can be incremented or decremented.</p>
 <pre><code class="language-purs">module Main where
 
@@ -197,9 +207,9 @@ component =
 
   render state =
     HH.div_
-      [ HH.button [ HE.onClick \_ -&gt; Decrement ] [ HH.text &quot;-&quot; ]
+      [ HH.button [ HE.onClick \_ -&gt; Decrement ] [ HH.text "-" ]
       , HH.text (show state)
-      , HH.button [ HE.onClick \_ -&gt; Increment ] [ HH.text &quot;+&quot; ]
+      , HH.button [ HE.onClick \_ -&gt; Increment ] [ HH.text "+" ]
       ]
 
   handleAction = case _ of
@@ -210,52 +220,52 @@ component =
       H.modify_ \state -&gt; state + 1
 </code></pre>
 <p>This component maintains an integer as its internal state, and updates that state in response to click events on the two buttons.</p>
-<p>This component works, but in a real world application we wouldn't leave all the types unspecified. Let's rebuild this component from scratch with all the types it uses.</p>
-<h2><a class="header" href="#building-a-basic-component-with-types" id="building-a-basic-component-with-types">Building a Basic Component (With Types)</a></h2>
-<p>A typical Halogen component accepts input, maintains an internal state, produces Halogen HTML from that state, and updates its state or performs effects in response to events. In this case we don't need to perform any effects, but we'll cover them soon.</p>
-<p>Let's break down each part of our component, assigning types along the way.</p>
-<h3><a class="header" href="#input" id="input">Input</a></h3>
-<p>Halogen components can accept input from a parent component or the root of the application. If you think of a component as a function, then input is the function's argument.</p>
+<p>This component works, but in a real world application we wouldn’t leave all the types unspecified. Let’s rebuild this component from scratch with all the types it uses.</p>
+<h2 id="building-a-basic-component-with-types"><a class="header" href="#building-a-basic-component-with-types">Building a Basic Component (With Types)</a></h2>
+<p>A typical Halogen component accepts input, maintains an internal state, produces Halogen HTML from that state, and updates its state or performs effects in response to events. In this case we don’t need to perform any effects, but we’ll cover them soon.</p>
+<p>Let’s break down each part of our component, assigning types along the way.</p>
+<h3 id="input"><a class="header" href="#input">Input</a></h3>
+<p>Halogen components can accept input from a parent component or the root of the application. If you think of a component as a function, then input is the function’s argument.</p>
 <p>If your component takes input, then you should describe it with a type. For example, a component that accepts an integer as input would use this type:</p>
 <pre><code class="language-purs">type Input = Int
 </code></pre>
-<p>Our counter doesn't require any input, so we have two choices. First, we can just say that our input type is <code>Unit</code>, meaning that we'll just take a dummy value and throw it away:</p>
+<p>Our counter doesn’t require any input, so we have two choices. First, we can just say that our input type is <code>Unit</code>, meaning that we’ll just take a dummy value and throw it away:</p>
 <pre><code class="language-purs">type Input = Unit
 </code></pre>
-<p>Second, and more commonly, anywhere our input type shows up in our component we can simply leave it as a type variable: <code>forall i. ...</code>. It's perfectly fine to use either approach, but from here on out we'll use type variables to represent types our component isn't using.</p>
-<h3><a class="header" href="#state" id="state">State</a></h3>
-<p>Halogen components maintain an internal state over time, which is used to drive the component's behavior and to produce HTML. Our counter component maintains the current count, an integer, so we'll use that as our state type:</p>
+<p>Second, and more commonly, anywhere our input type shows up in our component we can simply leave it as a type variable: <code>forall i. ...</code>. It’s perfectly fine to use either approach, but from here on out we’ll use type variables to represent types our component isn’t using.</p>
+<h3 id="state"><a class="header" href="#state">State</a></h3>
+<p>Halogen components maintain an internal state over time, which is used to drive the component’s behavior and to produce HTML. Our counter component maintains the current count, an integer, so we’ll use that as our state type:</p>
 <pre><code class="language-purs">type State = Int
 </code></pre>
 <p>Our component needs to also produce an initial state value. All Halogen components require an <code>initialState</code> function which produces the initial state from the input value:</p>
 <pre><code class="language-purs">initialState :: Input -&gt; State
 </code></pre>
-<p>Our counter component doesn't use its input, so our <code>initialState</code> function won't use an input type and will instead just leave that type variable open. Our counter should start at 0 when the component runs.</p>
+<p>Our counter component doesn’t use its input, so our <code>initialState</code> function won’t use an input type and will instead just leave that type variable open. Our counter should start at 0 when the component runs.</p>
 <pre><code class="language-purs">initialState :: forall input. input -&gt; State
 initialState _ = 0
 </code></pre>
-<h3><a class="header" href="#actions" id="actions">Actions</a></h3>
-<p>Halogen components can update state, perform effects, and communicate with other components in response to events that arise internally. Components use an &quot;action&quot; type to describe what kinds of things a component can do in response to internal events.</p>
+<h3 id="actions"><a class="header" href="#actions">Actions</a></h3>
+<p>Halogen components can update state, perform effects, and communicate with other components in response to events that arise internally. Components use an “action” type to describe what kinds of things a component can do in response to internal events.</p>
 <p>Our counter has two internal events:</p>
 <ol>
-<li>a click event on the &quot;-&quot; button to decrement the count</li>
-<li>a click event on the &quot;+&quot; button to increment the count.</li>
+<li>a click event on the “-” button to decrement the count</li>
+<li>a click event on the “+” button to increment the count.</li>
 </ol>
-<p>We can describe what our component should do in response to these events using a data type we'll call <code>Action</code>:</p>
+<p>We can describe what our component should do in response to these events using a data type we’ll call <code>Action</code>:</p>
 <pre><code class="language-purs">data Action = Increment | Decrement
 </code></pre>
-<p>This type signifies that our component is capable of incrementing and decrementing. In a moment, we'll see this type used in our HTML -- another example of Halogen's declarative nature.</p>
+<p>This type signifies that our component is capable of incrementing and decrementing. In a moment, we’ll see this type used in our HTML – another example of Halogen’s declarative nature.</p>
 <p>Just like how our state type had to be paired with an <code>initialState</code> function that describes how to produce a <code>State</code> value, our <code>Action</code> type should be paired with a function called <code>handleAction</code> that describes what to do when one of these actions occurs.</p>
 <pre><code class="language-purs">handleAction :: forall output m. Action -&gt; H.HalogenM State Action () output m Unit
 </code></pre>
-<p>As with our input type, we can leave type variables open for types that we aren't using.</p>
+<p>As with our input type, we can leave type variables open for types that we aren’t using.</p>
 <ul>
-<li>The type <code>()</code> means our component has no child components. We could also leave it open as a type variable because we aren't using it -- <code>slots</code>, by convention -- but <code>()</code> is so short you'll see this type commonly used instead.</li>
+<li>The type <code>()</code> means our component has no child components. We could also leave it open as a type variable because we aren’t using it – <code>slots</code>, by convention – but <code>()</code> is so short you’ll see this type commonly used instead.</li>
 <li>The <code>output</code> type parameter is only used when your component communicates with a parent.</li>
 <li>The <code>m</code> type parameter is only relevant when your component performs effects.</li>
 </ul>
-<p>Since our counter has no child components we'll use <code>()</code> to describe them, and because it doesn't communicate with a parent or perform effects we'll leave the <code>output</code> and <code>m</code> type variables open.</p>
-<p>Here's the <code>handleAction</code> function for our counter:</p>
+<p>Since our counter has no child components we’ll use <code>()</code> to describe them, and because it doesn’t communicate with a parent or perform effects we’ll leave the <code>output</code> and <code>m</code> type variables open.</p>
+<p>Here’s the <code>handleAction</code> function for our counter:</p>
 <pre><code class="language-purs">handleAction :: forall output m. Action -&gt; H.HalogenM State Action () output m Unit
 handleAction = case _ of
   Decrement -&gt;
@@ -267,29 +277,29 @@ handleAction = case _ of
 <p>Our <code>handleAction</code> function responds to <code>Decrement</code> by reducing our state variable by 1, and to <code>Increment</code> by increasing our state variable by 1. Halogen provides several update functions you can use in your <code>handleAction</code> function; these ones are commonly used:</p>
 <ul>
 <li><code>modify</code> allows you to update the state, given the previous state, returning the new state</li>
-<li><code>modify_</code> is the same as <code>modify</code>, but it doesn't return the new state (thus you don't have to explicitly discard the result, as you would with <code>modify</code>)</li>
+<li><code>modify_</code> is the same as <code>modify</code>, but it doesn’t return the new state (thus you don’t have to explicitly discard the result, as you would with <code>modify</code>)</li>
 <li><code>get</code> allows you to retrieve the current state</li>
 <li><code>gets</code> allows you to retrieve the current state and also apply a function to it (most commonly, <code>_.fieldName</code> to retrieve a particular field from a record)</li>
 </ul>
-<p>We'll talk more about <code>HalogenM</code> when we talk about performing effects. Our counter doesn't perform effects, so all we need are the state update functions.</p>
-<h3><a class="header" href="#rendering" id="rendering">Rendering</a></h3>
+<p>We’ll talk more about <code>HalogenM</code> when we talk about performing effects. Our counter doesn’t perform effects, so all we need are the state update functions.</p>
+<h3 id="rendering"><a class="header" href="#rendering">Rendering</a></h3>
 <p>Halogen components produce HTML from their state using a function called <code>render</code>. The render function runs every time the state changes. This is what makes Halogen declarative: for any given state, you describe the UI that it corresponds to. Halogen handles the workload of ensuring that state changes always result in the UI you described.</p>
-<p>Render functions in Halogen are pure, which means that you can't do things like get the current time, make network requests, or anything like that during rendering. All you can do is produce HTML for your state value.</p>
-<p>When we look at the type of our render function we can see the <code>ComponentHTML</code> type we touched on last chapter. This type is a more specialized version of the <code>HTML</code> type, meant specifically for HTML produced in components. Once again, we'll use <code>()</code> and leave <code>m</code> open because they are only relevant when using child components, which we'll cover in a later chapter.</p>
+<p>Render functions in Halogen are pure, which means that you can’t do things like get the current time, make network requests, or anything like that during rendering. All you can do is produce HTML for your state value.</p>
+<p>When we look at the type of our render function we can see the <code>ComponentHTML</code> type we touched on last chapter. This type is a more specialized version of the <code>HTML</code> type, meant specifically for HTML produced in components. Once again, we’ll use <code>()</code> and leave <code>m</code> open because they are only relevant when using child components, which we’ll cover in a later chapter.</p>
 <pre><code class="language-purs">render :: forall m. State -&gt; H.ComponentHTML Action () m
 </code></pre>
-<p>Now that we're working with our render function, we're back to the Halogen HTML that should be familiar from the last chapter! You can write regular HTML in <code>ComponentHTML</code> just like we did last chapter:</p>
+<p>Now that we’re working with our render function, we’re back to the Halogen HTML that should be familiar from the last chapter! You can write regular HTML in <code>ComponentHTML</code> just like we did last chapter:</p>
 <pre><code class="language-purs">import Halogen.HTML.Events
 
 render :: forall m. State -&gt; H.ComponentHTML Action () m
 render state =
   HH.div_
-    [ HH.button [ HE.onClick \_ -&gt; Decrement ] [ HH.text &quot;-&quot; ]
+    [ HH.button [ HE.onClick \_ -&gt; Decrement ] [ HH.text "-" ]
     , HH.text (show state)
-    , HH.button [ HE.onClick \_ -&gt; Increment ] [ HH.text &quot;+&quot; ]
+    , HH.button [ HE.onClick \_ -&gt; Increment ] [ HH.text "+" ]
     ]
 </code></pre>
-<h4><a class="header" href="#handling-events" id="handling-events">Handling Events</a></h4>
+<h4 id="handling-events"><a class="header" href="#handling-events">Handling Events</a></h4>
 <p>We can now see how to handle events in Halogen. First, you write the event handler in the properties array along with any other properties, attributes, and refs you might need. Then, you associate the event handler with an <code>Action</code> that your component knows how to handle. Finally, when the event occurs, your <code>handleAction</code> function is called to handle the event.</p>
 <p>You might be curious about why we provided an anonymous function to <code>onClick</code>. To see why, we can look at the actual type of <code>onClick</code>:</p>
 <pre><code class="language-purs">onClick
@@ -303,11 +313,11 @@ onClick
    . (MouseEvent -&gt; Action)
   -&gt; IProp (onClick :: MouseEvent | row) Action
 </code></pre>
-<p>In Halogen, event handlers take as their first argument a callback. This callback receives the DOM event that occurred (in the case of a click event, that's a <code>MouseEvent</code>), which contains some metadata you may want to use, and is then responsible for returning an action that Halogen should run in response to the event. In our case, we won't inspect the event itself, so we throw the argument away and return the action we want to run (<code>Increment</code> or <code>Decrement</code>).</p>
-<p>The <code>onClick</code> function then returns a value of type <code>IProp</code>. You should remember <code>IProp</code> from the previous chapter. As a refresher, Halogen HTML elements specify a list of what properties and events they support. Properties and events in turn specify their type. Halogen is then able to ensure that you never use a property or event on an element that doesn't support it. In this case buttons do support <code>onClick</code> events, so we're good to go!</p>
+<p>In Halogen, event handlers take as their first argument a callback. This callback receives the DOM event that occurred (in the case of a click event, that’s a <code>MouseEvent</code>), which contains some metadata you may want to use, and is then responsible for returning an action that Halogen should run in response to the event. In our case, we won’t inspect the event itself, so we throw the argument away and return the action we want to run (<code>Increment</code> or <code>Decrement</code>).</p>
+<p>The <code>onClick</code> function then returns a value of type <code>IProp</code>. You should remember <code>IProp</code> from the previous chapter. As a refresher, Halogen HTML elements specify a list of what properties and events they support. Properties and events in turn specify their type. Halogen is then able to ensure that you never use a property or event on an element that doesn’t support it. In this case buttons do support <code>onClick</code> events, so we’re good to go!</p>
 <p>In this simple example, the <code>MouseEvent</code> parameter is ignored by the handler function passed to <code>onClick</code>, since the action is completely determined by which button receives the click.  We will talk about accessing the event itself after we have looked at effects in section 3 of this guide.</p>
-<h3><a class="header" href="#bringing-it-all-together" id="bringing-it-all-together">Bringing It All Together</a></h3>
-<p>Let's bring each of our types and functions back together to produce our counter component -- this time with types specified. Let's revisit the types and functions that we wrote:</p>
+<h3 id="bringing-it-all-together"><a class="header" href="#bringing-it-all-together">Bringing It All Together</a></h3>
+<p>Let’s bring each of our types and functions back together to produce our counter component – this time with types specified. Let’s revisit the types and functions that we wrote:</p>
 <pre><code class="language-purs">-- This can be specified if your component takes input, or you can leave
 -- the type variable open if your component doesn't.
 type Input = Unit
@@ -325,8 +335,8 @@ handleAction = ...
 render :: forall m. State -&gt; H.ComponentHTML Action () m
 render = ...
 </code></pre>
-<p>These types and functions are the core building blocks of a typical Halogen component. But they aren't sufficient on their own like this -- we need to bring them all together in one place.</p>
-<p>We'll do that using the <code>H.mkComponent</code> function. This function takes a <code>ComponentSpec</code>, which is a record containing an <code>initialState</code>, <code>render</code>, and <code>eval</code> function, and produces a <code>Component</code> from it:</p>
+<p>These types and functions are the core building blocks of a typical Halogen component. But they aren’t sufficient on their own like this – we need to bring them all together in one place.</p>
+<p>We’ll do that using the <code>H.mkComponent</code> function. This function takes a <code>ComponentSpec</code>, which is a record containing an <code>initialState</code>, <code>render</code>, and <code>eval</code> function, and produces a <code>Component</code> from it:</p>
 <pre><code class="language-purs">component =
   H.mkComponent
     { -- First, we provide our function that describes how to produce the first state
@@ -338,23 +348,23 @@ render = ...
     , eval: H.mkEval $ H.defaultEval { handleAction = handleAction }
     }
 </code></pre>
-<p>We'll talk more about the <code>eval</code> function in future chapters. For the time being you can think of the <code>eval</code> function as defining how the component responds to events; for now, the only kind of events we care about are actions, and so the only function we'll use is <code>handleAction</code>.</p>
-<p>Our component is now complete, but we're missing one last type definition: our component type.</p>
-<h3><a class="header" href="#the-hcomponent-type" id="the-hcomponent-type">The <code>H.Component</code> Type</a></h3>
-<p>The <code>mkComponent</code> function produces a component from a <code>ComponentSpec</code>, which is a record of the functions that Halogen needs to run a component. We'll get into more detail about this type in a subsequent chapter.</p>
+<p>We’ll talk more about the <code>eval</code> function in future chapters. For the time being you can think of the <code>eval</code> function as defining how the component responds to events; for now, the only kind of events we care about are actions, and so the only function we’ll use is <code>handleAction</code>.</p>
+<p>Our component is now complete, but we’re missing one last type definition: our component type.</p>
+<h3 id="the-hcomponent-type"><a class="header" href="#the-hcomponent-type">The <code>H.Component</code> Type</a></h3>
+<p>The <code>mkComponent</code> function produces a component from a <code>ComponentSpec</code>, which is a record of the functions that Halogen needs to run a component. We’ll get into more detail about this type in a subsequent chapter.</p>
 <pre><code class="language-purs">mkComponent :: H.ComponentSpec ... -&gt; H.Component query input output m
 </code></pre>
-<p>The resulting component has the type <code>H.Component</code>, which itself takes four type parameters that describe the public interface of the component. Our component doesn't communicate with parent components or child components, so it doesn't use any of these type variables. Still, we'll briefly step through them now so you know what's coming in subsequent chapters.</p>
+<p>The resulting component has the type <code>H.Component</code>, which itself takes four type parameters that describe the public interface of the component. Our component doesn’t communicate with parent components or child components, so it doesn’t use any of these type variables. Still, we’ll briefly step through them now so you know what’s coming in subsequent chapters.</p>
 <ol>
 <li>The first parameter <code>query</code> represents a way that parent components can communicate with this component. We will talk about it more when we talk about parent and child components.</li>
-<li>The second parameter <code>input</code> represents the input our component accepts. In our case, the component doesn't accept any input, so we'll leave this variable open.</li>
-<li>The third parameter <code>output</code> represents a way that this component can communicate with its parent component. We'll talk about it more when we talk about parent and child components.</li>
-<li>The final parameter, <code>m</code>, represents the monad that can be used to run effects in the component. Our component doesn't run any effects, so we'll leave this variable open.</li>
+<li>The second parameter <code>input</code> represents the input our component accepts. In our case, the component doesn’t accept any input, so we’ll leave this variable open.</li>
+<li>The third parameter <code>output</code> represents a way that this component can communicate with its parent component. We’ll talk about it more when we talk about parent and child components.</li>
+<li>The final parameter, <code>m</code>, represents the monad that can be used to run effects in the component. Our component doesn’t run any effects, so we’ll leave this variable open.</li>
 </ol>
 <p>Our counter component can therefore be specified by leaving all of the <code>H.Component</code> type variables open.</p>
-<h2><a class="header" href="#the-final-product" id="the-final-product">The Final Product</a></h2>
-<p>That was a lot to take in! We've finally got our counter component fully specified with types. If you can comfortably build components like this one, you're most of the way to a thorough understanding of building Halogen components in general. The rest of this guide will build on top of your understanding of state, actions, and rendering HTML.</p>
-<p>We've added a <code>main</code> function that runs our Halogen application so that you can try this example out by pasting it into <a href="https://try.purescript.org">Try PureScript</a>. We'll cover how to run Halogen applications in a later chapter -- for now you can ignore the <code>main</code> function and focus on the component we've defined.</p>
+<h2 id="the-final-product"><a class="header" href="#the-final-product">The Final Product</a></h2>
+<p>That was a lot to take in! We’ve finally got our counter component fully specified with types. If you can comfortably build components like this one, you’re most of the way to a thorough understanding of building Halogen components in general. The rest of this guide will build on top of your understanding of state, actions, and rendering HTML.</p>
+<p>We’ve added a <code>main</code> function that runs our Halogen application so that you can try this example out by pasting it into <a href="https://try.purescript.org">Try PureScript</a>. We’ll cover how to run Halogen applications in a later chapter – for now you can ignore the <code>main</code> function and focus on the component we’ve defined.</p>
 <pre><code class="language-purs">module Main where
 
 import Prelude
@@ -389,9 +399,9 @@ initialState _ = 0
 render :: forall m. State -&gt; H.ComponentHTML Action () m
 render state =
   HH.div_
-    [ HH.button [ HE.onClick \_ -&gt; Decrement ] [ HH.text &quot;-&quot; ]
+    [ HH.button [ HE.onClick \_ -&gt; Decrement ] [ HH.text "-" ]
     , HH.text (show state)
-    , HH.button [ HE.onClick \_ -&gt; Increment ] [ HH.text &quot;+&quot; ]
+    , HH.button [ HE.onClick \_ -&gt; Increment ] [ HH.text "+" ]
     ]
 
 handleAction :: forall output m. Action -&gt; H.HalogenM State Action () output m Unit
@@ -407,17 +417,13 @@ handleAction = case _ of
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                        
                             <a rel="prev" href="../guide/01-Rendering-Halogen-HTML.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
-                                <i class="fa fa-angle-left"></i>
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
-                        
 
-                        
-                            <a rel="next" href="../guide/03-Performing-Effects.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
-                                <i class="fa fa-angle-right"></i>
+                            <a rel="next prefetch" href="../guide/03-Performing-Effects.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                             </a>
-                        
 
                         <div style="clear: both"></div>
                     </nav>
@@ -425,49 +431,42 @@ handleAction = case _ of
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                
                     <a rel="prev" href="../guide/01-Rendering-Halogen-HTML.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
-                        <i class="fa fa-angle-left"></i>
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
-                
 
-                
-                    <a rel="next" href="../guide/03-Performing-Effects.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
-                        <i class="fa fa-angle-right"></i>
+                    <a rel="next prefetch" href="../guide/03-Performing-Effects.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                     </a>
-                
             </nav>
 
         </div>
 
-        
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
 
-        
 
-        
 
-        
-        <script type="text/javascript">
+        <script>
             window.playground_copyable = true;
         </script>
-        
 
-        
 
-        
-        <script src="../elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../mark.min.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../searcher.js" type="text/javascript" charset="utf-8"></script>
-        
+        <script src="../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../mark-09e88c2c.min.js"></script>
+        <script src="../searcher-09f2665d.js"></script>
 
-        <script src="../clipboard.min.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../highlight.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../book.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../clipboard-1626706a.min.js"></script>
+        <script src="../highlight-90705e0c.js"></script>
+        <script src="../book-609e4cb8.js"></script>
 
         <!-- Custom JS scripts -->
-        
 
-        
 
+
+    </div>
     </body>
 </html>
