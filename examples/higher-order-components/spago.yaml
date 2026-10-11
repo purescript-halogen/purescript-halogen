@@ -1,0 +1,4 @@
+package:
+  name: example-higher-order-components
+  dependencies:
+    - halogen

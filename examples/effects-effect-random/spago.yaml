@@ -1,0 +1,5 @@
+package:
+  name: example-effects-effect-random
+  dependencies:
+    - halogen
+    - random

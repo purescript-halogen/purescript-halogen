@@ -1,0 +1,5 @@
+package:
+  name: example-ace
+  dependencies:
+    - halogen
+    - ace

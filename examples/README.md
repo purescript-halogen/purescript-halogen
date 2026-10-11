@@ -6,7 +6,7 @@ This folder contains a variety of examples demonstrating different Halogen featu
 
 Each of the Halogen examples are self-contained in a directory containing the source code and an `index.html` file that you can open in your browser once the source is compiled.
 
-Make sure Halogen's dependencies are installed:
+Install Halogen's dependencies:
 
 ```sh
 npm install

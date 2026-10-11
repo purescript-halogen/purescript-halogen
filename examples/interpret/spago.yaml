@@ -1,0 +1,6 @@
+package:
+  name: example-interpret
+  dependencies:
+    - halogen
+    - affjax
+    - affjax-web

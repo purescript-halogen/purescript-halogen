@@ -1,0 +1,4 @@
+package:
+  name: example-driver-io
+  dependencies:
+    - halogen

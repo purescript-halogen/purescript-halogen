@@ -1,0 +1,6 @@
+package:
+  name: example-effects-aff-ajax
+  dependencies:
+    - halogen
+    - affjax
+    - affjax-web
