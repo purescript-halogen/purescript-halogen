@@ -1,5 +1,11 @@
 package:
   name: halogen
+  publish:
+    version: 7.1.0
+    license: Apache-2.0
+    location:
+      githubOwner: purescript-halogen
+      githubRepo: purescript-halogen
   dependencies:
     - aff: ">=7.0.0 <9.0.0"
     - bifunctors: ">=6.0.0 <7.0.0"
@@ -46,12 +52,6 @@ package:
     main: Test.Main
     dependencies:
       - assert
-  publish:
-    version: 7.1.0
-    license: Apache-2.0
-    location:
-      githubOwner: purescript-halogen
-      githubRepo: purescript-halogen
 workspace:
   packageSet:
     registry: 81.4.0
