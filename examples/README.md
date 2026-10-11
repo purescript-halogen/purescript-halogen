@@ -6,7 +6,7 @@ This folder contains a variety of examples demonstrating different Halogen featu
 
 Each of the Halogen examples are self-contained in a directory containing the source code and an `index.html` file that you can open in your browser once the source is compiled.
 
-Make sure Halogen's dependencies are installed:
+With Node.js 24, PureScript 0.15.16, and registry-backed Spago 1.x available on your PATH, install Halogen's dependencies:
 
 ```sh
 npm install

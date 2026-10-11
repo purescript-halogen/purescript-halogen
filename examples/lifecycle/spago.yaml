@@ -1,0 +1,6 @@
+package:
+  name: example-lifecycle
+  dependencies:
+    - halogen
+    - arrays
+    - const

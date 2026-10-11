@@ -1,0 +1,8 @@
+package:
+  name: example-driver-websockets
+  dependencies:
+    - halogen
+    - aff-coroutines
+    - arrays
+    - coroutines
+    - web-socket

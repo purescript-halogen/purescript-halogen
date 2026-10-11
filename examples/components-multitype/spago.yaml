@@ -1,0 +1,4 @@
+package:
+  name: example-components-multitype
+  dependencies:
+    - halogen
