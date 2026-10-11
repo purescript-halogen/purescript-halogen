@@ -536,7 +536,7 @@ We now know how to define queries and evaluate them in a child component. Now, l
 ```purs
 module Parent where
 
-type Slots = ( counter :: H.Slot Counter.Query Void Int )
+type Slots = ( counter :: H.Slot Counter.Query Void Unit )
 
 _counter = Proxy :: Proxy "counter"
 ```
