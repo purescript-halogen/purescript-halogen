@@ -604,7 +604,7 @@ counter =
 <p>We now know how to define queries and evaluate them in a child component. Now, let's see how to <em>send</em> a query to a child component from a parent component. As usual, we can start by defining our parent component's slot type:</p>
 <pre><code class="language-purs">module Parent where
 
-type Slots = ( counter :: H.Slot Counter.Query Void Int )
+type Slots = ( counter :: H.Slot Counter.Query Void Unit )
 
 _counter = Proxy :: Proxy &quot;counter&quot;
 </code></pre>
