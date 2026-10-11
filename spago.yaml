@@ -54,10 +54,4 @@ package:
       githubRepo: purescript-halogen
 workspace:
   packageSet:
-    registry: 81.4.0
-  extraPackages:
-    ace: 9.1.1
-    affjax-web: 1.0.1
-    dom-indexed: 13.0.1
-    halogen-vdom: 8.0.1
-    web-pointerevents: 1.0.0
+    registry: 43.5.1
