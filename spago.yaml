@@ -39,7 +39,7 @@ package:
     - web-events: ">=4.0.0 <5.0.0"
     - web-file: ">=4.0.0 <5.0.0"
     - web-html: ">=4.0.0 <5.0.0"
-    - web-pointerevents: ">=1.0.0 <2.0.0"
+    - web-pointerevents: ">=1.0.0 <3.0.0"
     - web-touchevents: ">=4.0.0 <5.0.0"
     - web-uievents: ">=4.0.0 <6.0.0"
   test:
@@ -54,4 +54,4 @@ package:
       githubRepo: purescript-halogen
 workspace:
   packageSet:
-    registry: 43.5.1
+    registry: 81.4.0
